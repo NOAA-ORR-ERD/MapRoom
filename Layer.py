@@ -223,12 +223,12 @@ class Layer():
                     self.points.state = 0
                     
                     self.polygon_set_renderer = Polygon_set_renderer.Polygon_set_renderer(
-                                                    app_globals.application.opengl_renderer,
+                                                    app_globals.application.renderer.opengl_renderer,
                                                     self.points.view( self.POINT_XY_VIEW_DTYPE ).xy[ : n_points ].copy(),
                                                     self.polygon_adjacency_array,
                                                     self.polygons,
-                                                    app_globals.application.projection,
-                                                    app_globals.application.projection_is_identity )
+                                                    app_globals.application.renderer.projection,
+                                                    app_globals.application.renderer.projection_is_identity )
         
         elif ( ext == ".verdat" or ext == ".dat" ):
             ( self.load_error_string,
@@ -277,8 +277,8 @@ class Layer():
                 
                 # TODO: handle other projections besides +proj=merc and +proj=longlat
                 
-                currently_merc = app_globals.application.projection.srs.find( "+proj=merc" ) != -1
-                currently_longlat = app_globals.application.projection.srs.find( "+proj=longlat" ) != -1
+                currently_merc = app_globals.application.renderer.projection.srs.find( "+proj=merc" ) != -1
+                currently_longlat = app_globals.application.renderer.projection.srs.find( "+proj=longlat" ) != -1
                 incoming_merc = projection.srs.find( "+proj=merc" ) != -1
                 incoming_longlat = projection.srs.find( "+proj=longlat" ) != -1
                 
@@ -319,19 +319,19 @@ class Layer():
                         app_globals.application.reproject_all( srs )
                 
                 self.image_set_renderer = Image_set_renderer.Image_set_renderer(
-                                                app_globals.application.opengl_renderer,
+                                                app_globals.application.renderer.opengl_renderer,
                                                 self.images,
                                                 self.image_sizes,
                                                 self.image_world_rects,
-                                                app_globals.application.projection,
-                                                app_globals.application.projection_is_identity )
+                                                app_globals.application.renderer.projection,
+                                                app_globals.application.renderer.projection_is_identity )
         
         else:
             self.load_error_string = "unrecognized file type: " + ext
         
         if ( self.load_error_string == "" ):
             self.bounds = self.compute_bounding_rect()
-            app_globals.application.zoom_to_world_rect( self.bounds )
+            app_globals.application.renderer.zoom_to_world_rect( self.bounds )
     
     def make_points( self, count ):
         return np.repeat(
@@ -366,12 +366,12 @@ class Layer():
     def create_necessary_renderers( self ):
         if ( self.triangle_points != None and self.triangle_set_renderer == None ):
             self.triangle_set_renderer = Triangle_set_renderer.Triangle_set_renderer(
-                                                    app_globals.application.opengl_renderer,
+                                                    app_globals.application.renderer.opengl_renderer,
                                                     self.triangle_points.view( self.POINT_XY_VIEW_DTYPE ).xy,
                                                     self.triangle_points.color.copy().view( dtype = np.uint8 ),
                                                     self.triangles.view( self.TRIANGLE_POINTS_VIEW_DTYPE ).point_indexes,
-                                                    app_globals.application.projection,
-                                                    app_globals.application.projection_is_identity )
+                                                    app_globals.application.renderer.projection,
+                                                    app_globals.application.renderer.projection_is_identity )
         
         if ( self.points != None and self.point_and_line_set_renderer == None ):
             if ( self.line_segment_indexes == None ):
@@ -379,20 +379,20 @@ class Layer():
             
             print "number of line segments: " + str( len( self.line_segment_indexes ) )
             self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
-                                                    app_globals.application.opengl_renderer,
+                                                    app_globals.application.renderer.opengl_renderer,
                                                     self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
                                                     self.points.color.copy().view( dtype = np.uint8 ),
                                                     self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
                                                     self.line_segment_indexes.color,
-                                                    app_globals.application.projection,
-                                                    app_globals.application.projection_is_identity )
+                                                    app_globals.application.renderer.projection,
+                                                    app_globals.application.renderer.projection_is_identity )
         
         self.set_up_labels();
         self.increment_change_count()
     
     def set_up_labels( self ):
         if ( self.points != None and self.label_set_renderer == None ):
-            self.label_set_renderer = Label_set_renderer.Label_set_renderer( app_globals.application.opengl_renderer, MAX_LABEL_CHARATERS )
+            self.label_set_renderer = Label_set_renderer.Label_set_renderer( app_globals.application.renderer.opengl_renderer, MAX_LABEL_CHARATERS )
     
     def compute_bounding_rect( self, mark_type = STATE_NONE ):
         bounds = rect.NONE_RECT
@@ -670,8 +670,8 @@ class Layer():
                 self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
                 None )
         self.point_and_line_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                                    app_globals.application.projection,
-                                                    app_globals.application.projection_is_identity )
+                                                    app_globals.application.renderer.projection,
+                                                    app_globals.application.renderer.projection_is_identity )
     """
     
     def offset_selected_polygons( self, world_d_x, world_d_y ):
@@ -737,8 +737,8 @@ class Layer():
         if ( self.label_set_renderer != None ):
             self.label_set_renderer.delete_points( point_indexes )
             self.label_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                               app_globals.application.projection,
-                                               app_globals.application.projection_is_identity )
+                                               app_globals.application.renderer.projection,
+                                               app_globals.application.renderer.projection_is_identity )
         """
         
         app_globals.application.points_were_deleted( self )
@@ -789,8 +789,8 @@ class Layer():
             self.label_set_renderer.insert_point( len( self.points ) - 1,
                                                   str( self.default_depth ),
                                                   world_point,
-                                                  app_globals.application.projection,
-                                                  app_globals.application.projection_is_identity )
+                                                  app_globals.application.renderer.projection,
+                                                  app_globals.application.renderer.projection_is_identity )
         t = time.clock() - t0 # t is wall seconds elapsed (floating point)
         print "inserted into label set renderer in {0} seconds".format( t )
         """
@@ -899,12 +899,12 @@ class Layer():
         
         # we need to use projected points for the triangulation
         projected_points = self.points.view( self.POINT_XY_VIEW_DTYPE ).xy[ : len( self.points ) ].view( np.float32 ).copy()
-        if ( app_globals.application.projection_is_identity ):
+        if ( app_globals.application.renderer.projection_is_identity ):
             projected_points[ : , 0 ] = self.points[ : , 0 ]
             projected_points[ : , 1 ] = self.points[ : , 1 ]
         else:
-            projected_points[ : , 0 ], projected_points[ : , 1 ] = app_globals.application.projection( self.points.x, self.points.y )
-            hole_points_xy[ : , 0 ], hole_points_xy[ : , 1 ] = app_globals.application.projection( hole_points_xy[ : , 0 ], hole_points_xy[ : , 1 ] )
+            projected_points[ : , 0 ], projected_points[ : , 1 ] = app_globals.application.renderer.projection( self.points.x, self.points.y )
+            hole_points_xy[ : , 0 ], hole_points_xy[ : , 1 ] = app_globals.application.renderer.projection( hole_points_xy[ : , 0 ], hole_points_xy[ : , 1 ] )
         print "params: " + params
         print "hole points:"
         print hole_points_xy
@@ -926,9 +926,9 @@ class Layer():
         self.triangle_points.color = DEFAULT_POINT_COLOR
         
         # now un-project the points
-        if ( not app_globals.application.projection_is_identity ):
+        if ( not app_globals.application.renderer.projection_is_identity ):
             # import code; code.interact( local = locals() )
-            self.triangle_points.x, self.triangle_points.y = app_globals.application.projection( self.triangle_points.x, self.triangle_points.y, inverse = True )
+            self.triangle_points.x, self.triangle_points.y = app_globals.application.renderer.projection( self.triangle_points.x, self.triangle_points.y, inverse = True )
         
         self.triangles = self.make_triangles( len( triangles ) )
         self.triangles.view( self.TRIANGLE_POINTS_VIEW_DTYPE ).point_indexes = triangles
@@ -1068,13 +1068,13 @@ class Layer():
         
         self.point_and_line_set_renderer.destroy()
         self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
-                                                app_globals.application.opengl_renderer,
-                                                self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                                self.points.color.copy().view( dtype = np.uint8 ),
-                                                self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
-                                                self.line_segment_indexes.color,
-                                                app_globals.application.projection,
-                                                app_globals.application.projection_is_identity )
+                                                      app_globals.application.renderer.opengl_renderer,
+                                                      self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
+                                                      self.points.color.copy().view( dtype = np.uint8 ),
+                                                      self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
+                                                      self.line_segment_indexes.color,
+                                                      app_globals.application.renderer.projection,
+                                                      app_globals.application.renderer.projection_is_identity )
         
         t = time.clock() - t0 # t is wall seconds elapsed (floating point)
         print "rebuilt point and line set renderer in {0} seconds".format( t )
@@ -1100,14 +1100,14 @@ class Layer():
         if ( self.change_count == sys.maxint ):
             self.change_count = 0
     
-    def render( self, layer_index_base, pick_mode = False ):
+    def render( self, render_window, layer_index_base, pick_mode = False ):
         if ( not self.is_visible ):
             return
         
-        app = app_globals.application
-        s_r = app.get_screen_rect()
-        p_r = app.get_projected_rect_from_screen_rect( s_r )
-        w_r = app.get_world_rect_from_projected_rect( p_r )
+        
+        s_r = render_window.get_screen_rect()
+        p_r = render_window.get_projected_rect_from_screen_rect( s_r )
+        w_r = render_window.get_world_rect_from_projected_rect( p_r )
         
         # the images
         if ( self.image_set_renderer != None and self.images_visible ):
@@ -1145,7 +1145,7 @@ class Layer():
                 self.label_set_renderer.render( -1, pick_mode, s_r,
                                                 MAX_LABEL_CHARATERS, self.points.z,
                                                 self.point_and_line_set_renderer.vbo_point_xys.data,
-                                                p_r, app.projected_units_per_pixel )
+                                                p_r, render_window.projected_units_per_pixel )
     
     def destroy( self ):
         app_globals.editor.delete_undo_operations_for_layer( self )

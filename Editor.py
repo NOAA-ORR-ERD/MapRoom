@@ -105,12 +105,13 @@ class Editor():
     
     def __init__( self ):
         self.app = app_globals.application
+        print "***\nin Editor init: %s \n***"%self.app.renderer
         self.lm = app_globals.layer_manager
     
     def point_tool_selected( self ):
         for layer in self.lm.flatten():
             layer.clear_all_line_segment_selections()
-        self.app.refresh()
+        self.app.renderer.render()
     
     def point_tool_deselected( self ):
         pass
@@ -122,7 +123,7 @@ class Editor():
         if ( n > 1 ):
             for layer in self.lm.flatten():
                 layer.clear_all_point_selections()
-            self.app.refresh()
+            self.app.renderer.render()
     
     def line_tool_deselected( self ):
         pass
@@ -130,20 +131,20 @@ class Editor():
     def esc_key_pressed( self ):
         for layer in self.lm.flatten():
             layer.clear_all_selections()
-        self.app.refresh()
+        self.app.renderer.render()
     
     def delete_key_pressed( self ):
-        if ( self.app.mode == self.app.MODE_EDIT_POINTS or self.app.mode == self.app.MODE_EDIT_LINES ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_POINTS or self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
             layer = self.app.layer_tree_control.get_selected_layer()
             if ( layer != None ):
                 layer.delete_all_selected_objects()
                 self.end_operation_batch()
-                self.app.refresh()
+                self.app.renderer.render()
     
     def clicked_on_point( self, event, layer, point_index ):
         act_like_point_tool = False
         
-        if ( self.app.mode == self.app.MODE_EDIT_LINES ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
             if ( event.ControlDown() or event.ShiftDown() ):
                 # act_like_point_tool = True
                 pass
@@ -154,8 +155,11 @@ class Editor():
                     self.end_operation_batch()
                     layer.clear_all_point_selections()
                     layer.select_point( point_index )
+                elif len( point_indexes) == 0: # no currently selected point
+                    # select this point
+                    layer.select_point( point_index )
         
-        if ( self.app.mode == self.app.MODE_EDIT_POINTS or act_like_point_tool ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_POINTS or act_like_point_tool ):
             if ( event.ControlDown() ):
                 if ( layer.is_point_selected( point_index ) ):
                     layer.deselect_point( point_index )
@@ -174,17 +178,17 @@ class Editor():
                 layer.clear_all_selections()
                 layer.select_point( point_index )
         
-        self.app.refresh()
+        self.app.renderer.render()
     
     def clicked_on_line_segment( self, event, layer, line_segment_index, world_point ):
-        if ( self.app.mode == self.app.MODE_EDIT_POINTS ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_POINTS ):
             if ( not event.ControlDown() and not event.ShiftDown() ):
                 self.esc_key_pressed()
                 layer.insert_point_in_line( world_point, line_segment_index )
                 self.end_operation_batch()
-                self.app.forced_cursor = wx.StockCursor( wx.CURSOR_HAND )
+                self.app.renderer.forced_cursor = wx.StockCursor( wx.CURSOR_HAND )
         
-        if ( self.app.mode == self.app.MODE_EDIT_LINES ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
             if ( event.ControlDown() ):
                 if ( layer.is_line_segment_selected( line_segment_index ) ):
                     layer.deselect_line_segment( line_segment_index )
@@ -203,13 +207,13 @@ class Editor():
                 layer.clear_all_selections()
                 layer.select_line_segment( line_segment_index )
         
-        self.app.refresh()
+        self.app.renderer.render()
     
     def clicked_on_polygon( self, layer, polygon_index ):
         pass
     
     def clicked_on_empty_space( self, event, layer, world_point ):
-        if ( self.app.mode == self.app.MODE_EDIT_POINTS or self.app.mode == self.app.MODE_EDIT_LINES ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_POINTS or self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
             if ( layer.type == "root" or layer.type == "folder" ):
                 wx.MessageDialog(
                     wx.GetApp().GetTopWindow(),
@@ -217,25 +221,25 @@ class Editor():
                     message = "You cannot add points or lines to folder layers.",
                     style = wx.OK | wx.ICON_ERROR
                 ).ShowModal()
-            
+                            
                 return
         
-        if ( self.app.mode == self.app.MODE_EDIT_POINTS ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_POINTS ):
             if ( not event.ControlDown() and not event.ShiftDown() ):
                 self.esc_key_pressed()
                 # we release the focus because we don't want to immediately drag the new object (if any)
-                self.app.release_mouse()
+                #self.app.renderer.release_mouse() # shouldn't be captured now anyway
                 layer.insert_point( world_point )
                 self.end_operation_batch()
-                self.app.refresh()
+                self.app.renderer.render()
         
-        if ( self.app.mode == self.app.MODE_EDIT_LINES ):
+        if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
             if ( not event.ControlDown() and not event.ShiftDown() ):
                 point_indexes = layer.get_selected_point_indexes()
                 if ( len( point_indexes == 1 ) ):
                     self.esc_key_pressed()
                     # we release the focus because we don't want to immediately drag the new object (if any)
-                    self.app.release_mouse()
+                    # self.app.renderer.release_mouse()
                     point_index = layer.insert_point( world_point )
                     layer.insert_line_segment( point_index, point_indexes[ 0 ] )
                     self.end_operation_batch()
@@ -243,7 +247,7 @@ class Editor():
                     layer.select_point( point_index )
 
                 layer.select_point( point_index )
-                self.app.refresh()
+                self.app.renderer.render()
     
     def dragged( self, world_d_x, world_d_y ):
         if ( self.clickable_object_mouse_is_over == None ):
@@ -253,7 +257,7 @@ class Editor():
         layer = self.lm.get_layer_by_flattened_index( layer_index )
         layer.offset_selected_objects( world_d_x, world_d_y )
         # self.end_operation_batch()
-        self.app.refresh()
+        self.app.renderer.render()
     
     def finished_drag( self, mouse_down_position, mouse_move_position ):
         if ( self.clickable_object_mouse_is_over == None ):
@@ -265,8 +269,8 @@ class Editor():
         if ( d_x == 0 and d_y == 0 ):
             return
         
-        w_p0 = self.app.get_world_point_from_screen_point( mouse_down_position )
-        w_p1 = self.app.get_world_point_from_screen_point( mouse_move_position )
+        w_p0 = self.app.renderer.get_world_point_from_screen_point( mouse_down_position )
+        w_p1 = self.app.renderer.get_world_point_from_screen_point( mouse_move_position )
         world_d_x = w_p1[ 0 ] - w_p0[ 0 ]
         world_d_y = w_p1[ 1 ] - w_p0[ 1 ]
         
@@ -330,7 +334,7 @@ class Editor():
     def end_operation_batch( self ):
         self.show_undo_redo_debug_dump( "end_operation_batch()" )
         self.undo_stack_next_operation_number += 1
-        self.app.refresh()
+        self.app.renderer.render()
     
     def delete_undo_operations_for_layer( self, layer ):
         self.clear_undo_stack_forward()

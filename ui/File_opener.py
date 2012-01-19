@@ -9,34 +9,33 @@ Prompts the user for a filename and then tries to load it as a layer,
 displaying any resulting error message to the user.
 """
 
-def show( file_path = None ):
-    if file_path == None:
-        file_types = (
-            "All files (*.*)|*.*",
-            "BNA files (*.bna)|*.bna",
-            "GeoTIFF files (*.tif)|*.tif",
-            "KAP files (*.kap)|*.kap",
-            "Maproom Vector files (*.maproomv)|*.maproomv",
-            "MOSS files (*.ms1)|*.ms1",
-            "NGA DNC ZIP files (*.zip)|*.zip",
-            "Shape files (*.shp)|*.shp",
-            "Verdat files (*.verdat)|*.verdat",
-            "XML files (*.xml)|*.xml"
-        )
+def show():
+    file_types = (
+        "All files (*.*)|*.*",
+        "BNA files (*.bna)|*.bna",
+        "GeoTIFF files (*.tif)|*.tif",
+        "KAP files (*.kap)|*.kap",
+        "Maproom Vector files (*.maproomv)|*.maproomv",
+        "MOSS files (*.ms1)|*.ms1",
+        "NGA DNC ZIP files (*.zip)|*.zip",
+        "Shape files (*.shp)|*.shp",
+        "Verdat files (*.verdat)|*.verdat",
+        "XML files (*.xml)|*.xml"
+    )
+    
+    dialog = wx.FileDialog(
+        app_globals.application.frame,
+        style = wx.FD_FILE_MUST_EXIST,
+        message = "Select a file to open",
+        wildcard = "|".join( file_types )
+    )
         
-        dialog = wx.FileDialog(
-            app_globals.application.frame,
-            style = wx.FD_FILE_MUST_EXIST,
-            message = "Select a file to open",
-            wildcard = "|".join( file_types )
-        )
-            
-        if dialog.ShowModal() != wx.ID_OK:
-            return
-            
-        file_path = os.path.normcase( os.path.abspath( dialog.GetPath() ) )
+    if dialog.ShowModal() != wx.ID_OK:
+        return
+        
+    file_path = os.path.normcase( os.path.abspath( dialog.GetPath() ) )
 
-        open_file(file_path)
+    open_file(file_path)
 
 def open_file(file_path):
 
@@ -74,7 +73,9 @@ def open_file(file_path):
             style = wx.OK | wx.ICON_ERROR,
         ).ShowModal()
         
-        return
+        return None
     
     app_globals.layer_manager.insert_layer( insertion_multi_index, layer )
     app_globals.application.layer_tree_control.select_layer( layer )
+
+    return None

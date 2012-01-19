@@ -364,39 +364,42 @@ class Menu_bar( wx.MenuBar ):
         pass
     
     def do_set_zoom_to_box_mode( self, event ):
-        if ( app_globals.application.mode == app_globals.application.MODE_EDIT_POINTS ):
+        print "in zoom to box handler"
+        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_POINTS ):
             app_globals.editor.point_tool_deselected()
-        if ( app_globals.application.mode == app_globals.application.MODE_EDIT_LINES ):
+        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_LINES ):
             app_globals.editor.line_tool_deselected()
-        app_globals.application.mode = app_globals.application.MODE_ZOOM_RECT
+        app_globals.application.renderer.mode =  app_globals.application.MODE_ZOOM_RECT
+        print "calling refresh on application"
+        app_globals.application.refresh()
     
     def do_set_pan_mode( self, event ):
-        if ( app_globals.application.mode == app_globals.application.MODE_EDIT_POINTS ):
+        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_POINTS ):
             app_globals.editor.point_tool_deselected()
-        if ( app_globals.application.mode == app_globals.application.MODE_EDIT_LINES ):
+        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_LINES ):
             app_globals.editor.line_tool_deselected()
-        app_globals.application.mode = app_globals.application.MODE_PAN
+        app_globals.application.renderer.mode =  app_globals.application.MODE_PAN
     
     def do_set_add_points_mode( self, event ):
-        if ( app_globals.application.mode == app_globals.application.MODE_EDIT_LINES ):
+        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_LINES ):
             app_globals.editor.line_tool_deselected()
-        app_globals.application.mode = app_globals.application.MODE_EDIT_POINTS
+        app_globals.application.renderer.mode =  app_globals.application.MODE_EDIT_POINTS
         app_globals.editor.point_tool_selected()
     
     def do_set_add_lines_mode( self, event ):
-        if ( app_globals.application.mode == app_globals.application.MODE_EDIT_POINTS ):
+        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_POINTS ):
             app_globals.editor.point_tool_deselected()
-        app_globals.application.mode = app_globals.application.MODE_EDIT_LINES
+        app_globals.application.renderer.mode =  app_globals.application.MODE_EDIT_LINES
         app_globals.editor.line_tool_selected()
     
     def do_zoom_in( self, event ):
-        app_globals.application.zoom_in()
+        app_globals.application.renderer.zoom_in()
     
     def do_zoom_out( self, event ):
-        app_globals.application.zoom_out()
+        app_globals.application.renderer.zoom_out()
     
     def do_zoom_fit( self, event ):
-        app_globals.application.zoom_to_fit()
+        app_globals.application.renderer.zoom_to_fit()
     
     def do_toggle_grid( self, event ):
         app_globals.application.lon_lat_grid_shown = not app_globals.application.lon_lat_grid_shown

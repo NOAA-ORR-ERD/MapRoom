@@ -35,9 +35,9 @@ class Layer_manager():
         layer.name = "Layers"
         layer.type = "root"
         self.insert_layer( [ 0 ], layer )
-        self.add_folder( name = "folder_a" )
-        self.add_folder( name = "folder_b" )
-        self.add_folder( name = "folder_c" )
+        #self.add_folder( name = "folder_a" )
+        #self.add_folder( name = "folder_b" )
+        #self.add_folder( name = "folder_c" )
     
     def flatten( self ):
         return self.flatten_recursive( self.layers )
@@ -194,11 +194,11 @@ class Layer_manager():
         
         return result
     
-    def render( self, pick_mode = False ):
+    def render( self, render_window, pick_mode = False ):
         list = self.flatten()
         length = len( list )
         for i, layer in enumerate( reversed( list ) ):
-            layer.render( ( length - 1 - i ) * 10, pick_mode )
+            layer.render( render_window, ( length - 1 - i ) * 10, pick_mode )
     
     ###########################################################
     

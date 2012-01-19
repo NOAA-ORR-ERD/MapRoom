@@ -40,9 +40,10 @@ class Lon_lat_grid:
     def __init__( self ):
         pass
     
-    def draw( self, opengl_renderer, world_rect, projected_rect, screen_rect ):
-        app = app_globals.application
-        
+    ## fixme == this should be able to get the various rects from the render_window object...
+    def draw( self, render_window, world_rect, projected_rect, screen_rect ):
+        #app = app_globals.application
+        opengl_renderer = render_window.opengl_renderer
         degrees_lon_per_pixel = float( rect.width( world_rect ) ) / float( rect.width( screen_rect ) )
         degrees_lat_per_pixel = float( rect.height( world_rect ) ) / float( rect.height( screen_rect ) )
         
@@ -73,7 +74,7 @@ class Lon_lat_grid:
             if ( longitude < -180 or longitude > 180 ):
                 continue
             w_p = ( longitude, world_rect[ 0 ][ 1 ] )
-            s_p = app.get_screen_point_from_world_point( w_p )
+            s_p = render_window.get_screen_point_from_world_point( w_p )
             s = library.coordinates.format_lon_line_label( longitude )
             size = opengl_renderer.get_drawn_string_dimensions( s )
             opengl_renderer.draw_screen_line( ( s_p[ 0 ], screen_rect[ 0 ][ 1 ] + size[ 1 ] + 5 ),
@@ -94,7 +95,7 @@ class Lon_lat_grid:
             if ( latitude < -89 or latitude > 89 ):
                 continue
             w_p = ( world_rect[ 0 ][ 0 ], latitude )
-            s_p = app.get_screen_point_from_world_point( w_p )
+            s_p = render_window.get_screen_point_from_world_point( w_p )
             s = library.coordinates.format_lat_line_label( latitude )
             size = opengl_renderer.get_drawn_string_dimensions( s )
             opengl_renderer.draw_screen_line( ( screen_rect[ 0 ][ 0 ], s_p[ 1 ] ),
