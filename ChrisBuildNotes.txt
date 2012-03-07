@@ -1,0 +1,96 @@
+Notes on Getting MapRoom Up and Running on Win65 box:
+
+ = 32 bit Python =
+ 
+ I decided to punt on the 64 bit for now. See below for some notes form when I started to look at 64 bit.
+ 
+  == C/C++ compiler ==
+
+Visual Studio Express 2008: install it and it "just works"
+
+ == Python and packages==
+ 
+There is now a script:  `check_maproom_deps.py` that will try to import eveything, and give you a warnign if it its not there or the wrong version.
+
+ 
+ Note: lots of great binary builds available from Chris Gohlke's site: 
+
+ [http://www.lfd.uci.edu/~gohlke/pythonlibs/]
+
+I've used a lot of those.
+ 
+ * python 2.7 from python.org
+ 
+ * setuptools via `python ez_setup.py`
+   NOTE: as of this writing, this installed version 0.6c11, which seems to work fine. However, there is a Windows binary out there that isntalls 0.6c12, that that version isntalls a binary for runnign scripts that opens up a new DOS box -- and makes things unworkable.
+
+ * wxPython   2.8.12.1 unicode (from wxPython.org)
+ 
+ * numpy 1.6.1 from numpy org (32 bit superpack)
+
+ * pyopengl 3.0.1 (gohlke)
+ 
+ * pyproj 1.9.0: (gohlke)
+ 
+ * GDAL/OGR 1.9.0: (gohlke)
+  
+ * cython 0.15.1: (gohlke)
+ 
+ * 
+
+ == Extras ==
+ (not needed by MapRoom, but...)
+ 
+ * scipy 0.10.1 from scipy.org (32 bit superpack)
+
+ * ipython 0.12 (gohlke)
+
+ * nose 1.1.2 (gohlke) -- should be needed, but not yet!
+
+ * PIL 1.1.7 (gohlke) 
+
+ * py2exe 0.6.10dev (gohlke)
+ 
+ * pyreadline 1.7.1 (gohlke)
+ 
+ * Sphinx 1.1.2 (gohlke)
+ 
+ * 
+ 
+ == In house libs ==
+ * pyTriangle 2.6.1: you'll find this in the "libs" part of teh maproom project. It's ours, but I kept it separate form maproom as it's useful on its own. It should build from source if you've got Cython and the C compiler set up right.
+ 
+ == Accessories ==  
+ 
+ Stuff I like to use:
+ 
+ TortoiseSVN 
+
+ Peppy (easy_install -U peppy)
+ 
+
+ = 64 bit Python =
+
+To build 64 bit extensions, I used the Window7 SDK:
+
+http://www.microsoft.com/download/en/confirmation.aspx?id=3138
+
+as per instructions on the cyhton Wiki:
+
+http://wiki.cython.org/64BitCythonExtensionsOnWindows
+
+
+
+Python stuff installed:
+
+python2.7 64 bit (python.org
+wxPython 2.8.12 (wxPython.org)
+setuptools (easy_setup.py)
+
+GDAL binaries from:
+
+http://www.gisinternals.com/sdk/
+
+(VS2008 builds, latest release: finished at 2012.02.29.)
+
+ 
