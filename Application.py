@@ -216,11 +216,11 @@ class Application( wx.App ):
                 print "opening:", filename
                 ui.File_opener.open_file(filename)
         else: # just so there is something there.
-            app_globals.layer_manager.add_folder( name = "folder_a" )
+            pass #app_globals.layer_manager.add_folder( name = "folder_a" )
         
         print "selected layer", self.layer_tree_control.get_selected_layer()
         
-        self.layer_tree_control.rebuild()
+        #self.layer_tree_control.rebuild()
         print "after rebuilding: selected layer", self.layer_tree_control.get_selected_layer()
         
         self.is_initialized = True

@@ -72,6 +72,8 @@ class RenderWindow( glcanvas.GLCanvas ):
                                 glcanvas.WX_GL_MIN_ALPHA, 8, )
         glcanvas.GLCanvas.__init__( self, *args, **kwargs)
         
+        self.context = glcanvas.GLContext(self)
+        
         p = os.path.join( self.IMAGE_PATH, "cursors", "hand.ico" )
         self.hand_cursor = wx.Cursor( p, wx.BITMAP_TYPE_ICO, 16, 16 )
         p = os.path.join( self.IMAGE_PATH, "cursors", "hand_closed.ico" )
@@ -344,8 +346,8 @@ class RenderWindow( glcanvas.GLCanvas ):
         traceback.print_stack();
         import code; code.interact( local = locals() )
         """
-        
-        self.SetCurrent()
+
+        self.SetCurrent(self.context)
         
         # this has to be here because the window has to exist before making the renderer
         if ( self.opengl_renderer == None ):
