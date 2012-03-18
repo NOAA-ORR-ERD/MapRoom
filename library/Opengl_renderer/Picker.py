@@ -69,7 +69,7 @@ class Picker:
     
     def bind_frame_buffer( self ):
         gl.glDrawBuffer( gl.GL_NONE );
-        gl_fbo.glBindFramebufferEXT( gl.GL_FRAMEBUFFER_EXT, self.frame_buffer )
+        gl_fbo.glBindFramebufferEXT( gl_fbo.GL_FRAMEBUFFER_EXT, self.frame_buffer )
     
     def unbind_frame_buffer( self ):
         gl_fbo.glBindFramebufferEXT( gl_fbo.GL_FRAMEBUFFER_EXT, 0 )
