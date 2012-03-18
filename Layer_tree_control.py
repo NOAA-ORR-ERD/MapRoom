@@ -270,27 +270,31 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
     
     def is_selected_layer_raisable( self ):
         item = self.GetSelection()
-        ( category, layer ) = self.GetItemPyData( item ).Data
-        if ( category != "layer" and category != "folder" ):
-            return False
-        lm = app_globals.layer_manager
-        mi = lm.get_multi_index_of_layer( layer )
+        if item:
+            ( category, layer ) = self.GetItemPyData( item ).Data
+            if ( category != "layer" and category != "folder" ):
+                return False
+            lm = app_globals.layer_manager
+            mi = lm.get_multi_index_of_layer( layer )
         
-        return mi[ len( mi ) - 1 ] >= 2
+            return mi[ len( mi ) - 1 ] >= 2
+        return False
     
     def is_selected_layer_lowerable( self ):
         item = self.GetSelection()
-        ( category, layer ) = self.GetItemPyData( item ).Data
-        if ( category != "layer" and category != "folder" ):
-            return False
-        lm = app_globals.layer_manager
-        mi = lm.get_multi_index_of_layer( layer )
-        n = mi[ len( mi ) - 1 ]
-        mi2 = mi[ : len( mi ) - 1 ]
-        parent_list = lm.get_layer_by_multi_index( mi2 )
-        total = len( parent_list )
-        
-        return n < ( total - 1 )
+        if item: 
+            ( category, layer ) = self.GetItemPyData( item ).Data
+            if ( category != "layer" and category != "folder" ):
+                return False
+            lm = app_globals.layer_manager
+            mi = lm.get_multi_index_of_layer( layer )
+            n = mi[ len( mi ) - 1 ]
+            mi2 = mi[ : len( mi ) - 1 ]
+            parent_list = lm.get_layer_by_multi_index( mi2 )
+            total = len( parent_list )
+            
+            return n < ( total - 1 )
+        return False
     
     def raise_selected_layer( self ):
         if ( not self.is_selected_layer_raisable() ):
