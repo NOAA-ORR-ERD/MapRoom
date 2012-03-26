@@ -14,6 +14,21 @@ import Version as version
 from ui.Error_notifier import notify_all_errors
 import app_globals
 
+import pyproj
+
+# these are here to get py2exe / py2app to pick them up, since the deps
+# import them in a way that they miss
+import multiprocessing
+
+class Logger(object):
+    def __init__(self, filename="output.txt"):
+        self.terminal = sys.stdout
+        self.log = open(filename, "a")
+
+    def write(self, message):
+        self.terminal.write(message)
+        self.log.write(message)
+
 def main( args ):
     app_globals.main_logger = logging.getLogger( "" )
     app_globals.main_logger.setLevel( logging.DEBUG )
@@ -26,13 +41,8 @@ def main( args ):
     if hasattr( sys, "frozen" ):
         pyproj.set_datapath( "pyproj_data" )
 
-        class Blackhole:
-            softspace = 0
-            def write( self, text ):
-                pass
-
-        sys.stdout = Blackhole()
-        sys.stderr = Blackhole()
+        sys.stdout = Logger()
+        sys.stderr = Logger()
     # Otherwise, log to stdout.
     else:
         console = logging.StreamHandler()
