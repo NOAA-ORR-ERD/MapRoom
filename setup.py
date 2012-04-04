@@ -147,6 +147,9 @@ data_files = [
     ( "ui/images/cursors",
         glob( "ui/images/cursors/*.ico" )
     ),
+    ( "library/Opengl_renderer", 
+        glob("library/Opengl_renderer/*.png")
+    ),
     ( "pyproj/data", pyproj_data ),
 ]
 
