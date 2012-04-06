@@ -179,7 +179,6 @@ try:
         author = "NOAA",
         data_files = data_files,
         packages = find_packages(),
-        ext_modules = ext_modules,
         app = [ "maproom.py" ],
         windows = [ dict(
             script = "maproom.py",
@@ -222,7 +221,7 @@ try:
         )
     )
 
-    if sys.platform.startswith( "win" ) and "py2exe" in sys.argv:
+    if sys.platform.startswith( "win" ):
         try:
             import triangle
             import shutil
@@ -236,7 +235,6 @@ try:
         except ImportError:
             pass
 
-    if sys.platform.startswith( "win" ) and "py2exe" in sys.argv:
         # See http://www.py2exe.org/index.cgi/PyOpenGL
         import OpenGL
         import OpenGL_accelerate
