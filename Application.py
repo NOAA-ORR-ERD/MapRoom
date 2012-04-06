@@ -156,6 +156,8 @@ class Application( wx.App ):
         
         self.tool_bar = Tool_bar()
         self.frame.SetToolBar( self.tool_bar )
+        # On Mac, we need to call Realize after setting the frame's toolbar.
+        self.tool_bar.Realize()
         
         self.status_bar = self.frame.CreateStatusBar()
         

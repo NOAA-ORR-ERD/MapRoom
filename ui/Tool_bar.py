@@ -63,7 +63,6 @@ class Tool_bar( wx.ToolBar ):
         self.AddRadioLabelTool( self.add_lines_id, "Edit Lines", self.bmp( "add_lines" ), shortHelp = "Edit Lines" )
         
         # self.selection_updated()
-        self.Realize()
         
         f = app_globals.application.frame
         # f.Bind( wx.EVT_TOOL, ui.Wx_handler( self.inbox, "triangulate" ), id = self.triangulate_id )
