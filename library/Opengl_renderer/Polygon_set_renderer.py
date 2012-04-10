@@ -324,6 +324,6 @@ class Polygon_set_renderer:
     
     def destroy( self ):
         if ( self.triangle_vertex_buffers != None ):
-            gl.glDeleteBuffers( self.triangle_vertex_buffers )
+            gl.glDeleteBuffers( 1, self.triangle_vertex_buffers )
         if ( self.line_vertex_buffers != None ):
-            gl.glDeleteBuffers( self.line_vertex_buffers )
+            gl.glDeleteBuffers( 1, self.line_vertex_buffers )
