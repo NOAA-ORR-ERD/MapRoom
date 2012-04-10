@@ -11,6 +11,12 @@ import library.Bitmap as Bitmap
 
 WHITESPACE_PATTERN = re.compile( "\s+" )
 
+def update_status(message):
+    import wx
+    tlw = wx.GetApp().GetTopWindow()
+    tlw.SetStatusText(message)
+    wx.SafeYield()
+
 def load_verdat_file( file_path ):
     """
     Load data from a DOGS-style verdat file. Returns:
@@ -188,6 +194,7 @@ def load_bna_file( file_path ):
     while True:
         if ( i >= num_lines ):
             break;
+        update_status("Loading %d of %d data points." % (i, num_lines))
         line = lines[ i ].strip()
         i += 1
         if ( len( line ) == 0 ):

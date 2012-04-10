@@ -1,4 +1,5 @@
 import os
+import time
 #import os.path
 #import sys
 #import math
@@ -22,6 +23,16 @@ import app_globals
 """
 The RenderWindow class -- where the opengl rendering really takes place.
 """
+
+def update_status(message):
+    tlw = wx.GetApp().GetTopWindow()
+    tlw.SetStatusText(message)
+    # for debugging purposes, so we can see a history of rendering
+    try:
+        f = open("output_render.txt", "a")
+        f.write(message + '\n')
+    except:
+        pass
 
 class RenderWindow( glcanvas.GLCanvas ):
     """
@@ -347,6 +358,7 @@ class RenderWindow( glcanvas.GLCanvas ):
         import code; code.interact( local = locals() )
         """
 
+        t0 = time.clock()
         self.SetCurrent(self.context)
         
         # this has to be here because the window has to exist before making the renderer
@@ -406,6 +418,9 @@ class RenderWindow( glcanvas.GLCanvas ):
         self.opengl_renderer.prepare_to_render_picker( s_r )
         app_globals.layer_manager.render(self,  pick_mode = True )
         self.opengl_renderer.done_rendering_picker()
+
+        elapsed = time.clock() - t0
+        wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
         
         if ( event != None ):
             event.Skip()
