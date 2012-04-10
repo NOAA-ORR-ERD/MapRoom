@@ -291,8 +291,9 @@ class Application( wx.App ):
             self.layer_tree_control.rebuild()
         if self.renderer is not None:
         #    self.renderer.render()
-            print "calling Update on renderer"
-            self.renderer.Update()
+            # On Mac this is neither necessary nor desired.
+            if not sys.platform.startswith('darwin'):
+                self.renderer.Update()
             self.renderer.Refresh()
         if ( self.layer_tree_control != None and self.properties_panel != None ):
             layer = self.layer_tree_control.get_selected_layer()
