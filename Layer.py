@@ -316,7 +316,7 @@ class Layer():
                                 #
                                 return
                         
-                        app_globals.application.reproject_all( srs )
+                        app_globals.application.renderer.reproject_all( srs )
                 
                 self.image_set_renderer = Image_set_renderer.Image_set_renderer(
                                                 app_globals.application.renderer.opengl_renderer,
