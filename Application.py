@@ -48,6 +48,8 @@ class Application( wx.App ):
     IMAGE_PATH = "ui/images"
     ICON_FILENAME = os.path.join( IMAGE_PATH, "maproom.ico" )
     
+    NAME = "Maproom"
+    
     MODE_PAN = 0
     MODE_ZOOM_RECT = 1
     MODE_EDIT_POINTS = 2
@@ -125,7 +127,8 @@ class Application( wx.App ):
     
     def OnInit( self ):
         print "in application.OnInit"
-        self.frame = wx.Frame( None, wx.ID_ANY, "Maproom" )
+        self.SetAppName(self.NAME)
+        self.frame = wx.Frame( None, wx.ID_ANY, self.NAME )
         self.frame.SetIcon( wx.Icon( self.ICON_FILENAME, wx.BITMAP_TYPE_ICO ) )
         self.frame.SetSizeHints( 250, 250 )
         # self.log_viewer = Log_viewer( self.frame )
