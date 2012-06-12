@@ -245,8 +245,6 @@ class Editor():
                     self.end_operation_batch()
                     layer.clear_all_point_selections()
                     layer.select_point( point_index )
-
-                layer.select_point( point_index )
                 self.app.renderer.render()
     
     def dragged( self, world_d_x, world_d_y ):
