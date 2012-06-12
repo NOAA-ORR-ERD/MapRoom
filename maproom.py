@@ -9,6 +9,10 @@ import os
 import sys
 import logging
 import wx
+
+# load this as early as possible so that we can ideally report even startup errors
+import error_handling
+
 import ui as app_ui
 import Version as version
 from ui.Error_notifier import notify_all_errors
@@ -52,8 +56,6 @@ def main( args ):
         )
         console.setFormatter( formatter )
         app_globals.main_logger.addHandler( console )
-    
-    notify_all_errors( app_globals.main_logger )
     
     """
     root_layer = plugin.Composite_layer(
