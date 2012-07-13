@@ -147,14 +147,17 @@ data_files = [
     ( "ui/images/cursors",
         glob( "ui/images/cursors/*.ico" )
     ),
-    ( "library/Opengl_renderer", 
-        glob("library/Opengl_renderer/*.png")
-    ),
-    ( "pyproj/data", pyproj_data ),
 ]
+if sys.platform.startswith('win'):
+    # with py2app, we just include the entire package and these files are
+    # copied over
+    data_files.extend([
+        ( "library/Opengl_renderer", 
+            glob("library/Opengl_renderer/*.png")
+        ),
+        ( "pyproj/data", pyproj_data ),
+    ])
 
-
-if 0 and sys.platform.startswith( "win" ) and "py2exe" in sys.argv:
     # Add missing DLL files that py2exe doesn't pull in automatically.
     data_files.append(
         ( ".", [ "..\..\PROJ.4\workspace\src\proj.dll" ] ),
@@ -187,6 +190,7 @@ try:
         options = dict(
             py2app = dict(
                 argv_emulation = True,
+                packages = ['pyproj', 'library'],
                 optimize = 2, # Equivalent to running "python -OO".
                 semi_standalone = False,
                 includes = common_includes + py2app_includes,
