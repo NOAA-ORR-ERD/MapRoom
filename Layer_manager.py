@@ -150,7 +150,11 @@ class Layer_manager():
        return None
     
     def get_layer_by_flattened_index( self, index ):
-        return self.flatten()[ index ]
+        flattened = self.flatten()
+        if index in flattened:
+            return flattened[index]
+        
+        return None
     
     def is_layer_selected( self, layer ):
         return app_globals.application.layer_tree_control.get_selected_layer() == layer
