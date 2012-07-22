@@ -1,5 +1,7 @@
 {
     'settings' : {
+        'virtualenv': '%(ROOTDIR)/env/maproom',
+        'uses_setuptools': True,
         'darwin' : {
             'archs': ['i386'],
             'min-version': '10.5',
@@ -24,6 +26,7 @@
         'version': '1.14',
         'source': 'http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz',
         'win32': {
+            'ignore': True,
             'build_args': ['NO_NLS=1',],
             'project_file': 'Makefile.msvc', 
         },
@@ -54,14 +57,15 @@
         },
         #'configure_args' : ["--with-proj='%(SRCDIR)s/..'", '--with-expat'],
         'win32': {
+            'ignore': True,
             'prebuild_script': """
 import os
 import shutil
 libiconv_dir = '../../libiconv/workspace'
 proj_dir = '../../PROJ.4/workspace'
 
-if not os.path.exists(libiconv_dir):
-    shutil.copytree('../libiconv-1.11', libiconv_dir)
+#if not os.path.exists(libiconv_dir):
+#    shutil.copytree('../libiconv-1.11', libiconv_dir)
 
 if not os.path.exists(proj_dir):
     shutil.copytree('../proj-4.7.0', proj_dir)
@@ -98,18 +102,8 @@ if not os.path.exists(proj_dir):
                 'cd ../..',
         ],
         'win32': {
-            'env_vars': {
-                'INCLUDE': '%INCLUDE%;%(SRCDIR)s/../ogdi-3.2.0.beta2/ogdi/include;%(SRCDIR)s/../ogdi-3.2.0.beta2/proj;%(SRCDIR)s/../ogdi-3.2.0.beta2/include/win32',
-            },
-            'postinstall_cmds': ['copy gdal16.dll ..\\dlls\\gdal16.dll'], 
-            'prebuild_script': """
-import os
-import shutil
-ogdi_dir = '../../OGDI/workspace'
-
-if not os.path.exists(ogdi_dir):
-    shutil.copytree('../ogdi-3.2.0.beta2', ogdi_dir)
-            """,
+            'binary': 'http://www.lfd.uci.edu/~gohlke/pythonlibs/5ury6iz9/GDAL-1.9.1.win32-py2.7.exe',
+            'installer': 'GDAL-1.9.1.win32-py2.7.exe',
         },
     },
     {
@@ -129,6 +123,10 @@ if not os.path.exists(ogdi_dir):
         'source': 'http://sourceforge.net/projects/scipy/files/scipy/0.10.1/scipy-0.10.1.tar.gz/download',
         'version': '0.10.1',
         'build_type': 'python',
+        'win32': {
+            'binary': 'http://sourceforge.net/projects/scipy/files/scipy/0.10.1/scipy-0.10.1-win32-superpack-python2.7.exe/download',
+            'installer': 'scipy-0.10.1-win32-superpack-python2.7.exe',
+        }
     },
     {
         'name': 'PyOpenGL',
@@ -147,6 +145,10 @@ if not os.path.exists(ogdi_dir):
         'source': 'http://pyproj.googlecode.com/files/pyproj-1.9.0.tar.gz',
         'version': '1.9.0',
         'build_type': 'python',
+        'win32': {
+            'binary': 'http://pyproj.googlecode.com/files/pyproj-1.9.0.win32-py2.7.exe',
+            'installer': 'pyproj-1.9.0.win32-py2.7.exe',
+        }
     },
     {
         'name': 'pytriangle',
