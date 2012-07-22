@@ -27,7 +27,7 @@ import multiprocessing
 class Logger(object):
     def __init__(self, filename="output.txt"):
         self.terminal = sys.stdout
-        self.log = open(filename, "a")
+        self.log = open(filename, "w")
 
     def write(self, message):
         self.terminal.write(message)
@@ -41,10 +41,14 @@ def main( args ):
     app_globals.opengl_logger.setLevel( logging.WARNING )
     app_globals.version = version
     
+    app = app_ui.Application( args )
+    
     # If the app is frozen, don't write anything to stdout.
     if hasattr( sys, "frozen" ):
         pyproj.set_datapath( "pyproj_data" )
-
+        log_file = os.path.join(wx.StandardPaths.Get().GetUserDataDir(), "Maproom", "log.txt")
+        if not os.path.exists(os.path.dirname(log_file)):
+            os.makedirs(os.path.dirname(log_file))
         sys.stdout = Logger()
         sys.stderr = Logger()
     # Otherwise, log to stdout.
@@ -66,7 +70,6 @@ def main( args ):
     )
     """
     
-    app = app_ui.Application( args )
     app.MainLoop()
 
 if __name__ == "__main__":
