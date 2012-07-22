@@ -159,9 +159,9 @@ if sys.platform.startswith('win'):
     ])
 
     # Add missing DLL files that py2exe doesn't pull in automatically.
-    data_files.append(
-        ( ".", [ "..\..\PROJ.4\workspace\src\proj.dll" ] ),
-    )
+    #data_files.append(
+    #    ( ".", [ "..\..\PROJ.4\workspace\src\proj.dll" ] ),
+    #)
 
 
 common_includes = [
@@ -282,7 +282,7 @@ AppUpdatesURL=http://www.noaa.gov/
 DefaultDirName={pf}\Maproom
 DefaultGroupName=Maproom
 OutputBaseFilename=Maproom_%s
-SetupIconFile=..\maproom\ui\images\maproom.ico
+SetupIconFile=..\ui\images\maproom.ico
 Compression=lzma
 SolidCompression=yes
 
