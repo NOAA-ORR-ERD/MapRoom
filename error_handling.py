@@ -84,9 +84,13 @@ def guiExceptionHook(exctype, value, trace):
                 s.sendmail(msg['From'], [msg['To']], msg.as_string())
                 s.quit()
             except:
-                import traceback
-                print traceback.print_exc()
+                wx.MessageBox("Unable to send email. Please email the bug report to maproombugreports@gmail.com")
+                return
                 
-        wx.GetApp().ExitMainLoop()
+        app = wx.GetApp()
+        for tlw in wx.GetTopLevelWindows():
+            tlw.Destroy()
+
+        app.ExitMainLoop()
         
 sys.excepthook = guiExceptionHook
