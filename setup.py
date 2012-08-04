@@ -210,6 +210,7 @@ try:
                 optimize = 2,
                 skip_archive = True,
                 compressed = False,
+                packages = ['library'],
                 # See http://www.py2exe.org/index.cgi/PyOpenGL
                 # and http://www.py2exe.org/index.cgi/TkInter
                 includes = common_includes,
