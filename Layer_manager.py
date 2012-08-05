@@ -151,7 +151,7 @@ class Layer_manager():
     
     def get_layer_by_flattened_index( self, index ):
         flattened = self.flatten()
-        if index in flattened:
+        if index < len(flattened):
             return flattened[index]
         
         return None
