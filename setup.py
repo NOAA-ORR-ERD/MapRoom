@@ -135,6 +135,13 @@ if svn_revision:
 
     version_file.close()
 
+full_version = Version.VERSION
+spaceless_version = Version.VERSION.replace( " ", "_" )
+
+if svn_revision:
+    full_version = "%s (r%s)" % ( Version.VERSION, svn_revision )
+    spaceless_version = "%s_r%s" % \
+        ( Version.VERSION.replace( " ", "_" ), svn_revision )
 
 data_files = [
     ( "ui/images",
@@ -261,13 +268,6 @@ try:
                 raise
 
         print "*** create installer ***"
-        if svn_revision:
-            full_version = "%s (r%s)" % ( Version.VERSION, svn_revision )
-            spaceless_version = "%s_r%s" % \
-                ( Version.VERSION.replace( " ", "_" ), svn_revision )
-        else:
-            full_version = Version.VERSION
-            spaceless_version = Version.VERSION.replace( " ", "_" )
 
         iss_filename = "dist\\maproom.iss"
         iss_file = open( iss_filename, "w" )
@@ -315,8 +315,15 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         os.system(
             '"C:\Program Files (x86)\Inno Setup 5\ISCC.exe" %s' % iss_filename,
         )
-
-
+    elif sys.platform.startswith('darwin'):
+        app_name = "dist/Maproom.app"
+        fat_app_name = "dist/Maproom.fat.app"
+        os.rename(app_name, fat_app_name)
+        subprocess.call(['/usr/bin/ditto', '-arch', 'i386', fat_app_name, app_name])
+        cwd = os.getcwd()
+        os.chdir('dist')
+        subprocess.call(['/usr/bin/zip', '-r', '-9', "Maproom-r%s.zip" % spaceless_version, 'Maproom.app',])
+        os.chdir(cwd)
 finally:
     if svn_revision:
         os.remove( VERSION_FILENAME )
