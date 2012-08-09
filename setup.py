@@ -18,6 +18,7 @@ from setuptools import setup, find_packages, Extension
 from glob import *
 import os
 import pyproj
+import shutil
 import subprocess
 import sys
 
@@ -324,6 +325,7 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         os.chdir('dist')
         subprocess.call(['/usr/bin/zip', '-r', '-9', "Maproom-r%s.zip" % spaceless_version, 'Maproom.app',])
         os.chdir(cwd)
+        shutil.rmtree(fat_app_name)
 finally:
     if svn_revision:
         os.remove( VERSION_FILENAME )
