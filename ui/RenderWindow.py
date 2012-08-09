@@ -121,10 +121,8 @@ class RenderWindow( glcanvas.GLCanvas ):
         self.selection_box_is_being_defined = False
         self.mouse_down_position = event.GetPosition()
         self.mouse_move_position = self.mouse_down_position
-        #self.CaptureMouse()
         
         if ( self.get_effective_tool_mode( event ) == self.MODE_PAN ):
-            self.CaptureMouse()
             return
         
         e = app_globals.editor
@@ -134,7 +132,6 @@ class RenderWindow( glcanvas.GLCanvas ):
             ( layer_index, type, subtype, object_index ) = e.parse_clickable_object( e.clickable_object_mouse_is_over )
             layer = lm.get_layer_by_flattened_index( layer_index )
             if ( lm.is_layer_selected( layer ) ):
-                self.CaptureMouse()
                 if ( e.clickable_object_is_ugrid_point() ):
                     e.clicked_on_point( event, layer, object_index )
                 if ( e.clickable_object_is_ugrid_line() ):
@@ -155,12 +152,14 @@ class RenderWindow( glcanvas.GLCanvas ):
     def release_mouse( self ):
         self.mouse_is_down = False
         self.selection_box_is_being_defined = False
-        self.ReleaseMouse()
+        while self.HasCapture():
+            self.ReleaseMouse()
     
     def on_mouse_motion( self, event ):
         self.get_effective_tool_mode( event ) # update alt key state
         
         if ( not self.mouse_is_down ):
+            self.release_mouse()
             #print "mouse is not down"
             o = self.opengl_renderer.picker.get_object_at_mouse_position( event.GetPosition() )
             #print "object that is under mouse:", o
@@ -193,6 +192,8 @@ class RenderWindow( glcanvas.GLCanvas ):
                 if ( d_x != 0 or d_y != 0 ):
                     w_p0 = self.get_world_point_from_screen_point( self.mouse_down_position )
                     w_p1 = self.get_world_point_from_screen_point( p )
+                    if not self.HasCapture():
+                        self.CaptureMouse()
                     app_globals.editor.dragged( w_p1[ 0 ] - w_p0[ 0 ], w_p1[ 1 ] - w_p0[ 1 ] )
                     self.mouse_down_position = p
                     self.render(event)
@@ -208,8 +209,8 @@ class RenderWindow( glcanvas.GLCanvas ):
             return
         
         self.mouse_is_down = False
-        if self.HasCapture(): # it's hard to know for sure when the mouse may be captured
-            self.ReleaseMouse()
+        self.release_mouse() # it's hard to know for sure when the mouse may be captured
+
         if ( self.get_effective_tool_mode( event ) == self.MODE_ZOOM_RECT ):
             self.mouse_move_position = event.GetPosition()
             ( x1, y1, x2, y2 ) = rect.get_normalized_coordinates( self.mouse_down_position,
@@ -282,10 +283,12 @@ class RenderWindow( glcanvas.GLCanvas ):
     
     def on_key_down( self, event ):
         self.get_effective_tool_mode( event )
+        event.Skip()
     
     def on_key_up( self, event ):
         self.get_effective_tool_mode( event )
-    
+        event.Skip()
+        
     def on_key_char( self, event ):
         self.get_effective_tool_mode( event )
         self.set_cursor()
@@ -298,6 +301,8 @@ class RenderWindow( glcanvas.GLCanvas ):
         else:
             if ( event.GetKeyCode() == wx.WXK_ESCAPE ):
                 app_globals.editor.esc_key_pressed()
+            if ( event.GetKeyCode() == wx.WXK_BACK ):
+                app_globals.editor.delete_key_pressed()
     
     def on_idle( self, event ):
         #self.get_effective_tool_mode( event ) # update alt key state (not needed, it gets called in set_cursor anyway
@@ -451,8 +456,9 @@ class RenderWindow( glcanvas.GLCanvas ):
                  self.projected_point_center[ 1 ] - d_p[ 1 ] )
     
     def get_projected_rect_from_screen_rect( self, screen_rect ):
-        left_bottom = ( screen_rect[ 0 ][ 0 ], screen_rect[ 1 ][ 1 ] )
-        right_top = ( screen_rect[ 1 ][ 0 ], screen_rect[ 0 ][ 1 ] )
+        BORDER = 10 # so that the map doesn't stretch right to the edges
+        left_bottom = ( screen_rect[ 0 ][ 0 ] - BORDER, screen_rect[ 1 ][ 1 ] + BORDER )
+        right_top = ( screen_rect[ 1 ][ 0 ] + BORDER, screen_rect[ 0 ][ 1 ] - BORDER )
         #
         return ( self.get_projected_point_from_screen_point( left_bottom ),
                  self.get_projected_point_from_screen_point( right_top ) )

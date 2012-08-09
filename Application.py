@@ -228,6 +228,7 @@ class Application( wx.App ):
         #self.layer_tree_control.rebuild()
         print "after rebuilding: selected layer", self.layer_tree_control.get_selected_layer()
         
+        self.renderer.SetFocus()
         self.is_initialized = True
         
         return True
