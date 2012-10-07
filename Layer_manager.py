@@ -349,7 +349,7 @@ class Layer_manager():
         
         f.write( "DOGS" )
         if layer.depth_unit != None and layer.depth_unit != "unknown":
-            f.write( "\t{0}\n".format( layer.depth_unit.value.upper() ) )
+            f.write( "\t{0}\n".format( layer.depth_unit.upper() ) )
         else:
             f.write( "\n" )
         
