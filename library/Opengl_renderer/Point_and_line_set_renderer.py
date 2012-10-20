@@ -94,7 +94,6 @@ class Point_and_line_set_renderer:
             self.vbo_line_segment_colors = None
             #
             return
-        
         projected_point_data = self.vbo_point_xys.data
         if ( projection_is_identity ):
             projected_point_data[ : , 0 ] = points[ : , 0 ]
@@ -127,48 +126,24 @@ class Point_and_line_set_renderer:
         pick_mode = True if we are drawing to the off-screen pick buffer
         """
         
-        # the line segments
-        if ( draw_line_segments and self.vbo_line_segment_point_xys != None and len( self.vbo_line_segment_point_xys.data ) > 0 ):
-            if ( not pick_mode and len( selected_line_segment_indexes ) != 0 ):
-                gl.glLineWidth( line_width + 10 )
-                gl.glColor( 1, 0.6, 0, 0.75 )
-                gl.glBegin( gl.GL_LINES )
-                for i in selected_line_segment_indexes:
-                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2, 0 ], self.vbo_line_segment_point_xys.data[ i * 2, 1 ], 0  )
-                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2 + 1, 0 ], self.vbo_line_segment_point_xys.data[ i * 2 + 1, 1 ], 0  )
-                gl.glEnd()
-                gl.glColor( 1, 1, 1, 1 )
-            
-            gl.glEnableClientState( gl.GL_VERTEX_ARRAY ) # FIXME: deprecated
-            self.vbo_line_segment_point_xys.bind()
-            gl.glVertexPointer( 2, gl.GL_FLOAT, 0, None ) # FIXME: deprecated
-            
-            if ( pick_mode ):
-                self.oglr.picker.bind_picker_colors( layer_index_base + LINES_SUB_LAYER_PICKER_OFFSET,
-                                                     len( self.world_line_segment_points ),
-                                                     True )
-                gl.glLineWidth( 6 )
-            else:
-                gl.glEnableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
-                self.vbo_line_segment_colors.bind()
-                gl.glColorPointer( self.CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None ) # FIXME: deprecated
-                gl.glLineWidth( line_width )
-            
-            gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_LINE )
-            
-            gl.glDrawArrays( gl.GL_LINES, 0, np.alen( self.vbo_line_segment_point_xys.data ) * 2 )
-            
-            gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_FILL )
-            
-            gl.glDisableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
-            if ( pick_mode ):
-                self.oglr.picker.unbind_picker_colors()
-            else:
-                self.vbo_line_segment_colors.unbind()
-            self.vbo_line_segment_point_xys.unbind()
+        if draw_points:
+            self.render_points( layer_index_base, pick_mode, point_size,
+                selected_point_indexes, flagged_point_indexes)
+
+        if draw_line_segments:
+            self.render_lines( layer_index_base, pick_mode, point_size, line_width,
+                selected_line_segment_indexes, flagged_line_segment_indexes)
         
-        # the points
-        if ( draw_points and self.vbo_point_xys != None and len( self.vbo_point_xys ) > 0 ):
+        
+    def render_points( self,
+                layer_index_base,
+                pick_mode,
+                point_size,
+                line_width,
+                selected_point_indexes = [],
+                flagged_point_indexes = [] ): # flagged_line_segment_indexes not yet used
+
+        if ( self.vbo_point_xys != None and len( self.vbo_point_xys ) > 0 ):
             if ( not pick_mode and len( flagged_point_indexes ) != 0 ):
                 gl.glPointSize( point_size + 15 )
                 gl.glColor( 0.2, 0, 1, 0.75 )
@@ -209,6 +184,7 @@ class Point_and_line_set_renderer:
                 gl.glPointSize( point_size )
             
             gl.glDrawArrays( gl.GL_POINTS, 0, np.alen( self.vbo_point_xys.data ) )
+            gl.glDisableClientState( gl.GL_VERTEX_ARRAY )
             
             if ( pick_mode ):
                 self.oglr.picker.unbind_picker_colors()
@@ -217,7 +193,56 @@ class Point_and_line_set_renderer:
                 gl.glDisableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
             
             self.vbo_point_xys.unbind()
-    
+
+    def render_lines( self,
+                layer_index_base,
+                pick_mode,
+                point_size,
+                line_width,
+                selected_line_segment_indexes = [],
+                flagged_line_segment_indexes = [] ): # flagged_line_segment_indexes not yet used
+        # the line segments
+        if ( self.vbo_line_segment_point_xys != None and len( self.vbo_line_segment_point_xys.data ) > 0 ):
+            if ( not pick_mode and len( selected_line_segment_indexes ) != 0 ):
+                gl.glLineWidth( line_width + 10 )
+                gl.glColor( 1, 0.6, 0, 0.75 )
+                gl.glBegin( gl.GL_LINES )
+                for i in selected_line_segment_indexes:
+                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2, 0 ], self.vbo_line_segment_point_xys.data[ i * 2, 1 ], 0  )
+                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2 + 1, 0 ], self.vbo_line_segment_point_xys.data[ i * 2 + 1, 1 ], 0  )
+                gl.glEnd()
+                gl.glColor( 1, 1, 1, 1 )
+            
+            gl.glEnableClientState( gl.GL_VERTEX_ARRAY ) # FIXME: deprecated
+            self.vbo_line_segment_point_xys.bind()
+            gl.glVertexPointer( 2, gl.GL_FLOAT, 0, None ) # FIXME: deprecated
+            
+            if ( pick_mode ):
+                self.oglr.picker.bind_picker_colors( layer_index_base + LINES_SUB_LAYER_PICKER_OFFSET,
+                                                     len( self.world_line_segment_points ),
+                                                     True )
+                gl.glLineWidth( 6 )
+            else:
+                gl.glEnableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
+                self.vbo_line_segment_colors.bind()
+                gl.glColorPointer( self.CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None ) # FIXME: deprecated
+                gl.glLineWidth( line_width )
+            
+            gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_LINE )
+                        
+            gl.glDrawArrays( gl.GL_LINES, 0, np.alen( self.vbo_line_segment_point_xys.data ) * 2 )
+            
+            gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_FILL )
+            
+            if ( pick_mode ):
+                self.oglr.picker.unbind_picker_colors()
+            else:
+                self.vbo_line_segment_colors.unbind()
+                gl.glDisableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
+            self.vbo_line_segment_point_xys.unbind()
+            
+            gl.glDisableClientState( gl.GL_VERTEX_ARRAY )
+            
     def destroy( self ):
         self.world_line_segment_points = None
         self.vbo_point_xys = None
