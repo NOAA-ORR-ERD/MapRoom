@@ -261,11 +261,14 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
             0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING
         )
         
+        self.depth_check = wx.CheckBox(self.panel, -1, "Enable Depth Tolerance Chceck for Duplicate Points")
+        self.sizer.Add(self.depth_check, 0, wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING)
+        
         self.depth_slider = Depth_slider( self.panel )
         self.depth_slider.SetMinSize( ( self.SLIDER_MIN_WIDTH, -1 ) )
         self.sizer.Add(
             self.depth_slider,
-            0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING
+            0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING + 8
         )
         
         self.find_button_id = wx.NewId()
@@ -292,6 +295,10 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         self.Show()
         
         self.find_button.Bind( wx.EVT_BUTTON, self.find_duplicates )
+        self.Bind( wx.EVT_CLOSE, self.on_close )
+        
+    def on_close( self, event ):
+        self.Destroy()
     
     def find_duplicates( self, event ):
         # at the time the button is pressed, we commit to a layer
@@ -309,7 +316,11 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         
         self.SetTitle( "Merge Duplicate Points -- Layer '" + self.layer.name + "'" )
         
-        self.duplicates = self.layer.find_duplicates( self.distance_slider.value / ( 60 * 60 ), self.depth_slider.value )
+        depth_value = -1
+        if self.depth_check.IsChecked():
+            depth_value = self.depth_slider.value
+        
+        self.duplicates = self.layer.find_duplicates( self.distance_slider.value / ( 60 * 60 ), depth_value )
         # print self.duplicates
         self.create_results_area()
         self.display_results()
