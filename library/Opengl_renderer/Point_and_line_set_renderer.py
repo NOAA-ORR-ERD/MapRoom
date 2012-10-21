@@ -230,7 +230,7 @@ class Point_and_line_set_renderer:
             
             gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_LINE )
                         
-            gl.glDrawArrays( gl.GL_LINES, 0, np.alen( self.vbo_line_segment_point_xys.data ) * 2 )
+            gl.glDrawArrays( gl.GL_LINES, 0, np.alen( self.vbo_line_segment_point_xys.data ) )
             
             gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_FILL )
             
