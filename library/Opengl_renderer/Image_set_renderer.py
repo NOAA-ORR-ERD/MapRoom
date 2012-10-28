@@ -99,7 +99,6 @@ class Image_set_renderer:
         
         gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
         
-        print "Projection is %r" % projection
         self.reproject( projection, projection_is_identity )
     
     def reproject( self, projection, projection_is_identity ):
