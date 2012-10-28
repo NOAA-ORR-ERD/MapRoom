@@ -156,16 +156,32 @@ class Layer():
     
     def __repr__( self ): 
        return self.name
+       
+    def guess_type_from_file_contents( self, file_path ):
+        f = open(file_path, "r")
+        line = f.readline()
+        f.close()
+        
+        if line.strip().startswith("DOGS"):
+            return ".verdat"
+        
+        return ""
     
     def read_from_file( self, file_path ):
         self.file_path = file_path
         ( base, ext ) = os.path.splitext( file_path )
         ext = ext.lower()
+        file_types = [".xml", ".bna", ".verdat", ".dat", ".png", ".kap"]
+        file_type = ""
+        if ext in file_types:
+            file_type = ext
+        else:
+            file_type = self.guess_type_from_file_contents( file_path )
         
-        if ( ext == ".xml" ):
+        if ( file_type == ".xml" ):
             app_globals.layer_manager.load_xml_layer( file_path )
         
-        elif ( ext == ".bna" ):
+        elif ( file_type == ".bna" ):
             ( self.load_error_string,
               f_polygon_points,
               f_polygon_starts,
@@ -230,7 +246,7 @@ class Layer():
                                                     app_globals.application.renderer.projection,
                                                     app_globals.application.renderer.projection_is_identity )
         
-        elif ( ext == ".verdat" or ext == ".dat" ):
+        elif ( file_type in [".verdat", ".dat"] ):
             ( self.load_error_string,
               f_points,
               f_depths,
@@ -260,7 +276,7 @@ class Layer():
                     
                     self.create_necessary_renderers()
         
-        elif ( ext == ".png" or ext == ".kap" ):
+        elif ( file_type in [".png", ".kap"] ):
             ( self.load_error_string,
               self.images,
               self.image_sizes,
