@@ -16,6 +16,7 @@ import pyproj
 #import Layer_tree_control
 #import Editor
 import lon_lat_grid
+import library.coordinates as coordinates
 import library.Opengl_renderer
 import library.rect as rect
 import app_globals
@@ -158,7 +159,12 @@ class RenderWindow( glcanvas.GLCanvas ):
     def on_mouse_motion( self, event ):
         self.get_effective_tool_mode( event ) # update alt key state
         
+        p = event.GetPosition()
+        proj_p = self.get_world_point_from_screen_point( p )
         if ( not self.mouse_is_down ):
+            tlw = wx.GetApp().GetTopWindow()
+            tlw.SetStatusText(coordinates.format_lat_lon_degrees_minutes(proj_p[0], proj_p[1]))
+        
             self.release_mouse()
             #print "mouse is not down"
             o = self.opengl_renderer.picker.get_object_at_mouse_position( event.GetPosition() )
@@ -172,7 +178,6 @@ class RenderWindow( glcanvas.GLCanvas ):
                 app_globals.editor.clickable_object_mouse_is_over = None
         
         if ( self.mouse_is_down ):
-            p = event.GetPosition()
             d_x = p[ 0 ] - self.mouse_down_position[ 0 ]
             d_y = self.mouse_down_position[ 1 ] - p[ 1 ]
             # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
