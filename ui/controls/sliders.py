@@ -2,7 +2,7 @@ import wx
 import wx.lib.sized_controls # for control border calcs
 
 class SliderLabel(wx.Panel):
-    def __init__(self, parent, id, minValue, maxValue, value, valueUnit):
+    def __init__(self, parent, id, value, minValue, maxValue, valueUnit):
         wx.Panel.__init__(self, parent, id)
         
         self.minValue = minValue
@@ -59,6 +59,9 @@ class SliderLabel(wx.Panel):
             1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM,
             border = self.SPACING
         )
+    
+    def GetValue(self):
+        return self.value_label.Label
         
     def SetValue(self, value):
         self.value_label.Label = self.FormatValue(value)
@@ -66,6 +69,8 @@ class SliderLabel(wx.Panel):
         
     def FormatValue(self, value):
         return "%s%s" % (value, self.valueUnit)
+        
+    Value = property(GetValue, SetValue)
         
 class FloatSlider(wx.Panel):
     """
@@ -96,7 +101,7 @@ class FloatSlider(wx.Panel):
         self.Sizer.Add(self.sliderCtrl, 0, wx.EXPAND | wx.ALL, BORDER)
         
         if style & wx.SL_LABELS:
-            self.sliderLabels = SliderLabel(self, -1, minValue, maxValue, value, valueUnit)
+            self.sliderLabels = SliderLabel(self, -1, value, minValue, maxValue, valueUnit)
             self.Sizer.Add(self.sliderLabels, 0, wx.EXPAND | wx.ALL, BORDER)
             
         self.sliderCtrl.Bind(wx.EVT_SLIDER, self.OnSliderChanged)
@@ -111,14 +116,18 @@ class FloatSlider(wx.Panel):
     def SetValue(self, value):
         self.value = value 
         self.stepValue = value / self.step_size
+        if self.stepValue > self.steps:
+            print "Value %s is outside of slider bounds." % self.stepValue
+            return
         self.sliderCtrl.Value = self.stepValue
         
     def OnSliderChanged(self, event):
         event.Skip() # so users of this control can add their own handling
         
         if self.sliderLabels:
-            self.sliderLabels.SetValue("%s" % self.GetValue())
+            self.sliderLabels.Value = "%s" % self.GetValue()
         
+    Value = property(GetValue, SetValue)
 
 class TextSlider(wx.Panel):
     """
@@ -143,12 +152,21 @@ class TextSlider(wx.Panel):
         self.textCtrl.Bind(wx.EVT_TEXT, self.OnTextChanged)
         self.sliderCtrl.Bind(wx.EVT_SLIDER, self.OnSliderChanged)
         
+    def GetValue(self):
+        return self.sliderCtrl.GetValue()
+        
+    def SetValue(self, value):
+        self.sliderCtrl.SetValue(value)
+        self.textCtrl.Value = "%s" % value
+        
     def OnTextChanged(self, event):
-        self.sliderCtrl.SetValue(float(event.String))
+        self.sliderCtrl.Value = float(event.String)
         
     def OnSliderChanged(self, event):
+        event.Skip()
         self.textCtrl.Value = "%s" % self.sliderCtrl.GetValue()
 
+    Value = property(GetValue, SetValue)
         
 if __name__ == "__main__":
     app = wx.PySimpleApp()

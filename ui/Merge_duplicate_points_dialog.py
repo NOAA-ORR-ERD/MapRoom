@@ -4,6 +4,7 @@ import wx
 
 import Layer
 import app_globals
+import ui.controls.sliders as sliders
 
 class Distance_slider( wx.StaticBoxSizer ):
     SPACING = 5
@@ -26,148 +27,16 @@ class Distance_slider( wx.StaticBoxSizer ):
             orient = wx.VERTICAL
         )
         
-        self.slider = wx.Slider(
-            parent,
+        self.slider = sliders.TextSlider(
+            self.GetStaticBox(),
             wx.ID_ANY,
-            minValue = 0,
-            maxValue = self.SLIDER_STEPS,
-        )
-        self.slider.SetValue(
-            math.log(
-                ( self.value - self.MINIMUM ) / ( self.MAXIMUM - self.MINIMUM ) * self.LOG_BASE,
-                  self.LOG_BASE ) * self.SLIDER_STEPS
-        )
-        
-        self.Add(
-            self.slider,
-            0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT,
-            border = self.SPACING
-        )
-        
-        self.seconds_label_sizer = wx.BoxSizer( wx.HORIZONTAL )
-        self.meters_label_sizer = wx.BoxSizer( wx.HORIZONTAL )
-        
-        self.seconds_label_sizer.Add(
-            wx.StaticText( 
-                parent,
-                wx.ID_ANY,
-                self.format_seconds( self.MINIMUM ),
-                style = wx.ALIGN_RIGHT
-            ),
-            0, wx.LEFT | wx.RIGHT,
-            border = self.SPACING
-        )
-        self.meters_label_sizer.Add(
-            wx.StaticText( 
-                parent,
-                wx.ID_ANY,
-                self.format_meters( self.MINIMUM ),
-                style = wx.ALIGN_RIGHT
-            ),
-            0, wx.LEFT | wx.RIGHT,
-            border = self.SPACING
-        )
-        
-        self.seconds_value_label = wx.StaticText( 
-            parent,
-            wx.ID_ANY,
-            self.format_seconds( self.value ),
-            style = wx.ALIGN_CENTRE
-        )
-        self.meters_value_label = wx.StaticText( 
-            parent,
-            wx.ID_ANY,
-            self.format_meters( self.value ),
-            style = wx.ALIGN_CENTRE
-        )
-        
-        value_font = self.seconds_value_label.GetFont()
-        value_font.SetWeight( wx.FONTWEIGHT_BOLD )
-        self.seconds_value_label.SetFont( value_font )
-        
-        self.seconds_label_sizer.Add(
-            self.seconds_value_label,
-            1, wx.EXPAND
-        )
-        self.meters_label_sizer.Add(
-            self.meters_value_label,
-            1, wx.EXPAND
-        )
-        
-        self.seconds_label_sizer.Add(
-            wx.StaticText(
-                parent,
-                wx.ID_ANY,
-                self.format_seconds( self.MAXIMUM ),
-                style = wx.ALIGN_RIGHT
-            ),
-            0, wx.LEFT | wx.RIGHT,
-            border = self.SPACING
-        )
-        self.meters_label_sizer.Add(
-            wx.StaticText(
-                parent,
-                wx.ID_ANY,
-                self.format_meters( self.MAXIMUM ),
-                style = wx.ALIGN_RIGHT
-            ),
-            0, wx.LEFT | wx.RIGHT,
-            border = self.SPACING
-        )
-        
-        self.Add(
-            self.seconds_label_sizer,
-            1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM,
-            border = self.SPACING
-        )
-        self.Add(
-            self.meters_label_sizer,
-            1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM,
-            border = self.SPACING
-        )
-        
-        self.slider.Bind( wx.EVT_SCROLL, self.slider_moved )
-    
-    def slider_moved( self, event ):
-        fraction = self.LOG_BASE ** ( self.slider.GetValue() / self.SLIDER_STEPS ) / self.LOG_BASE
-        self.value = ( self.MAXIMUM - self.MINIMUM ) * fraction + self.MINIMUM
-        self.seconds_value_label.SetLabel( self.format_seconds( self.value ) )
-        self.meters_value_label.SetLabel( self.format_meters( self.value ) )
-        self.Layout()
-    
-    @staticmethod
-    def format_seconds( value ):
-        return ( u"%f" % value ).rstrip( u"0" ).rstrip( "." ) + "\""
-    
-    @staticmethod
-    def format_meters( value ):
-        return u"%d m" % int( value * Distance_slider.SECONDS_TO_METERS )
-
-class Depth_slider( wx.StaticBoxSizer ):
-    SPACING = 5
-    MINIMUM = 0
-    MAXIMUM = 1000
-    INITIAL_VALUE = 100
-    
-    def __init__( self, parent ):
-        self.value = self.INITIAL_VALUE
-        
-        wx.StaticBoxSizer.__init__(
-            self,
-            wx.StaticBox(
-                parent,
-                label = "Depth Tolerance for Duplicate Points"
-            ),
-            orient = wx.VERTICAL
-        )
-        
-        self.slider = wx.Slider(
-            parent,
-            wx.ID_ANY,
+            value = self.INITIAL_VALUE,
             minValue = self.MINIMUM,
-            maxValue = self.MAXIMUM
+            maxValue = self.MAXIMUM,
+            steps = self.SLIDER_STEPS,
+            valueUnit = "''",
+            style = wx.SL_HORIZONTAL | wx.SL_LABELS
         )
-        self.slider.SetValue( self.INITIAL_VALUE )
         
         self.Add(
             self.slider,
@@ -175,62 +44,22 @@ class Depth_slider( wx.StaticBoxSizer ):
             border = self.SPACING
         )
         
-        self.label_sizer = wx.BoxSizer( wx.HORIZONTAL )
-        
-        self.label_sizer.Add(
-            wx.StaticText( 
-                parent,
-                wx.ID_ANY,
-                self.format_percent( self.MINIMUM ),
-                style = wx.ALIGN_RIGHT
-            ),
-            0, wx.LEFT | wx.RIGHT,
-            border = self.SPACING
-        )
-        
-        self.value_label = wx.StaticText(
-            parent,
-            wx.ID_ANY,
-            self.format_percent( self.value ),
-            style = wx.ALIGN_CENTRE
-        )
-        
-        value_font = self.value_label.GetFont()
-        value_font.SetWeight( wx.FONTWEIGHT_BOLD )
-        self.value_label.SetFont( value_font )
-        
-        self.label_sizer.Add(
-            self.value_label,
-            1, wx.EXPAND
-        )
-        
-        self.label_sizer.Add(
-            wx.StaticText( 
-                parent,
-                wx.ID_ANY,
-                self.format_percent( self.MAXIMUM ),
-                style = wx.ALIGN_RIGHT
-            ),
-            0, wx.LEFT | wx.RIGHT,
-            border = self.SPACING
-        )
-        
+        self.meters_label = sliders.SliderLabel(self.GetStaticBox(), -1, self.seconds_to_meters(self.slider.GetValue()), self.seconds_to_meters(self.MINIMUM), self.seconds_to_meters(self.MAXIMUM), " m")
         self.Add(
-            self.label_sizer,
-            1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.BOTTOM,
-            border = self.SPACING
+            self.meters_label,
+            0, wx.EXPAND | wx.LEFT | wx.RIGHT,
+            border = 12
         )
-        
+
         self.slider.Bind( wx.EVT_SCROLL, self.slider_moved )
     
     def slider_moved( self, event ):
         self.value = self.slider.GetValue()
-        self.value_label.SetLabel( self.format_percent( self.value ) )
-        self.Layout()
+        self.meters_label.SetValue( "%s" % self.seconds_to_meters(self.slider.GetValue()) )
     
     @staticmethod
-    def format_percent( value ):
-        return str( value ) + "%"
+    def seconds_to_meters( value ):
+        return int( value * Distance_slider.SECONDS_TO_METERS )
 
 class Merge_duplicate_points_dialog( wx.Dialog ):
     SPACING = 15
@@ -264,10 +93,23 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         self.depth_check = wx.CheckBox(self.panel, -1, "Enable Depth Tolerance Chceck for Duplicate Points")
         self.sizer.Add(self.depth_check, 0, wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING)
         
-        self.depth_slider = Depth_slider( self.panel )
+        depth_statbox = wx.StaticBox(
+                self,
+                label = "Depth Tolerance for Duplicate Points"
+            )
+        depth_statbox_sizer = wx.StaticBoxSizer(
+            depth_statbox,
+            orient = wx.VERTICAL
+        )
+        
+        self.depth_slider = sliders.TextSlider(depth_statbox, -1, 100, minValue=0, maxValue=1000, steps=1000, valueUnit="%", style=wx.SL_HORIZONTAL | wx.SL_LABELS)
+        
+        depth_statbox_sizer.Add(self.depth_slider, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, self.SPACING)
+        
+        #self.depth_slider = Depth_slider( self.panel )
         self.depth_slider.SetMinSize( ( self.SLIDER_MIN_WIDTH, -1 ) )
         self.sizer.Add(
-            self.depth_slider,
+            depth_statbox_sizer,
             0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING + 8
         )
         
@@ -318,7 +160,7 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         
         depth_value = -1
         if self.depth_check.IsChecked():
-            depth_value = self.depth_slider.value
+            depth_value = self.depth_slider.GetValue()
         
         self.duplicates = self.layer.find_duplicates( self.distance_slider.value / ( 60 * 60 ), depth_value )
         # print self.duplicates
