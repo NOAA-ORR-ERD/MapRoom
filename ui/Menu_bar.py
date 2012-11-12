@@ -2,6 +2,7 @@ import wx
 import os
 import sys
 from About_dialog import About_dialog
+from Preferences_dialog import PreferencesDialog
 from Triangle_dialog import Triangle_dialog
 # from Help_window import Help_window
 # from Add_layer_menu import Add_layer_menu
@@ -96,6 +97,13 @@ class Menu_bar( wx.MenuBar ):
         self.delete_selection = wx.MenuItem( self.edit_menu, wx.ID_DELETE, "&Delete Selection\tDel" )
         self.delete_selection.SetBitmap( wx.Bitmap( os.path.join( image_path, "delete_selection.png" ) ) )
         self.edit_menu.AppendItem( self.delete_selection )
+        
+        self.edit_menu.AppendSeparator()
+        prefs_shortcut = "" # does Windows have a standard shortcut for Preferences?
+        if sys.platform.startswith('darwin'):
+            prefs_shortcut = "\tCTRL+,"
+        self.preferences = wx.MenuItem( self.edit_menu, wx.ID_PREFERENCES, "Preferences" + prefs_shortcut)
+        self.edit_menu.AppendItem( self.preferences )
         
         ########################################################
         
@@ -278,6 +286,7 @@ class Menu_bar( wx.MenuBar ):
         f.Bind( wx.EVT_MENU, self.do_view_log, id = self.log_id )
         f.Bind( wx.EVT_MENU, self.do_show_help, id = self.help_id )
         f.Bind( wx.EVT_MENU, self.do_show_about, id = wx.ID_ABOUT )
+        f.Bind( wx.EVT_MENU, self.do_show_preferences, id = wx.ID_PREFERENCES )
     
     def enable_disable_menu_items( self ):
         raisable = app_globals.application.layer_tree_control.is_selected_layer_raisable()
@@ -422,7 +431,9 @@ class Menu_bar( wx.MenuBar ):
         pass
     def do_show_about( self, event ):
         About_dialog().show()
-    
+    def do_show_preferences( self, event ):
+        PreferencesDialog(None, wx.ID_ANY, "Maproom Preferences").Show()
+
     def updated_undo_redo( self ):
         u = app_globals.editor.get_current_undoable_operation_text()
         r = app_globals.editor.get_current_redoable_operation_text()

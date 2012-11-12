@@ -19,6 +19,7 @@ import Editor
 #import library.Opengl_renderer
 #import library.rect as rect
 import app_globals
+import preferences
 
 from ui.RenderWindow import RenderWindow
 
@@ -128,6 +129,12 @@ class Application( wx.App ):
     def OnInit( self ):
         print "in application.OnInit"
         self.SetAppName(self.NAME)
+        
+        data_dir = wx.StandardPaths.Get().GetUserDataDir()
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        app_globals.preferences = preferences.MaproomPreferences(os.path.join(data_dir, "MaproomPrefs.json"))
+                
         self.frame = wx.Frame( None, wx.ID_ANY, self.NAME )
         self.frame.SetIcon( wx.Icon( self.ICON_FILENAME, wx.BITMAP_TYPE_ICO ) )
         self.frame.SetSizeHints( 250, 250 )
@@ -232,7 +239,6 @@ class Application( wx.App ):
         self.is_initialized = True
         
         return True
-  
     
     def layer_tree_selection_changed( self ):
         self.menu_bar.enable_disable_menu_items()
@@ -271,6 +277,7 @@ class Application( wx.App ):
         # self.shutdown()
         self.is_closing = True
         app_globals.layer_manager.destroy()
+        app_globals.preferences.save()
         #self.opengl_renderer.destroy()
         self.frame.Destroy()
     

@@ -163,7 +163,7 @@ class RenderWindow( glcanvas.GLCanvas ):
         proj_p = self.get_world_point_from_screen_point( p )
         if ( not self.mouse_is_down ):
             tlw = wx.GetApp().GetTopWindow()
-            tlw.SetStatusText(coordinates.format_lat_lon_degrees_minutes(proj_p[0], proj_p[1]))
+            tlw.SetStatusText(coordinates.format_coords_for_display(proj_p[0], proj_p[1]))
         
             self.release_mouse()
             #print "mouse is not down"

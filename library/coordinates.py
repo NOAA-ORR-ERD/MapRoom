@@ -1,5 +1,7 @@
 # coding=utf8
 
+import app_globals
+
 def float_to_degrees_minutes_seconds( value, directions = None ):
     direction = ""
     if directions:
@@ -68,6 +70,17 @@ def format_lat_lon_degrees( longitude, latitude ):
         float_to_degrees( latitude, directions = ( "N", "S" ) )
     
     return u"%s, %s" % ( lat, lon )
+
+def format_coords_for_display( longitude, latitude ):
+    display_format = app_globals.preferences["Coordinate Display Format"]
+    if display_format == "degrees minutes seconds":
+        return format_lat_lon_degrees_minutes_seconds( longitude, latitude )
+    elif display_format == "decimal degrees":
+        return format_lat_lon_degrees( longitude, latitude )
+    else:
+        if display_format != "degrees decimal minutes":
+            print "ERROR: Unknown format %s specified when formatting coordinates" % display_format
+        return format_lat_lon_degrees_minutes( longitude, latitude )
 
 def format_lat_line_label( latitude ):
     ( degrees, minutes, direction ) = \

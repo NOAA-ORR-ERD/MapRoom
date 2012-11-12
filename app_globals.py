@@ -5,3 +5,4 @@ version = None
 application = None
 layer_manager = None
 editor = None
+preferences = None
