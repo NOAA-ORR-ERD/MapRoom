@@ -139,7 +139,6 @@ class Point_and_line_set_renderer:
                 layer_index_base,
                 pick_mode,
                 point_size,
-                line_width,
                 selected_point_indexes = [],
                 flagged_point_indexes = [] ): # flagged_line_segment_indexes not yet used
 
