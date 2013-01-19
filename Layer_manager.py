@@ -1,4 +1,6 @@
 import os
+import shutil
+import tempfile
 import time
 import traceback
 import numpy as np
@@ -408,7 +410,10 @@ class Layer_manager():
     
     def save_layer( self, layer, path ):
         if ( path.endswith( ".verdat" ) ):
-            f = open( path, "w" )
+            temp_dir = tempfile.mkdtemp()
+            temp_file = os.path.join(temp_dir, os.path.basename(path))
+                
+            f = open( temp_file, "w" )
             had_error = False
             try:
                 self.write_layer_as_verdat( f, layer )
@@ -423,13 +428,20 @@ class Layer_manager():
                 wx.MessageDialog(
                     app_globals.application.frame,
                     message = e.message,
-                    caption = "Save .verdat Error",
+                    caption = "Error Saving Verdat File",
                     style = wx.OK | wx.ICON_ERROR,
                 ).ShowModal()
             finally:
                 f.close()
-            if ( had_error ):
-                os.remove( path );
+            if ( not had_error and temp_file and os.path.exists(temp_file)):
+                try:
+                    shutil.copy(temp_file, path)
+                except Exception as e:
+                    print traceback.format_exc( e )
+                    wx.MessageDialog(app_globals.application.frame, 
+                        message = "Unable to save file to disk. Make sure you have write permissions to the file.",
+                        caption = "Error Saving Verdat File",
+                        style = wx.OK | wx.ICON_ERROR).ShowModal()
         
         if ( path.endswith( ".xml" ) ):
             # xml.etree.ElementTree doesn't format the output, so it's useless for our purposes; we write the xml by hand instead
