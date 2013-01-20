@@ -330,7 +330,11 @@ class Menu_bar( wx.MenuBar ):
         File_opener.show()
     
     def do_save( self, event ):
-        File_saver.show()
+        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        if layer.file_path == "":
+            File_saver.show()
+            return
+        app_globals.layer_manager.save_layer( layer, layer.file_path )   
     
     def do_save_as( self, event ):
         File_saver.show()
