@@ -461,9 +461,8 @@ class RenderWindow( glcanvas.GLCanvas ):
                  self.projected_point_center[ 1 ] - d_p[ 1 ] )
     
     def get_projected_rect_from_screen_rect( self, screen_rect ):
-        BORDER = 10 # so that the map doesn't stretch right to the edges
-        left_bottom = ( screen_rect[ 0 ][ 0 ] - BORDER, screen_rect[ 1 ][ 1 ] + BORDER )
-        right_top = ( screen_rect[ 1 ][ 0 ] + BORDER, screen_rect[ 0 ][ 1 ] - BORDER )
+        left_bottom = ( screen_rect[ 0 ][ 0 ], screen_rect[ 1 ][ 1 ] )
+        right_top = ( screen_rect[ 1 ][ 0 ], screen_rect[ 0 ][ 1 ] )
         #
         return ( self.get_projected_point_from_screen_point( left_bottom ),
                  self.get_projected_point_from_screen_point( right_top ) )
@@ -531,11 +530,15 @@ class RenderWindow( glcanvas.GLCanvas ):
     def zoom_to_fit( self ):
         w_r = app_globals.layer_manager.accumulate_layer_rects()
         if ( w_r != rect.NONE_RECT ):
-            self.zoom_to_world_rect( w_r )
+            self.zoom_to_world_rect( w_r, add_padding=True )
     
-    def zoom_to_world_rect( self, w_r ):
+    def zoom_to_world_rect( self, w_r, add_padding=False ):
         p_r = self.get_projected_rect_from_world_rect( w_r )
         size = self.get_screen_size()
+        # so that when we zoom, the points don't hit the very edge of the window
+        EDGE_PADDING = 20
+        size.x -= EDGE_PADDING * 2
+        size.y -= EDGE_PADDING * 2
         pixels_h = rect.width( p_r ) / self.projected_units_per_pixel
         pixels_v = rect.height( p_r ) / self.projected_units_per_pixel
         # print "pixels_h = {0}, pixels_v = {1}".format( pixels_h, pixels_v )
