@@ -340,7 +340,17 @@ class Menu_bar( wx.MenuBar ):
         File_saver.show()
     
     def do_save_image( self, event ):
-        pass
+        dialog = wx.FileDialog(
+            app_globals.application.frame,
+            style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
+            message = "Save as Image",
+            wildcard = "PNG Image (*.png) |*.png"
+        )
+    
+        if dialog.ShowModal() == wx.ID_OK:
+            image = app_globals.application.renderer.get_canvas_as_image()
+            image.SaveFile(dialog.GetPath(), wx.BITMAP_TYPE_PNG)
+        dialog.Destroy()        
     
     def do_undo( self, event ):
         app_globals.editor.undo()

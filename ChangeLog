@@ -1,5 +1,8 @@
 1/20/2012
 ---------------------------
+- KO Fixed #487 (Save Image)
+- KO Marked #437 (Allow loading a verdat with no boundaries) as fixed
+- KO Marked #156 (Preference setting to change format of lat/long display) as fixed
 - KO Changed save behavior to save to existing file rather than prompting
 - KO Fixed #470 (Label Positions Relative to Soundings Overlap (Sometimes...))
 

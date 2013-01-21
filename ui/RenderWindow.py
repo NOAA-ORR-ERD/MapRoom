@@ -21,6 +21,9 @@ import library.Opengl_renderer
 import library.rect as rect
 import app_globals
 
+import OpenGL
+import OpenGL.GL as gl
+
 """
 The RenderWindow class -- where the opengl rendering really takes place.
 """
@@ -589,6 +592,34 @@ class RenderWindow( glcanvas.GLCanvas ):
         self.projected_point_center = self.get_projected_point_from_world_point( w_c )
         
         self.render()
+    
+    def get_canvas_as_image( self ):
+        window_size = self.GetClientSize()
+
+        gl.glReadBuffer( gl.GL_FRONT )
+
+        raw_data = gl.glReadPixels(
+            x = 0,
+            y = 0,
+            width = window_size[ 0 ],
+            height = window_size[ 1 ],
+            format = gl.GL_RGB,
+            type = gl.GL_UNSIGNED_BYTE,
+            outputType = str,
+        )
+
+        bitmap = wx.BitmapFromBuffer(
+            width = window_size[ 0 ],
+            height = window_size[ 1 ],
+            dataBuffer = raw_data,
+        )
+
+        image = wx.ImageFromBitmap( bitmap )
+
+        # Flip the image vertically, because glReadPixel()'s y origin is at
+        # the bottom and wxPython's y origin is at the top.
+        screenshot = image.Mirror( horizontally = False )
+        return screenshot
     
     def constrain_zoom( self ):
         if ( self.projection_is_identity ):
