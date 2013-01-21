@@ -331,6 +331,9 @@ class Menu_bar( wx.MenuBar ):
     
     def do_save( self, event ):
         layer = app_globals.application.layer_tree_control.get_selected_layer()
+        if layer is None:
+            return
+            
         if layer.file_path == "":
             File_saver.show()
             return
