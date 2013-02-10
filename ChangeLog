@@ -1,4 +1,4 @@
-1/20/2012
+1/20/2013
 ---------------------------
 - KO Fixed #487 (Save Image)
 - KO Marked #437 (Allow loading a verdat with no boundaries) as fixed
@@ -6,7 +6,7 @@
 - KO Changed save behavior to save to existing file rather than prompting
 - KO Fixed #470 (Label Positions Relative to Soundings Overlap (Sometimes...))
 
-1/19/2012
+1/19/2013
 ---------------------------
 - KO Fixed #478 (verdat deleted when save fails)
 - KO Fixed #480 (Selected points should be highlighted)
