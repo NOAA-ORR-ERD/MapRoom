@@ -126,13 +126,13 @@ class Point_and_line_set_renderer:
         pick_mode = True if we are drawing to the off-screen pick buffer
         """
         
-        if draw_points:
-            self.render_points( layer_index_base, pick_mode, point_size,
-                selected_point_indexes, flagged_point_indexes)
-
         if draw_line_segments:
             self.render_lines( layer_index_base, pick_mode, point_size, line_width,
                 selected_line_segment_indexes, flagged_line_segment_indexes)
+        
+        if draw_points:
+            self.render_points( layer_index_base, pick_mode, point_size,
+                selected_point_indexes, flagged_point_indexes)
         
         
     def render_points( self,
@@ -175,7 +175,7 @@ class Point_and_line_set_renderer:
             if ( pick_mode ):
                 self.oglr.picker.bind_picker_colors( layer_index_base + POINTS_SUB_LAYER_PICKER_OFFSET,
                                                      len( self.vbo_point_xys.data ) )
-                gl.glPointSize( point_size + 4 )
+                gl.glPointSize( point_size + 8 )
             else:
                 gl.glEnableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
                 self.vbo_point_colors.bind()
