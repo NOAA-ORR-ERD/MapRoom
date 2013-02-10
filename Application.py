@@ -3,6 +3,8 @@ import os.path
 import sys
 import math
 import wx
+from wx.lib.pubsub import pub
+
 #import wx.glcanvas as glcanvas
 #import pyproj
 from ui.Menu_bar import Menu_bar
@@ -255,16 +257,14 @@ class Application( wx.App ):
         Merge_layers_dialog().show()
     
     def show_merge_duplicate_points_dialog_box( self ):
-        if ( self.merge_duplicate_points_dialog_box == None ):
-            self.merge_duplicate_points_dialog_box = Merge_duplicate_points_dialog()
-        self.merge_duplicate_points_dialog_box.Show()
-        self.merge_duplicate_points_dialog_box.SetFocus()
+        dialog = Merge_duplicate_points_dialog()
+        dialog.Show()
+        dialog.SetFocus()
     
     def points_were_deleted( self, layer ):
         # when points are deleted from a layer the indexes of the points in the existing merge dialog box
         # become invalid; so force the user to re-find duplicates in order to create a valid list again
-        if ( self.merge_duplicate_points_dialog_box != None and self.merge_duplicate_points_dialog_box.layer == layer ):
-            self.merge_duplicate_points_dialog_box.clear_results()
+        pub.sendMessage(('points', 'deleted'), layer=layer)
     
     def MacReopenApp( self ):
         """

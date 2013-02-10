@@ -1,6 +1,7 @@
 import sys
 import math
 import wx
+from wx.lib.pubsub import pub
 
 import Layer
 import app_globals
@@ -90,7 +91,7 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
             0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING
         )
         
-        self.depth_check = wx.CheckBox(self.panel, -1, "Enable Depth Tolerance Chceck for Duplicate Points")
+        self.depth_check = wx.CheckBox(self.panel, -1, "Enable Depth Tolerance Check for Duplicate Points")
         self.sizer.Add(self.depth_check, 0, wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING)
         
         depth_statbox = wx.StaticBox(
@@ -102,7 +103,7 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
             orient = wx.VERTICAL
         )
         
-        self.depth_slider = sliders.TextSlider(depth_statbox, -1, 100, minValue=0, maxValue=1000, steps=1000, valueUnit="%", style=wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.depth_slider = sliders.TextSlider(self.panel, -1, 100, minValue=0, maxValue=1000, steps=1000, valueUnit="%", style=wx.SL_HORIZONTAL | wx.SL_LABELS)
         
         depth_statbox_sizer.Add(self.depth_slider, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, self.SPACING)
         
@@ -139,6 +140,12 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         self.find_button.Bind( wx.EVT_BUTTON, self.find_duplicates )
         self.Bind( wx.EVT_CLOSE, self.on_close )
         
+        pub.subscribe(self.on_points_deleted, ('points', 'deleted'))
+        
+    def on_points_deleted(self, layer):
+        if layer == self.layer:
+            self.clear_results()
+
     def on_close( self, event ):
         self.Destroy()
     
@@ -265,7 +272,7 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         self.remove_button.Bind( wx.EVT_BUTTON, self.delete_selected_groups )
         
         self.Bind( wx.EVT_BUTTON, self.merge_clicked, id = self.merge_button_id )
-        self.Bind( wx.EVT_BUTTON, self.close, id = self.close_button_id )
+        self.Bind( wx.EVT_BUTTON, self.on_close, id = self.close_button_id )
         
         self.sizer.Layout()
         self.Fit()
