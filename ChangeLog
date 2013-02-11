@@ -1,5 +1,7 @@
 2/10/2013
 ---------------------------
+- KO Changed the log file location to go somewhere the app always has write access to
+- KO Changed setup.py to always delete the previous build first and include wx.lib.pubsub
 - KO Fixed #493 (Unable to adjust "Depth Tolerance Chceck [sic] for Duplicate Points" Values)
 - KO Fixed #452 (PyDeadObject errors when opening Merge Duplicate Points dialog multiple times)
 - KO Fixed #482 (Hard to select a point with a line segment)
