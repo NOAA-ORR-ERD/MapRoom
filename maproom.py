@@ -27,7 +27,7 @@ import multiprocessing
 class Logger(object):
     def __init__(self, filename="output.txt"):
         self.terminal = sys.stdout
-        self.log = open(filename, "w")
+        self.log = open(filename, "a")
 
     def write(self, message):
         self.terminal.write(message)
@@ -50,8 +50,12 @@ def main( args ):
         log_file = os.path.join(wx.StandardPaths.Get().GetUserDataDir(), "Maproom", "log.txt")
         if not os.path.exists(os.path.dirname(log_file)):
             os.makedirs(os.path.dirname(log_file))
-        sys.stdout = Logger()
-        sys.stderr = Logger()
+        
+        # Make sure we don't accumulate really long log files
+        if os.path.exists(log_file):
+            os.remove(log_file)
+        sys.stdout = Logger(filename=log_file)
+        sys.stderr = Logger(filename=log_file)
     # Otherwise, log to stdout.
     else:
         console = logging.StreamHandler()

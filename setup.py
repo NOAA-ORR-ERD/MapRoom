@@ -44,6 +44,8 @@ print gl_include_dirs
 print gl_library_dirs
 print gl_libraries
 
+shutil.rmtree( "dist", ignore_errors = True )
+
 # Definintion of compiled extension code:
 bitmap = Extension("library.Bitmap",
                            sources = [ "library/Bitmap.pyx" ],
@@ -125,7 +127,10 @@ except ( OSError, ValueError, IndexError ):
 VERSION_FILENAME = "Version.py"
 if svn_revision:
     lines = open( VERSION_FILENAME ).readlines()
-    os.rename( VERSION_FILENAME, "%s.orig" % VERSION_FILENAME )
+    VERSION_ORIG = VERSION_FILENAME + ".orig"
+    if os.path.exists( VERSION_ORIG ):
+        os.remove( VERSION_ORIG )
+    os.rename( VERSION_FILENAME, VERSION_ORIG )
     version_file = open( VERSION_FILENAME, "w" )
 
     for line in lines:
@@ -173,7 +178,7 @@ if sys.platform.startswith('win'):
 
 
 common_includes = [
-    "ctypes", "ctypes.util",
+    "ctypes", "ctypes.util", "wx.lib.pubsub.*", "wx.lib.pubsub.core.*", "wx.lib.pubsub.core.kwargs.*"
 ]
 
 py2app_includes = [
@@ -309,9 +314,6 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Maproom"; Filename
 Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags: nowait postinstall skipifsilent
 """ % ( full_version, spaceless_version ) )
         iss_file.close()
-
-        import shutil
-        shutil.rmtree( "dist\\Output", ignore_errors = True )
 
         os.system(
             '"C:\Program Files (x86)\Inno Setup 5\ISCC.exe" %s' % iss_filename,
