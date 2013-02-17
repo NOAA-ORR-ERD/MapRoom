@@ -1,3 +1,7 @@
+2/17/2013
+---------------------------
+- KO Changed setup.py on Windows to explicitly include .pyd files that py2exe seems not to detect
+
 2/10/2013
 ---------------------------
 - KO Changed the log file location to go somewhere the app always has write access to
