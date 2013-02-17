@@ -166,7 +166,10 @@ if sys.platform.startswith('win'):
     # copied over
     data_files.extend([
         ( "library/Opengl_renderer", 
-            glob("library/Opengl_renderer/*.png")
+            glob("library/Opengl_renderer/*.png") + glob("library/Opengl_renderer/*.pyd")
+        ),
+        ( "library", 
+            glob("library/*.pyd")
         ),
         ( "pyproj/data", pyproj_data ),
     ])
