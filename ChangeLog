@@ -1,3 +1,8 @@
+2/24/2013
+---------------------------
+- KO Changed log file deletion so that it will gracefully handle deletion failures
+
+
 2/17/2013
 ---------------------------
 - KO Changed setup.py on Windows to explicitly include .pyd files that py2exe seems not to detect

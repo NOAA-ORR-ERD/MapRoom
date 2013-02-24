@@ -53,7 +53,11 @@ def main( args ):
         
         # Make sure we don't accumulate really long log files
         if os.path.exists(log_file):
-            os.remove(log_file)
+            try:
+                os.remove(log_file)
+            except IOError, e:
+                # this probably means the app has another instance running
+                pass
         sys.stdout = Logger(filename=log_file)
         sys.stderr = Logger(filename=log_file)
     # Otherwise, log to stdout.
