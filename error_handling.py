@@ -85,7 +85,6 @@ def guiExceptionHook(exctype, value, trace):
                 s.quit()
             except:
                 wx.MessageBox("Unable to send email. Please email the bug report to maproombugreports@gmail.com")
-                return
                 
         app = wx.GetApp()
         for tlw in wx.GetTopLevelWindows():

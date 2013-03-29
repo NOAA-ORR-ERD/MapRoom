@@ -1,3 +1,12 @@
+3/29/2013
+---------------------------
+- KO fixed #499 (MapRoom.exe Process Hangs After Crash Report Attempt)
+- KO Fixed #498 (Deleting "...Tolerance for Duplicate Points" Values Crashes MapRoom)
+- KO Fixed #497 (Manual Entries in "...Tolerance for Duplicate Points" Dialogs Don't Update Display)
+- KO Fixed #496 (Merge Duplicate Points dialog too big) by removing static boxes
+- KO Fixed #492 (Unable to Resize "Merge Duplicate Points" Window After Clicking "Find Duplicates")
+- KO Changed Merge Duplicate Points UI to disable depth slider if depth isn't used
+
 2/24/2013
 ---------------------------
 - KO Changed log file deletion so that it will gracefully handle deletion failures

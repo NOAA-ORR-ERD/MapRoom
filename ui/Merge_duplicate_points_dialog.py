@@ -7,7 +7,7 @@ import Layer
 import app_globals
 import ui.controls.sliders as sliders
 
-class Distance_slider( wx.StaticBoxSizer ):
+class Distance_slider( wx.Panel ):
     SPACING = 5
     MINIMUM = 0.0
     MAXIMUM = 60.0
@@ -19,17 +19,15 @@ class Distance_slider( wx.StaticBoxSizer ):
     def __init__( self, parent ):
         self.value = self.INITIAL_VALUE
         
-        wx.StaticBoxSizer.__init__(
-            self,
-            wx.StaticBox(
-                parent,
-                label = "Distance Tolerance for Duplicate Points (seconds latitude)",
-            ),
-            orient = wx.VERTICAL
+        wx.Panel.__init__(self, parent, -1)
+        self.Sizer = wx.BoxSizer(wx.VERTICAL)
+        label = wx.StaticText(
+                self, wx.ID_ANY, "Distance Tolerance for Duplicate Points (seconds latitude)",
         )
+        self.Sizer.Add(label, 0, wx.ALL, self.SPACING)
         
         self.slider = sliders.TextSlider(
-            self.GetStaticBox(),
+            self,
             wx.ID_ANY,
             value = self.INITIAL_VALUE,
             minValue = self.MINIMUM,
@@ -39,21 +37,26 @@ class Distance_slider( wx.StaticBoxSizer ):
             style = wx.SL_HORIZONTAL | wx.SL_LABELS
         )
         
-        self.Add(
+        self.Sizer.Add(
             self.slider,
             0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT,
             border = self.SPACING
         )
         
-        self.meters_label = sliders.SliderLabel(self.GetStaticBox(), -1, self.seconds_to_meters(self.slider.GetValue()), self.seconds_to_meters(self.MINIMUM), self.seconds_to_meters(self.MAXIMUM), " m")
-        self.Add(
+        self.meters_label = sliders.SliderLabel(self, -1, self.seconds_to_meters(self.slider.GetValue()), self.seconds_to_meters(self.MINIMUM), self.seconds_to_meters(self.MAXIMUM), " m")
+        self.Sizer.Add(
             self.meters_label,
             0, wx.EXPAND | wx.LEFT | wx.RIGHT,
             border = 12
         )
 
         self.slider.Bind( wx.EVT_SCROLL, self.slider_moved )
-    
+        self.slider.sliderCtrl.Bind( wx.EVT_TEXT, self.OnTextChanged)
+
+    def OnTextChanged(self, event):
+        event.Skip()
+        self.slider.Value = float(event.String)
+        
     def slider_moved( self, event ):
         self.value = self.slider.GetValue()
         self.meters_label.SetValue( "%s" % self.seconds_to_meters(self.slider.GetValue()) )
@@ -94,25 +97,13 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         self.depth_check = wx.CheckBox(self.panel, -1, "Enable Depth Tolerance Check for Duplicate Points")
         self.sizer.Add(self.depth_check, 0, wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING)
         
-        depth_statbox = wx.StaticBox(
-                self,
-                label = "Depth Tolerance for Duplicate Points"
-            )
-        depth_statbox_sizer = wx.StaticBoxSizer(
-            depth_statbox,
-            orient = wx.VERTICAL
-        )
-        
         self.depth_slider = sliders.TextSlider(self.panel, -1, 100, minValue=0, maxValue=1000, steps=1000, valueUnit="%", style=wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.depth_slider.Enable(False)
         
-        depth_statbox_sizer.Add(self.depth_slider, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, self.SPACING)
+        self.sizer.Add(self.depth_slider, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, self.SPACING)
         
         #self.depth_slider = Depth_slider( self.panel )
         self.depth_slider.SetMinSize( ( self.SLIDER_MIN_WIDTH, -1 ) )
-        self.sizer.Add(
-            depth_statbox_sizer,
-            0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border = self.SPACING + 8
-        )
         
         self.find_button_id = wx.NewId()
         self.find_button = wx.Button(
@@ -139,12 +130,16 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         
         self.find_button.Bind( wx.EVT_BUTTON, self.find_duplicates )
         self.Bind( wx.EVT_CLOSE, self.on_close )
+        self.Bind( wx.EVT_CHECKBOX, self.on_depth_check )
         
         pub.subscribe(self.on_points_deleted, ('points', 'deleted'))
         
     def on_points_deleted(self, layer):
         if layer == self.layer:
             self.clear_results()
+
+    def on_depth_check(self, event):
+        self.depth_slider.Enable(event.IsChecked())
 
     def on_close( self, event ):
         self.Destroy()
