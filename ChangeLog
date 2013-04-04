@@ -1,3 +1,7 @@
+4/4/2013
+---------------------------
+- KO fixed #474 (Change zoom-on-scroll rate)
+
 3/29/2013
 ---------------------------
 - KO fixed #499 (MapRoom.exe Process Hangs After Crash Report Attempt)
@@ -5,6 +9,8 @@
 - KO Fixed #497 (Manual Entries in "...Tolerance for Duplicate Points" Dialogs Don't Update Display)
 - KO Fixed #496 (Merge Duplicate Points dialog too big) by removing static boxes
 - KO Fixed #492 (Unable to Resize "Merge Duplicate Points" Window After Clicking "Find Duplicates")
+- KO Fixed #452 (Need be able to identify duplicate points regardless of how different the depths are.)
+- KO Fixed #367 (Duplicate point finder should support searching for duplicates without a depth tolerance)
 - KO Changed Merge Duplicate Points UI to disable depth slider if depth isn't used
 
 2/24/2013

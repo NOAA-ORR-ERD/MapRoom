@@ -268,10 +268,21 @@ class RenderWindow( glcanvas.GLCanvas ):
         d_projected_units = ( projected_point_clicked[ 0 ] - self.projected_point_center[ 0 ],
                               projected_point_clicked[ 1 ] - self.projected_point_center[ 1 ] )
         
+        prefs = app_globals.preferences
+        
+        zoom = 1.2
+        zoom_speed = prefs["Scroll Zoom Speed"]
+        if zoom_speed == "Slow":
+            zoom = 1.2
+        elif zoom_speed == "Medium":
+            zoom = 1.6
+        elif zoom_speed == "Fast":
+            zoom = 2.0
+        
         if ( amount < 0 ):
-            self.projected_units_per_pixel *= 2
+            self.projected_units_per_pixel *= zoom
         else:
-            self.projected_units_per_pixel /= 2
+            self.projected_units_per_pixel /= zoom
         self.constrain_zoom()
         
         # compensate to keep the same projected point under the mouse

@@ -18,6 +18,7 @@ class MaproomPreferences(object):
         
         self.pref_defaults = {
             "Coordinate Display Format": "degrees decimal minutes",
+            "Scroll Zoom Speed": "Slow",
         }
         
     def load(self, filename):

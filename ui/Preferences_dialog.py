@@ -6,7 +6,8 @@ import wx.lib.sized_controls as sc
 import app_globals
 
 pref_choices = {
-    "Coordinate Display Format": ( "degrees minutes seconds", "degrees decimal minutes", "decimal degrees" )
+    "Coordinate Display Format": ( "degrees minutes seconds", "degrees decimal minutes", "decimal degrees" ),
+    "Scroll Zoom Speed": ( "Slow", "Medium", "Fast" ),
 }
 
 class PreferencesDialog(sc.SizedDialog):
@@ -24,6 +25,12 @@ class PreferencesDialog(sc.SizedDialog):
         coord_format.SetStringSelection(self.prefs[prefname])
         coord_format.Bind(wx.EVT_CHOICE, self.OnCoordinateDisplayFormatChanged)
         
+        prefname = "Scroll Zoom Speed"
+        wx.StaticText(panel, wx.ID_ANY, prefname)
+        zoom_speed = wx.Choice(panel, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, choices = pref_choices[prefname])
+        zoom_speed.SetStringSelection(self.prefs[prefname])
+        zoom_speed.Bind(wx.EVT_CHOICE, self.OnZoomSpeedChanged)
+        
         self.Fit()
         self.MinSize = self.Size
         
@@ -35,3 +42,5 @@ class PreferencesDialog(sc.SizedDialog):
     def OnCoordinateDisplayFormatChanged(self, event):
         self.prefs["Coordinate Display Format"] = event.String
         
+    def OnZoomSpeedChanged(self, event):
+        self.prefs["Scroll Zoom Speed"] = event.String
