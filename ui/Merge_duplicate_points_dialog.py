@@ -50,12 +50,12 @@ class Distance_slider( wx.Panel ):
             border = 12
         )
 
-        self.slider.Bind( wx.EVT_SCROLL, self.slider_moved )
-        self.slider.sliderCtrl.Bind( wx.EVT_TEXT, self.OnTextChanged)
+        self.slider.Bind( wx.EVT_SLIDER, self.slider_moved )
+        self.slider.textCtrl.Bind( wx.EVT_TEXT, self.OnTextChanged)
 
     def OnTextChanged(self, event):
         event.Skip()
-        self.slider.Value = float(event.String)
+        self.meters_label.SetValue( "%s" % self.seconds_to_meters(float(event.String)) )
         
     def slider_moved( self, event ):
         self.value = self.slider.GetValue()

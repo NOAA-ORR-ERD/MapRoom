@@ -58,6 +58,10 @@ def main( args ):
             except IOError, e:
                 # this probably means the app has another instance running
                 pass
+            except WindowsError:
+                # on Windows, failure to access generates a WindowsError rather than an IOError
+                pass
+                
         sys.stdout = Logger(filename=log_file)
         sys.stderr = Logger(filename=log_file)
     # Otherwise, log to stdout.

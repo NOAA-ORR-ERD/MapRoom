@@ -1,6 +1,8 @@
 4/4/2013
 ---------------------------
 - KO fixed #474 (Change zoom-on-scroll rate)
+- KO fixed #497, for real this time :)
+- KO fixed #500 (Can't Open More Than 1 Instance of MapRoom) on Windows
 
 3/29/2013
 ---------------------------
