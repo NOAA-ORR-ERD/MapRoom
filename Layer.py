@@ -3,6 +3,7 @@ import os.path
 import time
 import sys
 import numpy as np
+import pyproj
 from scipy.spatial.ckdtree import cKDTree
 import wx
 import library.File_loader as File_loader
@@ -13,6 +14,7 @@ import library.Opengl_renderer.Label_set_renderer as Label_set_renderer
 import library.Opengl_renderer.Image_set_renderer as Image_set_renderer
 from library.accumulator import flatten
 from library.color import *
+from library.Transformer import *
 import library.rect as rect
 from library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
 from pytriangle import triangulate_simple
@@ -46,6 +48,13 @@ STATE_OTHER_POLYGON = 128
 
 DEFAULT_DEPTH = 1.0
 DEFAULT_POINT_COLOR = color_to_int( 0.5, 0.5, 0, 1.0 )
+DEFAULT_COLORS = [
+    color_to_int( 0, 0, 1.0, 1 ),
+    color_to_int( 0, 0.75, 0, 1 ),
+    color_to_int( 0.5, 0, 1.0, 1 ),
+    color_to_int( 1.0, 0.5, 0, 1 ),
+    color_to_int( 0.5, 0.5, 0, 1 ),
+]
 DEFAULT_LINE_SEGMENT_COLOR = color_to_int( 0.5, 0, 0.5, 1.0 )
 
 MAX_LABEL_CHARATERS = 1000 * 5
@@ -107,6 +116,8 @@ class Layer():
         ( "color", np.uint32 ),  # Color of this polygon.
         ( "state", np.uint32 )   # standard maproom object states, plus polygon type
     ] )
+    
+    next_default_color_index = 0
     
     def __init__( self ):
         self.name = ""
@@ -256,6 +267,7 @@ class Layer():
                 self.type = ext
                 n = np.alen( f_points )
                 if ( n > 0 ):
+                    self.determine_layer_color()
                     self.points = self.make_points( n )
                     self.points.view( self.POINT_XY_VIEW_DTYPE ).xy[
                         0 : n
@@ -263,7 +275,7 @@ class Layer():
                     self.points.z[
                         0 : n
                     ] = f_depths
-                    self.points.color = DEFAULT_POINT_COLOR
+                    self.points.color = self.color
                     self.points.state = 0
                     
                     n = np.alen( f_line_segment_indexes )
@@ -271,7 +283,7 @@ class Layer():
                     self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE ).points[
                         0 : n
                     ] = f_line_segment_indexes
-                    self.line_segment_indexes.color = DEFAULT_LINE_SEGMENT_COLOR
+                    self.line_segment_indexes.color = self.color
                     self.line_segment_indexes.state = 0
                     
                     self.create_necessary_renderers()
@@ -378,6 +390,18 @@ class Layer():
             np.array( [ ( 0, 0 ) ], dtype = self.POLYGON_ADJACENCY_DTYPE ),
             count,
         ).view( np.recarray )
+    
+    def determine_layer_color( self ):
+        print "Calling determine_layer_color?"
+        if not self.color:
+            print "setting layer color?"
+            self.color = DEFAULT_COLORS[
+                Layer.next_default_color_index
+            ]
+
+            Layer.next_default_color_index = (
+                Layer.next_default_color_index + 1
+            ) % len( DEFAULT_COLORS )
     
     def create_necessary_renderers( self ):
         if ( self.triangle_points != None and self.triangle_set_renderer == None ):
@@ -760,7 +784,7 @@ class Layer():
         app_globals.application.points_were_deleted( self )
     
     def insert_point( self, world_point ):
-        return self.insert_point_at_index( len( self.points ), world_point, self.default_depth, DEFAULT_POINT_COLOR, STATE_SELECTED, True )
+        return self.insert_point_at_index( len( self.points ), world_point, self.default_depth, self.color, STATE_SELECTED, True )
     
     def insert_point_at_index( self, point_index, world_point, z, color, state, add_undo_info ):
         t0 = time.clock()
@@ -840,7 +864,7 @@ class Layer():
     """
     
     def insert_line_segment( self, point_index_1, point_index_2 ):
-        return self.insert_line_segment_at_index( len( self.line_segment_indexes ), point_index_1, point_index_2, DEFAULT_LINE_SEGMENT_COLOR, STATE_NONE, True )
+        return self.insert_line_segment_at_index( len( self.line_segment_indexes ), point_index_1, point_index_2, self.color, STATE_NONE, True )
     
     def insert_line_segment_at_index( self, l_s_i, point_index_1, point_index_2, color, state, add_undo_info ):
         l_s = np.array( [ ( point_index_1, point_index_2, color, state ) ],
@@ -886,6 +910,7 @@ class Layer():
     
     def triangulate( self, q, a ):
         # determine the boundaries in this layer
+        self.determine_layer_color()
         ( boundaries, non_boundary_points ) = find_boundaries(
                                                     points = self.points,
                                                     point_count = len( self.points ),
@@ -939,7 +964,7 @@ class Layer():
             0 : len( triangle_points_xy )
         ] = triangle_points_xy
         self.triangle_points[ 0 : len( triangle_points_xy ) ].z = triangle_points_z
-        self.triangle_points.color = DEFAULT_POINT_COLOR
+        self.triangle_points.color = self.color
         
         # now un-project the points
         if ( not app_globals.application.renderer.projection_is_identity ):
@@ -995,6 +1020,25 @@ class Layer():
             self.POINT_XY_VIEW_DTYPE
         ).xy[ : ].copy()
         
+        latlong = pyproj.Proj( "+proj=latlong" )
+
+        # If necessary, convert points to lat-long before find duplicates.
+        # This makes the distance tolerance work properly.
+        projection = app_globals.application.renderer.projection
+        if projection.srs != latlong.srs:
+            points = points.view(
+                [ ( "x", np.float32 ), ( "y", np.float32 ) ]
+            ).view( np.recarray )
+            latlong_transformer = Transformer( latlong )
+            latlong_transformer.transform_many(
+                points, points, projection, set_cache = False
+            )
+
+        # cKDTree doesn't handle NaNs gracefully, but it does handle infinity
+        # values. So replace all the NaNs with infinity.
+        points = points.view( np.float32 )
+        points[ np.isnan( points ) ] = np.inf
+        
         tree = cKDTree( points )
         
         ( _, indices_list ) = tree.query(
@@ -1012,22 +1056,23 @@ class Layer():
                 index for index in sorted( indices )
                 if index != len( self.points )
             ]
-            
+                        
             if len( indices ) < 2:
                 continue                
             
             # If this layer was merged from two layers, and if
             # all point indices in the current list are from the same source
             # layer, then skip this list of duplicates.
-            unique_sources = set()
-            for index in indices:
-                if ( index < self.merged_points_index ):
-                    unique_sources.add( 0 )
-                else:
-                    unique_sources.add( 1 )
+            if self.merged_points_index > 0:
+                unique_sources = set()
+                for index in indices:
+                    if ( index < self.merged_points_index ):
+                        unique_sources.add( 0 )
+                    else:
+                        unique_sources.add( 1 )
             
-            if len( unique_sources ) < 2:
-                continue
+                if len( unique_sources ) < 2:
+                    continue
             
             # Filter out points not within the depth tolerance from one another.
             depth_0 = self.points.z[ indices[ 0 ] ]

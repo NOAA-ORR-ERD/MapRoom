@@ -382,7 +382,7 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         
         self.layer.select_points( points, Layer.STATE_FLAGGED )
         bounds = self.layer.compute_bounding_rect( Layer.STATE_FLAGGED )
-        app_globals.application.zoom_to_include_world_rect( bounds )
+        app_globals.application.renderer.zoom_to_include_world_rect( bounds )
         app_globals.application.refresh()
     
     def key_pressed( self, event ):
