@@ -23,16 +23,17 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
         self.Bind( treectrl.EVT_TREE_BEGIN_DRAG, self.handle_begin_drag )
         self.Bind( treectrl.EVT_TREE_END_DRAG, self.handle_end_drag )
         self.Bind( treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed )
-        
+                
         """
         self.state_image_list = wx.ImageList( self.IMAGE_SIZE, self.IMAGE_SIZE )
         #self.state_image_list.Add( wx.Bitmap( "maproom/ui/images/maproom.png", wx.BITMAP_TYPE_PNG ) )
         #self.SetImageList( self.state_image_list )
+        """        
         
         self.Bind( wx.EVT_LEFT_DOWN, self.mouse_pressed )
         self.Bind( wx.EVT_RIGHT_DOWN, self.mouse_pressed )
-        self.Bind( wx.EVT_RIGHT_UP, self.mouse_right_released )
-        """
+        # self.Bind( wx.EVT_RIGHT_UP, self.mouse_right_released )
+
     
     def get_selected_layer( self ):
         item = self.GetSelection()
@@ -323,6 +324,22 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
         lm.insert_layer( mi_target, source_layer )
         app_globals.editor.esc_key_pressed()
     
+    def mouse_pressed( self, event ):
+        # If a selected item is clicked, unselect it so that it will be
+        # selected again. This allows the user to click on an
+        # already-selected layer to display its properties, for instance.
+        event.Skip()
+        selected_item = self.GetSelection()
+        if selected_item is None: return
+
+        ( clicked_item, flags ) = self.HitTest( event.GetPosition() )
+
+        if clicked_item != selected_item or \
+           flags & wx.TREE_HITTEST_ONITEMLABEL == 0:
+            return
+
+        self.ToggleItemSelection( selected_item ) 
+    
     """
     def add( self, layer, hidden = False, insert_index = None, parent = None ):
         if self.none_item:
@@ -540,21 +557,6 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
             object_indices = (),
             record_undo = False,
         )
-
-    def mouse_pressed( self, event ):
-        # If a selected item is clicked, unselect it so that it will be
-        # selected again. This allows the user to click on an
-        # already-selected layer to display its properties, for instance.
-        event.Skip()
-        selected_item = self.GetSelection()
-        if selected_item is None: return
-
-        ( clicked_item, flags ) = self.HitTest( event.GetPosition() )
-
-        if clicked_item != selected_item or flags & wx.TREE_HITTEST_ONITEMLABEL == 0:
-            return
-
-        self.ToggleItemSelection( selected_item ) 
 
     def mouse_right_released( self, event ):
         event.Skip()

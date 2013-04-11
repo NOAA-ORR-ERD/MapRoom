@@ -57,15 +57,18 @@ class Properties_panel( wx.Panel ):
             bold_font = self.GetFont()
             bold_font.SetWeight( weight = wx.FONTWEIGHT_BOLD )
             
-            fields = [ "Layer name", "Source file" ]
+            fields = [ ]
             if ( layer.type == "folder" ):
                 fields = [ "Folder name" ]
             
             if ( layer.type == ".verdat" or layer.type == ".dat" or layer.type == ".xml" ):
-                fields.extend( [ "Depth unit", "Default depth", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points", "Point depth" ] )
+                if layer.get_num_points_selected() > 0:
+                    fields.extend( [ "Depth unit",  "Point depth" ] )
+                else:
+                    fields.extend( [  "Layer name", "Source file", "Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points" ] )
             
             if ( layer.type == ".bna" ):
-                fields.extend( [ "Polygon count" ] )
+                fields.extend( [ "Layer name", "Source file", "Polygon count" ] )
             
             self.sizer.AddSpacer( self.LABEL_SPACING )
             layer_name_control = None
@@ -88,7 +91,10 @@ class Properties_panel( wx.Panel ):
                 elif ( field == "Source file" ):
                     self.add_text_field( field, layer.file_path, None, wx.EXPAND, False )
                 elif ( field == "Depth unit" ):
-                    self.depth_unit_control = self.add_drop_down( field, [ "meters", "feet", "fathoms", "unknown" ], layer.depth_unit, self.depth_unit_changed )
+                    if layer.get_num_points_selected() > 0:
+                        self.add_static_text_field( field, layer.depth_unit )
+                    else:
+                        self.depth_unit_control = self.add_drop_down( field, [ "meters", "feet", "fathoms", "unknown" ], layer.depth_unit, self.depth_unit_changed )
                 elif ( field == "Default depth" ):
                     self.default_depth_control = self.add_text_field( field, str( layer.default_depth ), self.default_depth_changed )
                 elif ( field == "Point count" ):

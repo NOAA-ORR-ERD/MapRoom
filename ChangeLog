@@ -2,6 +2,7 @@
 ---------------------------
 - KO fixed #501 ("Merge Duplicate Points" Dialog Doesn't Find Duplicate Points)
 - KO Changed the layer colors to match the colors used by Dan's build.
+- KO Restored the properties panel behavior when selecting points to match Dan's build.
 
 4/4/2013
 ---------------------------

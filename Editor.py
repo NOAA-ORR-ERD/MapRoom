@@ -178,7 +178,7 @@ class Editor():
                 layer.clear_all_selections()
                 layer.select_point( point_index )
         
-        self.app.renderer.render()
+        self.app.refresh()
     
     def clicked_on_line_segment( self, event, layer, line_segment_index, world_point ):
         if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_POINTS ):
@@ -207,7 +207,7 @@ class Editor():
                 layer.clear_all_selections()
                 layer.select_line_segment( line_segment_index )
         
-        self.app.renderer.render()
+        self.app.refresh()
     
     def clicked_on_polygon( self, layer, polygon_index ):
         pass
