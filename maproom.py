@@ -45,8 +45,6 @@ def main( args ):
     
     # If the app is frozen, don't write anything to stdout.
     if hasattr( sys, "frozen" ):
-        if sys.platform.startswith('win'):
-            pyproj.set_datapath( "pyproj_data" )
         log_file = os.path.join(wx.StandardPaths.Get().GetUserDataDir(), "Maproom", "log.txt")
         if not os.path.exists(os.path.dirname(log_file)):
             os.makedirs(os.path.dirname(log_file))
