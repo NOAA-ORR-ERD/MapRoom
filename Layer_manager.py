@@ -13,6 +13,8 @@ from library.Shape import points_outside_polygon
 from library.Boundary import find_boundaries
 import app_globals
 
+from wx.lib.pubsub import pub
+
 class Verdat_save_error( Exception ):
     def __init__( self, message, points = None ):
         Exception.__init__( self, message )
@@ -69,7 +71,7 @@ class Layer_manager():
             if ( layer.type == "folder" ):
                 layer = [ layer ]
         self.insert_layer_recursive( at_multi_index, layer, self.layers )
-        app_globals.application.refresh( None, True )
+        pub.sendMessage(('layer', 'inserted'), manager=self, layer=layer)
     
     def insert_layer_recursive( self, at_multi_index, layer, tree ):
         if ( len( at_multi_index ) == 1 ):

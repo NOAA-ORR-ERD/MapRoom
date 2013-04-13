@@ -1,3 +1,9 @@
+4/12/2013
+---------------------------
+- KO Refactored the logic for creating map elements from Application.py into MapController.py
+- KO Refactored, and when possible removed, some layering violations caused by app_global references
+- KO Changed modeless dialogs so that they are always destroyed when closed, or raised if opened
+
 4/11/2013
 ---------------------------
 - KO fixed #501 ("Merge Duplicate Points" Dialog Doesn't Find Duplicate Points)

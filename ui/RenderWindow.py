@@ -370,9 +370,6 @@ class RenderWindow( glcanvas.GLCanvas ):
         if ( self.is_alt_key_down ):
             return self.MODE_PAN
         return self.mode
-    
-    def layer_tree_selection_changed( self ):
-        self.render()
 
     def render( self, event=None ):
         

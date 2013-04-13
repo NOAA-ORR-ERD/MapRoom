@@ -11,8 +11,11 @@ class Tool_bar( wx.ToolBar ):
     """
     IMAGE_PATH = "ui/images"
     
-    def __init__( self ):
-        wx.ToolBar.__init__( self, app_globals.application.frame, style = wx.TB_FLAT )
+    def __init__( self, controller ):
+        self.controller = controller
+        self.frame = controller.frame
+    
+        wx.ToolBar.__init__( self, self.frame, style = wx.TB_FLAT )
         
         image_path = self.IMAGE_PATH
         self.toolbar_image_path = os.path.join( image_path, "toolbar" )
@@ -64,26 +67,26 @@ class Tool_bar( wx.ToolBar ):
         
         # self.selection_updated()
         
-        f = app_globals.application.frame
+        f = self.frame
         # f.Bind( wx.EVT_TOOL, ui.Wx_handler( self.inbox, "triangulate" ), id = self.triangulate_id )
         
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_triangulate( event), id = self.triangulate_id )
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_set_pan_mode( event), id = self.pan_id )
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_set_add_points_mode( event), id = self.add_points_id )
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_set_add_lines_mode( event), id = self.add_lines_id )
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_add_layer( event), id = wx.ID_NEW )
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_add_folder( event), id = wx.ID_ADD )
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_undo( event), id = wx.ID_UNDO )
-        f.Bind( wx.EVT_TOOL, lambda event: app_globals.application.menu_bar.do_redo( event), id = wx.ID_REDO )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_triangulate( event), id = self.triangulate_id )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_set_pan_mode( event), id = self.pan_id )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_set_add_points_mode( event), id = self.add_points_id )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_set_add_lines_mode( event), id = self.add_lines_id )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_add_layer( event), id = wx.ID_NEW )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_add_folder( event), id = wx.ID_ADD )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_undo( event), id = wx.ID_UNDO )
+        f.Bind( wx.EVT_TOOL, lambda event: self.controller.menu_bar.do_redo( event), id = wx.ID_REDO )
         # f.Bind( wx.EVT_TOOL, ui.Wx_handler( self.inbox, "contour_layer" ), id = self.contour_id )
         
         # make the pan tool selected by default
         self.ToggleTool( self.pan_id, True )
     
     def enable_disable_tools( self ):
-        raisable = app_globals.application.layer_tree_control.is_selected_layer_raisable()
+        raisable = self.controller.layer_tree_control.is_selected_layer_raisable()
         self.EnableTool( wx.ID_UP, raisable )
-        lowerable = app_globals.application.layer_tree_control.is_selected_layer_lowerable()
+        lowerable = self.controller.layer_tree_control.is_selected_layer_lowerable()
         self.EnableTool( wx.ID_DOWN, lowerable )
         self.updated_undo_redo()
     

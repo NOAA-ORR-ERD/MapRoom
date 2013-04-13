@@ -76,6 +76,5 @@ def open_file(file_path):
         return None
     
     app_globals.layer_manager.insert_layer( insertion_multi_index, layer )
-    app_globals.application.layer_tree_control.select_layer( layer )
 
     return None

@@ -103,15 +103,14 @@ class Editor():
     undo_stack_next_index = 0
     undo_stack_next_operation_number = 0
     
-    def __init__( self ):
+    def __init__( self, layer_manager ):
         self.app = app_globals.application
-        print "***\nin Editor init: %s \n***"%self.app.renderer
-        self.lm = app_globals.layer_manager
+        self.lm = layer_manager
     
     def point_tool_selected( self ):
         for layer in self.lm.flatten():
             layer.clear_all_line_segment_selections()
-        self.app.renderer.render()
+        self.app.refresh()
     
     def point_tool_deselected( self ):
         pass
@@ -123,7 +122,7 @@ class Editor():
         if ( n > 1 ):
             for layer in self.lm.flatten():
                 layer.clear_all_point_selections()
-            self.app.renderer.render()
+            self.app.refresh()
     
     def line_tool_deselected( self ):
         pass
@@ -131,7 +130,7 @@ class Editor():
     def esc_key_pressed( self ):
         for layer in self.lm.flatten():
             layer.clear_all_selections()
-        self.app.renderer.render()
+        self.app.refresh()
     
     def delete_key_pressed( self ):
         if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_POINTS or self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
@@ -139,7 +138,7 @@ class Editor():
             if ( layer != None ):
                 layer.delete_all_selected_objects()
                 self.end_operation_batch()
-                self.app.renderer.render()
+                self.app.refresh()
     
     def clicked_on_point( self, event, layer, point_index ):
         act_like_point_tool = False
@@ -231,7 +230,7 @@ class Editor():
                 #self.app.renderer.release_mouse() # shouldn't be captured now anyway
                 layer.insert_point( world_point )
                 self.end_operation_batch()
-                self.app.renderer.render()
+                self.app.refresh()
         
         if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
             if ( not event.ControlDown() and not event.ShiftDown() ):
@@ -245,7 +244,7 @@ class Editor():
                     self.end_operation_batch()
                     layer.clear_all_point_selections()
                     layer.select_point( point_index )
-                self.app.renderer.render()
+                self.app.refresh()
     
     def dragged( self, world_d_x, world_d_y ):
         if ( self.clickable_object_mouse_is_over == None ):
@@ -255,7 +254,7 @@ class Editor():
         layer = self.lm.get_layer_by_flattened_index( layer_index )
         layer.offset_selected_objects( world_d_x, world_d_y )
         # self.end_operation_batch()
-        self.app.renderer.render()
+        self.app.refresh()
     
     def finished_drag( self, mouse_down_position, mouse_move_position ):
         if ( self.clickable_object_mouse_is_over == None ):
@@ -332,7 +331,7 @@ class Editor():
     def end_operation_batch( self ):
         self.show_undo_redo_debug_dump( "end_operation_batch()" )
         self.undo_stack_next_operation_number += 1
-        self.app.renderer.render()
+        self.app.refresh()
     
     def delete_undo_operations_for_layer( self, layer ):
         self.clear_undo_stack_forward()

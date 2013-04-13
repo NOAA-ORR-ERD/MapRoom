@@ -68,6 +68,7 @@ class Distance_slider( wx.Panel ):
 class Merge_duplicate_points_dialog( wx.Dialog ):
     SPACING = 15
     SLIDER_MIN_WIDTH = 400
+    NAME = "Merge Duplicate Points"
     
     layer = None
     duplicates = []
@@ -76,8 +77,8 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
     
     def __init__( self ):
         wx.Dialog.__init__(
-            self, None, wx.ID_ANY, "Merge Duplicate Points",
-            style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT
+            self, None, wx.ID_ANY, self.NAME,
+            style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT, name = self.NAME
         )
         self.SetIcon( app_globals.application.frame.GetIcon() )
         
@@ -142,6 +143,8 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         self.depth_slider.Enable(event.IsChecked())
 
     def on_close( self, event ):
+        for layer in app_globals.layer_manager.flatten():
+            layer.clear_all_selections( Layer.STATE_FLAGGED )
         self.Destroy()
     
     def find_duplicates( self, event ):
@@ -432,10 +435,4 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         
         event.Skip()
         self.clear_results()
-    
-    def close( self, event ):
-        for layer in app_globals.layer_manager.flatten():
-            layer.clear_all_selections( Layer.STATE_FLAGGED )
-        
-        event.Skip()
-        self.Hide()
+

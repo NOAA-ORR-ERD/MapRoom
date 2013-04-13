@@ -16,22 +16,27 @@ class Menu_bar( wx.MenuBar ):
     """
     IMAGE_PATH = "ui/images"
     
-    def __init__( self ):
+    def __init__( self, controller ):
         wx.MenuBar.__init__( self )
+        
+        self.controller = controller
+        self.frame = self.controller.frame
         
         image_path = self.IMAGE_PATH
 
         self.SetAutoWindowMenu( False )
 
-        app_globals.application.frame.Bind( wx.EVT_MENU,
+        self.frame.Bind( wx.EVT_MENU,
             lambda event: wx.MessageDialog(
-                app_globals.application.frame, "Not implemented yet.", style = wx.OK | wx.ICON_ERROR
+                self.frame, "Not implemented yet.", style = wx.OK | wx.ICON_ERROR
             ).ShowModal()
         )
         
         self.file_menu = wx.Menu()
         self.Append( self.file_menu, "File" )
         
+        self.new_map_item = wx.MenuItem( self.file_menu, wx.NewId(), "New Map...\tCtrl-N" )
+        #self.file_menu.AppendItem( self.new_map_item )
         self.open_item = wx.MenuItem( self.file_menu, wx.ID_OPEN, "Open...\tCtrl-O", )
         self.open_item.SetBitmap( wx.Bitmap( os.path.join( image_path, "open.png" ) ) )
         self.file_menu.AppendItem( self.open_item )
@@ -255,7 +260,8 @@ class Menu_bar( wx.MenuBar ):
         
         ########################################################
         
-        f = app_globals.application.frame
+        f = self.frame
+        f.Bind( wx.EVT_MENU, self.do_new_map, self.new_map_item )
         f.Bind( wx.EVT_MENU, self.do_open_file, id = wx.ID_OPEN )
         f.Bind( wx.EVT_MENU, self.do_save, id = wx.ID_SAVE )
         f.Bind( wx.EVT_MENU, self.do_save_as, id = wx.ID_SAVEAS )
@@ -289,9 +295,9 @@ class Menu_bar( wx.MenuBar ):
         f.Bind( wx.EVT_MENU, self.do_show_preferences, id = wx.ID_PREFERENCES )
     
     def enable_disable_menu_items( self ):
-        raisable = app_globals.application.layer_tree_control.is_selected_layer_raisable()
+        raisable = self.controller.layer_tree_control.is_selected_layer_raisable()
         self.raise_item.Enable( raisable )
-        lowerable = app_globals.application.layer_tree_control.is_selected_layer_lowerable()
+        lowerable = self.controller.layer_tree_control.is_selected_layer_lowerable()
         self.lower_item.Enable( lowerable )
         self.updated_undo_redo()
         
@@ -326,11 +332,14 @@ class Menu_bar( wx.MenuBar ):
         self.EnableTool( wx.ID_REMOVE, False )
         """
     
+    def do_new_map( self, event ):
+        app_globals.application.new_map()
+    
     def do_open_file( self, event ):
         File_opener.show()
     
     def do_save( self, event ):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        layer = self.controller.layer_tree_control.get_selected_layer()
         if layer is None:
             return
             
@@ -344,14 +353,14 @@ class Menu_bar( wx.MenuBar ):
     
     def do_save_image( self, event ):
         dialog = wx.FileDialog(
-            app_globals.application.frame,
+            app_globals.current_frame,
             style = wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             message = "Save as Image",
             wildcard = "PNG Image (*.png) |*.png"
         )
     
         if dialog.ShowModal() == wx.ID_OK:
-            image = app_globals.application.renderer.get_canvas_as_image()
+            image = self.controller.renderer.get_canvas_as_image()
             image.SaveFile(dialog.GetPath(), wx.BITMAP_TYPE_PNG)
         dialog.Destroy()        
     
@@ -362,14 +371,14 @@ class Menu_bar( wx.MenuBar ):
         app_globals.editor.redo()
     
     def do_raise_layer( self, event ):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
-        app_globals.application.layer_tree_control.raise_selected_layer()
-        app_globals.application.layer_tree_control.select_layer( layer )
+        layer = self.controller.layer_tree_control.get_selected_layer()
+        self.controller.layer_tree_control.raise_selected_layer()
+        self.controller.layer_tree_control.select_layer( layer )
     
     def do_lower_layer( self, event ):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
-        app_globals.application.layer_tree_control.lower_selected_layer()
-        app_globals.application.layer_tree_control.select_layer( layer )
+        layer = self.controller.layer_tree_control.get_selected_layer()
+        self.controller.layer_tree_control.lower_selected_layer()
+        self.controller.layer_tree_control.select_layer( layer )
     
     def do_clear( self, event ):
         app_globals.editor.esc_key_pressed()
@@ -391,54 +400,54 @@ class Menu_bar( wx.MenuBar ):
     
     def do_set_zoom_to_box_mode( self, event ):
         print "in zoom to box handler"
-        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_POINTS ):
+        if ( self.controller.renderer.mode  == self.controller.MODE_EDIT_POINTS ):
             app_globals.editor.point_tool_deselected()
-        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_LINES ):
+        if ( self.controller.renderer.mode  == self.controller.MODE_EDIT_LINES ):
             app_globals.editor.line_tool_deselected()
-        app_globals.application.renderer.mode =  app_globals.application.MODE_ZOOM_RECT
+        self.controller.renderer.mode =  self.controller.MODE_ZOOM_RECT
         print "calling refresh on application"
-        app_globals.application.refresh()
+        self.controller.refresh()
     
     def do_set_pan_mode( self, event ):
-        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_POINTS ):
+        if ( self.controller.renderer.mode  == self.controller.MODE_EDIT_POINTS ):
             app_globals.editor.point_tool_deselected()
-        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_LINES ):
+        if ( self.controller.renderer.mode  == self.controller.MODE_EDIT_LINES ):
             app_globals.editor.line_tool_deselected()
-        app_globals.application.renderer.mode =  app_globals.application.MODE_PAN
+        self.controller.renderer.mode =  self.controller.MODE_PAN
     
     def do_set_add_points_mode( self, event ):
-        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_LINES ):
+        if ( self.controller.renderer.mode  == self.controller.MODE_EDIT_LINES ):
             app_globals.editor.line_tool_deselected()
-        app_globals.application.renderer.mode =  app_globals.application.MODE_EDIT_POINTS
+        self.controller.renderer.mode =  self.controller.MODE_EDIT_POINTS
         app_globals.editor.point_tool_selected()
     
     def do_set_add_lines_mode( self, event ):
-        if ( app_globals.application.renderer.mode  == app_globals.application.MODE_EDIT_POINTS ):
+        if ( self.controller.renderer.mode  == self.controller.MODE_EDIT_POINTS ):
             app_globals.editor.point_tool_deselected()
-        app_globals.application.renderer.mode =  app_globals.application.MODE_EDIT_LINES
+        self.controller.renderer.mode =  self.controller.MODE_EDIT_LINES
         app_globals.editor.line_tool_selected()
     
     def do_zoom_in( self, event ):
-        app_globals.application.renderer.zoom_in()
+        self.controller.renderer.zoom_in()
     
     def do_zoom_out( self, event ):
-        app_globals.application.renderer.zoom_out()
+        self.controller.renderer.zoom_out()
     
     def do_zoom_fit( self, event ):
-        app_globals.application.renderer.zoom_to_fit()
+        self.controller.renderer.zoom_to_fit()
     
     def do_toggle_grid( self, event ):
-        app_globals.application.lon_lat_grid_shown = not app_globals.application.lon_lat_grid_shown
-        app_globals.application.refresh()
+        self.controller.lon_lat_grid_shown = not self.controller.lon_lat_grid_shown
+        self.controller.refresh()
     
     def do_triangulate( self, event ):
-        app_globals.application.show_triangle_dialog_box()
+        self.controller.show_triangle_dialog_box()
     
     def do_merge_layers( self, event ):
-        app_globals.application.show_merge_layers_dialog_box()
+        self.controller.show_merge_layers_dialog_box()
     
     def do_merge_duplicate_points( self, event ):
-        app_globals.application.show_merge_duplicate_points_dialog_box()
+        self.controller.show_merge_duplicate_points_dialog_box()
     
     def do_jump( self, event ):
         pass

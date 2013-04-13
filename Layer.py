@@ -19,6 +19,7 @@ import library.rect as rect
 from library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
 from pytriangle import triangulate_simple
 from Editor import *
+from wx.lib.pubsub import pub
 import app_globals
 
 """
@@ -781,7 +782,9 @@ class Layer():
                                                app_globals.application.renderer.projection_is_identity )
         """
         
-        app_globals.application.points_were_deleted( self )
+        # when points are deleted from a layer the indexes of the points in the existing merge dialog box
+        # become invalid; so force the user to re-find duplicates in order to create a valid list again
+        pub.sendMessage(('points', 'deleted'), layer=self)
     
     def insert_point( self, world_point ):
         return self.insert_point_at_index( len( self.points ), world_point, self.default_depth, self.color, STATE_SELECTED, True )
@@ -900,7 +903,7 @@ class Layer():
             offsets += np.where( self.line_segment_indexes.point2 > point_index, 1, 0 )
             self.line_segment_indexes.point2 -= offsets
         
-        app_globals.application.points_were_deleted( self )
+        pub.sendMessage(('points', 'deleted'), layer=self)
     
     def delete_line_segment( self, l_s_i, add_undo_info ):
         if ( add_undo_info ):

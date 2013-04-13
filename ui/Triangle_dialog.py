@@ -8,10 +8,11 @@ import app_globals
 
 class Triangle_dialog( wx.Dialog ):
     SPACING = 15
+    NAME = "Triangulate Layer"
     
     def __init__( self ):
-        wx.Dialog.__init__(self, None, wx.ID_ANY, "Triangulate Layer",
-                           style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT
+        wx.Dialog.__init__(self, None, wx.ID_ANY, self.NAME,
+                           style = wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT, name = self.NAME
                            )
         self.SetIcon( app_globals.application.frame.GetIcon() )
         
@@ -98,6 +99,7 @@ class Triangle_dialog( wx.Dialog ):
         
         self.triangulate_button.Bind( wx.EVT_BUTTON, self.triangulate )
         self.close_button.Bind( wx.EVT_BUTTON, self.close )
+        self.Bind( wx.EVT_CLOSE, self.close )
     
     def triangulate( self, event ):
         self.triangulate_button.Enable( False )
@@ -143,8 +145,7 @@ class Triangle_dialog( wx.Dialog ):
         app_globals.application.layer_tree_control.select_layer( layer )
     
     def close( self, event ):
-        event.Skip()
-        self.Hide()
+        self.Destroy()
 
 if __name__ == "__main__":
     """

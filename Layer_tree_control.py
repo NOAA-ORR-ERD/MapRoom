@@ -4,6 +4,9 @@ try:
     import wx.lib.agw.customtreectrl as treectrl
 except ImportError:
     import wx.lib.customtreectrl as treectrl
+
+from wx.lib.pubsub import pub
+
 import Layer
 import app_globals
 
@@ -86,7 +89,7 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
         print "rebuiding layers = " + str( lm.layers )
         self.add_layers_recursive( lm.layers, None )
         # self.Thaw()
-        app_globals.application.layer_tree_selection_changed()
+        pub.sendMessage(('layer', 'selection', 'changed'), manager = lm, layer = self.get_selected_layer())
     
     def add_layers_recursive( self, layer_tree, parent ):
         if ( len( layer_tree ) == 0 ):
@@ -267,7 +270,7 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
     
     def handle_selection_changed( self, event ):
         app_globals.editor.esc_key_pressed()
-        app_globals.application.layer_tree_selection_changed()
+        pub.sendMessage(('layer', 'selection', 'changed'), manager = app_globals.layer_manager, layer = self.get_selected_layer())
     
     def is_selected_layer_raisable( self ):
         item = self.GetSelection()

@@ -32,15 +32,16 @@ class Merge_layers_dialog:
         if ( len( layers ) == 2 ):
             dialog.SetSelections( [ 0, 1 ] )
         
-        if ( dialog.ShowModal() != wx.ID_OK ):
-            return
+        result = dialog.ShowModal()
+        if result == wx.ID_OK:
+            selections = dialog.GetSelections()
         
-        selections = dialog.GetSelections()
-        if len( selections ) != 2:
-            wx.MessageDialog(
-                self.parent_frame,
-                message = "You must select exactly two layers to merge.",
-                style = wx.OK | wx.ICON_ERROR,
-            ).ShowModal()
-        else:
-            app_globals.layer_manager.merge_layers( layers[ selections[ 0 ] ], layers[ selections[ 1 ] ] )
+            if len( selections ) != 2:
+                wx.MessageDialog(
+                    self.parent_frame,
+                    message = "You must select exactly two layers to merge.",
+                    style = wx.OK | wx.ICON_ERROR,
+                ).ShowModal()
+            else:
+                app_globals.layer_manager.merge_layers( layers[ selections[ 0 ] ], layers[ selections[ 1 ] ] )
+        dialog.Destroy()
