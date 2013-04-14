@@ -119,6 +119,7 @@ class LayerRendererOpenGL():
     
     def rebuild_point_and_line_set_renderer( self, create = False ):
         if self.point_and_line_set_renderer:
+            create = True
             self.point_and_line_set_renderer.destroy()
         
         t0 = time.clock()

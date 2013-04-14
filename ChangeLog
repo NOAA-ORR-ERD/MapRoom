@@ -1,8 +1,14 @@
+4/14/2013
+---------------------------
+- KO Refactored layer rendering logic into a new class LayerRendererOpenGL
+
 4/12/2013
 ---------------------------
 - KO Refactored the logic for creating map elements from Application.py into MapController.py
 - KO Refactored, and when possible removed, some layering violations caused by app_global references
 - KO Changed modeless dialogs so that they are always destroyed when closed, or raised if opened
+- KO Changed Layer_manager's layers to be instance-specific, rather than a static global
+- KO Added File -> New Map to allow MapRoom to open multiple maps in one session
 
 4/11/2013
 ---------------------------

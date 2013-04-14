@@ -32,9 +32,9 @@ class Layer_manager():
     The first layer in the overall list and in each sublist is assumed to be a "folder" layer, whose only
     purpose at present is to hold the folder name.
     """
-    layers = []
     
     def __init__( self ):
+        self.layers = []
         layer = Layer.Layer()
         layer.name = "Layers"
         layer.type = "root"

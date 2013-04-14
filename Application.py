@@ -96,6 +96,7 @@ class Application( wx.App ):
         # we may be able to replace this with wx.GetApp().GetTopWindow(), so long as we
         # ensure the current frame is always set to the top window.
         self.frame = self.current_map.frame
+        self.SetTopWindow(self.frame)
         
         # this is pretty much so that Layer can directly access the renderer when rendering
         # itself. We should be able to remove this once we move layer rendering logic into

@@ -36,7 +36,7 @@ class Menu_bar( wx.MenuBar ):
         self.Append( self.file_menu, "File" )
         
         self.new_map_item = wx.MenuItem( self.file_menu, wx.NewId(), "New Map...\tCtrl-N" )
-        #self.file_menu.AppendItem( self.new_map_item )
+        self.file_menu.AppendItem( self.new_map_item )
         self.open_item = wx.MenuItem( self.file_menu, wx.ID_OPEN, "Open...\tCtrl-O", )
         self.open_item.SetBitmap( wx.Bitmap( os.path.join( image_path, "open.png" ) ) )
         self.file_menu.AppendItem( self.open_item )
