@@ -82,7 +82,7 @@ class Layer_manager():
     
     def remove_layer( self, at_multi_index ):
         self.remove_layer_recursive( at_multi_index, self.layers )
-        app_globals.application.refresh( None, True )
+        app_globals.application.refresh( rebuild_tree = True )
     
     def remove_layer_recursive( self, at_multi_index, tree ):
         index = at_multi_index[ 0 ]
@@ -620,7 +620,7 @@ class Layer_manager():
                 l = l[ index ]
             del l[ mi[ -1 ] ]
         
-        app_globals.application.refresh( None, True )
+        app_globals.application.refresh( rebuild_tree = True )
     
     def merge_layers( self, layer_a, layer_b ):
         layer = Layer.Layer()

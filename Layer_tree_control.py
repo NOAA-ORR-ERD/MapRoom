@@ -158,7 +158,7 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
             subitem = self.AppendItem( item, "triangles", ct_type = treectrl.TREE_ITEMTYPE_CHECK, data = data )
             self.CheckItem2( subitem, layer.triangles_visible )
         
-        if ( layer.label_set_renderer != None ):
+        if ( layer.points != None ):
             data = wx.TreeItemData()
             data.SetData( ( "labels", layer ) )
             subitem = self.AppendItem( item, "labels", ct_type = treectrl.TREE_ITEMTYPE_CHECK, data = data )
@@ -168,6 +168,20 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
             self.Expand( item )
         
         return item
+   
+    def remove_layer( self, layer, parent = None ):
+        item = self.layer_to_item.get( layer )
+        if item is None: return
+
+        self.Freeze()
+        self.Delete( item )
+
+        if self.GetChildrenCount( self.root ) == 0:
+            self.none_item = self.AppendItem( self.root, "None" )
+
+        self.Thaw()
+
+        self.layer_to_item.pop( layer, None )
     
     def handle_item_checked( self, event ):
         ( category, layer ) = self.GetItemPyData( event.GetItem() ).Data
@@ -280,8 +294,8 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
                 return False
             lm = app_globals.layer_manager
             mi = lm.get_multi_index_of_layer( layer )
-        
-            return mi[ len( mi ) - 1 ] >= 2
+            if mi is not None:
+                return mi[ len( mi ) - 1 ] >= 2
         return False
     
     def is_selected_layer_lowerable( self ):
@@ -292,12 +306,13 @@ class Layer_tree_control( treectrl.CustomTreeCtrl ):
                 return False
             lm = app_globals.layer_manager
             mi = lm.get_multi_index_of_layer( layer )
-            n = mi[ len( mi ) - 1 ]
-            mi2 = mi[ : len( mi ) - 1 ]
-            parent_list = lm.get_layer_by_multi_index( mi2 )
-            total = len( parent_list )
+            if mi is not None:
+                n = mi[ len( mi ) - 1 ]
+                mi2 = mi[ : len( mi ) - 1 ]
+                parent_list = lm.get_layer_by_multi_index( mi2 )
+                total = len( parent_list )
             
-            return n < ( total - 1 )
+                return n < ( total - 1 )
         return False
     
     def raise_selected_layer( self ):

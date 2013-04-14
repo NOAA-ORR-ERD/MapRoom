@@ -1,28 +1,21 @@
 import os
 import time
-#import os.path
-#import sys
-#import math
+
 import wx
 import wx.glcanvas as glcanvas
 import pyproj
-#from ui.Menu_bar import Menu_bar
-#from ui.Tool_bar import Tool_bar
-#from ui.Properties_panel import Properties_panel
-#from ui.Triangle_dialog import Triangle_dialog
-#from ui.Merge_layers_dialog import Merge_layers_dialog
-#from ui.Merge_duplicate_points_dialog import Merge_duplicate_points_dialog
-#import Layer_manager
-#import Layer_tree_control
-#import Editor
+
 import lon_lat_grid
 import library.coordinates as coordinates
 import library.Opengl_renderer
+import library.Opengl_renderer.LayerRendererOpenGL as LayerRendererOpenGL
 import library.rect as rect
 import app_globals
 
 import OpenGL
 import OpenGL.GL as gl
+
+from wx.lib.pubsub import pub
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.
@@ -82,6 +75,10 @@ class RenderWindow( glcanvas.GLCanvas ):
     #is_closing = False
     
     def __init__(self, *args, **kwargs):
+        self.layer_manager = kwargs.pop('layer_manager')
+        self.editor = kwargs.pop('editor')
+        self.layer_renderers = {}
+
         kwargs[ 'attribList' ]= ( glcanvas.WX_GL_RGBA,
                                 glcanvas.WX_GL_DOUBLEBUFFER,
                                 glcanvas.WX_GL_MIN_ALPHA, 8, )
@@ -114,7 +111,12 @@ class RenderWindow( glcanvas.GLCanvas ):
         # Prevent flashing on Windows by doing nothing on an erase background event.
         self.Bind( wx.EVT_ERASE_BACKGROUND, lambda event: None )
         #self.is_initialized = True
-        
+            
+    def update_renderers( self ):
+        for layer in self.layer_manager.layers:
+            if not layer in self.layer_renderers:
+                self.layer_renderers[layer] = LayerRendererOpenGL.LayerRendererOpenGL( self, layer )
+                self.layer_renderers[layer].create_necessary_renderers()
     
     def on_mouse_down( self, event ):
         #self.SetFocus() # why would it not be focused?
@@ -129,8 +131,8 @@ class RenderWindow( glcanvas.GLCanvas ):
         if ( self.get_effective_tool_mode( event ) == self.MODE_PAN ):
             return
         
-        e = app_globals.editor
-        lm = app_globals.layer_manager
+        e = self.editor
+        lm = self.layer_manager
         
         if ( e.clickable_object_mouse_is_over != None ): # the mouse is on a clickable object
             ( layer_index, type, subtype, object_index ) = e.parse_clickable_object( e.clickable_object_mouse_is_over )
@@ -173,12 +175,12 @@ class RenderWindow( glcanvas.GLCanvas ):
             o = self.opengl_renderer.picker.get_object_at_mouse_position( event.GetPosition() )
             #print "object that is under mouse:", o
             if ( o != None ):
-                ( layer_index, type, subtype, object_index ) = app_globals.editor.parse_clickable_object( o )
-                layer = app_globals.layer_manager.get_layer_by_flattened_index( layer_index )
-                if ( app_globals.layer_manager.is_layer_selected( layer ) ):
-                    app_globals.editor.clickable_object_mouse_is_over = o
+                ( layer_index, type, subtype, object_index ) = self.editor.parse_clickable_object( o )
+                layer = self.layer_manager.get_layer_by_flattened_index( layer_index )
+                if ( self.layer_manager.is_layer_selected( layer ) ):
+                    self.editor.clickable_object_mouse_is_over = o
             else:
-                app_globals.editor.clickable_object_mouse_is_over = None
+                self.editor.clickable_object_mouse_is_over = None
         
         if ( self.mouse_is_down ):
             d_x = p[ 0 ] - self.mouse_down_position[ 0 ]
@@ -202,7 +204,7 @@ class RenderWindow( glcanvas.GLCanvas ):
                     w_p1 = self.get_world_point_from_screen_point( p )
                     if not self.HasCapture():
                         self.CaptureMouse()
-                    app_globals.editor.dragged( w_p1[ 0 ] - w_p0[ 0 ], w_p1[ 1 ] - w_p0[ 1 ] )
+                    self.editor.dragged( w_p1[ 0 ] - w_p0[ 0 ], w_p1[ 1 ] - w_p0[ 1 ] )
                     self.mouse_down_position = p
                     self.render(event)
     
@@ -250,7 +252,7 @@ class RenderWindow( glcanvas.GLCanvas ):
                 self.selection_box_is_being_defined = False
                 self.render()
             else:
-                app_globals.editor.finished_drag( self.mouse_down_position, self.mouse_move_position )
+                self.editor.finished_drag( self.mouse_down_position, self.mouse_move_position )
         self.selection_box_is_being_defined = False
     
     def on_mouse_wheel_scroll( self, event ):
@@ -298,7 +300,7 @@ class RenderWindow( glcanvas.GLCanvas ):
     def on_mouse_leave( self, event ):
         self.SetCursor( wx.StockCursor( wx.CURSOR_ARROW ) )
         # this messes up object dragging when the mouse goes outside the window
-        # app_globals.editor.clickable_object_mouse_is_over = None
+        # self.editor.clickable_object_mouse_is_over = None
     
     def on_key_down( self, event ):
         self.get_effective_tool_mode( event )
@@ -319,9 +321,9 @@ class RenderWindow( glcanvas.GLCanvas ):
                 self.render()
         else:
             if ( event.GetKeyCode() == wx.WXK_ESCAPE ):
-                app_globals.editor.esc_key_pressed()
+                self.editor.esc_key_pressed()
             if ( event.GetKeyCode() == wx.WXK_BACK ):
-                app_globals.editor.delete_key_pressed()
+                self.editor.delete_key_pressed()
     
     def on_idle( self, event ):
         #self.get_effective_tool_mode( event ) # update alt key state (not needed, it gets called in set_cursor anyway
@@ -334,9 +336,9 @@ class RenderWindow( glcanvas.GLCanvas ):
             #
             return
         
-        if ( app_globals.editor.clickable_object_mouse_is_over != None and
+        if ( self.editor.clickable_object_mouse_is_over != None and
              ( self.get_effective_tool_mode( None ) == self.MODE_EDIT_POINTS or self.get_effective_tool_mode( None ) == self.MODE_EDIT_LINES ) ):
-            if ( self.get_effective_tool_mode( None ) == self.MODE_EDIT_POINTS and app_globals.editor.clickable_object_is_ugrid_line() ):
+            if ( self.get_effective_tool_mode( None ) == self.MODE_EDIT_POINTS and self.editor.clickable_object_is_ugrid_line() ):
                 self.SetCursor( wx.StockCursor( wx.CURSOR_BULLSEYE ) )
             else:
                 self.SetCursor( wx.StockCursor( wx.CURSOR_HAND ) )
@@ -381,6 +383,7 @@ class RenderWindow( glcanvas.GLCanvas ):
 
         t0 = time.clock()
         self.SetCurrent(self.context)
+        self.update_renderers()
         
         # this has to be here because the window has to exist before making the renderer
         if ( self.opengl_renderer == None ):
@@ -402,8 +405,14 @@ class RenderWindow( glcanvas.GLCanvas ):
         self.box_overlay.render()
         self.set_render_projection_matrix()
         """
+
+        def render_layers( pick_mode = False ):       
+            list = self.layer_manager.flatten()
+            length = len( list )
+            for i, layer in enumerate( reversed( list ) ):
+                self.layer_renderers[layer].render( self, ( length - 1 - i ) * 10, pick_mode )
         
-        app_globals.layer_manager.render(self)
+        render_layers()
         
         if ( not self.opengl_renderer.prepare_to_render_screen_objects( s_r ) ):
             return
@@ -437,7 +446,7 @@ class RenderWindow( glcanvas.GLCanvas ):
         self.SwapBuffers()
         
         self.opengl_renderer.prepare_to_render_picker( s_r )
-        app_globals.layer_manager.render(self,  pick_mode = True )
+        render_layers( pick_mode = True )
         self.opengl_renderer.done_rendering_picker()
 
         elapsed = time.clock() - t0
@@ -445,6 +454,14 @@ class RenderWindow( glcanvas.GLCanvas ):
         
         if ( event != None ):
             event.Skip()
+    
+    def rebuild_points_and_lines_for_layer( self, layer ):
+        if layer in self.layer_renderers:
+            self.layer_renderers[layer].rebuild_point_and_line_set_renderer()
+            
+    def rebuild_triangles_for_layer( self, layer ):
+        if layer in self.layer_renderers:
+            self.layer_renderers[layer].rebuild_triangle_set_renderer()
     
     def resize_render_pane( self, event ):
         if not self.GetContext():
@@ -539,7 +556,7 @@ class RenderWindow( glcanvas.GLCanvas ):
         self.render()
     
     def zoom_to_fit( self ):
-        w_r = app_globals.layer_manager.accumulate_layer_rects()
+        w_r = self.layer_manager.accumulate_layer_rects()
         if ( w_r != rect.NONE_RECT ):
             self.zoom_to_world_rect( w_r, add_padding=True )
     
@@ -576,6 +593,7 @@ class RenderWindow( glcanvas.GLCanvas ):
                 self.zoom_to_world_rect( w_r )
     
     def reproject_all( self, srs ):
+        self.update_renderers()
         s_r = self.get_screen_rect()
         s_c = rect.center( s_r )
         w_c = self.get_world_point_from_screen_point( s_c )
@@ -584,7 +602,9 @@ class RenderWindow( glcanvas.GLCanvas ):
         # print "self.projected_units_per_pixel A = " + str( self.projected_units_per_pixel )
         self.projection = pyproj.Proj( srs )
         self.projection_is_identity = self.projection.srs.find( "+proj=longlat" ) != -1
-        app_globals.layer_manager.reproject_all( self.projection, self.projection_is_identity )
+        
+        for layer in self.layer_manager.flatten():
+            self.layer_renderers[layer].reproject( self.projection, self.projection_is_identity )
         # print "self.projected_units_per_pixel B = " + str( self.projected_units_per_pixel )
         
         ratio = 1.0

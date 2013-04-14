@@ -5,21 +5,19 @@ import math
 import wx
 from wx.lib.pubsub import pub
 
-#import wx.glcanvas as glcanvas
-#import pyproj
 from ui.Menu_bar import Menu_bar
 from ui.Tool_bar import Tool_bar
 from ui.Properties_panel import Properties_panel
 from ui.Triangle_dialog import Triangle_dialog
 from ui.Merge_layers_dialog import Merge_layers_dialog
 from ui.Merge_duplicate_points_dialog import Merge_duplicate_points_dialog
-import ui.File_opener
+
+import Editor
 import Layer_manager
 import Layer_tree_control
-import Editor
-#import lon_lat_grid
-#import library.Opengl_renderer
-#import library.rect as rect
+import RenderController
+import ui.File_opener
+
 import app_globals
 import preferences
 
@@ -85,7 +83,6 @@ class MapController( object ):
     is_closing = False
     
     def __init__( self ):
-        print "Initializing new Map"
         self.layer_manager = Layer_manager.Layer_manager()
         self.editor = Editor.Editor(self.layer_manager)
         
@@ -129,8 +126,8 @@ class MapController( object ):
         
         self.status_bar = self.frame.CreateStatusBar()
         
-        print "Initializing RenderWindow..."
-        self.renderer = RenderWindow( self.renderer_splitter)
+        self.renderer = RenderWindow( self.renderer_splitter, layer_manager = self.layer_manager, editor = self.editor )
+        self.render_controller = RenderController.RenderController( self.layer_manager, self.renderer )
 
         self.renderer_splitter.SplitVertically(
             self.properties_splitter,
@@ -185,6 +182,7 @@ class MapController( object ):
             self.refresh()
     
     def on_layer_inserted( self, manager, layer ):
+        print "Layer inserted..."
         if self.layer_manager == manager:
             self.refresh( None, True )
             self.layer_tree_control.select_layer( layer )

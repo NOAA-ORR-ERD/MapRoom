@@ -7,11 +7,6 @@ import pyproj
 from scipy.spatial.ckdtree import cKDTree
 import wx
 import library.File_loader as File_loader
-import library.Opengl_renderer.Point_and_line_set_renderer as Point_and_line_set_renderer
-import library.Opengl_renderer.Triangle_set_renderer as Triangle_set_renderer
-import library.Opengl_renderer.Polygon_set_renderer as Polygon_set_renderer
-import library.Opengl_renderer.Label_set_renderer as Label_set_renderer
-import library.Opengl_renderer.Image_set_renderer as Image_set_renderer
 from library.accumulator import flatten
 from library.color import *
 from library.Transformer import *
@@ -160,11 +155,7 @@ class Layer():
         self.image_world_rects = None
         self.images_visible = True
         
-        self.point_and_line_set_renderer = None
-        self.triangle_set_renderer = None
-        self.label_set_renderer = None
-        self.polygon_set_renderer = None
-        self.image_set_renderer = None
+        self.is_dirty = False
     
     def __repr__( self ): 
        return self.name
@@ -203,9 +194,11 @@ class Layer():
             
             if ( self.load_error_string == "" ):
                 self.type = ext
+                self.labels_visible = False
                 n_points = np.alen( f_polygon_points )
                 n_polygons = np.alen( f_polygon_starts )
                 if ( n_points > 0 ):
+                    self.points_visible = False
                     self.points = self.make_points( n_points )
                     self.points.view( self.POINT_XY_VIEW_DTYPE ).xy[
                         0 : n_points
@@ -249,14 +242,6 @@ class Layer():
                     """
                     
                     self.points.state = 0
-                    
-                    self.polygon_set_renderer = Polygon_set_renderer.Polygon_set_renderer(
-                                                    app_globals.application.renderer.opengl_renderer,
-                                                    self.points.view( self.POINT_XY_VIEW_DTYPE ).xy[ : n_points ].copy(),
-                                                    self.polygon_adjacency_array,
-                                                    self.polygons,
-                                                    app_globals.application.renderer.projection,
-                                                    app_globals.application.renderer.projection_is_identity )
         
         elif ( file_type in [".verdat", ".dat"] ):
             ( self.load_error_string,
@@ -286,9 +271,7 @@ class Layer():
                     ] = f_line_segment_indexes
                     self.line_segment_indexes.color = self.color
                     self.line_segment_indexes.state = 0
-                    
-                    self.create_necessary_renderers()
-        
+                            
         elif ( file_type in [".png", ".kap"] ):
             ( self.load_error_string,
               self.images,
@@ -345,15 +328,7 @@ class Layer():
                                 #
                                 return
                         
-                        app_globals.application.renderer.reproject_all( srs )
-                
-                self.image_set_renderer = Image_set_renderer.Image_set_renderer(
-                                                app_globals.application.renderer.opengl_renderer,
-                                                self.images,
-                                                self.image_sizes,
-                                                self.image_world_rects,
-                                                app_globals.application.renderer.projection,
-                                                app_globals.application.renderer.projection_is_identity )
+                        pub.sendMessage( ('layer', 'proejction', 'changed'), layer = self, projection = srs )
         
         else:
             self.load_error_string = "unrecognized file type: " + ext
@@ -393,7 +368,6 @@ class Layer():
         ).view( np.recarray )
     
     def determine_layer_color( self ):
-        print "Calling determine_layer_color?"
         if not self.color:
             print "setting layer color?"
             self.color = DEFAULT_COLORS[
@@ -403,38 +377,7 @@ class Layer():
             Layer.next_default_color_index = (
                 Layer.next_default_color_index + 1
             ) % len( DEFAULT_COLORS )
-    
-    def create_necessary_renderers( self ):
-        if ( self.triangle_points != None and self.triangle_set_renderer == None ):
-            self.triangle_set_renderer = Triangle_set_renderer.Triangle_set_renderer(
-                                                    app_globals.application.renderer.opengl_renderer,
-                                                    self.triangle_points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                                    self.triangle_points.color.copy().view( dtype = np.uint8 ),
-                                                    self.triangles.view( self.TRIANGLE_POINTS_VIEW_DTYPE ).point_indexes,
-                                                    app_globals.application.renderer.projection,
-                                                    app_globals.application.renderer.projection_is_identity )
-        
-        if ( self.points != None and self.point_and_line_set_renderer == None ):
-            if ( self.line_segment_indexes == None ):
-                self.line_segment_indexes = self.make_line_segment_indexes( 0 )
-            
-            print "number of line segments: " + str( len( self.line_segment_indexes ) )
-            self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
-                                                    app_globals.application.renderer.opengl_renderer,
-                                                    self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                                    self.points.color.copy().view( dtype = np.uint8 ),
-                                                    self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
-                                                    self.line_segment_indexes.color,
-                                                    app_globals.application.renderer.projection,
-                                                    app_globals.application.renderer.projection_is_identity )
-        
-        self.set_up_labels();
-        self.increment_change_count()
-    
-    def set_up_labels( self ):
-        if ( self.points != None and self.label_set_renderer == None ):
-            self.label_set_renderer = Label_set_renderer.Label_set_renderer( app_globals.application.renderer.opengl_renderer, MAX_LABEL_CHARATERS )
-    
+
     def compute_bounding_rect( self, mark_type = STATE_NONE ):
         bounds = rect.NONE_RECT
         
@@ -689,8 +632,7 @@ class Layer():
             for point_index in s_p_i_s:
                 self.offset_point( point_index, world_d_x, world_d_y, True )
             # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
-            self.rebuild_point_and_line_set_renderer()
-            # self.rebuild_for_offset_points()
+            pub.sendMessage( ('layer', 'points', 'changed'), layer = self )
             self.increment_change_count()
     
     def offset_point( self, point_index, world_d_x, world_d_y, add_undo_info ):
@@ -771,7 +713,6 @@ class Layer():
             self.line_segment_indexes = np.delete( self.line_segment_indexes, line_segment_indexes_to_be_deleted, 0 )
         
         # delete them from the point_and_line_set_renderer (by simply rebuilding it)
-        self.rebuild_point_and_line_set_renderer()
         
         """
         # delete them from the label_set_renderer
@@ -784,7 +725,7 @@ class Layer():
         
         # when points are deleted from a layer the indexes of the points in the existing merge dialog box
         # become invalid; so force the user to re-find duplicates in order to create a valid list again
-        pub.sendMessage(('points', 'deleted'), layer=self)
+        pub.sendMessage(('layer', 'points', 'deleted'), layer=self)
     
     def insert_point( self, world_point ):
         return self.insert_point_at_index( len( self.points ), world_point, self.default_depth, self.color, STATE_SELECTED, True )
@@ -798,8 +739,8 @@ class Layer():
             self.points = self.make_points( 1 )
             self.points[ 0 ] = p
             point_index = 0
-            self.create_necessary_renderers()
-            app_globals.application.refresh( None, True )
+            pub.sendMessage( ('layer', 'updated' ), layer = self )
+            app_globals.application.refresh()
             app_globals.application.layer_tree_control.select_layer( self )
         else:
             self.points = np.insert( self.points, point_index, p ).view( np.recarray )
@@ -823,7 +764,7 @@ class Layer():
         # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
         # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
         if ( add_undo_info ):
-            self.rebuild_point_and_line_set_renderer()
+            pub.sendMessage( ('layer', 'points', 'changed' ), layer = self )
         
         """
         t0 = time.clock()
@@ -881,7 +822,7 @@ class Layer():
         # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
         # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
         if ( add_undo_info ):
-            self.rebuild_point_and_line_set_renderer()
+            pub.sendMessage( ('layer', 'lines', 'changed'), layer = self )
         
         return l_s_i
     
@@ -903,7 +844,7 @@ class Layer():
             offsets += np.where( self.line_segment_indexes.point2 > point_index, 1, 0 )
             self.line_segment_indexes.point2 -= offsets
         
-        pub.sendMessage(('points', 'deleted'), layer=self)
+        pub.sendMessage(('layer', 'points', 'deleted'), layer=self)
     
     def delete_line_segment( self, l_s_i, add_undo_info ):
         if ( add_undo_info ):
@@ -977,11 +918,7 @@ class Layer():
         self.triangles = self.make_triangles( len( triangles ) )
         self.triangles.view( self.TRIANGLE_POINTS_VIEW_DTYPE ).point_indexes = triangles
         
-        if ( self.triangle_set_renderer != None ):
-            self.triangle_set_renderer.destroy()
-            self.triangle_set_renderer = None
-        
-        self.create_necessary_renderers()
+        pub.sendMessage( ( 'layer', 'triangulated' ), layer = self )
     
     def merge_from_source_layers( self, layer_a, layer_b ):
         # for now we only handle merging of points and lines
@@ -1012,7 +949,7 @@ class Layer():
         ] = l_s_i_s
         # self.line_segment_indexes.state = 0
         
-        self.create_necessary_renderers()
+        pub.sendMessage( ('layer', 'updated' ), layer = self )
     
     # returns a list of pairs of point indexes
     def find_duplicates( self, distance_tolerance_degrees, depth_tolerance_percentage = -1 ):
@@ -1122,106 +1059,12 @@ class Layer():
         if ( len( points_to_delete ) > 0 ):
             self.delete_points_and_lines( list( points_to_delete ), None, True )
         
-        app_globals.application.refresh()
-    
-    def rebuild_point_and_line_set_renderer( self ):
-        if ( self.point_and_line_set_renderer == None ):
-            return
-        
-        t0 = time.clock()
-        
-        self.point_and_line_set_renderer.destroy()
-        self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
-                                                      app_globals.application.renderer.opengl_renderer,
-                                                      self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                                      self.points.color.copy().view( dtype = np.uint8 ),
-                                                      self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
-                                                      self.line_segment_indexes.color,
-                                                      app_globals.application.renderer.projection,
-                                                      app_globals.application.renderer.projection_is_identity )
-        
-        t = time.clock() - t0 # t is wall seconds elapsed (floating point)
-        print "rebuilt point and line set renderer in {0} seconds".format( t )
-    
-    def reproject( self, projection, projection_is_identity ):
-        if ( self.point_and_line_set_renderer != None ):
-            self.point_and_line_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                                        projection,
-                                                        projection_is_identity )
-        if ( self.polygon_set_renderer != None ):
-            self.polygon_set_renderer.reproject( projection, projection_is_identity )
-        """
-        if ( self.label_set_renderer != None ):
-            self.label_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                               projection,
-                                               projection_is_identity )
-        """
-        if ( self.image_set_renderer != None ):
-            self.image_set_renderer.reproject( projection, projection_is_identity )
-    
+        app_globals.application.refresh()        
+
     def increment_change_count( self ):
         self.change_count += 1
         if ( self.change_count == sys.maxint ):
             self.change_count = 0
     
-    def render( self, render_window, layer_index_base, pick_mode = False ):
-        if ( not self.is_visible ):
-            return
-        
-        
-        s_r = render_window.get_screen_rect()
-        p_r = render_window.get_projected_rect_from_screen_rect( s_r )
-        w_r = render_window.get_world_rect_from_projected_rect( p_r )
-        
-        # the images
-        if ( self.image_set_renderer != None and self.images_visible ):
-            self.image_set_renderer.render( -1, pick_mode )
-        
-        # the polygons
-        if ( self.polygon_set_renderer != None and self.polygons_visible ):
-            self.polygon_set_renderer.render( layer_index_base + POLYGONS_SUB_LAYER_PICKER_OFFSET,
-                                              pick_mode,
-                                              self.polygons.color,
-                                              color_to_int( 0, 0, 0, 1.0 ),
-                                              1 ) # , self.get_selected_polygon_indexes()
-        
-        # the triangle points and triangle line segments
-        if ( self.triangle_set_renderer != None and self.triangles_visible ):
-            self.triangle_set_renderer .render( pick_mode,
-                                                self.point_size + 10,
-                                                self.triangle_line_width )
-        
-        # the points and line segments
-        if ( self.point_and_line_set_renderer != None ):
-            self.point_and_line_set_renderer.render( layer_index_base + POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
-                                                     pick_mode,
-                                                     self.point_size,
-                                                     self.line_width,
-                                                     self.points_visible,
-                                                     self.line_segments_visible,
-                                                     self.get_selected_point_indexes(),
-                                                     self.get_selected_point_indexes( STATE_FLAGGED ),
-                                                     self.get_selected_line_segment_indexes(),
-                                                     self.get_selected_line_segment_indexes( STATE_FLAGGED ) )
-            
-            # the labels
-            if ( self.label_set_renderer != None and self.labels_visible and self.point_and_line_set_renderer.vbo_point_xys != None ):
-                self.label_set_renderer.render( -1, pick_mode, s_r,
-                                                MAX_LABEL_CHARATERS, self.points.z,
-                                                self.point_and_line_set_renderer.vbo_point_xys.data,
-                                                p_r, render_window.projected_units_per_pixel )
-    
     def destroy( self ):
         app_globals.editor.delete_undo_operations_for_layer( self )
-        if ( self.point_and_line_set_renderer != None ):
-            self.point_and_line_set_renderer.destroy()
-            self.point_and_line_set_renderer = None
-        if ( self.polygon_set_renderer != None ):
-            self.polygon_set_renderer.destroy()
-            self.polygon_set_renderer = None
-        if ( self.label_set_renderer != None ):
-            self.label_set_renderer.destroy()
-            self.label_set_renderer = None
-        if ( self.image_set_renderer != None ):
-            self.image_set_renderer.destroy()
-            self.image_set_renderer = None

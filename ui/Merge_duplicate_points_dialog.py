@@ -133,7 +133,7 @@ class Merge_duplicate_points_dialog( wx.Dialog ):
         self.Bind( wx.EVT_CLOSE, self.on_close )
         self.Bind( wx.EVT_CHECKBOX, self.on_depth_check )
         
-        pub.subscribe(self.on_points_deleted, ('points', 'deleted'))
+        pub.subscribe(self.on_points_deleted, ('layer', 'points', 'deleted'))
         
     def on_points_deleted(self, layer):
         if layer == self.layer:

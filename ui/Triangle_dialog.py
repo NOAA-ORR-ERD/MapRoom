@@ -141,7 +141,7 @@ class Triangle_dialog( wx.Dialog ):
             print traceback.format_exc( e )
             wx.MessageBox( e.message, "Triangulate Error")
         
-        app_globals.application.refresh( None, True )
+        app_globals.application.refresh( rebuild_tree = True )
         app_globals.application.layer_tree_control.select_layer( layer )
     
     def close( self, event ):

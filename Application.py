@@ -105,13 +105,13 @@ class Application( wx.App ):
         # for its get_selected_layer and select_layer methods
         self.layer_tree_control = self.current_map.layer_tree_control
         
-    def refresh( self ):
+    def refresh( self, rebuild_tree = False ):
         """
         TODO: This needs to be removed, but it will take a while since this has calls everywhere,
         so for now we just leave it and have it do the best thing possible.
         """
         if self.current_map is not None:
-            self.current_map.refresh()
+            self.current_map.refresh( None, rebuild_tree )
         
     
     def MacReopenApp( self ):
