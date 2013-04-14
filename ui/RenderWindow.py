@@ -172,7 +172,9 @@ class RenderWindow( glcanvas.GLCanvas ):
         
             self.release_mouse()
             #print "mouse is not down"
-            o = self.opengl_renderer.picker.get_object_at_mouse_position( event.GetPosition() )
+            o = None
+            if self.opengl_renderer is not None:
+                o = self.opengl_renderer.picker.get_object_at_mouse_position( event.GetPosition() )
             #print "object that is under mouse:", o
             if ( o != None ):
                 ( layer_index, type, subtype, object_index ) = self.editor.parse_clickable_object( o )
