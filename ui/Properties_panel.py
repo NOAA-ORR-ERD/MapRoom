@@ -197,7 +197,7 @@ class Properties_panel( wx.Panel ):
     
     def point_depth_changed( self, event ):
         layer = app_globals.application.layer_tree_control.get_selected_layer()
-        if ( layer == None or self.depth_unit_control == None ):
+        if layer == None:
             return
         
         num_points_changed = 0

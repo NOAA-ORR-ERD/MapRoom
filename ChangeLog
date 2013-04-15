@@ -1,6 +1,7 @@
 4/14/2013
 ---------------------------
 - KO Refactored layer rendering logic into a new class LayerRendererOpenGL
+- KO Fixed #471 (Enable MapRoom to Edit Soundings in a .VERDAT)
 
 4/12/2013
 ---------------------------
