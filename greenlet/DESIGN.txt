@@ -1,0 +1,247 @@
+This document is a high-level Maproom design overview intended for software
+developers new to the Maproom source code.
+
+Maproom is primarily written in Python, with some C and Cython code in
+performance-critical areas. Maproom also depends on a large number of
+3rd-party libraries, many of which are written in C and C++. For the full list
+of dependencies, see maproom/README.txt. There is also a separate "libs"
+repository full of source code for many Maproom dependencies, since in some
+cases we have to compile them ourselves.
+
+The Maproom source is split into two main source directories: maproomlib and
+maproom. The maproomlib directory contains all of the theoretically reusable
+components, while the maproom directory contains source code specific to the
+Maproom application. The eventual idea is that maproomlib will serve as a
+somewhat stable API against which Maproom-like applications can be built, but
+it's not quite there yet.
+
+
+Other Documentation
+-------------------
+
+Maproom source does contain Sphinx documentation describing various functions
+and their arguments, but it may be out of date in places. Also see the two
+README.txt files within the maproom and maproomlib directories.
+
+
+Tasks and Threads
+-----------------
+
+Maproom uses the actor model (http://en.wikipedia.org/wiki/Actor_model) to
+communicate between components. This means that the program is composed of
+many separate cooperative tasks, often one per object, that communicate
+largely by passing messages amongst each other. This has some benefits and
+some drawbacks.
+
+The biggest benefit is that everything can occur asynchronously, so for
+instance while a file is loading, the code can issue appropriate events for
+the UI to handle. And since most object interaction is serialized via
+messages, there's little need for the kind of manual synchronization and
+resulting deadlock risk that's par for the course with more traditional
+multithreaded applications.
+
+The downside of using the actor model is that it can make code more difficult
+to follow than it otherwise would be. Work for a single operation (like adding
+a point) is often spread across multiple tasks cooperating by a chain of
+messages being passed back and forth, rather than being consolidated in a
+single place. This can make debugging difficult, and individual task message
+handlers often devolve into huge switch statements (or the Python equivalent).
+
+Even though Maproom uses cooperative multitasking for the most part, there are
+still two separate threads in the application to accomodate the wxPython UI
+library. One thread does all work related to the UI and rendering, while the
+other thread does everything else. Each of these two threads has its own
+cooperative multitasking scheduler, and tasks in a given thread can
+communicate with tasks in the other thread by message passing.
+
+If I were starting again from scratch, I might revisit the decision of using
+actors throughout the program. Instead, I might use actors only at the thread
+boundary, while using traditional function calling within each thread. Or I
+might split the program into separate processes with Python's multiprocessing
+module (http://docs.python.org/library/multiprocessing.html) to avoid the GIL
+and take advantage of multiple CPU cores. A more functional programming
+(http://en.wikipedia.org/wiki/Functional_programming) and less state-oriented
+approach might even be beneficial.
+
+
+Plugins
+-------
+
+The bulk of maproomlib is in the maproomlib/plugin directory, where you'll
+find plugins for reading files, saving files, representing geographic data in
+memory as layers, and rendering layers. 
+
+Writing a new file loading plugin is as simple as making a file in the plugin
+directory containing a Python callable of the same name, and setting the
+callable's "PLUGIN_TYPE" member to "file_loader". The callable should take a
+filename and a few other arguments and return a new loaded layer to its
+caller.
+
+Writing a file saving plugin is similar, but also requires adding the saving
+plugin to a list of SUPPORTED_SAVERS for one of the composite layer types
+described below.
+
+Currently, the best way to get started writing a plugin is to read the source
+code for a similar existing plugin.
+
+As of this writing, there are the following PLUGIN_TYPEs:
+
+  * file_loader: Capable of loading a file and returning it as a layer.
+  * file_saver: Capable of saving a layer to a file.
+  * raster_layer: An in-memory set of raster (bitmap) data.
+  * vector_layer: An in-memory set of vector (point, line, or polygon) data.
+  * layer: An in-memory set of general data.
+  * renderer: Capable of drawing layers to the screen.
+
+
+Layers
+------
+
+A layer in Maproom is the "model" from a model-view-controller perspective
+(http://en.wikipedia.org/wiki/Model-View-Controller), as it contains the
+geographic data upon which the rest of the application operates. However, each
+layer does contain a fair amount of code as well for interacting with the
+data, sending messages about the data, and so on.
+
+There are basically two types of layers: Composite layers and non-composite
+layers. Composite layers contain little of their own data and act as
+containers for more primitive layers. Examples include a Line_point_layer
+(which can represent loaded Verdat or other files) and a Polygon_point_layer
+(which can represent loaded polygon files).
+
+Non-composite layers contain the actual data for points, lines, and polygons.
+For example, there is a Point_set_layer, which contains an array of point
+coordinates for a particular layer. There's also a Line_set_layer, which
+contains an array of line segment data connecting some points.
+
+Geographic position data in these layers are stored in the "native" projection
+and coordinates of the data. So if the source file contains Mercator data,
+then the resulting loaded layer will be in Mercator.
+
+
+Rendering
+---------
+
+Maproom renders all loaded layers to the screen with OpenGL, and the rendering
+code is its own gigantic plugin in the maproomlib/plugin/Opengl_renderer
+directory. Right now that's the only renderer, although in principle other
+renderers could be written.
+
+Within the Opengl_renderer, there is a "sub-renderer" corresponding to each of
+the various layer types. So there is a sub-renderer that knows how to render
+Polygon_set_layers, a sub-renderer that can only render Line_set_layers, etc.
+The Opengl_render invokes each one in turn in order to render all of the
+different layers shown on a map.
+
+One task that these sub-renderers perform is making sure that all of the data
+from the various layers are reprojected to a common display projection.
+If this reprojection was not done, then the various layers wouldn't line up
+when rendered. Since it's more difficult to reproject raster data than vector
+data, this usually means that if a raster map is loaded, then Maproom
+reprojects all vector data layers to that raster map's projection before
+rendering.
+
+Note that this doesn't alter the data as stored in the layers themselves --
+those are left untouched. It's just that before rendering, the vector data is
+reprojected, and this reprojected position data is cached to improve
+performance.
+
+If you're just interested in adding new file loading or saving plugins for
+existing layer types (such as raster data, points, lines, or polygons), then
+you shouldn't need to even look at the renderer code. You'll only need to
+write a new renderer if you want to support a new layer type.
+
+
+User Interface
+--------------
+
+The actual Maproom UI code, including menus and the toolbar, is found within
+the top-level maproom directory since it's application-specific. It's pretty
+unremarkable wxPython code. The main thing to know is that much of it is
+driven by asynchronous messages from the underlying layers.
+
+Some user interface code is within the maproomlib/plugin/Opengl_renderer
+directory. For instance, the way that Maproom currently supports picking
+points or lines with the mouse is necessarily OpenGL-specific, so it's found
+within that renderer.
+
+Any theoretically reusable UI code is found within the maproomlib/ui
+directory.
+
+
+Module Block Diagram
+--------------------
+
+This is a pretty rough depiction and not strictly accurate, but it should give
+you a general idea about how the various modules fit together.
+
++----------------------------------------+
+|               maproom.ui               |
++----------------------------------------+
+|             maproomlib.ui              |
++------------------------------------+---+
+|           maproomlib.plugin        |   |
++   +--------------------------------+   |
+|   |       maproomlib.utility           |
++---+------------------------------------+
+|     3rd-party library dependencies     |
++----------------------------------------+
+
+
+Program Flow: Initialization
+----------------------------
+
+When maproom/maproom.py is launched with Python, Maproom first performs some
+basic initialization like enabling logging, setting paths, and redirecting
+stdout/stderr. Then it creates a separate thread with its own scheduler where
+the program's non-UI work is performed. This includes tasks for the root
+composite layer (maproomlib/plugin/Composite_layer.py) that holds all of the
+other layers, the command stack (maproomlib/utility/Command_stack.py) which
+supports undo/redo, and the plugin loader
+(maproomlib/utility/Plugin_loader.py) which is responsible for discovering and
+loading plugins.
+
+Lastly, the current thread schedules creation of the application UI
+(maproom/ui/Application.py), which initializes a renderer (currently
+maproomlib/plugin/Opengl_renderer/__init__.py), opens a window, and handles UI
+events as they come in.
+
+If any arguments are given on the command-line (currently only filenames to
+load), they are passed to the application UI when it is initialized. This
+causes each data file to be loaded in turn with the plugin loader, which adds
+the loaded layer as a child of the root layer and issues appropriate messages.
+
+When the renderer receives a layer added message, it creates the appropriate
+sub-renderer for that layer type. For instance, if the plugin loader loads a
+new point layer (maproomlib/plugin/Point_set_layer.py), then the renderer will
+create a corresponding sub-renderer that knows how to render points
+(maproomlib/plugin/Opengl_renderer/Point_set_renderer.py). In this manner, a
+tree of parent and child sub-renderers is created in the UI thread that
+mirrors the structure of the underlying layer tree in the non-UI thread.
+
+A similar process occurs when a user loads a data file via the UI rather than
+the command-line.
+
+
+Program Flow: Selecting a Point
+-------------------------------
+
+When a user performs an operation like clicking on a vector point on the map
+to select it, the following steps occur. First, the object picker
+(maproomlib/plugin/Opengl_renderer/Object_picker.py) determines that the point
+was clicked, and it sends a replace selection message to the root layer. The
+root layer forwards the message to its child layers, which means that
+eventually the message arrives at the selection layer
+(maproomlib/plugin/Selection_layer.py) responsible for the selecting the
+points. Each loaded top-level child of the root layer typically has its own
+separate selection layer.
+
+The selection layer responds to the replace selection message by making a new
+selection containing the clicked point and replacing any existing selection
+with it. This causes a notification message to be issued about the new
+selection. The renderer (maproomlib/plugin/Opengl_renderer/__init__.py)
+receives this message, and thus instructs the appropriate point set
+sub-renderer (maproomlib/plugin/Opengl_renderer/Point_set_renderer.py) to
+display an orange highlight around the selected point, indicating to the user
+that the point has been selected. Note that the selection highlight is
+rendered as a completely separate layer underneath the original point layer.

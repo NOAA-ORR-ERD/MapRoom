@@ -1,0 +1,10 @@
+syntax: glob
+
+*.pyc
+*.pyd
+*.swp
+.coverage
+build
+dist
+.svn
+*~

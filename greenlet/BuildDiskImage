@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# Script to build an OS_X disk image from the Converter app.
+# Determines version based on contents of maproom/Version.py.
+
+VERSION=`grep ^VERSION maproom/Version.py | cut -d '=' -f 2 | sed -e 's/"//g'`
+SPACELESS_VERSION=`echo $VERSION | tr ' ' '_'`
+SVN_REVISION=`svn info | grep "^Last Changed Rev: " | cut -d " " -f 4`
+PYTHON_BASE_VERSION=2.6
+
+# These two commands are necessary to copy the Python binary to a location
+# where py2app will find it.
+mkdir -p dist/Maproom.app/Contents/Frameworks/Python.framework/Versions/${PYTHON_BASE_VERSION}
+cp /Library/Frameworks/Python.framework/Versions/${PYTHON_BASE_VERSION}/Python dist/Maproom.app/Contents/Frameworks/Python.framework/Versions/${PYTHON_BASE_VERSION}/
+
+/usr/bin/hdiutil create \
+    -srcfolder dist \
+    -volname "Maproom ${VERSION} (r${SVN_REVISION}) Disk Image" \
+    -ov "Maproom_${SPACELESS_VERSION}_r${SVN_REVISION}.dmg"
