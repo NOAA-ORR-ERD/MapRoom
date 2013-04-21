@@ -1,0 +1,154 @@
+{
+    "settings" : {
+        "virtualenv": "%(HOMEDIR)s/env/maproom",
+        "uses_setuptools": "TRUE",
+        "darwin" : {
+            "archs": ["i386"],
+            "min-version": "10.6",
+            "env_vars": {
+                "CC": "gcc-4.0",
+                "CXX": "g++-4.0"
+            }
+        }
+        
+    },
+    "packages" : [
+    {
+        "name": "proj",
+        "version": "4.7.0",
+        "source": "http://download.osgeo.org/proj/proj-4.7.0.tar.gz",
+        "darwin": {
+            "ignore": "TRUE"
+        }
+    },
+    {
+        "name": "libiconv",
+        "version": "1.14",
+        "source": "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz",
+        "win32": {
+            "ignore": "TRUE",
+            "build_args": ["NO_NLS=1"],
+            "project_file": "Makefile.msvc"
+        },
+        "darwin": {
+            "ignore": "TRUE"
+        }
+    },
+    {
+        "name": "gfortran",
+        "version": "4.2.3",
+        "darwin": {
+            "dmg": "http://cran.r-project.org/bin/macosx/tools/gfortran-4.2.3.dmg",
+            "installer": "gfortran.pkg",
+            "installer_requires_admin": "TRUE"
+        },
+        "win32": {
+            "ignore": "TRUE"
+        }
+    },
+    {
+        "name": "ogdi",
+        "version": "3.2.0.beta2",
+        "format": "gnumake",
+        "project_file": "makefile",
+        "source": "http://sourceforge.net/projects/ogdi/files/ogdi/3.2.0beta2/ogdi-3.2.0.beta2.tar.gz/download",
+        "darwin": {
+            "ignore": "TRUE"
+        },
+        "configure_args" : ["--with-proj='%(SRCDIR)s/..'", "--with-expat"],
+        "win32": {
+            "ignore": "TRUE",
+            "prebuild_script": "ogdi_prebuild.py",
+            "postinstall_cmds" : [
+                "cp bin/win32/*.dll ../dlls"
+            ],
+            "env_vars": {
+                "TOPDIR" : "%(SRCDIR)s",
+                "TARGET": "win32",
+                "MSVCDIR": "/cygdrive/c/Program\\ Files/Microsoft\\ Visual\\ Studio\\ 9.0/VC",
+                "MSVCDIR_NATIVE" : "\"c:\\Program Files\\Microsoft Visual Studio 9.0\\VC\"",
+                "SDKDIR_NATIVE" : "\"c:\\Program Files\\Microsoft SDKs\\Windows\\v6.0A\"",
+                "INCLUDE" : "%INCLUDE%;%(SRCDIR)s/../libiconv-1.11/include",
+                "LIB" : "%LIB%;%(SRCDIR)s/../libiconv-1.11/lib",
+                "PATH": "%(PYTHON)s;%PATH%;C:\\cygwin\\bin"
+            }
+        }
+    },
+    {
+        "name": "greenlet",
+        "source": "http://pypi.python.org/packages/source/g/greenlet/greenlet-0.3.4.zip#md5=530a69acebbb0d66eb5abd83523d8272",
+        "version": "0.3.4",
+        "build_type": "python"
+    },
+    {
+        "name": "gdal",
+        "version": "1.9.2",
+        "configure_args": ["--with-unix-stdio-64=no"],
+        "source": "http://download.osgeo.org/gdal/gdal-1.9.2.tar.gz",
+        "postinstall_cmds" : [
+                "cd swig/python",
+                "%(PYTHON)s setup.py install",
+                "cd ../.."
+        ],
+        "win32": {
+            "binary": "http://www.lfd.uci.edu/~gohlke/pythonlibs/5ury6iz9/GDAL-1.9.1.win32-py2.7.exe",
+            "installer": "GDAL-1.9.1.win32-py2.7.exe"
+        }
+    },
+    {
+        "name": "Cython",
+        "source": "http://cython.org/release/Cython-0.15.1.tar.gz",
+        "version": "0.15.1",
+        "build_type": "python"
+    },
+    {
+        "name": "numpy",
+        "source": "http://sourceforge.net/projects/numpy/files/NumPy/1.6.1/numpy-1.6.1.tar.gz/download",
+        "version": "1.6.1",
+        "build_type": "python"
+    },
+    {
+        "name": "scipy",
+        "source": "http://sourceforge.net/projects/scipy/files/scipy/0.10.1/scipy-0.10.1.tar.gz/download",
+        "version": "0.10.1",
+        "build_type": "python",
+        "win32": {
+            "binary": "http://sourceforge.net/projects/scipy/files/scipy/0.10.1/scipy-0.10.1-win32-superpack-python2.7.exe/download",
+            "installer": "scipy-0.10.1-win32-superpack-python2.7.exe"
+        }
+    },
+    {
+        "name": "PyOpenGL",
+        "source": "http://pypi.python.org/packages/source/P/PyOpenGL/PyOpenGL-3.0.1.tar.gz#md5=cdf03284f24279b8d9914bb680a37b5e",
+        "version": "3.0.1",
+        "build_type": "python"
+    },
+    {
+        "name": "PyOpenGL-accelerate",
+        "source": "http://pypi.python.org/packages/source/P/PyOpenGL-accelerate/PyOpenGL-accelerate-3.0.1.tar.gz#md5=4014cd203dd5f52109a76edc4c14a480",
+        "version": "3.0.1",
+        "build_type": "python"
+    },
+    {
+        "name": "pyproj",
+        "source": "http://pyproj.googlecode.com/files/pyproj-1.9.0.tar.gz",
+        "version": "1.9.0",
+        "build_type": "python",
+        "win32": {
+            "binary": "http://pyproj.googlecode.com/files/pyproj-1.9.0.win32-py2.7.exe",
+            "installer": "pyproj-1.9.0.win32-py2.7.exe"
+        }
+    },
+    {
+        "name": "pytriangle",
+        "version": "2.6.1",
+        "build_type": "python"
+    },
+    {
+        "name": "pygarmin",
+        "source": "https://github.com/quentinsf/pygarmin.git",
+        "version": "0.7",
+        "build_type": "python"
+    }
+    ]
+}
