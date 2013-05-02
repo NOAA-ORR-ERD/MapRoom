@@ -96,6 +96,18 @@
         }
     },
     {
+        "name": "wxPython",
+        "source": "http://downloads.sourceforge.net/wxpython/wxPython-src-2.9.4.0.tar.bz2",
+        "version": "2.9.4.0",
+        "build_type": "python",
+        "darwin": {
+            "dmg": "http://downloads.sourceforge.net/wxpython/wxPython2.9-osx-2.9.4.0-cocoa-py2.7.dmg",
+            "installer": "wxPython2.9-osx-cocoa-py2.7.pkg",
+            "postinstall_script": "wxpython_postinstall.py",
+            "installer_requires_admin": "TRUE"
+        }
+    },
+    {
         "name": "Cython",
         "source": "http://cython.org/release/Cython-0.15.1.tar.gz",
         "version": "0.15.1",
