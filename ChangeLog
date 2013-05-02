@@ -1,3 +1,8 @@
+5/2/2013
+---------------------------
+- KO Added setup.cfg so that `python setup_library.py install` installs to the correct dir.
+- KO Changed line editing mode to allow point selection when shift is held down
+
 4/14/2013
 ---------------------------
 - KO Refactored layer rendering logic into a new class LayerRendererOpenGL

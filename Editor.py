@@ -145,7 +145,7 @@ class Editor():
         
         if ( self.app.renderer.mode == self.app.renderer.MODE_EDIT_LINES ):
             if ( event.ControlDown() or event.ShiftDown() ):
-                # act_like_point_tool = True
+                act_like_point_tool = True
                 pass
             else:
                 point_indexes = layer.get_selected_point_indexes()
