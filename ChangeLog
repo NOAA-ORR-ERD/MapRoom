@@ -1,3 +1,7 @@
+5/3/2013
+---------------------------
+- KO Fixed an issue with how Layer_maanger detects raster and vector layers
+
 5/2/2013
 ---------------------------
 - KO Added setup.cfg so that `python setup_library.py install` installs to the correct dir.

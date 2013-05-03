@@ -166,7 +166,7 @@ class Layer_manager():
     def count_raster_layers( self ):
         n = 0
         for layer in self.flatten():
-            if ( layer.image_set_renderer != None ):
+            if ( layer.images != None ):
                 n += 1
         #
         return n
@@ -174,9 +174,9 @@ class Layer_manager():
     def count_vector_layers( self ):
         n = 0
         for layer in self.flatten():
-            if ( layer.point_and_line_set_renderer != None or
-                 layer.polygon_set_renderer != None or
-                 layer.label_set_renderer != None ):
+            if ( layer.points != None or
+                 layer.polygons != None or
+                 layer.labels_visible ):
                 n += 1
         #
         return n
