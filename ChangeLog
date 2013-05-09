@@ -1,3 +1,7 @@
+5/8/2013
+---------------------------
+- KO Renamed Transformer class to Projection and added projection function to fully wrap pyproj
+
 5/3/2013
 ---------------------------
 - KO Fixed an issue with how Layer_maanger detects raster and vector layers

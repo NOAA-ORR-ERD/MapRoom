@@ -3,13 +3,12 @@ import os.path
 import time
 import sys
 import numpy as np
-import pyproj
 from scipy.spatial.ckdtree import cKDTree
 import wx
 import library.File_loader as File_loader
 from library.accumulator import flatten
 from library.color import *
-from library.Transformer import *
+from library.Projection import *
 import library.rect as rect
 from library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
 from pytriangle import triangulate_simple
@@ -960,7 +959,7 @@ class Layer():
             self.POINT_XY_VIEW_DTYPE
         ).xy[ : ].copy()
         
-        latlong = pyproj.Proj( "+proj=latlong" )
+        latlong_proj = Projection( "+proj=latlong" )
 
         # If necessary, convert points to lat-long before find duplicates.
         # This makes the distance tolerance work properly.
@@ -969,8 +968,7 @@ class Layer():
             points = points.view(
                 [ ( "x", np.float32 ), ( "y", np.float32 ) ]
             ).view( np.recarray )
-            latlong_transformer = Transformer( latlong )
-            latlong_transformer.transform_many(
+            latlong_proj.transform_many(
                 points, points, projection, set_cache = False
             )
 

@@ -3,7 +3,7 @@ import pyproj
 from Cache import Cache
 
 
-class Transformer:
+class Projection:
     """
     A class used for transforming points from one projection to another. This
     is typically accomplished by wrapping a :class:`maproomlib.utility.Inbox`
@@ -17,10 +17,21 @@ class Transformer:
     MAX_CACHE_ENTRIES = 20
 
     def __init__( self, projection ):
-        self.projection = projection
+        self.proj = pyproj.Proj( projection )
+        self.srs = self.proj.srs
 
         # ( id of original array, original projection ) -> transformed points
         self.cache = Cache( self.MAX_CACHE_ENTRIES )
+        
+    def projection( self, x, y, inverse = False ):
+        if self.is_identity():
+            return (x, y)
+        
+        return self.proj( x, y, inverse=inverse )
+
+    def is_identity( self ):
+        identity = self.srs.find( "+proj=latlong" ) != -1
+        return identity
 
     def transform( self, point, source_projection ):
         """
@@ -36,7 +47,7 @@ class Transformer:
         :rtype: ( x, y ) tuple
         """
         return pyproj.transform(
-            source_projection, self.projection,
+            source_projection, self.proj,
             point[ 0 ], point[ 1 ],
         )
 
@@ -54,7 +65,7 @@ class Transformer:
         :rtype: ( x, y ) tuple
         """
         return pyproj.transform(
-            self.projection, destination_projection,
+            self.proj, destination_projection,
             point[ 0 ], point[ 1 ],
         )
 
@@ -77,7 +88,7 @@ class Transformer:
         :type set_cache: bool
         """
         ( destination_points.x, destination_points.y ) = pyproj.transform(
-            source_projection, self.projection,
+            source_projection, self.proj,
             source_points.x, source_points.y,
         )
 
@@ -141,4 +152,19 @@ class Transformer:
         :type projection: pyproj.Proj
         """
         self.cache.clear()
-        self.projection = projection
+        self.proj = pyproj.Proj( projection )
+        self.srs = self.proj.srs
+
+import unittest
+
+class ProjectionTests(unittest.TestCase):
+    def testIdentity(self):
+        proj = Projection( "+proj=latlong" )
+        orig_point = (-62.242000,  12.775000)
+        new_point = proj.projection(orig_point[0], orig_point[1])
+        
+        self.assertEqual(orig_point, new_point)
+
+if __name__ == "__main__":
+    unittest.main()
+            
