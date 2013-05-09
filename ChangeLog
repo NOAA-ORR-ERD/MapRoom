@@ -1,3 +1,8 @@
+5/9/2013
+---------------------------
+- KO Fixed an issue introduced by the use of Projection class by adding a __call__ method
+- KO Added testRunner.py to run all unit tests, along with RenderWindow unit tests
+
 5/8/2013
 ---------------------------
 - KO Renamed Transformer class to Projection and added projection function to fully wrap pyproj
