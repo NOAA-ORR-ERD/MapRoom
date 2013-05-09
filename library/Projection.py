@@ -23,6 +23,9 @@ class Projection:
         # ( id of original array, original projection ) -> transformed points
         self.cache = Cache( self.MAX_CACHE_ENTRIES )
         
+    def __call__(self, x, y, inverse = False ):
+        return self.projection(x, y, inverse=inverse)
+        
     def projection( self, x, y, inverse = False ):
         if self.is_identity():
             return (x, y)
@@ -165,6 +168,6 @@ class ProjectionTests(unittest.TestCase):
         
         self.assertEqual(orig_point, new_point)
 
-if __name__ == "__main__":
-    unittest.main()
+def getTestSuite():
+    return unittest.makeSuite(ProjectionTests)
             

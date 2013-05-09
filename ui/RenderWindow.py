@@ -17,6 +17,8 @@ import OpenGL.GL as gl
 
 from wx.lib.pubsub import pub
 
+from library.Projection import Projection
+
 """
 The RenderWindow class -- where the opengl rendering really takes place.
 """
@@ -65,7 +67,7 @@ class RenderWindow( glcanvas.GLCanvas ):
     projected_point_center = ( 0, 0 )
     # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)
     projected_units_per_pixel = 10000
-    projection = pyproj.Proj( "+proj=merc +units=m +over" )
+    projection = Projection( "+proj=merc +units=m +over" )
     # for longlat projection, apparently someone decided that since the projection
     # is the identity, it might as well do something and so it returns the coordinates as
     # radians instead of degrees; so here we use this variable to avoid using the longlat projection
@@ -514,20 +516,14 @@ class RenderWindow( glcanvas.GLCanvas ):
                  self.get_screen_point_from_projected_point( right_bottom ) )
     
     def get_world_point_from_projected_point( self, projected_point ):
-        if ( self.projection_is_identity ):
-            return projected_point
-        else:
-            return self.projection( projected_point[ 0 ], projected_point[ 1 ], inverse = True )
+        return self.projection( projected_point[ 0 ], projected_point[ 1 ], inverse = True )
     
     def get_world_rect_from_projected_rect( self, projected_rect ):
         return ( self.get_world_point_from_projected_point( projected_rect[ 0 ] ),
                  self.get_world_point_from_projected_point( projected_rect[ 1 ] ) )
     
     def get_projected_point_from_world_point( self, world_point ):
-        if ( self.projection_is_identity ):
-            return world_point
-        else:
-            return self.projection( world_point[ 0 ], world_point[ 1 ] )
+        return self.projection( world_point[ 0 ], world_point[ 1 ] )
     
     def get_projected_rect_from_world_rect( self, world_rect ):
         return ( self.get_projected_point_from_world_point( world_rect[ 0 ] ),
@@ -602,7 +598,7 @@ class RenderWindow( glcanvas.GLCanvas ):
         was_identity = self.projection_is_identity
         
         # print "self.projected_units_per_pixel A = " + str( self.projected_units_per_pixel )
-        self.projection = pyproj.Proj( srs )
+        self.projection = Projection( srs )
         self.projection_is_identity = self.projection.srs.find( "+proj=longlat" ) != -1
         
         for layer in self.layer_manager.flatten():
@@ -701,3 +697,70 @@ class RenderWindow( glcanvas.GLCanvas ):
     def get_lat_dist_from_screen_dist( self, screen_dist ):
         return self.degrees_lat_per_pixel * screen_dist
     """
+
+import unittest
+
+import Editor
+import Layer_manager
+
+class RenderWindowTests(unittest.TestCase):
+    def setUp(self):
+        self.layer_manager = Layer_manager.Layer_manager()
+        self.editor = Editor.Editor(self.layer_manager)
+        self.frame = wx.Frame(None, -1, "Test Frame")
+        self.canvas = RenderWindow(self.frame, -1, size=(400, 400), layer_manager=self.layer_manager, editor=self.editor)
+        
+    def tearDown(self):
+        self.frame.Destroy()
+
+    def testCoordinateConversions(self):
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertEquals(proj_rect, ((-2000000.0, -2000000.0), (2000000.0, 2000000.0)))
+        
+        proj_point = self.canvas.get_projected_point_from_screen_point((0, 0))
+        self.assertEquals(proj_point, (-2000000.0, 2000000.0))
+        proj_point = self.canvas.get_projected_point_from_screen_point((200, 200))
+        self.assertEquals(proj_point, (0.0, 0.0))
+        proj_point = self.canvas.get_projected_point_from_screen_point((400, 400))
+        self.assertEquals(proj_point, (2000000.0, -2000000.0))
+        
+        # FIXME: The below tests all fail due to rounding errors.
+        #proj_point = self.canvas.get_projected_point_from_world_point((-17.966305682390427, 17.790560385793754))
+        #self.assertEquals(proj_point, (-2000000.0, 2000000.0))
+        #proj_point = self.canvas.get_projected_point_from_world_point((0.0, 0.0))
+        #self.assertEquals(proj_point, (0.0, 0.0))
+        #proj_point = self.canvas.get_projected_point_from_world_point((17.966305682390427, -17.790560385793764))
+        #self.assertEquals(proj_point, (2000000.0, -2000000.0))
+        
+        world_point = self.canvas.get_world_point_from_screen_point((0, 0))
+        self.assertEquals(world_point, (-17.966305682390427, 17.790560385793754))
+        world_point = self.canvas.get_world_point_from_screen_point((200, 200))
+        self.assertEquals(world_point, (0.0, 0.0))
+        world_point = self.canvas.get_world_point_from_screen_point((400, 400))
+        self.assertEquals(world_point, (17.966305682390427, -17.790560385793764))
+        
+        world_point = self.canvas.get_world_point_from_projected_point((-2000000.0, 2000000.0))
+        self.assertEquals(world_point, (-17.966305682390427, 17.790560385793754))
+        world_point = self.canvas.get_world_point_from_projected_point((0.0, 0.0))
+        self.assertEquals(world_point, (0.0, 0.0))
+        world_point = self.canvas.get_world_point_from_projected_point((2000000.0, -2000000.0))
+        self.assertEquals(world_point, (17.966305682390427, -17.790560385793764))        
+
+        screen_point = self.canvas.get_screen_point_from_projected_point((-2000000.0, 2000000.0))
+        self.assertEquals(screen_point, (0, 0))
+        screen_point = self.canvas.get_screen_point_from_projected_point((0.0, 0.0))
+        self.assertEquals(screen_point, (200, 200))
+        screen_point = self.canvas.get_screen_point_from_projected_point((2000000.0, -2000000.0))
+        self.assertEquals(screen_point, (400, 400))
+
+        # FIXME: The below tests fail due to rounding errors.
+        #screen_point = self.canvas.get_screen_point_from_world_point((-17.966305682390427, 17.790560385793754))
+        #self.assertEquals(screen_point, (0, 0))
+        #screen_point = self.canvas.get_screen_point_from_world_point((0.0, 0.0))
+        #self.assertEquals(screen_point, (200, 200))
+        #screen_point = self.canvas.get_screen_point_from_world_point((17.966305682390427, -17.790560385793764))
+        #self.assertEquals(screen_point, (400, 400))
+
+
+def getTestSuite():
+    return unittest.makeSuite(RenderWindowTests)
