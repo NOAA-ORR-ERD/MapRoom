@@ -719,6 +719,9 @@ class RenderWindowTests(unittest.TestCase):
         proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
         self.assertEquals(proj_rect, ((-2000000.0, -2000000.0), (2000000.0, 2000000.0)))
         
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        self.assertEquals(world_rect, ((-17.966305682390427, -17.790560385793764), (17.966305682390427, 17.790560385793754)))
+        
         proj_point = self.canvas.get_projected_point_from_screen_point((0, 0))
         self.assertEquals(proj_point, (-2000000.0, 2000000.0))
         proj_point = self.canvas.get_projected_point_from_screen_point((200, 200))
