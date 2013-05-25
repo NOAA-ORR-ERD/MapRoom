@@ -536,7 +536,9 @@ class RenderWindow( glcanvas.GLCanvas ):
         return self.get_world_rect_from_projected_rect( self.get_projected_rect_from_screen_rect( screen_rect ) )
     
     def get_screen_point_from_world_point( self, world_point ):
-        return self.get_screen_point_from_projected_point( self.get_projected_point_from_world_point( world_point ) )
+        screen_point = self.get_screen_point_from_projected_point( self.get_projected_point_from_world_point( world_point ) ) 
+        # screen points are pixels, which should be int values
+        return ( round(screen_point[0]), round(screen_point[1]) )
     
     def get_screen_rect_from_world_rect( self, world_rect ):
         return self.get_screen_rect_from_projected_rect( self.get_projected_rect_from_world_rect( world_rect ) )
@@ -724,13 +726,14 @@ class RenderWindowTests(unittest.TestCase):
         proj_point = self.canvas.get_projected_point_from_screen_point((400, 400))
         self.assertEquals(proj_point, (2000000.0, -2000000.0))
         
-        # FIXME: The below tests all fail due to rounding errors.
-        #proj_point = self.canvas.get_projected_point_from_world_point((-17.966305682390427, 17.790560385793754))
-        #self.assertEquals(proj_point, (-2000000.0, 2000000.0))
-        #proj_point = self.canvas.get_projected_point_from_world_point((0.0, 0.0))
-        #self.assertEquals(proj_point, (0.0, 0.0))
-        #proj_point = self.canvas.get_projected_point_from_world_point((17.966305682390427, -17.790560385793764))
-        #self.assertEquals(proj_point, (2000000.0, -2000000.0))
+        # We get values like 19999999.99999, so we round the return values before running
+        # comparisons.
+        proj_point = self.canvas.get_projected_point_from_world_point((-17.966305682390427, 17.790560385793754))
+        self.assertEquals((round(proj_point[0]), round(proj_point[1])), (-2000000.0, 2000000.0))
+        proj_point = self.canvas.get_projected_point_from_world_point((0.0, 0.0))
+        self.assertEquals((round(proj_point[0]), round(proj_point[1])), (0.0, 0.0))
+        proj_point = self.canvas.get_projected_point_from_world_point((17.966305682390427, -17.790560385793764))
+        self.assertEquals((round(proj_point[0]), round(proj_point[1])), (2000000.0, -2000000.0))
         
         world_point = self.canvas.get_world_point_from_screen_point((0, 0))
         self.assertEquals(world_point, (-17.966305682390427, 17.790560385793754))
@@ -753,13 +756,12 @@ class RenderWindowTests(unittest.TestCase):
         screen_point = self.canvas.get_screen_point_from_projected_point((2000000.0, -2000000.0))
         self.assertEquals(screen_point, (400, 400))
 
-        # FIXME: The below tests fail due to rounding errors.
-        #screen_point = self.canvas.get_screen_point_from_world_point((-17.966305682390427, 17.790560385793754))
-        #self.assertEquals(screen_point, (0, 0))
-        #screen_point = self.canvas.get_screen_point_from_world_point((0.0, 0.0))
-        #self.assertEquals(screen_point, (200, 200))
-        #screen_point = self.canvas.get_screen_point_from_world_point((17.966305682390427, -17.790560385793764))
-        #self.assertEquals(screen_point, (400, 400))
+        screen_point = self.canvas.get_screen_point_from_world_point((-17.966305682390427, 17.790560385793754))
+        self.assertEquals(screen_point, (0, 0))
+        screen_point = self.canvas.get_screen_point_from_world_point((0.0, 0.0))
+        self.assertEquals(screen_point, (200, 200))
+        screen_point = self.canvas.get_screen_point_from_world_point((17.966305682390427, -17.790560385793764))
+        self.assertEquals(screen_point, (400, 400))
 
 
 def getTestSuite():
