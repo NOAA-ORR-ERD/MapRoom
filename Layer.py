@@ -334,7 +334,7 @@ class Layer():
         
         if ( self.load_error_string == "" ):
             self.bounds = self.compute_bounding_rect()
-            app_globals.application.renderer.zoom_to_world_rect( self.bounds )
+            pub.sendMessage( ('layer', 'loaded'), layer = self )
     
     def make_points( self, count ):
         return np.repeat(

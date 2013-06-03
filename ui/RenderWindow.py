@@ -702,18 +702,37 @@ class RenderWindow( glcanvas.GLCanvas ):
 
 import unittest
 
+# imports needed only for tests
 import Editor
+import Layer
 import Layer_manager
+import RenderController
 
 class RenderWindowTests(unittest.TestCase):
     def setUp(self):
         self.layer_manager = Layer_manager.Layer_manager()
         self.editor = Editor.Editor(self.layer_manager)
-        self.frame = wx.Frame(None, -1, "Test Frame")
+        self.frame = wx.Frame(None, -1, "Test Frame", size=(400, 440))
+        self.frame.CreateStatusBar()
         self.canvas = RenderWindow(self.frame, -1, size=(400, 400), layer_manager=self.layer_manager, editor=self.editor)
+        self.render_controller = RenderController.RenderController(self.layer_manager, self.canvas)
+        self.frame.Show()
         
     def tearDown(self):
-        self.frame.Destroy()
+        # NOTE: The frame cannot be immediately destroyed here, or else it gets messages
+        # while being partially deleted. We need to give the thread a bit of time for proper shut down
+        wx.CallAfter(self.frame.Destroy)
+
+    def testRenderLoadedFile(self):
+        layer = Layer.Layer()
+        layer.read_from_file(os.path.abspath("TestData/Verdat/000026pts.verdat"))
+        self.layer_manager.insert_layer(None, layer)
+        
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertEquals(proj_rect, ((-9305004.516951878, -920746.4576416654), (-1316099.4471520581, 7068158.612158153)))
+        
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        self.assertEquals(world_rect, ((-83.58827776379056, -8.297405610026354), (-11.822722487979462, 53.64172954714474)))           
 
     def testCoordinateConversions(self):
         proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
