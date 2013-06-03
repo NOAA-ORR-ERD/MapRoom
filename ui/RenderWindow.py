@@ -541,7 +541,8 @@ class RenderWindow( glcanvas.GLCanvas ):
         return ( round(screen_point[0]), round(screen_point[1]) )
     
     def get_screen_rect_from_world_rect( self, world_rect ):
-        return self.get_screen_rect_from_projected_rect( self.get_projected_rect_from_world_rect( world_rect ) )
+        rect = self.get_screen_rect_from_projected_rect( self.get_projected_rect_from_world_rect( world_rect ) )
+        return ((int(round(rect[0][0])), int(round(rect[0][1]))), (int(round(rect[1][0])), int(round(rect[1][1]))))
     
     def zoom_in( self ):
         self.projected_units_per_pixel /= 2.0;
@@ -785,6 +786,37 @@ class RenderWindowTests(unittest.TestCase):
         screen_point = self.canvas.get_screen_point_from_world_point((17.966305682390427, -17.790560385793764))
         self.assertEquals(screen_point, (400, 400))
 
+    def testZoom(self):
+        screen_rect = self.canvas.get_screen_rect()
+        print "screen rect = %r" % (screen_rect, )
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertEquals(proj_rect, ((-2000000.0, -2000000.0), (2000000.0, 2000000.0)))
+        
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        self.assertEquals(world_rect, ((-17.966305682390427, -17.790560385793764), (17.966305682390427, 17.790560385793754)))
+
+        screen_rect = self.canvas.get_screen_rect_from_world_rect(world_rect)
+        self.assertEquals(screen_rect, self.canvas.get_screen_rect())
+
+        self.canvas.zoom_in()
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertEquals(proj_rect, ((-1000000.0, -1000000.0), (1000000.0, 1000000.0)))
+        
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        #self.assertEquals(world_rect, ((-17.966305682390427, -17.790560385793764), (17.966305682390427, 17.790560385793754)))
+
+        screen_rect = self.canvas.get_screen_rect_from_world_rect(world_rect)
+        self.assertEquals(screen_rect, self.canvas.get_screen_rect())        
+        
+        self.canvas.zoom_out()
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertEquals(proj_rect, ((-2000000.0, -2000000.0), (2000000.0, 2000000.0)))
+
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        self.assertEquals(world_rect, ((-17.966305682390427, -17.790560385793764), (17.966305682390427, 17.790560385793754)))
+
+        screen_rect = self.canvas.get_screen_rect_from_world_rect(world_rect)
+        self.assertEquals(screen_rect, self.canvas.get_screen_rect())
 
 def getTestSuite():
     return unittest.makeSuite(RenderWindowTests)
