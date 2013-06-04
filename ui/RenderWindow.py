@@ -724,6 +724,19 @@ class RenderWindowTests(unittest.TestCase):
         # while being partially deleted. We need to give the thread a bit of time for proper shut down
         wx.CallAfter(self.frame.Destroy)
 
+    def testLonLatGrid(self):
+        screen_rect = self.canvas.get_screen_rect()
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(screen_rect)
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        
+        grid = self.canvas.lon_lat_grid
+        grid.resize(world_rect, screen_rect)
+        
+        self.assertEquals(grid.lat_step, 10.0)
+        self.assertEquals(grid.lon_step, 10.0)
+        print "lat_step = %r" % grid.lat_step
+        print "lon_step = %r" % grid.lon_step
+
     def testRenderLoadedFile(self):
         layer = Layer.Layer()
         layer.read_from_file(os.path.abspath("TestData/Verdat/000026pts.verdat"))

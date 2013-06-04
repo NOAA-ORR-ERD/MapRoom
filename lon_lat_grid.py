@@ -38,12 +38,10 @@ class Lon_lat_grid:
     STEP_COUNT = len( STEPS )
     
     def __init__( self ):
-        pass
-    
-    ## fixme == this should be able to get the various rects from the render_window object...
-    def draw( self, render_window, world_rect, projected_rect, screen_rect ):
-        #app = app_globals.application
-        opengl_renderer = render_window.opengl_renderer
+        self.lat_step = self.STEPS[0]
+        self.lon_step = self.STEPS[0]
+        
+    def resize(self, world_rect, screen_rect):
         degrees_lon_per_pixel = float( rect.width( world_rect ) ) / float( rect.width( screen_rect ) )
         degrees_lat_per_pixel = float( rect.height( world_rect ) ) / float( rect.height( screen_rect ) )
         
@@ -51,15 +49,23 @@ class Lon_lat_grid:
                            self.REFERENCE_PIXEL_SIZE[ 1 ] * degrees_lat_per_pixel )
         
         # Determine which grid lines should be shown (degrees, minutes).
-        lon_step = self.STEPS[ min(
+        self.lon_step = self.STEPS[ min(
             bisect.bisect( self.STEPS, abs( reference_size[ 0 ] ) ),
             self.STEP_COUNT - 1,
         ) ]
-        lat_step = self.STEPS[ min(
+        self.lat_step = self.STEPS[ min(
             bisect.bisect( self.STEPS, abs( reference_size[ 1 ] ) ),
             self.STEP_COUNT - 1,
         ) ]
+    
+    ## fixme == this should be able to get the various rects from the render_window object...
+    def draw( self, render_window, world_rect, projected_rect, screen_rect ):
+        #app = app_globals.application
+        opengl_renderer = render_window.opengl_renderer
         
+        self.resize(world_rect, screen_rect)
+        lon_step = self.lon_step
+        lat_step = self.lat_step
         # print "lon_step = " + str( lon_step )
         # print "lat_step = " + str( lat_step )
         # print "world_rect = " + str( world_rect )
