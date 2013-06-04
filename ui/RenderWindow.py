@@ -709,6 +709,8 @@ import Layer
 import Layer_manager
 import RenderController
 
+import numpy as np
+
 class RenderWindowTests(unittest.TestCase):
     def setUp(self):
         self.layer_manager = Layer_manager.Layer_manager()
@@ -731,6 +733,10 @@ class RenderWindowTests(unittest.TestCase):
         
         grid = self.canvas.lon_lat_grid
         grid.resize(world_rect, screen_rect)
+        
+        steps = np.arange(-10.0, 17.790560385793754, 10.0, dtype = np.float64 )
+        self.assertEquals(True, (grid.lat_steps==steps).all())
+        self.assertEquals(True, (grid.lon_steps==steps).all())
         
         self.assertEquals(grid.lat_step, 10.0)
         self.assertEquals(grid.lon_step, 10.0)

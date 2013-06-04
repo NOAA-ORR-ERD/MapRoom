@@ -57,6 +57,18 @@ class Lon_lat_grid:
             bisect.bisect( self.STEPS, abs( reference_size[ 1 ] ) ),
             self.STEP_COUNT - 1,
         ) ]
+        
+        self.lon_steps = np.arange(
+            world_rect[ 0 ][ 0 ] + self.lon_step - world_rect[ 0 ][ 0 ] % self.lon_step,
+            world_rect[ 1 ][ 0 ],
+            self.lon_step,
+            dtype = np.float64 )
+            
+        self.lat_steps = np.arange(
+            world_rect[ 0 ][ 1 ] + self.lat_step - world_rect[ 0 ][ 1 ] % self.lat_step,
+            world_rect[ 1 ][ 1 ],
+            self.lat_step,
+            dtype = np.float64 )
     
     ## fixme == this should be able to get the various rects from the render_window object...
     def draw( self, render_window, world_rect, projected_rect, screen_rect ):
@@ -64,17 +76,11 @@ class Lon_lat_grid:
         opengl_renderer = render_window.opengl_renderer
         
         self.resize(world_rect, screen_rect)
-        lon_step = self.lon_step
-        lat_step = self.lat_step
         # print "lon_step = " + str( lon_step )
         # print "lat_step = " + str( lat_step )
         # print "world_rect = " + str( world_rect )
         
-        for longitude in np.arange(
-            world_rect[ 0 ][ 0 ] + lon_step - world_rect[ 0 ][ 0 ] % lon_step,
-            world_rect[ 1 ][ 0 ],
-            lon_step,
-            dtype = np.float64 ):
+        for longitude in self.lon_steps:
             
             # print "  longitude = " + str( longitude )
             if ( longitude < -180 or longitude > 180 ):
@@ -91,11 +97,7 @@ class Lon_lat_grid:
             """
             opengl_renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] ), s )
         
-        for latitude in np.arange(
-            world_rect[ 0 ][ 1 ] + lat_step - world_rect[ 0 ][ 1 ] % lat_step,
-            world_rect[ 1 ][ 1 ],
-            lat_step,
-            dtype = np.float64 ):
+        for latitude in self.lat_steps:
             
             # print "  latitude = " + str( latitude )
             if ( latitude < -89 or latitude > 89 ):
