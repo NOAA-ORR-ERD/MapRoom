@@ -47,7 +47,8 @@ class Lon_lat_grid:
         
         reference_size = ( self.REFERENCE_PIXEL_SIZE[ 0 ] * degrees_lon_per_pixel,
                            self.REFERENCE_PIXEL_SIZE[ 1 ] * degrees_lat_per_pixel )
-        
+        #print "world_rect = %r" % (world_rect,)
+        #print "reference_size = %r" % (reference_size,)
         # Determine which grid lines should be shown (degrees, minutes).
         self.lon_step = self.STEPS[ min(
             bisect.bisect( self.STEPS, abs( reference_size[ 0 ] ) ),
@@ -74,7 +75,8 @@ class Lon_lat_grid:
     def draw( self, render_window, world_rect, projected_rect, screen_rect ):
         #app = app_globals.application
         opengl_renderer = render_window.opengl_renderer
-        
+        #print "projected_rect = %r" % (projected_rect,)
+        #print "screen_rect = %r" % (screen_rect,)
         self.resize(world_rect, screen_rect)
         # print "lon_step = " + str( lon_step )
         # print "lat_step = " + str( lat_step )
