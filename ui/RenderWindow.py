@@ -765,6 +765,27 @@ class RenderWindowTests(unittest.TestCase):
         world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
         self.assertEquals(world_rect, ((-83.58827776379056, -8.297405610026354), (-11.822722487979462, 53.64172954714474)))           
 
+    def testResizeRenderView(self):
+        # first make sure the defaults are correct
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertEquals(proj_rect, ((-2000000.0, -2000000.0), (2000000.0, 2000000.0)))
+        
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        self.assertEquals(world_rect, ((-17.966305682390427, -17.790560385793764), (17.966305682390427, 17.790560385793754)))
+        
+        newSize = (800, 600)
+        self.canvas.Size = newSize
+        
+        self.assertEquals(((0,0),newSize), self.canvas.get_screen_rect())
+        
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        #print "proj_rect = %r" % (proj_rect,)
+        self.assertEquals(proj_rect, ((-4000000.0, -3000000.0), (4000000.0, 3000000.0)))
+        
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        #print "world_rect = %r" % (world_rect,)
+        self.assertEquals(world_rect, ((-35.932611364780854, -26.15936387187683), (35.932611364780854, 26.159363871876817)))        
+
     def testCoordinateConversions(self):
         proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
         self.assertEquals(proj_rect, ((-2000000.0, -2000000.0), (2000000.0, 2000000.0)))
