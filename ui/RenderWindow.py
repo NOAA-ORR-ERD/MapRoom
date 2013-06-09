@@ -878,5 +878,24 @@ class RenderWindowTests(unittest.TestCase):
         screen_rect = self.canvas.get_screen_rect_from_world_rect(world_rect)
         self.assertEquals(screen_rect, self.canvas.get_screen_rect())
 
+    def testZoomToWorldRect(self):
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        ratio = 1.234 # an uneven ratio so we don't get nice even numbers
+        new_rect = ((proj_rect[0][0] * ratio, proj_rect[0][1] * ratio), (proj_rect[1][0]*ratio, proj_rect[1][1]*ratio))
+        w_r = self.canvas.get_world_rect_from_projected_rect(new_rect)
+        
+        self.canvas.zoom_to_world_rect(w_r)
+        
+        new_proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertNotEqual(proj_rect, new_proj_rect)
+        self.assertEqual(new_proj_rect, ((-2742222.2222222225, -2742222.222222222), (2742222.2222222225, 2742222.222222223)))
+         
+        #print "new_proj_rect = %r" % (new_proj_rect,)
+        
+        new_world_rect = self.canvas.get_world_rect_from_projected_rect(new_proj_rect)
+        self.assertNotEqual(w_r, new_world_rect)
+        self.assertEqual(new_world_rect, ((-24.63380134674421, -24.051051010416202), (24.63380134674421, 24.051051010416202)))
+        #print "new_world_rect = %r" % (new_world_rect,)
+        
 def getTestSuite():
     return unittest.makeSuite(RenderWindowTests)
