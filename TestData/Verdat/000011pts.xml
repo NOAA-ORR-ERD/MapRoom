@@ -1,0 +1,4 @@
+<?xml version="1.0" ?>
+<layer name="000011pts.verdat" type=".verdat" is_expanded="True" is_visible="True" file_path="/Volumes/MacintoshHD2/code/svn/Mapping/TestData/Verdat/000011pts.verdat" depth_unit="unknown" default_depth="1.0">
+  <data_file file_name="000011pts_0.xml" />
+</layer>

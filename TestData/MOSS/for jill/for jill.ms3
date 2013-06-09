@@ -1,0 +1,43 @@
+0, SPILLID: Exercise Scenario
+0, FROM: HAZMAT Trajectory Analysis
+0, CONTACT: NOAA/HAZMAT (206) 526-6411
+0, ISSUED: 1342, 8/17/09
+0, VALIDFOR: 1000, 3/25/10
+0, ADDLEDATA:
+0, CAVEAT: These estimates are based on the latest available information.  Please refer to
+0, CAVEAT: the trajectory analysis briefing and your Scientific Support Coordinator (SSC) for
+0, CAVEAT: more complete information.
+0, CAVEAT: 
+0, CAVEAT: 
+0, FROMLOGO: gnome.bmp
+0, LIGHTHEAVYRANGE: 2,7
+1, Portland
+2, Portsmouth
+3, Boston
+4, Provincetown
+5, Plymouth
+6, Weymouth
+7, Gloucester
+8, Newburyport
+9, Kennebunkport
+10, x
+11, Relative
+12, Distribution*
+13, Light
+14, Medium
+15, Heavy
+16, Confidence
+17, limit
+18, Forecast
+19, 3/25/10, 1000
+20, These estimates are based on the latest available information.  Please refer to
+21, the trajectory analysis briefing and your Scientific Support Coordinator (SSC) for
+22, more complete information.
+23, 
+24, 
+25, Exercise Scenario -- HAZMAT Trajectory Analysis
+26, Estimate for: 1000, 3/25/10
+27, Prepared: 1342, 8/17/09 -- NOAA/HAZMAT (206) 526-6411
+28, Light
+29, Heavy
+30, * this scale bar shows the meaning of the distribution terms at the current time
