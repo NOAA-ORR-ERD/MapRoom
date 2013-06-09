@@ -883,6 +883,9 @@ class RenderWindowTests(unittest.TestCase):
         ratio = 1.234 # an uneven ratio so we don't get nice even numbers
         new_rect = ((proj_rect[0][0] * ratio, proj_rect[0][1] * ratio), (proj_rect[1][0]*ratio, proj_rect[1][1]*ratio))
         w_r = self.canvas.get_world_rect_from_projected_rect(new_rect)
+        self.assertEqual(w_r, ((-22.17042121206979, -21.769222673475657), (22.17042121206979, 21.769222673475646)))
+        
+        print "world_rect = %r" % (w_r,)
         
         self.canvas.zoom_to_world_rect(w_r)
         
