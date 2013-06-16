@@ -570,11 +570,14 @@ class RenderWindow( glcanvas.GLCanvas ):
         size.y -= EDGE_PADDING * 2
         pixels_h = rect.width( p_r ) / self.projected_units_per_pixel
         pixels_v = rect.height( p_r ) / self.projected_units_per_pixel
-        # print "pixels_h = {0}, pixels_v = {1}".format( pixels_h, pixels_v )
+        print "pixels_h = {0}, pixels_v = {1}".format( pixels_h, pixels_v )
         ratio_h = float( pixels_h ) / float( size[ 0 ] )
         ratio_v = float( pixels_v ) / float( size[ 1 ] )
+        print "size = %r" % (size,)
+        print "ratio_h = %r, ratio_v = %r" % (ratio_h, ratio_v)
         ratio = max( ratio_h, ratio_v )
         
+        print "ratio = %r" % ratio
         self.projected_point_center = rect.center( p_r )
         self.projected_units_per_pixel *= ratio
         self.constrain_zoom()
