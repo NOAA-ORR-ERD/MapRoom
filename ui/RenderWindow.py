@@ -744,7 +744,7 @@ class RenderWindowTests(unittest.TestCase):
         layer = Layer.Layer()
         layer.read_from_file(os.path.abspath("TestData/Verdat/000026pts.verdat"))
         self.layer_manager.insert_layer(None, layer)
-        
+        self.canvas.Update()
         proj_rect = self.canvas.get_projected_rect_from_screen_rect(screen_rect)
         world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
         
@@ -753,6 +753,11 @@ class RenderWindowTests(unittest.TestCase):
         self.assertEquals(grid.lon_step, 20.0)
         print "lat_step = %r" % grid.lat_step
         print "lon_step = %r" % grid.lon_step
+
+        image = self.canvas.get_canvas_as_image()
+        imageName = "TestData/TestResults/zoom_to_world_rect1.png"
+        if not os.path.exists(imageName):
+            image.SaveFile(imageName, wx.BITMAP_TYPE_PNG)
 
     def testRenderLoadedFile(self):
         layer = Layer.Layer()
