@@ -748,6 +748,9 @@ class RenderWindowTests(unittest.TestCase):
         proj_rect = self.canvas.get_projected_rect_from_screen_rect(screen_rect)
         world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
         
+        self.assertEquals(proj_rect, ((-9305004.516951878, -920746.4576416654), (-1316099.4471520581, 7068158.612158153)))
+        self.assertEquals(world_rect, ((-83.58827776379056, -8.297405610026354), (-11.822722487979462, 53.64172954714474)))
+        
         grid.resize(world_rect, screen_rect)
         self.assertEquals(grid.lat_step, 20.0)
         self.assertEquals(grid.lon_step, 20.0)
