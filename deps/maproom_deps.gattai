@@ -78,7 +78,8 @@
         "name": "greenlet",
         "source": "http://pypi.python.org/packages/source/g/greenlet/greenlet-0.3.4.zip#md5=530a69acebbb0d66eb5abd83523d8272",
         "version": "0.3.4",
-        "build_type": "python"
+        "build_type": "python",
+        "ignore": "TRUE"
     },
     {
         "name": "gdal",
