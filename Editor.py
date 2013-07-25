@@ -8,6 +8,8 @@ import library.Opengl_renderer.Point_and_line_set_renderer as Point_and_line_set
 import library.Opengl_renderer.Polygon_set_renderer as Polygon_set_renderer
 import app_globals
 
+from wx.lib.pubsub import pub
+
 """
     editing rules:
         - click on point tool deselects any selected lines (DONE)
@@ -391,7 +393,7 @@ class Editor():
             self.undo_operation( self.undo_stack[ self.undo_stack_next_index - 1 ], affected_layers )
             self.undo_stack_next_index -= 1
         for layer in affected_layers:
-            layer.rebuild_point_and_line_set_renderer()
+            pub.sendMessage( ('layer', 'points', 'changed'), layer = layer )
         self.show_undo_redo_debug_dump( "undo() done" )
         self.app.refresh()
     
@@ -433,7 +435,7 @@ class Editor():
             self.redo_operation( self.undo_stack[ self.undo_stack_next_index ], affected_layers )
             self.undo_stack_next_index += 1
         for layer in affected_layers:
-            layer.rebuild_point_and_line_set_renderer()
+            pub.sendMessage( ('layer', 'points', 'changed'), layer = layer )
         self.show_undo_redo_debug_dump( "redo() done" )
         self.app.refresh()
     
