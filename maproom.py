@@ -23,6 +23,7 @@ import pyproj
 # these are here to get py2exe / py2app to pick them up, since the deps
 # import them in a way that they miss
 import multiprocessing
+multiprocessing.freeze_support()
 
 class Logger(object):
     def __init__(self, filename="output.txt"):
