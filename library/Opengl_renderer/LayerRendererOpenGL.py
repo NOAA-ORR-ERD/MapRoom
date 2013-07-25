@@ -9,7 +9,6 @@ import library.Opengl_renderer.Polygon_set_renderer as Polygon_set_renderer
 import library.Opengl_renderer.Label_set_renderer as Label_set_renderer
 import library.Opengl_renderer.Image_set_renderer as Image_set_renderer
 from library.color import *
-from library.Transformer import *
 import library.rect as rect
 from Editor import *
 
