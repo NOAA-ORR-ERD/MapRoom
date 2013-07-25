@@ -1,3 +1,9 @@
+7/25/2013
+---------------------------
+- KO Fixed XML layer loading bug
+- KO Fixed error dialog incompatibility with 2.9.4.0
+
+
 5/9/2013
 ---------------------------
 - KO Fixed an issue introduced by the use of Projection class by adding a __call__ method

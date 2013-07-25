@@ -28,7 +28,8 @@ class ErrorDialog(sc.SizedDialog):
         self.details = wx.TextCtrl(pane, -1, size=(300, 240), style=wx.TE_MULTILINE)
         self.details.SetSizerProps(expand=True, proportion=1)
 
-        self.SetButtonSizer(self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL))
+        btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
+        self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())
 
         self.submitBtn = self.FindWindowById(wx.ID_OK)
         self.submitBtn.Label = "Submit"

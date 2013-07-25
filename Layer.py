@@ -182,6 +182,7 @@ class Layer():
         
         if ( file_type == ".xml" ):
             app_globals.layer_manager.load_xml_layer( file_path )
+            return
         
         elif ( file_type == ".bna" ):
             ( self.load_error_string,

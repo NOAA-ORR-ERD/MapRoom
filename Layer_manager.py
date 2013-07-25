@@ -469,11 +469,6 @@ class Layer_manager():
         layer.is_visible = element.get( "is_visible" ) == "True"
         layer.file_path = element.get( "file_path" )
         layer.default_depth = float( element.get( "default_depth" ) )
-        if ( layer.type != "root" ):
-            print "inserting layer " + layer.name + " at " + multi_index.__repr__()
-            self.insert_layer( multi_index, layer )
-            if ( multi_index == [] ):
-                multi_index = [ 1 ]
         for i, child in enumerate( list( element ) ):
             if ( child.tag == "data_file" ):
                 self.load_xml_layer_data( layer, os.path.join( directory_path, child.get( "file_name" ) ) )
@@ -482,6 +477,11 @@ class Layer_manager():
                 # remember that multi-indexes are 1-based because the folder "layer" itself is always in position 0
                 mi.append( i + 1 )
                 self.load_xml_layer_recursive( child, mi, directory_path )
+        if ( layer.type != "root" ):
+            print "inserting layer " + layer.name + " at " + multi_index.__repr__()
+            self.insert_layer( multi_index, layer )
+            if ( multi_index == [] ):
+                multi_index = [ 1 ]
     
     def load_xml_layer_data( self, layer, path ):
         print "load_xml_layer_data called for layer " + layer.name + ", path = " + path
@@ -566,8 +566,8 @@ class Layer_manager():
                 layer.triangles.color = cs
                 layer.triangles.state = ss
         
-        layer.create_necessary_renderers()
         layer.bounds = layer.compute_bounding_rect()
+        pub.sendMessage( ('layer', 'loaded'), layer = layer )
     
     def add_layer( self, name = "New Layer" ):
         layer = Layer.Layer()
