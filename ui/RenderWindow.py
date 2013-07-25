@@ -559,7 +559,7 @@ class RenderWindow( glcanvas.GLCanvas ):
     def zoom_to_fit( self ):
         w_r = self.layer_manager.accumulate_layer_rects()
         if ( w_r != rect.NONE_RECT ):
-            self.zoom_to_world_rect( w_r, add_padding=True )
+            self.zoom_to_world_rect( w_r )
     
     def zoom_to_world_rect( self, w_r ):
         p_r = self.get_projected_rect_from_world_rect( w_r )

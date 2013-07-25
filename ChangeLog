@@ -2,7 +2,8 @@
 ---------------------------
 - KO Fixed XML layer loading bug
 - KO Fixed error dialog incompatibility with 2.9.4.0
-
+- KO Fixed error when triangulating on Windows in the exe version
+- KO Fixed error when calling Zoom to Fit
 
 5/9/2013
 ---------------------------
