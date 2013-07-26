@@ -320,13 +320,7 @@ class Layer_manager():
         
         f.write( i0 + "</layer>\n" )
     
-    def write_layer_as_verdat( self, f, layer ):
-        if ( layer.line_segment_indexes == None or len( layer.line_segment_indexes ) == 0 ):
-            raise Verdat_save_error(
-                "A layer must have line segments to be saved as .verdat.",
-                points = None
-            )
-        
+    def write_layer_as_verdat( self, f, layer ):        
         points = layer.points
         lines = layer.line_segment_indexes
         
@@ -337,19 +331,20 @@ class Layer_manager():
                 line_count = len( lines )
             )
         
-        # ensure that all points are within (or on) the outer boundary
-        outside_point_indices = points_outside_polygon(
-            points.x,
-            points.y,
-            point_count = len( points ),
-            polygon = np.array( boundaries[ 0 ][ 0 ], np.uint32 )
-        )
-        
-        if len( outside_point_indices ) > 0:
-            raise Verdat_save_error(
-                "Points occur outside of the Verdat boundary.",
-                points = tuple( outside_point_indices )
+        if len(boundaries) > 0:
+            # ensure that all points are within (or on) the outer boundary
+            outside_point_indices = points_outside_polygon(
+                points.x,
+                points.y,
+                point_count = len( points ),
+                polygon = np.array( boundaries[ 0 ][ 0 ], np.uint32 )
             )
+        
+            if len( outside_point_indices ) > 0:
+                raise Verdat_save_error(
+                    "Points occur outside of the Verdat boundary.",
+                    points = tuple( outside_point_indices )
+                )
         
         f.write( "DOGS" )
         if layer.depth_unit != None and layer.depth_unit != "unknown":

@@ -115,11 +115,6 @@ def find_boundaries( points, point_count, lines, line_count ):
         
         boundaries.append( ( boundary, 0.5 * area ) )
     
-    if len( boundaries ) < 1:
-        raise Find_boundaries_error(
-            "At least one closed boundary is required."
-        )
-    
     # Find the outer boundary that contains all the other boundaries.
     # Determine this by simply selecting the boundary with the biggest
     # interior area.
@@ -135,7 +130,7 @@ def find_boundaries( points, point_count, lines, line_count ):
     
     # Make the outer boundary first in the list of boundaries if it's not
     # there already.
-    if outer_boundary_index != 0:
+    if outer_boundary_index is not None and outer_boundary_index != 0:
         del( boundaries[ outer_boundary_index ] )
         boundaries.insert( 0, ( outer_boundary, outer_boundary_area ) )
     

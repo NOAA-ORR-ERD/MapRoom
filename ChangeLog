@@ -4,6 +4,7 @@
 - KO Added test suite for coordinates module
 - KO Added the ability to view / edit point coordinates
 - KO Implemented Jump to Coordinates
+- KO Fixed #479 (should be able to save a verdat with no boundaries)
 
 7/25/2013
 ---------------------------
