@@ -1,9 +1,16 @@
+7/26/2013
+---------------------------
+- KO Added coordinate conversions to decimal degrees
+- KO Added test suite for coordinates module
+- KO Added the ability to view / edit point coordinates
+
 7/25/2013
 ---------------------------
 - KO Fixed XML layer loading bug
 - KO Fixed error dialog incompatibility with 2.9.4.0
 - KO Fixed error when triangulating on Windows in the exe version
 - KO Fixed error when calling Zoom to Fit
+- KO Fixed undo error after layer code refactoring
 
 5/9/2013
 ---------------------------

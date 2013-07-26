@@ -1,5 +1,7 @@
 # coding=utf8
 
+import unittest
+
 import app_globals
 
 def float_to_degrees_minutes_seconds( value, directions = None ):
@@ -46,6 +48,43 @@ def float_to_degrees( value, directions = None ):
     degrees = abs( value )
     
     return ( degrees, direction )
+    
+def degrees_minutes_seconds_to_float( degrees ):
+    values = degrees.strip().split(" ")
+    dir = ""
+    if len(values) == 3:
+        degrees, minutes, seconds = values
+    else:
+        degrees, minutes, seconds, dir = values
+    
+    result = float(degrees.strip())
+    result += float(minutes.strip()) / 60.0
+    result += float(seconds.strip()) / 3600.0
+
+    if dir in ["W", "S"]:
+        result *= -1
+    
+    return result
+    
+def degrees_minutes_to_float( degrees ):
+    degrees, minutes, dir = degrees.strip().split(" ")
+    
+    result = float(degrees.strip())
+    result += float(minutes.strip()) / 60.0
+
+    if dir in ["W", "S"]:
+        result *= -1
+    
+    return result
+    
+def degrees_to_float( degrees ):
+    degrees, dir = degrees.strip().split(" ")
+    result = float(degrees.strip())
+    dir = dir.strip()
+    if dir in ["W", "S"]:
+        result *= -1
+        
+    return result    
 
 def format_lat_lon_degrees_minutes_seconds( longitude, latitude ):
     lon = u"%d° %d′ %d″ %s" % \
@@ -103,3 +142,82 @@ def format_lon_line_label( longitude ):
         degrees += 1
     
     return u" %d° %d' %s " % ( degrees, minutes, direction )
+
+def lat_lon_from_degrees_minutes( lat_lon_string ):
+    lat_lon_string = lat_lon_string.replace(u"°", "").replace(u"′", "")
+    lon, lat = lat_lon_string.split(",")
+    try:
+        return (degrees_minutes_to_float(lat), degrees_minutes_to_float(lon))
+    except Exception, e:
+        import traceback
+        print traceback.format_exc(e)
+        return (-1, -1)
+    
+def lat_lon_from_degrees_minutes_seconds( lat_lon_string ):
+    lat_lon_string = lat_lon_string.replace(u"°", "").replace(u"″", "").replace(u"′", "")
+    lon, lat = lat_lon_string.split(",")
+    try:
+        return (degrees_minutes_seconds_to_float(lat), degrees_minutes_seconds_to_float(lon))
+    except Exception, e:
+        import traceback
+        print traceback.format_exc(e)
+        return (-1, -1)
+    
+def lat_lon_from_decimal_degrees( lat_lon_string ):
+    lat_lon_string = lat_lon_string.replace(u"°", "")
+    try:
+        lon, lat = lat_lon_string.split(",")
+        return (degrees_to_float(lat), degrees_to_float(lon))
+    except Exception, e:
+        import traceback
+        print traceback.format_exc(e)
+        return (-1, -1)
+    
+def lat_lon_from_format_string( lat_lon_string ):
+    if lat_lon_string.find(u"″") != -1:
+        return lat_lon_from_degrees_minutes_seconds( lat_lon_string )
+    elif lat_lon_string.find(u"′") != -1:
+        return lat_lon_from_degrees_minutes( lat_lon_string )
+
+    return lat_lon_from_decimal_degrees( lat_lon_string )
+    
+    
+
+class CoordinateTests(unittest.TestCase):
+    def setUp(self):
+        self.coord = (-62.242, 12.775)
+    
+    def testToDecimalDegrees(self):
+        result = u"12.775000° N, 62.242000° W"
+        self.assertEquals(result, format_lat_lon_degrees(self.coord[0], self.coord[1]))
+        
+    def testToDegreesMinutesSeconds(self):
+        result = u"12° 46′ 30″ N, 62° 14′ 31″ W"
+        self.assertEquals(result, format_lat_lon_degrees_minutes_seconds(self.coord[0], self.coord[1]))
+        
+    def testToDegreesDecimalMinutes(self):
+        result = u"12° 46.5000′ N, 62° 14.5200′ W"
+        self.assertEquals(result, format_lat_lon_degrees_minutes(self.coord[0], self.coord[1]))
+        
+    def testFromFormatStringDecimalDegrees(self):
+        lat_lon_string = u"12.775000° N, 62.242000° W"
+        self.assertEquals(self.coord, lat_lon_from_format_string(lat_lon_string))
+        
+    def testFromFormatStringDegreesMinutesSeconds(self):
+        lat_lon_string = u"12° 46′ 30″ N, 62° 14′ 31″ W"
+        result = lat_lon_from_format_string(lat_lon_string)
+        self.assertEquals(self.coord, (round(result[0], 3), round(result[1], 3)))
+        equator_string = u"0° 0′ 0″, 62° 14′ 31″ W"
+        result = lat_lon_from_format_string(equator_string)
+        self.assertEquals((self.coord[0], 0.0), (round(result[0], 3), round(result[1], 3)))
+        
+    def testFromFormatStringDegreesMinutes(self):
+        lat_lon_string = u"12° 46.5000′ N, 62° 14.5200′ W"
+        result = lat_lon_from_format_string(lat_lon_string)
+        self.assertEquals(self.coord, (round(result[0], 3), round(result[1], 3)))
+        
+    def testInvalidFormatStringToLatLon(self):
+        self.assertEquals((-1, -1),  lat_lon_from_format_string("Hello!"))
+        
+def getTestSuite():
+    return unittest.makeSuite(CoordinateTests)

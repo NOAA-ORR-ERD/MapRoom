@@ -1,7 +1,11 @@
 import wx
+
 import app_globals
 from Editor import *
 import Layer
+import library.coordinates as coordinates
+
+from wx.lib.pubsub import pub
 
 class Properties_panel( wx.Panel ):
     """
@@ -64,6 +68,8 @@ class Properties_panel( wx.Panel ):
             if ( layer.type == ".verdat" or layer.type == ".dat" or layer.type == ".xml" ):
                 if layer.get_num_points_selected() > 0:
                     fields.extend( [ "Depth unit",  "Point depth" ] )
+                    if layer.get_num_points_selected() == 1:
+                        fields.extend( ["Point coordinates"] )
                 else:
                     fields.extend( [  "Layer name", "Source file", "Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points" ] )
             
@@ -125,6 +131,10 @@ class Properties_panel( wx.Panel ):
                     self.point_depth_control = self.add_text_field( field, s, self.point_depth_changed )
                     self.point_depth_control.SetSelection( -1, -1 )
                     self.point_depth_control.SetFocus()
+                elif field == "Point coordinates":
+                    index = layer.get_selected_point_indexes()[0]
+                    coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i])
+                    self.point_coord_control = self.add_text_field( field, coords_text, self.point_coords_changed, expand = wx.EXPAND )
             
             self.sizer.Layout()
             self.sizer.FitInside( self )
@@ -194,6 +204,38 @@ class Properties_panel( wx.Panel ):
         except Exception as e:
             c.SetBackgroundColour( "#FF8080" )
         c.Refresh()
+
+    def point_coords_changed( self, event ):
+        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        if layer == None:
+            return
+        
+        c = self.point_coord_control
+        c.SetBackgroundColour( "#FFFFFF" )
+        try:
+            # layer.default_depth = float( c.GetValue() )
+            new_point = coordinates.lat_lon_from_format_string( c.GetValue() )
+            print "New point = %r" % (new_point,)
+            if new_point == (-1, -1):
+                c.SetBackgroundColour( "#FF8080" )
+                return
+            index = layer.get_selected_point_indexes()[0]
+            current_point = (layer.points.x[index], layer.points.y[index])
+            x_diff = new_point[0] - current_point[0]
+            y_diff = new_point[1] - current_point[1]
+            params = ( -x_diff, -y_diff )
+            
+            print "params = %r" % (params,)
+            app_globals.editor.add_undo_operation_to_operation_batch( OP_MOVE_POINT, layer, index, params )
+            layer.offset_point( index, x_diff, y_diff )
+            pub.sendMessage( ('layer', 'points', 'changed'), layer = layer )
+            app_globals.editor.end_operation_batch()
+        except Exception as e:
+            import traceback
+            print traceback.format_exc(e)
+            c.SetBackgroundColour( "#FF8080" )
+        #c.Refresh()            
+        app_globals.application.refresh()
     
     def point_depth_changed( self, event ):
         layer = app_globals.application.layer_tree_control.get_selected_layer()

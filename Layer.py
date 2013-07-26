@@ -635,7 +635,7 @@ class Layer():
             pub.sendMessage( ('layer', 'points', 'changed'), layer = self )
             self.increment_change_count()
     
-    def offset_point( self, point_index, world_d_x, world_d_y, add_undo_info ):
+    def offset_point( self, point_index, world_d_x, world_d_y, add_undo_info=False ):
         self.points.x[ point_index ] += world_d_x
         self.points.y[ point_index ] += world_d_y
         """

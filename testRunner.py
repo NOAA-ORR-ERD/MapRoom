@@ -1,10 +1,11 @@
 import unittest
 import wx
 
+import library.coordinates
 import library.Projection
 import ui.RenderWindow
 
-alltests = unittest.TestSuite( [library.Projection.getTestSuite(), ui.RenderWindow.getTestSuite()] )
+alltests = unittest.TestSuite( [library.coordinates.getTestSuite(), library.Projection.getTestSuite(), ui.RenderWindow.getTestSuite()] )
 
 if __name__ == "__main__":
     class TestApp(wx.App):
