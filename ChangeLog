@@ -3,6 +3,7 @@
 - KO Added coordinate conversions to decimal degrees
 - KO Added test suite for coordinates module
 - KO Added the ability to view / edit point coordinates
+- KO Implemented Jump to Coordinates
 
 7/25/2013
 ---------------------------

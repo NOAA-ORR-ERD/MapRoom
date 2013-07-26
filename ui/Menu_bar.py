@@ -2,6 +2,7 @@ import wx
 import os
 import sys
 from About_dialog import About_dialog
+from Jump_coords_dialog import JumpCoordsDialog
 from Preferences_dialog import PreferencesDialog
 from Triangle_dialog import Triangle_dialog
 # from Help_window import Help_window
@@ -9,6 +10,7 @@ from Triangle_dialog import Triangle_dialog
 import File_opener
 import File_saver
 import app_globals
+import library.coordinates as coordinates
 
 class Menu_bar( wx.MenuBar ):
     """
@@ -450,7 +452,15 @@ class Menu_bar( wx.MenuBar ):
         self.controller.show_merge_duplicate_points_dialog_box()
     
     def do_jump( self, event ):
-        pass
+        dialog = JumpCoordsDialog(None, wx.ID_ANY, "Jump to Coordinates")
+        if dialog.ShowModal() == wx.ID_OK:
+            lat_lon = coordinates.lat_lon_from_format_string(dialog.coords_text.Value)
+            app = wx.GetApp()
+            renderer = app.current_map.renderer
+            renderer.projected_point_center = renderer.get_projected_point_from_world_point(lat_lon)
+            app.refresh()
+        dialog.Destroy()
+        
     def do_view_log( self, event ):
         pass
     def do_show_help( self, event ):
