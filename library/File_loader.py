@@ -1,7 +1,6 @@
 import os
 import math
 import time
-import re
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
@@ -9,7 +8,7 @@ from library.accumulator import accumulator
 import library.rect as rect
 import library.Bitmap as Bitmap
 
-WHITESPACE_PATTERN = re.compile( "\s+" )
+import library.formats.verdat as verdat
 
 def update_status(message):
     import wx
@@ -17,98 +16,10 @@ def update_status(message):
     tlw.SetStatusText(message)
     wx.SafeYield()
 
-def load_verdat_file( file_path ):
-    """
-    Load data from a DOGS-style verdat file. Returns:
-    
-    ( load_error_string, points, depths, line_segment_indexes, depth_unit )
-    
-    where:
-        load_error_string = string descripting the loading error, or "" if there was no error
-        points = numpy array (type = 2 x np.float32)
-        depths = numpy array (type = 1 x np.float32)
-        line_segment_indexes = numpy array (type = 2 x np.uint32)
-        depth_unit = string
-    """
-    
-    points = accumulator( block_shape=(2,), dtype=np.float32 )
-    depths = accumulator( dtype = np.float32 )
-    line_segment_indexes = accumulator( block_shape=(2,), dtype = np.uint32 )
-    
-    in_file = file( file_path, "rU" )
-    
-    header_line = in_file.readline().strip()
-    header = WHITESPACE_PATTERN.split( header_line )
-    if ( header[ 0 ] == "DOGS" ):
-        not_actually_header = None
-    else:
-        not_actually_header = header_line
-    
-    if len( header ) == 2:
-        depth_unit = header[ 1 ].lower()
-    else:
-        depth_unit = "unknown"
-    
-    # a .verdat file lists the points first, and then the boundary offsets; it is assumed that
-    # the points are listed such that the first boundary polygon is defined by points 0 through i - 1,
-    # the second boundary polygon is defined by points i through j - 1, and so on; and then there
-    # are some number of non-boundary-polygon points at the end of the list; in this way, the boundary
-    # polygons can be specified simply by giving the indexes i, j, etc.
-    
-    # read the points
-    while True:
-        line_str = not_actually_header or in_file.readline().strip()
-        not_actually_header = None
-        line = line_str.split( "," )
-        
-        data = tuple( map( float, line ) )
-        if data == ( 0, 0, 0, 0 ):
-            break
-        if len( data ) != 4:
-            return ( "The .verdat file {0} is invalid.".format( file_path ), None, None, None, "", None, None )
-        
-        ( index, longitude, latitude, depth ) = data
-        
-        points.append( ( longitude, latitude ) )
-        depths.append( depth )
-    
-    # read the boundary polygon indexes
-    
-    boundary_count = int( in_file.readline() )
-    line_segments = []
-    point_index = 0
-    start_point_index = 0
-    
-    for boundary_index in range( boundary_count ):
-        # -1 to make zero-indexed
-        end_point_index = int( in_file.readline() ) - 1
-        point_index = start_point_index
-        
-        # Skip "boundaries" that are only one or two points.
-        if end_point_index - start_point_index + 1 < 3:
-            start_point_index = end_point_index + 1
-            continue
-        
-        while point_index < end_point_index:
-            line_segment_indexes.append( ( point_index, point_index + 1 ) )
-            point_index += 1
-        
-        # Close the boundary by connecting the first point to the last.
-        line_segment_indexes.append( ( point_index, start_point_index ) )
-        
-        start_point_index = end_point_index + 1
-    
-    in_file.close()
-    
-    # import code; code.interact( local = locals() )
-    
-    return ( "",
-             np.asarray( points ),
-             np.asarray( depths ),
-             np.asarray( line_segment_indexes ),
-             depth_unit )
-
 ###########################################################
+
+def load_verdat_file( file_path ):
+    return verdat.load_verdat_file( file_path )
 
 BNA_LAND_FEATURE_CODE = 1
 BNA_WATER_FEATURE_CODE = 2
@@ -177,9 +88,6 @@ def load_bna_file( file_path ):
     print lines[ 0 ]
     print lines[ 1 ]
     print "split in {0} seconds".format( t )
-    
-    # for i in xrange( ):
-    # WHITESPACE_PATTERN = re.compile( "\n" )
     
     polygon_points = accumulator( block_shape=(2,), dtype=np.float32 )
     polygon_starts = accumulator( block_shape=(1,), dtype = np.uint32 )

@@ -6,6 +6,7 @@ import numpy as np
 from scipy.spatial.ckdtree import cKDTree
 import wx
 import library.File_loader as File_loader
+import library.formats.verdat as verdat
 from library.accumulator import flatten
 from library.color import *
 from library.Projection import *
@@ -185,7 +186,25 @@ class Layer():
             return ".verdat"
         
         return ""
-    
+        
+    def check_for_errors( self ):
+        if self.type in ["", ".verdat"]:
+            try:
+                verdat.check_valid_verdat( self )
+                wx.MessageBox("This file is a valid verdat file.", "No Errors Found")
+            except Exception, e:
+                if hasattr( e, "points" ) and e.points != None:
+                    self.clear_all_selections( Layer.STATE_FLAGGED )
+                    for p in e.points:
+                        self.select_point( p, Layer.STATE_FLAGGED )
+                    app_globals.application.refresh()
+                wx.MessageDialog(
+                    app_globals.application.frame,
+                    message = e.message,
+                    caption = "Verdat File Contains Errors",
+                    style = wx.OK | wx.ICON_ERROR,
+                ).ShowModal()
+
     def read_from_file( self, file_path ):
         self.file_path = file_path
         ( base, ext ) = os.path.splitext( file_path )

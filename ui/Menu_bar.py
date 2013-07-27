@@ -39,11 +39,7 @@ class Menu_bar( wx.MenuBar ):
         self.Append( self.file_menu, "File" )
         
         self.new_map_item = wx.MenuItem( self.file_menu, wx.NewId(), "New Map...\tCtrl-N" )
-        self.file_menu.AppendItem( self.new_map_item )
-        self.new_layer_menu = wx.Menu()
-        self.new_verdat_item = wx.MenuItem( self.new_layer_menu, wx.NewId(), "Verdat")
-        self.new_layer_menu.AppendItem(self.new_verdat_item)
-        self.file_menu.AppendMenu(wx.NewId(), "New Layer", self.new_layer_menu)        
+        self.file_menu.AppendItem( self.new_map_item )     
         
         self.open_item = wx.MenuItem( self.file_menu, wx.ID_OPEN, "Open...\tCtrl-O", )
         self.open_item.SetBitmap( wx.Bitmap( os.path.join( image_path, "open.png" ) ) )
@@ -202,6 +198,12 @@ class Menu_bar( wx.MenuBar ):
             self.add_lines_mode_item.SetBitmap( wx.Bitmap( os.path.join( image_path, "add_lines.png" ) ) )
         self.layer_menu.AppendItem( self.add_lines_mode_item )
         
+        self.layer_menu.AppendSeparator()
+        
+        self.check_valid_verdat_id = wx.NewId()
+        self.check_valid_verdat_item = wx.MenuItem( self.layer_menu, self.check_valid_verdat_id, "Check for errors")
+        self.layer_menu.AppendItem( self.check_valid_verdat_item )
+        
         ########################################################
         
         self.view_menu = wx.Menu()
@@ -274,7 +276,6 @@ class Menu_bar( wx.MenuBar ):
         
         f = self.frame
         f.Bind( wx.EVT_MENU, self.do_new_map, self.new_map_item )
-        f.Bind( wx.EVT_MENU, self.do_new_layer_verdat, self.new_verdat_item )
         f.Bind( wx.EVT_MENU, self.do_open_file, id = wx.ID_OPEN )
         f.Bind( wx.EVT_MENU, self.do_save, id = wx.ID_SAVE )
         f.Bind( wx.EVT_MENU, self.do_save_as, id = wx.ID_SAVEAS )
@@ -285,7 +286,7 @@ class Menu_bar( wx.MenuBar ):
         f.Bind( wx.EVT_MENU, self.do_lower_layer, id = wx.ID_DOWN )
         f.Bind( wx.EVT_MENU, self.do_clear, id = wx.ID_CLEAR )
         f.Bind( wx.EVT_MENU, self.do_delete, id = wx.ID_DELETE )
-        f.Bind( wx.EVT_MENU, self.do_add_layer, id = wx.ID_NEW )
+        f.Bind( wx.EVT_MENU, self.do_add_layer, id = add_layer.Id )
         f.Bind( wx.EVT_MENU, self.do_add_folder, id = wx.ID_ADD )
         f.Bind( wx.EVT_MENU, self.do_delete_layer, id = wx.ID_REMOVE )
         f.Bind( wx.EVT_MENU, self.do_countour_layer, id = self.contour_id )
@@ -301,6 +302,7 @@ class Menu_bar( wx.MenuBar ):
         f.Bind( wx.EVT_MENU, self.do_toggle_grid, id = self.grid_id )
         f.Bind( wx.EVT_MENU, self.do_triangulate, id = self.triangulate_id )
         f.Bind( wx.EVT_MENU, self.do_merge_layers, id = self.merge_layers_id )
+        f.Bind( wx.EVT_MENU, self.do_check_for_errors, id = self.check_valid_verdat_id )
         f.Bind( wx.EVT_MENU, self.do_jump, id = self.jump_id )
         f.Bind( wx.EVT_MENU, self.do_merge_duplicate_points, id = self.merge_duplicate_points_id )
         f.Bind( wx.EVT_MENU, self.do_view_log, id = self.log_id )
@@ -348,14 +350,6 @@ class Menu_bar( wx.MenuBar ):
     
     def do_new_map( self, event ):
         app_globals.application.new_map()
-    
-    def do_new_layer_verdat( self, event ):
-        file_path = ""
-        insertion_multi_index = app_globals.layer_manager.get_layer_multi_index_from_file_path( file_path )    
-        layer = Layer.Layer()
-        layer.new()
-    
-        app_globals.layer_manager.insert_layer( insertion_multi_index, layer )
     
     def do_open_file( self, event ):
         File_opener.show()
@@ -470,6 +464,10 @@ class Menu_bar( wx.MenuBar ):
     
     def do_merge_layers( self, event ):
         self.controller.show_merge_layers_dialog_box()
+    
+    def do_check_for_errors( self, event ):
+        layer = self.controller.layer_tree_control.get_selected_layer()
+        layer.check_for_errors()
     
     def do_merge_duplicate_points( self, event ):
         self.controller.show_merge_duplicate_points_dialog_box()

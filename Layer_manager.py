@@ -7,18 +7,12 @@ import numpy as np
 import wx
 from xml.etree.ElementTree import ElementTree
 import Layer
+import library.formats.verdat as verdat
 import library.rect as rect
 from library.accumulator import flatten
-from library.Shape import points_outside_polygon
-from library.Boundary import find_boundaries
 import app_globals
 
 from wx.lib.pubsub import pub
-
-class Verdat_save_error( Exception ):
-    def __init__( self, message, points = None ):
-        Exception.__init__( self, message )
-        self.points = points
 
 class Layer_manager():
     """
@@ -331,91 +325,6 @@ class Layer_manager():
         
         f.write( i0 + "</layer>\n" )
     
-    def write_layer_as_verdat( self, f, layer ):        
-        points = layer.points
-        lines = layer.line_segment_indexes
-        
-        ( boundaries, non_boundary_points ) = find_boundaries(
-                points = points,
-                point_count = len( points ),
-                lines = lines,
-                line_count = len( lines )
-            )
-        
-        if len(boundaries) > 0:
-            # ensure that all points are within (or on) the outer boundary
-            outside_point_indices = points_outside_polygon(
-                points.x,
-                points.y,
-                point_count = len( points ),
-                polygon = np.array( boundaries[ 0 ][ 0 ], np.uint32 )
-            )
-        
-            if len( outside_point_indices ) > 0:
-                raise Verdat_save_error(
-                    "Points occur outside of the Verdat boundary.",
-                    points = tuple( outside_point_indices )
-                )
-        
-        f.write( "DOGS" )
-        if layer.depth_unit != None and layer.depth_unit != "unknown":
-            f.write( "\t{0}\n".format( layer.depth_unit.upper() ) )
-        else:
-            f.write( "\n" )
-        
-        boundary_endpoints = []
-        POINT_FORMAT = "%3d, %4.6f, %4.6f, %3.3f\n"
-        file_point_index = 1 # one-based instead of zero-based
-        
-        # write all boundary points to the file
-        # print "writing boundaries"
-        for ( boundary_index, ( boundary, area ) ) in enumerate( boundaries ):
-            # if the outer boundary's area is positive, then reverse its
-            # points so that they're wound counter-clockwise
-            # print "index:", boundary_index, "area:", area, "len( boundary ):", len( boundary )
-            if boundary_index == 0:
-                if area > 0.0:
-                    boundary = reversed( boundary )
-            # if any other boundary has a negative area, then reverse its
-            # points so that they're wound clockwise
-            elif area < 0.0:
-                boundary = reversed( boundary )
-            
-            for point_index in boundary:
-                f.write( POINT_FORMAT % (
-                    file_point_index,
-                    points.x[ point_index ],
-                    points.y[ point_index ],
-                    points.z[ point_index ],
-                ) )
-                file_point_index += 1
-            
-            boundary_endpoints.append( file_point_index - 1 )
-        
-        # Write non-boundary points to file.
-        for point_index in non_boundary_points:
-            x = points.x[ point_index ]
-            if np.isnan( x ):
-                continue
-            
-            y = points.y[ point_index ]
-            z = points.z[ point_index ]
-            
-            f.write( POINT_FORMAT % (
-                file_point_index,
-                x, y, z,
-            ) )
-            file_point_index += 1
-        
-        # zero record signals the end of the points section
-        f.write( POINT_FORMAT % ( 0, 0.0, 0.0, 0.0 ) )
-        
-        # write the number of boundaries, followed by each boundary endpoint index
-        f.write( "%d\n" % len( boundary_endpoints ) )
-        
-        for endpoint in boundary_endpoints:
-            f.write( "{0}\n".format( endpoint ) )
-    
     def save_layer( self, layer, path ):
         if ( path.endswith( ".verdat" ) ):
             temp_dir = tempfile.mkdtemp()
@@ -424,7 +333,7 @@ class Layer_manager():
             f = open( temp_file, "w" )
             had_error = False
             try:
-                self.write_layer_as_verdat( f, layer )
+                verdat.write_layer_as_verdat( f, layer )
             except Exception as e:
                 had_error = True
                 print traceback.format_exc( e )
@@ -578,8 +487,7 @@ class Layer_manager():
     
     def add_layer( self, name = "New Layer" ):
         layer = Layer.Layer()
-        layer.type = ".xml"
-        layer.name = name
+        layer.new()
         self.insert_layer( None, layer )
     
     def add_folder( self, name = "New Folder" ):

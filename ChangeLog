@@ -4,6 +4,8 @@
 - KO Added support for zooming to a specific layer (#142)
 - KO Switched the version to 1.9.x since we can't rely on a simple revision number any longer.
 - KO Changed selected points and lines to drawing last to make them more visible (#495)
+- KO Added the ability to check a verdat layer for errors (#438)
+- KO Moved verdat format logic into its own class in library.formats
 
 7/26/2013
 ---------------------------
