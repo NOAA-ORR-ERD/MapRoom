@@ -3,6 +3,7 @@
 - KO Added support for loading tif images via GDAL (#488)
 - KO Added support for zooming to a specific layer (#142)
 - KO Switched the version to 1.9.x since we can't rely on a simple revision number any longer.
+- KO Changed selected points and lines to drawing last to make them more visible (#495)
 
 7/26/2013
 ---------------------------

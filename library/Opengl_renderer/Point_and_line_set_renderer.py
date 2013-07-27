@@ -134,6 +134,28 @@ class Point_and_line_set_renderer:
             self.render_points( layer_index_base, pick_mode, point_size,
                 selected_point_indexes, flagged_point_indexes)
         
+    def render_selected_line_segments( self, line_width, selected_line_segment_indexes = [] ):
+        if ( self.vbo_line_segment_point_xys != None and len( self.vbo_line_segment_point_xys.data ) > 0 ): 
+            if ( len( selected_line_segment_indexes ) != 0 ):
+                gl.glLineWidth( line_width + 10 )
+                gl.glColor( 1, 0.6, 0, 0.75 )
+                gl.glBegin( gl.GL_LINES )
+                for i in selected_line_segment_indexes:
+                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2, 0 ], self.vbo_line_segment_point_xys.data[ i * 2, 1 ], 0  )
+                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2 + 1, 0 ], self.vbo_line_segment_point_xys.data[ i * 2 + 1, 1 ], 0  )
+                gl.glEnd()
+                gl.glColor( 1, 1, 1, 1 )        
+
+    def render_selected_points( self, point_size, selected_point_indexes = [] ):
+        if ( self.vbo_point_xys != None and len( self.vbo_point_xys ) > 0 ):
+            if ( len( selected_point_indexes ) != 0 ):
+                gl.glPointSize( point_size + 10 )
+                gl.glColor( 1, 0.6, 0, 0.75 )
+                gl.glBegin( gl.GL_POINTS )
+                for i in selected_point_indexes:
+                    gl.glVertex( self.vbo_point_xys.data[ i, 0 ], self.vbo_point_xys.data[ i, 1 ], 0  )
+                gl.glEnd()
+                gl.glColor( 1, 1, 1, 1 )
         
     def render_points( self,
                 layer_index_base,
@@ -148,14 +170,6 @@ class Point_and_line_set_renderer:
                 gl.glColor( 0.2, 0, 1, 0.75 )
                 gl.glBegin( gl.GL_POINTS )
                 for i in flagged_point_indexes:
-                    gl.glVertex( self.vbo_point_xys.data[ i, 0 ], self.vbo_point_xys.data[ i, 1 ], 0  )
-                gl.glEnd()
-                gl.glColor( 1, 1, 1, 1 )
-            if ( not pick_mode and len( selected_point_indexes ) != 0 ):
-                gl.glPointSize( point_size + 10 )
-                gl.glColor( 1, 0.6, 0, 0.75 )
-                gl.glBegin( gl.GL_POINTS )
-                for i in selected_point_indexes:
                     gl.glVertex( self.vbo_point_xys.data[ i, 0 ], self.vbo_point_xys.data[ i, 1 ], 0  )
                 gl.glEnd()
                 gl.glColor( 1, 1, 1, 1 )
@@ -201,17 +215,7 @@ class Point_and_line_set_renderer:
                 selected_line_segment_indexes = [],
                 flagged_line_segment_indexes = [] ): # flagged_line_segment_indexes not yet used
         # the line segments
-        if ( self.vbo_line_segment_point_xys != None and len( self.vbo_line_segment_point_xys.data ) > 0 ):
-            if ( not pick_mode and len( selected_line_segment_indexes ) != 0 ):
-                gl.glLineWidth( line_width + 10 )
-                gl.glColor( 1, 0.6, 0, 0.75 )
-                gl.glBegin( gl.GL_LINES )
-                for i in selected_line_segment_indexes:
-                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2, 0 ], self.vbo_line_segment_point_xys.data[ i * 2, 1 ], 0  )
-                    gl.glVertex( self.vbo_line_segment_point_xys.data[ i * 2 + 1, 0 ], self.vbo_line_segment_point_xys.data[ i * 2 + 1, 1 ], 0  )
-                gl.glEnd()
-                gl.glColor( 1, 1, 1, 1 )
-            
+        if ( self.vbo_line_segment_point_xys != None and len( self.vbo_line_segment_point_xys.data ) > 0 ):            
             gl.glEnableClientState( gl.GL_VERTEX_ARRAY ) # FIXME: deprecated
             self.vbo_line_segment_point_xys.bind()
             gl.glVertexPointer( 2, gl.GL_FLOAT, 0, None ) # FIXME: deprecated

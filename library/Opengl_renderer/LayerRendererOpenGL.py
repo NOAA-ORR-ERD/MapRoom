@@ -198,6 +198,15 @@ class LayerRendererOpenGL():
                                                 self.point_and_line_set_renderer.vbo_point_xys.data,
                                                 p_r, render_window.projected_units_per_pixel )
     
+        # render selections after everything else
+        if ( self.point_and_line_set_renderer != None and not pick_mode ):
+            if self.layer.line_segments_visible:
+                self.point_and_line_set_renderer.render_selected_line_segments( self.layer.line_width, self.layer.get_selected_line_segment_indexes() )
+
+            if self.layer.points_visible:
+                self.point_and_line_set_renderer.render_selected_points( self.layer.point_size,
+                                                     self.layer.get_selected_point_indexes())
+
     def __del__( self ):
         if ( self.point_and_line_set_renderer != None ):
             self.point_and_line_set_renderer.destroy()
