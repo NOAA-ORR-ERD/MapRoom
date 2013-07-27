@@ -290,10 +290,10 @@ def load_image_file( file_path ):
     dataset = gdal.Open( str( file_path ) )
     
     if ( dataset is None ):
-        return ( "Unable to load the image file " + file_path, None, None, None )
+        return ( "Unable to load the image file " + file_path, None, None, None, None )
     
     if ( dataset.RasterCount < 0 or dataset.RasterCount > 3 ):
-        return ( "The number of raster bands is unsupported for file " + file_path, None, None, None )
+        return ( "The number of raster bands is unsupported for file " + file_path, None, None, None, None )
     
     has_scaline_data = False
     if ( dataset.GetDriver().ShortName in SCANLINE_DRIVER_NAMES ):

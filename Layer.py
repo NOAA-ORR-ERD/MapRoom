@@ -190,7 +190,7 @@ class Layer():
         self.file_path = file_path
         ( base, ext ) = os.path.splitext( file_path )
         ext = ext.lower()
-        file_types = [".xml", ".bna", ".verdat", ".dat", ".png", ".kap"]
+        file_types = [".xml", ".bna", ".verdat", ".dat", ".png", ".kap", ".tif"]
         file_type = ""
         if ext in file_types:
             file_type = ext
@@ -290,7 +290,7 @@ class Layer():
                     self.line_segment_indexes.color = self.color
                     self.line_segment_indexes.state = 0
                             
-        elif ( file_type in [".png", ".kap"] ):
+        elif ( file_type in [".png", ".kap", ".tif"] ):
             ( self.load_error_string,
               self.images,
               self.image_sizes,

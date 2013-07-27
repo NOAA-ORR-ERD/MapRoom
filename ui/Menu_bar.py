@@ -219,6 +219,10 @@ class Menu_bar( wx.MenuBar ):
         self.zoom_fit_item.SetBitmap( wx.Bitmap( os.path.join( image_path, "zoom_fit.png" ) ) )
         self.view_menu.AppendItem( self.zoom_fit_item )
         
+        self.zoom_layer_id = wx.NewId()
+        self.zoom_layer_item = wx.MenuItem( self.view_menu, self.zoom_layer_id, "&Zoom to Selected Layer", )
+        self.view_menu.AppendItem( self.zoom_layer_item )
+        
         self.view_menu.AppendSeparator()
         
         self.grid_id = wx.NewId()
@@ -293,6 +297,7 @@ class Menu_bar( wx.MenuBar ):
         f.Bind( wx.EVT_MENU, self.do_zoom_in, id = wx.ID_ZOOM_IN )
         f.Bind( wx.EVT_MENU, self.do_zoom_out, id = wx.ID_ZOOM_OUT )
         f.Bind( wx.EVT_MENU, self.do_zoom_fit, id = wx.ID_ZOOM_FIT )
+        f.Bind( wx.EVT_MENU, self.do_zoom_layer, id = self.zoom_layer_id )
         f.Bind( wx.EVT_MENU, self.do_toggle_grid, id = self.grid_id )
         f.Bind( wx.EVT_MENU, self.do_triangulate, id = self.triangulate_id )
         f.Bind( wx.EVT_MENU, self.do_merge_layers, id = self.merge_layers_id )
@@ -452,6 +457,9 @@ class Menu_bar( wx.MenuBar ):
     
     def do_zoom_fit( self, event ):
         self.controller.renderer.zoom_to_fit()
+        
+    def do_zoom_layer( self, event ):
+        self.controller.render_controller.zoom_to_selected_layer()
     
     def do_toggle_grid( self, event ):
         self.controller.lon_lat_grid_shown = not self.controller.lon_lat_grid_shown

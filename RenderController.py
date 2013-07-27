@@ -23,7 +23,7 @@ class RenderController( object ):
             self.render_window.update_renderers()
         
     def on_layer_loaded( self, layer ):
-        self.render_window.zoom_to_world_rect( layer.bounds )
+        self.zoom_to_layer( layer )
         
     def on_layer_points_lines_changed( self, layer ):
         if layer in self.layer_manager.layers:
@@ -36,3 +36,12 @@ class RenderController( object ):
     def on_layer_triangulated( self, layer ):
         if layer in self.layer_manager.layers:
             self.render_window.rebuild_triangles_for_layer( layer )
+
+    def zoom_to_selected_layer( self ):
+        sel_layer = self.layer_manager.get_selected_layer()
+        print "Selected layer = %r" % sel_layer
+        if sel_layer is not None:
+            self.zoom_to_layer( sel_layer )
+    
+    def zoom_to_layer( self, layer ):
+        self.render_window.zoom_to_world_rect( layer.bounds )

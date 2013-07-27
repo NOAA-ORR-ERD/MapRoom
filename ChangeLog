@@ -1,19 +1,25 @@
+7/27/2013
+---------------------------
+- KO Added support for loading tif images via GDAL (#488)
+- KO Added support for zooming to a specific layer (#142)
+- KO Switched the version to 1.9.x since we can't rely on a simple revision number any longer.
+
 7/26/2013
 ---------------------------
 - KO Added coordinate conversions to decimal degrees
 - KO Added test suite for coordinates module
-- KO Added the ability to view / edit point coordinates
-- KO Implemented Jump to Coordinates
+- KO Added the ability to view / edit point coordinates (#418)
+- KO Implemented Jump to Coordinates (#505, #157)
 - KO Fixed #479 (should be able to save a verdat with no boundaries)
 - KO Fixed #475 (Should be able to create a new verdat from scratch)
 
 7/25/2013
 ---------------------------
-- KO Fixed XML layer loading bug
+- KO Fixed XML layer loading bug (#481)
 - KO Fixed error dialog incompatibility with 2.9.4.0
-- KO Fixed error when triangulating on Windows in the exe version
-- KO Fixed error when calling Zoom to Fit
-- KO Fixed undo error after layer code refactoring
+- KO Fixed error when triangulating on Windows in the exe version (#484)
+- KO Fixed error when calling Zoom to Fit (#502)
+- KO Fixed undo error after layer code refactoring (#504)
 
 5/9/2013
 ---------------------------

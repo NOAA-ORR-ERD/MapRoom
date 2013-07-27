@@ -39,9 +39,12 @@ class Layer_manager():
         layer.name = "Layers"
         layer.type = "root"
         self.insert_layer( [ 0 ], layer )
+        self.current_layer = None
         #self.add_folder( name = "folder_a" )
         #self.add_folder( name = "folder_b" )
         #self.add_folder( name = "folder_c" )
+        
+        pub.subscribe(self.on_layer_selection_changed, ('layer', 'selection', 'changed'))
     
     def flatten( self ):
         return self.flatten_recursive( self.layers )
@@ -159,6 +162,14 @@ class Layer_manager():
             return flattened[index]
         
         return None
+    
+    def on_layer_selection_changed( self, manager, layer ):
+        if manager == self:
+            print "Setting current layer to %r" % layer
+            self.current_layer = layer
+    
+    def get_selected_layer( self ):
+        return self.current_layer
     
     def is_layer_selected( self, layer ):
         return app_globals.application.layer_tree_control.get_selected_layer() == layer
