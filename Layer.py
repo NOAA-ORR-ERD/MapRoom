@@ -159,6 +159,23 @@ class Layer():
     def __repr__( self ): 
        return self.name
        
+    def new( self ):
+        self.name = "New Layer"
+        self.determine_layer_color()
+        self.points = self.make_points( 0 )
+        
+    def empty( self ):
+        """
+        We shouldn't allow saving of a layer with no content, so we use this method
+        to determine if we can save this layer.
+        """
+        no_points = (self.points is None or len(self.points) == 0)
+        no_triangles = (self.triangles is None or len(self.triangles) == 0)
+        no_polygons = (self.polygons is None or len(self.polygons) == 0)
+        no_images = (self.images is None or len(self.images) == 0)
+        
+        return no_points and no_triangles and no_polygons and no_images
+       
     def guess_type_from_file_contents( self, file_path ):
         f = open(file_path, "r")
         line = f.readline()
@@ -193,6 +210,7 @@ class Layer():
               f_polygon_identifiers ) = File_loader.load_bna_file( file_path )
             
             if ( self.load_error_string == "" ):
+                self.determine_layer_color()
                 self.type = ext
                 self.labels_visible = False
                 n_points = np.alen( f_polygon_points )

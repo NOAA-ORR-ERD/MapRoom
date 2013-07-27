@@ -10,6 +10,7 @@ from Triangle_dialog import Triangle_dialog
 import File_opener
 import File_saver
 import app_globals
+import Layer
 import library.coordinates as coordinates
 
 class Menu_bar( wx.MenuBar ):
@@ -39,6 +40,11 @@ class Menu_bar( wx.MenuBar ):
         
         self.new_map_item = wx.MenuItem( self.file_menu, wx.NewId(), "New Map...\tCtrl-N" )
         self.file_menu.AppendItem( self.new_map_item )
+        self.new_layer_menu = wx.Menu()
+        self.new_verdat_item = wx.MenuItem( self.new_layer_menu, wx.NewId(), "Verdat")
+        self.new_layer_menu.AppendItem(self.new_verdat_item)
+        self.file_menu.AppendMenu(wx.NewId(), "New Layer", self.new_layer_menu)        
+        
         self.open_item = wx.MenuItem( self.file_menu, wx.ID_OPEN, "Open...\tCtrl-O", )
         self.open_item.SetBitmap( wx.Bitmap( os.path.join( image_path, "open.png" ) ) )
         self.file_menu.AppendItem( self.open_item )
@@ -264,6 +270,7 @@ class Menu_bar( wx.MenuBar ):
         
         f = self.frame
         f.Bind( wx.EVT_MENU, self.do_new_map, self.new_map_item )
+        f.Bind( wx.EVT_MENU, self.do_new_layer_verdat, self.new_verdat_item )
         f.Bind( wx.EVT_MENU, self.do_open_file, id = wx.ID_OPEN )
         f.Bind( wx.EVT_MENU, self.do_save, id = wx.ID_SAVE )
         f.Bind( wx.EVT_MENU, self.do_save_as, id = wx.ID_SAVEAS )
@@ -336,6 +343,14 @@ class Menu_bar( wx.MenuBar ):
     
     def do_new_map( self, event ):
         app_globals.application.new_map()
+    
+    def do_new_layer_verdat( self, event ):
+        file_path = ""
+        insertion_multi_index = app_globals.layer_manager.get_layer_multi_index_from_file_path( file_path )    
+        layer = Layer.Layer()
+        layer.new()
+    
+        app_globals.layer_manager.insert_layer( insertion_multi_index, layer )
     
     def do_open_file( self, event ):
         File_opener.show()

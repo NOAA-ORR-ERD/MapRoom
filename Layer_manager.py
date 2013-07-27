@@ -464,6 +464,7 @@ class Layer_manager():
         layer.is_visible = element.get( "is_visible" ) == "True"
         layer.file_path = element.get( "file_path" )
         layer.default_depth = float( element.get( "default_depth" ) )
+        layer.determine_layer_color()
         for i, child in enumerate( list( element ) ):
             if ( child.tag == "data_file" ):
                 self.load_xml_layer_data( layer, os.path.join( directory_path, child.get( "file_name" ) ) )
