@@ -1002,7 +1002,7 @@ class Layer():
         # If necessary, convert points to lat-long before find duplicates.
         # This makes the distance tolerance work properly.
         projection = app_globals.application.renderer.projection
-        if projection.srs != latlong.srs:
+        if projection.srs != latlong_proj.srs:
             points = points.view(
                 [ ( "x", np.float32 ), ( "y", np.float32 ) ]
             ).view( np.recarray )

@@ -91,7 +91,7 @@ class Projection:
         :type set_cache: bool
         """
         ( destination_points.x, destination_points.y ) = pyproj.transform(
-            source_projection, self.proj,
+            source_projection.proj, self.proj,
             source_points.x, source_points.y,
         )
 
