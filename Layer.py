@@ -194,9 +194,9 @@ class Layer():
                 wx.MessageBox("This file is a valid verdat file.", "No Errors Found")
             except Exception, e:
                 if hasattr( e, "points" ) and e.points != None:
-                    self.clear_all_selections( Layer.STATE_FLAGGED )
+                    self.clear_all_selections( STATE_FLAGGED )
                     for p in e.points:
-                        self.select_point( p, Layer.STATE_FLAGGED )
+                        self.select_point( p, STATE_FLAGGED )
                     app_globals.application.refresh()
                 wx.MessageDialog(
                     app_globals.application.frame,
