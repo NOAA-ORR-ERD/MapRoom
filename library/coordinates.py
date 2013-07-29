@@ -78,7 +78,11 @@ def degrees_minutes_to_float( degrees ):
     return result
     
 def degrees_to_float( degrees ):
-    degrees, dir = degrees.strip().split(" ")
+    values = degrees.strip().split(" ")
+    dir = ""
+    if len(values) == 2:
+        dir = values[1]
+    degrees = values[0]
     result = float(degrees.strip())
     dir = dir.strip()
     if dir in ["W", "S"]:

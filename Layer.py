@@ -309,7 +309,7 @@ class Layer():
                     self.line_segment_indexes.color = self.color
                     self.line_segment_indexes.state = 0
                             
-        elif ( file_type in [".png", ".kap", ".tif"] ):
+        else:
             ( self.load_error_string,
               self.images,
               self.image_sizes,
@@ -366,9 +366,6 @@ class Layer():
                                 return
                         
                         pub.sendMessage( ('layer', 'proejction', 'changed'), layer = self, projection = srs )
-        
-        else:
-            self.load_error_string = "unrecognized file type: " + ext
         
         if ( self.load_error_string == "" ):
             self.bounds = self.compute_bounding_rect()
