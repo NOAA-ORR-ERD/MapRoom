@@ -11,6 +11,7 @@ displaying any resulting error message to the user.
 
 def show():
     file_types = (
+        "All Files|*.bna;*.tif;*.png;*.kap;*.maproomv;*.ms1;*.zip;*.shp;*.verdat;*.xml"
         "BNA files (*.bna)|*.bna",
         "GeoTIFF files (*.tif)|*.tif",
         "GeoTIFF files (*.png)|*.png",
