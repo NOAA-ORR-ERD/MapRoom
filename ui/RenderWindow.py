@@ -544,17 +544,19 @@ class RenderWindow( glcanvas.GLCanvas ):
         rect = self.get_screen_rect_from_projected_rect( self.get_projected_rect_from_world_rect( world_rect ) )
         return ((int(round(rect[0][0])), int(round(rect[0][1]))), (int(round(rect[1][0])), int(round(rect[1][1]))))
     
-    def zoom_in( self ):
-        self.projected_units_per_pixel /= 2.0;
+    def zoom( self, steps = 1, ratio = 2.0, focus_point_screen = None ):
+        if ratio > 0:
+            self.projected_units_per_pixel /= ratio
+        else:
+            self.projected_units_per_pixel *= abs(ratio)
         self.constrain_zoom()
-        print "self.projected_units_per_pixel = " + str( self.projected_units_per_pixel )
         self.render()
     
+    def zoom_in( self ):
+        self.zoom(ratio=2.0)
+    
     def zoom_out( self ):
-        self.projected_units_per_pixel *= 2.0;
-        self.constrain_zoom()
-        print "self.projected_units_per_pixel = " + str( self.projected_units_per_pixel )
-        self.render()
+        self.zoom(ratio=-2.0)
     
     def zoom_to_fit( self ):
         w_r = self.layer_manager.accumulate_layer_rects()
@@ -888,6 +890,16 @@ class RenderWindowTests(unittest.TestCase):
 
         screen_rect = self.canvas.get_screen_rect_from_world_rect(world_rect)
         self.assertEquals(screen_rect, self.canvas.get_screen_rect())
+
+        self.canvas.zoom(ratio=1.5)
+        proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
+        self.assertEquals(proj_rect, ((-1333333.3333333335, -1333333.3333333335), (1333333.3333333335, 1333333.3333333335)))
+        
+        world_rect = self.canvas.get_world_rect_from_projected_rect(proj_rect)
+        #self.assertEquals(world_rect, ((-17.966305682390427, -17.790560385793764), (17.966305682390427, 17.790560385793754)))
+
+        screen_rect = self.canvas.get_screen_rect_from_world_rect(world_rect)
+        self.assertEquals(screen_rect, self.canvas.get_screen_rect())     
 
     def testZoomToWorldRect(self):
         proj_rect = self.canvas.get_projected_rect_from_screen_rect(self.canvas.get_screen_rect())
