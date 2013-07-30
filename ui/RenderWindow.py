@@ -269,10 +269,10 @@ class RenderWindow( glcanvas.GLCanvas ):
         
         amount = rotation / delta
         
-        screen_point_clicked = event.GetPosition()
-        projected_point_clicked = self.get_projected_point_from_screen_point( screen_point_clicked )
-        d_projected_units = ( projected_point_clicked[ 0 ] - self.projected_point_center[ 0 ],
-                              projected_point_clicked[ 1 ] - self.projected_point_center[ 1 ] )
+        screen_point = event.GetPosition()
+        projected_point = self.get_projected_point_from_world_point(screen_point)
+        world_point = self.get_world_point_from_screen_point(screen_point)
+        prect = self.get_projected_rect_from_screen_rect(self.get_screen_rect())
         
         prefs = app_globals.preferences
         
@@ -287,17 +287,20 @@ class RenderWindow( glcanvas.GLCanvas ):
         
         if ( amount < 0 ):
             self.projected_units_per_pixel *= zoom
+            
         else:
             self.projected_units_per_pixel /= zoom
         self.constrain_zoom()
         
-        # compensate to keep the same projected point under the mouse
+        new_world_point = self.get_world_point_from_screen_point(screen_point)        
+        delta = (new_world_point[0] - world_point[0], new_world_point[1] - world_point[1])
+        
         if ( amount < 0 ):
-            self.projected_point_center = ( self.projected_point_center[ 0 ] - d_projected_units[ 0 ],
-                                            self.projected_point_center[ 1 ] - d_projected_units[ 1 ] )
+            self.projected_point_center = ( self.projected_point_center[ 0 ] + delta[ 0 ],
+                                            self.projected_point_center[ 1 ] + delta[ 1 ] )
         else:
-            self.projected_point_center = ( self.projected_point_center[ 0 ] + d_projected_units[ 0 ] / 2,
-                                            self.projected_point_center[ 1 ] + d_projected_units[ 1 ] / 2 )
+            self.projected_point_center = ( self.projected_point_center[ 0 ] - delta[ 0 ],
+                                            self.projected_point_center[ 1 ] - delta[ 1 ] )
         
         self.render()
     
