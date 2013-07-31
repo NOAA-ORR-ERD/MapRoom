@@ -65,16 +65,15 @@ class Properties_panel( wx.Panel ):
             if ( layer.type == "folder" ):
                 fields = [ "Folder name" ]
             
-            if ( layer.type == ".verdat" or layer.type == ".dat" or layer.type == ".xml" ):
+            elif ( layer.type == ".bna" ):
+                fields.extend( [ "Layer name", "Source file", "Polygon count" ] )
+            else:
                 if layer.get_num_points_selected() > 0:
                     fields.extend( [ "Depth unit",  "Point depth" ] )
                     if layer.get_num_points_selected() == 1:
                         fields.extend( ["Point coordinates"] )
                 else:
                     fields.extend( [  "Layer name", "Source file", "Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points" ] )
-            
-            if ( layer.type == ".bna" ):
-                fields.extend( [ "Layer name", "Source file", "Polygon count" ] )
             
             self.sizer.AddSpacer( self.LABEL_SPACING )
             layer_name_control = None
