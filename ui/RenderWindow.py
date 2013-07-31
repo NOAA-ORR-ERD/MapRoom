@@ -270,9 +270,7 @@ class RenderWindow( glcanvas.GLCanvas ):
         amount = rotation / delta
         
         screen_point = event.GetPosition()
-        projected_point = self.get_projected_point_from_world_point(screen_point)
         world_point = self.get_world_point_from_screen_point(screen_point)
-        prect = self.get_projected_rect_from_screen_rect(self.get_screen_rect())
         
         prefs = app_globals.preferences
         
@@ -292,15 +290,13 @@ class RenderWindow( glcanvas.GLCanvas ):
             self.projected_units_per_pixel /= zoom
         self.constrain_zoom()
         
-        new_world_point = self.get_world_point_from_screen_point(screen_point)        
-        delta = (new_world_point[0] - world_point[0], new_world_point[1] - world_point[1])
+        projected_point = self.get_projected_point_from_screen_point(screen_point)
+        new_projected_point = self.get_projected_point_from_world_point(world_point) 
         
-        if ( amount < 0 ):
-            self.projected_point_center = ( self.projected_point_center[ 0 ] + delta[ 0 ],
+        delta = (new_projected_point[0] - projected_point[0], new_projected_point[1] - projected_point[1])
+        
+        self.projected_point_center = ( self.projected_point_center[ 0 ] + delta[ 0 ],
                                             self.projected_point_center[ 1 ] + delta[ 1 ] )
-        else:
-            self.projected_point_center = ( self.projected_point_center[ 0 ] - delta[ 0 ],
-                                            self.projected_point_center[ 1 ] - delta[ 1 ] )
         
         self.render()
     
