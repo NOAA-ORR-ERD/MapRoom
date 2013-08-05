@@ -1,7 +1,12 @@
+8/4/2013
+---------------------------
+- KO Fixed #507 (change projection dialog shouldn't open)
+
 7/31/2013
 ---------------------------
 - KO Fixed #465 (Zooming in with scroll wheel should center)
 - KO Fixed #517 (new layers don't have properties panel)
+- KO Restored the ability to select all files in dialogs (fixes #481 and #488)
 
 7/27/2013
 ---------------------------

@@ -325,7 +325,10 @@ class Layer():
                 # a latlong image loaded, and this image is mercator, change to mercator
                 
                 # TODO: handle other projections besides +proj=merc and +proj=longlat
-                
+                raster_layers = app_globals.layer_manager.count_raster_layers()
+                vector_layers = app_globals.layer_manager.count_vector_layers()
+                if raster_layers == 0 and vector_layers == 0:
+                    pub.sendMessage( ('layer', 'proejction', 'changed'), layer = self, projection = projection.srs )
                 currently_merc = app_globals.application.renderer.projection.srs.find( "+proj=merc" ) != -1
                 currently_longlat = app_globals.application.renderer.projection.srs.find( "+proj=longlat" ) != -1
                 incoming_merc = projection.srs.find( "+proj=merc" ) != -1
@@ -339,31 +342,24 @@ class Layer():
                     else:
                         type = "Longitude/Latitude"
                         srs = "+proj=longlat +over"
-                    if ( app_globals.layer_manager.count_raster_layers() > 0 ):
+                    message = None
+                    if ( raster_layers > 0 ):
+                        message = "The file you are loading is in " + type + " projection, but one or more other raster files already loaded have a different projection. Do you want to load this file anyway, with distortion?"
+                    elif ( vector_layers > 0 ):
+                        message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
+
+                    if message is not None:
                         dialog = wx.MessageDialog(
                             app_globals.application.frame,
-                            message = "The file you are loading is in " + type + " projection, but one or more other raster files already loaded have a different projection. Do you want to load this file anyway, with distortion?",
+                            message = message,
                             caption = "Projection Conflict",
                             style = wx.OK | wx.CANCEL | wx.ICON_QUESTION,
                         )
-                        
+                    
                         if ( dialog.ShowModal() != wx.ID_OK ):
                             self.load_error_string = "Projection conflict"
                             #
                             return
-                    else:
-                        if ( app_globals.layer_manager.count_vector_layers() > 0 ):
-                            dialog = wx.MessageDialog(
-                                app_globals.application.frame,
-                                message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?",
-                                caption = "Projection Conflict",
-                                style = wx.OK | wx.CANCEL | wx.ICON_QUESTION,
-                            )
-                            
-                            if ( dialog.ShowModal() != wx.ID_OK ):
-                                self.load_error_string = "Projection conflict"
-                                #
-                                return
                         
                         pub.sendMessage( ('layer', 'proejction', 'changed'), layer = self, projection = srs )
         

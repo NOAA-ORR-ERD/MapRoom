@@ -50,9 +50,6 @@ class RenderWindow( glcanvas.GLCanvas ):
     hand_cursor = None
     hand_closed_cursor = None
     forced_cursor = None
-
-    lon_lat_grid = None
-    lon_lat_grid_shown = True
     
     opengl_renderer = None
     
@@ -61,17 +58,6 @@ class RenderWindow( glcanvas.GLCanvas ):
     selection_box_is_being_defined = False;
     mouse_down_position = ( 0, 0 )
     mouse_move_position = ( 0, 0 )
-    
-    # two variables keep track of what's visible on the screen:
-    # (1) the projected point at the center of the screen
-    projected_point_center = ( 0, 0 )
-    # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)
-    projected_units_per_pixel = 10000
-    projection = Projection( "+proj=merc +units=m +over" )
-    # for longlat projection, apparently someone decided that since the projection
-    # is the identity, it might as well do something and so it returns the coordinates as
-    # radians instead of degrees; so here we use this variable to avoid using the longlat projection
-    projection_is_identity = False
     
     #is_initialized = False
     #is_closing = False
@@ -94,6 +80,18 @@ class RenderWindow( glcanvas.GLCanvas ):
         self.hand_closed_cursor = wx.Cursor( p, wx.BITMAP_TYPE_ICO, 16, 16 )
         
         self.lon_lat_grid = lon_lat_grid.Lon_lat_grid()
+        self.lon_lat_grid_shown = True
+        
+        # two variables keep track of what's visible on the screen:
+        # (1) the projected point at the center of the screen
+        self.projected_point_center = ( 0, 0 )
+        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)
+        self.projected_units_per_pixel = 10000
+        self.projection = Projection( "+proj=merc +units=m +over" )
+        # for longlat projection, apparently someone decided that since the projection
+        # is the identity, it might as well do something and so it returns the coordinates as
+        # radians instead of degrees; so here we use this variable to avoid using the longlat projection
+        self.projection_is_identity = False
         
         #self.frame.Bind( wx.EVT_MOVE, self.refresh )
         #self.frame.Bind( wx.EVT_IDLE, self.on_idle )

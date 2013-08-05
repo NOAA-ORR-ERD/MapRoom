@@ -180,8 +180,7 @@ class Layer_manager():
         n = 0
         for layer in self.flatten():
             if ( layer.points != None or
-                 layer.polygons != None or
-                 layer.labels_visible ):
+                 layer.polygons != None ):
                 n += 1
         #
         return n
