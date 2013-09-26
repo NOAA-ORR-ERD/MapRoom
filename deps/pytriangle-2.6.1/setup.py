@@ -36,7 +36,7 @@ DEFINES = [("TRILIBRARY", None), # this builds Triangle as a lib, rather than as
 # Add the defines for disabling the FPU extended precision           ] 
 ## fixme: this needs a lot of work!
 ##        it's really compiler dependent, not machine dependent
-if sys.platform == 'darwin' and platform.machine() == 'i386':
+if sys.platform == 'darwin':
     print "adding no CPU flags for mac"
     ## according to:
     ## http://www.christian-seiler.de/projekte/fpmath/
