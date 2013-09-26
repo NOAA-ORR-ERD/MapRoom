@@ -57,6 +57,11 @@ shape = Extension("library.Shape",
                            include_dirs = [ numpy.get_include() ],
                            )
 
+tree = Extension("library.scipy_ckdtree",
+                           sources = [ "library/scipy_ckdtree.pyx" ],
+                           include_dirs = [ numpy.get_include() ],
+                           )
+
 tessellator = Extension("library.Opengl_renderer.Tessellator",
                            sources = [ "library/Opengl_renderer/Tessellator.pyx" ],
                            include_dirs = gl_include_dirs,
@@ -71,7 +76,7 @@ render = Extension("library.Opengl_renderer.Render",
                           libraries = gl_libraries,
                           )
 
-ext_modules = [bitmap, shape, tessellator, render ]
+ext_modules = [bitmap, shape, tree, tessellator, render ]
 #ext_modules = [tessellator]
 
 if sys.platform.startswith( "win" ) and "py2exe" in sys.argv:

@@ -3,7 +3,7 @@ import os.path
 import time
 import sys
 import numpy as np
-from scipy.spatial.ckdtree import cKDTree
+from library.scipy_ckdtree import cKDTree
 import wx
 import library.File_loader as File_loader
 import library.formats.verdat as verdat
