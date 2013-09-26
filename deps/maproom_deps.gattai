@@ -3,11 +3,11 @@
         "virtualenv": "%(HOMEDIR)s/env/maproom",
         "uses_setuptools": "TRUE",
         "darwin" : {
-            "archs": ["i386"],
+            "archs": ["x86_64"],
             "min-version": "10.6",
             "env_vars": {
-                "CC": "gcc-4.0",
-                "CXX": "g++-4.0"
+                "CC": "gcc",
+                "CXX": "g++"
             }
         }
         
