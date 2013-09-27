@@ -3,11 +3,11 @@
         "virtualenv": "%(HOMEDIR)s/env/maproom",
         "uses_setuptools": "TRUE",
         "darwin" : {
-            "archs": ["i386"],
+            "archs": ["x86_64"],
             "min-version": "10.6",
             "env_vars": {
-                "CC": "gcc-4.0",
-                "CXX": "g++-4.0"
+                "CC": "gcc",
+                "CXX": "g++"
             }
         }
         
@@ -18,31 +18,6 @@
         "version": "4.7.0",
         "source": "http://download.osgeo.org/proj/proj-4.7.0.tar.gz",
         "darwin": {
-            "ignore": "TRUE"
-        }
-    },
-    {
-        "name": "libiconv",
-        "version": "1.14",
-        "source": "http://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.14.tar.gz",
-        "win32": {
-            "ignore": "TRUE",
-            "build_args": ["NO_NLS=1"],
-            "project_file": "Makefile.msvc"
-        },
-        "darwin": {
-            "ignore": "TRUE"
-        }
-    },
-    {
-        "name": "gfortran",
-        "version": "4.2.3",
-        "darwin": {
-            "dmg": "http://cran.r-project.org/bin/macosx/tools/gfortran-4.2.3.dmg",
-            "installer": "gfortran.pkg",
-            "installer_requires_admin": "TRUE"
-        },
-        "win32": {
             "ignore": "TRUE"
         }
     },
@@ -73,13 +48,6 @@
                 "PATH": "%(PYTHON)s;%PATH%;C:\\cygwin\\bin"
             }
         }
-    },
-    {
-        "name": "greenlet",
-        "source": "http://pypi.python.org/packages/source/g/greenlet/greenlet-0.3.4.zip#md5=530a69acebbb0d66eb5abd83523d8272",
-        "version": "0.3.4",
-        "build_type": "python",
-        "ignore": "TRUE"
     },
     {
         "name": "gdal",
@@ -119,16 +87,6 @@
         "source": "http://sourceforge.net/projects/numpy/files/NumPy/1.6.1/numpy-1.6.1.tar.gz/download",
         "version": "1.6.1",
         "build_type": "python"
-    },
-    {
-        "name": "scipy",
-        "source": "http://sourceforge.net/projects/scipy/files/scipy/0.10.1/scipy-0.10.1.tar.gz/download",
-        "version": "0.10.1",
-        "build_type": "python",
-        "win32": {
-            "binary": "http://sourceforge.net/projects/scipy/files/scipy/0.10.1/scipy-0.10.1-win32-superpack-python2.7.exe/download",
-            "installer": "scipy-0.10.1-win32-superpack-python2.7.exe"
-        }
     },
     {
         "name": "PyOpenGL",
