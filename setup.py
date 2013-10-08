@@ -330,7 +330,7 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         app_name = "dist/Maproom.app"
         fat_app_name = "dist/Maproom.fat.app"
         os.rename(app_name, fat_app_name)
-        subprocess.call(['/usr/bin/ditto', '-arch', 'i386', fat_app_name, app_name])
+        subprocess.call(['/usr/bin/ditto', '-arch', 'x86_64', fat_app_name, app_name])
         cwd = os.getcwd()
         os.chdir('dist')
         subprocess.call(['/usr/bin/zip', '-r', '-9', "Maproom-r%s-darwin.zip" % spaceless_version, 'Maproom.app',])
