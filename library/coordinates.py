@@ -91,9 +91,9 @@ def degrees_to_float( degrees ):
     return result    
 
 def format_lat_lon_degrees_minutes_seconds( longitude, latitude ):
-    lon = u"%d° %d′ %d″ %s" % \
+    lon = u"%d°%d′%d″%s" % \
         float_to_degrees_minutes_seconds( longitude, directions = ( "E", "W" ) )
-    lat = u"%d° %d′ %d″ %s" % \
+    lat = u"%d°%d′%d″%s" % \
         float_to_degrees_minutes_seconds( latitude, directions = ( "N", "S" ) )
     
     return u"%s, %s" % ( lat, lon )
