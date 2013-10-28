@@ -25,7 +25,9 @@ import pyproj
 import multiprocessing
 multiprocessing.freeze_support()
 
+
 class Logger(object):
+
     def __init__(self, filename="output.txt"):
         self.terminal = sys.stdout
         self.log = open(filename, "a")
@@ -34,22 +36,23 @@ class Logger(object):
         self.terminal.write(message)
         self.log.write(message)
 
-def main( args ):
-    app_globals.main_logger = logging.getLogger( "" )
-    app_globals.main_logger.setLevel( logging.DEBUG )
+
+def main(args):
+    app_globals.main_logger = logging.getLogger("")
+    app_globals.main_logger.setLevel(logging.DEBUG)
     # PyOpenGL is a little too chatty with its logging.
-    app_globals.opengl_logger = logging.getLogger( "OpenGL" )
-    app_globals.opengl_logger.setLevel( logging.WARNING )
+    app_globals.opengl_logger = logging.getLogger("OpenGL")
+    app_globals.opengl_logger.setLevel(logging.WARNING)
     app_globals.version = version
-    
-    app = app_ui.Application( args )
-    
+
+    app = app_ui.Application(args)
+
     # If the app is frozen, don't write anything to stdout.
-    if hasattr( sys, "frozen" ):
+    if hasattr(sys, "frozen"):
         log_file = os.path.join(wx.StandardPaths.Get().GetUserDataDir(), "Maproom", "log.txt")
         if not os.path.exists(os.path.dirname(log_file)):
             os.makedirs(os.path.dirname(log_file))
-        
+
         # Make sure we don't accumulate really long log files
         if os.path.exists(log_file):
             try:
@@ -60,19 +63,19 @@ def main( args ):
             except WindowsError:
                 # on Windows, failure to access generates a WindowsError rather than an IOError
                 pass
-                
+
         sys.stdout = Logger(filename=log_file)
         sys.stderr = Logger(filename=log_file)
     # Otherwise, log to stdout.
     else:
         console = logging.StreamHandler()
-        console.setLevel( logging.INFO )
+        console.setLevel(logging.INFO)
         formatter = logging.Formatter(
             "%(levelname)s: %(message)s at %(filename)s:%(lineno)d",
         )
-        console.setFormatter( formatter )
-        app_globals.main_logger.addHandler( console )
-    
+        console.setFormatter(formatter)
+        app_globals.main_logger.addHandler(console)
+
     """
     root_layer = plugin.Composite_layer(
         command_stack,
@@ -81,9 +84,9 @@ def main( args ):
         name = "root",
     )
     """
-    
+
     app.MainLoop()
 
 if __name__ == "__main__":
     # multiprocessing.freeze_support()
-    main( sys.argv[ 1: ] )
+    main(sys.argv[1:])

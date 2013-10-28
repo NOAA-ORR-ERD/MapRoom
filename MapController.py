@@ -39,60 +39,62 @@ from ui.RenderWindow import RenderWindow
     - create new layer
 """
 
-class MapController( object ):
+
+class MapController(object):
+
     """
     Manages the UI and data objects, such as layers, for a map.
     """
-    DEFAULT_FRAME_SIZE = ( 1000, 750 )
+    DEFAULT_FRAME_SIZE = (1000, 750)
     LEFT_SASH_POSITION = 200
     TOP_SASH_POSITION = 250
     IMAGE_PATH = "ui/images"
-    ICON_FILENAME = os.path.join( IMAGE_PATH, "maproom.ico" )
-    
+    ICON_FILENAME = os.path.join(IMAGE_PATH, "maproom.ico")
+
     NAME = "Maproom"
-    
+
     MODE_PAN = 0
     MODE_ZOOM_RECT = 1
     MODE_EDIT_POINTS = 2
     MODE_EDIT_LINES = 3
-    
+
     frame = None
     menu_bar = None
     tool_bar = None
     renderer_splitter = None
     properties_splitter = None
-    renderer = None # the glcanvas
+    renderer = None  # the glcanvas
     layer_tree_panel = None
     properties_panel = None
     layer_tree_control = None
     layer_manager = None
     status_bar = None
-    
+
     mode = MODE_PAN
     hand_cursor = None
     hand_closed_cursor = None
     forced_cursor = None
-    
+
     lon_lat_grid = None
     lon_lat_grid_shown = True
-    
+
     is_alt_key_down = False
-    selection_box_is_being_defined = False;
-    
+    selection_box_is_being_defined = False
+
     is_initialized = False
     is_closing = False
-    
-    def __init__( self ):
+
+    def __init__(self):
         self.layer_manager = Layer_manager.Layer_manager()
         self.editor = Editor.Editor(self.layer_manager)
-        
+
         # a hack until we remove the coupling of globals to this object's members
         self.bind_globals()
-    
-        self.frame = wx.Frame( None, wx.ID_ANY, self.NAME )
-        self.frame.SetIcon( wx.Icon( self.ICON_FILENAME, wx.BITMAP_TYPE_ICO ) )
-        self.frame.SetSizeHints( 250, 250 )
-        
+
+        self.frame = wx.Frame(None, wx.ID_ANY, self.NAME)
+        self.frame.SetIcon(wx.Icon(self.ICON_FILENAME, wx.BITMAP_TYPE_ICO))
+        self.frame.SetSizeHints(250, 250)
+
         pos = self.frame.Position
         for tlw in wx.GetTopLevelWindows():
             if not tlw is self.frame and isinstance(tlw, wx.Frame):
@@ -101,99 +103,99 @@ class MapController( object ):
                 if tlw.Position.y == pos.y:
                     pos.y += 20
         self.frame.Move(pos)
-        
+
         self.renderer_splitter = wx.SplitterWindow(
             self.frame,
             wx.ID_ANY,
-            style = wx.SP_3DSASH,
+            style=wx.SP_3DSASH,
         )
-        self.renderer_splitter.SetMinimumPaneSize( 20 )
-        
+        self.renderer_splitter.SetMinimumPaneSize(20)
+
         self.properties_splitter = wx.SplitterWindow(
             self.renderer_splitter,
             wx.ID_ANY,
-            style = wx.SP_3DSASH,
+            style=wx.SP_3DSASH,
         )
-        self.properties_splitter.SetMinimumPaneSize( 20 )
-        
-        self.menu_bar = Menu_bar( self )
-        self.frame.SetMenuBar( self.menu_bar )
-        
-        self.tool_bar = Tool_bar( self )
-        self.frame.SetToolBar( self.tool_bar )
+        self.properties_splitter.SetMinimumPaneSize(20)
+
+        self.menu_bar = Menu_bar(self)
+        self.frame.SetMenuBar(self.menu_bar)
+
+        self.tool_bar = Tool_bar(self)
+        self.frame.SetToolBar(self.tool_bar)
         # On Mac, we need to call Realize after setting the frame's toolbar.
         self.tool_bar.Realize()
-        
+
         self.status_bar = self.frame.CreateStatusBar()
-        
-        self.renderer = RenderWindow( self.renderer_splitter, layer_manager = self.layer_manager, editor = self.editor )
-        self.render_controller = RenderController.RenderController( self.layer_manager, self.renderer )
+
+        self.renderer = RenderWindow(self.renderer_splitter, layer_manager=self.layer_manager, editor=self.editor)
+        self.render_controller = RenderController.RenderController(self.layer_manager, self.renderer)
 
         self.renderer_splitter.SplitVertically(
             self.properties_splitter,
             self.renderer,
             self.LEFT_SASH_POSITION,
         )
-        
-        self.layer_tree_control = Layer_tree_control.Layer_tree_control( self.properties_splitter )
-        self.properties_panel = Properties_panel( self.properties_splitter )
-        
+
+        self.layer_tree_control = Layer_tree_control.Layer_tree_control(self.properties_splitter)
+        self.properties_panel = Properties_panel(self.properties_splitter)
+
         self.properties_splitter.SplitHorizontally(
             self.layer_tree_control,
             self.properties_panel,
             self.TOP_SASH_POSITION,
         )
-        
+
         # TODO: Make a frame delegate for these parts
-        self.frame.Bind( wx.EVT_CLOSE, self.close )
-        self.frame.Bind( wx.EVT_MENU, self.close_app, id = wx.ID_EXIT )
-        self.frame.Bind( wx.EVT_ACTIVATE, self.activate )
-        self.frame.Bind( wx.EVT_ACTIVATE_APP, self.refresh )
+        self.frame.Bind(wx.EVT_CLOSE, self.close)
+        self.frame.Bind(wx.EVT_MENU, self.close_app, id=wx.ID_EXIT)
+        self.frame.Bind(wx.EVT_ACTIVATE, self.activate)
+        self.frame.Bind(wx.EVT_ACTIVATE_APP, self.refresh)
 
         pub.subscribe(self.on_layer_inserted, ('layer', 'inserted'))
         pub.subscribe(self.on_layer_selection_changed, ('layer', 'selection', 'changed'))
 
         self.renderer.SetFocus()
-        
-        self.frame.SetSize( self.DEFAULT_FRAME_SIZE )
-        self.frame.Show( True )
+
+        self.frame.SetSize(self.DEFAULT_FRAME_SIZE)
+        self.frame.Show(True)
         self.is_initialized = True
-    
-    def activate( self, event ):
+
+    def activate(self, event):
         if event.Active:
             print "setting this as the active frame"
             self.bind_globals()
             self.refresh()
-    
-    def bind_globals( self ):
+
+    def bind_globals(self):
         # TODO: remove this coupling
         app_globals.application.set_current_map(self)
         app_globals.layer_manager = self.layer_manager
         app_globals.editor = self.editor
-    
-    def show_frame( self ):
-        self.frame.Show( True )
+
+    def show_frame(self):
+        self.frame.Show(True)
         self.renderer.SetFocus()
-    
-    def on_layer_selection_changed( self, manager, layer ):
+
+    def on_layer_selection_changed(self, manager, layer):
         if self.layer_manager == manager:
             self.menu_bar.enable_disable_menu_items()
             self.tool_bar.enable_disable_tools()
             self.refresh()
-    
-    def on_layer_inserted( self, manager, layer ):
+
+    def on_layer_inserted(self, manager, layer):
         print "Layer inserted..."
         if self.layer_manager == manager:
-            self.refresh( None, True )
-            self.layer_tree_control.select_layer( layer )
-    
-    def show_triangle_dialog_box( self ):
+            self.refresh(None, True)
+            self.layer_tree_control.select_layer(layer)
+
+    def show_triangle_dialog_box(self):
         self.show_dialog_of_type(Triangle_dialog)
-    
-    def show_merge_layers_dialog_box( self ):
+
+    def show_merge_layers_dialog_box(self):
         Merge_layers_dialog().show()
-    
-    def show_dialog_of_type( self, type ):
+
+    def show_dialog_of_type(self, type):
         """
         This will look for an existing dialog of type, and will Raise it if found,
         otherwise it will create the dialog and show it. This should probably go into
@@ -205,31 +207,31 @@ class MapController( object ):
             if window.Name == name:
                 dialog = window
                 break
-                
+
         if dialog:
             dialog.Raise()
         else:
             dialog = type()
             dialog.Show()
         dialog.SetFocus()
-    
-    def show_merge_duplicate_points_dialog_box( self ):
+
+    def show_merge_duplicate_points_dialog_box(self):
         self.show_dialog_of_type(Merge_duplicate_points_dialog)
-    
-    def close( self, event ):
+
+    def close(self, event):
         self.is_closing = True
         self.frame.Destroy()
-        
-    def close_app( self, event ):
+
+    def close_app(self, event):
         wx.GetApp().ExitMainLoop()
-    
-    def refresh( self, event = None, rebuild_layer_tree_control = False ):
+
+    def refresh(self, event=None, rebuild_layer_tree_control=False):
         print "refresh called"
-        ## fixme: this shouldn't be required!
-        if ( self.is_closing ):
+        # fixme: this shouldn't be required!
+        if (self.is_closing):
             return
-        
-        if ( rebuild_layer_tree_control and self.layer_tree_control != None ):
+
+        if (rebuild_layer_tree_control and self.layer_tree_control != None):
             self.layer_tree_control.rebuild()
         if self.renderer is not None:
         #    self.renderer.render()
@@ -237,10 +239,10 @@ class MapController( object ):
             if not sys.platform.startswith('darwin'):
                 self.renderer.Update()
             self.renderer.Refresh()
-        if ( self.layer_tree_control != None and self.properties_panel != None ):
+        if (self.layer_tree_control != None and self.properties_panel != None):
             layer = self.layer_tree_control.get_selected_layer()
             # note that the following call only does work if the properties for the layer have changed
-            self.properties_panel.display_panel_for_layer( layer )
-        if ( self.is_initialized ):
+            self.properties_panel.display_panel_for_layer(layer)
+        if (self.is_initialized):
             self.menu_bar.enable_disable_menu_items()
             self.tool_bar.enable_disable_tools()

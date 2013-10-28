@@ -7,22 +7,23 @@ FILL_SUB_LAYER_PICKER_OFFSET = 0
 POINTS_SUB_LAYER_PICKER_OFFSET = 1
 LINES_SUB_LAYER_PICKER_OFFSET = 2
 
+
 class Polygon_set_renderer:
-    
+
     ogrl = None
-    
+
     points = None
     point_adjacency_array = None
     polygons = None
-    
+
     polygon_count = 0
-    triangle_vertex_buffers = None # projected
+    triangle_vertex_buffers = None  # projected
     triangle_vertex_counts = None
-    line_vertex_buffers = None # projected
+    line_vertex_buffers = None  # projected
     line_vertex_counts = None
     line_nan_counts = None
-    
-    def __init__( self, opengl_renderer, points, point_adjacency_array, polygons, projection, projection_is_identity ):
+
+    def __init__(self, opengl_renderer, points, point_adjacency_array, polygons, projection, projection_is_identity):
         """
         points = 2 x np.float32, i.e., "2f4"
         point_adjacency = np array of
@@ -42,36 +43,36 @@ class Polygon_set_renderer:
         projection = a pyproj-style projection callable object, such that
                         projection( world_x, world_y ) = ( projected_x, projected_y )
         """
-        
+
         self.ogrl = opengl_renderer
-        
+
         # gl.glEnable( gl.GL_BLEND )
         # gl.glBlendFunc( gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA )
         # gl.glEnable( gl.GL_LINE_SMOOTH )
         # gl.glHint( gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE )
-        
+
         self.points = points.copy()
         self.point_adjacency_array = point_adjacency_array.copy()
         self.polygons = polygons.copy()
-        self.polygon_count = np.alen( polygons )
+        self.polygon_count = np.alen(polygons)
         self.line_vertex_counts = polygons.count.copy()
-        
-        self.reproject( projection, projection_is_identity )
-    
-    def set_invalid_polygons( self, polygons, polygon_count ):
+
+        self.reproject(projection, projection_is_identity)
+
+    def set_invalid_polygons(self, polygons, polygon_count):
         # Invalid polygons are those that couldn't be tessellated and thus
         # have zero fill triangles. But don't consider hole polygons as
         # invalid polygons.
         invalid_indices_including_holes = np.where(
-            self.triangle_vertex_counts[ : polygon_count ] == 0
-        )[ 0 ]
+            self.triangle_vertex_counts[: polygon_count] == 0
+        )[0]
         invalid_indices = []
-        
+
         for index in invalid_indices_including_holes:
             if index > 0 and \
-               polygons.group[ index ] != polygons.group[ index - 1 ]:
-                invalid_indices.append( index )
-        
+               polygons.group[index] != polygons.group[index - 1]:
+                invalid_indices.append(index)
+
         # this is a mechanism to inform the calling program of invalid polygons
         # TODO: make this a pull (call to a get_invalid_polygons() method) instead
         # of a push (message)
@@ -81,66 +82,66 @@ class Polygon_set_renderer:
             polygon_indices = np.array( invalid_indices, np.uint32 ),
         )
         """
-    
-    def reproject( self, projection, projection_is_identity ):
-        if ( self.polygon_count == 0 ):
+
+    def reproject(self, projection, projection_is_identity):
+        if (self.polygon_count == 0):
             return
-        
+
         self.destroy()
-        
+
         self.triangle_vertex_buffers = np.ndarray(
             self.polygon_count,
-            dtype = np.uint32
+            dtype=np.uint32
         )
         self.triangle_vertex_counts = np.ndarray(
             self.polygon_count,
-            dtype = np.uint32
+            dtype=np.uint32
         )
         self.line_vertex_buffers = np.ndarray(
             self.polygon_count,
-            dtype = np.uint32
+            dtype=np.uint32
         )
         self.line_nan_counts = np.zeros(
             self.polygon_count,
-            dtype = np.uint32
+            dtype=np.uint32
         )
-        
+
         init_vertex_buffers(
-            self.triangle_vertex_buffers, # out parameter -- init_vertex_buffers() builds a vbo buffer for each polygon and stores them in this handle
-            self.line_vertex_buffers, # out parameter -- init_vertex_buffers() builds a vbo buffer for each polygon and stores them in this handle
-            start_index = 0,
-            count = self.polygon_count,
-            pygl = gl
+            self.triangle_vertex_buffers,  # out parameter -- init_vertex_buffers() builds a vbo buffer for each polygon and stores them in this handle
+            self.line_vertex_buffers,  # out parameter -- init_vertex_buffers() builds a vbo buffer for each polygon and stores them in this handle
+            start_index=0,
+            count=self.polygon_count,
+            pygl=gl
         )
-        
+
         projected_points = np.ndarray(
-            ( np.alen( self.points ), 2 ),
-            dtype = np.float32
+            (np.alen(self.points), 2),
+            dtype=np.float32
         )
-        if ( projection_is_identity ):
-            projected_points[ : , 0 ] = self.points[ : , 0 ]
-            projected_points[ : , 1 ] = self.points[ : , 1 ]
+        if (projection_is_identity):
+            projected_points[:, 0] = self.points[:, 0]
+            projected_points[:, 1] = self.points[:, 1]
         else:
-            projected_points[ : , 0 ], projected_points[ : , 1 ] = projection( self.points[ : , 0 ], self.points[ : , 1 ] )
-        
+            projected_points[:, 0], projected_points[:, 1] = projection(self.points[:, 0], self.points[:, 1])
+
         tessellate(
-            projected_points, # used to be: self.points
+            projected_points,  # used to be: self.points
             self.point_adjacency_array.next,
             self.point_adjacency_array.polygon,
             self.polygons.start,
-            self.polygons.count, # per-polygon point count
-            self.line_nan_counts, # out parameter -- how many nan/deleted points in each polygon
+            self.polygons.count,  # per-polygon point count
+            self.line_nan_counts,  # out parameter -- how many nan/deleted points in each polygon
             self.polygons.group,
-            self.triangle_vertex_buffers, # out parameter -- fills in the triangle vertex points
-            self.triangle_vertex_counts, # out parameter -- how many triangle points for each polygon?
-            self.line_vertex_buffers, # out parameter -- fills in the line vertex points
+            self.triangle_vertex_buffers,  # out parameter -- fills in the triangle vertex points
+            self.triangle_vertex_counts,  # out parameter -- how many triangle points for each polygon?
+            self.line_vertex_buffers,  # out parameter -- fills in the line vertex points
             gl
         )
-        
+
         # print "total line_nan_counts = " + str( self.line_nan_counts.sum() )
-        self.set_invalid_polygons( self.polygons, self.polygon_count )
-    
-    def render( self, layer_index_base, pick_mode, polygon_colors, line_color, line_width, broken_polygon_index = None ):
+        self.set_invalid_polygons(self.polygons, self.polygon_count)
+
+    def render(self, layer_index_base, pick_mode, polygon_colors, line_color, line_width, broken_polygon_index=None):
         """
         layer_index_base = the base number of this layer renderer for pick buffer purposes
         pick_mode = True if we are drawing to the off-screen pick buffer
@@ -150,55 +151,55 @@ class Polygon_set_renderer:
         """
         if self.triangle_vertex_buffers is None or self.polygon_count == 0:
             return
-        
+
         # the fill triangles
-        
-        gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_FILL )
-        
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
         active_colors = polygon_colors
-        if ( pick_mode ):
-            start_color = ( layer_index_base + FILL_SUB_LAYER_PICKER_OFFSET ) << 24
-            active_colors = np.arange( start_color, start_color + self.polygon_count, dtype = np.uint32 )
-        
+        if (pick_mode):
+            start_color = (layer_index_base + FILL_SUB_LAYER_PICKER_OFFSET) << 24
+            active_colors = np.arange(start_color, start_color + self.polygon_count, dtype=np.uint32)
+
         render_buffers_with_colors(
-            self.triangle_vertex_buffers[ : self.polygon_count ],
+            self.triangle_vertex_buffers[: self.polygon_count],
             active_colors,
-            self.triangle_vertex_counts[ : self.polygon_count ],
+            self.triangle_vertex_counts[: self.polygon_count],
             gl.GL_TRIANGLES,
             gl
         )
-        
+
         # the lines
-        
-        gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_LINE )
-        
-        if ( pick_mode ):
-            gl.glLineWidth( 6 )
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+
+        if (pick_mode):
+            gl.glLineWidth(6)
             # note that all of the lines of each polygon get the color of the polygon as a whole
             render_buffers_with_colors(
-                self.line_vertex_buffers[ : self.polygon_count ],
+                self.line_vertex_buffers[: self.polygon_count],
                 active_colors,
-                self.line_vertex_counts[ : self.polygon_count ],
+                self.line_vertex_counts[: self.polygon_count],
                 gl.GL_LINE_LOOP,
                 gl
             )
         else:
-            gl.glLineWidth( line_width )
+            gl.glLineWidth(line_width)
             render_buffers_with_one_color(
-                self.line_vertex_buffers[ : self.polygon_count ],
+                self.line_vertex_buffers[: self.polygon_count],
                 line_color,
-                self.line_vertex_counts[ : self.polygon_count ],
+                self.line_vertex_counts[: self.polygon_count],
                 gl.GL_LINE_LOOP,
                 gl,
                 0 if broken_polygon_index is None else broken_polygon_index,
                 # If needed, render with one polygon border popped open.
                 gl.GL_LINE_LOOP if broken_polygon_index is None else gl.GL_LINE_STRIP
             )
-        
+
         # TODO: drawt the points if the polygon is selected for editing
-        
-        gl.glPolygonMode( gl.GL_FRONT_AND_BACK, gl.GL_FILL )
-    
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
     """
     def update_polygons( self, points, polygon_points, polygons,
                          polygon_count, updated_points, projection ):
@@ -321,9 +322,9 @@ class Polygon_set_renderer:
             start_indices = [ new_start_point ],
         )
     """
-    
-    def destroy( self ):
-        if ( self.triangle_vertex_buffers != None ):
-            gl.glDeleteBuffers( 1, self.triangle_vertex_buffers )
-        if ( self.line_vertex_buffers != None ):
-            gl.glDeleteBuffers( 1, self.line_vertex_buffers )
+
+    def destroy(self):
+        if (self.triangle_vertex_buffers != None):
+            gl.glDeleteBuffers(1, self.triangle_vertex_buffers)
+        if (self.line_vertex_buffers != None):
+            gl.glDeleteBuffers(1, self.line_vertex_buffers)
