@@ -196,7 +196,7 @@ class CoordinateTests(unittest.TestCase):
         self.assertEquals(result, format_lat_lon_degrees(self.coord[0], self.coord[1]))
         
     def testToDegreesMinutesSeconds(self):
-        result = u"12° 46′ 30″ N, 62° 14′ 31″ W"
+        result = u"12°46′30″N, 62°14′31″W"
         self.assertEquals(result, format_lat_lon_degrees_minutes_seconds(self.coord[0], self.coord[1]))
         
     def testToDegreesDecimalMinutes(self):
