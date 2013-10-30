@@ -38,7 +38,6 @@ class Menu_bar(wx.MenuBar):
                         )
 
         self.file_menu = wx.Menu()
-        self.Append(self.file_menu, "File")
 
         self.new_map_item = wx.MenuItem(self.file_menu, wx.NewId(), "New Map...\tCtrl-N")
         self.file_menu.AppendItem(self.new_map_item)
@@ -78,6 +77,11 @@ class Menu_bar(wx.MenuBar):
         self.exit_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "quit.png")))
         self.file_menu.AppendItem(self.exit_item)
 
+        # wait to add the File menu till after all the menu items are added
+        # so that the Quit item will be moved out of the File menu to the app
+        # menu as per Apple style guideles
+        self.Append(self.file_menu, "&File")
+        
         #
 
         self.edit_menu = wx.Menu()
