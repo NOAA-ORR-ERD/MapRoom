@@ -69,6 +69,9 @@ class Application(wx.App):
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
         app_globals.preferences = preferences.MaproomPreferences(os.path.join(data_dir, "MaproomPrefs.json"))
+        
+        self.setup_pubsub()
+        self.setup_filehistory()
 
         self.new_map()
 
@@ -82,6 +85,34 @@ class Application(wx.App):
         self.is_initialized = True
 
         return True
+    
+    def setup_pubsub(self):
+        pub.subscribe(self.on_recent_files_config, ('recent_files', 'config'))
+        pub.subscribe(self.on_recent_files_update, ('recent_files', 'update'))
+        pub.subscribe(self.on_recent_files_open, ('recent_files', 'open'))
+    
+    def setup_filehistory(self):
+        configfile = os.path.join(wx.StandardPaths.Get().GetUserDataDir(), "config.dat")
+        self.config = wx.Config(self.NAME, style=wx.CONFIG_USE_LOCAL_FILE, localFilename=configfile)
+        print self.config
+        self.filehistory = wx.FileHistory(app_globals.preferences["Number of Recent Files"])
+        self.filehistory.Load(self.config)
+
+    def on_recent_files_config(self, menu):
+        #config = self.get_config_file("recent-files.dat")
+        self.filehistory.UseMenu(menu)
+        self.filehistory.AddFilesToMenu()
+    
+    def on_recent_files_update(self, path):
+        print "recent_files_update:", path
+        self.filehistory.AddFileToHistory(path)
+        self.filehistory.Save(self.config)
+        self.config.Flush()
+
+    def on_recent_files_open(self, index):
+        path = self.filehistory.GetHistoryFile(index)
+        print "recent_files_open:", path
+        ui.File_opener.open_file(path)
 
     def new_map(self):
         map = MapController()

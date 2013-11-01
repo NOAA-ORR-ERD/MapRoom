@@ -1,6 +1,8 @@
 import wx
 import os
 import sys
+from wx.lib.pubsub import pub
+
 from About_dialog import About_dialog
 from Jump_coords_dialog import JumpCoordsDialog
 from Preferences_dialog import PreferencesDialog
@@ -45,6 +47,10 @@ class Menu_bar(wx.MenuBar):
         self.open_item = wx.MenuItem(self.file_menu, wx.ID_OPEN, "Open...\tCtrl-O", )
         self.open_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "open.png")))
         self.file_menu.AppendItem(self.open_item)
+        
+        recent = wx.Menu()
+        pub.sendMessage(('recent_files', 'config'), menu=recent)
+        self.file_menu.AppendMenu(wx.ID_ANY, "&Recent Files", recent)
 
         self.file_menu.AppendSeparator()
 
@@ -315,6 +321,7 @@ class Menu_bar(wx.MenuBar):
         f.Bind(wx.EVT_MENU, self.do_show_help, id=self.help_id)
         f.Bind(wx.EVT_MENU, self.do_show_about, id=wx.ID_ABOUT)
         f.Bind(wx.EVT_MENU, self.do_show_preferences, id=wx.ID_PREFERENCES)
+        f.Bind(wx.EVT_MENU_RANGE, self.on_file_history, id=wx.ID_FILE1, id2=wx.ID_FILE1+app_globals.preferences["Number of Recent Files"])
 
     def enable_disable_menu_items(self):
         raisable = self.controller.layer_tree_control.is_selected_layer_raisable()
@@ -499,6 +506,10 @@ class Menu_bar(wx.MenuBar):
 
     def do_show_preferences(self, event):
         PreferencesDialog(None, wx.ID_ANY, "Maproom Preferences").Show()
+        
+    def on_file_history(self, event):
+        index = event.GetId() - wx.ID_FILE1
+        pub.sendMessage(('recent_files', 'open'), index=index)
 
     def updated_undo_redo(self):
         u = app_globals.editor.get_current_undoable_operation_text()

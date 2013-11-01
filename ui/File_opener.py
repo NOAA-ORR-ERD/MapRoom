@@ -1,4 +1,6 @@
 import wx
+from wx.lib.pubsub import pub
+
 import os.path
 import Layer
 from Layer_manager import *
@@ -42,14 +44,19 @@ def show():
 
 
 def open_file(file_path):
-
+    if open_file_with_retval(file_path):
+        # Only add the file to the recent files list if opened successfully
+        file_path = os.path.normcase(os.path.abspath(file_path))
+        pub.sendMessage(('recent_files', 'update'), path=file_path)
+        
+def open_file_with_retval(file_path):
     # xml files are treated specially
     if (file_path.endswith(".xml")):
         layer = Layer.Layer()
         layer.read_from_file(file_path)
         # we don't need to insert anything because the xml reader inserts layers as appropriate
 
-        return
+        return True
 
     insertion_multi_index = app_globals.layer_manager.get_layer_multi_index_from_file_path(file_path)
     if (insertion_multi_index != None):
@@ -62,7 +69,7 @@ def open_file(file_path):
         )
 
         if (dialog.ShowModal() != wx.ID_OK):
-            return
+            return False
 
         app_globals.layer_manager.delete_selected_layer(layer)
 
@@ -77,8 +84,8 @@ def open_file(file_path):
             style=wx.OK | wx.ICON_ERROR,
         ).ShowModal()
 
-        return None
+        return False
 
     app_globals.layer_manager.insert_layer(insertion_multi_index, layer)
 
-    return None
+    return True
