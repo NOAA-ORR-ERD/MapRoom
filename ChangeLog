@@ -1,3 +1,15 @@
+10/31/2013
+---------------------------
+Released 1.9.4
+- RM Fixed #536: added recent files list to file menu
+- RM Added scripts to automatically create/tag new versions and app bundle
+- RM Fixed #528: Quit menu item now only appears on app menu
+- RM Fixed whitespace to (largely) conform to PEP8
+- RM Refs #526: updated test case for degrees/minutes/seconds
+- RM Fixed #526: removed extra whitespace between components
+- CB Updated README for TestData, and added some netcdf particle files.
+- CB added a README for the sampple data
+
 8/4/2013
 ---------------------------
 - KO Fixed #507 (change projection dialog shouldn't open)
