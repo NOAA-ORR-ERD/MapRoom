@@ -1,4 +1,5 @@
 # coding=utf8
+import re
 
 import unittest
 
@@ -54,7 +55,8 @@ def float_to_degrees(value, directions=None):
 
 
 def degrees_minutes_seconds_to_float(degrees):
-    values = degrees.strip().split(" ")
+    # handle with spaces or without
+    values = re.split(u"[°′″]", degrees.strip().replace(" ",""))
     dir = ""
     if len(values) == 3:
         degrees, minutes, seconds = values
@@ -172,7 +174,6 @@ def lat_lon_from_degrees_minutes(lat_lon_string):
 
 
 def lat_lon_from_degrees_minutes_seconds(lat_lon_string):
-    lat_lon_string = lat_lon_string.replace(u"°", "").replace(u"″", "").replace(u"′", "")
     lon, lat = lat_lon_string.split(",")
     try:
         return (degrees_minutes_seconds_to_float(lat), degrees_minutes_seconds_to_float(lon))
@@ -227,6 +228,9 @@ class CoordinateTests(unittest.TestCase):
         lat_lon_string = u"12° 46′ 30″ N, 62° 14′ 31″ W"
         result = lat_lon_from_format_string(lat_lon_string)
         self.assertEquals(self.coord, (round(result[0], 3), round(result[1], 3)))
+        string2 = format_lat_lon_degrees_minutes_seconds(result[0], result[1])
+        result2 = lat_lon_from_format_string(string2)
+        self.assertEquals((round(result[0], 3), round(result[1], 3)), (round(result2[0], 3), round(result2[1], 3)))
         equator_string = u"0° 0′ 0″, 62° 14′ 31″ W"
         result = lat_lon_from_format_string(equator_string)
         self.assertEquals((self.coord[0], 0.0), (round(result[0], 3), round(result[1], 3)))
