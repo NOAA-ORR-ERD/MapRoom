@@ -91,7 +91,6 @@ class Menu_bar(wx.MenuBar):
         #
 
         self.edit_menu = wx.Menu()
-        self.Append(self.edit_menu, "Edit")
 
         # For some inexplicable reason, if wx.ID_UNDO is used here instead of
         # making a custom id, then the Undo menu entry is almost always
@@ -125,6 +124,7 @@ class Menu_bar(wx.MenuBar):
             prefs_shortcut = "\tCTRL+,"
         self.preferences = wx.MenuItem(self.edit_menu, wx.ID_PREFERENCES, "Preferences" + prefs_shortcut)
         self.edit_menu.AppendItem(self.preferences)
+        self.Append(self.edit_menu, "Edit")
 
         #
 
