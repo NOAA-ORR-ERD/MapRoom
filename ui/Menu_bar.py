@@ -5,6 +5,7 @@ from wx.lib.pubsub import pub
 
 from About_dialog import About_dialog
 from Jump_coords_dialog import JumpCoordsDialog
+from Find_point_dialog import FindPointDialog
 from Preferences_dialog import PreferencesDialog
 from Triangle_dialog import Triangle_dialog
 # from Help_window import Help_window
@@ -252,6 +253,10 @@ class Menu_bar(wx.MenuBar):
         self.jump_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "jump.png")))
         self.view_menu.AppendItem(self.jump_item)
 
+        self.find_point_id = wx.NewId()
+        self.find_point_item = wx.MenuItem(self.view_menu, self.find_point_id, "Find Point...\tCtrl-F")
+        self.view_menu.AppendItem(self.find_point_item)
+
         #
 
         self.tools_menu = wx.Menu()
@@ -316,6 +321,7 @@ class Menu_bar(wx.MenuBar):
         f.Bind(wx.EVT_MENU, self.do_merge_layers, id=self.merge_layers_id)
         f.Bind(wx.EVT_MENU, self.do_check_for_errors, id=self.check_valid_verdat_id)
         f.Bind(wx.EVT_MENU, self.do_jump, id=self.jump_id)
+        f.Bind(wx.EVT_MENU, self.do_find_point, id=self.find_point_id)
         f.Bind(wx.EVT_MENU, self.do_merge_duplicate_points, id=self.merge_duplicate_points_id)
         f.Bind(wx.EVT_MENU, self.do_view_log, id=self.log_id)
         f.Bind(wx.EVT_MENU, self.do_show_help, id=self.help_id)
@@ -493,6 +499,31 @@ class Menu_bar(wx.MenuBar):
             renderer = app.current_map.renderer
             renderer.projected_point_center = renderer.get_projected_point_from_world_point(lat_lon)
             app.refresh()
+        dialog.Destroy()
+
+    def do_find_point(self, event):
+        dialog = FindPointDialog(None, wx.ID_ANY, "Find Point")
+        if dialog.ShowModal() == wx.ID_OK:
+            try:
+                value = dialog.text.Value
+                index = int(value) - 1
+                layer = dialog.layer
+                point = layer.points[index]
+                print "point[%d]=%s" % (index, str(point))
+                app = wx.GetApp()
+                renderer = app.current_map.renderer
+                renderer.projected_point_center = renderer.get_projected_point_from_world_point((point[0], point[1]))
+                layer.clear_all_point_selections()
+                layer.select_point(index)
+                app.refresh()
+            except IndexError:
+                tlw = wx.GetApp().GetTopWindow()
+                tlw.SetStatusText(u"No point #%s in this layer" % value)
+            except ValueError:
+                tlw = wx.GetApp().GetTopWindow()
+                tlw.SetStatusText(u"Point number must be an integer, not '%s'" % value)
+            except:
+                raise
         dialog.Destroy()
 
     def do_view_log(self, event):
