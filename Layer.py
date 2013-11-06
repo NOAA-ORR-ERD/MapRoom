@@ -164,8 +164,11 @@ class Layer():
 
     def new(self):
         self.name = "New Layer"
+        self.new_points()
+    
+    def new_points(self, num=0):
         self.determine_layer_color()
-        self.points = self.make_points(0)
+        self.points = self.make_points(num)
 
     def empty(self):
         """
@@ -763,7 +766,11 @@ class Layer():
         pub.sendMessage(('layer', 'points', 'deleted'), layer=self)
 
     def insert_point(self, world_point):
-        return self.insert_point_at_index(len(self.points), world_point, self.default_depth, self.color, STATE_SELECTED, True)
+        if self.points is None:
+            index = -1
+        else:
+            index = len(self.points)
+        return self.insert_point_at_index(index, world_point, self.default_depth, self.color, STATE_SELECTED, True)
 
     def insert_point_at_index(self, point_index, world_point, z, color, state, add_undo_info):
         t0 = time.clock()
@@ -771,7 +778,7 @@ class Layer():
         p = np.array([(world_point[0], world_point[1], z, color, state)],
                      dtype=self.POINT_DTYPE)
         if (self.points == None):
-            self.points = self.make_points(1)
+            self.new_points(1)
             self.points[0] = p
             point_index = 0
             pub.sendMessage(('layer', 'updated'), layer=self)
