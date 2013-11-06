@@ -1,3 +1,15 @@
+11/06/2013
+---------------------------
+Released 1.9.5
+- RM Fixed #529: added point number to status text display on mouse motion
+- RM Added is_ugrid_point convenience function to Editor
+- RM Fixed #530: menu item enabled only when layer has points
+- RM Minor refoctor of Layer to separate out method to create new points
+- RM Refs #530: added check for layer with no points
+- RM Refs #530: added basic functionality to search for a point
+- RM Fixed #526: (again). handle whitespace in to/from conversion to dms
+- RM Fixed #542: moved Preferences menu item to app menu only on OSX
+
 10/31/2013
 ---------------------------
 Released 1.9.4
