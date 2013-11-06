@@ -170,8 +170,7 @@ class RenderWindow(glcanvas.GLCanvas):
         p = event.GetPosition()
         proj_p = self.get_world_point_from_screen_point(p)
         if (not self.mouse_is_down):
-            tlw = wx.GetApp().GetTopWindow()
-            tlw.SetStatusText(coordinates.format_coords_for_display(proj_p[0], proj_p[1]))
+            status_text = coordinates.format_coords_for_display(proj_p[0], proj_p[1])
 
             self.release_mouse()
             # print "mouse is not down"
@@ -184,8 +183,14 @@ class RenderWindow(glcanvas.GLCanvas):
                 layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
                 if (self.layer_manager.is_layer_selected(layer)):
                     self.editor.clickable_object_mouse_is_over = o
+                if self.editor.is_ugrid_point(o):
+                    status_text += "  Point %s on %s" % (object_index + 1, str(layer))
+
             else:
                 self.editor.clickable_object_mouse_is_over = None
+
+            tlw = wx.GetApp().GetTopWindow()
+            tlw.SetStatusText(status_text)
 
         if (self.mouse_is_down):
             d_x = p[0] - self.mouse_down_position[0]
