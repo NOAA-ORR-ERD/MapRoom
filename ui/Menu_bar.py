@@ -508,14 +508,15 @@ class Menu_bar(wx.MenuBar):
                 value = dialog.text.Value
                 index = int(value) - 1
                 layer = dialog.layer
-                point = layer.points[index]
-                print "point[%d]=%s" % (index, str(point))
-                app = wx.GetApp()
-                renderer = app.current_map.renderer
-                renderer.projected_point_center = renderer.get_projected_point_from_world_point((point[0], point[1]))
-                layer.clear_all_point_selections()
-                layer.select_point(index)
-                app.refresh()
+                if layer.has_points():
+                    point = layer.points[index]
+                    print "point[%d]=%s" % (index, str(point))
+                    app = wx.GetApp()
+                    renderer = app.current_map.renderer
+                    renderer.projected_point_center = renderer.get_projected_point_from_world_point((point[0], point[1]))
+                    layer.clear_all_point_selections()
+                    layer.select_point(index)
+                    app.refresh()
             except IndexError:
                 tlw = wx.GetApp().GetTopWindow()
                 tlw.SetStatusText(u"No point #%s in this layer" % value)

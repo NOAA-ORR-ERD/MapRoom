@@ -461,6 +461,9 @@ class Layer():
             self.polygons.state = self.polygons.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
+    def has_points(self):
+        return self.points is not None and len(self.points) > 0
+
     def select_point(self, point_index, mark_type=STATE_SELECTED):
         self.points.state[point_index] = self.points.state[point_index] | mark_type
         self.increment_change_count()
