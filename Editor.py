@@ -285,10 +285,13 @@ class Editor():
 
         self.end_operation_batch()
 
-    def clickable_object_is_ugrid_point(self):
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
+    def is_ugrid_point(self, obj):
+        (layer_index, type, subtype, object_index) = self.parse_clickable_object(obj)
         #
         return type == Layer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET and subtype == Point_and_line_set_renderer.POINTS_SUB_LAYER_PICKER_OFFSET
+
+    def clickable_object_is_ugrid_point(self):
+        return self.is_ugrid_point(self.clickable_object_mouse_is_over)
 
     def clickable_object_is_ugrid_line(self):
         (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
@@ -312,7 +315,7 @@ class Editor():
 
     def parse_clickable_object(self, o):
         if (o == None):
-            return (None, None, None)
+            return (None, None, None, None)
 
         # see Layer.py for layer types
         # see Point_and_line_set_renderer.py and Polygon_set_renderer.py for subtypes
@@ -476,3 +479,31 @@ class Editor():
         else:
             print "    longer than 100 items"
         print "undo_stack_next_index is now: " + str(self.undo_stack_next_index)
+
+
+import unittest
+
+# imports needed only for tests
+import Layer_manager
+
+import numpy as np
+
+
+class EditorTests(unittest.TestCase):
+
+    def setUp(self):
+        self.layer_manager = Layer_manager.Layer_manager()
+        self.editor = Editor(self.layer_manager)
+
+    def tearDown(self):
+        pass
+
+    def testPoints(self):
+        points = [(10, 0), (20, 10), (30, 12)]
+        for point in points:
+            self.assertTrue(self.editor.is_ugrid_point(point), msg="Point %s failed" % str(point))
+            self.editor.clickable_object_mouse_is_over = point
+            self.assertTrue(self.editor.clickable_object_is_ugrid_point(), msg="Point %s failed" % str(point))
+
+def getTestSuite():
+    return unittest.makeSuite(EditorTests)
