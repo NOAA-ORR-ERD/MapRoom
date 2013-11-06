@@ -335,6 +335,10 @@ class Menu_bar(wx.MenuBar):
         lowerable = self.controller.layer_tree_control.is_selected_layer_lowerable()
         self.lower_item.Enable(lowerable)
         self.updated_undo_redo()
+        
+        layer = self.controller.layer_tree_control.get_selected_layer()
+        enabled = layer is not None and layer.has_points()
+        self.find_point_item.Enable(enabled)
 
         """
         self.save_item.Enable( False )
