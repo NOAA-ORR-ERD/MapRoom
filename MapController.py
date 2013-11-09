@@ -95,15 +95,6 @@ class MapController(object):
         self.frame.SetIcon(wx.Icon(self.ICON_FILENAME, wx.BITMAP_TYPE_ICO))
         self.frame.SetSizeHints(250, 250)
 
-        pos = self.frame.Position
-        for tlw in wx.GetTopLevelWindows():
-            if not tlw is self.frame and isinstance(tlw, wx.Frame):
-                if tlw.Position.x == pos.x:
-                    pos.x += 20
-                if tlw.Position.y == pos.y:
-                    pos.y += 20
-        self.frame.Move(pos)
-
         self.renderer_splitter = wx.SplitterWindow(
             self.frame,
             wx.ID_ANY,
@@ -158,8 +149,18 @@ class MapController(object):
         self.renderer.SetFocus()
 
         self.frame.SetSize(self.DEFAULT_FRAME_SIZE)
+        self.frame.Center()
         self.frame.Show(True)
         self.is_initialized = True
+        
+        pos = self.frame.Position
+        for tlw in wx.GetTopLevelWindows():
+            if not tlw is self.frame and isinstance(tlw, wx.Frame):
+                if tlw.Position.x == pos.x:
+                    pos.x += 20
+                if tlw.Position.y == pos.y:
+                    pos.y += 20
+        self.frame.Move(pos)
 
     def activate(self, event):
         if event.Active:
