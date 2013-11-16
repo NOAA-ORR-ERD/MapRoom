@@ -67,7 +67,8 @@ class MapFrame(wx.Frame):
         # On Mac, we need to call Realize after setting the frame's toolbar.
         self.tool_bar.Realize()
 
-        self.status_bar = self.CreateStatusBar()
+        self.status_bar = self.CreateStatusBar(2)
+        self.status_bar.SetStatusWidths([-1, 300])
 
         self.renderer = RenderWindow(self.renderer_splitter, layer_manager=controller.layer_manager, editor=controller.editor)
         self.render_controller = RenderController.RenderController(controller.layer_manager, self.renderer)
