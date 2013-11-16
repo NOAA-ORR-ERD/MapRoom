@@ -37,7 +37,7 @@ class Logger(object):
         self.log.write(message)
 
 
-def main(args):
+def main():
     app_globals.main_logger = logging.getLogger("")
     app_globals.main_logger.setLevel(logging.DEBUG)
     # PyOpenGL is a little too chatty with its logging.
@@ -45,7 +45,7 @@ def main(args):
     app_globals.opengl_logger.setLevel(logging.WARNING)
     app_globals.version = version
 
-    app = app_ui.Application(args)
+    app = app_ui.Application()
 
     # If the app is frozen, don't write anything to stdout.
     if hasattr(sys, "frozen"):
@@ -89,4 +89,4 @@ def main(args):
 
 if __name__ == "__main__":
     # multiprocessing.freeze_support()
-    main(sys.argv[1:])
+    main()

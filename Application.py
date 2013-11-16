@@ -3,6 +3,7 @@ import os.path
 import sys
 import math
 import wx
+import argparse
 from wx.lib.pubsub import pub
 
 #import wx.glcanvas as glcanvas
@@ -55,36 +56,42 @@ class Application(wx.App):
     frame = None
     maps = []
 
-    def __init__(self, init_filenames):
+    def __init__(self):
         print "in application.__init__"
         app_globals.application = self
-        self.init_filenames = init_filenames
         wx.App.__init__(self, False)
 
     def OnInit(self):
         print "in application.OnInit"
         self.SetAppName(self.NAME)
 
-        data_dir = wx.StandardPaths.Get().GetUserDataDir()
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-        app_globals.preferences = preferences.MaproomPreferences(os.path.join(data_dir, "MaproomPrefs.json"))
+        self.process_args()
         
         self.setup_pubsub()
         self.setup_filehistory()
 
         self.new_map()
-
-        if self.init_filenames:
-            for filename in self.init_filenames:
-                print "opening:", filename
-                ui.File_opener.open_file(filename)
-        else:  # just so there is something there.
-            pass  # app_globals.layer_manager.add_folder( name = "folder_a" )
-
+        
+        self.load_initial_files()
+        
         self.is_initialized = True
 
         return True
+    
+    def process_args(self):
+        parser = argparse.ArgumentParser(description="NOAA mapping utility")
+        parser.add_argument("files", nargs="*", help="Open supported image/vector/map files")
+        self.args = parser.parse_args()
+
+        data_dir = wx.StandardPaths.Get().GetUserDataDir()
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        app_globals.preferences = preferences.MaproomPreferences(os.path.join(data_dir, "MaproomPrefs.json"))
+    
+    def load_initial_files(self):
+        for filename in self.args.files:
+            print "opening:", filename
+            ui.File_opener.open_file(filename)
     
     def setup_pubsub(self):
         pub.subscribe(self.on_recent_files_config, ('recent_files', 'config'))
@@ -152,6 +159,21 @@ class Application(wx.App):
         Invoked by wx when the Maproom dock icon is clicked on Mac OS X.
         """
         self.GetTopWindow().Raise()
+
+    def MacOpenFile(self, filename):
+        """
+        Invoked by wx when a file is dropped on the Maproom dock icon on Mac OS X.
+        """
+        # FIXME: for some reason, when using python on the command line this
+        # method gets called for each argument, including the "maproom.py"
+        # argument
+        if not hasattr(sys, "frozen"):
+            if filename in sys.argv:
+                print "MacOpenFile: found %s in sys.argv! Ignoring!" % filename
+                index = sys.argv.index(filename)
+                del sys.argv[index]
+                return
+        ui.File_opener.open_file(filename)
 
     def OnExit(self):
         self.is_closing = True
