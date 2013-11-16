@@ -24,11 +24,11 @@ class Menu_bar(wx.MenuBar):
     """
     IMAGE_PATH = "ui/images"
 
-    def __init__(self, controller):
+    def __init__(self, controller, frame):
         wx.MenuBar.__init__(self)
 
         self.controller = controller
-        self.frame = self.controller.frame
+        self.frame = frame
 
         image_path = self.IMAGE_PATH
 

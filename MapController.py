@@ -39,6 +39,64 @@ from ui.RenderWindow import RenderWindow
     - create new layer
 """
 
+class MapFrame(wx.Frame):
+    def __init__(self, controller):
+        wx.Frame.__init__(self, None, wx.ID_ANY, controller.NAME)
+        self.SetIcon(wx.Icon(controller.ICON_FILENAME, wx.BITMAP_TYPE_ICO))
+        self.SetSizeHints(250, 250)
+
+        self.renderer_splitter = wx.SplitterWindow(
+            self,
+            wx.ID_ANY,
+            style=wx.SP_3DSASH,
+        )
+        self.renderer_splitter.SetMinimumPaneSize(20)
+
+        self.properties_splitter = wx.SplitterWindow(
+            self.renderer_splitter,
+            wx.ID_ANY,
+            style=wx.SP_3DSASH,
+        )
+        self.properties_splitter.SetMinimumPaneSize(20)
+
+        self.menu_bar = Menu_bar(controller, self)
+        self.SetMenuBar(self.menu_bar)
+
+        self.tool_bar = Tool_bar(controller, self)
+        self.SetToolBar(self.tool_bar)
+        # On Mac, we need to call Realize after setting the frame's toolbar.
+        self.tool_bar.Realize()
+
+        self.status_bar = self.CreateStatusBar()
+
+        self.renderer = RenderWindow(self.renderer_splitter, layer_manager=controller.layer_manager, editor=controller.editor)
+        self.render_controller = RenderController.RenderController(controller.layer_manager, self.renderer)
+
+        self.renderer_splitter.SplitVertically(
+            self.properties_splitter,
+            self.renderer,
+            controller.LEFT_SASH_POSITION,
+        )
+
+        self.layer_tree_control = Layer_tree_control.Layer_tree_control(self.properties_splitter)
+        self.properties_panel = Properties_panel(self.properties_splitter)
+
+        self.properties_splitter.SplitHorizontally(
+            self.layer_tree_control,
+            self.properties_panel,
+            controller.TOP_SASH_POSITION,
+        )
+
+        # TODO: Make a frame delegate for these parts
+        self.Bind(wx.EVT_CLOSE, controller.close)
+        self.Bind(wx.EVT_MENU, controller.close_app, id=wx.ID_EXIT)
+        self.Bind(wx.EVT_ACTIVATE, controller.activate)
+        self.Bind(wx.EVT_ACTIVATE_APP, controller.refresh)
+
+        self.renderer.SetFocus()
+
+        self.SetSize(controller.DEFAULT_FRAME_SIZE)
+
 
 class MapController(object):
 
@@ -91,71 +149,30 @@ class MapController(object):
         # a hack until we remove the coupling of globals to this object's members
         self.bind_globals()
 
-        self.frame = wx.Frame(None, wx.ID_ANY, self.NAME)
-        self.frame.SetIcon(wx.Icon(self.ICON_FILENAME, wx.BITMAP_TYPE_ICO))
-        self.frame.SetSizeHints(250, 250)
-
-        self.renderer_splitter = wx.SplitterWindow(
-            self.frame,
-            wx.ID_ANY,
-            style=wx.SP_3DSASH,
-        )
-        self.renderer_splitter.SetMinimumPaneSize(20)
-
-        self.properties_splitter = wx.SplitterWindow(
-            self.renderer_splitter,
-            wx.ID_ANY,
-            style=wx.SP_3DSASH,
-        )
-        self.properties_splitter.SetMinimumPaneSize(20)
-
-        self.menu_bar = Menu_bar(self)
-        self.frame.SetMenuBar(self.menu_bar)
-
-        self.tool_bar = Tool_bar(self)
-        self.frame.SetToolBar(self.tool_bar)
-        # On Mac, we need to call Realize after setting the frame's toolbar.
-        self.tool_bar.Realize()
-
-        self.status_bar = self.frame.CreateStatusBar()
-
-        self.renderer = RenderWindow(self.renderer_splitter, layer_manager=self.layer_manager, editor=self.editor)
-        self.render_controller = RenderController.RenderController(self.layer_manager, self.renderer)
-
-        self.renderer_splitter.SplitVertically(
-            self.properties_splitter,
-            self.renderer,
-            self.LEFT_SASH_POSITION,
-        )
-
-        self.layer_tree_control = Layer_tree_control.Layer_tree_control(self.properties_splitter)
-        self.properties_panel = Properties_panel(self.properties_splitter)
-
-        self.properties_splitter.SplitHorizontally(
-            self.layer_tree_control,
-            self.properties_panel,
-            self.TOP_SASH_POSITION,
-        )
-
-        # TODO: Make a frame delegate for these parts
-        self.frame.Bind(wx.EVT_CLOSE, self.close)
-        self.frame.Bind(wx.EVT_MENU, self.close_app, id=wx.ID_EXIT)
-        self.frame.Bind(wx.EVT_ACTIVATE, self.activate)
-        self.frame.Bind(wx.EVT_ACTIVATE_APP, self.refresh)
-
+        self.frame = MapFrame(self)
+        
+        # FIXME: other classes depend on some attributes appearing in
+        # MapController, so copy from MapFrame
+        self.menu_bar = self.frame.menu_bar
+        self.tool_bar = self.frame.tool_bar
+        self.renderer = self.frame.renderer
+        self.properties_panel = self.frame.properties_panel
+        self.layer_tree_control = self.frame.layer_tree_control
+        self.render_controller = self.frame.render_controller
+        
         pub.subscribe(self.on_layer_inserted, ('layer', 'inserted'))
         pub.subscribe(self.on_layer_selection_changed, ('layer', 'selection', 'changed'))
 
-        self.renderer.SetFocus()
-
-        self.frame.SetSize(self.DEFAULT_FRAME_SIZE)
         self.frame.Center()
         self.frame.Show(True)
+        self.reposition()
         self.is_initialized = True
-        
+
+    def reposition(self):
         pos = self.frame.Position
         for tlw in wx.GetTopLevelWindows():
-            if not tlw is self.frame and isinstance(tlw, wx.Frame):
+            if not tlw is self.frame and isinstance(tlw, wx.Frame) and tlw.GetName() == self.NAME:
+                print tlw
                 if tlw.Position.x == pos.x:
                     pos.x += 20
                 if tlw.Position.y == pos.y:

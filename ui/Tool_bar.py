@@ -13,9 +13,9 @@ class Tool_bar(wx.ToolBar):
     """
     IMAGE_PATH = "ui/images"
 
-    def __init__(self, controller):
+    def __init__(self, controller, frame):
         self.controller = controller
-        self.frame = controller.frame
+        self.frame = frame
 
         wx.ToolBar.__init__(self, self.frame, style=wx.TB_FLAT)
 
