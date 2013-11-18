@@ -196,7 +196,8 @@ class Menu_bar(wx.MenuBar):
 
         self.pan_mode_id = wx.NewId()
         self.pan_mode_item = wx.MenuItem(self.layer_menu, self.pan_mode_id, "Pan", kind=wx.ITEM_RADIO)
-        self.pan_mode_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "pan.png")))
+        if sys.platform == "darwin":
+            self.pan_mode_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "pan.png")))
         self.layer_menu.AppendItem(self.pan_mode_item)
 
         self.add_points_mode_id = wx.NewId()
