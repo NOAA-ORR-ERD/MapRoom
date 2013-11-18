@@ -26,32 +26,25 @@ def show():
 
         return
 
+    if (layer.points != None and len(layer.points) > 0):
+        filetype = "XML or Verdat"
+    else:
+        filetype = "XML"
+
     if (layer.type == "root"):
-        m = "The root node of the layer tree is selected. This will save the entire tree of layers as an xml file."
+        m = "Select %s file to save the entire tree of layers"
     elif (layer.type == "folder"):
-        m = "A folder in the layer tree is selected. This will save the entire sub-tree of layers as an xml file."
+        m = "Select %s file to save the sub-tree of layers"
     elif not layer.empty():
-        m = "An individual layer in the layer tree is selected. This will save the selected layer, " + layer.name + ", as an xml file."
+        m = "Select %s file to save layer " + layer.name
     else:
         wx.MessageBox("An empty layer cannot be saved. Please add some data to the layer and try again.", "Cannot Save Empty Layer")
-        return
-
-    if (layer.points != None and len(layer.points) > 0):
-        m += "\n\nBecause you have selected a layer with points, you also have the option of saving this layer as a .verdat file."
-
-    dialog = wx.MessageDialog(
-        app_globals.application.frame,
-        caption="Save",
-        message=m,
-        style=wx.OK | wx.CANCEL,
-    )
-    if (dialog.ShowModal() != wx.ID_OK):
         return
 
     dialog = wx.FileDialog(
         app_globals.application.frame,
         style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
-        message="Select save file",
+        message=m % filetype,
         wildcard="|".join(file_types_including_verdat if layer.points != None else file_types)
     )
 
