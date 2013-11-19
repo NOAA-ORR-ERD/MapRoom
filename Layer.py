@@ -116,6 +116,8 @@ class Layer():
     ])
 
     next_default_color_index = 0
+    
+    new_layer_index = 0
 
     def __init__(self):
         self.name = ""
@@ -164,6 +166,9 @@ class Layer():
 
     def new(self):
         self.name = "New Layer"
+        Layer.new_layer_index += 1
+        if Layer.new_layer_index > 1:
+            self.name += " %d" % Layer.new_layer_index
         self.new_points()
     
     def new_points(self, num=0):
