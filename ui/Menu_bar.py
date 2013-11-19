@@ -135,7 +135,7 @@ class Menu_bar(wx.MenuBar):
         add_layer = wx.MenuItem(
             self.layer_menu,
             wx.ID_ANY,
-            "New Layer",
+            "New Grid Layer",
             # subMenu = Add_layer_menu( image_path, root_layer, command_stack, frame )
         )
         add_layer.SetBitmap(wx.Bitmap(os.path.join(image_path, "add_layer.png")))
