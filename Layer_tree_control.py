@@ -235,7 +235,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         self.dragged_item = None
 
         # if we dropped somewhere that isn't on top of an item, ignore the event
-        if not item.IsOk():
+        if item is None or not item.IsOk():
             return
 
         (target_category, target_layer) = self.GetItemPyData(item).Data
