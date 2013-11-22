@@ -1,3 +1,19 @@
+11/22/2013
+---------------------------
+Released 1.9.6
+- RM Fixed #527: added flush method to Logger object for py2app std[out|err]
+- RM Fixed #532: added integer range parsing to Find Point dialog
+- RM Fixed #548: added point selection count to properties panel
+- RM Added convenience function to put debug messages in correct status bar location
+- RM [Fixed #515]: added new layer count
+- RM Fixed #509: changed menu item text to New Grid Layer
+- RM Refs #546: radio button images only allowed on Mac
+- RM Fixed #516: removed extra dialog and placed info message in save dialog
+- RM Refs #138: added call to MacOpenFile with workaround for wx 2.9
+- RM Fixed #544: created split status bar
+- RM Refs #545: refactor to pull out Frame init from MapController into MapFrame class
+- RM Fixed #543: added a call to Center() which correctly adjusts for the dock position
+
 11/06/2013
 ---------------------------
 Released 1.9.5
