@@ -345,6 +345,7 @@ class Menu_bar(wx.MenuBar):
         enabled = layer is not None and layer.has_points()
         self.find_point_item.Enable(enabled)
 
+        self.grid_item.Check(self.controller.renderer.lon_lat_grid_shown)
         """
         self.save_item.Enable( False )
         self.save_as_item.Enable( False )
@@ -484,7 +485,7 @@ class Menu_bar(wx.MenuBar):
         self.controller.render_controller.zoom_to_selected_layer()
 
     def do_toggle_grid(self, event):
-        self.controller.lon_lat_grid_shown = not self.controller.lon_lat_grid_shown
+        self.controller.renderer.lon_lat_grid_shown = not self.controller.renderer.lon_lat_grid_shown
         self.controller.refresh()
 
     def do_triangulate(self, event):

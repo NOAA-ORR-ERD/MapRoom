@@ -137,9 +137,6 @@ class MapController(object):
     hand_closed_cursor = None
     forced_cursor = None
 
-    lon_lat_grid = None
-    lon_lat_grid_shown = True
-
     is_alt_key_down = False
     selection_box_is_being_defined = False
 
