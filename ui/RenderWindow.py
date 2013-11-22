@@ -26,7 +26,7 @@ The RenderWindow class -- where the opengl rendering really takes place.
 
 def update_status(message):
     tlw = wx.GetApp().GetTopWindow()
-    tlw.SetStatusText(message, 1)
+    tlw.show_debug_message(message)
     # for debugging purposes, so we can see a history of rendering
     try:
         f = open("output_render.txt", "a")

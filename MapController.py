@@ -97,6 +97,9 @@ class MapFrame(wx.Frame):
         self.renderer.SetFocus()
 
         self.SetSize(controller.DEFAULT_FRAME_SIZE)
+    
+    def show_debug_message(self, message):
+        self.SetStatusText(message, 1)
 
 
 class MapController(object):
