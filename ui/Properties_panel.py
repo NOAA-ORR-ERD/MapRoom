@@ -71,7 +71,7 @@ class Properties_panel(wx.Panel):
                 fields.extend(["Layer name", "Source file", "Polygon count"])
             else:
                 if layer.get_num_points_selected() > 0:
-                    fields.extend(["Depth unit",  "Point depth"])
+                    fields.extend(["Depth unit",  "Selected points", "Point depth"])
                     if layer.get_num_points_selected() == 1:
                         fields.extend(["Point coordinates"])
                 else:
