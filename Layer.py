@@ -418,7 +418,7 @@ class Layer():
                 Layer.next_default_color_index + 1
             ) % len(DEFAULT_COLORS)
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def compute_bounding_rect_of_points(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
 
         if (self.points != None):
@@ -431,6 +431,11 @@ class Layer():
             b = points.y.min()
             t = points.y.max()
             bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
+
+        return bounds
+
+    def compute_bounding_rect(self, mark_type=STATE_NONE):
+        bounds = self.compute_bounding_rect_of_points(mark_type)
 
         if (self.triangle_points != None):
             l = self.triangle_points.x.min()

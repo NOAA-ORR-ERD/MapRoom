@@ -2,7 +2,7 @@ import wx
 import wx.lib.sized_controls as sc
 
 import library.coordinates as coordinates
-
+from library.textparse import parse_int_string
 
 class FindPointDialog(sc.SizedDialog):
 
@@ -10,7 +10,7 @@ class FindPointDialog(sc.SizedDialog):
         sc.SizedDialog.__init__(self, *a, **kw)
 
         panel = self.GetContentsPane()
-        wx.StaticText(panel, -1, "Find point number")
+        wx.StaticText(panel, -1, "Find point number, range of points\nor multiple ranges.\n\nSeparate ranges by commas, e.g: 1-4,8-10")
 
         self.text = wx.TextCtrl(panel, -1, "")
         self.text.SetSizerProps(expand=True)
@@ -41,3 +41,8 @@ class FindPointDialog(sc.SizedDialog):
 
     def OnClose(self, event):
         self.EndModal(wx.ID_CANCEL)
+    
+    def get_values(self):
+        values, error = parse_int_string(self.text.Value)
+        return values, error
+

@@ -111,13 +111,21 @@ class Menu_bar(wx.MenuBar):
 
         self.edit_menu.AppendSeparator()
 
+        self.delete_selection = wx.MenuItem(self.edit_menu, wx.ID_DELETE, "&Delete Selection\tDel")
+        self.delete_selection.SetBitmap(wx.Bitmap(os.path.join(image_path, "delete_selection.png")))
+        self.edit_menu.AppendItem(self.delete_selection)
+
+        self.edit_menu.AppendSeparator()
+
         self.clear_selection = wx.MenuItem(self.edit_menu, wx.ID_CLEAR, "&Clear Selection\tEsc", )
         self.clear_selection.SetBitmap(wx.Bitmap(os.path.join(image_path, "clear_selection.png")))
         self.edit_menu.AppendItem(self.clear_selection)
 
-        self.delete_selection = wx.MenuItem(self.edit_menu, wx.ID_DELETE, "&Delete Selection\tDel")
-        self.delete_selection.SetBitmap(wx.Bitmap(os.path.join(image_path, "delete_selection.png")))
-        self.edit_menu.AppendItem(self.delete_selection)
+        self.edit_menu.AppendSeparator()
+
+        self.find_point_id = wx.NewId()
+        self.find_point_item = wx.MenuItem(self.edit_menu, self.find_point_id, "Find Points...\tCtrl-F")
+        self.edit_menu.AppendItem(self.find_point_item)
 
         self.edit_menu.AppendSeparator()
         prefs_shortcut = ""  # does Windows have a standard shortcut for Preferences?
@@ -253,10 +261,6 @@ class Menu_bar(wx.MenuBar):
         self.jump_item = wx.MenuItem(self.view_menu, self.jump_id, "Jump to Coordinates...\tCtrl-J")
         self.jump_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "jump.png")))
         self.view_menu.AppendItem(self.jump_item)
-
-        self.find_point_id = wx.NewId()
-        self.find_point_item = wx.MenuItem(self.view_menu, self.find_point_id, "Find Point...\tCtrl-F")
-        self.view_menu.AppendItem(self.find_point_item)
 
         #
 
@@ -507,21 +511,26 @@ class Menu_bar(wx.MenuBar):
         dialog.Destroy()
 
     def do_find_point(self, event):
-        dialog = FindPointDialog(None, wx.ID_ANY, "Find Point")
+        dialog = FindPointDialog(None, wx.ID_ANY, "Find Points")
         if dialog.ShowModal() == wx.ID_OK:
             try:
-                value = dialog.text.Value
-                index = int(value) - 1
+                values, error = dialog.get_values()
                 layer = dialog.layer
-                if layer.has_points():
+                if len(values) > 0 and layer.has_points():
+                    index = values[0]
                     point = layer.points[index]
                     print "point[%d]=%s" % (index, str(point))
                     app = wx.GetApp()
-                    renderer = app.current_map.renderer
-                    renderer.projected_point_center = renderer.get_projected_point_from_world_point((point[0], point[1]))
                     layer.clear_all_point_selections()
-                    layer.select_point(index)
+                    for index in values:
+                        layer.select_point(index)
+                    renderer = app.current_map.renderer
+                    w_r = layer.compute_bounding_rect_of_points(Layer.STATE_SELECTED)
+                    renderer.zoom_to_include_world_rect(w_r)
                     app.refresh()
+                if error:
+                    tlw = wx.GetApp().GetTopWindow()
+                    tlw.SetStatusText(error)
             except IndexError:
                 tlw = wx.GetApp().GetTopWindow()
                 tlw.SetStatusText(u"No point #%s in this layer" % value)
