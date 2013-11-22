@@ -10,6 +10,7 @@ import library.coordinates as coordinates
 import library.Opengl_renderer
 import library.Opengl_renderer.LayerRendererOpenGL as LayerRendererOpenGL
 import library.rect as rect
+from library.color import *
 import app_globals
 
 import OpenGL
@@ -84,6 +85,8 @@ class RenderWindow(glcanvas.GLCanvas):
 
         self.lon_lat_grid = lon_lat_grid.Lon_lat_grid()
         self.lon_lat_grid_shown = True
+        
+        self.bounding_boxes_shown = False
 
         # two variables keep track of what's visible on the screen:
         # (1) the projected point at the center of the screen
@@ -430,6 +433,8 @@ class RenderWindow(glcanvas.GLCanvas):
         try:
             if (self.lon_lat_grid_shown):
                 self.lon_lat_grid.draw(self, w_r, p_r, s_r)
+            if (self.bounding_boxes_shown):
+                self.draw_bounding_boxes()
             if ((self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT or self.selection_box_is_being_defined) and self.mouse_is_down):
                 (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
                                                                    self.mouse_move_position)
@@ -462,6 +467,15 @@ class RenderWindow(glcanvas.GLCanvas):
 
         if (event != None):
             event.Skip()
+
+    def draw_bounding_boxes(self):
+        layers = self.layer_manager.flatten()
+        for layer in layers:
+            w_r = layer.bounds
+            if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
+                s_r = self.get_screen_rect_from_world_rect(w_r)
+                r, g, b, a = int_to_color(layer.color)
+                self.opengl_renderer.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
     def rebuild_points_and_lines_for_layer(self, layer):
         if layer in self.layer_renderers:

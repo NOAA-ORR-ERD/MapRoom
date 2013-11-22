@@ -213,6 +213,28 @@ class Opengl_renderer():
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
+    def draw_screen_box(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, width=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
+        # flip y to treat rect as normal screen coordinates
+        r = ((r[0][0], rect.height(self.given_screen_rect) - r[0][1]),
+             (r[1][0], rect.height(self.given_screen_rect) - r[1][1]))
+
+        gl.glDisable(gl.GL_TEXTURE_2D)
+        gl.glDisable(gl.GL_LINE_SMOOTH)
+        gl.glLineWidth(width)
+        # don't let texture colors override the line color
+        gl.glColor(red, green, blue, alpha)
+        gl.glLineStipple(stipple_factor, stipple_pattern)
+        gl.glEnable(gl.GL_LINE_STIPPLE)
+        gl.glBegin(gl.GL_LINE_LOOP)
+        gl.glVertex(r[0][0], r[0][1], 0)
+        gl.glVertex(r[1][0], r[0][1], 0)
+        gl.glVertex(r[1][0], r[1][1], 0)
+        gl.glVertex(r[0][0], r[1][1], 0)
+        gl.glEnd()
+        gl.glDisable(gl.GL_LINE_STIPPLE)
+        gl.glEnable(gl.GL_LINE_SMOOTH)
+        gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
+
     def draw_screen_rect(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0):
         # flip y to treat rect as normal screen coordinates
         r = ((r[0][0], rect.height(self.given_screen_rect) - r[0][1]),

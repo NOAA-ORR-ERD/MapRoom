@@ -28,3 +28,17 @@ def color_to_int(red, green, blue, alpha):
         ),
         dtype=np.uint8,
     ).view(np.uint32)[0]
+
+def int_to_color(color):
+    ints = np.frombuffer(color.tostring(), dtype=np.uint8)
+    floats = tuple([i/255.0 for i in ints])
+    return floats
+
+if __name__ == "__main__":
+    rgba = (.5, .5, .5, 1)
+    i = color_to_int(*rgba)
+    print "%x" % i
+    print type(i)
+    color = int_to_color(i)
+    rgba2 = list(color)
+    print rgba2

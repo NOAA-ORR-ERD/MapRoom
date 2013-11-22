@@ -257,6 +257,12 @@ class Menu_bar(wx.MenuBar):
 
         self.view_menu.AppendSeparator()
 
+        self.bbox_id = wx.NewId()
+        self.bbox_item = wx.MenuItem(self.view_menu, self.bbox_id, "Layer Bounding Boxes", kind=wx.ITEM_CHECK)
+        self.view_menu.AppendItem(self.bbox_item)
+
+        self.view_menu.AppendSeparator()
+
         self.jump_id = wx.NewId()
         self.jump_item = wx.MenuItem(self.view_menu, self.jump_id, "Jump to Coordinates...\tCtrl-J")
         self.jump_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "jump.png")))
@@ -322,6 +328,7 @@ class Menu_bar(wx.MenuBar):
         f.Bind(wx.EVT_MENU, self.do_zoom_fit, id=wx.ID_ZOOM_FIT)
         f.Bind(wx.EVT_MENU, self.do_zoom_layer, id=self.zoom_layer_id)
         f.Bind(wx.EVT_MENU, self.do_toggle_grid, id=self.grid_id)
+        f.Bind(wx.EVT_MENU, self.do_toggle_bbox, id=self.bbox_id)
         f.Bind(wx.EVT_MENU, self.do_triangulate, id=self.triangulate_id)
         f.Bind(wx.EVT_MENU, self.do_merge_layers, id=self.merge_layers_id)
         f.Bind(wx.EVT_MENU, self.do_check_for_errors, id=self.check_valid_verdat_id)
@@ -346,6 +353,7 @@ class Menu_bar(wx.MenuBar):
         self.find_point_item.Enable(enabled)
 
         self.grid_item.Check(self.controller.renderer.lon_lat_grid_shown)
+        self.bbox_item.Check(self.controller.renderer.bounding_boxes_shown)
         """
         self.save_item.Enable( False )
         self.save_as_item.Enable( False )
@@ -486,6 +494,10 @@ class Menu_bar(wx.MenuBar):
 
     def do_toggle_grid(self, event):
         self.controller.renderer.lon_lat_grid_shown = not self.controller.renderer.lon_lat_grid_shown
+        self.controller.refresh()
+
+    def do_toggle_bbox(self, event):
+        self.controller.renderer.bounding_boxes_shown = not self.controller.renderer.bounding_boxes_shown
         self.controller.refresh()
 
     def do_triangulate(self, event):
