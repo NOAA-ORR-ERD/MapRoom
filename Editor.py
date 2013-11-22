@@ -233,6 +233,7 @@ class Editor():
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.app.renderer.release_mouse() # shouldn't be captured now anyway
                 layer.insert_point(world_point)
+                layer.update_bounds()
                 self.end_operation_batch()
                 self.app.refresh()
 
@@ -244,6 +245,7 @@ class Editor():
                     # we release the focus because we don't want to immediately drag the new object (if any)
                     # self.app.renderer.release_mouse()
                     point_index = layer.insert_point(world_point)
+                    layer.update_bounds()
                     layer.insert_line_segment(point_index, point_indexes[0])
                     self.end_operation_batch()
                     layer.clear_all_point_selections()

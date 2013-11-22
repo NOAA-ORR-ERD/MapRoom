@@ -374,8 +374,11 @@ class Layer():
                         pub.sendMessage(('layer', 'proejction', 'changed'), layer=self, projection=srs)
 
         if (self.load_error_string == ""):
-            self.bounds = self.compute_bounding_rect()
+            self.update_bounds()
             pub.sendMessage(('layer', 'loaded'), layer=self)
+
+    def update_bounds(self):
+        self.bounds = self.compute_bounding_rect()
 
     def make_points(self, count):
         return np.repeat(
