@@ -36,6 +36,8 @@ class Tool_bar(wx.ToolBar):
 
         self.AddLabelTool(wx.ID_NEW, "New Layer", self.bmp("add_layer"), shortHelp="New Layer", )
         self.AddLabelTool(wx.ID_ADD, "New Folder", self.bmp("add_folder"), shortHelp="New Folder", )
+        # FIXME: folders are not implemented, so disabling UI
+        self.EnableTool(wx.ID_ADD, False)
 
         self.AddLabelTool(wx.ID_UP, "Raise Layer", self.bmp("raise"), shortHelp="Raise Layer")
         self.AddLabelTool(wx.ID_DOWN, "Lower Layer", self.bmp("lower"), shortHelp="Lower Layer")

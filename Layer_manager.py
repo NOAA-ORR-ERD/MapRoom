@@ -492,6 +492,7 @@ class Layer_manager():
         self.insert_layer(None, layer)
 
     def add_folder(self, name="New Folder"):
+        # FIXME: doesn't work, so menu/toolbar items are disabled
         folder = Layer.Layer()
         folder.type = "folder"
         folder.name = name

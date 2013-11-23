@@ -156,6 +156,8 @@ class Menu_bar(wx.MenuBar):
             # subMenu = Add_layer_menu( image_path, root_layer, command_stack, frame )
         )
         add_folder.SetBitmap(wx.Bitmap(os.path.join(image_path, "add_folder.png")))
+        # FIXME: folders are still not implemented, so disabling UI
+        add_folder.Enable(False)
         self.layer_menu.AppendItem(add_folder)
 
         self.layer_menu.AppendSeparator()
