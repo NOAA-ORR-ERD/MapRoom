@@ -289,7 +289,6 @@ class Menu_bar(wx.MenuBar):
         #
 
         self.help_menu = wx.Menu()
-        self.Append(self.help_menu, "&Help")
 
         self.help_id = wx.NewId()
         self.help_item = wx.MenuItem(self.help_menu, self.help_id, "Maproom Help...\tF1")
@@ -301,6 +300,8 @@ class Menu_bar(wx.MenuBar):
         self.about_item = wx.MenuItem(self.help_menu, wx.ID_ABOUT, "&About Maproom...")
         self.about_item.SetBitmap(wx.Bitmap(os.path.join(image_path, "maproom.png")))
         self.help_menu.AppendItem(self.about_item)
+
+        self.Append(self.help_menu, "&Help")
 
         #
 
