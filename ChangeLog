@@ -1,5 +1,14 @@
 11/22/2013
 ---------------------------
+Released 1.9.7
+- RM Fixed #547: disabled Add Folder UI until folders are implemented
+- RM Fixed #554: check for bad item when dropping layer in layer tree
+- RM Fixed #557: Added layer bounding box drawing
+- RM Fixed #556: lat/log grid menu item now references state stored in RenderWindow
+- RM Fixed #511: layer boundary now updated after adding each point
+
+11/22/2013
+---------------------------
 Released 1.9.6
 - RM Fixed #527: added flush method to Logger object for py2app std[out|err]
 - RM Fixed #532: added integer range parsing to Find Point dialog
