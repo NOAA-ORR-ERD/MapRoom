@@ -230,7 +230,7 @@ class MapController(object):
         if dialog:
             dialog.Raise()
         else:
-            dialog = type()
+            dialog = type(self.frame)
             dialog.Show()
         dialog.SetFocus()
 

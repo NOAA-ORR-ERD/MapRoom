@@ -77,10 +77,10 @@ class Merge_duplicate_points_dialog(wx.Dialog):
     list_contains_real_data = False
     dirty = False
 
-    def __init__(self):
+    def __init__(self, parent):
         wx.Dialog.__init__(
-            self, None, wx.ID_ANY, self.NAME,
-            style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT, name=self.NAME
+            self, parent, wx.ID_ANY, self.NAME,
+            style=wx.DEFAULT_DIALOG_STYLE, name=self.NAME
         )
         self.SetIcon(app_globals.application.frame.GetIcon())
 

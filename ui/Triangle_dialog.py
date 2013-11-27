@@ -11,9 +11,9 @@ class Triangle_dialog(wx.Dialog):
     SPACING = 15
     NAME = "Triangulate Layer"
 
-    def __init__(self):
-        wx.Dialog.__init__(self, None, wx.ID_ANY, self.NAME,
-                           style=wx.DEFAULT_DIALOG_STYLE | wx.DIALOG_NO_PARENT, name=self.NAME
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, self.NAME,
+                           style=wx.DEFAULT_DIALOG_STYLE, name=self.NAME
                            )
         self.SetIcon(app_globals.application.frame.GetIcon())
 
