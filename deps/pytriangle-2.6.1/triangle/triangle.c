@@ -4893,6 +4893,16 @@ void exactinit()
 #endif /* LINUX */
 
 #ifdef CPU86
+    /* include definitions for MinGW compilation */
+#ifndef _MCW_PC
+#define _MCW_PC 0x00030000
+#endif
+#ifndef _PC_24
+#define _PC_24 0x00020000
+#endif
+#ifndef _PC_53
+#define _PC_53 0x00010000
+#endif
 #ifdef SINGLE
   _control87(_PC_24, _MCW_PC); /* Set FPU control word for single precision. */
 #else /* not SINGLE */
