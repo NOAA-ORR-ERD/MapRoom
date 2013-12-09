@@ -118,6 +118,7 @@ def send_email_via_gmail(subject, message, sender, passwd, recipient):
         s.login(sender, passwd)
         s.sendmail(msg['From'], [msg['To']], msg.as_string())
         s.quit()
+        return True
     except Exception, e:
         wx.MessageBox("Unable to send email:\n\%s\n\nPlease email the bug report to %s" % (str(e), recipient))
 
@@ -247,11 +248,14 @@ class ErrorDialog(wx.Dialog):
         if e_id == wx.ID_CLOSE:
             self.Close()
         elif e_id == ID_SEND:
-            send_email_via_gmail("Maproom Error Report", self.err_msg,
-                                 app_globals.error_email_from,
-                                 app_globals.error_email_passwd,
-                                 app_globals.error_email_to)
-            self.Close()
+            if send_email_via_gmail("Maproom Error Report", self.err_msg,
+                                    app_globals.error_email_from,
+                                    app_globals.error_email_passwd,
+                                    app_globals.error_email_to):
+                self.Close()
+            else:
+                btn = wx.FindWindowById(ID_SEND, self)
+                btn.Enable(False)
         elif e_id == wx.ID_ABORT:
             ErrorDialog.ABORT = True
             # Try a nice shutdown first time through
