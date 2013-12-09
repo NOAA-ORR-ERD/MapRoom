@@ -29,6 +29,11 @@ class Properties_panel(wx.Panel):
         wx.Panel.__init__(self, parent)
         static_box = wx.StaticBox(self, label="Properties")
         self.sizer = wx.StaticBoxSizer(static_box, wx.VERTICAL)
+        
+        # Future wx versions will require sizer managed controls to be children
+        # of the staticboxsizer, not children of the parent panel, but it's
+        # accepted now so we're going with it.
+        self.sizer_parent = static_box
         self.SetSizer(self.sizer)
         self.sizer.Add(wx.Panel(self))
 
@@ -88,9 +93,9 @@ class Properties_panel(wx.Panel):
                 if (field == "Flagged points"):
                     if (layer.get_num_points_selected(Layer.STATE_FLAGGED) == 0):
                         continue
-                label = wx.StaticText(self, label=field)
+                label = wx.StaticText(self.sizer_parent, label=field)
                 label.SetFont(bold_font)
-                self.sizer.Add(label, 0, wx.LEFT | wx.RIGHT, self.SIDE_SPACING)
+                self.sizer.Add(label, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
                 self.sizer.AddSpacer(self.LABEL_SPACING)
 
                 if (field == "Layer name" or field == "Folder name"):
@@ -138,7 +143,6 @@ class Properties_panel(wx.Panel):
                     self.point_coord_control = self.add_text_field(field, coords_text, self.point_coords_changed, expand=wx.EXPAND)
 
             self.sizer.Layout()
-            self.sizer.FitInside(self)
 
             # self.layer_name_control.SetSelection( -1, -1 )
             # self.layer_name_control.SetFocus()
@@ -148,8 +152,8 @@ class Properties_panel(wx.Panel):
         self.Refresh()
 
     def add_text_field(self, field_name, default_text, changed_function, expand=0, enabled=True):
-        c = wx.TextCtrl(self, value=default_text)
-        self.sizer.Add(c, 0, expand | wx.LEFT | wx.RIGHT, self.SIDE_SPACING)
+        c = wx.TextCtrl(self.sizer_parent, value=default_text)
+        self.sizer.Add(c, 0, expand | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
         self.sizer.AddSpacer(self.VALUE_SPACING)
         c.Bind(wx.EVT_TEXT, changed_function)
         c.SetEditable(enabled)
@@ -158,8 +162,8 @@ class Properties_panel(wx.Panel):
         return c
 
     def add_drop_down(self, field_name, choices, default_choice, changed_function):
-        c = wx.Choice(self, choices=choices)
-        self.sizer.Add(c, 0, wx.LEFT | wx.RIGHT, self.SIDE_SPACING)
+        c = wx.Choice(self.sizer_parent, choices=choices)
+        self.sizer.Add(c, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
         self.sizer.AddSpacer(self.VALUE_SPACING)
         c.SetSelection(choices.index(default_choice))
         c.Bind(wx.EVT_CHOICE, changed_function)
@@ -168,8 +172,8 @@ class Properties_panel(wx.Panel):
         return c
 
     def add_static_text_field(self, field_name, text):
-        c = wx.StaticText(self, label=text)
-        self.sizer.Add(c, 0, wx.LEFT | wx.RIGHT, self.SIDE_SPACING)
+        c = wx.StaticText(self.sizer_parent, label=text)
+        self.sizer.Add(c, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
         self.sizer.AddSpacer(self.VALUE_SPACING)
 
         return c
