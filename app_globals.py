@@ -6,3 +6,7 @@ application = None
 layer_manager = None
 editor = None
 preferences = None
+
+error_email_from = "maproombugreports@gmail.com"
+error_email_passwd = "bushy206"
+error_email_to = "rob.mcmullen@noaa.gov"

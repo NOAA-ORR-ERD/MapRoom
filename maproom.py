@@ -11,7 +11,7 @@ import logging
 import wx
 
 # load this as early as possible so that we can ideally report even startup errors
-import error_handling
+import library.exception_handler
 
 import ui as app_ui
 import Version as version
