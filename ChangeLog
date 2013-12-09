@@ -1,3 +1,15 @@
+12/09/2013
+---------------------------
+Released 1.9.8
+- RM Allow user to copy error text and send email manually if auto sending fails
+- RM Added new error handler
+- RM Refs #550: following advice for wxPython 2.9.x, static box sizer children now children of box sizer instead of frame
+- RM Added missing constants for Windows/MinGW compilation
+- RM Removed redundant copy of pytriangle source files
+- RM Refs #550: updated about dialog to show versions
+- RM Refs #555: dialogs now have a wx.Frame as a parent
+- RM Fixed #558: About menu item now only appears on app menu
+
 11/22/2013
 ---------------------------
 Released 1.9.7
