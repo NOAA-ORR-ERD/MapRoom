@@ -527,6 +527,10 @@ class Menu_bar(wx.MenuBar):
         dialog.Destroy()
 
     def do_find_point(self, event):
+        # sanity check for existence of at least one layer.  Really should be
+        # short-circuited by UI being disabled, but that doesn't happen yet.
+        if self.controller.layer_tree_control.get_selected_layer() is None:
+            return
         dialog = FindPointDialog(None, wx.ID_ANY, "Find Points")
         if dialog.ShowModal() == wx.ID_OK:
             try:
