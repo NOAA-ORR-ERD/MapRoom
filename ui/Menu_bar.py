@@ -409,7 +409,7 @@ class Menu_bar(wx.MenuBar):
 
     def do_save_image(self, event):
         dialog = wx.FileDialog(
-            app_globals.current_frame,
+            app_globals.application.frame,
             style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
             message="Save as Image",
             wildcard="PNG Image (*.png) |*.png"
