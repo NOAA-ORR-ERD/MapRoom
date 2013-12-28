@@ -73,9 +73,18 @@ def open_file_with_retval(file_path):
 
         app_globals.layer_manager.delete_selected_layer(layer)
 
-    layer = Layer.Layer()
-    layer.read_from_file(file_path)
-    layer.name = os.path.split(file_path)[1]
+    try:
+        layer = Layer.Layer()
+        layer.read_from_file(file_path)
+        layer.name = os.path.split(file_path)[1]
+    except IOError, e:
+        wx.MessageDialog(
+            app_globals.application.frame,
+            message='Failed loading file %s:\n\n%s' % (file_path, str(e)),
+            style=wx.OK | wx.ICON_ERROR,
+        ).ShowModal()
+
+        return False
 
     if (layer.load_error_string != ""):
         wx.MessageDialog(
