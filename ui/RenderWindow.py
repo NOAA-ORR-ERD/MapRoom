@@ -273,6 +273,7 @@ class RenderWindow(glcanvas.GLCanvas):
 
         rotation = event.GetWheelRotation()
         delta = event.GetWheelDelta()
+        print "on_mouse_wheel_scroll. delta=%d" % delta
         if (delta == 0):
             return
 

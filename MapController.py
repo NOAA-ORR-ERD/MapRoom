@@ -185,6 +185,12 @@ class MapController(object):
             print "setting this as the active frame"
             self.bind_globals()
             self.refresh()
+            
+            # On windows, this is needed to force mouse wheel events to be
+            # delivered to the renderer.  Other platforms deliver mouse wheel
+            # events to whatever control the mouse is over, but windows needs
+            # focus
+            self.renderer.SetFocus()
 
     def bind_globals(self):
         # TODO: remove this coupling
