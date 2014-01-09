@@ -57,9 +57,9 @@ if sys.platform == 'darwin':
 elif sys.platform == 'win32':
     print "adding define for Windows for FPU management"
     DEFINES.append(('CPU86', None))
-#elif  :#  something for linux here...
-#    print "adding CPU flags for Intel Linux"
-#    DEFINES.append(('LINUX', None))
+elif 'linux' in sys.platform :#  something for linux here...
+    print "adding CPU flags for Intel Linux"
+    DEFINES.append(('LINUX', None))
 else:
     raise RuntimeError("this system isn't supported for building yet")
 
