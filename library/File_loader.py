@@ -99,13 +99,20 @@ def load_bna_file(file_path):
     polygon_identifiers = []
 
     t0 = time.clock()
+    update_interval = .1
+    update_every = 1000
+    t_update = t0 + update_interval
     total_points = 0
     i = 0
     num_lines = len(lines)
     while True:
         if (i >= num_lines):
             break
-        update_status("Loading %d of %d data points." % (i, num_lines))
+        if (i % update_every) == 0:
+            t = time.clock()
+            if t > t_update:
+                update_status("Loading %d of %d data points." % (i, num_lines))
+                t_update = t + update_interval
         line = lines[i].strip()
         i += 1
         if (len(line) == 0):
@@ -157,6 +164,7 @@ def load_bna_file(file_path):
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
     print "loop in {0} seconds".format(t)
     print "******** END"
+    update_status("Loaded %d data points in %.2fs." % (num_lines, t))
 
     return ("",
             np.asarray(polygon_points),
