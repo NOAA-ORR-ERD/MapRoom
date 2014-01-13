@@ -114,7 +114,7 @@ def load_bna_file(file_path):
         # fixme -- this will break if there are commas in any of the fields!
         pieces = line.split(",")
         if len(pieces) != 3:
-            return ("The .bna file {0} is invalid.".format(file_path), None, None, None, None, None)
+            return ("The .bna file {0} is invalid. Error at line {1}.".format(file_path, i), None, None, None, None, None)
         polygon_identifiers.append(pieces[0].strip('"'))
         try:
             feature_code = int(pieces[1].strip('"'))
