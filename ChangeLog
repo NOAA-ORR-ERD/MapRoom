@@ -1,3 +1,14 @@
+01/13/2014
+---------------------------
+Released 1.9.10
+- RM Speeded up BNA loading by only updating progress every 1000 points loaded
+- RM Added line number when BNA error found during load
+- RM Fixed #566: incorrect number of return values on bad BNA
+- RM Fixed incorrect number of return values on bad BNA
+- RM Menu items can't be enabled on linux till after they're added to the menu
+- RM Added linux support for pytriangle
+- RM Fixed #565: win needs keyboard focus on renderer for mouse wheel to work
+
 01/06/2014
 ---------------------------
 Released 1.9.9
