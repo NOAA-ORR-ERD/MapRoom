@@ -97,62 +97,8 @@ pyproj_data = glob(
 )
 
 
-# Determine the current svn revision, if this is an svn checkout. Also, make
-# sure we don't have any local modifications.
-try:
-    output = subprocess.Popen(
-        ["svn", "info"], stdout=subprocess.PIPE,
-    ).communicate()[0]
-
-    for line in output.split("\n"):
-        if line.startswith("Revision: "):
-            svn_revision = int(line.split(": ")[1])
-            break
-    else:
-        svn_revision = None
-
-    if "py2app" in sys.argv or "py2exe" in sys.argv:
-        output = subprocess.Popen(
-            ["svn", "stat", "-q"], stdout=subprocess.PIPE,
-        ).communicate()[0]
-        if len(output.strip()) > 0:
-            # Yes, this is obnoxious. But it prevents accidentally releasing
-            # software with local modifications.
-            print "Local modifications exist. Refusing to build an installer."
-            print "Please check in or revert your changes before building."
-            #sys.exit( 1 )
-
-except (OSError, ValueError, IndexError):
-    svn_revision = None
-
-
-# Poke the revision into Maproom's version info file so that the packaged
-# application knows what svn revision it's built from. This can make debugging
-# a whole lot easier.
-VERSION_FILENAME = "Version.py"
-if svn_revision:
-    lines = open(VERSION_FILENAME).readlines()
-    VERSION_ORIG = VERSION_FILENAME + ".orig"
-    if os.path.exists(VERSION_ORIG):
-        os.remove(VERSION_ORIG)
-    os.rename(VERSION_FILENAME, VERSION_ORIG)
-    version_file = open(VERSION_FILENAME, "w")
-
-    for line in lines:
-        if line.startswith("SOURCE_CONTROL_REVISION="):
-            version_file.write('SOURCE_CONTROL_REVISION="%d"' % svn_revision)
-        else:
-            version_file.write(line)
-
-    version_file.close()
-
 full_version = Version.VERSION
 spaceless_version = Version.VERSION.replace(" ", "_")
-
-if svn_revision:
-    full_version = "%s (r%s)" % (Version.VERSION, svn_revision)
-    spaceless_version = "%s_r%s" % \
-        (Version.VERSION.replace(" ", "_"), svn_revision)
 
 data_files = [
     ("ui/images",
@@ -337,6 +283,4 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         os.chdir(cwd)
         shutil.rmtree(fat_app_name)
 finally:
-    if svn_revision:
-        os.remove(VERSION_FILENAME)
-        os.rename("%s.orig" % VERSION_FILENAME, VERSION_FILENAME)
+    pass
