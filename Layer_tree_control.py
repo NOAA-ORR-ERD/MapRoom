@@ -1,4 +1,5 @@
 import os
+import sys
 import wx
 try:
     import wx.lib.agw.customtreectrl as treectrl
@@ -15,7 +16,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     dragged_item = None
 
-    def __init__(self, parent_window):
+    def __init__(self, parent_window, renderer):
         treectrl.CustomTreeCtrl.__init__(
             self, parent_window, wx.ID_ANY,
             style=treectrl.TR_DEFAULT_STYLE | wx.BORDER_SUNKEN
@@ -37,6 +38,9 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         self.Bind(wx.EVT_LEFT_DOWN, self.mouse_pressed)
         self.Bind(wx.EVT_RIGHT_DOWN, self.mouse_pressed)
         # self.Bind( wx.EVT_RIGHT_UP, self.mouse_right_released )
+        if sys.platform.startswith("win"):
+            self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
+            self.renderer = renderer
 
     def get_selected_layer(self):
         item = self.GetSelection()
@@ -359,6 +363,16 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
             return
 
         self.ToggleItemSelection(selected_item)
+
+    def on_mouse_wheel_scroll(self, event):
+        screen_point = event.GetPosition()
+        size = self.GetSize()
+        if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
+#            print "Mouse not over Tree: trying map!"
+            self.renderer.on_mouse_wheel_scroll(event)
+            return
+        
+        event.Skip()
 
     """
     def add( self, layer, hidden = False, insert_index = None, parent = None ):

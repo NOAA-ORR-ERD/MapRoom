@@ -79,7 +79,7 @@ class MapFrame(wx.Frame):
             controller.LEFT_SASH_POSITION,
         )
 
-        self.layer_tree_control = Layer_tree_control.Layer_tree_control(self.properties_splitter)
+        self.layer_tree_control = Layer_tree_control.Layer_tree_control(self.properties_splitter, self.renderer)
         self.properties_panel = Properties_panel(self.properties_splitter)
 
         self.properties_splitter.SplitHorizontally(
@@ -93,6 +93,13 @@ class MapFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, controller.close_app, id=wx.ID_EXIT)
         self.Bind(wx.EVT_ACTIVATE, controller.activate)
         self.Bind(wx.EVT_ACTIVATE_APP, controller.refresh)
+        
+        # This binding only necessary on Windows which limits mousewheel
+        # events to the control with focus (additional logic is present in
+        # RenderWindow.on_mouse_wheel_scroll).  Other platforms send mouse
+        # wheel events to the control that the mouse is over.
+        if sys.platform.startswith("win"):
+            self.Bind(wx.EVT_MOUSEWHEEL, self.renderer.on_mouse_wheel_scroll)
 
         self.renderer.SetFocus()
 

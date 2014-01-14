@@ -273,13 +273,29 @@ class RenderWindow(glcanvas.GLCanvas):
 
         rotation = event.GetWheelRotation()
         delta = event.GetWheelDelta()
-        print "on_mouse_wheel_scroll. delta=%d" % delta
+        window = event.GetEventObject()
+        print "on_mouse_wheel_scroll. delta=%d win=%s" % (delta, window)
         if (delta == 0):
             return
 
         amount = rotation / delta
 
         screen_point = event.GetPosition()
+        
+        # On windows, the mouse wheel events are only passed to controls with
+        # the text focus.  So we are forced to grab mouse wheel events on the
+        # Frame because the events are propagated up from the control with
+        # the focus to the Frame.  The coordinates will be relative to the
+        # control, not the map, so we have to transate them here.
+        if window != self:
+            monitor_point = window.ClientToScreen(screen_point)
+            screen_point = self.ScreenToClient(monitor_point)
+#            print "Mouse over other window at screen pos %s, window pos %s!" % (monitor_point, screen_point)
+            size = self.GetSize()
+            if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
+#                print "Mouse not over RenderWindow: skipping!"
+                return
+            
         world_point = self.get_world_point_from_screen_point(screen_point)
 
         prefs = app_globals.preferences
