@@ -287,7 +287,7 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         subprocess.call(['/usr/bin/ditto', '-arch', 'x86_64', fat_app_name, app_name])
         cwd = os.getcwd()
         os.chdir(mac_dist_dir)
-        subprocess.call(['/usr/bin/zip', '-r', '-9', "Maproom-r%s-darwin.zip" % spaceless_version, 'Maproom.app', ])
+        subprocess.call(['/usr/bin/zip', '-r', '-9', "Maproom-%s-darwin.zip" % spaceless_version, 'Maproom.app', ])
         os.chdir(cwd)
         shutil.rmtree(fat_app_name)
 finally:
