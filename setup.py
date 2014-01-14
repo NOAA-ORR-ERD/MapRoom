@@ -44,8 +44,6 @@ print gl_include_dirs
 print gl_library_dirs
 print gl_libraries
 
-shutil.rmtree("dist", ignore_errors=True)
-
 # Definintion of compiled extension code:
 bitmap = Extension("library.Bitmap",
                    sources=["library/Bitmap.pyx"],
@@ -140,11 +138,19 @@ py2app_includes = [
     "OpenGL_accelerate.formathandler",
 ]
 
+base_dist_dir = "dist-%s" % spaceless_version
+win_dist_dir = os.path.join(base_dist_dir, "win")
+mac_dist_dir = os.path.join(base_dist_dir, "mac")
 
 try:
+    if sys.platform.startswith("win"):
+        shutil.rmtree(win_dist_dir, ignore_errors=True)
+    elif sys.platform.startswith('darwin'):
+        shutil.rmtree(mac_dist_dir, ignore_errors=True)
+
     setup(
         name="Maproom",
-        version="1.0",
+        version=full_version,
         description="High-performance 2d mapping",
         author="NOAA",
         data_files=data_files,
@@ -156,6 +162,7 @@ try:
         )],
         options=dict(
             py2app=dict(
+                dist_dir=mac_dist_dir,
                 argv_emulation=True,
                 packages=['pyproj', 'library'],
                 optimize=2,  # Equivalent to running "python -OO".
@@ -174,6 +181,7 @@ try:
                 )
             ),
             py2exe=dict(
+                dist_dir=win_dist_dir,
                 optimize=2,
                 skip_archive=True,
                 compressed=False,
@@ -200,7 +208,7 @@ try:
             print "*** copy Triangle module ***"
             triangle_path = triangle.__file__
             try:
-                shutil.copy(triangle_path, "dist")
+                shutil.copy(triangle_path, win_dist_dir)
             except (OSError, WindowsError), error:
                 if not "already exists" in str(error):
                     raise
@@ -216,12 +224,12 @@ try:
         opengl_accelerate_dir = os.path.dirname(OpenGL_accelerate.__file__)
         try:
             shutil.copytree(
-                opengl_dir, os.path.join("dist", "OpenGL"),
+                opengl_dir, os.path.join(win_dist_dir, "OpenGL"),
                 ignore=shutil.ignore_patterns("GLUT", "Tk"),
             )
             shutil.copytree(
                 opengl_accelerate_dir,
-                os.path.join("dist", "OpenGL_accelerate"),
+                os.path.join(win_dist_dir, "OpenGL_accelerate"),
             )
         except WindowsError, error:
             if not "already exists" in str(error):
@@ -229,7 +237,7 @@ try:
 
         print "*** create installer ***"
 
-        iss_filename = "dist\\maproom.iss"
+        iss_filename = "%s\\maproom.iss" % win_dist_dir
         iss_file = open(iss_filename, "w")
         iss_file.write( """
 [Setup]
@@ -243,7 +251,7 @@ AppUpdatesURL=http://www.noaa.gov/
 DefaultDirName={pf}\Maproom
 DefaultGroupName=Maproom
 OutputBaseFilename=Maproom_%s
-SetupIconFile=..\ui\images\maproom.ico
+SetupIconFile=..\..\ui\images\maproom.ico
 Compression=lzma
 SolidCompression=yes
 
@@ -273,12 +281,12 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
             '"C:\Program Files (x86)\Inno Setup 5\ISCC.exe" %s' % iss_filename,
         )
     elif sys.platform.startswith('darwin'):
-        app_name = "dist/Maproom.app"
-        fat_app_name = "dist/Maproom.fat.app"
+        app_name = "%s/Maproom.app" % mac_dist_dir
+        fat_app_name = "%s/Maproom.fat.app" % mac_dist_dir
         os.rename(app_name, fat_app_name)
         subprocess.call(['/usr/bin/ditto', '-arch', 'x86_64', fat_app_name, app_name])
         cwd = os.getcwd()
-        os.chdir('dist')
+        os.chdir(mac_dist_dir)
         subprocess.call(['/usr/bin/zip', '-r', '-9', "Maproom-r%s-darwin.zip" % spaceless_version, 'Maproom.app', ])
         os.chdir(cwd)
         shutil.rmtree(fat_app_name)
