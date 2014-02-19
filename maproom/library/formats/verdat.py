@@ -1,9 +1,9 @@
 import os
 import numpy as np
 import re
-from library.accumulator import accumulator
-from library.Boundary import find_boundaries
-from library.Shape import points_outside_polygon
+from maproom.library.accumulator import accumulator
+from maproom.library.Boundary import find_boundaries
+from maproom.library.Shape import points_outside_polygon
 
 WHITESPACE_PATTERN = re.compile("\s+")
 

@@ -1,3 +1,6 @@
+# Hack to begin the transition away from global variables!
+import os
+
 # this is a shared object to avoid having to pass key singletons throughout the code
 main_logger = None
 opengl_logger = None
@@ -5,7 +8,17 @@ version = None
 application = None
 layer_manager = None
 editor = None
-preferences = None
+
+print __file__
+image_path = os.path.join(os.path.dirname(__file__), "maproom/ui/images")
+
+preferences = {
+    "Coordinate Display Format": "degrees decimal minutes",
+    "Scroll Zoom Speed": "Slow",
+    
+    # FIXME: preferences doesn't handle non-string items when saving/loading
+    "Number of Recent Files": 20,
+}
 
 error_email_from = "maproombugreports@gmail.com"
 error_email_passwd = "bushy206"

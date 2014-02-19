@@ -1,6 +1,6 @@
 import random
 import numpy as np
-from library.Shape import point_in_polygon
+from maproom.library.Shape import point_in_polygon
 
 
 class Find_boundaries_error(Exception):

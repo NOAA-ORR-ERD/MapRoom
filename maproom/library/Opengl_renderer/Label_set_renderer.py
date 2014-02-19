@@ -4,8 +4,8 @@ import numpy as np
 import time
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
-import library.rect as rect
-from library.accumulator import accumulator
+import maproom.library.rect as rect
+from maproom.library.accumulator import accumulator
 
 
 class Label_set_renderer:

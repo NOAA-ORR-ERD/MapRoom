@@ -4,11 +4,11 @@ import time
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
-from library.accumulator import accumulator
-import library.rect as rect
-import library.Bitmap as Bitmap
+from maproom.library.accumulator import accumulator
+import maproom.library.rect as rect
+import maproom.library.Bitmap as Bitmap
 
-import library.formats.verdat as verdat
+import maproom.library.formats.verdat as verdat
 
 
 def update_status(message):

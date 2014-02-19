@@ -22,7 +22,7 @@ import shutil
 import subprocess
 import sys
 
-import Version
+import maproom.Version as Version
 
 # find the various headers, libs, etc.
 import numpy
@@ -45,30 +45,30 @@ print gl_library_dirs
 print gl_libraries
 
 # Definintion of compiled extension code:
-bitmap = Extension("library.Bitmap",
-                   sources=["library/Bitmap.pyx"],
+bitmap = Extension("maproom.library.Bitmap",
+                   sources=["maproom/library/Bitmap.pyx"],
                    include_dirs=[numpy.get_include()],
                    )
 
-shape = Extension("library.Shape",
-                  sources=["library/Shape.pyx"],
+shape = Extension("maproom.library.Shape",
+                  sources=["maproom/library/Shape.pyx"],
                   include_dirs=[numpy.get_include()],
                   )
 
-tree = Extension("library.scipy_ckdtree",
-                 sources=["library/scipy_ckdtree.pyx"],
+tree = Extension("maproom.library.scipy_ckdtree",
+                 sources=["maproom/library/scipy_ckdtree.pyx"],
                  include_dirs=[numpy.get_include()],
                  )
 
-tessellator = Extension("library.Opengl_renderer.Tessellator",
-                        sources=["library/Opengl_renderer/Tessellator.pyx"],
+tessellator = Extension("maproom.library.Opengl_renderer.Tessellator",
+                        sources=["maproom/library/Opengl_renderer/Tessellator.pyx"],
                         include_dirs=gl_include_dirs,
                         library_dirs=gl_library_dirs,
                         libraries=gl_libraries,
                         )
 
-render = Extension("library.Opengl_renderer.Render",
-                   sources=["library/Opengl_renderer/Render.pyx"],
+render = Extension("maproom.library.Opengl_renderer.Render",
+                   sources=["maproom/library/Opengl_renderer/Render.pyx"],
                    include_dirs=gl_include_dirs,
                    library_dirs=gl_library_dirs,
                    libraries=gl_libraries,
@@ -99,28 +99,27 @@ full_version = Version.VERSION
 spaceless_version = Version.VERSION.replace(" ", "_")
 
 data_files = [
-    ("ui/images",
-        glob("ui/images/*.ico") +
-        glob("ui/images/*.png")
+    ("maproom/ui/images",
+        glob("maproom/ui/images/*.ico") +
+        glob("maproom/ui/images/*.png")
      ),
-    ("ui/images/toolbar",
-        glob("ui/images/toolbar/*.png")
+    ("maproom/ui/images/toolbar",
+        glob("maproom/ui/images/toolbar/*.png")
      ),
-    ("ui/images/cursors",
-        glob("ui/images/cursors/*.ico")
+    ("maproom/ui/images/cursors",
+        glob("maproom/ui/images/cursors/*.ico")
      ),
 ]
 if sys.platform.startswith('win'):
     # with py2app, we just include the entire package and these files are
     # copied over
     data_files.extend([
-        ("library/Opengl_renderer",
+        ("maproom/library/Opengl_renderer",
             glob("library/Opengl_renderer/*.png") + glob("library/Opengl_renderer/*.pyd")
          ),
-        ("library",
+        ("maproom/library",
             glob("library/*.pyd")
          ),
-        ("pyproj/data", pyproj_data),
     ])
 
     # Add missing DLL files that py2exe doesn't pull in automatically.
@@ -156,9 +155,15 @@ try:
         data_files=data_files,
         packages=find_packages(),
         app=["maproom.py"],
+        entry_points = """
+
+        [envisage.plugins]
+        peppy2.tasks = maproom.plugin:MaproomPlugin
+
+        """,
         windows=[dict(
             script="maproom.py",
-            icon_resources=[(1, "ui/images/maproom.ico")],
+            icon_resources=[(1, "maproom/ui/images/maproom.ico")],
         )],
         options=dict(
             py2app=dict(

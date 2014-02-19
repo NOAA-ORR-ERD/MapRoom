@@ -5,7 +5,7 @@ setup.py for MapRoom -- mostly to build the Cython extensions
 
 right now - it mostly is to be used as follows:
 
-python setup.py build_ext --inplace
+python setup_library.py build_ext --inplace
 
 """
 
@@ -37,30 +37,30 @@ print gl_library_dirs
 print gl_libraries
 
 # Definintion of compiled extension code:
-bitmap = Extension("library.Bitmap",
-                   sources=["library/Bitmap.pyx"],
+bitmap = Extension("maproom.library.Bitmap",
+                   sources=["maproom/library/Bitmap.pyx"],
                    include_dirs=[numpy.get_include()],
                    )
 
-shape = Extension("library.Shape",
-                  sources=["library/Shape.pyx"],
+shape = Extension("maproom.library.Shape",
+                  sources=["maproom/library/Shape.pyx"],
                   include_dirs=[numpy.get_include()],
                   )
 
-tree = Extension("library.scipy_ckdtree",
-                 sources=["library/scipy_ckdtree.pyx"],
+tree = Extension("maproom.library.scipy_ckdtree",
+                 sources=["maproom/library/scipy_ckdtree.pyx"],
                  include_dirs=[numpy.get_include()],
                  )
 
-tessellator = Extension("library.Opengl_renderer.Tessellator",
-                        sources=["library/Opengl_renderer/Tessellator.pyx"],
+tessellator = Extension("maproom.library.Opengl_renderer.Tessellator",
+                        sources=["maproom/library/Opengl_renderer/Tessellator.pyx"],
                         include_dirs=gl_include_dirs,
                         library_dirs=gl_library_dirs,
                         libraries=gl_libraries,
                         )
 
-render = Extension("library.Opengl_renderer.Render",
-                   sources=["library/Opengl_renderer/Render.pyx"],
+render = Extension("maproom.library.Opengl_renderer.Render",
+                   sources=["maproom/library/Opengl_renderer/Render.pyx"],
                    include_dirs=gl_include_dirs,
                    library_dirs=gl_library_dirs,
                    libraries=gl_libraries,

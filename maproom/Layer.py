@@ -217,6 +217,7 @@ class Layer():
 
     def read_from_file(self, file_path):
         self.file_path = file_path
+        self.name = os.path.split(file_path)[1]
         (base, ext) = os.path.splitext(file_path)
         ext = ext.lower()
         file_types = [".xml", ".bna", ".verdat", ".dat", ".png", ".kap", ".tif"]
@@ -375,7 +376,8 @@ class Layer():
 
         if (self.load_error_string == ""):
             self.update_bounds()
-            pub.sendMessage(('layer', 'loaded'), layer=self)
+            print "FIXME: old call to pubsub!"
+            #pub.sendMessage(('layer', 'loaded'), layer=self)
 
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()

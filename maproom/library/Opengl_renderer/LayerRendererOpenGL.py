@@ -3,14 +3,14 @@ import os.path
 import time
 import sys
 import numpy as np
-import library.Opengl_renderer.Point_and_line_set_renderer as Point_and_line_set_renderer
-import library.Opengl_renderer.Triangle_set_renderer as Triangle_set_renderer
-import library.Opengl_renderer.Polygon_set_renderer as Polygon_set_renderer
-import library.Opengl_renderer.Label_set_renderer as Label_set_renderer
-import library.Opengl_renderer.Image_set_renderer as Image_set_renderer
-from library.color import *
-import library.rect as rect
-from Editor import *
+import maproom.library.Opengl_renderer.Point_and_line_set_renderer as Point_and_line_set_renderer
+import maproom.library.Opengl_renderer.Triangle_set_renderer as Triangle_set_renderer
+import maproom.library.Opengl_renderer.Polygon_set_renderer as Polygon_set_renderer
+import maproom.library.Opengl_renderer.Label_set_renderer as Label_set_renderer
+import maproom.library.Opengl_renderer.Image_set_renderer as Image_set_renderer
+from maproom.library.color import *
+import maproom.library.rect as rect
+from maproom.Editor import *
 
 
 """

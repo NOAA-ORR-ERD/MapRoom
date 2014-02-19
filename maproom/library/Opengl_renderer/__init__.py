@@ -6,7 +6,7 @@ import OpenGL
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
-import library.rect as rect
+import maproom.library.rect as rect
 import Picker
 import Font_extents
 

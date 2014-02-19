@@ -5,9 +5,9 @@ import OpenGL.arrays.vbo as gl_vbo
 
 import OpenGL.GL.EXT.framebuffer_object as gl_fbo
 
-import library.rect as rect
+import maproom.library.rect as rect
 
-from library.color import *
+from maproom.library.color import *
 # import Image, ImageDraw
 
 
