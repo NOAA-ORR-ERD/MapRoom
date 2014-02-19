@@ -400,19 +400,20 @@ class LayerControl(glcanvas.GLCanvas):
         return self.mode
 
     def render(self, event=None):
-        """
-        import traceback
-        traceback.print_stack();
-        import code; code.interact( local = locals() )
-        """
+        # Get interactive console here:
+#        import traceback
+#        traceback.print_stack();
+#        import code; code.interact( local = locals() )
+        if not self.IsShown():
+            print "layer_control_wx.render: not shown yet, so skipping render"
+            return
 
         t0 = time.clock()
         self.SetCurrent(self.context)
-        self.update_renderers()
-
         # this has to be here because the window has to exist before making the renderer
         if (self.opengl_renderer == None):
             self.opengl_renderer = library.Opengl_renderer.Opengl_renderer(True)
+        self.update_renderers()
 
         s_r = self.get_screen_rect()
         # print "s_r = " + str( s_r )
