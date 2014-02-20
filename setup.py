@@ -206,7 +206,7 @@ try:
         )
     )
 
-    if sys.platform.startswith("win"):
+    if 'py2exe' in sys.argv and sys.platform.startswith("win"):
         try:
             import triangle
             import shutil
@@ -285,7 +285,7 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         os.system(
             '"C:\Program Files (x86)\Inno Setup 5\ISCC.exe" %s' % iss_filename,
         )
-    elif sys.platform.startswith('darwin'):
+    elif 'py2app' in sys.argv and sys.platform.startswith('darwin'):
         app_name = "%s/Maproom.app" % mac_dist_dir
         fat_app_name = "%s/Maproom.fat.app" % mac_dist_dir
         os.rename(app_name, fat_app_name)
