@@ -25,17 +25,6 @@ The RenderWindow class -- where the opengl rendering really takes place.
 """
 
 
-def update_status(message):
-    tlw = wx.GetApp().GetTopWindow()
-    tlw.show_debug_message(message)
-    # for debugging purposes, so we can see a history of rendering
-    try:
-        f = open("output_render.txt", "a")
-        f.write(message + '\n')
-    except:
-        pass
-
-
 class LayerControl(glcanvas.GLCanvas):
 
     """
@@ -64,6 +53,7 @@ class LayerControl(glcanvas.GLCanvas):
     #is_closing = False
 
     def __init__(self, *args, **kwargs):
+        self.layer_editor = kwargs.pop('layer_editor')
         self.layer_manager = kwargs.pop('layer_manager')
         self.editor = kwargs.pop('editor')
         self.layer_renderers = {}
@@ -478,6 +468,10 @@ class LayerControl(glcanvas.GLCanvas):
         self.opengl_renderer.done_rendering_picker()
 
         elapsed = time.clock() - t0
+
+        def update_status(message):
+            print message
+            self.layer_editor.editor_area.task.status_bar.message = message
         wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
 
         if (event != None):

@@ -57,7 +57,6 @@ class LayerEditor(Editor):
     def load(self, guess=None):
         """ Loads the contents of the editor.
         """
-        img = wx.EmptyImage(1,1)
         if guess is None:
             path = self.path
         else:
@@ -101,7 +100,7 @@ class LayerEditor(Editor):
         self.editor = LegacyEditor.Editor(self.layer_manager)
 
         # Base-class constructor.
-        self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor)
+        self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor, layer_editor=self)
         self.render_controller = RenderController.RenderController(self.layer_manager, self.control)
         app_globals.application = self
         app_globals.layer_manager = self.layer_manager
@@ -109,6 +108,8 @@ class LayerEditor(Editor):
 
         # Load the editor's contents.
         self.load()
+        
+        print "LayerEditor: task=%s" % self.editor_area.task
 
         return self.control
 
