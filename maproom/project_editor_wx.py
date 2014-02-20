@@ -69,6 +69,7 @@ class ProjectEditor(Editor):
                 return False
             index = None
             self.layer_manager.insert_layer(index, layer)
+            self.render_controller.zoom_to_layer(layer)
 
         self.dirty = False
 
