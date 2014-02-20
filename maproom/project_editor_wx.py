@@ -10,7 +10,7 @@ from traits.api import Bool, Event, Instance, File, Unicode, Property, provides
 from pyface.tasks.api import Editor
 
 # Local imports.
-from i_layer_editor import ILayerEditor
+from i_project_editor import IProjectEditor
 from layer_control_wx import LayerControl
 import app_globals
 import Editor as LegacyEditor
@@ -19,13 +19,14 @@ import Layer_manager
 import Layer_tree_control
 import RenderController
 
-@provides(ILayerEditor)
-class LayerEditor(Editor):
-    """ The toolkit specific implementation of a BitmapEditor.  See the
-    IBitmapEditor interface for the API documentation.
+@provides(IProjectEditor)
+class ProjectEditor(Editor):
+    """The wx implementation of a ProjectEditor.
+    
+    See the IProjectEditor interface for the API documentation.
     """
 
-    #### 'IPythonEditor' interface ############################################
+    #### 'IProjectEditor' interface ############################################
 
     obj = Instance(File)
 

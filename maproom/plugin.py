@@ -32,12 +32,12 @@ class MaproomPlugin(Plugin):
     ###########################################################################
 
     def _task_factories_default(self):
-        from maproom.task import MaproomTask
+        from maproom.task import MaproomProjectTask
 
         return [ 
-            TaskFactory(id = 'maproom.layers',
-                        name = 'Maproom Task',
-                        factory = MaproomTask),
+            TaskFactory(id = 'maproom.project',
+                        name = 'Maproom Project Task',
+                        factory = MaproomProjectTask),
             ]
 
     def _recognizer_default(self):

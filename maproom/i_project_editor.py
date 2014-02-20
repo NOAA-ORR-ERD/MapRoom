@@ -6,8 +6,13 @@ from traits.api import Bool, Event, Instance, File, Interface, Unicode
 from pyface.tasks.i_editor import IEditor
 
 
-class ILayerEditor(IEditor):
-    """ A widget for editing maproom layers. """
+class IProjectEditor(IEditor):
+    """A widget for editing maproom projects.
+    
+    A maproom project consists of several layers of various types arranged in a
+    stacking order.  Layers might be bitmap images, vector images, annotation
+    layers, grid layers, etc.
+    """
 
     #### 'IPythonEditor' interface ############################################
 

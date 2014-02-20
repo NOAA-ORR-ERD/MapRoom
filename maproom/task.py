@@ -11,17 +11,17 @@ from traits.api import on_trait_change, Property, Instance
 
 from peppy2.framework.task import FrameworkTask
 
-from layer_editor import LayerEditor
+from project_editor import ProjectEditor
 from panes import LayerSelectionPane, LayerInfoPane
 
-class MaproomTask(FrameworkTask):
-    """The Maproom Layer editor task.
+class MaproomProjectTask(FrameworkTask):
+    """The Maproom Project File editor task.
     """
 
     #### Task interface #######################################################
 
-    id = 'maproom.layer_task'
-    name = 'Maproom'
+    id = 'maproom.project_task'
+    name = 'Maproom Project File'
 
     ###########################################################################
     # 'Task' interface.
@@ -33,12 +33,6 @@ class MaproomTask(FrameworkTask):
                 PaneItem('maproom.layer_selection_pane'),
                 PaneItem('maproom.layer_info_pane'),
                 ))
-
-    def create_central_pane(self):
-        """ Create the central pane: the text editor.
-        """
-        self.editor_area = EditorAreaPane()
-        return self.editor_area
 
     def create_dock_panes(self):
         """ Create the file browser and connect to its double click event.
@@ -52,7 +46,7 @@ class MaproomTask(FrameworkTask):
     def get_editor(self, guess=None):
         """ Opens a new empty window
         """
-        editor = LayerEditor()
+        editor = ProjectEditor()
         return editor
 
     ###
