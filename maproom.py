@@ -16,6 +16,14 @@ from peppy2.file_type.plugin import FileTypePlugin
 from peppy2.framework.application import FrameworkApplication
 from maproom.plugin import MaproomPlugin
 
+# Imports for py2exe/py2app
+import wx
+import multiprocessing
+multiprocessing.freeze_support()
+
+import os
+os.environ["ETS_DEBUG"] = "True"
+
 def main(argv):
     """ Run the application.
     """

@@ -129,8 +129,42 @@ if sys.platform.startswith('win'):
 
 
 common_includes = [
-    "ctypes", "ctypes.util", "wx.lib.pubsub.*", "wx.lib.pubsub.core.*", "wx.lib.pubsub.core.kwargs.*"
+    "ctypes",
+    "ctypes.util",
+    "wx.lib.pubsub.*",
+    "wx.lib.pubsub.core.*",
+    "wx.lib.pubsub.core.kwargs.*",
+    "multiprocessing",
+    
+    "traits",
+    
+    "traitsui",
+    "traitsui.editors",
+    "traitsui.editors.*",
+    "traitsui.extras",
+    "traitsui.extras.*",
+    "traitsui.wx",
+    "traitsui.wx.*",
+ 
+    "pyface",
+    "pyface.*",
+    "pyface.wx",
+ 
+    "pyface.ui.wx",
+    "pyface.ui.wx.init",
+    "pyface.ui.wx.*",
+    "pyface.ui.wx.grid.*",
+    "pyface.ui.wx.action.*",
+    "pyface.ui.wx.timer.*",
+    "pyface.ui.wx.tasks.*",
+    "pyface.ui.wx.workbench.*",
 ]
+
+import peppy2
+common_includes.extend(peppy2.get_py2exe_toolkit_includes())
+import maproom
+common_includes.extend(peppy2.get_py2exe_toolkit_includes(maproom))
+print common_includes
 
 py2app_includes = [
     "OpenGL_accelerate",
@@ -169,11 +203,11 @@ try:
             py2app=dict(
                 dist_dir=mac_dist_dir,
                 argv_emulation=True,
-                packages=['pyproj', 'library'],
+                packages=['pyproj'],
                 optimize=2,  # Equivalent to running "python -OO".
                 semi_standalone=False,
                 includes=common_includes + py2app_includes,
-                iconfile="ui/images/maproom.icns",
+                iconfile="maproom/ui/images/maproom.icns",
                 plist=dict(
                     CFBundleName="Maproom",
                     CFBundleTypeExtensions=["verdat", "kap", "bna"],
