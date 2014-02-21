@@ -93,7 +93,12 @@ class Opengl_renderer():
         return True
 
     def load_font_texture(self):
-        font_path = path = os.path.join(os.path.dirname(__file__), "font.png")
+        frozen = getattr(sys, 'frozen', False)
+        font_path = os.path.join(os.path.dirname(__file__), "font.png")
+        if frozen and frozen in ('macosx_app'):
+            root = os.environ['RESOURCEPATH']
+            zippath, modpath = font_path.split(".zip/")
+            font_path = os.path.join(root, modpath)
         image = wx.Image(font_path, wx.BITMAP_TYPE_PNG)
         width = image.GetWidth()
         height = image.GetHeight()

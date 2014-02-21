@@ -9,8 +9,14 @@ application = None
 layer_manager = None
 editor = None
 
-print __file__
+import sys
+frozen = getattr(sys, 'frozen', False)
 image_path = os.path.join(os.path.dirname(__file__), "maproom/ui/images")
+if frozen and frozen in ('macosx_app'):
+    print "FROZEN!!! %s" % frozen
+    root = os.environ['RESOURCEPATH']
+    zippath, image_path = image_path.split(".zip/")
+    image_path = os.path.join(root, image_path)
 
 preferences = {
     "Coordinate Display Format": "degrees decimal minutes",
