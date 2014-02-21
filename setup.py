@@ -337,12 +337,18 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         )
     elif 'py2app' in sys.argv and sys.platform.startswith('darwin'):
         app_name = "%s/Maproom.app" % mac_dist_dir
+        
+        # Strip out useless binary stuff from the site packages zip file.
+        # Saves 3MB or so
+        site_packages = "%s/Contents/Resources/lib/python2.7/site-packages.zip" % app_name
+        subprocess.call(['/usr/bin/zip', '-d', site_packages, "wx/locale/*", "*.c", "*.pyx", "*.png", "*.jpg", "*.ico", ])
+
         fat_app_name = "%s/Maproom.fat.app" % mac_dist_dir
         os.rename(app_name, fat_app_name)
         subprocess.call(['/usr/bin/ditto', '-arch', 'x86_64', fat_app_name, app_name])
         cwd = os.getcwd()
         os.chdir(mac_dist_dir)
-        subprocess.call(['/usr/bin/zip', '-r', '-9', "Maproom-%s-darwin.zip" % spaceless_version, 'Maproom.app', ])
+        subprocess.call(['/usr/bin/zip', '-r', '-9', '-q', "Maproom-%s-darwin.zip" % spaceless_version, 'Maproom.app', ])
         os.chdir(cwd)
         shutil.rmtree(fat_app_name)
 finally:
