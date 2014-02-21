@@ -98,27 +98,28 @@ pyproj_data = glob(
 full_version = Version.VERSION
 spaceless_version = Version.VERSION.replace(" ", "_")
 
-data_files = [
-    ("maproom/ui/images",
-        glob("maproom/ui/images/*.ico") +
-        glob("maproom/ui/images/*.png")
-     ),
-    ("maproom/ui/images/toolbar",
-        glob("maproom/ui/images/toolbar/*.png")
-     ),
-    ("maproom/ui/images/cursors",
-        glob("maproom/ui/images/cursors/*.ico")
-     ),
-]
+import peppy2
+import maproom
+
+data_files = []
+data_files.extend(peppy2.get_py2exe_data_files())
+data_files.extend(peppy2.get_py2exe_data_files(maproom))
+
+import traitsui
+data_files.extend(peppy2.get_py2exe_data_files(traitsui, excludes=["*/qt4/*"]))
+
+import pyface
+data_files.extend(peppy2.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
+
 if sys.platform.startswith('win'):
     # with py2app, we just include the entire package and these files are
     # copied over
     data_files.extend([
         ("maproom/library/Opengl_renderer",
-            glob("library/Opengl_renderer/*.png") + glob("library/Opengl_renderer/*.pyd")
+            glob("maproom/library/Opengl_renderer/*.pyd")
          ),
         ("maproom/library",
-            glob("library/*.pyd")
+            glob("maproom/library/*.pyd")
          ),
     ])
 
@@ -159,10 +160,7 @@ common_includes = [
     "pyface.ui.wx.tasks.*",
     "pyface.ui.wx.workbench.*",
 ]
-
-import peppy2
 common_includes.extend(peppy2.get_py2exe_toolkit_includes())
-import maproom
 common_includes.extend(peppy2.get_py2exe_toolkit_includes(maproom))
 print common_includes
 
@@ -170,6 +168,26 @@ py2app_includes = [
     "OpenGL_accelerate",
     "OpenGL_accelerate.formathandler",
 ]
+
+common_excludes = [
+    "test",
+#    "unittest", # needed for numpy
+    "pydoc_data",
+    "pyface.ui.qt4",
+    "traitsui.qt4",
+     "Tkconstants",
+    "Tkinter", 
+    "tcl", 
+    "_imagingtk",
+    "PIL._imagingtk",
+    "ImageTk",
+    "PIL.ImageTk",
+    "FixTk",
+    ]
+
+py2exe_excludes = [
+    "OpenGL",
+    ]
 
 base_dist_dir = "dist-%s" % spaceless_version
 win_dist_dir = os.path.join(base_dist_dir, "win")
@@ -207,6 +225,7 @@ try:
                 optimize=2,  # Equivalent to running "python -OO".
                 semi_standalone=False,
                 includes=common_includes + py2app_includes,
+                excludes=common_excludes,
                 iconfile="maproom/ui/images/maproom.icns",
                 plist=dict(
                     CFBundleName="Maproom",
@@ -228,10 +247,7 @@ try:
                 # See http://www.py2exe.org/index.cgi/PyOpenGL
                 # and http://www.py2exe.org/index.cgi/TkInter
                 includes=common_includes,
-                excludes=[
-                    "OpenGL", "Tkconstants", "Tkinter", "tcl", "_imagingtk",
-                    "PIL._imagingtk", "ImageTk", "PIL.ImageTk", "FixTk",
-                ],
+                excludes=common_excludes + py2exe_excludes,
             ),
             build=dict(
                 #compiler = "mingw32",
