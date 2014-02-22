@@ -394,7 +394,7 @@ class LayerControl(glcanvas.GLCanvas):
 #        import traceback
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
-        if not self.IsShown():
+        if not self.IsShownOnScreen():
             print "layer_control_wx.render: not shown yet, so skipping render"
             return
 
