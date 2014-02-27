@@ -341,7 +341,7 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         # Strip out useless binary stuff from the site packages zip file.
         # Saves 3MB or so
         site_packages = "%s/Contents/Resources/lib/python2.7/site-packages.zip" % app_name
-        subprocess.call(['/usr/bin/zip', '-d', site_packages, "wx/locale/*", "*.c", "*.pyx", "*.png", "*.jpg", "*.ico", ])
+        subprocess.call(['/usr/bin/zip', '-d', site_packages, "distutils/command/*", "wx/locale/*", "*.c", "*.pyx", "*.png", "*.jpg", "*.ico", ])
 
         fat_app_name = "%s/Maproom.fat.app" % mac_dist_dir
         os.rename(app_name, fat_app_name)
