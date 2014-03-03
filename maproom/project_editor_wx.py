@@ -98,7 +98,7 @@ class ProjectEditor(Editor):
     def _create_control(self, parent):
         """ Creates the toolkit-specific control for the widget. """
 
-        self.layer_manager = Layer_manager.Layer_manager()
+        self.layer_manager = Layer_manager.Layer_manager(self)
         self.editor = LegacyEditor.Editor(self)
 
         # Base-class constructor.

@@ -10,7 +10,6 @@ import Layer
 import library.formats.verdat as verdat
 import library.rect as rect
 from library.accumulator import flatten
-import app_globals
 
 from wx.lib.pubsub import pub
 
@@ -29,7 +28,8 @@ class Layer_manager():
     purpose at present is to hold the folder name.
     """
 
-    def __init__(self):
+    def __init__(self, project):
+        self.project = project
         self.layers = []
         layer = Layer.Layer()
         layer.name = "Layers"
@@ -81,7 +81,7 @@ class Layer_manager():
 
     def remove_layer(self, at_multi_index):
         self.remove_layer_recursive(at_multi_index, self.layers)
-        app_globals.application.refresh(rebuild_tree=True)
+        self.project.refresh(rebuild_tree=True)
 
     def remove_layer_recursive(self, at_multi_index, tree):
         index = at_multi_index[0]
@@ -168,7 +168,7 @@ class Layer_manager():
         return self.current_layer
 
     def is_layer_selected(self, layer):
-        return app_globals.application.layer_tree_control.get_selected_layer() == layer
+        return self.project.layer_tree_control.get_selected_layer() == layer
 
     def count_raster_layers(self):
         n = 0
@@ -342,9 +342,9 @@ class Layer_manager():
                     layer.clear_all_selections(Layer.STATE_FLAGGED)
                     for p in e.points:
                         layer.select_point(p, Layer.STATE_FLAGGED)
-                    app_globals.application.refresh()
+                    self.project.refresh()
                 wx.MessageDialog(
-                    app_globals.application.frame,
+                    self.project.control,
                     message=e.message,
                     caption="Error Saving Verdat File",
                     style=wx.OK | wx.ICON_ERROR,
@@ -356,7 +356,7 @@ class Layer_manager():
                     shutil.copy(temp_file, path)
                 except Exception as e:
                     print traceback.format_exc(e)
-                    wx.MessageDialog(app_globals.application.frame,
+                    wx.MessageDialog(self.project.control,
                                      message="Unable to save file to disk. Make sure you have write permissions to the file.",
                                      caption="Error Saving Verdat File",
                                      style=wx.OK | wx.ICON_ERROR).ShowModal()
@@ -500,10 +500,10 @@ class Layer_manager():
 
     def delete_selected_layer(self, layer=None):
         if (layer == None):
-            layer = app_globals.application.layer_tree_control.get_selected_layer()
+            layer = self.project.layer_tree_control.get_selected_layer()
             if (layer == None):
                 wx.MessageDialog(
-                    app_globals.application.frame,
+                    self.project.control,
                     message="You must select an item in the tree (either a single layer or a tree of layers) in the tree control before attempting to delete.",
                     style=wx.OK | wx.ICON_ERROR
                 ).ShowModal()
@@ -518,7 +518,7 @@ class Layer_manager():
                 m = "An individual layer in the layer tree is selected. This will delete the selected layer, " + layer.name + "."
 
             dialog = wx.MessageDialog(
-                app_globals.application.frame,
+                self.project.control,
                 caption="Delete",
                 message=m,
                 style=wx.OK | wx.CANCEL
@@ -537,7 +537,7 @@ class Layer_manager():
                 l = l[index]
             del l[mi[-1]]
 
-        app_globals.application.refresh(rebuild_tree=True)
+        self.project.refresh(rebuild_tree=True)
 
     def merge_layers(self, layer_a, layer_b):
         layer = Layer.Layer()
@@ -545,7 +545,7 @@ class Layer_manager():
         layer.name = "Merged"
         layer.merge_from_source_layers(layer_a, layer_b)
         self.insert_layer(None, layer)
-        app_globals.application.layer_tree_control.select_layer(layer)
+        self.project.layer_tree_control.select_layer(layer)
 
     def destroy_recursive(self, layer):
         if (self.layer_is_folder(layer)):
