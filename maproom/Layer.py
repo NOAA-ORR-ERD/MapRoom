@@ -220,18 +220,14 @@ class Layer():
         self.name = os.path.split(file_path)[1]
         (base, ext) = os.path.splitext(file_path)
         ext = ext.lower()
-        file_types = [".xml", ".bna", ".verdat", ".dat", ".png", ".kap", ".tif"]
+        file_types = [".bna", ".verdat", ".dat", ".png", ".kap", ".tif"]
         file_type = ""
         if ext in file_types:
             file_type = ext
         else:
             file_type = self.guess_type_from_file_contents(file_path)
 
-        if (file_type == ".xml"):
-            app_globals.layer_manager.load_xml_layer(file_path)
-            return
-
-        elif (file_type == ".bna"):
+        if (file_type == ".bna"):
             (self.load_error_string,
              f_polygon_points,
              f_polygon_starts,

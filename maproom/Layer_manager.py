@@ -5,7 +5,6 @@ import time
 import traceback
 import numpy as np
 import wx
-from xml.etree.ElementTree import ElementTree
 import Layer
 import library.formats.verdat as verdat
 import library.rect as rect
@@ -214,277 +213,39 @@ class Layer_manager():
         for i, layer in enumerate(reversed(list)):
             layer.render(render_window, (length - 1 - i) * 10, pick_mode)
 
-    #
-
-    def write_layer_as_xml_element(self, direcotry_path, file_name, f, indent, layer):
-        i0 = " " * indent
-        i2 = i0 + "  "
-        i4 = i2 + "  "
-        f.write(i0 +
-                "<layer name=\"{0}\" type=\"{1}\" is_expanded=\"{2}\" is_visible=\"{3}\" file_path=\"{4}\" depth_unit=\"{5}\" default_depth=\"{6}\">\n".format(
-                    layer.name, layer.type, str(layer.is_expanded), str(layer.is_visible), layer.file_path, layer.depth_unit, str(layer.default_depth)))
-
-        if (not self.layer_is_folder(layer)):
-            (f_name, ext) = os.path.splitext(file_name)
-            c = 0
-            while (True):
-                data_file_name = f_name + "_" + str(c) + ext
-                data_file_path = os.path.join(direcotry_path, data_file_name)
-                if (not os.path.exists(data_file_path)):
-                    break
-                c += 1
-
-            f.write(i2 + "<data_file file_name=\"{0}\" />\n".format(data_file_name))
-
-            f_sub = open(data_file_path, "w")
-            f_sub.write("<?xml version=\"1.0\" ?>\n")
-            f_sub.write("<data>\n")
-
-            if (layer.points != None):
-                t0 = time.clock()
-                xs = list(layer.points.x)
-                ys = list(layer.points.y)
-                zs = list(layer.points.z)
-                cs = list(layer.points.color)
-                ss = list(layer.points.state)
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "retrieved point coordinates in {0} seconds".format(t)
-                t0 = time.clock()
-                f_sub.write("  <points points_visible=\"{0}\" labels_visible=\"{1}\">\n".format(layer.points_visible, layer.labels_visible))
-                for i in xrange(len(xs)):
-                    f_sub.write("    <p x=\"{0}\" y=\"{1}\" z=\"{2}\" c=\"{3}\" s=\"{4}\" />\n".format(
-                        str(xs[i]), str(ys[i]), str(zs[i]), str(cs[i]), str(ss[i])))
-                f_sub.write("  </points>\n")
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "saved points in {0} seconds".format(t)
-
-            if (layer.line_segment_indexes != None):
-                t0 = time.clock()
-                p1s = list(layer.line_segment_indexes.point1)
-                p2s = list(layer.line_segment_indexes.point2)
-                cs = list(layer.line_segment_indexes.color)
-                ss = list(layer.line_segment_indexes.state)
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "retrieved point coordinates in {0} seconds".format(t)
-                t0 = time.clock()
-                f_sub.write("  <line_segment_indexes line_segments_visible=\"{0}\">\n".format(layer.line_segments_visible))
-                for i in xrange(len(p1s)):
-                    f_sub.write("    <l p1=\"{0}\" p2=\"{1}\" c=\"{2}\" s=\"{3}\" />\n".format(
-                        str(p1s[i]), str(p2s[i]), str(cs[i]), str(ss[i])))
-                f_sub.write("  </line_segment_indexes>\n")
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "saved line segment indexes in {0} seconds".format(t)
-
-            if (layer.triangle_points != None):
-                t0 = time.clock()
-                xs = list(layer.triangle_points.x)
-                ys = list(layer.triangle_points.y)
-                zs = list(layer.triangle_points.z)
-                cs = list(layer.triangle_points.color)
-                ss = list(layer.triangle_points.state)
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "retrieved triangle point coordinates in {0} seconds".format(t)
-                t0 = time.clock()
-                f_sub.write("  <triangle_points triangles_visible=\"{0}\">\n".format(layer.triangles_visible))
-                for i in xrange(len(xs)):
-                    f_sub.write("    <p x=\"{0}\" y=\"{1}\" z=\"{2}\" c=\"{3}\" s=\"{4}\" />\n".format(
-                        str(xs[i]), str(ys[i]), str(zs[i]), str(cs[i]), str(ss[i])))
-                f_sub.write("  </triangle_points>\n")
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "saved triangle points in {0} seconds".format(t)
-
-            if (layer.triangles != None):
-                t0 = time.clock()
-                p1s = list(layer.triangles.point1)
-                p2s = list(layer.triangles.point2)
-                p3s = list(layer.triangles.point3)
-                cs = list(layer.triangles.color)
-                ss = list(layer.triangles.state)
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "retrieved triangle indexes in {0} seconds".format(t)
-                t0 = time.clock()
-                f_sub.write("  <triangle_indexes>\n")
-                for i in xrange(len(p1s)):
-                    f_sub.write("    <l p1=\"{0}\" p2=\"{1}\" p3=\"{2}\" c=\"{3}\" s=\"{4}\" />\n".format(
-                        str(p1s[i]), str(p2s[i]), str(p3s[i]), str(cs[i]), str(ss[i])))
-                f_sub.write("  </triangle_indexes>\n")
-                t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-                print "saved triangle indexes in {0} seconds".format(t)
-
-            if (layer.polygons != None):
-                pass
-
-            if (layer.images != None):
-                pass
-
-            f_sub.write("</data>\n")
-            f_sub.close()
-
-        else:
-            for item in self.get_layer_children(layer):
-                self.write_layer_as_xml_element(direcotry_path, file_name, f, indent + 2, item)
-
-        f.write(i0 + "</layer>\n")
-
     def save_layer(self, layer, path):
-        if (path.endswith(".verdat")):
-            temp_dir = tempfile.mkdtemp()
-            temp_file = os.path.join(temp_dir, os.path.basename(path))
+        temp_dir = tempfile.mkdtemp()
+        temp_file = os.path.join(temp_dir, os.path.basename(path))
 
-            f = open(temp_file, "w")
-            had_error = False
-            try:
-                verdat.write_layer_as_verdat(f, layer)
-            except Exception as e:
-                had_error = True
-                print traceback.format_exc(e)
-                if hasattr(e, "points") and e.points != None:
-                    layer.clear_all_selections(Layer.STATE_FLAGGED)
-                    for p in e.points:
-                        layer.select_point(p, Layer.STATE_FLAGGED)
-                    self.project.refresh()
-                wx.MessageDialog(
-                    self.project.control,
-                    message=e.message,
-                    caption="Error Saving Verdat File",
-                    style=wx.OK | wx.ICON_ERROR,
-                ).ShowModal()
-            finally:
-                f.close()
-            if (not had_error and temp_file and os.path.exists(temp_file)):
-                try:
-                    shutil.copy(temp_file, path)
-                except Exception as e:
-                    print traceback.format_exc(e)
-                    wx.MessageDialog(self.project.control,
-                                     message="Unable to save file to disk. Make sure you have write permissions to the file.",
-                                     caption="Error Saving Verdat File",
-                                     style=wx.OK | wx.ICON_ERROR).ShowModal()
-
-        if (path.endswith(".xml")):
-            # xml.etree.ElementTree doesn't format the output, so it's useless for our purposes; we write the xml by hand instead
-            (p, f_name) = os.path.split(path)
-            f = open(path, "w")
-            f.write("<?xml version=\"1.0\" ?>\n")
-            self.write_layer_as_xml_element(p, f_name, f, 0, layer)
+        f = open(temp_file, "w")
+        had_error = False
+        try:
+            verdat.write_layer_as_verdat(f, layer)
+        except Exception as e:
+            had_error = True
+            print traceback.format_exc(e)
+            if hasattr(e, "points") and e.points != None:
+                layer.clear_all_selections(Layer.STATE_FLAGGED)
+                for p in e.points:
+                    layer.select_point(p, Layer.STATE_FLAGGED)
+                self.project.refresh()
+            wx.MessageDialog(
+                self.project.control,
+                message=e.message,
+                caption="Error Saving Verdat File",
+                style=wx.OK | wx.ICON_ERROR,
+            ).ShowModal()
+        finally:
             f.close()
-            print "done saving"
-
-    def load_xml_layer(self, path):
-        tree = ElementTree()
-        tree.parse(path)
-        (directory_path, file_name) = os.path.split(path)
-        self.load_xml_layer_recursive(tree.getroot(), [], directory_path)
-
-    def load_xml_layer_recursive(self, element, multi_index, directory_path):
-        print "load_xml_layer_recursive called " + multi_index.__repr__()
-        layer = Layer.Layer()
-        layer.name = element.get("name")
-        layer.type = element.get("type")
-        layer.is_expanded = element.get("is_expanded") == "True"
-        layer.is_visible = element.get("is_visible") == "True"
-        layer.file_path = element.get("file_path")
-        layer.default_depth = float(element.get("default_depth"))
-        layer.determine_layer_color()
-        for i, child in enumerate(list(element)):
-            if (child.tag == "data_file"):
-                self.load_xml_layer_data(layer, os.path.join(directory_path, child.get("file_name")))
-            elif (child.tag == "layer"):
-                mi = multi_index[:]
-                # remember that multi-indexes are 1-based because the folder "layer" itself is always in position 0
-                mi.append(i + 1)
-                self.load_xml_layer_recursive(child, mi, directory_path)
-        if (layer.type != "root"):
-            print "inserting layer " + layer.name + " at " + multi_index.__repr__()
-            self.insert_layer(multi_index, layer)
-            if (multi_index == []):
-                multi_index = [1]
-
-    def load_xml_layer_data(self, layer, path):
-        print "load_xml_layer_data called for layer " + layer.name + ", path = " + path
-        tree = ElementTree()
-        tree.parse(path)
-        e = tree.getroot()
-        for child in list(e):
-            if (child.tag == "points"):
-                layer.points_visible = child.get("points_visible") == "True"
-                layer.labels_visible = child.get("labels_visible") == "True"
-                layer.points = layer.make_points(len(list(child)))
-                xs = []
-                ys = []
-                zs = []
-                cs = []
-                ss = []
-                for c in list(child):
-                    xs.append(float(c.get("x")))
-                    ys.append(float(c.get("y")))
-                    zs.append(float(c.get("z")))
-                    cs.append(int(c.get("c")))
-                    ss.append(int(c.get("s")))
-                layer.points.x = xs
-                layer.points.y = ys
-                layer.points.z = zs
-                layer.points.color = cs
-                layer.points.state = ss
-
-            elif (child.tag == "line_segment_indexes"):
-                layer.line_segments_visible = child.get("line_segments_visible") == "True"
-                layer.line_segment_indexes = layer.make_line_segment_indexes(len(list(child)))
-                p1s = []
-                p2s = []
-                cs = []
-                ss = []
-                for c in list(child):
-                    p1s.append(int(c.get("p1")))
-                    p2s.append(int(c.get("p2")))
-                    cs.append(int(c.get("c")))
-                    ss.append(int(c.get("s")))
-                layer.line_segment_indexes.point1 = p1s
-                layer.line_segment_indexes.point2 = p2s
-                layer.line_segment_indexes.color = cs
-                layer.line_segment_indexes.state = ss
-
-            if (child.tag == "triangle_points"):
-                layer.triangles_visible = child.get("triangles_visible") == "True"
-                layer.triangle_points = layer.make_points(len(list(child)))
-                xs = []
-                ys = []
-                zs = []
-                cs = []
-                ss = []
-                for c in list(child):
-                    xs.append(float(c.get("x")))
-                    ys.append(float(c.get("y")))
-                    zs.append(float(c.get("z")))
-                    cs.append(int(c.get("c")))
-                    ss.append(int(c.get("s")))
-                layer.triangle_points.x = xs
-                layer.triangle_points.y = ys
-                layer.triangle_points.z = zs
-                layer.triangle_points.color = cs
-                layer.triangle_points.state = ss
-
-            elif (child.tag == "triangle_indexes"):
-                layer.triangles = layer.make_triangles(len(list(child)))
-                p1s = []
-                p2s = []
-                p3s = []
-                cs = []
-                ss = []
-                for c in list(child):
-                    p1s.append(int(c.get("p1")))
-                    p2s.append(int(c.get("p2")))
-                    p3s.append(int(c.get("p3")))
-                    cs.append(int(c.get("c")))
-                    ss.append(int(c.get("s")))
-                layer.triangles.point1 = p1s
-                layer.triangles.point2 = p2s
-                layer.triangles.point3 = p3s
-                layer.triangles.color = cs
-                layer.triangles.state = ss
-
-        layer.bounds = layer.compute_bounding_rect()
-        pub.sendMessage(('layer', 'loaded'), layer=layer)
+        if (not had_error and temp_file and os.path.exists(temp_file)):
+            try:
+                shutil.copy(temp_file, path)
+            except Exception as e:
+                print traceback.format_exc(e)
+                wx.MessageDialog(self.project.control,
+                                 message="Unable to save file to disk. Make sure you have write permissions to the file.",
+                                 caption="Error Saving Verdat File",
+                                 style=wx.OK | wx.ICON_ERROR).ShowModal()
 
     def add_layer(self, name="New Layer"):
         layer = Layer.Layer()
