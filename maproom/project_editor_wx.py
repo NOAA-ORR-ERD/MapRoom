@@ -18,7 +18,6 @@ import Editor as LegacyEditor
 import Layer
 import Layer_manager
 import Layer_tree_control
-import RenderController
 
 @provides(IProjectEditor)
 class ProjectEditor(Editor):
@@ -100,10 +99,16 @@ class ProjectEditor(Editor):
         """ Creates the toolkit-specific control for the widget. """
 
         self.layer_manager = Layer_manager.Layer_manager()
-        self.editor = LegacyEditor.Editor(self.layer_manager)
+        self.editor = LegacyEditor.Editor(self)
 
         # Base-class constructor.
         self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor, layer_editor=self)
+        
+        # Tree/Properties controls referenced from MapController
+        self.layer_tree_control = None
+        self.properties_panel = None
+        
+        # Pubsub stuff from RenderController
         self.setup_pubsub()
         
         app_globals.application = self
@@ -158,3 +163,29 @@ class ProjectEditor(Editor):
 
     def zoom_to_layer(self, layer):
         self.control.zoom_to_world_rect(layer.bounds)
+
+    # Some conversion object reference types
+    #
+    # Application.current_map == MapController
+
+    #### old MapController
+    
+    def refresh(self, rebuild_layer_tree_control=False):
+        """from MapController
+        """
+        print "refresh called"
+#        # fixme: this shouldn't be required!
+#        if (self.is_closing):
+#            return
+        if (rebuild_layer_tree_control and self.layer_tree_control != None):
+            self.layer_tree_control.rebuild()
+        if self.control is not None:
+        #    self.renderer.render()
+            # On Mac this is neither necessary nor desired.
+            if not sys.platform.startswith('darwin'):
+                self.control.Update()
+            self.control.Refresh()
+        if (self.layer_tree_control != None and self.properties_panel != None):
+            layer = self.layer_tree_control.get_selected_layer()
+            # note that the following call only does work if the properties for the layer have changed
+            self.properties_panel.display_panel_for_layer(layer)
