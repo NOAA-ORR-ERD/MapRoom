@@ -4,6 +4,7 @@ from os.path import basename
 
 # Major package imports.
 import wx
+from wx.lib.pubsub import pub
 
 # Enthought library imports.
 from traits.api import Bool, Event, Instance, File, Unicode, Property, provides
@@ -69,7 +70,7 @@ class ProjectEditor(Editor):
                 return False
             index = None
             self.layer_manager.insert_layer(index, layer)
-            self.render_controller.zoom_to_layer(layer)
+            self.zoom_to_layer(layer)
 
         self.dirty = False
 
@@ -103,7 +104,8 @@ class ProjectEditor(Editor):
 
         # Base-class constructor.
         self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor, layer_editor=self)
-        self.render_controller = RenderController.RenderController(self.layer_manager, self.control)
+        self.setup_pubsub()
+        
         app_globals.application = self
         app_globals.layer_manager = self.layer_manager
         app_globals.editor = self.editor
@@ -117,3 +119,42 @@ class ProjectEditor(Editor):
 
     #### wx event handlers ####################################################
 
+    #### old RenderController
+    
+    def setup_pubsub(self):
+        pub.subscribe(self.on_layer_points_lines_changed, ('layer', 'lines', 'changed'))
+        pub.subscribe(self.on_layer_points_lines_changed, ('layer', 'points', 'changed'))
+        pub.subscribe(self.on_layer_points_lines_changed, ('layer', 'points', 'deleted'))
+
+        pub.subscribe(self.on_projection_changed, ('layer', 'projection', 'changed'))
+        pub.subscribe(self.on_layer_loaded, ('layer', 'loaded'))
+        pub.subscribe(self.on_layer_updated, ('layer', 'updated'))
+        pub.subscribe(self.on_layer_triangulated, ('layer', 'triangulated'))
+
+    def on_layer_updated(self, layer):
+        if layer in self.layer_manager.layers:
+            self.control.update_renderers()
+
+    def on_layer_loaded(self, layer):
+        self.zoom_to_layer(layer)
+
+    def on_layer_points_lines_changed(self, layer):
+        if layer in self.layer_manager.layers:
+            self.control.rebuild_points_and_lines_for_layer(layer)
+
+    def on_projection_changed(self, layer, projection):
+        if layer in self.layer_manager.layers:
+            self.control.reproject_all(projection)
+
+    def on_layer_triangulated(self, layer):
+        if layer in self.layer_manager.layers:
+            self.control.rebuild_triangles_for_layer(layer)
+
+    def zoom_to_selected_layer(self):
+        sel_layer = self.layer_manager.get_selected_layer()
+        print "Selected layer = %r" % sel_layer
+        if sel_layer is not None:
+            self.zoom_to_layer(sel_layer)
+
+    def zoom_to_layer(self, layer):
+        self.control.zoom_to_world_rect(layer.bounds)
