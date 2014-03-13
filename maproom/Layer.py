@@ -1102,3 +1102,4 @@ class Layer():
 
     def destroy(self):
         self.lm.delete_undo_operations_for_layer(self)
+        self.lm = None

@@ -224,6 +224,7 @@ class Layer_manager(LayerUndo):
     def destroy(self):
         for layer in self.flatten():
             layer.destroy()
+        self.layers = []
 
     def load_layer_from_uri(self, uri):
         layer = Layer.Layer(self)
