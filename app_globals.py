@@ -5,9 +5,6 @@ import os
 main_logger = None
 opengl_logger = None
 version = None
-application = None
-layer_manager = None
-editor = None
 
 import sys
 frozen = getattr(sys, 'frozen', False)

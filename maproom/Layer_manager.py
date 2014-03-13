@@ -13,7 +13,169 @@ from library.accumulator import flatten
 from wx.lib.pubsub import pub
 
 
-class Layer_manager():
+class LayerUndo(object):
+    def __init__(self):
+        # the undo stack is a list of objects, where each object is of the form:
+        # { "n" : <int operation number>, "op" : <int operation enum>, "l" : <layer>, "i" : <point or line index in layer>, "p" : ( params depending on op enum ) }
+        self.undo_stack = []
+        self.undo_stack_next_index = 0
+        self.undo_stack_next_operation_number = 0
+    
+    def refresh(self, **kwargs):
+        pass
+
+    def add_undo_operation_to_operation_batch(self, op, layer, index, params):
+        self.clear_undo_stack_forward()
+        self.undo_stack.append({"n": self.undo_stack_next_operation_number, "op": op, "l": layer, "i": index, "p": params})
+        self.undo_stack_next_index = len(self.undo_stack)
+
+    def end_operation_batch(self):
+        self.show_undo_redo_debug_dump("end_operation_batch()")
+        self.undo_stack_next_operation_number += 1
+        self.refresh()
+
+    def delete_undo_operations_for_layer(self, layer):
+        self.clear_undo_stack_forward()
+        new_stack = []
+        for o in self.undo_stack:
+            if (o["l"] != layer):
+                new_stack.append(o)
+        self.undo_stack = new_stack
+        self.undo_stack_next_index = len(self.undo_stack)
+
+    def clear_undo_stack_forward(self):
+        if (len(self.undo_stack) > self.undo_stack_next_index):
+            self.undo_stack = self.undo_stack[0: self.undo_stack_next_index]
+
+    def get_current_undoable_operation_text(self):
+        if (self.undo_stack_next_index == 0):
+            return ""
+
+        op = self.undo_stack[self.undo_stack_next_index - 1]["op"]
+
+        return self.get_undo_redo_operation_text(op)
+
+    def get_current_redoable_operation_text(self):
+        if (self.undo_stack_next_index >= len(self.undo_stack)):
+            return ""
+
+        op = self.undo_stack[self.undo_stack_next_index]["op"]
+
+        return self.get_undo_redo_operation_text(op)
+
+    def get_undo_redo_operation_text(self, op):
+        if (op == OP_ADD_POINT or op == OP_ADD_LINE):
+            return "Add"
+        elif (op == OP_DELETE_POINT or op == OP_DELETE_LINE):
+            return "Delete"
+        elif (op == OP_MOVE_POINT):
+            return "Move"
+        elif (op == OP_CHANGE_POINT_DEPTH):
+            return "Depth Change"
+
+        return ""
+
+    def undo(self):
+        if (self.undo_stack_next_index == 0):
+            return
+        operation_number = self.undo_stack[self.undo_stack_next_index - 1]["n"]
+        # here we assume that all operations in the batch are actually from the same layer
+        # we also assume that as point and line deletions are undone, the objects come back already in selected state,
+        # which is true because they had to be in selected state at the time they were deleted
+        layer = self.undo_stack[self.undo_stack_next_index - 1]["l"]
+        layer.clear_all_selections()
+        # walk backward until we get to a different operation number or hit the start of the stack
+        affected_layers = set()
+        while (True):
+            if (self.undo_stack_next_index == 0 or self.undo_stack[self.undo_stack_next_index - 1]["n"] != operation_number):
+                break
+            self.undo_operation(self.undo_stack[self.undo_stack_next_index - 1], affected_layers)
+            self.undo_stack_next_index -= 1
+        for layer in affected_layers:
+            pub.sendMessage(('layer', 'points', 'changed'), layer=layer)
+        self.show_undo_redo_debug_dump("undo() done")
+        self.refresh()
+
+    def undo_operation(self, o, affected_layers):
+        operation_number = o["n"]
+        op = o["op"]
+        layer = o["l"]
+        index = o["i"]
+        params = o["p"]
+
+        affected_layers.add(layer)
+
+        if (op == OP_ADD_POINT):
+            layer.delete_point(index, False)
+        elif (op == OP_ADD_LINE):
+            layer.delete_line_segment(index, False)
+        elif (op == OP_DELETE_POINT):
+            ((x, y), z, color, state) = params
+            layer.insert_point_at_index(index, (x, y), z, color, state, False)
+        elif (op == OP_DELETE_LINE):
+            (point_index_1, point_index_2, color, state) = params
+            layer.insert_line_segment_at_index(index, point_index_1, point_index_2, color, state, False)
+        elif (op == OP_MOVE_POINT):
+            (world_d_x, world_d_y) = params
+            layer.offset_point(index, world_d_x, world_d_y, False)
+        elif (op == OP_CHANGE_POINT_DEPTH):
+            (old_depth, new_depth) = params
+            layer.points.z[index] = old_depth
+
+    def redo(self):
+        if (self.undo_stack_next_index >= len(self.undo_stack)):
+            return
+        operation_number = self.undo_stack[self.undo_stack_next_index]["n"]
+        # walk forward until we get to a different operation number or hit the end of the stack
+        affected_layers = set()
+        while (True):
+            if (self.undo_stack_next_index == len(self.undo_stack) or self.undo_stack[self.undo_stack_next_index]["n"] != operation_number):
+                break
+            self.redo_operation(self.undo_stack[self.undo_stack_next_index], affected_layers)
+            self.undo_stack_next_index += 1
+        for layer in affected_layers:
+            pub.sendMessage(('layer', 'points', 'changed'), layer=layer)
+        self.show_undo_redo_debug_dump("redo() done")
+        self.refresh()
+
+    def redo_operation(self, o, affected_layers):
+        operation_number = o["n"]
+        op = o["op"]
+        layer = o["l"]
+        index = o["i"]
+        params = o["p"]
+
+        affected_layers.add(layer)
+
+        if (op == OP_ADD_POINT):
+            ((x, y), z, color, state) = params
+            layer.insert_point_at_index(index, (x, y), z, color, state, False)
+        elif (op == OP_ADD_LINE):
+            (point_index_1, point_index_2, color, state) = params
+            layer.insert_line_segment_at_index(index, point_index_1, point_index_2, color, state, False)
+        elif (op == OP_DELETE_POINT):
+            layer.delete_point(index, False)
+        elif (op == OP_DELETE_LINE):
+            layer.delete_line_segment(index, False)
+        elif (op == OP_MOVE_POINT):
+            (world_d_x, world_d_y) = params
+            layer.offset_point(index, -world_d_x, -world_d_y, False)
+        elif (op == OP_CHANGE_POINT_DEPTH):
+            (old_depth, new_depth) = params
+            layer.points.z[index] = new_depth
+
+    def show_undo_redo_debug_dump(self, location_message):
+        print location_message
+        print "the undo_stack is now: "
+        if (len(self.undo_stack) <= 100):
+            for item in self.undo_stack:
+                print "    " + str(item)
+        else:
+            print "    longer than 100 items"
+        print "undo_stack_next_index is now: " + str(self.undo_stack_next_index)
+
+
+class Layer_manager(LayerUndo):
 
     """
     Manages the layers (a tree of Layer).
@@ -28,9 +190,10 @@ class Layer_manager():
     """
 
     def __init__(self, project):
+        LayerUndo.__init__(self)
         self.project = project
         self.layers = []
-        layer = Layer.Layer()
+        layer = Layer.Layer(self)
         layer.name = "Layers"
         layer.type = "root"
         self.insert_layer([0], layer)
@@ -40,6 +203,9 @@ class Layer_manager():
         #self.add_folder( name = "folder_c" )
 
         pub.subscribe(self.on_layer_selection_changed, ('layer', 'selection', 'changed'))
+    
+    def refresh(self, **kwargs):
+        self.project.refresh(**kwargs)
 
     def flatten(self):
         return self.flatten_recursive(self.layers)
@@ -58,6 +224,16 @@ class Layer_manager():
     def destroy(self):
         for layer in self.flatten():
             layer.destroy()
+
+    def load_layer_from_uri(self, uri):
+        layer = Layer.Layer(self)
+        layer.read_from_file(uri)
+        if layer.load_error_string != "":
+            print "LAYER LOAD ERROR: %s" % layer.load_error_string
+            return None
+        index = None
+        self.insert_layer(index, layer)
+        return layer
 
     def insert_layer(self, at_multi_index, layer):
         if (at_multi_index == None or at_multi_index == []):
@@ -80,7 +256,7 @@ class Layer_manager():
 
     def remove_layer(self, at_multi_index):
         self.remove_layer_recursive(at_multi_index, self.layers)
-        self.project.refresh(rebuild_tree=True)
+        self.refresh(rebuild_tree=True)
 
     def remove_layer_recursive(self, at_multi_index, tree):
         index = at_multi_index[0]
@@ -228,7 +404,7 @@ class Layer_manager():
                 layer.clear_all_selections(Layer.STATE_FLAGGED)
                 for p in e.points:
                     layer.select_point(p, Layer.STATE_FLAGGED)
-                self.project.refresh()
+                self.refresh()
             wx.MessageDialog(
                 self.project.control,
                 message=e.message,
@@ -298,7 +474,7 @@ class Layer_manager():
                 l = l[index]
             del l[mi[-1]]
 
-        self.project.refresh(rebuild_tree=True)
+        self.refresh(rebuild_tree=True)
 
     def merge_layers(self, layer_a, layer_b):
         layer = Layer.Layer()

@@ -13,7 +13,6 @@ from pyface.tasks.api import Editor
 # Local imports.
 from i_project_editor import IProjectEditor
 from layer_control_wx import LayerControl
-import app_globals
 import Editor as LegacyEditor
 import Layer
 import Layer_manager
@@ -62,14 +61,9 @@ class ProjectEditor(Editor):
             path = self.path
         else:
             metadata = guess.get_metadata()
-            layer = Layer.Layer()
-            layer.read_from_file(metadata.uri)
-            if layer.load_error_string != "":
-                print "LAYER LOAD ERROR: %s" % layer.load_error_string
-                return False
-            index = None
-            self.layer_manager.insert_layer(index, layer)
-            self.zoom_to_layer(layer)
+            layer = self.layer_manager.load_layer_from_uri(metadata.uri)
+            if layer:
+                self.zoom_to_layer(layer)
 
         self.dirty = False
 
@@ -111,10 +105,6 @@ class ProjectEditor(Editor):
         # Pubsub stuff from RenderController
         self.setup_pubsub()
         
-        app_globals.application = self
-        app_globals.layer_manager = self.layer_manager
-        app_globals.editor = self.editor
-
         # Load the editor's contents.
         self.load()
         

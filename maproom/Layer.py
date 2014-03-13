@@ -15,7 +15,6 @@ from library.Boundary import find_boundaries, generate_inside_hole_point, genera
 from pytriangle import triangulate_simple
 from Editor import *
 from wx.lib.pubsub import pub
-import app_globals
 
 """
     point: x, y, z (depth), color, state
@@ -119,7 +118,8 @@ class Layer():
     
     new_layer_index = 0
 
-    def __init__(self):
+    def __init__(self, manager):
+        self.lm = manager
         self.name = ""
         self.type = ""  # either "folder" (folder don't use any of the data below is_expanded) or the file suffix
         self.is_expanded = True
@@ -196,24 +196,6 @@ class Layer():
             return ".verdat"
 
         return ""
-
-    def check_for_errors(self):
-        if self.type in ["", ".verdat"]:
-            try:
-                verdat.check_valid_verdat(self)
-                wx.MessageBox("This file is a valid verdat file.", "No Errors Found")
-            except Exception, e:
-                if hasattr(e, "points") and e.points != None:
-                    self.clear_all_selections(STATE_FLAGGED)
-                    for p in e.points:
-                        self.select_point(p, STATE_FLAGGED)
-                    app_globals.application.refresh()
-                wx.MessageDialog(
-                    app_globals.application.frame,
-                    message=e.message,
-                    caption="Verdat File Contains Errors",
-                    style=wx.OK | wx.ICON_ERROR,
-                ).ShowModal()
 
     def read_from_file(self, file_path):
         self.file_path = file_path
@@ -332,12 +314,12 @@ class Layer():
                 # a latlong image loaded, and this image is mercator, change to mercator
 
                 # TODO: handle other projections besides +proj=merc and +proj=longlat
-                raster_layers = app_globals.layer_manager.count_raster_layers()
-                vector_layers = app_globals.layer_manager.count_vector_layers()
+                raster_layers = self.lm.count_raster_layers()
+                vector_layers = self.lm.count_vector_layers()
                 if raster_layers == 0 and vector_layers == 0:
                     pub.sendMessage(('layer', 'proejction', 'changed'), layer=self, projection=projection.srs)
-                currently_merc = app_globals.application.renderer.projection.srs.find("+proj=merc") != -1
-                currently_longlat = app_globals.application.renderer.projection.srs.find("+proj=longlat") != -1
+                currently_merc = self.lm.project.control.projection.srs.find("+proj=merc") != -1
+                currently_longlat = self.lm.project.control.projection.srs.find("+proj=longlat") != -1
                 incoming_merc = projection.srs.find("+proj=merc") != -1
                 incoming_longlat = projection.srs.find("+proj=longlat") != -1
 
@@ -691,7 +673,7 @@ class Layer():
         # we don't set the undo information here because this function is called repeatedly as the mouse moves
         if ( add_undo_info ):
             params = ( world_d_x, world_d_y )
-            app_globals.editor.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
+            self.lm.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
         """
 
     """
@@ -702,8 +684,8 @@ class Layer():
                 self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
                 None )
         self.point_and_line_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                                    app_globals.application.renderer.projection,
-                                                    app_globals.application.renderer.projection_is_identity )
+                                                    self.lm.project.control.projection,
+                                                    self.lm.project.control.projection_is_identity )
     """
 
     def offset_selected_polygons(self, world_d_x, world_d_y):
@@ -735,7 +717,7 @@ class Layer():
                 l.reverse()
                 for i in l:
                     params = (self.line_segment_indexes.point1[i], self.line_segment_indexes.point2[i], self.line_segment_indexes.color[i], self.line_segment_indexes.state[i])
-                    app_globals.editor.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, i, params)
+                    self.lm.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, i, params)
 
             # adjust the point indexes of the remaining line segments
             offsets = np.zeros(np.alen(self.line_segment_indexes))
@@ -753,7 +735,7 @@ class Layer():
             l.reverse()
             for i in l:
                 params = ((self.points.x[i], self.points.y[i]), self.points.z[i], self.points.color[i], self.points.state[i])
-                app_globals.editor.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, i, params)
+                self.lm.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, i, params)
 
         # delete them from the layer
         self.points = np.delete(self.points, point_indexes, 0)
@@ -768,8 +750,8 @@ class Layer():
         if ( self.label_set_renderer != None ):
             self.label_set_renderer.delete_points( point_indexes )
             self.label_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                               app_globals.application.renderer.projection,
-                                               app_globals.application.renderer.projection_is_identity )
+                                               self.lm.project.control.projection,
+                                               self.lm.project.control.projection_is_identity )
         """
 
         # when points are deleted from a layer the indexes of the points in the existing merge dialog box
@@ -793,8 +775,8 @@ class Layer():
             self.points[0] = p
             point_index = 0
             pub.sendMessage(('layer', 'updated'), layer=self)
-            app_globals.application.refresh()
-            app_globals.application.layer_tree_control.select_layer(self)
+            self.lm.refresh()
+            self.lm.project.layer_tree_control.select_layer(self)
         else:
             self.points = np.insert(self.points, point_index, p).view(np.recarray)
         t = time.clock() - t0  # t is wall seconds elapsed (floating point)
@@ -811,7 +793,7 @@ class Layer():
 
         if (add_undo_info):
             params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            app_globals.editor.add_undo_operation_to_operation_batch(OP_ADD_POINT, self, point_index, params)
+            self.lm.add_undo_operation_to_operation_batch(OP_ADD_POINT, self, point_index, params)
 
         # insert it into the point_and_line_set_renderer (by simply rebuilding it)
         # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
@@ -826,8 +808,8 @@ class Layer():
             self.label_set_renderer.insert_point( len( self.points ) - 1,
                                                   str( self.default_depth ),
                                                   world_point,
-                                                  app_globals.application.renderer.projection,
-                                                  app_globals.application.renderer.projection_is_identity )
+                                                  self.lm.project.control.projection,
+                                                  self.lm.project.control.projection_is_identity )
         t = time.clock() - t0 # t is wall seconds elapsed (floating point)
         print "inserted into label set renderer in {0} seconds".format( t )
         """
@@ -870,7 +852,7 @@ class Layer():
 
         if (add_undo_info):
             params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            app_globals.editor.add_undo_operation_to_operation_batch(OP_ADD_LINE, self, l_s_i, params)
+            self.lm.add_undo_operation_to_operation_batch(OP_ADD_LINE, self, l_s_i, params)
 
         # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
         # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
@@ -885,7 +867,7 @@ class Layer():
 
         if (add_undo_info):
             params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            app_globals.editor.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, point_index, params)
+            self.lm.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, point_index, params)
         self.points = np.delete(self.points, point_index, 0)
 
         # update point indexes in the line segements to account for the deleted point
@@ -902,7 +884,7 @@ class Layer():
     def delete_line_segment(self, l_s_i, add_undo_info):
         if (add_undo_info):
             params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            app_globals.editor.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
+            self.lm.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
 
     def triangulate(self, q, a):
@@ -937,12 +919,12 @@ class Layer():
 
         # we need to use projected points for the triangulation
         projected_points = self.points.view(self.POINT_XY_VIEW_DTYPE).xy[: len(self.points)].view(np.float32).copy()
-        if (app_globals.application.renderer.projection_is_identity):
+        if (self.lm.project.control.projection_is_identity):
             projected_points[:, 0] = self.points[:, 0]
             projected_points[:, 1] = self.points[:, 1]
         else:
-            projected_points[:, 0], projected_points[:, 1] = app_globals.application.renderer.projection(self.points.x, self.points.y)
-            hole_points_xy[:, 0], hole_points_xy[:, 1] = app_globals.application.renderer.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
+            projected_points[:, 0], projected_points[:, 1] = self.lm.project.control.projection(self.points.x, self.points.y)
+            hole_points_xy[:, 0], hole_points_xy[:, 1] = self.lm.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
         print "params: " + params
         print "hole points:"
         print hole_points_xy
@@ -964,9 +946,9 @@ class Layer():
         self.triangle_points.color = self.color
 
         # now un-project the points
-        if (not app_globals.application.renderer.projection_is_identity):
+        if (not self.lm.project.control.projection_is_identity):
             # import code; code.interact( local = locals() )
-            self.triangle_points.x, self.triangle_points.y = app_globals.application.renderer.projection(self.triangle_points.x, self.triangle_points.y, inverse=True)
+            self.triangle_points.x, self.triangle_points.y = self.lm.project.control.projection(self.triangle_points.x, self.triangle_points.y, inverse=True)
 
         self.triangles = self.make_triangles(len(triangles))
         self.triangles.view(self.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = triangles
@@ -1017,7 +999,7 @@ class Layer():
 
         # If necessary, convert points to lat-long before find duplicates.
         # This makes the distance tolerance work properly.
-        projection = app_globals.application.renderer.projection
+        projection = self.lm.project.control.projection
         if projection.srs != latlong_proj.srs:
             points = points.view(
                 [("x", np.float32), ("y", np.float32)]
@@ -1111,7 +1093,7 @@ class Layer():
         if (len(points_to_delete) > 0):
             self.delete_points_and_lines(list(points_to_delete), None, True)
 
-        app_globals.application.refresh()
+        self.lm.refresh()
 
     def increment_change_count(self):
         self.change_count += 1
@@ -1119,4 +1101,4 @@ class Layer():
             self.change_count = 0
 
     def destroy(self):
-        app_globals.editor.delete_undo_operations_for_layer(self)
+        self.lm.delete_undo_operations_for_layer(self)
