@@ -104,6 +104,10 @@ class LayerControl(glcanvas.GLCanvas):
         # Prevent flashing on Windows by doing nothing on an erase background event.
         self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
         #self.is_initialized = True
+    
+    def change_view(self, layer_manager, editor):
+        self.layer_manager = layer_manager
+        self.editor = editor
 
     def update_renderers(self):
         for layer in self.layer_manager.layers:

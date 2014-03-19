@@ -7,8 +7,9 @@ import wx
 from wx.lib.pubsub import pub
 
 # Enthought library imports.
-from traits.api import Bool, Event, Instance, File, Unicode, Property, provides
-from pyface.tasks.api import Editor
+from traits.api import provides
+
+from peppy2.framework.editor import FrameworkEditor
 
 # Local imports.
 from i_project_editor import IProjectEditor
@@ -19,36 +20,14 @@ import Layer_manager
 import Layer_tree_control
 
 @provides(IProjectEditor)
-class ProjectEditor(Editor):
+class ProjectEditor(FrameworkEditor):
     """The wx implementation of a ProjectEditor.
     
     See the IProjectEditor interface for the API documentation.
     """
 
-    #### 'IProjectEditor' interface ############################################
-
-    obj = Instance(File)
-
-    path = Unicode
-
-    dirty = Bool(False)
-
-    name = Property(Unicode, depends_on='path')
-
-    tooltip = Property(Unicode, depends_on='path')
-
-    #### Events ####
-
-    changed = Event
-
-    def _get_tooltip(self):
-        return self.path
-
-    def _get_name(self):
-        return basename(self.path) or 'Untitled'
-
     ###########################################################################
-    # 'BitmapEditor' interface.
+    # 'FrameworkEditor' interface.
     ###########################################################################
 
     def create(self, parent):
@@ -66,6 +45,13 @@ class ProjectEditor(Editor):
                 self.zoom_to_layer(layer)
 
         self.dirty = False
+
+    def view_of(self, editor):
+        """ Copy the view of the supplied editor.
+        """
+        self.control.change_view(editor.layer_manager, editor.editor)
+        self.control.zoom_to_fit()
+        self.dirty = editor.dirty
 
     def save(self, path=None):
         """ Saves the contents of the editor.
@@ -104,9 +90,6 @@ class ProjectEditor(Editor):
         
         # Pubsub stuff from RenderController
         self.setup_pubsub()
-        
-        # Load the editor's contents.
-        self.load()
         
         print "LayerEditor: task=%s" % self.editor_area.task
 
