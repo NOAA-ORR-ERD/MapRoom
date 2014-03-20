@@ -86,7 +86,7 @@ class ProjectEditor(FrameworkEditor):
         self.editor = LegacyEditor.Editor(self)
 
         # Base-class constructor.
-        self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor, layer_editor=self)
+        self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor, project=self)
         
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = None

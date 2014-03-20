@@ -197,12 +197,6 @@ class Layer_manager(LayerUndo):
         layer.name = "Layers"
         layer.type = "root"
         self.insert_layer([0], layer)
-        self.current_layer = None
-        #self.add_folder( name = "folder_a" )
-        #self.add_folder( name = "folder_b" )
-        #self.add_folder( name = "folder_c" )
-
-        pub.subscribe(self.on_layer_selection_changed, ('layer', 'selection', 'changed'))
     
     def refresh(self, **kwargs):
         self.project.refresh(**kwargs)
@@ -340,17 +334,6 @@ class Layer_manager(LayerUndo):
             return flattened[index]
 
         return None
-
-    def on_layer_selection_changed(self, manager, layer):
-        if manager == self:
-            print "Setting current layer to %r" % layer
-            self.current_layer = layer
-
-    def get_selected_layer(self):
-        return self.current_layer
-
-    def is_layer_selected(self, layer):
-        return self.project.layer_tree_control.get_selected_layer() == layer
 
     def count_raster_layers(self):
         n = 0

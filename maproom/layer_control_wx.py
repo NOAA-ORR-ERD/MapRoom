@@ -53,7 +53,7 @@ class LayerControl(glcanvas.GLCanvas):
     #is_closing = False
 
     def __init__(self, *args, **kwargs):
-        self.layer_editor = kwargs.pop('layer_editor')
+        self.project = kwargs.pop('project')
         self.layer_manager = kwargs.pop('layer_manager')
         self.editor = kwargs.pop('editor')
         self.layer_renderers = {}
@@ -134,7 +134,7 @@ class LayerControl(glcanvas.GLCanvas):
         if (e.clickable_object_mouse_is_over != None):  # the mouse is on a clickable object
             (layer_index, type, subtype, object_index) = e.parse_clickable_object(e.clickable_object_mouse_is_over)
             layer = lm.get_layer_by_flattened_index(layer_index)
-            if (lm.is_layer_selected(layer)):
+            if (self.project.layer_tree_control.is_selected_layer(layer)):
                 if (e.clickable_object_is_ugrid_point()):
                     e.clicked_on_point(event, layer, object_index)
                 if (e.clickable_object_is_ugrid_line()):
@@ -143,7 +143,7 @@ class LayerControl(glcanvas.GLCanvas):
         else:  # the mouse is not on a clickable object
             # fixme: there should be a reference to the layer manager in the RenderWindow
             # and we could get the selected layer from there -- or is selected purely a UI concept?
-            layer = app_globals.application.layer_tree_control.get_selected_layer()
+            layer = self.project.layer_tree_control.get_selected_layer()
             if (layer != None):
                 if (event.ControlDown() or event.ShiftDown()):
                     self.selection_box_is_being_defined = True
@@ -175,7 +175,7 @@ class LayerControl(glcanvas.GLCanvas):
             if (o != None):
                 (layer_index, type, subtype, object_index) = self.editor.parse_clickable_object(o)
                 layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
-                if (self.layer_manager.is_layer_selected(layer)):
+                if (self.project.layer_tree_control.is_selected_layer(layer)):
                     self.editor.clickable_object_mouse_is_over = o
                 if self.editor.is_ugrid_point(o):
                     status_text += "  Point %s on %s" % (object_index + 1, str(layer))
@@ -430,7 +430,7 @@ class LayerControl(glcanvas.GLCanvas):
             list = self.layer_manager.flatten()
             length = len(list)
             for i, layer in enumerate(reversed(list)):
-                self.layer_renderers[layer].render(self, self.layer_editor.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
+                self.layer_renderers[layer].render(self, self.project.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
 
         render_layers()
 
@@ -475,7 +475,7 @@ class LayerControl(glcanvas.GLCanvas):
 
         def update_status(message):
             print message
-            self.layer_editor.editor_area.task.status_bar.message = message
+            self.project.editor_area.task.status_bar.message = message
         wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
 
         if (event != None):
@@ -590,7 +590,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.zoom(ratio=-2.0)
 
     def zoom_to_fit(self):
-        w_r = self.layer_manager.accumulate_layer_rects(self.layer_editor.layer_visibility)
+        w_r = self.layer_manager.accumulate_layer_rects(self.project.layer_visibility)
         if (w_r != rect.NONE_RECT):
             self.zoom_to_world_rect(w_r)
 

@@ -54,6 +54,13 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
         return layer
 
+    def is_selected_layer(self, layer):
+        item = self.GetSelection()
+        if (item == None):
+            return False
+        (category, selected) = self.GetItemPyData(item).Data
+        return layer == selected
+
     def select_layer(self, layer):
         self.project.editor.esc_key_pressed()
 
