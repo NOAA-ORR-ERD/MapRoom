@@ -49,7 +49,8 @@ class ProjectEditor(FrameworkEditor):
     def view_of(self, editor):
         """ Copy the view of the supplied editor.
         """
-        self.control.change_view(editor.layer_manager, editor.editor)
+        self.layer_manager = editor.layer_manager
+        self.control.change_view(self.layer_manager, editor.editor)
         self.control.zoom_to_fit()
         self.dirty = editor.dirty
 
