@@ -126,8 +126,9 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         else:
             data.SetData(("layer", layer))
 
+        vis = self.project.layer_visibility[layer]
         item = self.AppendItem(parent, layer.name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-        self.CheckItem2(item, layer.is_visible)
+        self.CheckItem2(item, vis["layer"])
 
         # add sub-items depending on what the layer has
 
@@ -138,37 +139,37 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
             data = wx.TreeItemData()
             data.SetData(("images", layer))
             subitem = self.AppendItem(item, "images", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, layer.images_visible)
+            self.CheckItem2(subitem, vis["images"])
 
         if (layer.polygons != None):
             data = wx.TreeItemData()
             data.SetData(("polygons", layer))
             subitem = self.AppendItem(item, "polygons", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, layer.polygons_visible)
+            self.CheckItem2(subitem, vis["polygons"])
 
         if (layer.points != None):
             data = wx.TreeItemData()
             data.SetData(("points", layer))
             subitem = self.AppendItem(item, "points", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, layer.points_visible)
+            self.CheckItem2(subitem, vis["points"])
 
         if (layer.line_segment_indexes != None):
             data = wx.TreeItemData()
             data.SetData(("lines", layer))
             subitem = self.AppendItem(item, "line segments", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, layer.line_segments_visible)
+            self.CheckItem2(subitem, vis["lines"])
 
         if (layer.triangles != None):
             data = wx.TreeItemData()
             data.SetData(("triangles", layer))
             subitem = self.AppendItem(item, "triangles", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, layer.triangles_visible)
+            self.CheckItem2(subitem, vis["triangles"])
 
         if (layer.points != None):
             data = wx.TreeItemData()
             data.SetData(("labels", layer))
             subitem = self.AppendItem(item, "labels", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, layer.labels_visible)
+            self.CheckItem2(subitem, vis["labels"])
 
         if (layer.is_expanded):
             self.Expand(item)
@@ -194,20 +195,8 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         (category, layer) = self.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
         checked = self.IsItemChecked(item)
-        if (category == "layer"):
-            layer.is_visible = checked
-        elif (category == "images"):
-            layer.images_visible = checked
-        elif (category == "polygons"):
-            layer.polygons_visible = checked
-        elif (category == "points"):
-            layer.points_visible = checked
-        elif (category == "lines"):
-            layer.line_segments_visible = checked
-        elif (category == "triangles"):
-            layer.triangles_visible = checked
-        elif (category == "labels"):
-            layer.labels_visible = checked
+        vis = self.project.layer_visibility[layer]
+        vis[category] = checked
         self.project.refresh()
         event.Skip()
 

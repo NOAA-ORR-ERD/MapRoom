@@ -430,7 +430,7 @@ class LayerControl(glcanvas.GLCanvas):
             list = self.layer_manager.flatten()
             length = len(list)
             for i, layer in enumerate(reversed(list)):
-                self.layer_renderers[layer].render(self, (length - 1 - i) * 10, pick_mode)
+                self.layer_renderers[layer].render(self, self.layer_editor.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
 
         render_layers()
 
@@ -590,7 +590,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.zoom(ratio=-2.0)
 
     def zoom_to_fit(self):
-        w_r = self.layer_manager.accumulate_layer_rects()
+        w_r = self.layer_manager.accumulate_layer_rects(self.layer_editor.layer_visibility)
         if (w_r != rect.NONE_RECT):
             self.zoom_to_world_rect(w_r)
 

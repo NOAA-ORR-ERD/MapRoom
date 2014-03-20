@@ -123,7 +123,6 @@ class Layer():
         self.name = ""
         self.type = ""  # either "folder" (folder don't use any of the data below is_expanded) or the file suffix
         self.is_expanded = True
-        self.is_visible = True
 
         self.file_path = ""
         self.depth_unit = "unknown"
@@ -144,20 +143,14 @@ class Layer():
         self.change_count = 0
 
         self.points = None
-        self.points_visible = True
         self.line_segment_indexes = None
-        self.line_segments_visible = True
-        self.labels_visible = True
         self.triangle_points = None
         self.triangles = None
-        self.triangles_visible = True
         self.polygons = None
-        self.polygons_visible = True
         self.polygon_adjacency_array = None  # parallels the points array
         self.images = None
         self.image_sizes = None
         self.image_world_rects = None
-        self.images_visible = True
 
         self.is_dirty = False
 
@@ -186,6 +179,21 @@ class Layer():
         no_images = (self.images is None or len(self.images) == 0)
 
         return no_points and no_triangles and no_polygons and no_images
+
+    def get_visibility_dict(self):
+        d = dict()
+        d["layer"] = True
+        d["images"] = True
+        d["polygons"] = True
+        d["points"] = True
+        d["lines"] = True
+        d["triangles"] = True
+        d["labels"] = True
+        if self.type == "bna":
+            # FIXME: this was the default visibility from maproom 2; is this correct?
+            d["labels"] = False
+            d["points"] = False
+        return d
 
     def guess_type_from_file_contents(self, file_path):
         f = open(file_path, "r")
@@ -220,11 +228,9 @@ class Layer():
             if (self.load_error_string == ""):
                 self.determine_layer_color()
                 self.type = ext
-                self.labels_visible = False
                 n_points = np.alen(f_polygon_points)
                 n_polygons = np.alen(f_polygon_starts)
                 if (n_points > 0):
-                    self.points_visible = False
                     self.points = self.make_points(n_points)
                     self.points.view(self.POINT_XY_VIEW_DTYPE).xy[
                         0: n_points

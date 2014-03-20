@@ -152,8 +152,8 @@ class LayerRendererOpenGL():
         if (self.image_set_renderer != None):
             self.image_set_renderer.reproject(projection, projection_is_identity)
 
-    def render(self, render_window, layer_index_base, pick_mode=False):
-        if (not self.layer.is_visible):
+    def render(self, render_window, layer_visibility, layer_index_base, pick_mode=False):
+        if (not layer_visibility["layer"]):
             return
 
         s_r = render_window.get_screen_rect()
@@ -161,11 +161,11 @@ class LayerRendererOpenGL():
         w_r = render_window.get_world_rect_from_projected_rect(p_r)
 
         # the images
-        if (self.image_set_renderer != None and self.layer.images_visible):
+        if (self.image_set_renderer != None and layer_visibility["images"]):
             self.image_set_renderer.render(-1, pick_mode)
 
         # the polygons
-        if (self.polygon_set_renderer != None and self.layer.polygons_visible):
+        if (self.polygon_set_renderer != None and layer_visibility["polygons"]):
             self.polygon_set_renderer.render(layer_index_base + POLYGONS_SUB_LAYER_PICKER_OFFSET,
                                              pick_mode,
                                              self.layer.polygons.color,
@@ -173,7 +173,7 @@ class LayerRendererOpenGL():
                                              1)  # , self.get_selected_polygon_indexes()
 
         # the triangle points and triangle line segments
-        if (self.triangle_set_renderer != None and self.layer.triangles_visible):
+        if (self.triangle_set_renderer != None and layer_visibility["triangles"]):
             self.triangle_set_renderer .render(pick_mode,
                                                self.layer.point_size + 10,
                                                self.layer.triangle_line_width)
@@ -184,15 +184,15 @@ class LayerRendererOpenGL():
                                                     pick_mode,
                                                     self.layer.point_size,
                                                     self.layer.line_width,
-                                                    self.layer.points_visible,
-                                                    self.layer.line_segments_visible,
+                                                    layer_visibility["points"],
+                                                    layer_visibility["lines"],
                                                     self.layer.get_selected_point_indexes(),
                                                     self.layer.get_selected_point_indexes(STATE_FLAGGED),
                                                     self.layer.get_selected_line_segment_indexes(),
                                                     self.layer.get_selected_line_segment_indexes(STATE_FLAGGED))
 
             # the labels
-            if (self.label_set_renderer != None and self.layer.labels_visible and self.point_and_line_set_renderer.vbo_point_xys != None):
+            if (self.label_set_renderer != None and layer_visibility["labels"] and self.point_and_line_set_renderer.vbo_point_xys != None):
                 self.label_set_renderer.render(-1, pick_mode, s_r,
                                                MAX_LABEL_CHARATERS, self.layer.points.z,
                                                self.point_and_line_set_renderer.vbo_point_xys.data,
@@ -200,10 +200,10 @@ class LayerRendererOpenGL():
 
         # render selections after everything else
         if (self.point_and_line_set_renderer != None and not pick_mode):
-            if self.layer.line_segments_visible:
+            if layer_visibility["lines"]:
                 self.point_and_line_set_renderer.render_selected_line_segments(self.layer.line_width, self.layer.get_selected_line_segment_indexes())
 
-            if self.layer.points_visible:
+            if layer_visibility["points"]:
                 self.point_and_line_set_renderer.render_selected_points(self.layer.point_size,
                                                                         self.layer.get_selected_point_indexes())
 

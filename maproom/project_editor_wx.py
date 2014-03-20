@@ -41,6 +41,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             metadata = guess.get_metadata()
             layer = self.layer_manager.load_layer_from_uri(metadata.uri)
+            self.layer_visibility[layer] = layer.get_visibility_dict()
             if layer:
                 self.zoom_to_layer(layer)
 
@@ -50,6 +51,7 @@ class ProjectEditor(FrameworkEditor):
         """ Copy the view of the supplied editor.
         """
         self.layer_manager = editor.layer_manager
+        self.layer_visibility = self.layer_manager.get_default_visibility()
         self.control.change_view(self.layer_manager, editor.editor)
         self.control.zoom_to_fit()
         self.dirty = editor.dirty
@@ -80,6 +82,7 @@ class ProjectEditor(FrameworkEditor):
         """ Creates the toolkit-specific control for the widget. """
 
         self.layer_manager = Layer_manager.Layer_manager(self)
+        self.layer_visibility = self.layer_manager.get_default_visibility()
         self.editor = LegacyEditor.Editor(self)
 
         # Base-class constructor.

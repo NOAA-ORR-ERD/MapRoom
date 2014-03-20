@@ -220,6 +220,12 @@ class Layer_manager(LayerUndo):
                 result.extend(self.flatten_recursive(item))
 
         return result
+    
+    def get_default_visibility(self):
+        layer_visibility = dict()
+        for layer in self.flatten():
+            layer_visibility[layer] = layer.get_visibility_dict()
+        return layer_visibility
 
     def destroy(self):
         for layer in self.flatten():
@@ -367,14 +373,14 @@ class Layer_manager(LayerUndo):
         for layer in self.flatten():
             layer.reproject(projection, projection_is_identity)
 
-    def accumulate_layer_rects(self, only_visible_layers=True):
+    def accumulate_layer_rects(self, layer_visibility, only_visible_layers=True):
         result = rect.NONE_RECT
 
         if (len(self.layers) == 0):
             return result
 
         for layer in self.flatten():
-            if (only_visible_layers and not layer.is_visible):
+            if (only_visible_layers and not layer_visibility[layer]["layer"]):
                 continue
 
             if (result == rect.NONE_RECT):
