@@ -14,7 +14,8 @@ class LayerSelectionPane(DockPane):
     name = 'Layers'
     
     def create_contents(self, parent):
-        return Layer_tree_control(parent, self.task.active_editor)
+        control = Layer_tree_control(parent, self.task.active_editor, size=(200,-1))
+        return control
     
     #### trait change handlers
     

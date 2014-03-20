@@ -15,9 +15,9 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     dragged_item = None
 
-    def __init__(self, parent_window, project):
+    def __init__(self, parent_window, project, size=(-1,-1)):
         treectrl.CustomTreeCtrl.__init__(
-            self, parent_window, wx.ID_ANY,
+            self, parent_window, wx.ID_ANY, size=size,
             style=treectrl.TR_DEFAULT_STYLE,
             agwStyle=treectrl.TR_HIDE_ROOT|treectrl.TR_NO_LINES|treectrl.TR_HAS_BUTTONS,
         )
