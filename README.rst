@@ -8,8 +8,13 @@ Prerequisites
 
 This combination of library versions is known to work:
 
-$ pip install numpy==1.7.2 PyOpenGL==3.0.2 PyOpenGl_accelerate==3.0.2 GDAL==1.10.0
+pip install numpy==1.7.2 PyOpenGL==3.0.2 pyproj==1.9.3 GDAL==1.10.0 Cython==0.19.2
+# pip install PyOpenGL_accelerate==3.0.2
 
+PyOpenGL_accelerate is currently not used because a paint event is apparently
+being triggered before the window is realized on screen, or something similar.
+It seems like the GLCanvas isn't fully initialized, perhaps? Not sure, but
+the workaround for the moment is just to not use PyOpenGL_accelerate.
 
 Usage
 =====
