@@ -7,13 +7,8 @@ opengl_logger = None
 version = None
 
 import sys
-frozen = getattr(sys, 'frozen', False)
-image_path = os.path.join(os.path.dirname(__file__), "maproom/ui/images")
-if frozen and frozen in ('macosx_app'):
-    print "FROZEN!!! %s" % frozen
-    root = os.environ['RESOURCEPATH']
-    zippath, image_path = image_path.split(".zip/")
-    image_path = os.path.join(root, image_path)
+import peppy2
+image_path = peppy2.get_image_path("maproom/ui/images", sys.modules[__name__])
 
 preferences = {
     "Coordinate Display Format": "degrees decimal minutes",
