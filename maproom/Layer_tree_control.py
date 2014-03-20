@@ -94,7 +94,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         lm = self.project.layer_manager
         self.DeleteAllItems()
         # self.Freeze()
-        print "rebuiding layers = " + str(lm.layers)
+        print "LAYER_TREE: rebuiding layers = " + str(lm.layers)
         self.add_layers_recursive(lm.layers, None)
         # self.Thaw()
         pub.sendMessage(('layer', 'selection', 'changed'), manager=lm, layer=self.get_selected_layer())
@@ -113,10 +113,8 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
             else:
                 self.add_layers_recursive(item, folder_node)
 
-        if (layer_tree[0].is_expanded):
-            self.Expand(folder_node)
-
     def add_layer(self, layer, parent):
+        print "LAYER_TREE: adding layer = " + str(layer.name)
         if (parent == None):
             data = wx.TreeItemData()
             data.SetData(("root", layer))
