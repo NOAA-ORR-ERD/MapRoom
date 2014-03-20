@@ -2,7 +2,7 @@
 
 """
 # Enthought library imports.
-from pyface.api import ImageResource
+from pyface.api import ImageResource, GUI
 from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
     IEditorAreaPane, EditorAreaPane, Editor, DockPane, HSplitter, VSplitter
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
@@ -48,6 +48,14 @@ class MaproomProjectTask(FrameworkTask):
         """
         editor = ProjectEditor()
         return editor
+
+    def _active_editor_changed(self):
+        tree = self.window.get_dock_pane('maproom.layer_selection_pane')
+        if tree is not None and tree.control is not None:
+            # We must be in an event handler during trait change callbacks,
+            # because we segfault without the GUI.invoke_later (equivalent
+            # to wx.CallAfter)
+            GUI.invoke_later(tree.control.set_project, self.active_editor)
 
     ###
     @classmethod
