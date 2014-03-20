@@ -335,7 +335,7 @@ import numpy as np
 class EditorTests(unittest.TestCase):
 
     def setUp(self):
-        self.layer_manager = Layer_manager.Layer_manager()
+        self.layer_manager = Layer_manager.LayerManager()
         self.editor = Editor(self.layer_manager)
 
     def tearDown(self):

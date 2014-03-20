@@ -10,19 +10,48 @@ import library.formats.verdat as verdat
 import library.rect as rect
 from library.accumulator import flatten
 
-from wx.lib.pubsub import pub
+# Enthought library imports.
+from traits.api import HasTraits, Int, Any, List, Set, Bool, Event
 
-
-class LayerUndo(object):
-    def __init__(self):
-        # the undo stack is a list of objects, where each object is of the form:
-        # { "n" : <int operation number>, "op" : <int operation enum>, "l" : <layer>, "i" : <point or line index in layer>, "p" : ( params depending on op enum ) }
-        self.undo_stack = []
-        self.undo_stack_next_index = 0
-        self.undo_stack_next_operation_number = 0
+class LayerUndo(HasTraits):
     
-    def refresh(self, **kwargs):
-        pass
+    #### Traits definitions
+    
+    # the undo stack is a list of objects, where each object is of the form:
+    # { "n" : <int operation number>, "op" : <int operation enum>, "l" :
+    # <layer>, "i" : <point or line index in layer>, "p" : ( params depending
+    # on op enum ) }
+    undo_stack = List(Any)
+    
+    undo_stack_next_index = Int
+    
+    undo_stack_next_operation_number = Int
+    
+    undo_stack_changed = Event
+    
+    layer_points_changed = Event
+
+    def start_batch_events(self):
+        self.batch = True
+        self.events = []
+    
+    def end_batch_events(self):
+        self.batch = False
+        order = []
+        seen = set()
+        for event in self.events:
+            if event in seen:
+                continue
+            seen.add(event)
+            order.append(event)
+        for name, value in order:
+            setattr(self, name, value)
+    
+    def dispatch_event(self, event, value=True):
+        if self.batch:
+            self.events.append((event, value))
+        else:
+            setattr(self, event, value)
 
     def add_undo_operation_to_operation_batch(self, op, layer, index, params):
         self.clear_undo_stack_forward()
@@ -92,9 +121,9 @@ class LayerUndo(object):
             self.undo_operation(self.undo_stack[self.undo_stack_next_index - 1], affected_layers)
             self.undo_stack_next_index -= 1
         for layer in affected_layers:
-            pub.sendMessage(('layer', 'points', 'changed'), layer=layer)
+            self.dispatch_event('layer_points_changed', layer)
         self.show_undo_redo_debug_dump("undo() done")
-        self.refresh()
+        self.undo_stack_changed = True
 
     def undo_operation(self, o, affected_layers):
         operation_number = o["n"]
@@ -134,9 +163,9 @@ class LayerUndo(object):
             self.redo_operation(self.undo_stack[self.undo_stack_next_index], affected_layers)
             self.undo_stack_next_index += 1
         for layer in affected_layers:
-            pub.sendMessage(('layer', 'points', 'changed'), layer=layer)
+            self.dispatch_event('layer_points_changed', layer)
         self.show_undo_redo_debug_dump("redo() done")
-        self.refresh()
+        self.undo_stack_changed = True
 
     def redo_operation(self, o, affected_layers):
         operation_number = o["n"]
@@ -175,7 +204,7 @@ class LayerUndo(object):
         print "undo_stack_next_index is now: " + str(self.undo_stack_next_index)
 
 
-class Layer_manager(LayerUndo):
+class LayerManager(LayerUndo):
 
     """
     Manages the layers (a tree of Layer).
@@ -188,19 +217,38 @@ class Layer_manager(LayerUndo):
     The first layer in the overall list and in each sublist is assumed to be a "folder" layer, whose only
     purpose at present is to hold the folder name.
     """
+    project = Any
+    
+    layers = List(Any)
+    
+    batch = Bool
+    
+    events = List(Any)
+    
+    layer_loaded = Event
+    
+    layers_changed = Event
+    
+    refresh_needed = Event
 
-    def __init__(self, project):
-        LayerUndo.__init__(self)
+    @classmethod
+    def create(cls, project):
+        """Convenience function to create a new, empty LayerManager
+        
+        Since classes that use Traits can't seem to use an __init__ method,
+        we are forced to use a convenience function to initialize non-traits
+        members.  Trying to define layers using _layers_default results
+        in recursion from the print statement in insert_layers trying to
+        references self.layers which isn't yet defined.
+        """
+        self = cls()
         self.project = project
-        self.layers = []
         layer = Layer.Layer(self)
         layer.name = "Layers"
         layer.type = "root"
         self.insert_layer([0], layer)
+        return self
     
-    def refresh(self, **kwargs):
-        self.project.refresh(**kwargs)
-
     def flatten(self):
         return self.flatten_recursive(self.layers)
 
@@ -233,6 +281,7 @@ class Layer_manager(LayerUndo):
             print "LAYER LOAD ERROR: %s" % layer.load_error_string
             return None
         index = None
+        self.dispatch_event('layer_loaded', layer)
         self.insert_layer(index, layer)
         return layer
 
@@ -246,7 +295,7 @@ class Layer_manager(LayerUndo):
             if (layer.type == "folder"):
                 layer = [layer]
         self.insert_layer_recursive(at_multi_index, layer, self.layers)
-        pub.sendMessage(('layer', 'inserted'), manager=self, layer=layer)
+        self.dispatch_event('layers_changed')
 
     def insert_layer_recursive(self, at_multi_index, layer, tree):
         if (len(at_multi_index) == 1):
@@ -257,7 +306,7 @@ class Layer_manager(LayerUndo):
 
     def remove_layer(self, at_multi_index):
         self.remove_layer_recursive(at_multi_index, self.layers)
-        self.refresh(rebuild_tree=True)
+        self.dispatch_event('layers_changed')
 
     def remove_layer_recursive(self, at_multi_index, tree):
         index = at_multi_index[0]
@@ -394,7 +443,7 @@ class Layer_manager(LayerUndo):
                 layer.clear_all_selections(Layer.STATE_FLAGGED)
                 for p in e.points:
                     layer.select_point(p, Layer.STATE_FLAGGED)
-                self.refresh()
+                self.dispatch_event('refresh_needed')
             wx.MessageDialog(
                 self.project.control,
                 message=e.message,
@@ -464,7 +513,7 @@ class Layer_manager(LayerUndo):
                 l = l[index]
             del l[mi[-1]]
 
-        self.refresh(rebuild_tree=True)
+        self.dispatch_event('layers_changed')
 
     def merge_layers(self, layer_a, layer_b):
         layer = Layer.Layer()

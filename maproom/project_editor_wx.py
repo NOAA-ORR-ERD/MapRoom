@@ -7,7 +7,7 @@ import wx
 from wx.lib.pubsub import pub
 
 # Enthought library imports.
-from traits.api import provides
+from traits.api import provides, on_trait_change, Any
 
 from peppy2.framework.editor import FrameworkEditor
 
@@ -25,6 +25,7 @@ class ProjectEditor(FrameworkEditor):
     
     See the IProjectEditor interface for the API documentation.
     """
+    layer_manager = Any
 
     ###########################################################################
     # 'FrameworkEditor' interface.
@@ -33,7 +34,7 @@ class ProjectEditor(FrameworkEditor):
     def create(self, parent):
         self.control = self._create_control(parent)
 
-    def load(self, guess=None):
+    def load(self, guess=None, layer=False, **kwargs):
         """ Loads the contents of the editor.
         """
         if guess is None:
@@ -41,7 +42,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             metadata = guess.get_metadata()
             layer = self.layer_manager.load_layer_from_uri(metadata.uri)
-            self.layer_visibility[layer] = layer.get_visibility_dict()
+            
             if layer:
                 self.zoom_to_layer(layer)
 
@@ -81,7 +82,7 @@ class ProjectEditor(FrameworkEditor):
     def _create_control(self, parent):
         """ Creates the toolkit-specific control for the widget. """
 
-        self.layer_manager = Layer_manager.Layer_manager(self)
+        self.layer_manager = Layer_manager.LayerManager.create(self)
         self.layer_visibility = self.layer_manager.get_default_visibility()
         self.editor = LegacyEditor.Editor(self)
 
@@ -89,7 +90,8 @@ class ProjectEditor(FrameworkEditor):
         self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor, project=self)
         
         # Tree/Properties controls referenced from MapController
-        self.layer_tree_control = None
+        self.layer_tree_control = self.editor_area.task.window.get_dock_pane('maproom.layer_selection_pane').control
+        self.properties_panel = self.editor_area.task.window.get_dock_pane('maproom.layer_info_pane').control
         self.properties_panel = None
         
         # Pubsub stuff from RenderController
@@ -98,6 +100,37 @@ class ProjectEditor(FrameworkEditor):
         print "LayerEditor: task=%s" % self.editor_area.task
 
         return self.control
+    
+    #### Traits event handlers
+    
+    @on_trait_change('layer_manager:layer_loaded')
+    def layer_loaded(self, layer):
+        print "layer_loaded called for %s" % layer
+        self.layer_visibility[layer] = layer.get_visibility_dict()
+    
+    @on_trait_change('layer_manager:layers_changed')
+    def layers_changed(self):
+        print "layers_changed called!!!"
+        if self.layer_tree_control is None:
+            return
+        self.layer_tree_control.rebuild()
+        self.refresh()
+    
+    @on_trait_change('layer_manager:refresh_needed')
+    def refresh(self):
+        print "refresh called"
+        if self.control is None:
+            return
+        
+        # On Mac this is neither necessary nor desired.
+        if not sys.platform.startswith('darwin'):
+            self.control.Update()
+        self.control.Refresh()
+        
+        if (self.properties_panel is not None):
+            layer = self.layer_tree_control.get_selected_layer()
+            # note that the following call only does work if the properties for the layer have changed
+            self.properties_panel.display_panel_for_layer(layer)
 
     #### wx event handlers ####################################################
 
@@ -140,29 +173,3 @@ class ProjectEditor(FrameworkEditor):
 
     def zoom_to_layer(self, layer):
         self.control.zoom_to_world_rect(layer.bounds)
-
-    # Some conversion object reference types
-    #
-    # Application.current_map == MapController
-
-    #### old MapController
-    
-    def refresh(self, rebuild_layer_tree_control=False):
-        """from MapController
-        """
-        print "refresh called"
-#        # fixme: this shouldn't be required!
-#        if (self.is_closing):
-#            return
-        if (rebuild_layer_tree_control and self.layer_tree_control != None):
-            self.layer_tree_control.rebuild()
-        if self.control is not None:
-        #    self.renderer.render()
-            # On Mac this is neither necessary nor desired.
-            if not sys.platform.startswith('darwin'):
-                self.control.Update()
-            self.control.Refresh()
-        if (self.layer_tree_control != None and self.properties_panel != None):
-            layer = self.layer_tree_control.get_selected_layer()
-            # note that the following call only does work if the properties for the layer have changed
-            self.properties_panel.display_panel_for_layer(layer)
