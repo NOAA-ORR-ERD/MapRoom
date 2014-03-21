@@ -26,7 +26,7 @@ def main(argv):
 
     plugins = [ MaproomPlugin() ]
     
-    run(plugins=plugins, use_eggs=False)
+    run(plugins=plugins, use_eggs=False, startup_task="maproom.project")
 
     logging.shutdown()
 

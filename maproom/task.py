@@ -30,7 +30,6 @@ class MaproomProjectTask(FrameworkTask):
 
     #### Task interface #######################################################
 
-    id = 'maproom.project_task'
     name = 'Maproom Project File'
 
     ###########################################################################
