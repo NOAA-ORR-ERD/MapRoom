@@ -27,6 +27,11 @@ class ProjectEditor(FrameworkEditor):
     """
     layer_manager = Any
 
+    #### property getters
+
+    def _get_name(self):
+        return basename(self.path) or 'Untitled Project'
+
     ###########################################################################
     # 'FrameworkEditor' interface.
     ###########################################################################
