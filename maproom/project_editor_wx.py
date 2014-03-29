@@ -16,7 +16,7 @@ from i_project_editor import IProjectEditor
 from layer_control_wx import LayerControl
 import Editor as LegacyEditor
 import Layer
-import Layer_manager
+from layer_manager import LayerManager
 import Layer_tree_control
 
 @provides(IProjectEditor)
@@ -87,7 +87,7 @@ class ProjectEditor(FrameworkEditor):
     def _create_control(self, parent):
         """ Creates the toolkit-specific control for the widget. """
 
-        self.layer_manager = Layer_manager.LayerManager.create(self)
+        self.layer_manager = LayerManager.create(self)
         self.layer_visibility = self.layer_manager.get_default_visibility()
         self.editor = LegacyEditor.Editor(self)
 

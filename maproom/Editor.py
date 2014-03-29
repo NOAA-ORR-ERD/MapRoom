@@ -3,7 +3,6 @@ import sys
 import wx
 import library.rect as rect
 import Layer
-import Layer_manager
 import renderer
 
 from wx.lib.pubsub import pub
@@ -290,29 +289,25 @@ class Editor():
         return renderer.is_polygon_point(self.clickable_object_mouse_is_over)
 
 
-import unittest
-
-# imports needed only for tests
-import Layer_manager
-
-import numpy as np
-
-
-class EditorTests(unittest.TestCase):
-
-    def setUp(self):
-        self.layer_manager = Layer_manager.LayerManager()
-        self.editor = Editor(self.layer_manager)
-
-    def tearDown(self):
-        pass
-
-    def testPoints(self):
-        points = [(10, 0), (20, 10), (30, 12)]
-        for point in points:
-            self.assertTrue(self.editor.is_ugrid_point(point), msg="Point %s failed" % str(point))
-            self.editor.clickable_object_mouse_is_over = point
-            self.assertTrue(self.editor.clickable_object_is_ugrid_point(), msg="Point %s failed" % str(point))
-
 def getTestSuite():
+    import unittest
+    import layer_manager
+    import numpy as np
+
+    class EditorTests(unittest.TestCase):
+
+        def setUp(self):
+            self.layer_manager = layer_manager.LayerManager()
+            self.editor = Editor(self.layer_manager)
+
+        def tearDown(self):
+            pass
+
+        def testPoints(self):
+            points = [(10, 0), (20, 10), (30, 12)]
+            for point in points:
+                self.assertTrue(self.editor.is_ugrid_point(point), msg="Point %s failed" % str(point))
+                self.editor.clickable_object_mouse_is_over = point
+                self.assertTrue(self.editor.clickable_object_is_ugrid_point(), msg="Point %s failed" % str(point))
+
     return unittest.makeSuite(EditorTests)

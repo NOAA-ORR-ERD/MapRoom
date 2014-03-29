@@ -553,7 +553,7 @@ def test():
     print a
     print tree
 
-    lm = Layer_manager()
+    lm = LayerManager()
     lm.layers = tree
 
     print "lm.flatten()"
