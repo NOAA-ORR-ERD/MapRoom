@@ -8,9 +8,8 @@ import Triangle_set_renderer
 import Polygon_set_renderer
 import Label_set_renderer
 import Image_set_renderer
-from maproom.library.color import *
+from color import *
 import maproom.library.rect as rect
-from maproom.Editor import *
 
 
 """

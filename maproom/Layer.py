@@ -8,7 +8,7 @@ import wx
 import library.File_loader as File_loader
 import library.formats.verdat as verdat
 from library.accumulator import flatten
-from library.color import *
+from renderer import color_to_int
 from library.Projection import *
 import library.rect as rect
 from library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point

@@ -9,7 +9,6 @@ import lon_lat_grid
 import library.coordinates as coordinates
 import renderer
 import library.rect as rect
-from library.color import *
 import app_globals
 
 import OpenGL
@@ -486,7 +485,7 @@ class LayerControl(glcanvas.GLCanvas):
             w_r = layer.bounds
             if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
                 s_r = self.get_screen_rect_from_world_rect(w_r)
-                r, g, b, a = int_to_color(layer.color)
+                r, g, b, a = renderer.int_to_color(layer.color)
                 self.opengl_renderer.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
     def rebuild_points_and_lines_for_layer(self, layer):

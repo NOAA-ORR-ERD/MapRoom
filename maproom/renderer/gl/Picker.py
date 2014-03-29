@@ -7,7 +7,7 @@ import OpenGL.GL.EXT.framebuffer_object as gl_fbo
 
 import maproom.library.rect as rect
 
-from maproom.library.color import *
+from color import *
 # import Image, ImageDraw
 
 
