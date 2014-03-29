@@ -21,16 +21,6 @@ from wx.lib.pubsub import pub
     state = selected | flagged | deleted | edited | added | land_polygon | water_polygon | other_polygon
 """
 
-# for the picker, we only have a total of 255 "layers" that it tracks;
-# so we give each Layer 10 slots, 5 for the point-and-line renderer and
-# 5 for the polygon renderer; within each renderer, these 5 are further
-# divided to distinguish between points, lines, and fills; so the assumption
-# here is that we won't have more than 25 actively "pickable" Layers, and
-# each layer won't have more than 10 subcategories of pickable item types
-# among its renderers
-POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET = 0
-POLYGONS_SUB_LAYER_PICKER_OFFSET = 5
-
 STATE_NONE = 0
 STATE_SELECTED = 1
 STATE_FLAGGED = 2

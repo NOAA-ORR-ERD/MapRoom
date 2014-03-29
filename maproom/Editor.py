@@ -4,8 +4,7 @@ import wx
 import library.rect as rect
 import Layer
 import Layer_manager
-import library.Opengl_renderer.Point_and_line_set_renderer as Point_and_line_set_renderer
-import library.Opengl_renderer.Polygon_set_renderer as Polygon_set_renderer
+import renderer
 
 from wx.lib.pubsub import pub
 
@@ -247,7 +246,7 @@ class Editor():
         if (self.clickable_object_mouse_is_over == None):
             return
 
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
+        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.lm.get_layer_by_flattened_index(layer_index)
         layer.offset_selected_objects(world_d_x, world_d_y)
         # self.end_operation_batch()
@@ -268,7 +267,7 @@ class Editor():
         world_d_x = w_p1[0] - w_p0[0]
         world_d_y = w_p1[1] - w_p0[1]
 
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
+        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.lm.get_layer_by_flattened_index(layer_index)
 
         s_p_i_s = layer.get_selected_point_plus_line_point_indexes()
@@ -278,50 +277,17 @@ class Editor():
 
         self.end_operation_batch()
 
-    def is_ugrid_point(self, obj):
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(obj)
-        #
-        return type == Layer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET and subtype == Point_and_line_set_renderer.POINTS_SUB_LAYER_PICKER_OFFSET
-
     def clickable_object_is_ugrid_point(self):
-        return self.is_ugrid_point(self.clickable_object_mouse_is_over)
+        return renderer.is_ugrid_point(self.clickable_object_mouse_is_over)
 
     def clickable_object_is_ugrid_line(self):
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
-        #
-        return type == Layer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET and subtype == Point_and_line_set_renderer.LINES_SUB_LAYER_PICKER_OFFSET
+        return renderer.is_ugrid_line(self.clickable_object_mouse_is_over)
 
-    def clickable_object_is_polyon_fill(self):
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
-        #
-        return type == Layer_manager.POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == Polygon_set_renderer.FILL_SUB_LAYER_PICKER_OFFSET
+    def clickable_object_is_polygon_fill(self):
+        return renderer.is_polygon_fill(self.clickable_object_mouse_is_over)
 
-    def clickable_object_is_polyon_point(self):
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
-        #
-        return type == Layer_manager.POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == Point_and_line_set_renderer.POINTS_SUB_LAYER_PICKER_OFFSET
-
-    def clickable_object_is_polyon_point(self):
-        (layer_index, type, subtype, object_index) = self.parse_clickable_object(self.clickable_object_mouse_is_over)
-        #
-        return type == Layer_manager.POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == Point_and_line_set_renderer.LINES_SUB_LAYER_PICKER_OFFSET
-
-    def parse_clickable_object(self, o):
-        if (o == None):
-            return (None, None, None, None)
-
-        # see Layer.py for layer types
-        # see Point_and_line_set_renderer.py and Polygon_set_renderer.py for subtypes
-        (layer_index, object_index) = o
-        type_and_subtype = layer_index % 10
-        type = (type_and_subtype / 5) * 5
-        subtype = type_and_subtype % 5
-        layer_index = layer_index / 10
-        # print str( self.clickable_object_mouse_is_over ) + "," + str( ( layer_index, type, subtype ) )
-        #
-        return (layer_index, type, subtype, object_index)
-
-    #
+    def clickable_object_is_polygon_point(self):
+        return renderer.is_polygon_point(self.clickable_object_mouse_is_over)
 
 
 import unittest

@@ -7,8 +7,7 @@ import pyproj
 
 import lon_lat_grid
 import library.coordinates as coordinates
-import library.Opengl_renderer
-import library.Opengl_renderer.LayerRendererOpenGL as LayerRendererOpenGL
+import renderer
 import library.rect as rect
 from library.color import *
 import app_globals
@@ -112,7 +111,7 @@ class LayerControl(glcanvas.GLCanvas):
     def update_renderers(self):
         for layer in self.layer_manager.layers:
             if not layer in self.layer_renderers:
-                self.layer_renderers[layer] = LayerRendererOpenGL.LayerRendererOpenGL(self, layer)
+                self.layer_renderers[layer] = renderer.LayerRenderer(self, layer)
                 self.layer_renderers[layer].create_necessary_renderers()
 
     def on_mouse_down(self, event):
@@ -132,7 +131,7 @@ class LayerControl(glcanvas.GLCanvas):
         lm = self.layer_manager
 
         if (e.clickable_object_mouse_is_over != None):  # the mouse is on a clickable object
-            (layer_index, type, subtype, object_index) = e.parse_clickable_object(e.clickable_object_mouse_is_over)
+            (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
             layer = lm.get_layer_by_flattened_index(layer_index)
             if (self.project.layer_tree_control.is_selected_layer(layer)):
                 if (e.clickable_object_is_ugrid_point()):
@@ -173,11 +172,11 @@ class LayerControl(glcanvas.GLCanvas):
                 o = self.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
             # print "object that is under mouse:", o
             if (o != None):
-                (layer_index, type, subtype, object_index) = self.editor.parse_clickable_object(o)
+                (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
                 layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
                 if (self.project.layer_tree_control.is_selected_layer(layer)):
                     self.editor.clickable_object_mouse_is_over = o
-                if self.editor.is_ugrid_point(o):
+                if renderer.is_ugrid_point(o):
                     status_text += "  Point %s on %s" % (object_index + 1, str(layer))
 
             else:
@@ -406,7 +405,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.SetCurrent(self.context)
         # this has to be here because the window has to exist before making the renderer
         if (self.opengl_renderer == None):
-            self.opengl_renderer = library.Opengl_renderer.Opengl_renderer(True)
+            self.opengl_renderer = renderer.RendererDriver(True)
         self.update_renderers()
 
         s_r = self.get_screen_rect()
