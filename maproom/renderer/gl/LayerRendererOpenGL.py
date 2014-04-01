@@ -9,6 +9,7 @@ import Polygon_set_renderer
 import Label_set_renderer
 import Image_set_renderer
 from color import *
+import data_types
 import maproom.library.rect as rect
 
 
@@ -36,17 +37,6 @@ STATE_ADDED = 16
 STATE_LAND_POLYGON = 32
 STATE_WATER_POLYGON = 64
 STATE_OTHER_POLYGON = 128
-
-DEFAULT_DEPTH = 1.0
-DEFAULT_POINT_COLOR = color_to_int(0.5, 0.5, 0, 1.0)
-DEFAULT_COLORS = [
-    color_to_int(0, 0, 1.0, 1),
-    color_to_int(0, 0.75, 0, 1),
-    color_to_int(0.5, 0, 1.0, 1),
-    color_to_int(1.0, 0.5, 0, 1),
-    color_to_int(0.5, 0.5, 0, 1),
-]
-DEFAULT_LINE_SEGMENT_COLOR = color_to_int(0.5, 0, 0.5, 1.0)
 
 MAX_LABEL_CHARATERS = 1000 * 5
 
@@ -83,7 +73,7 @@ class LayerRendererOpenGL():
         if self.layer.polygons != None and self.polygon_set_renderer == None:
             self.polygon_set_renderer = Polygon_set_renderer.Polygon_set_renderer(
                 self.renderer.opengl_renderer,
-                self.layer.points.view(self.layer.POINT_XY_VIEW_DTYPE).xy[: len(self.layer.points)].copy(),
+                self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(self.layer.points)].copy(),
                 self.layer.polygon_adjacency_array,
                 self.layer.polygons,
                 self.renderer.projection,
@@ -110,9 +100,9 @@ class LayerRendererOpenGL():
 
         self.triangle_set_renderer = Triangle_set_renderer.Triangle_set_renderer(
             self.renderer.opengl_renderer,
-            self.layer.triangle_points.view(self.layer.POINT_XY_VIEW_DTYPE).xy,
+            self.layer.triangle_points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
             self.layer.triangle_points.color.copy().view(dtype=np.uint8),
-            self.layer.triangles.view(self.layer.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes,
+            self.layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes,
             self.renderer.projection,
             self.renderer.projection_is_identity)
 
@@ -125,9 +115,9 @@ class LayerRendererOpenGL():
         if create:
             self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
                 self.renderer.opengl_renderer,
-                self.layer.points.view(self.layer.POINT_XY_VIEW_DTYPE).xy,
+                self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
                 self.layer.points.color.copy().view(dtype=np.uint8),
-                self.layer.line_segment_indexes.view(self.layer.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"],
+                self.layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"],
                 self.layer.line_segment_indexes.color,
                 self.renderer.projection,
                 self.renderer.projection_is_identity)
@@ -137,7 +127,7 @@ class LayerRendererOpenGL():
 
     def reproject(self, projection, projection_is_identity):
         if (self.point_and_line_set_renderer != None):
-            self.point_and_line_set_renderer.reproject(self.layer.points.view(self.layer.POINT_XY_VIEW_DTYPE).xy,
+            self.point_and_line_set_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
                                                        projection,
                                                        projection_is_identity)
         if (self.polygon_set_renderer != None):

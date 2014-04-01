@@ -8,7 +8,7 @@ import wx
 import library.File_loader as File_loader
 import library.formats.verdat as verdat
 from library.accumulator import flatten
-from renderer import color_to_int
+from renderer import color_to_int, data_types
 from library.Projection import *
 import library.rect as rect
 from library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
@@ -42,67 +42,12 @@ DEFAULT_COLORS = [
 ]
 DEFAULT_LINE_SEGMENT_COLOR = color_to_int(0.5, 0, 0.5, 1.0)
 
-MAX_LABEL_CHARATERS = 1000 * 5
-
 
 class Layer():
 
     """
     A layer.
     """
-
-    POINT_DTYPE = np.dtype([
-        ("x", np.float32),
-        ("y", np.float32),
-        ("z", np.float32),
-        ("color", np.uint32),
-        ("state", np.uint32)
-    ])
-    POINT_XY_VIEW_DTYPE = np.dtype([
-        ("xy", "2f4"),
-        ("z", np.float32),
-        ("color", np.uint32),
-        ("state", np.uint32)
-    ])
-    POINT_XYZ_VIEW_DTYPE = np.dtype([
-        ("xyz", "3f4"),
-        ("color", np.uint32),
-        ("state", np.uint32)
-    ])
-    LINE_SEGMENT_DTYPE = np.dtype([
-        ("point1", np.uint32),  # Index of first point in line segment.
-        ("point2", np.uint32),  # Index of second point in line segment.
-        ("color", np.uint32),  # Color of this line segment.
-        ("state", np.uint32)
-    ])
-    LINE_SEGMENT_POINTS_VIEW_DTYPE = np.dtype([
-        ("points", "2u4"),
-        ("color", np.uint32),
-        ("state", np.uint32)
-    ])
-    TRIANGLE_DTYPE = np.dtype([
-        ("point1", np.uint32),  # Index of first point in triangle.
-        ("point2", np.uint32),  # Index of second point in triangle.
-        ("point3", np.uint32),  # Index of third point in triangle.
-        ("color", np.uint32),
-        ("state", np.uint32)
-    ])
-    TRIANGLE_POINTS_VIEW_DTYPE = np.dtype([
-        ("point_indexes", "3u4"),
-        ("color", np.uint32),
-        ("state", np.uint32)
-    ])
-    POLYGON_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
-        ("next", np.uint32),   # Index of next adjacent point in polygon.
-        ("polygon", np.uint32)  # Index of polygon this point is in.
-    ])
-    POLYGON_DTYPE = np.dtype([
-        ("start", np.uint32),  # Index of arbitrary point in this polygon.
-        ("count", np.uint32),  # Number of points in this polygon.
-        ("group", np.uint32),  # An outer polygon and all of its holes have the same opaque group id.
-        ("color", np.uint32),  # Color of this polygon.
-        ("state", np.uint32)   # standard maproom object states, plus polygon type
-    ])
 
     next_default_color_index = 0
     
@@ -222,7 +167,7 @@ class Layer():
                 n_polygons = np.alen(f_polygon_starts)
                 if (n_points > 0):
                     self.points = self.make_points(n_points)
-                    self.points.view(self.POINT_XY_VIEW_DTYPE).xy[
+                    self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                         0: n_points
                     ] = f_polygon_points
                     self.polygons = self.make_polygons(n_polygons)
@@ -277,7 +222,7 @@ class Layer():
                 if (n > 0):
                     self.determine_layer_color()
                     self.points = self.make_points(n)
-                    self.points.view(self.POINT_XY_VIEW_DTYPE).xy[
+                    self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                         0: n
                     ] = f_points
                     self.points.z[
@@ -288,7 +233,7 @@ class Layer():
 
                     n = np.alen(f_line_segment_indexes)
                     self.line_segment_indexes = self.make_line_segment_indexes(n)
-                    self.line_segment_indexes.view(self.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
+                    self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
                         0: n
                     ] = f_line_segment_indexes
                     self.line_segment_indexes.color = self.color
@@ -358,31 +303,31 @@ class Layer():
 
     def make_points(self, count):
         return np.repeat(
-            np.array([(np.nan, np.nan, np.nan, 0, 0)], dtype=self.POINT_DTYPE),
+            np.array([(np.nan, np.nan, np.nan, 0, 0)], dtype=data_types.POINT_DTYPE),
             count,
         ).view(np.recarray)
 
     def make_line_segment_indexes(self, count):
         return np.repeat(
-            np.array([(0, 0, 0, 0)], dtype=self.LINE_SEGMENT_DTYPE),
+            np.array([(0, 0, 0, 0)], dtype=data_types.LINE_SEGMENT_DTYPE),
             count,
         ).view(np.recarray)
 
     def make_triangles(self, count):
         return np.repeat(
-            np.array([(0, 0, 0, 0, 0)], dtype=self.TRIANGLE_DTYPE),
+            np.array([(0, 0, 0, 0, 0)], dtype=data_types.TRIANGLE_DTYPE),
             count,
         ).view(np.recarray)
 
     def make_polygons(self, count):
         return np.repeat(
-            np.array([(0, 0, 0, 0, 0)], dtype=self.POLYGON_DTYPE),
+            np.array([(0, 0, 0, 0, 0)], dtype=data_types.POLYGON_DTYPE),
             count,
         ).view(np.recarray)
 
     def make_polygon_adjacency_array(self, count):
         return np.repeat(
-            np.array([(0, 0)], dtype=self.POLYGON_ADJACENCY_DTYPE),
+            np.array([(0, 0)], dtype=data_types.POLYGON_ADJACENCY_DTYPE),
             count,
         ).view(np.recarray)
 
@@ -676,10 +621,10 @@ class Layer():
     def rebuild_for_offset_points( self ):
         if ( self.line_segment_indexes != None ):
             self.point_and_line_set_renderer.build_line_segment_buffers(
-                self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                self.line_segment_indexes.view( self.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
+                self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+                self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
                 None )
-        self.point_and_line_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
+        self.point_and_line_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
                                                     self.lm.project.control.projection,
                                                     self.lm.project.control.projection_is_identity )
     """
@@ -745,7 +690,7 @@ class Layer():
         # delete them from the label_set_renderer
         if ( self.label_set_renderer != None ):
             self.label_set_renderer.delete_points( point_indexes )
-            self.label_set_renderer.reproject( self.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
+            self.label_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
                                                self.lm.project.control.projection,
                                                self.lm.project.control.projection_is_identity )
         """
@@ -765,7 +710,7 @@ class Layer():
         t0 = time.clock()
         # insert it into the layer
         p = np.array([(world_point[0], world_point[1], z, color, state)],
-                     dtype=self.POINT_DTYPE)
+                     dtype=data_types.POINT_DTYPE)
         if (self.points == None):
             self.new_points(1)
             self.points[0] = p
@@ -831,7 +776,7 @@ class Layer():
         for p_i in point_indexes:
             if ( p_i != point_index and not ( p_i in connected_points ) ):
                 l_s = np.array( [ ( p_i, point_index, DEFAULT_LINE_SEGMENT_COLOR, STATE_NONE ) ],
-                                dtype = self.LINE_SEGMENT_DTYPE ).view( np.recarray )
+                                dtype = data_types.LINE_SEGMENT_DTYPE ).view( np.recarray )
                 self.line_segment_indexes = np.append( self.line_segment_indexes, l_s ).view( np.recarray )
                 num_connections_made += 1
         if ( num_connections_made > 0 ):
@@ -843,7 +788,7 @@ class Layer():
 
     def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state, add_undo_info):
         l_s = np.array([(point_index_1, point_index_2, color, state)],
-                       dtype=self.LINE_SEGMENT_DTYPE).view(np.recarray)
+                       dtype=data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
         self.line_segment_indexes = np.insert(self.line_segment_indexes, l_s_i, l_s).view(np.recarray)
 
         if (add_undo_info):
@@ -914,7 +859,7 @@ class Layer():
             params = params + "a" + str(a)
 
         # we need to use projected points for the triangulation
-        projected_points = self.points.view(self.POINT_XY_VIEW_DTYPE).xy[: len(self.points)].view(np.float32).copy()
+        projected_points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(self.points)].view(np.float32).copy()
         if (self.lm.project.control.projection_is_identity):
             projected_points[:, 0] = self.points[:, 0]
             projected_points[:, 1] = self.points[:, 1]
@@ -931,11 +876,11 @@ class Layer():
             params,
             projected_points,
             self.points.z[: len(self.points)].copy(),
-            self.line_segment_indexes.view(self.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(self.line_segment_indexes)].view(np.uint32).copy(),
+            self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(self.line_segment_indexes)].view(np.uint32).copy(),
             hole_points_xy)
 
         self.triangle_points = self.make_points(len(triangle_points_xy))
-        self.triangle_points.view(self.POINT_XY_VIEW_DTYPE).xy[
+        self.triangle_points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
             0: len(triangle_points_xy)
         ] = triangle_points_xy
         self.triangle_points[0: len(triangle_points_xy)].z = triangle_points_z
@@ -947,7 +892,7 @@ class Layer():
             self.triangle_points.x, self.triangle_points.y = self.lm.project.control.projection(self.triangle_points.x, self.triangle_points.y, inverse=True)
 
         self.triangles = self.make_triangles(len(triangles))
-        self.triangles.view(self.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = triangles
+        self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = triangles
 
         pub.sendMessage(('layer', 'triangulated'), layer=self)
 
@@ -988,7 +933,7 @@ class Layer():
             return []
 
         points = self.points.view(
-            self.POINT_XY_VIEW_DTYPE
+            data_types.POINT_XY_VIEW_DTYPE
         ).xy[:].copy()
 
         latlong_proj = Projection("+proj=latlong")
