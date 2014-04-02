@@ -61,34 +61,36 @@ class LayerRendererOpenGL():
         return self.name
 
     def create_necessary_renderers(self):
-        if (self.layer.triangle_points != None and self.triangle_set_renderer == None):
-            self.rebuild_triangle_set_renderer()
+        if hasattr(self.layer, "points"):
+            if (self.layer.triangle_points != None and self.triangle_set_renderer == None):
+                self.rebuild_triangle_set_renderer()
 
-        if (self.layer.points != None and self.point_and_line_set_renderer == None):
-            if (self.layer.line_segment_indexes == None):
-                self.layer.line_segment_indexes = self.layer.make_line_segment_indexes(0)
+            if (self.layer.points != None and self.point_and_line_set_renderer == None):
+                if (self.layer.line_segment_indexes == None):
+                    self.layer.line_segment_indexes = self.layer.make_line_segment_indexes(0)
 
-            self.rebuild_point_and_line_set_renderer(create=True)
+                self.rebuild_point_and_line_set_renderer(create=True)
 
-        if self.layer.polygons != None and self.polygon_set_renderer == None:
-            self.polygon_set_renderer = Polygon_set_renderer.Polygon_set_renderer(
-                self.renderer.opengl_renderer,
-                self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(self.layer.points)].copy(),
-                self.layer.polygon_adjacency_array,
-                self.layer.polygons,
-                self.renderer.projection,
-                self.renderer.projection_is_identity)
+            if self.layer.polygons != None and self.polygon_set_renderer == None:
+                self.polygon_set_renderer = Polygon_set_renderer.Polygon_set_renderer(
+                    self.renderer.opengl_renderer,
+                    self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(self.layer.points)].copy(),
+                    self.layer.polygon_adjacency_array,
+                    self.layer.polygons,
+                    self.renderer.projection,
+                    self.renderer.projection_is_identity)
 
-        if self.layer.images and not self.image_set_renderer:
-            self.image_set_renderer = Image_set_renderer.Image_set_renderer(
-                self.renderer.opengl_renderer,
-                self.layer.images,
-                self.layer.image_sizes,
-                self.layer.image_world_rects,
-                self.renderer.projection,
-                self.renderer.projection_is_identity)
+            self.set_up_labels()
 
-        self.set_up_labels()
+        if hasattr(self.layer, "images"):
+            if self.layer.images and not self.image_set_renderer:
+                self.image_set_renderer = Image_set_renderer.Image_set_renderer(
+                    self.renderer.opengl_renderer,
+                    self.layer.images,
+                    self.layer.image_sizes,
+                    self.layer.image_world_rects,
+                    self.renderer.projection,
+                    self.renderer.projection_is_identity)
 
     def set_up_labels(self):
         if (self.layer.points != None and self.label_set_renderer == None):

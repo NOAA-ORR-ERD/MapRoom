@@ -15,7 +15,6 @@ from peppy2.framework.editor import FrameworkEditor
 from i_project_editor import IProjectEditor
 from layer_control_wx import LayerControl
 import Editor as LegacyEditor
-import Layer
 from layer_manager import LayerManager
 import Layer_tree_control
 

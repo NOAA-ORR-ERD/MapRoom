@@ -2,7 +2,6 @@ import os
 import sys
 import wx
 import library.rect as rect
-import Layer
 import renderer
 
 from wx.lib.pubsub import pub

@@ -3,79 +3,31 @@ import os.path
 import time
 import sys
 import numpy as np
-from library.scipy_ckdtree import cKDTree
 import wx
-import library.File_loader as File_loader
-import library.formats.verdat as verdat
-from library.accumulator import flatten
-from renderer import color_to_int, data_types
-from library.Projection import *
-import library.rect as rect
-from library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
 from pytriangle import triangulate_simple
-from Editor import *
-from wx.lib.pubsub import pub
 
-"""
-    point: x, y, z (depth), color, state
-    state = selected | flagged | deleted | edited | added | land_polygon | water_polygon | other_polygon
-"""
+from ..library import File_loader, rect
+from ..library.scipy_ckdtree import cKDTree
+from ..library.formats import verdat
+from ..library.accumulator import flatten
+from ..library.Projection import Projection
+from ..library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
+from ..renderer import color_to_int, data_types
 
-STATE_NONE = 0
-STATE_SELECTED = 1
-STATE_FLAGGED = 2
-STATE_DELETED = 4
-STATE_EDITED = 8
-STATE_ADDED = 16
-STATE_LAND_POLYGON = 32
-STATE_WATER_POLYGON = 64
-STATE_OTHER_POLYGON = 128
+from base import Layer
+from constants import *
 
-DEFAULT_DEPTH = 1.0
-DEFAULT_POINT_COLOR = color_to_int(0.5, 0.5, 0, 1.0)
-DEFAULT_COLORS = [
-    color_to_int(0, 0, 1.0, 1),
-    color_to_int(0, 0.75, 0, 1),
-    color_to_int(0.5, 0, 1.0, 1),
-    color_to_int(1.0, 0.5, 0, 1),
-    color_to_int(0.5, 0.5, 0, 1),
-]
-DEFAULT_LINE_SEGMENT_COLOR = color_to_int(0.5, 0, 0.5, 1.0)
-
-
-class Layer():
-
-    """
-    A layer.
-    """
-
-    next_default_color_index = 0
+class VectorLayer(Layer):
+    """Layer for points/lines/polygons.
     
-    new_layer_index = 0
+    """
+    default_name = "Vector Layer"
 
     def __init__(self, manager):
-        self.lm = manager
-        self.name = ""
-        self.type = ""  # either "folder" (folder don't use any of the data below is_expanded) or the file suffix
-        self.is_expanded = True
-
-        self.file_path = ""
-        self.depth_unit = "unknown"
-        self.default_depth = DEFAULT_DEPTH
-        self.color = 0
-        self.point_size = 4.0
-        self.selected_point_size = 15.0
-        self.line_width = 2.0
-        self.selected_line_width = 10.0
-        self.triangle_line_width = 1.0
-        self.bounds = rect.NONE_RECT
-        self.load_error_string = ""
+        Layer.__init__(self, manager)
 
         # when two layers are merged into one, this is the index of the start of the points that came from the second layer
         self.merged_points_index = 0
-
-        # this is any change that might affect the properties panel (e.g., number of points selected)
-        self.change_count = 0
 
         self.points = None
         self.line_segment_indexes = None
@@ -87,16 +39,8 @@ class Layer():
         self.image_sizes = None
         self.image_world_rects = None
 
-        self.is_dirty = False
-
-    def __repr__(self):
-        return self.name
-
     def new(self):
-        self.name = "New Layer"
-        Layer.new_layer_index += 1
-        if Layer.new_layer_index > 1:
-            self.name += " %d" % Layer.new_layer_index
+        Layer.new(self)
         self.new_points()
     
     def new_points(self, num=0):
@@ -111,24 +55,8 @@ class Layer():
         no_points = (self.points is None or len(self.points) == 0)
         no_triangles = (self.triangles is None or len(self.triangles) == 0)
         no_polygons = (self.polygons is None or len(self.polygons) == 0)
-        no_images = (self.images is None or len(self.images) == 0)
 
         return no_points and no_triangles and no_polygons and no_images
-
-    def get_visibility_dict(self):
-        d = dict()
-        d["layer"] = True
-        d["images"] = True
-        d["polygons"] = True
-        d["points"] = True
-        d["lines"] = True
-        d["triangles"] = True
-        d["labels"] = True
-        if self.type == "bna":
-            # FIXME: this was the default visibility from maproom 2; is this correct?
-            d["labels"] = False
-            d["points"] = False
-        return d
 
     def guess_type_from_file_contents(self, file_path):
         f = open(file_path, "r")
@@ -1035,12 +963,3 @@ class Layer():
             self.delete_points_and_lines(list(points_to_delete), None, True)
 
         self.lm.refresh()
-
-    def increment_change_count(self):
-        self.change_count += 1
-        if (self.change_count == sys.maxint):
-            self.change_count = 0
-
-    def destroy(self):
-        self.lm.delete_undo_operations_for_layer(self)
-        self.lm = None

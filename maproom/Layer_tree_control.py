@@ -8,7 +8,7 @@ except ImportError:
 
 from wx.lib.pubsub import pub
 
-import Layer
+from layers import Layer
 
 
 class Layer_tree_control(treectrl.CustomTreeCtrl):
@@ -115,7 +115,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         # import code; code.interact( local = locals() )
 
         for item in layer_tree[1:]:
-            if (isinstance(item, Layer.Layer)):
+            if (isinstance(item, Layer)):
                 node = self.add_layer(item, folder_node)
             else:
                 self.add_layers_recursive(item, folder_node)

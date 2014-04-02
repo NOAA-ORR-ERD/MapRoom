@@ -5,10 +5,11 @@ import time
 import traceback
 import numpy as np
 import wx
-import Layer
 import library.formats.verdat as verdat
 import library.rect as rect
 from library.accumulator import flatten
+
+from layers import Layer, RootLayer, VectorLayer, constants
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event
@@ -243,9 +244,7 @@ class LayerManager(LayerUndo):
         """
         self = cls()
         self.project = project
-        layer = Layer.Layer(self)
-        layer.name = "Layers"
-        layer.type = "root"
+        layer = RootLayer(self)
         self.insert_layer([0], layer)
         return self
     
@@ -256,7 +255,7 @@ class LayerManager(LayerUndo):
         result = []
 
         for item in tree:
-            if (isinstance(item, Layer.Layer)):
+            if (isinstance(item, Layer)):
                 result.append(item)
             else:
                 result.extend(self.flatten_recursive(item))
@@ -275,7 +274,8 @@ class LayerManager(LayerUndo):
         self.layers = []
 
     def load_layer_from_uri(self, uri):
-        layer = Layer.Layer(self)
+        # FIXME: load all layer types, not just vector!
+        layer = VectorLayer(self)
         layer.read_from_file(uri)
         if layer.load_error_string != "":
             print "LAYER LOAD ERROR: %s" % layer.load_error_string
@@ -334,7 +334,7 @@ class LayerManager(LayerUndo):
 
     def get_multi_index_of_layer_recursive(self, layer, tree):
         for i, item in enumerate(tree):
-            if (isinstance(item, Layer.Layer)):
+            if (isinstance(item, Layer)):
                 if (item == layer):
                     # in the case of folders, we return the multi-index to the parent,
                     # since the folder "layer" itself is just a pseudo-layer
@@ -440,9 +440,9 @@ class LayerManager(LayerUndo):
             had_error = True
             print traceback.format_exc(e)
             if hasattr(e, "points") and e.points != None:
-                layer.clear_all_selections(Layer.STATE_FLAGGED)
+                layer.clear_all_selections(constants.STATE_FLAGGED)
                 for p in e.points:
-                    layer.select_point(p, Layer.STATE_FLAGGED)
+                    layer.select_point(p, constants.STATE_FLAGGED)
                 self.dispatch_event('refresh_needed')
             wx.MessageDialog(
                 self.project.control,
@@ -463,13 +463,13 @@ class LayerManager(LayerUndo):
                                  style=wx.OK | wx.ICON_ERROR).ShowModal()
 
     def add_layer(self, name="New Layer"):
-        layer = Layer.Layer()
+        layer = Layer()
         layer.new()
         self.insert_layer(None, layer)
 
     def add_folder(self, name="New Folder"):
         # FIXME: doesn't work, so menu/toolbar items are disabled
-        folder = Layer.Layer()
+        folder = Layer()
         folder.type = "folder"
         folder.name = name
         self.insert_layer(None, folder)
@@ -516,7 +516,7 @@ class LayerManager(LayerUndo):
         self.dispatch_event('layers_changed')
 
     def merge_layers(self, layer_a, layer_b):
-        layer = Layer.Layer()
+        layer = Layer()
         layer.type = ".verdat"
         layer.name = "Merged"
         layer.merge_from_source_layers(layer_a, layer_b)
@@ -532,21 +532,21 @@ class LayerManager(LayerUndo):
 
 def test():
     """
-    a = Layer.Layer()
+    a = Layer()
     a.name = "a"
-    b = Layer.Layer()
+    b = Layer()
     b.name = "b"
-    c = Layer.Layer()
+    c = Layer()
     c.name = "c"
-    d = Layer.Layer()
+    d = Layer()
     d.name = "d"
-    e = Layer.Layer()
+    e = Layer()
     e.name = "e"
-    f = Layer.Layer()
+    f = Layer()
     f.name = "f"
-    g = Layer.Layer()
+    g = Layer()
     g.name = "g"
-    h = Layer.Layer()
+    h = Layer()
     h.name = "h"
 
     tree = [ [ a, b ], [c, [ d, e ] ], f, [ g, h ] ]
