@@ -9,7 +9,7 @@ import library.formats.verdat as verdat
 import library.rect as rect
 from library.accumulator import flatten
 
-from layers import Layer, RootLayer, VectorLayer, constants
+from layers import Layer, RootLayer, Grid, VectorLayer, constants
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event
@@ -246,6 +246,8 @@ class LayerManager(LayerUndo):
         self.project = project
         layer = RootLayer(self)
         self.insert_layer([0], layer)
+        grid = Grid(self)
+        self.insert_layer([1], grid)
         return self
     
     def flatten(self):

@@ -18,7 +18,7 @@ class Layer(object):
 
     def __init__(self, manager):
         self.lm = manager
-        self.name = ""
+        self.name = self.default_name
         self.type = self.default_type
         self.is_expanded = True
 
@@ -113,7 +113,24 @@ class Layer(object):
         self.change_count += 1
         if (self.change_count == sys.maxint):
             self.change_count = 0
+    
+    def create_renderer(self, storage):
+        """Create the graphic renderer for this layer.
+        
+        There may be multiple views of this layer (e.g.  in different windows),
+        so we can't just create the renderer as an attribute of this object.
+        The storage parameter is attached to the view and independent of
+        other views of this layer.
+        
+        """
+        pass
 
+    def render_projected(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+        print "Layer %s doesn't have projected objects to render" % self.name
+
+    def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility):
+        print "Layer %s doesn't have screen objects to render" % self.name
+    
     def destroy(self):
         self.lm.delete_undo_operations_for_layer(self)
         self.lm = None

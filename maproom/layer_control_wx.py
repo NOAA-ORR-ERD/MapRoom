@@ -5,7 +5,6 @@ import wx
 import wx.glcanvas as glcanvas
 import pyproj
 
-import lon_lat_grid
 import library.coordinates as coordinates
 import renderer
 import library.rect as rect
@@ -21,6 +20,24 @@ from library.Projection import Projection
 """
 The RenderWindow class -- where the opengl rendering really takes place.
 """
+
+class RendererViewStorage(object):
+    """Data class to store items needed on a per-view basis
+    
+    """
+    # Because each LayerManager could be in multiple views, we can't store
+    # layer renderer data in either the layer or the layer manager.  As
+    # currently designed, the layer renderers cache data for each view (e.g.
+    # OpenGL VBOs), and it might lead to some unintended drawing errors.
+    # Not sure at this point, but to ease the refactoring to self-rendering
+    # layers, I'm introducing this storage class so that each view has its own
+    # renderer for each layer.
+    #
+    # Maybe as I understand the code better I might realize that all the
+    # data could be shared in which case the renderers could simply become
+    # attributes of the layer itself and this storage class would go away.
+    def __init__(self, renderer):
+        self.renderer = renderer
 
 
 class LayerControl(glcanvas.GLCanvas):
@@ -55,6 +72,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.layer_manager = kwargs.pop('layer_manager')
         self.editor = kwargs.pop('editor')
         self.layer_renderers = {}
+        self.renderer_view_storage = {}
 
         kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
                                 glcanvas.WX_GL_DOUBLEBUFFER,
@@ -67,9 +85,6 @@ class LayerControl(glcanvas.GLCanvas):
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
         p = os.path.join(app_globals.image_path, "cursors", "hand_closed.ico")
         self.hand_closed_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
-
-        self.lon_lat_grid = lon_lat_grid.Lon_lat_grid()
-        self.lon_lat_grid_shown = True
         
         self.bounding_boxes_shown = False
 
@@ -112,6 +127,10 @@ class LayerControl(glcanvas.GLCanvas):
             if not layer in self.layer_renderers:
                 self.layer_renderers[layer] = renderer.LayerRenderer(self, layer)
                 self.layer_renderers[layer].create_necessary_renderers()
+            if not layer in self.renderer_view_storage:
+                storage = RendererViewStorage(self)
+                self.renderer_view_storage[layer] = storage
+                layer.create_renderer(storage)
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
@@ -429,17 +448,25 @@ class LayerControl(glcanvas.GLCanvas):
             length = len(list)
             for i, layer in enumerate(reversed(list)):
                 self.layer_renderers[layer].render(self, self.project.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
+                storage = self.renderer_view_storage[layer]
+                layer.render_projected(storage, s_r, p_r, w_r, self.project.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
 
         render_layers()
 
         if (not self.opengl_renderer.prepare_to_render_screen_objects(s_r)):
             return
 
+        def render_screen_layers():
+            list = self.layer_manager.flatten()
+            length = len(list)
+            for i, layer in enumerate(reversed(list)):
+                storage = self.renderer_view_storage[layer]
+                layer.render_screen(storage, w_r, p_r, s_r, self.project.layer_visibility[layer])
+
         # we use a try here since we must call done_rendering_screen_objects() below
         # to pop the gl stack
         try:
-            if (self.lon_lat_grid_shown):
-                self.lon_lat_grid.draw(self, w_r, p_r, s_r)
+            render_screen_layers()
             if (self.bounding_boxes_shown):
                 self.draw_bounding_boxes()
             if ((self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT or self.selection_box_is_being_defined) and self.mouse_is_down):
