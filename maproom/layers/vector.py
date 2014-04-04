@@ -57,6 +57,24 @@ class VectorLayer(Layer):
         no_polygons = (self.polygons is None or len(self.polygons) == 0)
 
         return no_points and no_triangles and no_polygons and no_images
+    
+    def get_visibility_items(self):
+        """Return allowable keys for visibility dict lookups for this layer
+        """
+        return ["points", "lines", "polygons", "triangles", "labels"]
+    
+    def visibility_item_exists(self, label):
+        """Return keys for visibility dict lookups that currently exist in this layer
+        """
+        if label in ["points", "labels"]:
+            return self.points is not None
+        if label == "lines":
+            return self.line_segment_indexes is not None
+        if label == "polygons":
+            return self.polygons is not None
+        if label == "triangles":
+            return self.triangles is not None
+        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def guess_type_from_file_contents(self, file_path):
         f = open(file_path, "r")

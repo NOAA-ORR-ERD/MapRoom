@@ -142,41 +142,12 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         if (layer.type == ".bna"):
             return item
 
-        if (layer.images != None):
-            data = wx.TreeItemData()
-            data.SetData(("images", layer))
-            subitem = self.AppendItem(item, "images", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, vis["images"])
-
-        if (layer.polygons != None):
-            data = wx.TreeItemData()
-            data.SetData(("polygons", layer))
-            subitem = self.AppendItem(item, "polygons", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, vis["polygons"])
-
-        if (layer.points != None):
-            data = wx.TreeItemData()
-            data.SetData(("points", layer))
-            subitem = self.AppendItem(item, "points", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, vis["points"])
-
-        if (layer.line_segment_indexes != None):
-            data = wx.TreeItemData()
-            data.SetData(("lines", layer))
-            subitem = self.AppendItem(item, "line segments", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, vis["lines"])
-
-        if (layer.triangles != None):
-            data = wx.TreeItemData()
-            data.SetData(("triangles", layer))
-            subitem = self.AppendItem(item, "triangles", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, vis["triangles"])
-
-        if (layer.points != None):
-            data = wx.TreeItemData()
-            data.SetData(("labels", layer))
-            subitem = self.AppendItem(item, "labels", ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-            self.CheckItem2(subitem, vis["labels"])
+        for label in layer.get_visibility_items():
+            if layer.visibility_item_exists(label):
+                data = wx.TreeItemData()
+                data.SetData((label, layer))
+                subitem = self.AppendItem(item, label, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
+                self.CheckItem2(subitem, vis[label])
 
         if (layer.is_expanded):
             self.Expand(item)

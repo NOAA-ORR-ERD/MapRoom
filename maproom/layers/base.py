@@ -69,6 +69,16 @@ class Layer(object):
             d["labels"] = False
             d["points"] = False
         return d
+    
+    def get_visibility_items(self):
+        """Return allowable keys for visibility dict lookups for this layer
+        """
+        return []
+    
+    def visibility_item_exists(self, label):
+        """Returns True if the visibility item should be shown in the UI
+        """
+        return False
 
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()
