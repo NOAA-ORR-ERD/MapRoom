@@ -981,3 +981,74 @@ class VectorLayer(Layer):
             self.delete_points_and_lines(list(points_to_delete), None, True)
 
         self.lm.refresh()
+    
+    def create_renderer(self, renderer):
+        """Create the graphic renderer for this layer.
+        
+        There may be multiple views of this layer (e.g.  in different windows),
+        so we can't just create the renderer as an attribute of this object.
+        The storage parameter is attached to the view and independent of
+        other views of this layer.
+        
+        """
+        if self.triangle_points != None and renderer.triangle_set_renderer == None:
+            renderer.rebuild_triangle_set_renderer(self)
+
+        if self.points != None and renderer.point_and_line_set_renderer == None:
+            if (self.line_segment_indexes == None):
+                self.line_segment_indexes = self.make_line_segment_indexes(0)
+
+            renderer.rebuild_point_and_line_set_renderer(self, create=True)
+
+        if self.polygons != None and renderer.polygon_set_renderer == None:
+            renderer.rebuild_polygon_set_renderer(self, create=True)
+
+        renderer.set_up_labels(self)
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+        if (not layer_visibility["layer"]):
+            return
+
+        # the polygons
+        if (renderer.polygon_set_renderer != None and layer_visibility["polygons"]):
+            renderer.polygon_set_renderer.render(layer_index_base + renderer.POLYGONS_SUB_LAYER_PICKER_OFFSET,
+                                             pick_mode,
+                                             self.polygons.color,
+                                             color_to_int(0, 0, 0, 1.0),
+                                             1)  # , self.get_selected_polygon_indexes()
+
+        # the triangle points and triangle line segments
+        if (renderer.triangle_set_renderer != None and layer_visibility["triangles"]):
+            renderer.triangle_set_renderer .render(pick_mode,
+                                               self.point_size + 10,
+                                               self.triangle_line_width)
+
+        # the points and line segments
+        if (renderer.point_and_line_set_renderer != None):
+            renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
+                                                    pick_mode,
+                                                    self.point_size,
+                                                    self.line_width,
+                                                    layer_visibility["points"],
+                                                    layer_visibility["lines"],
+                                                    self.get_selected_point_indexes(),
+                                                    self.get_selected_point_indexes(STATE_FLAGGED),
+                                                    self.get_selected_line_segment_indexes(),
+                                                    self.get_selected_line_segment_indexes(STATE_FLAGGED))
+
+            # the labels
+            if (renderer.label_set_renderer != None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys != None):
+                renderer.label_set_renderer.render(-1, pick_mode, s_r,
+                                               renderer.MAX_LABEL_CHARACTERS, self.points.z,
+                                               renderer.point_and_line_set_renderer.vbo_point_xys.data,
+                                               p_r, renderer.canvas.projected_units_per_pixel)
+
+        # render selections after everything else
+        if (renderer.point_and_line_set_renderer != None and not pick_mode):
+            if layer_visibility["lines"]:
+                renderer.point_and_line_set_renderer.render_selected_line_segments(self.line_width, self.get_selected_line_segment_indexes())
+
+            if layer_visibility["points"]:
+                renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
+                                                                        self.get_selected_point_indexes())
+        

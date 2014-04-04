@@ -91,7 +91,7 @@ class Grid(Layer):
         print "Rendering grid!!! visible=%s" % (layer_visibility["layer"])
         if (not layer_visibility["layer"]):
             return
-        render_window = storage.renderer
+        render_window = storage.canvas
         opengl_renderer = render_window.opengl_renderer
 #        print "projected_rect = %r" % (projected_rect,)
 #        print "screen_rect = %r" % (screen_rect,)
