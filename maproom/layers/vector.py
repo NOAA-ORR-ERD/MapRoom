@@ -14,17 +14,17 @@ from ..library.Projection import Projection
 from ..library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
 from ..renderer import color_to_int, data_types
 
-from base import Layer
+from base import Layer, ProjectedLayer
 from constants import *
 
-class VectorLayer(Layer):
+class VectorLayer(ProjectedLayer):
     """Layer for points/lines/polygons.
     
     """
     default_name = "Vector Layer"
 
     def __init__(self, manager):
-        Layer.__init__(self, manager)
+        ProjectedLayer.__init__(self, manager)
 
         # when two layers are merged into one, this is the index of the start of the points that came from the second layer
         self.merged_points_index = 0
@@ -1006,6 +1006,7 @@ class VectorLayer(Layer):
         renderer.set_up_labels(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
         if (not layer_visibility["layer"]):
             return
 

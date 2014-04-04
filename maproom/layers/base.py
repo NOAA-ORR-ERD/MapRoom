@@ -135,12 +135,24 @@ class Layer(object):
         """
         pass
 
-    def render_projected(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
-        print "Layer %s doesn't have projected objects to render" % self.name
-
-    def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility):
-        print "Layer %s doesn't have screen objects to render" % self.name
+    def render(self, opengl_renderer, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+        if hasattr(self, "render_projected"):
+            opengl_renderer.prepare_to_render_projected_objects()
+            self.render_projected(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
+        if hasattr(self, "render_screen"):
+            opengl_renderer.prepare_to_render_screen_objects()
+            self.render_screen(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
     
     def destroy(self):
         self.lm.delete_undo_operations_for_layer(self)
         self.lm = None
+
+
+class ProjectedLayer(Layer):
+    def render_projected(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+        print "Layer %s doesn't have projected objects to render" % self.name
+
+
+class ScreenLayer(Layer):
+    def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+        print "Layer %s doesn't have screen objects to render" % self.name

@@ -26,13 +26,7 @@ class Opengl_renderer():
          ("u_rb", np.float32), ("v_rb", np.float32)]
     )
 
-    font_texture = None
-    font_texture_size = None
-    font_extents = None
-
     picker = None
-
-    given_screen_rect = rect.EMPTY_RECT
 
     def __init__(self, create_picker=False):
         if gl.glGetInteger( gl.GL_RED_BITS ) != 8 or \
@@ -60,37 +54,46 @@ class Opengl_renderer():
         if (create_picker):
             self.picker = Picker.Picker()
 
+        self.screen_rect = rect.EMPTY_RECT
+
     def destroy(self):
         if self.font_texture:
             gl.glDeleteTextures(
                 np.array([self.font_texture], np.uint32),
             )
             self.font_texture = None
-
-    def prepare_to_render_projected_objects(self, projected_rect, screen_rect):
-        s_w = rect.width(screen_rect)
-        s_h = rect.height(screen_rect)
+    
+    def prepare_to_render(self, projected_rect, screen_rect):
+        self.screen_rect = screen_rect
+        self.s_w = rect.width(screen_rect)
+        self.s_h = rect.height(screen_rect)
+        self.projected_rect = projected_rect
         p_w = rect.width(projected_rect)
         p_h = rect.height(projected_rect)
 
-        if (s_w <= 0 or s_h <= 0 or p_w <= 0 or p_h <= 0):
+        if (self.s_w <= 0 or self.s_h <= 0 or p_w <= 0 or p_h <= 0):
             return False
-
-        gl.glViewport(0, 0, s_w, s_h)
+        
+        gl.glViewport(0, 0, self.s_w, self.s_h)
 
         gl.glClearColor(1.0, 1.0, 1.0, 0)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
+        self.prepare_to_render_projected_objects()
+        
+        return True
+
+    def prepare_to_render_projected_objects(self):
         gl.glDisable(gl.GL_TEXTURE_2D)
 
         gl.glMatrixMode(gl.GL_PROJECTION)  # TODO: deprecated
         gl.glLoadIdentity()
 
-        glu.gluOrtho2D(projected_rect[0][0], projected_rect[1][0], projected_rect[0][1], projected_rect[1][1])
+        glu.gluOrtho2D(self.projected_rect[0][0], self.projected_rect[1][0],
+                       self.projected_rect[0][1], self.projected_rect[1][1])
 
         gl.glMatrixMode(gl.GL_MODELVIEW)  # TODO: deprecated
         gl.glLoadIdentity()
-
-        return True
 
     def load_font_texture(self):
         frozen = getattr(sys, 'frozen', False)
@@ -163,28 +166,16 @@ class Opengl_renderer():
     #
     # the methods below are used to render simple objects one at a time, in screen coordinates
 
-    def prepare_to_render_screen_objects(self, screen_rect):
-        self.given_screen_rect = screen_rect
-
-        s_w = rect.width(screen_rect)
-        s_h = rect.height(screen_rect)
-
-        if (s_w <= 0 or s_h <= 0):
-            return False
-
+    def prepare_to_render_screen_objects(self):
         gl.glEnable(gl.GL_TEXTURE_2D)
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.font_texture)
 
         # set up an orthogonal projection
         gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glPushMatrix()
         gl.glLoadIdentity()
-        gl.glOrtho(0, s_w, 0, s_h, -1, 1)
+        gl.glOrtho(0, self.s_w, 0, self.s_h, -1, 1)
         gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glPushMatrix()
         gl.glLoadIdentity()
-
-        return True
 
     def get_drawn_string_dimensions(self, s):
         width = 0
@@ -200,8 +191,8 @@ class Opengl_renderer():
 
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
         # flip y to treat point as normal screen coordinates
-        point_a = (point_a[0], rect.height(self.given_screen_rect) - point_a[1])
-        point_b = (point_b[0], rect.height(self.given_screen_rect) - point_b[1])
+        point_a = (point_a[0], rect.height(self.screen_rect) - point_a[1])
+        point_b = (point_b[0], rect.height(self.screen_rect) - point_b[1])
 
         gl.glDisable(gl.GL_TEXTURE_2D)
         gl.glDisable(gl.GL_LINE_SMOOTH)
@@ -220,8 +211,8 @@ class Opengl_renderer():
 
     def draw_screen_box(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, width=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
         # flip y to treat rect as normal screen coordinates
-        r = ((r[0][0], rect.height(self.given_screen_rect) - r[0][1]),
-             (r[1][0], rect.height(self.given_screen_rect) - r[1][1]))
+        r = ((r[0][0], rect.height(self.screen_rect) - r[0][1]),
+             (r[1][0], rect.height(self.screen_rect) - r[1][1]))
 
         gl.glDisable(gl.GL_TEXTURE_2D)
         gl.glDisable(gl.GL_LINE_SMOOTH)
@@ -242,8 +233,8 @@ class Opengl_renderer():
 
     def draw_screen_rect(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0):
         # flip y to treat rect as normal screen coordinates
-        r = ((r[0][0], rect.height(self.given_screen_rect) - r[0][1]),
-             (r[1][0], rect.height(self.given_screen_rect) - r[1][1]))
+        r = ((r[0][0], rect.height(self.screen_rect) - r[0][1]),
+             (r[1][0], rect.height(self.screen_rect) - r[1][1]))
 
         gl.glDisable(gl.GL_TEXTURE_2D)
         # don't let texture colors override the fill color
@@ -259,7 +250,7 @@ class Opengl_renderer():
 
     def draw_screen_string(self, point, s):
         # flip y to treat point as normal screen coordinates
-        point = (point[0], rect.height(self.given_screen_rect) - point[1])
+        point = (point[0], rect.height(self.screen_rect) - point[1])
 
         screen_vertex_data = np.zeros(
             (len(s), ),
@@ -352,9 +343,3 @@ class Opengl_renderer():
 
         vbo_screen_vertexes = None
         vbo_texture_coordinates = None
-
-    def done_rendering_screen_objects(self):
-        gl.glMatrixMode(gl.GL_PROJECTION)
-        gl.glPopMatrix()
-        gl.glMatrixMode(gl.GL_MODELVIEW)
-        gl.glPopMatrix()

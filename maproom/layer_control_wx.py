@@ -410,7 +410,7 @@ class LayerControl(glcanvas.GLCanvas):
         w_r = self.get_world_rect_from_projected_rect(p_r)
         # print "w_r = " + str( w_r )
 
-        if (not self.opengl_renderer.prepare_to_render_projected_objects(p_r, s_r)):
+        if not self.opengl_renderer.prepare_to_render(p_r, s_r):
             return
 
         """
@@ -425,49 +425,32 @@ class LayerControl(glcanvas.GLCanvas):
             length = len(list)
             for i, layer in enumerate(reversed(list)):
                 renderer = self.layer_renderers[layer]
-                layer.render_projected(renderer, w_r, p_r, s_r, self.project.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
+                layer.render(self.opengl_renderer, renderer, w_r, p_r, s_r, self.project.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
 
         render_layers()
 
-        if (not self.opengl_renderer.prepare_to_render_screen_objects(s_r)):
-            return
-
-        def render_screen_layers():
-            list = self.layer_manager.flatten()
-            length = len(list)
-            for i, layer in enumerate(reversed(list)):
-                renderer = self.layer_renderers[layer]
-                layer.render_screen(renderer, w_r, p_r, s_r, self.project.layer_visibility[layer])
-
-        # we use a try here since we must call done_rendering_screen_objects() below
-        # to pop the gl stack
-        try:
-            render_screen_layers()
-            if (self.bounding_boxes_shown):
-                self.draw_bounding_boxes()
-            if ((self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT or self.selection_box_is_being_defined) and self.mouse_is_down):
-                (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
-                                                                   self.mouse_move_position)
-                # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )
-                rects = self.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
-                for r in rects:
-                    if (r != rect.EMPTY_RECT):
-                        self.opengl_renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
-                # small adjustments to make stipple overlap gray rects perfectly
-                y1 -= 1
-                x2 += 1
-                self.opengl_renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-                self.opengl_renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-                self.opengl_renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-                self.opengl_renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-        except Exception as inst:
-            raise
-            # print "error during rendering of screen objects: " + str( inst )
-
-        self.opengl_renderer.done_rendering_screen_objects()
+        self.opengl_renderer.prepare_to_render_screen_objects()
+        if (self.bounding_boxes_shown):
+            self.draw_bounding_boxes()
+        if ((self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT or self.selection_box_is_being_defined) and self.mouse_is_down):
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
+                                                               self.mouse_move_position)
+            # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )
+            rects = self.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
+            for r in rects:
+                if (r != rect.EMPTY_RECT):
+                    self.opengl_renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
+            # small adjustments to make stipple overlap gray rects perfectly
+            y1 -= 1
+            x2 += 1
+            self.opengl_renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            self.opengl_renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            self.opengl_renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            self.opengl_renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
 
         self.SwapBuffers()
 
+        self.opengl_renderer.prepare_to_render_projected_objects()
         self.opengl_renderer.prepare_to_render_picker(s_r)
         render_layers(pick_mode=True)
         self.opengl_renderer.done_rendering_picker()

@@ -2,9 +2,9 @@ import bisect
 import numpy as np
 from ..library import rect, coordinates
 
-from base import Layer
+from base import ScreenLayer
 
-class Grid(Layer):
+class Grid(ScreenLayer):
     """Root layer
     
     Only one root layer per project.
@@ -87,10 +87,10 @@ class Grid(Layer):
             dtype=np.float64)
 
     # fixme == this should be able to get the various rects from the render_window object...
-    def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility):
-        print "Rendering grid!!! visible=%s" % (layer_visibility["layer"])
-        if (not layer_visibility["layer"]):
+    def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+        if (not layer_visibility["layer"] or pick_mode):
             return
+        print "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
         render_window = storage.canvas
         opengl_renderer = render_window.opengl_renderer
 #        print "projected_rect = %r" % (projected_rect,)
