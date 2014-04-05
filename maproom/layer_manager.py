@@ -9,7 +9,7 @@ import library.formats.verdat as verdat
 import library.rect as rect
 from library.accumulator import flatten
 
-from layers import Layer, RootLayer, Grid, VectorLayer, constants
+from layers import Layer, RootLayer, Grid, VectorLayer, RasterLayer, constants
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event
@@ -275,10 +275,17 @@ class LayerManager(LayerUndo):
             layer.destroy()
         self.layers = []
 
-    def load_layer_from_uri(self, uri):
+    def load_layer_from_metadata(self, metadata):
         # FIXME: load all layer types, not just vector!
-        layer = VectorLayer(self)
-        layer.read_from_file(uri)
+        if metadata.mime == "application/x-maproom-verdat":
+            layer = VectorLayer(self)
+            layer.read_from_file(metadata.uri)
+        elif metadata.mime.startswith("image"):
+            layer = RasterLayer(self)
+            layer.read_from_file(metadata.uri)
+        else:
+            layer = Layer(self)
+            layer.load_error_string = "Unknown file type %s for %s" % (metadata.mime, metadata.uri)
         if layer.load_error_string != "":
             print "LAYER LOAD ERROR: %s" % layer.load_error_string
             return None
@@ -389,7 +396,7 @@ class LayerManager(LayerUndo):
     def count_raster_layers(self):
         n = 0
         for layer in self.flatten():
-            if (layer.images != None):
+            if (hasattr(layer, "images") and layer.images != None):
                 n += 1
         #
         return n
@@ -397,8 +404,8 @@ class LayerManager(LayerUndo):
     def count_vector_layers(self):
         n = 0
         for layer in self.flatten():
-            if (layer.points != None or
-                    layer.polygons != None):
+            if (hasattr(layer, "points") and (layer.points != None or
+                    layer.polygons != None)):
                 n += 1
         #
         return n

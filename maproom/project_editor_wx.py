@@ -45,7 +45,7 @@ class ProjectEditor(FrameworkEditor):
             path = self.path
         else:
             metadata = guess.get_metadata()
-            layer = self.layer_manager.load_layer_from_uri(metadata.uri)
+            layer = self.layer_manager.load_layer_from_metadata(metadata)
             
             if layer:
                 self.zoom_to_layer(layer)
