@@ -96,6 +96,9 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     def rebuild(self):
         # rebuild the tree from the layer manager's data
+        if self.project is None:
+            # Wait till there's an active project
+            return
         lm = self.project.layer_manager
         self.DeleteAllItems()
         # self.Freeze()

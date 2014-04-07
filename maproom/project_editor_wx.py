@@ -117,8 +117,6 @@ class ProjectEditor(FrameworkEditor):
     @on_trait_change('layer_manager:layers_changed')
     def layers_changed(self):
         print "layers_changed called!!!"
-        if self.layer_tree_control is None:
-            return
         self.layer_tree_control.rebuild()
         self.refresh()
     
