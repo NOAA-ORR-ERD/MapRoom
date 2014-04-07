@@ -579,6 +579,8 @@ class LayerControl(glcanvas.GLCanvas):
             self.zoom_to_world_rect(w_r)
 
     def zoom_to_world_rect(self, w_r):
+        if (w_r == rect.NONE_RECT):
+            return
         p_r = self.get_projected_rect_from_world_rect(w_r)
         size = self.get_screen_size()
         # so that when we zoom, the points don't hit the very edge of the window

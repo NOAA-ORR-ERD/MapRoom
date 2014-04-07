@@ -4,6 +4,7 @@
 import logging
 
 # Framework imports.
+from peppy2 import get_image_path
 from peppy2.framework.application import run
 
 # Local imports.
@@ -26,7 +27,9 @@ def main(argv):
 
     plugins = [ MaproomPlugin() ]
     
-    run(plugins=plugins, use_eggs=False, startup_task="maproom.project")
+    import maproom
+    image_path = [get_image_path("icons", maproom)]
+    run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task="maproom.project")
 
     logging.shutdown()
 

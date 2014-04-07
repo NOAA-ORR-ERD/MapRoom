@@ -7,7 +7,7 @@ import wx
 from wx.lib.pubsub import pub
 
 # Enthought library imports.
-from traits.api import provides, on_trait_change, Any
+from traits.api import provides, on_trait_change, Any, Bool
 
 from peppy2.framework.editor import FrameworkEditor
 
@@ -25,6 +25,8 @@ class ProjectEditor(FrameworkEditor):
     See the IProjectEditor interface for the API documentation.
     """
     layer_manager = Any
+    
+    layer_zoomable = Bool
 
     #### property getters
 
@@ -120,6 +122,15 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
         self.refresh()
     
+    def layer_selection_changed(self, sel_layer=None):
+        if sel_layer is None:
+            sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            self.layer_zoomable = sel_layer.is_zoomable()
+        else:
+            self.layer_zoomable = False
+        print "layer=%s, zoomable = %s" % (sel_layer, self.layer_zoomable)
+    
     @on_trait_change('layer_manager:refresh_needed')
     def refresh(self):
         print "refresh called"
@@ -170,7 +181,7 @@ class ProjectEditor(FrameworkEditor):
             self.control.rebuild_triangles_for_layer(layer)
 
     def zoom_to_selected_layer(self):
-        sel_layer = self.layer_manager.get_selected_layer()
+        sel_layer = self.layer_tree_control.get_selected_layer()
         print "Selected layer = %r" % sel_layer
         if sel_layer is not None:
             self.zoom_to_layer(sel_layer)

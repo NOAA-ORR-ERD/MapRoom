@@ -5,8 +5,9 @@
 from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
 from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
     IEditorAreaPane, EditorAreaPane, Editor, DockPane, HSplitter, VSplitter
+from pyface.action.api import Group
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
-    SMenu, SToolBar, TaskAction, EditorAction, TaskToggleGroup, SchemaAddition
+    SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
 from traits.api import on_trait_change, Property, Instance
 
 from peppy2.framework.task import FrameworkTask
@@ -38,6 +39,39 @@ class BoundingBoxAction(EditorAction):
     def _update_checked(self):
         self.checked = self.active_editor.control.bounding_boxes_shown
 
+class ZoomInAction(EditorAction):
+    name = 'Zoom In'
+    tooltip = 'Increase magnification'
+    image = ImageResource('zoom_in')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.control.zoom_in)
+
+class ZoomOutAction(EditorAction):
+    name = 'Zoom Out'
+    tooltip = 'Decrease magnification'
+    image = ImageResource('zoom_out')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.control.zoom_out)
+
+class ZoomToFit(EditorAction):
+    name = 'Zoom to Fit'
+    tooltip = 'Set magnification to show all layers'
+    image = ImageResource('zoom_fit')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.control.zoom_to_fit)
+
+class ZoomToLayer(EditorAction):
+    name = 'Zoom to Layer'
+    tooltip = 'Set magnification to show current layer'
+    enabled_name = 'layer_zoomable' # enabled based on state of task.active_editor.dirty
+    image = ImageResource('zoom_to_layer')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
+
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
@@ -64,6 +98,11 @@ class MaproomProjectTask(FrameworkTask):
 
     def _extra_actions_default(self):
         # FIXME: Is there no way to add an item to an existing group?
+        zoomgroup = lambda : Group(ZoomInAction(),
+                                   ZoomOutAction(),
+                                   ZoomToFit(),
+                                   ZoomToLayer(),
+                                   id="zoomgroup")
         actions = [ SchemaAddition(id='OpenLayer',
                                    factory=OpenLayerAction,
                                    path='MenuBar/File',
@@ -74,6 +113,14 @@ class MaproomProjectTask(FrameworkTask):
                                    factory=BoundingBoxAction,
                                    path='MenuBar/View',
                                    after="TaskGroupEnd",
+                                   ),
+                    SchemaAddition(factory=zoomgroup,
+                                   path='MenuBar/View',
+                                   absolute_position="first",
+                                   ),
+                    SchemaAddition(factory=zoomgroup,
+                                   path='ToolBar',
+                                   after="File",
                                    ),
                     ]
         return actions
