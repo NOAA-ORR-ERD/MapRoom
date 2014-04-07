@@ -6,7 +6,7 @@ from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
 from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
     IEditorAreaPane, EditorAreaPane, Editor, DockPane, HSplitter, VSplitter
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
-    SMenu, SToolBar, TaskAction, TaskToggleGroup, SchemaAddition
+    SMenu, SToolBar, TaskAction, EditorAction, TaskToggleGroup, SchemaAddition
 from traits.api import on_trait_change, Property, Instance
 
 from peppy2.framework.task import FrameworkTask
@@ -23,6 +23,20 @@ class OpenLayerAction(TaskAction):
         dialog = FileDialog(parent=event.task.window.control)
         if dialog.open() == OK:
             event.task.window.application.load_file(dialog.path, event.task, layer=True)
+
+class BoundingBoxAction(EditorAction):
+    name = 'Show Bounding Boxes'
+    tooltip = 'Display or hide bounding boxes for each layer'
+    style = 'toggle'
+
+    def perform(self, event):
+        value = not self.active_editor.control.bounding_boxes_shown
+        self.active_editor.control.bounding_boxes_shown = value
+        GUI.invoke_later(self.active_editor.control.render)
+
+    @on_trait_change('active_editor')
+    def _update_checked(self):
+        self.checked = self.active_editor.control.bounding_boxes_shown
 
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
@@ -55,6 +69,11 @@ class MaproomProjectTask(FrameworkTask):
                                    path='MenuBar/File',
                                    after="OpenGroup",
                                    before="OpenGroupEnd",
+                                   ),
+                    SchemaAddition(id='bb',
+                                   factory=BoundingBoxAction,
+                                   path='MenuBar/View',
+                                   after="TaskGroupEnd",
                                    ),
                     ]
         return actions
