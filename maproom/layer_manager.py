@@ -490,9 +490,10 @@ class LayerManager(LayerUndo):
                                  caption="Error Saving Verdat File",
                                  style=wx.OK | wx.ICON_ERROR).ShowModal()
 
-    def add_layer(self, name="New Layer"):
-        layer = Layer()
+    def add_layer(self):
+        layer = VectorLayer(self)
         layer.new()
+        self.dispatch_event('layer_loaded', layer)
         self.insert_layer(None, layer)
 
     def add_folder(self, name="New Folder"):

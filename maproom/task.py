@@ -5,7 +5,7 @@
 from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
 from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
     IEditorAreaPane, EditorAreaPane, Editor, DockPane, HSplitter, VSplitter
-from pyface.action.api import Group
+from pyface.action.api import Group, Separator
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
     SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
 from traits.api import on_trait_change, Property, Instance
@@ -72,6 +72,14 @@ class ZoomToLayer(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
 
+class NewLayerAction(EditorAction):
+    name = 'New Vector Layer'
+    tooltip = 'Create new vector (grid) layer'
+    image = ImageResource('add_layer')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_manager.add_layer)
+
 class RaiseLayerAction(EditorAction):
     name = 'Raise Layer'
     tooltip = 'Move layer up in the stacking order'
@@ -123,44 +131,57 @@ class MaproomProjectTask(FrameworkTask):
                                    ZoomToFit(),
                                    ZoomToLayer(),
                                    id="zoomgroup")
-        layermenu = lambda: SMenu(
+        layer = lambda: SMenu(
             id= 'Layer', name="Layer"
         )
-        raisegroup = lambda : Group(RaiseLayerAction(),
-                                   LowerLayerAction(),
-                                   id="raisegroup")
-        actions = [ SchemaAddition(id='OpenLayer',
-                                   factory=OpenLayerAction,
-                                   path='MenuBar/File',
-                                   after="OpenGroup",
-                                   before="OpenGroupEnd",
-                                   ),
-                    SchemaAddition(id='bb',
-                                   factory=BoundingBoxAction,
-                                   path='MenuBar/View',
-                                   after="TaskGroupEnd",
-                                   ),
-                    SchemaAddition(factory=layermenu,
-                                   path='MenuBar',
-                                   after="Edit",
-                                   ),
-                    SchemaAddition(factory=raisegroup,
-                                   path='MenuBar/Layer',
-                                   ),
-                    SchemaAddition(factory=zoomgroup,
-                                   path='MenuBar/View',
-                                   absolute_position="first",
-                                   ),
-                    SchemaAddition(id="Raise",
-                                   factory=raisegroup,
-                                   path='ToolBar',
-                                   after="File",
-                                   ),
-                    SchemaAddition(factory=zoomgroup,
-                                   path='ToolBar',
-                                   after="Raise",
-                                   ),
-                    ]
+        layertools = lambda : Group(
+            NewLayerAction(),
+            RaiseLayerAction(),
+            LowerLayerAction(),
+            id="layertools")
+        layermenu = lambda : Group(
+            Group(NewLayerAction(),
+                  id="addlayergroup"),
+            Group(RaiseLayerAction(),
+                  LowerLayerAction(),
+                  id="raisegroup"),
+            id="layermenu")
+        actions = [
+            # Menubar additions
+            SchemaAddition(id='OpenLayer',
+                           factory=OpenLayerAction,
+                           path='MenuBar/File',
+                           after="OpenGroup",
+                           before="OpenGroupEnd",
+                           ),
+            SchemaAddition(id='bb',
+                           factory=BoundingBoxAction,
+                           path='MenuBar/View',
+                           after="TaskGroupEnd",
+                           ),
+            SchemaAddition(factory=layer,
+                           path='MenuBar',
+                           after="Edit",
+                           ),
+            SchemaAddition(factory=layermenu,
+                           path='MenuBar/Layer',
+                           ),
+            SchemaAddition(factory=zoomgroup,
+                           path='MenuBar/View',
+                           absolute_position="first",
+                           ),
+            
+            # Toolbar additions
+            SchemaAddition(id="layer",
+                           factory=layertools,
+                           path='ToolBar',
+                           after="File",
+                           ),
+            SchemaAddition(factory=zoomgroup,
+                           path='ToolBar',
+                           after="layer",
+                           ),
+            ]
         return actions
 
     ###########################################################################
