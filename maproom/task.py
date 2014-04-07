@@ -79,6 +79,8 @@ class MaproomProjectTask(FrameworkTask):
     #### Task interface #######################################################
 
     name = 'Maproom Project File'
+    
+    icon = ImageResource('maproom')
 
     ###########################################################################
     # 'Task' interface.
