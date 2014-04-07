@@ -27,6 +27,10 @@ class ProjectEditor(FrameworkEditor):
     layer_manager = Any
     
     layer_zoomable = Bool
+    
+    layer_above = Bool
+    
+    layer_below = Bool
 
     #### property getters
 
@@ -125,8 +129,12 @@ class ProjectEditor(FrameworkEditor):
             sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             self.layer_zoomable = sel_layer.is_zoomable()
+            self.layer_above = self.layer_manager.is_raisable(sel_layer)
+            self.layer_below = self.layer_manager.is_lowerable(sel_layer)
         else:
             self.layer_zoomable = False
+            self.layer_above = False
+            self.layer_below = False
         print "layer=%s, zoomable = %s" % (sel_layer, self.layer_zoomable)
     
     @on_trait_change('layer_manager:refresh_needed')

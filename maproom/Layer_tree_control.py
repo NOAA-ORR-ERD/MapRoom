@@ -261,45 +261,10 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         self.project.editor.esc_key_pressed()
         self.project.layer_selection_changed(self.get_selected_layer())
 
-    def is_selected_layer_raisable(self):
-        item = self.GetSelection()
-        if item:
-            (category, layer) = self.GetItemPyData(item).Data
-            if (category != "layer" and category != "folder"):
-                return False
-            lm = self.project.layer_manager
-            mi = lm.get_multi_index_of_layer(layer)
-            if mi is not None:
-                return mi[len(mi) - 1] >= 2
-        return False
-
-    def is_selected_layer_lowerable(self):
-        item = self.GetSelection()
-        if item:
-            (category, layer) = self.GetItemPyData(item).Data
-            if (category != "layer" and category != "folder"):
-                return False
-            lm = self.project.layer_manager
-            mi = lm.get_multi_index_of_layer(layer)
-            if mi is not None:
-                n = mi[len(mi) - 1]
-                mi2 = mi[: len(mi) - 1]
-                parent_list = lm.get_layer_by_multi_index(mi2)
-                total = len(parent_list)
-
-                return n < (total - 1)
-        return False
-
     def raise_selected_layer(self):
-        if (not self.is_selected_layer_raisable()):
-            return
-
         self.move_selected_layer(-1)
 
     def lower_selected_layer(self):
-        if (not self.is_selected_layer_lowerable()):
-            return
-
         self.move_selected_layer(1)
 
     def move_selected_layer(self, delta):
@@ -316,6 +281,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         lm.remove_layer(mi_source)
         lm.insert_layer(mi_target, source_layer)
         self.project.editor.esc_key_pressed()
+        self.select_layer(layer)
 
     def mouse_pressed(self, event):
         # If a selected item is clicked, unselect it so that it will be

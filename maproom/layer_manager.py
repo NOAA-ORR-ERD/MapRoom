@@ -364,6 +364,25 @@ class LayerManager(LayerUndo):
     def layer_is_folder(self, layer):
         return layer.type == "root" or layer.type == "folder"
 
+    def is_raisable(self, layer):
+        if layer.type != "root":
+            mi = self.get_multi_index_of_layer(layer)
+            if mi is not None:
+                return mi[len(mi) - 1] >= 2
+        return False
+
+    def is_lowerable(self, layer):
+        if layer.type != "root":
+            mi = self.get_multi_index_of_layer(layer)
+            if mi is not None:
+                n = mi[len(mi) - 1]
+                mi2 = mi[: len(mi) - 1]
+                parent_list = self.get_layer_by_multi_index(mi2)
+                total = len(parent_list)
+
+                return n < (total - 1)
+        return False
+
     # returns a list of the child layers of a root or folder layer
     def get_layer_children(self, layer):
         mi = self.get_multi_index_of_layer(layer)

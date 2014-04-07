@@ -66,11 +66,29 @@ class ZoomToFit(EditorAction):
 class ZoomToLayer(EditorAction):
     name = 'Zoom to Layer'
     tooltip = 'Set magnification to show current layer'
-    enabled_name = 'layer_zoomable' # enabled based on state of task.active_editor.dirty
+    enabled_name = 'layer_zoomable'
     image = ImageResource('zoom_to_layer')
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
+
+class RaiseLayerAction(EditorAction):
+    name = 'Raise Layer'
+    tooltip = 'Move layer up in the stacking order'
+    enabled_name = 'layer_above'
+    image = ImageResource('raise.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.raise_selected_layer)
+
+class LowerLayerAction(EditorAction):
+    name = 'Lower Layer'
+    tooltip = 'Move layer down in the stacking order'
+    enabled_name = 'layer_below'
+    image = ImageResource('lower.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer)
 
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
@@ -105,6 +123,12 @@ class MaproomProjectTask(FrameworkTask):
                                    ZoomToFit(),
                                    ZoomToLayer(),
                                    id="zoomgroup")
+        layermenu = lambda: SMenu(
+            id= 'Layer', name="Layer"
+        )
+        raisegroup = lambda : Group(RaiseLayerAction(),
+                                   LowerLayerAction(),
+                                   id="raisegroup")
         actions = [ SchemaAddition(id='OpenLayer',
                                    factory=OpenLayerAction,
                                    path='MenuBar/File',
@@ -116,13 +140,25 @@ class MaproomProjectTask(FrameworkTask):
                                    path='MenuBar/View',
                                    after="TaskGroupEnd",
                                    ),
+                    SchemaAddition(factory=layermenu,
+                                   path='MenuBar',
+                                   after="Edit",
+                                   ),
+                    SchemaAddition(factory=raisegroup,
+                                   path='MenuBar/Layer',
+                                   ),
                     SchemaAddition(factory=zoomgroup,
                                    path='MenuBar/View',
                                    absolute_position="first",
                                    ),
-                    SchemaAddition(factory=zoomgroup,
+                    SchemaAddition(id="Raise",
+                                   factory=raisegroup,
                                    path='ToolBar',
                                    after="File",
+                                   ),
+                    SchemaAddition(factory=zoomgroup,
+                                   path='ToolBar',
+                                   after="Raise",
                                    ),
                     ]
         return actions
