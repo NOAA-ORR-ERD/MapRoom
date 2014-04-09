@@ -322,6 +322,10 @@ class VectorLayer(ProjectedLayer):
             bounds = rect.accumulate_rect(bounds, b)
 
         return bounds
+    
+    def compute_selected_bounding_rect(self):
+        bounds = self.compute_bounding_rect(STATE_SELECTED)
+        return bounds
 
     def clear_all_selections(self, mark_type=STATE_SELECTED):
         self.clear_all_point_selections(mark_type)

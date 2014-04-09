@@ -31,6 +31,8 @@ class ProjectEditor(FrameworkEditor):
     layer_above = Bool
     
     layer_below = Bool
+    
+    layer_has_points = Bool
 
     #### property getters
 
@@ -131,10 +133,12 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = sel_layer.is_zoomable()
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
+            self.layer_has_points = sel_layer.has_points()
         else:
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
+            self.layer_has_points = False
         print "layer=%s, zoomable = %s" % (sel_layer, self.layer_zoomable)
     
     @on_trait_change('layer_manager:refresh_needed')

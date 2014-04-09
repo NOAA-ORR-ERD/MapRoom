@@ -716,6 +716,34 @@ class LayerControl(glcanvas.GLCanvas):
             self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)
             self.project.refresh()
         dialog.Destroy()
+
+    def do_find_points(self):
+        from ui.Find_point_dialog import FindPointDialog
+        dialog = FindPointDialog(self.project)
+        if dialog.ShowModalWithFocus() == wx.ID_OK:
+            try:
+                values, error = dialog.get_values()
+                layer = dialog.layer
+                if len(values) > 0 and layer.has_points():
+                    print "selected indexes: %s" % str(values)
+                    layer.clear_all_point_selections()
+                    layer.select_points(values)
+                    w_r = layer.compute_selected_bounding_rect()
+                    print "w_r = %s" % str(w_r)
+                    self.zoom_to_include_world_rect(w_r)
+                    self.project.refresh()
+                if error:
+                    tlw = wx.GetApp().GetTopWindow()
+                    tlw.SetStatusText(error)
+            except IndexError:
+                tlw = wx.GetApp().GetTopWindow()
+                tlw.SetStatusText(u"No point #%s in this layer" % value)
+            except ValueError:
+                tlw = wx.GetApp().GetTopWindow()
+                tlw.SetStatusText(u"Point number must be an integer, not '%s'" % value)
+            except:
+                raise
+        dialog.Destroy()
         
     """
     def get_degrees_lon_per_pixel( self, reference_latitude = None ):

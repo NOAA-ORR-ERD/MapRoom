@@ -107,6 +107,15 @@ class JumpToCoordsAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.control.do_jump_coords)
 
+class FindPointsAction(EditorAction):
+    name = 'Find Points'
+    accelerator = 'Ctrl+F'
+    enabled_name = 'layer_has_points'
+    tooltip = 'Find and highlight points or ranges of points'
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.control.do_find_points)
+
 
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
@@ -156,6 +165,10 @@ class MaproomProjectTask(FrameworkTask):
                   LowerLayerAction(),
                   id="raisegroup"),
             id="layermenu")
+        editmenu = lambda: Group(
+            Group(FindPointsAction(),
+                  id="findgroup"),
+            id="editmenu")
         actions = [
             # Menubar additions
             SchemaAddition(id='OpenLayer',
@@ -163,6 +176,10 @@ class MaproomProjectTask(FrameworkTask):
                            path='MenuBar/File',
                            after="OpenGroup",
                            before="OpenGroupEnd",
+                           ),
+            SchemaAddition(factory=editmenu,
+                           path='MenuBar/Edit',
+                           before="PrefGroup",
                            ),
             SchemaAddition(id='bb',
                            factory=BoundingBoxAction,
