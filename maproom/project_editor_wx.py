@@ -33,6 +33,8 @@ class ProjectEditor(FrameworkEditor):
     layer_below = Bool
     
     layer_has_points = Bool
+    
+    layer_has_selection = Bool
 
     #### property getters
 
@@ -133,13 +135,27 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = sel_layer.is_zoomable()
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
-            self.layer_has_points = sel_layer.has_points()
         else:
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
-            self.layer_has_points = False
         print "layer=%s, zoomable = %s" % (sel_layer, self.layer_zoomable)
+        self.layer_contents_changed(sel_layer)
+    
+    def layer_contents_changed(self, sel_layer=None):
+        if sel_layer is None:
+            sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            self.layer_has_points = sel_layer.has_points()
+            if self.layer_has_points:
+                print "selected points: %s"  % sel_layer.get_num_points_selected()
+                self.layer_has_selection = sel_layer.get_num_points_selected() > 0
+            else:
+                self.layer_has_selection = False
+        else:
+            self.layer_has_points = False
+            self.layer_has_selection = False
+        print "has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection)
     
     @on_trait_change('layer_manager:refresh_needed')
     def refresh(self):
@@ -156,6 +172,15 @@ class ProjectEditor(FrameworkEditor):
             layer = self.layer_tree_control.get_selected_layer()
             # note that the following call only does work if the properties for the layer have changed
             self.properties_panel.display_panel_for_layer(layer)
+    
+    #### old Editor
+
+    def clear_selection(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            sel_layer.clear_all_selections()
+            self.layer_contents_changed()
+            self.refresh()
 
     #### wx event handlers ####################################################
 

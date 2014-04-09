@@ -731,6 +731,7 @@ class LayerControl(glcanvas.GLCanvas):
                     w_r = layer.compute_selected_bounding_rect()
                     print "w_r = %s" % str(w_r)
                     self.zoom_to_include_world_rect(w_r)
+                    self.project.layer_contents_changed()
                     self.project.refresh()
                 if error:
                     tlw = wx.GetApp().GetTopWindow()

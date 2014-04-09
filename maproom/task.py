@@ -107,6 +107,15 @@ class JumpToCoordsAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.control.do_jump_coords)
 
+class ClearSelectionAction(EditorAction):
+    name = 'Clear Selection'
+    enabled_name = 'layer_has_selection'
+    tooltip = 'Deselects all selected items in the current layer'
+    image = ImageResource('clear_selection.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.clear_selection)
+
 class FindPointsAction(EditorAction):
     name = 'Find Points'
     accelerator = 'Ctrl+F'
@@ -166,9 +175,14 @@ class MaproomProjectTask(FrameworkTask):
                   id="raisegroup"),
             id="layermenu")
         editmenu = lambda: Group(
+            Group(ClearSelectionAction(),
+                  id="findgroup", separator=False),
             Group(FindPointsAction(),
                   id="findgroup"),
             id="editmenu")
+        edittools = lambda : Group(
+            ClearSelectionAction(),
+            id="edittools")
         actions = [
             # Menubar additions
             SchemaAddition(id='OpenLayer',
@@ -208,6 +222,11 @@ class MaproomProjectTask(FrameworkTask):
                            factory=layertools,
                            path='ToolBar',
                            after="File",
+                           ),
+            SchemaAddition(id="edit",
+                           factory=edittools,
+                           path='ToolBar',
+                           before="layer",
                            ),
             SchemaAddition(factory=zoomgroup,
                            path='ToolBar',
