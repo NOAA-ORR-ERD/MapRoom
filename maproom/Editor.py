@@ -4,7 +4,8 @@ import wx
 import library.rect as rect
 import renderer
 
-from wx.lib.pubsub import pub
+from layer_undo import *
+
 
 """
     editing rules:
@@ -79,13 +80,6 @@ from wx.lib.pubsub import pub
         - rename layer
         - triangulate
 """
-
-OP_ADD_POINT = 1  # params = None
-OP_DELETE_POINT = 2  # params = ( ( x, y ), z, color, state )
-OP_ADD_LINE = 3  # params = None
-OP_DELETE_LINE = 4  # params = ( point_index_1, point_index_2, color, state )
-OP_MOVE_POINT = 5  # params = ( d_lon, d_lat )
-OP_CHANGE_POINT_DEPTH = 6  # params = ( old_depth, new_depth )
 
 
 class Editor():

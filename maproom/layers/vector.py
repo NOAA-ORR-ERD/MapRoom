@@ -13,6 +13,7 @@ from ..library.accumulator import flatten
 from ..library.Projection import Projection
 from ..library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
 from ..renderer import color_to_int, data_types
+from ..layer_undo import *
 
 from base import Layer, ProjectedLayer
 from constants import *
