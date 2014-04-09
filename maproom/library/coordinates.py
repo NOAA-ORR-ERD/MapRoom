@@ -79,7 +79,7 @@ def degrees_minutes_to_float(degrees):
     result = float(degrees.strip())
     result += float(minutes.strip()) / 60.0
 
-    if dir in ["W", "S"]:
+    if dir.upper() in ["W", "S"]:
         result *= -1
 
     return result
@@ -93,7 +93,7 @@ def degrees_to_float(degrees):
     degrees = values[0]
     result = float(degrees.strip())
     dir = dir.strip()
-    if dir in ["W", "S"]:
+    if dir.upper() in ["W", "S"]:
         result *= -1
 
     return result

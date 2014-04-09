@@ -708,6 +708,15 @@ class LayerControl(glcanvas.GLCanvas):
 
         return [above, below, left, right]
 
+    def do_jump_coords(self):
+        from ui.Jump_coords_dialog import JumpCoordsDialog
+        dialog = JumpCoordsDialog(self)
+        if dialog.ShowModalWithFocus() == wx.ID_OK:
+            lat_lon = coordinates.lat_lon_from_format_string(dialog.coords_text.Value)
+            self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)
+            self.project.refresh()
+        dialog.Destroy()
+        
     """
     def get_degrees_lon_per_pixel( self, reference_latitude = None ):
         if ( reference_latitude == None ):

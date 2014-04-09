@@ -98,6 +98,16 @@ class LowerLayerAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer)
 
+class JumpToCoordsAction(EditorAction):
+    name = 'Jump to Coordinates'
+    accelerator = 'Ctrl+J'
+    tooltip = 'Center the screen on the specified coordinates'
+    image = ImageResource('jump.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.control.do_jump_coords)
+
+
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
@@ -156,6 +166,11 @@ class MaproomProjectTask(FrameworkTask):
                            ),
             SchemaAddition(id='bb',
                            factory=BoundingBoxAction,
+                           path='MenuBar/View',
+                           after="TaskGroupEnd",
+                           ),
+            SchemaAddition(id='jump',
+                           factory=JumpToCoordsAction,
                            path='MenuBar/View',
                            after="TaskGroupEnd",
                            ),
