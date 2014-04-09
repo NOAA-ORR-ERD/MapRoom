@@ -1,43 +1,58 @@
 import os
 import sys
 import numpy as np
+
+# Enthought library imports.
+from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
+
+# MapRoom imports
 from ..library import rect
 
+# local package imports
 from constants import *
 
-class Layer(object):
+class Layer(HasTraits):
     """Base Layer class with some abstract methods.
     """
-    default_name = "Empty Layer"
-    
-    default_type = "" # "folder", "root", or the extension of the file type
-
     next_default_color_index = 0
     
     new_layer_index = 0
-
-    def __init__(self, manager):
-        self.lm = manager
-        self.name = self.default_name
-        self.type = self.default_type
-        self.is_expanded = True
-
-        self.file_path = ""
-        self.depth_unit = "unknown"
-        self.default_depth = DEFAULT_DEPTH
-        self.color = 0
-        self.point_size = 4.0
-        self.selected_point_size = 15.0
-        self.line_width = 2.0
-        self.selected_line_width = 10.0
-        self.triangle_line_width = 1.0
-        self.bounds = rect.NONE_RECT
-        self.load_error_string = ""
-
-        # this is any change that might affect the properties panel (e.g., number of points selected)
-        self.change_count = 0
-
-        self.is_dirty = False
+    
+    # Traits
+    
+    name = Unicode("Empty Layer")
+    
+    type = Str("")
+    
+    file_path = Unicode
+    
+    default_depth = Float(1.0)
+    
+    color = Int(0)
+    
+    point_size = Float(4.0)
+    
+    selected_point_size = Float(15.0)
+    
+    line_width = Float(2.0)
+    
+    selected_line_width = Float(10.0)
+    
+    triangle_line_width = Float(1.0)
+    
+    bounds = Any(rect.NONE_RECT)
+    
+    # this is any change that might affect the properties panel (e.g., number
+    # of points selected)
+    change_count = Int(0)
+    
+    # FIXME: is really a view parameter so instead of affecting all views,
+    # should be stored in the view somehow
+    is_expanded = Bool(True)
+    
+    load_error_string = Str
+    
+    manager = Any
 
     def __repr__(self):
         return self.name
@@ -150,6 +165,24 @@ class Layer(object):
     def destroy(self):
         self.lm.delete_undo_operations_for_layer(self)
         self.lm = None
+
+
+class Folder(Layer):
+    """Layer that contains other layers.
+    """
+    name = Unicode("Folder")
+    
+    type = Str("folder")
+
+
+class RootLayer(Folder):
+    """Root layer
+    
+    Only one root layer per project.
+    """
+    name = Unicode("Root Layer")
+    
+    type = Str("root")
 
 
 class ProjectedLayer(Layer):

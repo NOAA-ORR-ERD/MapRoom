@@ -6,6 +6,9 @@ import numpy as np
 import wx
 from pytriangle import triangulate_simple
 
+# Enthought library imports.
+from traits.api import Unicode, Str, Any
+
 from ..library import File_loader, rect
 from ..library.scipy_ckdtree import cKDTree
 from ..library.formats import verdat
@@ -21,14 +24,13 @@ class RasterLayer(ProjectedLayer):
     """Layer for raster images
     
     """
-    default_name = "Raster Layer"
+    name = Unicode("Raster Layer")
 
-    def __init__(self, manager):
-        Layer.__init__(self, manager)
-
-        self.images = None
-        self.image_sizes = None
-        self.image_world_rects = None
+    images = Any
+    
+    image_sizes = Any
+    
+    image_world_rects = Any
 
     def empty(self):
         """
@@ -69,14 +71,14 @@ class RasterLayer(ProjectedLayer):
             # a latlong image loaded, and this image is mercator, change to mercator
 
             # TODO: handle other projections besides +proj=merc and +proj=longlat
-            raster_layers = self.lm.count_raster_layers()
-            vector_layers = self.lm.count_vector_layers()
+            raster_layers = self.manager.count_raster_layers()
+            vector_layers = self.manager.count_vector_layers()
             
             # FIXME: what was this pubsub message used for?
 #            if raster_layers == 0 and vector_layers == 0:
 #                pub.sendMessage(('layer', 'proejction', 'changed'), layer=self, projection=projection.srs)
-            currently_merc = self.lm.project.control.projection.srs.find("+proj=merc") != -1
-            currently_longlat = self.lm.project.control.projection.srs.find("+proj=longlat") != -1
+            currently_merc = self.manager.project.control.projection.srs.find("+proj=merc") != -1
+            currently_longlat = self.manager.project.control.projection.srs.find("+proj=longlat") != -1
             incoming_merc = projection.srs.find("+proj=merc") != -1
             incoming_longlat = projection.srs.find("+proj=longlat") != -1
 

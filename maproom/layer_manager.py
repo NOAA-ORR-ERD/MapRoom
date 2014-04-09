@@ -55,9 +55,9 @@ class LayerManager(LayerUndo):
         """
         self = cls()
         self.project = project
-        layer = RootLayer(self)
+        layer = RootLayer(manager=self)
         self.insert_layer([0], layer)
-        grid = Grid(self)
+        grid = Grid(manager=self)
         self.insert_layer([1], grid)
         return self
     
@@ -89,10 +89,10 @@ class LayerManager(LayerUndo):
     def load_layer_from_metadata(self, metadata):
         # FIXME: load all layer types, not just vector!
         if metadata.mime == "application/x-maproom-verdat":
-            layer = VectorLayer(self)
+            layer = VectorLayer(manager=self)
             layer.read_from_file(metadata.uri)
         elif metadata.mime.startswith("image"):
-            layer = RasterLayer(self)
+            layer = RasterLayer(manager=self)
             layer.read_from_file(metadata.uri)
         else:
             layer = Layer(self)

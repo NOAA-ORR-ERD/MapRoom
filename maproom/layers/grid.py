@@ -1,5 +1,9 @@
 import bisect
 import numpy as np
+
+# Enthought library imports.
+from traits.api import Unicode, Str
+
 from ..library import rect, coordinates
 
 from base import ScreenLayer
@@ -9,8 +13,9 @@ class Grid(ScreenLayer):
     
     Only one root layer per project.
     """
-    default_name = "Lon/Lat Grid"
-    default_type = "grid"
+    name = Unicode("Lon/Lat Grid")
+    
+    type = Str("grid")
     
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)

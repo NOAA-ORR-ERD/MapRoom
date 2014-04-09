@@ -6,6 +6,9 @@ import numpy as np
 import wx
 from pytriangle import triangulate_simple
 
+# Enthought library imports.
+from traits.api import Int, Unicode, Any
+
 from ..library import File_loader, rect
 from ..library.scipy_ckdtree import cKDTree
 from ..library.formats import verdat
@@ -22,23 +25,21 @@ class VectorLayer(ProjectedLayer):
     """Layer for points/lines/polygons.
     
     """
-    default_name = "Vector Layer"
-
-    def __init__(self, manager):
-        ProjectedLayer.__init__(self, manager)
-
-        # when two layers are merged into one, this is the index of the start of the points that came from the second layer
-        self.merged_points_index = 0
-
-        self.points = None
-        self.line_segment_indexes = None
-        self.triangle_points = None
-        self.triangles = None
-        self.polygons = None
-        self.polygon_adjacency_array = None  # parallels the points array
-        self.images = None
-        self.image_sizes = None
-        self.image_world_rects = None
+    name = Unicode("Vector Layer")
+    
+    points = Any
+    
+    line_segment_indexes = Any
+    
+    triangle_points = Any
+    
+    triangles = Any
+    
+    polygons = Any
+    
+    polygon_adjacency_array = Any  # parallels the points array
+    
+    merged_points_index = Int(0)
 
     def new(self):
         Layer.new(self)
@@ -57,7 +58,7 @@ class VectorLayer(ProjectedLayer):
         no_triangles = (self.triangles is None or len(self.triangles) == 0)
         no_polygons = (self.polygons is None or len(self.polygons) == 0)
 
-        return no_points and no_triangles and no_polygons and no_images
+        return no_points and no_triangles and no_polygons
     
     def get_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
@@ -187,58 +188,7 @@ class VectorLayer(ProjectedLayer):
                     self.line_segment_indexes.state = 0
 
         else:
-            (self.load_error_string,
-             self.images,
-             self.image_sizes,
-             self.image_world_rects,
-             projection) = File_loader.load_image_file(file_path)
-
-            if (self.load_error_string == ""):
-                self.type = ext
-
-                # change the app projection to latlong if this image is latlong projection
-                # and we don't currently have a mercator image loaded;
-                # alternatively, if we are in latlong and we don't currently have
-                # a latlong image loaded, and this image is mercator, change to mercator
-
-                # TODO: handle other projections besides +proj=merc and +proj=longlat
-                raster_layers = self.lm.count_raster_layers()
-                vector_layers = self.lm.count_vector_layers()
-                if raster_layers == 0 and vector_layers == 0:
-                    pub.sendMessage(('layer', 'proejction', 'changed'), layer=self, projection=projection.srs)
-                currently_merc = self.lm.project.control.projection.srs.find("+proj=merc") != -1
-                currently_longlat = self.lm.project.control.projection.srs.find("+proj=longlat") != -1
-                incoming_merc = projection.srs.find("+proj=merc") != -1
-                incoming_longlat = projection.srs.find("+proj=longlat") != -1
-
-                disagreement = (currently_merc != incoming_merc) or (currently_longlat != incoming_longlat)
-                if (disagreement):
-                    if (incoming_merc):
-                        type = "Mercator"
-                        srs = "+proj=merc +units=m +over"
-                    else:
-                        type = "Longitude/Latitude"
-                        srs = "+proj=longlat +over"
-                    message = None
-                    if (raster_layers > 0):
-                        message = "The file you are loading is in " + type + " projection, but one or more other raster files already loaded have a different projection. Do you want to load this file anyway, with distortion?"
-                    elif (vector_layers > 0):
-                        message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
-
-                    if message is not None:
-                        dialog = wx.MessageDialog(
-                            app_globals.application.frame,
-                            message=message,
-                            caption="Projection Conflict",
-                            style=wx.OK | wx.CANCEL | wx.ICON_QUESTION,
-                        )
-
-                        if (dialog.ShowModal() != wx.ID_OK):
-                            self.load_error_string = "Projection conflict"
-                            #
-                            return
-
-                        pub.sendMessage(('layer', 'proejction', 'changed'), layer=self, projection=srs)
+            self.load_error_string = "unknown vector file type %s" % file_type,
 
         if (self.load_error_string == ""):
             self.update_bounds()
@@ -314,13 +264,6 @@ class VectorLayer(ProjectedLayer):
             b = self.triangle_points.y.min()
             t = self.triangle_points.y.max()
             bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
-
-        if (self.image_world_rects != None):
-            world_rect_flat_list = flatten(self.image_world_rects)
-            b = world_rect_flat_list[0]
-            for r in world_rect_flat_list[1:]:
-                b = rect.accumulate_rect(b, r)
-            bounds = rect.accumulate_rect(bounds, b)
 
         return bounds
     
