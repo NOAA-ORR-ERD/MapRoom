@@ -14,6 +14,7 @@ from peppy2.framework.editor import FrameworkEditor
 from i_project_editor import IProjectEditor
 from layer_control_wx import LayerControl
 from layer_manager import LayerManager
+from layer_undo import *
 import Layer_tree_control
 import renderer
 
@@ -448,7 +449,7 @@ class ProjectEditor(FrameworkEditor):
         s_p_i_s = layer.get_selected_point_plus_line_point_indexes()
         for point_index in s_p_i_s:
             params = (world_d_x, world_d_y)
-            self.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)
+            self.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)
 
         self.layer_manager.end_operation_batch()
 
