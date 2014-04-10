@@ -359,4 +359,4 @@ class MaproomProjectTask(FrameworkTask):
     ###
     @classmethod
     def can_edit(cls, mime):
-        return mime.startswith("image") or mime == "application/x-maproom-verdat"
+        return mime.startswith("image") or mime.startswith("application/x-maproom-")

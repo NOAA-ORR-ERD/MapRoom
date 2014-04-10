@@ -11,10 +11,20 @@ class VerdatRecognizer(HasTraits):
     
     before = "text/plain"
     
-    def identify_bytes(self, byte_stream):
-        """Return a MIME type if byte stream can be identified.
-        
-        If byte stream is not known, returns None
-        """
+    def identify(self, guess):
+        byte_stream = guess.get_utf8()
         if byte_stream.startswith("DOGS"):
             return "application/x-maproom-verdat"
+
+@provides(IFileRecognizer)
+class BNARecognizer(HasTraits):
+    """Default plain text identifier based on percentage of non-ASCII bytes.
+    
+    """
+    id = "application/x-maproom-bna"
+    
+    before = "text/plain"
+    
+    def identify(self, guess):
+        if guess.metadata.uri.lower().endswith(".bna"):
+            return "application/x-maproom-bna"

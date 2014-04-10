@@ -102,6 +102,9 @@ class LayerManager(LayerUndo):
         if metadata.mime == "application/x-maproom-verdat":
             layer = VectorLayer(manager=self)
             layer.read_from_file(metadata.uri)
+        elif metadata.mime == "application/x-maproom-bna":
+            layer = VectorLayer(manager=self)
+            layer.read_from_file(metadata.uri)
         elif metadata.mime.startswith("image"):
             layer = RasterLayer(manager=self)
             layer.read_from_file(metadata.uri)
