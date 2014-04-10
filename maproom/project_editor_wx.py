@@ -4,10 +4,9 @@ from os.path import basename
 
 # Major package imports.
 import wx
-from wx.lib.pubsub import pub
 
 # Enthought library imports.
-from traits.api import provides, on_trait_change, Any, Bool
+from traits.api import provides, on_trait_change, Any, Bool, Int
 
 from peppy2.framework.editor import FrameworkEditor
 
@@ -35,6 +34,8 @@ class ProjectEditor(FrameworkEditor):
     layer_has_points = Bool
     
     layer_has_selection = Bool
+    
+    mouse_mode = Int
 
     #### property getters
 
@@ -108,9 +109,6 @@ class ProjectEditor(FrameworkEditor):
         self.properties_panel = self.editor_area.task.window.get_dock_pane('maproom.layer_info_pane').control
         self.properties_panel = None
         
-        # Pubsub stuff from RenderController
-        self.setup_pubsub()
-        
         print "LayerEditor: task=%s" % self.editor_area.task
 
         return self.control
@@ -128,21 +126,23 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
         self.refresh()
     
-    def layer_selection_changed(self, sel_layer=None):
+    def update_layer_selection_ui(self, sel_layer=None):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             self.layer_zoomable = sel_layer.is_zoomable()
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
+            self.mouse_mode = self.control.mode
         else:
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
+            self.mouse_mode = self.control.MODE_PAN
         print "layer=%s, zoomable = %s" % (sel_layer, self.layer_zoomable)
-        self.layer_contents_changed(sel_layer)
+        self.update_layer_contents_ui(sel_layer)
     
-    def layer_contents_changed(self, sel_layer=None):
+    def update_layer_contents_ui(self, sel_layer=None):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
@@ -156,6 +156,16 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_points = False
             self.layer_has_selection = False
         print "has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection)
+    
+    @on_trait_change('layer_manager:layer_contents_changed')
+    def layer_contents_changed(self, layer):
+        print "layer_contents_changed called!!!"
+        self.control.rebuild_points_and_lines_for_layer(layer)
+    
+    @on_trait_change('layer_manager:layer_contents_triangulated')
+    def layer_contents_triangulated(self, layer):
+        print "layer_contents_changed called!!!"
+        self.control.rebuild_triangles_for_layer(layer)
     
     @on_trait_change('layer_manager:refresh_needed')
     def refresh(self):
@@ -179,42 +189,22 @@ class ProjectEditor(FrameworkEditor):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             sel_layer.clear_all_selections()
-            self.layer_contents_changed()
+            self.update_layer_contents_ui()
             self.refresh()
+
+    def delete_selection(self):
+        if (self.control.mode == self.control.MODE_EDIT_POINTS or self.control.mode == self.control.MODE_EDIT_LINES):
+            sel_layer = self.layer_tree_control.get_selected_layer()
+            if sel_layer is not None:
+                sel_layer.delete_all_selected_objects()
+                self.layer_manager.end_operation_batch()
+                self.update_layer_contents_ui()
+                self.refresh()
 
     #### wx event handlers ####################################################
 
     #### old RenderController
     
-    def setup_pubsub(self):
-        pub.subscribe(self.on_layer_points_lines_changed, ('layer', 'lines', 'changed'))
-        pub.subscribe(self.on_layer_points_lines_changed, ('layer', 'points', 'changed'))
-        pub.subscribe(self.on_layer_points_lines_changed, ('layer', 'points', 'deleted'))
-
-        pub.subscribe(self.on_projection_changed, ('layer', 'projection', 'changed'))
-        pub.subscribe(self.on_layer_loaded, ('layer', 'loaded'))
-        pub.subscribe(self.on_layer_updated, ('layer', 'updated'))
-        pub.subscribe(self.on_layer_triangulated, ('layer', 'triangulated'))
-
-    def on_layer_updated(self, layer):
-        if layer in self.layer_manager.layers:
-            self.control.update_renderers()
-
-    def on_layer_loaded(self, layer):
-        self.zoom_to_layer(layer)
-
-    def on_layer_points_lines_changed(self, layer):
-        if layer in self.layer_manager.layers:
-            self.control.rebuild_points_and_lines_for_layer(layer)
-
-    def on_projection_changed(self, layer, projection):
-        if layer in self.layer_manager.layers:
-            self.control.reproject_all(projection)
-
-    def on_layer_triangulated(self, layer):
-        if layer in self.layer_manager.layers:
-            self.control.rebuild_triangles_for_layer(layer)
-
     def zoom_to_selected_layer(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         print "Selected layer = %r" % sel_layer

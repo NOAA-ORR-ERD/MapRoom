@@ -105,7 +105,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         print "LAYER_TREE: rebuiding layers = " + str(lm.layers)
         self.add_layers_recursive(lm.layers, None)
         # self.Thaw()
-        self.project.layer_selection_changed(self.get_selected_layer())
+        self.project.update_layer_selection_ui(self.get_selected_layer())
 
     def add_layers_recursive(self, layer_tree, parent):
         if (len(layer_tree) == 0):
@@ -259,7 +259,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     def handle_selection_changed(self, event):
         self.project.editor.esc_key_pressed()
-        self.project.layer_selection_changed(self.get_selected_layer())
+        self.project.update_layer_selection_ui(self.get_selected_layer())
 
     def raise_selected_layer(self):
         self.move_selected_layer(-1)

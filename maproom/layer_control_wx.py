@@ -13,8 +13,6 @@ import app_globals
 import OpenGL
 import OpenGL.GL as gl
 
-from wx.lib.pubsub import pub
-
 from library.Projection import Projection
 
 """
@@ -31,11 +29,6 @@ class LayerControl(glcanvas.GLCanvas):
     MODE_ZOOM_RECT = 1
     MODE_EDIT_POINTS = 2
     MODE_EDIT_LINES = 3
-
-    mode = MODE_PAN
-    hand_cursor = None
-    hand_closed_cursor = None
-    forced_cursor = None
 
     opengl_renderer = None
 
@@ -65,6 +58,8 @@ class LayerControl(glcanvas.GLCanvas):
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
         p = os.path.join(app_globals.image_path, "cursors", "hand_closed.ico")
         self.hand_closed_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
+        self.forced_cursor = None
+        self.mode = self.MODE_PAN
         
         self.bounding_boxes_shown = False
 
@@ -476,11 +471,11 @@ class LayerControl(glcanvas.GLCanvas):
 
     def rebuild_points_and_lines_for_layer(self, layer):
         if layer in self.layer_renderers:
-            self.layer_renderers[layer].rebuild_point_and_line_set_renderer()
+            self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer)
 
     def rebuild_triangles_for_layer(self, layer):
         if layer in self.layer_renderers:
-            self.layer_renderers[layer].rebuild_triangle_set_renderer()
+            self.layer_renderers[layer].rebuild_triangle_set_renderer(layer)
 
     def resize_render_pane(self, event):
         if not self.GetContext():
@@ -731,7 +726,7 @@ class LayerControl(glcanvas.GLCanvas):
                     w_r = layer.compute_selected_bounding_rect()
                     print "w_r = %s" % str(w_r)
                     self.zoom_to_include_world_rect(w_r)
-                    self.project.layer_contents_changed()
+                    self.project.update_layer_contents_ui()
                     self.project.refresh()
                 if error:
                     tlw = wx.GetApp().GetTopWindow()

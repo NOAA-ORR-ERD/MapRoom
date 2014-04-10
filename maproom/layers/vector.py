@@ -192,8 +192,6 @@ class VectorLayer(ProjectedLayer):
 
         if (self.load_error_string == ""):
             self.update_bounds()
-            print "FIXME: old call to pubsub!"
-            #pub.sendMessage(('layer', 'loaded'), layer=self)
 
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()
@@ -498,7 +496,7 @@ class VectorLayer(ProjectedLayer):
             for point_index in s_p_i_s:
                 self.offset_point(point_index, world_d_x, world_d_y, True)
             # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
-            pub.sendMessage(('layer', 'points', 'changed'), layer=self)
+            self.manager.dispatch_event('layer_contents_changed', self)
             self.increment_change_count()
 
     def offset_point(self, point_index, world_d_x, world_d_y, add_undo_info=False):
@@ -508,7 +506,7 @@ class VectorLayer(ProjectedLayer):
         # we don't set the undo information here because this function is called repeatedly as the mouse moves
         if ( add_undo_info ):
             params = ( world_d_x, world_d_y )
-            self.lm.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
+            self.manager.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
         """
 
     """
@@ -519,8 +517,8 @@ class VectorLayer(ProjectedLayer):
                 self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
                 None )
         self.point_and_line_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                                                    self.lm.project.control.projection,
-                                                    self.lm.project.control.projection_is_identity )
+                                                    self.manager.project.control.projection,
+                                                    self.manager.project.control.projection_is_identity )
     """
 
     def offset_selected_polygons(self, world_d_x, world_d_y):
@@ -552,7 +550,7 @@ class VectorLayer(ProjectedLayer):
                 l.reverse()
                 for i in l:
                     params = (self.line_segment_indexes.point1[i], self.line_segment_indexes.point2[i], self.line_segment_indexes.color[i], self.line_segment_indexes.state[i])
-                    self.lm.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, i, params)
+                    self.manager.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, i, params)
 
             # adjust the point indexes of the remaining line segments
             offsets = np.zeros(np.alen(self.line_segment_indexes))
@@ -570,7 +568,7 @@ class VectorLayer(ProjectedLayer):
             l.reverse()
             for i in l:
                 params = ((self.points.x[i], self.points.y[i]), self.points.z[i], self.points.color[i], self.points.state[i])
-                self.lm.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, i, params)
+                self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, i, params)
 
         # delete them from the layer
         self.points = np.delete(self.points, point_indexes, 0)
@@ -585,13 +583,13 @@ class VectorLayer(ProjectedLayer):
         if ( self.label_set_renderer != None ):
             self.label_set_renderer.delete_points( point_indexes )
             self.label_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                                               self.lm.project.control.projection,
-                                               self.lm.project.control.projection_is_identity )
+                                               self.manager.project.control.projection,
+                                               self.manager.project.control.projection_is_identity )
         """
 
         # when points are deleted from a layer the indexes of the points in the existing merge dialog box
         # become invalid; so force the user to re-find duplicates in order to create a valid list again
-        pub.sendMessage(('layer', 'points', 'deleted'), layer=self)
+        self.manager.dispatch_event('layer_contents_deleted', self)
 
     def insert_point(self, world_point):
         if self.points is None:
@@ -609,9 +607,8 @@ class VectorLayer(ProjectedLayer):
             self.new_points(1)
             self.points[0] = p
             point_index = 0
-            pub.sendMessage(('layer', 'updated'), layer=self)
-            self.lm.refresh()
-            self.lm.project.layer_tree_control.select_layer(self)
+            self.dispatch_event('refresh_needed')
+            self.manager.project.layer_tree_control.select_layer(self)
         else:
             self.points = np.insert(self.points, point_index, p).view(np.recarray)
         t = time.clock() - t0  # t is wall seconds elapsed (floating point)
@@ -628,13 +625,13 @@ class VectorLayer(ProjectedLayer):
 
         if (add_undo_info):
             params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            self.lm.add_undo_operation_to_operation_batch(OP_ADD_POINT, self, point_index, params)
+            self.manager.add_undo_operation_to_operation_batch(OP_ADD_POINT, self, point_index, params)
 
         # insert it into the point_and_line_set_renderer (by simply rebuilding it)
         # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
         # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
         if (add_undo_info):
-            pub.sendMessage(('layer', 'points', 'changed'), layer=self)
+            self.manager.dispatch_event('layer_contents_changed', self)
 
         """
         t0 = time.clock()
@@ -643,8 +640,8 @@ class VectorLayer(ProjectedLayer):
             self.label_set_renderer.insert_point( len( self.points ) - 1,
                                                   str( self.default_depth ),
                                                   world_point,
-                                                  self.lm.project.control.projection,
-                                                  self.lm.project.control.projection_is_identity )
+                                                  self.manager.project.control.projection,
+                                                  self.manager.project.control.projection_is_identity )
         t = time.clock() - t0 # t is wall seconds elapsed (floating point)
         print "inserted into label set renderer in {0} seconds".format( t )
         """
@@ -687,12 +684,12 @@ class VectorLayer(ProjectedLayer):
 
         if (add_undo_info):
             params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            self.lm.add_undo_operation_to_operation_batch(OP_ADD_LINE, self, l_s_i, params)
+            self.manager.add_undo_operation_to_operation_batch(OP_ADD_LINE, self, l_s_i, params)
 
         # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
         # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
         if (add_undo_info):
-            pub.sendMessage(('layer', 'lines', 'changed'), layer=self)
+            self.manager.dispatch_event('layer_contents_changed', self)
 
         return l_s_i
 
@@ -702,7 +699,7 @@ class VectorLayer(ProjectedLayer):
 
         if (add_undo_info):
             params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            self.lm.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, point_index, params)
+            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, point_index, params)
         self.points = np.delete(self.points, point_index, 0)
 
         # update point indexes in the line segements to account for the deleted point
@@ -714,12 +711,12 @@ class VectorLayer(ProjectedLayer):
             offsets += np.where(self.line_segment_indexes.point2 > point_index, 1, 0)
             self.line_segment_indexes.point2 -= offsets
 
-        pub.sendMessage(('layer', 'points', 'deleted'), layer=self)
+        self.manager.dispatch_event('layer_contents_changed', self)
 
     def delete_line_segment(self, l_s_i, add_undo_info):
         if (add_undo_info):
             params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            self.lm.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
+            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
 
     def triangulate(self, q, a):
@@ -754,12 +751,12 @@ class VectorLayer(ProjectedLayer):
 
         # we need to use projected points for the triangulation
         projected_points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(self.points)].view(np.float32).copy()
-        if (self.lm.project.control.projection_is_identity):
+        if (self.manager.project.control.projection_is_identity):
             projected_points[:, 0] = self.points[:, 0]
             projected_points[:, 1] = self.points[:, 1]
         else:
-            projected_points[:, 0], projected_points[:, 1] = self.lm.project.control.projection(self.points.x, self.points.y)
-            hole_points_xy[:, 0], hole_points_xy[:, 1] = self.lm.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
+            projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(self.points.x, self.points.y)
+            hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
         print "params: " + params
         print "hole points:"
         print hole_points_xy
@@ -781,14 +778,14 @@ class VectorLayer(ProjectedLayer):
         self.triangle_points.color = self.color
 
         # now un-project the points
-        if (not self.lm.project.control.projection_is_identity):
+        if (not self.manager.project.control.projection_is_identity):
             # import code; code.interact( local = locals() )
-            self.triangle_points.x, self.triangle_points.y = self.lm.project.control.projection(self.triangle_points.x, self.triangle_points.y, inverse=True)
+            self.triangle_points.x, self.triangle_points.y = self.manager.project.control.projection(self.triangle_points.x, self.triangle_points.y, inverse=True)
 
         self.triangles = self.make_triangles(len(triangles))
         self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = triangles
 
-        pub.sendMessage(('layer', 'triangulated'), layer=self)
+        self.manager.dispatch_event('layer_contents_triangulated', self)
 
     def merge_from_source_layers(self, layer_a, layer_b):
         # for now we only handle merging of points and lines
@@ -819,7 +816,7 @@ class VectorLayer(ProjectedLayer):
         ] = l_s_i_s
         # self.line_segment_indexes.state = 0
 
-        pub.sendMessage(('layer', 'updated'), layer=self)
+        self.renderer_update_event = True
 
     # returns a list of pairs of point indexes
     def find_duplicates(self, distance_tolerance_degrees, depth_tolerance_percentage=-1):
@@ -834,7 +831,7 @@ class VectorLayer(ProjectedLayer):
 
         # If necessary, convert points to lat-long before find duplicates.
         # This makes the distance tolerance work properly.
-        projection = self.lm.project.control.projection
+        projection = self.manager.project.control.projection
         if projection.srs != latlong_proj.srs:
             points = points.view(
                 [("x", np.float32), ("y", np.float32)]
@@ -928,7 +925,7 @@ class VectorLayer(ProjectedLayer):
         if (len(points_to_delete) > 0):
             self.delete_points_and_lines(list(points_to_delete), None, True)
 
-        self.lm.refresh()
+        self.dispatch_event('refresh_needed')
     
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.

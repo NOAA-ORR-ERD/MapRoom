@@ -123,7 +123,7 @@ class Editor():
             layer = self.project.layer_tree_control.get_selected_layer()
             if (layer != None):
                 layer.delete_all_selected_objects()
-                self.end_operation_batch()
+                self.lm.end_operation_batch()
                 self.project.refresh()
 
     def clicked_on_point(self, event, layer, point_index):
@@ -137,7 +137,7 @@ class Editor():
                 point_indexes = layer.get_selected_point_indexes()
                 if (len(point_indexes == 1) and not layer.are_points_connected(point_index, point_indexes[0])):
                     layer.insert_line_segment(point_index, point_indexes[0])
-                    self.end_operation_batch()
+                    self.lm.end_operation_batch()
                     layer.clear_all_point_selections()
                     layer.select_point(point_index)
                 elif len(point_indexes) == 0:  # no currently selected point
@@ -170,7 +170,7 @@ class Editor():
             if (not event.ControlDown() and not event.ShiftDown()):
                 self.esc_key_pressed()
                 layer.insert_point_in_line(world_point, line_segment_index)
-                self.end_operation_batch()
+                self.lm.end_operation_batch()
                 self.project.control.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
 
         if (self.project.control.mode == self.project.control.MODE_EDIT_LINES):
@@ -216,7 +216,7 @@ class Editor():
                 # self.project.control.release_mouse() # shouldn't be captured now anyway
                 layer.insert_point(world_point)
                 layer.update_bounds()
-                self.end_operation_batch()
+                self.lm.end_operation_batch()
                 self.project.refresh()
 
         if (self.project.control.mode == self.project.control.MODE_EDIT_LINES):
@@ -229,7 +229,7 @@ class Editor():
                     point_index = layer.insert_point(world_point)
                     layer.update_bounds()
                     layer.insert_line_segment(point_index, point_indexes[0])
-                    self.end_operation_batch()
+                    self.lm.end_operation_batch()
                     layer.clear_all_point_selections()
                     layer.select_point(point_index)
                 self.project.refresh()
@@ -241,7 +241,7 @@ class Editor():
         (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.lm.get_layer_by_flattened_index(layer_index)
         layer.offset_selected_objects(world_d_x, world_d_y)
-        # self.end_operation_batch()
+        # self.lm.end_operation_batch()
         self.project.refresh()
 
     def finished_drag(self, mouse_down_position, mouse_move_position):
@@ -267,7 +267,7 @@ class Editor():
             params = (world_d_x, world_d_y)
             self.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)
 
-        self.end_operation_batch()
+        self.lm.end_operation_batch()
 
     def clickable_object_is_ugrid_point(self):
         return renderer.is_ugrid_point(self.clickable_object_mouse_is_over)

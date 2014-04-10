@@ -14,6 +14,7 @@ from peppy2.framework.task import FrameworkTask
 
 from project_editor import ProjectEditor
 from panes import LayerSelectionPane, LayerInfoPane
+from layer_control_wx import LayerControl
 
 class OpenLayerAction(TaskAction):
     name = 'Open Layer...'
@@ -116,6 +117,70 @@ class ClearSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.clear_selection)
 
+class DeleteSelectionAction(EditorAction):
+    name = 'Delete Selection'
+    accelerator = 'DEL'
+    enabled_name = 'layer_has_selection'
+    tooltip = 'Deletes the selected items in the current layer'
+    image = ImageResource('delete_selection.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.delete_selection)
+
+class ZoomModeAction(EditorAction):
+    name = 'Zoom Mode'
+    tooltip = 'Zoom to box'
+    image = ImageResource('zoom_box.png')
+    style = 'radio'
+
+    def perform(self, event):
+        self.active_editor.control.mode = LayerControl.MODE_ZOOM_RECT
+
+    @on_trait_change('active_editor.mouse_mode')
+    def _update_checked(self):
+        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_ZOOM_RECT
+
+class PanModeAction(EditorAction):
+    name = 'Pan Mode'
+    tooltip = 'Pan the viewport'
+    image = ImageResource('pan.png')
+    style = 'radio'
+
+    def perform(self, event):
+        self.active_editor.control.mode = LayerControl.MODE_PAN
+
+    @on_trait_change('active_editor.mouse_mode')
+    def _update_checked(self):
+        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_PAN
+
+class AddPointsAction(EditorAction):
+    name = 'Add Points Mode'
+    enabled_name = 'layer_has_points'
+    tooltip = 'Add points to the current layer'
+    image = ImageResource('add_points.png')
+    style = 'radio'
+
+    def perform(self, event):
+        self.active_editor.control.mode = LayerControl.MODE_EDIT_POINTS
+
+    @on_trait_change('active_editor.mouse_mode')
+    def _update_checked(self):
+        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_POINTS
+
+class AddLinesAction(EditorAction):
+    name = 'Add Lines Mode'
+    enabled_name = 'layer_has_points'
+    tooltip = 'Add lines to the current layer'
+    image = ImageResource('add_lines.png')
+    style = 'radio'
+
+    def perform(self, event):
+        self.active_editor.control.mode = LayerControl.MODE_EDIT_LINES
+
+    @on_trait_change('active_editor.mouse_mode')
+    def _update_checked(self):
+        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_LINES
+
 class FindPointsAction(EditorAction):
     name = 'Find Points'
     accelerator = 'Ctrl+F'
@@ -173,16 +238,29 @@ class MaproomProjectTask(FrameworkTask):
             Group(RaiseLayerAction(),
                   LowerLayerAction(),
                   id="raisegroup"),
+            Group(ZoomModeAction(),
+                  PanModeAction(),
+                  AddPointsAction(),
+                  AddLinesAction(),
+                  id="modegroup"),
             id="layermenu")
         editmenu = lambda: Group(
             Group(ClearSelectionAction(),
+                  DeleteSelectionAction(),
                   id="findgroup", separator=False),
             Group(FindPointsAction(),
                   id="findgroup"),
             id="editmenu")
         edittools = lambda : Group(
             ClearSelectionAction(),
+            DeleteSelectionAction(),
             id="edittools")
+        modetools = lambda : Group(
+            ZoomModeAction(),
+            PanModeAction(),
+            AddPointsAction(),
+            AddLinesAction(),
+            id="modetools")
         actions = [
             # Menubar additions
             SchemaAddition(id='OpenLayer',
@@ -231,6 +309,10 @@ class MaproomProjectTask(FrameworkTask):
             SchemaAddition(factory=zoomgroup,
                            path='ToolBar',
                            after="layer",
+                           ),
+            SchemaAddition(factory=modetools,
+                           path='ToolBar',
+                           after="zoomgroup",
                            ),
             ]
         return actions
