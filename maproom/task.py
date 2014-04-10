@@ -310,13 +310,15 @@ class MaproomProjectTask(FrameworkTask):
                            path='ToolBar',
                            before="layer",
                            ),
-            SchemaAddition(factory=zoomgroup,
+            SchemaAddition(id="zoom",
+                           factory=zoomgroup,
                            path='ToolBar',
                            after="layer",
                            ),
-            SchemaAddition(factory=modetools,
+            SchemaAddition(id="mode",
+                           factory=modetools,
                            path='ToolBar',
-                           after="zoomgroup",
+                           after="zoom",
                            ),
             ]
         return actions
