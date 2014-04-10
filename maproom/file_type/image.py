@@ -12,7 +12,7 @@ class GDALRecognizer(HasTraits):
     """
     id = "image/x-gdal"
     
-    before = "image/*"
+    before = "image/common"
     
     def identify(self, guess):
         try:
