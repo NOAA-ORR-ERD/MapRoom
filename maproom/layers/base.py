@@ -79,8 +79,7 @@ class Layer(HasTraits):
         d["lines"] = True
         d["triangles"] = True
         d["labels"] = True
-        if self.type == "bna":
-            # FIXME: this was the default visibility from maproom 2; is this correct?
+        if self.type == ".bna":
             d["labels"] = False
             d["points"] = False
         return d

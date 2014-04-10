@@ -946,7 +946,7 @@ class VectorLayer(ProjectedLayer):
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
 
         if self.polygons != None and renderer.polygon_set_renderer == None:
-            renderer.rebuild_polygon_set_renderer(self, create=True)
+            renderer.rebuild_polygon_set_renderer(self)
 
         renderer.set_up_labels(self)
 
