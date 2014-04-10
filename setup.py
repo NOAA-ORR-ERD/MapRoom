@@ -215,7 +215,7 @@ try:
         """,
         windows=[dict(
             script="maproom.py",
-            icon_resources=[(1, "maproom/ui/images/maproom.ico")],
+            icon_resources=[(1, "maproom/icons/maproom.ico")],
         )],
         options=dict(
             py2app=dict(
@@ -226,7 +226,7 @@ try:
                 semi_standalone=False,
                 includes=common_includes + py2app_includes,
                 excludes=common_excludes,
-                iconfile="maproom/ui/images/maproom.icns",
+                iconfile="maproom/icons/maproom.icns",
                 plist=dict(
                     CFBundleName="Maproom",
                     CFBundleTypeExtensions=["verdat", "kap", "bna"],
@@ -306,7 +306,7 @@ AppUpdatesURL=http://www.noaa.gov/
 DefaultDirName={pf}\Maproom
 DefaultGroupName=Maproom
 OutputBaseFilename=Maproom_%s
-SetupIconFile=..\..\ui\images\maproom.ico
+SetupIconFile=..\..\icons\maproom.ico
 Compression=lzma
 SolidCompression=yes
 
