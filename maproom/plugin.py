@@ -42,4 +42,5 @@ class MaproomPlugin(Plugin):
 
     def _recognizer_default(self):
         from maproom.file_type.text import VerdatRecognizer, BNARecognizer
-        return [VerdatRecognizer(), BNARecognizer()]
+        from maproom.file_type.image import GDALRecognizer
+        return [VerdatRecognizer(), BNARecognizer(), GDALRecognizer()]
