@@ -135,6 +135,7 @@ class ZoomModeAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.control.mode = LayerControl.MODE_ZOOM_RECT
+        self.active_editor.update_layer_selection_ui()
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
@@ -148,6 +149,7 @@ class PanModeAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.control.mode = LayerControl.MODE_PAN
+        self.active_editor.update_layer_selection_ui()
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
@@ -162,6 +164,7 @@ class AddPointsAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.control.mode = LayerControl.MODE_EDIT_POINTS
+        self.active_editor.update_layer_selection_ui()
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
@@ -176,6 +179,7 @@ class AddLinesAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.control.mode = LayerControl.MODE_EDIT_LINES
+        self.active_editor.update_layer_selection_ui()
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
