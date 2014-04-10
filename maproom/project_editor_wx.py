@@ -13,9 +13,9 @@ from peppy2.framework.editor import FrameworkEditor
 # Local imports.
 from i_project_editor import IProjectEditor
 from layer_control_wx import LayerControl
-import Editor as LegacyEditor
 from layer_manager import LayerManager
 import Layer_tree_control
+import renderer
 
 @provides(IProjectEditor)
 class ProjectEditor(FrameworkEditor):
@@ -35,7 +35,9 @@ class ProjectEditor(FrameworkEditor):
     
     layer_has_selection = Bool
     
-    mouse_mode = Int
+    clickable_object_mouse_is_over = Any
+    
+    mouse_mode = Int(LayerControl.MODE_PAN)
 
     #### property getters
 
@@ -68,7 +70,7 @@ class ProjectEditor(FrameworkEditor):
         """
         self.layer_manager = editor.layer_manager
         self.layer_visibility = self.layer_manager.get_default_visibility()
-        self.control.change_view(self.layer_manager, editor.editor)
+        self.control.change_view(self.layer_manager)
         self.control.zoom_to_fit()
         self.dirty = editor.dirty
 
@@ -99,10 +101,9 @@ class ProjectEditor(FrameworkEditor):
 
         self.layer_manager = LayerManager.create(self)
         self.layer_visibility = self.layer_manager.get_default_visibility()
-        self.editor = LegacyEditor.Editor(self)
 
         # Base-class constructor.
-        self.control = LayerControl(parent, layer_manager=self.layer_manager, editor=self.editor, project=self)
+        self.control = LayerControl(parent, layer_manager=self.layer_manager, project=self)
         
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = self.editor_area.task.window.get_dock_pane('maproom.layer_selection_pane').control
@@ -133,12 +134,12 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = sel_layer.is_zoomable()
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
-            self.mouse_mode = self.control.mode
+            # leave mouse_mode set to current setting
         else:
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
-            self.mouse_mode = self.control.MODE_PAN
+            self.mouse_mode = LayerControl.MODE_PAN
         print "layer=%s, zoomable = %s" % (sel_layer, self.layer_zoomable)
         self.update_layer_contents_ui(sel_layer)
     
@@ -183,7 +184,7 @@ class ProjectEditor(FrameworkEditor):
             # note that the following call only does work if the properties for the layer have changed
             self.properties_panel.display_panel_for_layer(layer)
     
-    #### old Editor
+    #### old Editor ########################################################
 
     def clear_selection(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
@@ -193,13 +194,203 @@ class ProjectEditor(FrameworkEditor):
             self.refresh()
 
     def delete_selection(self):
-        if (self.control.mode == self.control.MODE_EDIT_POINTS or self.control.mode == self.control.MODE_EDIT_LINES):
+        if (self.mouse_mode == LayerControl.MODE_EDIT_POINTS or self.mouse_mode == LayerControl.MODE_EDIT_LINES):
             sel_layer = self.layer_tree_control.get_selected_layer()
             if sel_layer is not None:
                 sel_layer.delete_all_selected_objects()
                 self.layer_manager.end_operation_batch()
                 self.update_layer_contents_ui()
                 self.refresh()
+
+    def point_tool_selected(self):
+        for layer in self.layer_manager.flatten():
+            layer.clear_all_line_segment_selections()
+        self.refresh()
+
+    def point_tool_deselected(self):
+        pass
+
+    def line_tool_selected(self):
+        n = 0
+        for layer in self.layer_manager.flatten():
+            n += layer.get_num_points_selected()
+        if (n > 1):
+            for layer in self.layer_manager.flatten():
+                layer.clear_all_point_selections()
+            self.refresh()
+
+    def line_tool_deselected(self):
+        pass
+
+    def esc_key_pressed(self):
+        for layer in self.layer_manager.flatten():
+            layer.clear_all_selections()
+        self.refresh()
+
+    def delete_key_pressed(self):
+        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
+            layer = self.layer_tree_control.get_selected_layer()
+            if (layer != None):
+                layer.delete_all_selected_objects()
+                self.layer_manager.end_operation_batch()
+                self.refresh()
+
+    def clicked_on_point(self, event, layer, point_index):
+        act_like_point_tool = False
+
+        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
+            if (event.ControlDown() or event.ShiftDown()):
+                act_like_point_tool = True
+                pass
+            else:
+                point_indexes = layer.get_selected_point_indexes()
+                if (len(point_indexes == 1) and not layer.are_points_connected(point_index, point_indexes[0])):
+                    layer.insert_line_segment(point_index, point_indexes[0])
+                    self.layer_manager.end_operation_batch()
+                    layer.clear_all_point_selections()
+                    layer.select_point(point_index)
+                elif len(point_indexes) == 0:  # no currently selected point
+                    # select this point
+                    layer.select_point(point_index)
+
+        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or act_like_point_tool):
+            if (event.ControlDown()):
+                if (layer.is_point_selected(point_index)):
+                    layer.deselect_point(point_index)
+                else:
+                    layer.select_point(point_index)
+            elif (layer.is_point_selected(point_index)):
+                pass
+            elif (event.ShiftDown()):
+                path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
+                if (path != []):
+                    for p_index in path:
+                        layer.select_point(p_index)
+                else:
+                    layer.select_point(point_index)
+            else:
+                layer.clear_all_selections()
+                layer.select_point(point_index)
+
+        self.refresh()
+
+    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
+            if (not event.ControlDown() and not event.ShiftDown()):
+                self.esc_key_pressed()
+                layer.insert_point_in_line(world_point, line_segment_index)
+                self.layer_manager.end_operation_batch()
+                self.control.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
+
+        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
+            if (event.ControlDown()):
+                if (layer.is_line_segment_selected(line_segment_index)):
+                    layer.deselect_line_segment(line_segment_index)
+                else:
+                    layer.select_line_segment(line_segment_index)
+            elif (layer.is_line_segment_selected(line_segment_index)):
+                pass
+            elif (event.ShiftDown()):
+                path = layer.find_lines_on_shortest_path_from_line_to_selected_line(line_segment_index)
+                if (path != []):
+                    for l_s_i in path:
+                        layer.select_line_segment(l_s_i)
+                else:
+                    layer.select_line_segment(line_segment_index)
+            else:
+                layer.clear_all_selections()
+                layer.select_line_segment(line_segment_index)
+
+        self.refresh()
+
+    def clicked_on_polygon(self, layer, polygon_index):
+        pass
+
+    def clicked_on_empty_space(self, event, layer, world_point):
+        print "clicked on empty space: layer %s, point %s" % (layer, str(world_point)) 
+        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
+            if (layer.type == "root" or layer.type == "folder"):
+                wx.MessageDialog(
+                    wx.GetApp().GetTopWindow(),
+                    caption="Cannot Edit",
+                    message="You cannot add points or lines to folder layers.",
+                    style=wx.OK | wx.ICON_ERROR
+                ).ShowModal()
+
+                return
+        print "1: self.mouse_mode=%d" % self.mouse_mode
+        if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
+            if (not event.ControlDown() and not event.ShiftDown()):
+                print "1.1"
+                self.esc_key_pressed()
+                # we release the focus because we don't want to immediately drag the new object (if any)
+                # self.control.release_mouse() # shouldn't be captured now anyway
+                layer.insert_point(world_point)
+                layer.update_bounds()
+                self.layer_manager.end_operation_batch()
+                self.refresh()
+        print "2"
+        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
+            if (not event.ControlDown() and not event.ShiftDown()):
+                point_indexes = layer.get_selected_point_indexes()
+                if (len(point_indexes == 1)):
+                    self.esc_key_pressed()
+                    # we release the focus because we don't want to immediately drag the new object (if any)
+                    # self.control.release_mouse()
+                    point_index = layer.insert_point(world_point)
+                    layer.update_bounds()
+                    layer.insert_line_segment(point_index, point_indexes[0])
+                    self.layer_manager.end_operation_batch()
+                    layer.clear_all_point_selections()
+                    layer.select_point(point_index)
+                self.refresh()
+
+    def dragged(self, world_d_x, world_d_y):
+        if (self.clickable_object_mouse_is_over == None):
+            return
+
+        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
+        layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
+        layer.offset_selected_objects(world_d_x, world_d_y)
+        # self.layer_manager.end_operation_batch()
+        self.refresh()
+
+    def finished_drag(self, mouse_down_position, mouse_move_position):
+        if (self.clickable_object_mouse_is_over == None):
+            return
+
+        d_x = mouse_move_position[0] - mouse_down_position[0]
+        d_y = mouse_down_position[1] - mouse_move_position[1]
+
+        if (d_x == 0 and d_y == 0):
+            return
+
+        w_p0 = self.control.get_world_point_from_screen_point(mouse_down_position)
+        w_p1 = self.control.get_world_point_from_screen_point(mouse_move_position)
+        world_d_x = w_p1[0] - w_p0[0]
+        world_d_y = w_p1[1] - w_p0[1]
+
+        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
+        layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
+
+        s_p_i_s = layer.get_selected_point_plus_line_point_indexes()
+        for point_index in s_p_i_s:
+            params = (world_d_x, world_d_y)
+            self.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)
+
+        self.layer_manager.end_operation_batch()
+
+    def clickable_object_is_ugrid_point(self):
+        return renderer.is_ugrid_point(self.clickable_object_mouse_is_over)
+
+    def clickable_object_is_ugrid_line(self):
+        return renderer.is_ugrid_line(self.clickable_object_mouse_is_over)
+
+    def clickable_object_is_polygon_fill(self):
+        return renderer.is_polygon_fill(self.clickable_object_mouse_is_over)
+
+    def clickable_object_is_polygon_point(self):
+        return renderer.is_polygon_point(self.clickable_object_mouse_is_over)
 
     #### wx event handlers ####################################################
 

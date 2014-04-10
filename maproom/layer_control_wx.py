@@ -44,7 +44,7 @@ class LayerControl(glcanvas.GLCanvas):
     def __init__(self, *args, **kwargs):
         self.project = kwargs.pop('project')
         self.layer_manager = kwargs.pop('layer_manager')
-        self.editor = kwargs.pop('editor')
+        self.editor = self.project
         self.layer_renderers = {}
 
         kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
@@ -59,7 +59,6 @@ class LayerControl(glcanvas.GLCanvas):
         p = os.path.join(app_globals.image_path, "cursors", "hand_closed.ico")
         self.hand_closed_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
         self.forced_cursor = None
-        self.mode = self.MODE_PAN
         
         self.bounding_boxes_shown = False
 
@@ -93,9 +92,8 @@ class LayerControl(glcanvas.GLCanvas):
         self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
         #self.is_initialized = True
     
-    def change_view(self, layer_manager, editor):
+    def change_view(self, layer_manager):
         self.layer_manager = layer_manager
-        self.editor = editor
 
     def update_renderers(self):
         for layer in self.layer_manager.layers:
@@ -106,7 +104,7 @@ class LayerControl(glcanvas.GLCanvas):
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
-        print "in on_mouse_down"
+        print "in on_mouse_down: event=%s" % event
         self.get_effective_tool_mode(event)  # update alt key state
         self.forced_cursor = None
         self.mouse_is_down = True
@@ -117,7 +115,7 @@ class LayerControl(glcanvas.GLCanvas):
         if (self.get_effective_tool_mode(event) == self.MODE_PAN):
             return
 
-        e = self.editor
+        e = self.project
         lm = self.layer_manager
 
         if (e.clickable_object_mouse_is_over != None):  # the mouse is on a clickable object
@@ -379,8 +377,10 @@ class LayerControl(glcanvas.GLCanvas):
             except:
                 pass
         if (self.is_alt_key_down):
-            return self.MODE_PAN
-        return self.mode
+            mode = self.MODE_PAN
+        else:
+            mode = self.project.mouse_mode
+        return mode
 
     def render(self, event=None):
         # Get interactive console here:
