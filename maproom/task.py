@@ -157,7 +157,7 @@ class PanModeAction(EditorAction):
 
 class AddPointsAction(EditorAction):
     name = 'Add Points Mode'
-    enabled_name = 'layer_has_points'
+    visible_name = 'layer_has_points'
     tooltip = 'Add points to the current layer'
     image = ImageResource('add_points.png')
     style = 'radio'
@@ -172,7 +172,7 @@ class AddPointsAction(EditorAction):
 
 class AddLinesAction(EditorAction):
     name = 'Add Lines Mode'
-    enabled_name = 'layer_has_points'
+    visible_name = 'layer_has_points'
     tooltip = 'Add lines to the current layer'
     image = ImageResource('add_lines.png')
     style = 'radio'
