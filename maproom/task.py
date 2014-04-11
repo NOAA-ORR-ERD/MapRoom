@@ -221,6 +221,19 @@ class MaproomProjectTask(FrameworkTask):
         """
         return [ LayerSelectionPane(), LayerInfoPane() ]
 
+    def _tool_bars_default(self):
+        toolbars = [
+            SToolBar(Group(ZoomModeAction(),
+                           PanModeAction(),
+                           AddPointsAction(),
+                           AddLinesAction(),
+                           id="modetools"),
+                     show_tool_names=False,
+                     id="ModeToolBar",),
+            ]
+        toolbars.extend(FrameworkTask._tool_bars_default(self))
+        return toolbars
+
     def _extra_actions_default(self):
         # FIXME: Is there no way to add an item to an existing group?
         zoomgroup = lambda : Group(ZoomInAction(),
@@ -259,12 +272,6 @@ class MaproomProjectTask(FrameworkTask):
             ClearSelectionAction(),
             DeleteSelectionAction(),
             id="edittools")
-        modetools = lambda : Group(
-            ZoomModeAction(),
-            PanModeAction(),
-            AddPointsAction(),
-            AddLinesAction(),
-            id="modetools")
         actions = [
             # Menubar additions
             SchemaAddition(id='OpenLayer',
@@ -314,11 +321,6 @@ class MaproomProjectTask(FrameworkTask):
                            factory=zoomgroup,
                            path='ToolBar',
                            after="layer",
-                           ),
-            SchemaAddition(id="mode",
-                           factory=modetools,
-                           path='ToolBar',
-                           after="zoom",
                            ),
             ]
         return actions
