@@ -6,7 +6,7 @@ from os.path import basename
 import wx
 
 # Enthought library imports.
-from traits.api import provides, on_trait_change, Any, Bool, Int
+from traits.api import provides, on_trait_change, Any, Bool, Int, Str
 
 from peppy2.framework.editor import FrameworkEditor
 
@@ -37,6 +37,8 @@ class ProjectEditor(FrameworkEditor):
     layer_has_selection = Bool
     
     clickable_object_mouse_is_over = Any
+    
+    mouse_mode_category = Str("BaseLayerToolBar")
     
     mouse_mode = Int(LayerControl.MODE_PAN)
 
@@ -136,6 +138,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
             # leave mouse_mode set to current setting
+            self.mouse_mode_category = sel_layer.mouse_selection_mode + "ToolBar"
         else:
             self.layer_zoomable = False
             self.layer_above = False
@@ -175,6 +178,7 @@ class ProjectEditor(FrameworkEditor):
         if self.control is None:
             return
         
+        self.editor_area.task.window._aui_manager.Update()
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
             self.control.Update()

@@ -7,7 +7,7 @@ import wx
 from pytriangle import triangulate_simple
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any
+from traits.api import Int, Unicode, Any, Str
 
 from ..library import File_loader, rect
 from ..library.scipy_ckdtree import cKDTree
@@ -26,6 +26,8 @@ class VectorLayer(ProjectedLayer):
     
     """
     name = Unicode("Vector Layer")
+    
+    mouse_selection_mode = Str("VectorLayer")
     
     points = Any
     

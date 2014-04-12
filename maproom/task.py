@@ -224,12 +224,16 @@ class MaproomProjectTask(FrameworkTask):
     def _tool_bars_default(self):
         toolbars = [
             SToolBar(Group(ZoomModeAction(),
+                           PanModeAction()),
+                     show_tool_names=False,
+#                     image_size=(22,22),
+                     id="BaseLayerToolBar",),
+            SToolBar(Group(ZoomModeAction(),
                            PanModeAction(),
                            AddPointsAction(),
-                           AddLinesAction(),
-                           id="modetools"),
+                           AddLinesAction()),
                      show_tool_names=False,
-                     id="ModeToolBar",),
+                     id="VectorLayerToolBar",),
             ]
         toolbars.extend(FrameworkTask._tool_bars_default(self))
         return toolbars
@@ -349,6 +353,17 @@ class MaproomProjectTask(FrameworkTask):
             self.activated()
         else:
             FrameworkTask.new(self, source, **kwargs)
+    
+    @on_trait_change('active_editor.mouse_mode_category')
+    def mode_toolbar_changed(self, changed_to):
+        for toolbar in self.window.tool_bar_managers:
+            name = toolbar.id
+            if name == "ToolBar" or name == changed_to:
+                state = True
+            else:
+                state = False
+            toolbar.visible = state
+            print "toolbar: %s = %s" % (name, state)
 
     def _active_editor_changed(self):
         tree = self.window.get_dock_pane('maproom.layer_selection_pane')
