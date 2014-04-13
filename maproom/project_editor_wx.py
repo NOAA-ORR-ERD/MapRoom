@@ -38,7 +38,12 @@ class ProjectEditor(FrameworkEditor):
     
     clickable_object_mouse_is_over = Any
     
-    mouse_mode_category = Str("BaseLayerToolBar")
+    # Force mouse mode category to be blank so that the initial trait change
+    # that occurs during initialization of this class doesn't match a real
+    # mouse mode.  If it does match, the toolbar won't be properly adjusted
+    # during the first trait change in response to update_layer_selection_ui
+    # and there will be an empty between named toolbars
+    mouse_mode_category = Str("")
     
     mouse_mode = Int(LayerControl.MODE_PAN)
 
