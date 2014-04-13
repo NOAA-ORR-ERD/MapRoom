@@ -38,7 +38,8 @@ class BoundingBoxAction(EditorAction):
 
     @on_trait_change('active_editor')
     def _update_checked(self):
-        self.checked = self.active_editor.control.bounding_boxes_shown
+        if self.active_editor:
+            self.checked = self.active_editor.control.bounding_boxes_shown
 
 class ZoomInAction(EditorAction):
     name = 'Zoom In'
@@ -139,7 +140,8 @@ class ZoomModeAction(EditorAction):
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
-        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_ZOOM_RECT
+        if self.active_editor:
+            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_ZOOM_RECT
 
 class PanModeAction(EditorAction):
     name = 'Pan Mode'
@@ -153,7 +155,8 @@ class PanModeAction(EditorAction):
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
-        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_PAN
+        if self.active_editor:
+            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_PAN
 
 class AddPointsAction(EditorAction):
     name = 'Add Points Mode'
@@ -168,7 +171,8 @@ class AddPointsAction(EditorAction):
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
-        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_POINTS
+        if self.active_editor:
+            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_POINTS
 
 class AddLinesAction(EditorAction):
     name = 'Add Lines Mode'
@@ -183,7 +187,8 @@ class AddLinesAction(EditorAction):
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
-        self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_LINES
+        if self.active_editor:
+            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_LINES
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
