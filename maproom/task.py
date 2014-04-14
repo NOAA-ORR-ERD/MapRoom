@@ -212,6 +212,8 @@ class FindPointsAction(EditorAction):
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
+    
+    new_file_text = 'Maproom Project'
 
     #### Task interface #######################################################
 
