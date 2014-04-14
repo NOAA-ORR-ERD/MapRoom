@@ -26,6 +26,15 @@ class OpenLayerAction(TaskAction):
         if dialog.open() == OK:
             event.task.window.application.load_file(dialog.path, event.task, layer=True)
 
+class SaveImageAction(EditorAction):
+    name = 'Save As Image...'
+    tooltip = 'Save a bitmap image of the current view'
+
+    def perform(self, event):
+        dialog = FileDialog(parent=event.task.window.control)
+        if dialog.open() == OK:
+            self.active_editor.save_image(dialog.path)
+
 class BoundingBoxAction(EditorAction):
     name = 'Show Bounding Boxes'
     tooltip = 'Display or hide bounding boxes for each layer'
@@ -288,6 +297,12 @@ class MaproomProjectTask(FrameworkTask):
                            path='MenuBar/File',
                            after="OpenGroup",
                            before="OpenGroupEnd",
+                           ),
+            SchemaAddition(id='SaveImage',
+                           factory=SaveImageAction,
+                           path='MenuBar/File',
+                           after="SaveGroup",
+                           before="SaveGroupEnd",
                            ),
             SchemaAddition(factory=editmenu,
                            path='MenuBar/Edit',

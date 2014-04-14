@@ -1,11 +1,12 @@
 # Standard library imports.
 import sys
-from os.path import basename
+import os.path
 
 # Major package imports.
 import wx
 
 # Enthought library imports.
+from pyface.api import YES, NO
 from traits.api import provides, on_trait_change, Any, Bool, Int, Str
 
 from peppy2.framework.editor import FrameworkEditor
@@ -50,7 +51,7 @@ class ProjectEditor(FrameworkEditor):
     #### property getters
 
     def _get_name(self):
-        return basename(self.path) or 'Untitled Project'
+        return os.path.basename(self.path) or 'Untitled Project'
 
     ###########################################################################
     # 'FrameworkEditor' interface.
@@ -83,14 +84,35 @@ class ProjectEditor(FrameworkEditor):
         self.dirty = editor.dirty
 
     def save(self, path=None):
-        """ Saves the contents of the editor.
+        """ Saves the contents of the editor in a maproom project file
         """
         if path is None:
             path = self.path
-
-        self.control.saveImage(path)
-
+        
+        # FIXME: need to determine the project file format!!!
+        
         self.dirty = False
+
+    def save_image(self, path):
+        """ Saves the contents of the editor in a maproom project file
+        """
+        valid = {
+            '.png': wx.BITMAP_TYPE_PNG,
+            '.tif': wx.BITMAP_TYPE_TIFF,
+            '.tiff': wx.BITMAP_TYPE_TIFF,
+            }
+        _, ext = os.path.splitext(path)
+        t = valid.get(ext.lower(), None)
+        if t is not None:
+            image = self.control.get_canvas_as_image()
+            if os.path.exists(path):
+                confirmed = self.editor_area.task.window.confirm("Image %s exists.\n\nReplace?" % path, "Replace Image")
+            else:
+                confirmed = YES
+            if confirmed == YES:
+                image.SaveFile(path, t)
+        else:
+            self.editor_area.task.window.error("Unsupported image type %s" % ext)
 
     ###########################################################################
     # Trait handlers.
