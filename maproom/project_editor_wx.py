@@ -105,12 +105,9 @@ class ProjectEditor(FrameworkEditor):
         t = valid.get(ext.lower(), None)
         if t is not None:
             image = self.control.get_canvas_as_image()
-            if os.path.exists(path):
-                confirmed = self.editor_area.task.window.confirm("Image %s exists.\n\nReplace?" % path, "Replace Image")
-            else:
-                confirmed = YES
-            if confirmed == YES:
-                image.SaveFile(path, t)
+            # "save as" dialog contains confirmation for overwriting existing
+            # file, so just write the file here
+            image.SaveFile(path, t)
         else:
             self.editor_area.task.window.error("Unsupported image type %s" % ext)
 

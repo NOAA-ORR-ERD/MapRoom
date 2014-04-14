@@ -31,7 +31,7 @@ class SaveImageAction(EditorAction):
     tooltip = 'Save a bitmap image of the current view'
 
     def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control)
+        dialog = FileDialog(parent=event.task.window.control, action='save as')
         if dialog.open() == OK:
             self.active_editor.save_image(dialog.path)
 
