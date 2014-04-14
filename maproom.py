@@ -3,6 +3,17 @@
 # Standard library imports.
 import logging
 
+# Must set these environmental vars early, before any of the Enthought
+# libraries are loaded, because some are only used at module load time.
+import os
+
+# Debugging turned on for readable exceptions on Enthought ui module import
+os.environ["ETS_DEBUG"] = "True"
+
+# Use the agw.aui toolbar because the standard toolbar in AUI doesn't refresh
+# properly on Mac
+os.environ["ETS_AUI_TOOLBAR"] = "True"
+
 # Framework imports.
 from peppy2 import get_image_path
 from peppy2.framework.application import run
@@ -14,9 +25,6 @@ from maproom.plugin import MaproomPlugin
 import wx
 import multiprocessing
 multiprocessing.freeze_support()
-
-import os
-os.environ["ETS_DEBUG"] = "True"
 
 def main(argv):
     """ Run the application.
