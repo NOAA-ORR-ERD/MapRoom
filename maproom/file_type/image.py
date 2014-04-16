@@ -19,4 +19,5 @@ class GDALRecognizer(HasTraits):
             dataset = gdal.Open(guess.metadata.uri)
         except RuntimeError:
             print "GDAL can't open %s; not an image"
+            return None
         return "image/x-gdal"
