@@ -8,9 +8,10 @@ from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
 from pyface.action.api import Group, Separator
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
     SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
-from traits.api import on_trait_change, Property, Instance
+from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode
 
 from peppy2.framework.task import FrameworkTask
+from peppy2.framework.i_about import IAbout
 
 from project_editor import ProjectEditor
 from panes import LayerSelectionPane, LayerInfoPane
@@ -209,6 +210,7 @@ class FindPointsAction(EditorAction):
         GUI.invoke_later(self.active_editor.control.do_find_points)
 
 
+@provides(IAbout)
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
@@ -222,6 +224,48 @@ class MaproomProjectTask(FrameworkTask):
     name = 'Maproom Project File'
     
     icon = ImageResource('maproom')
+    
+    #### 'IAbout' interface ###################################################
+    
+    about_title = Str('MapRoom')
+    
+    about_version = Unicode
+    
+    about_description = Unicode('Edit stuff.')
+    
+    about_website = Str('http://www.noaa.gov')
+    
+    about_image = Instance(ImageResource, ImageResource('maproom_large'))
+    
+    def _about_version_default(self):
+        import Version
+        return Version.VERSION
+    
+    def _about_description_default(self):
+        desc = "High-performance 2d mapping developed by NOAA\n\nUsing:\n"
+        import wx
+        desc += "  wxPython %s\n" % wx.version()
+        try:
+            import gdal
+            desc += "  GDAL %s\n" % gdal.VersionInfo()
+        except:
+            pass
+        try:
+            import numpy
+            desc += "  numpy %s\n" % numpy.version.version
+        except:
+            pass
+        try:
+            import OpenGL
+            desc += "  PyOpenGL %s\n" % OpenGL.__version__
+        except:
+            pass
+        try:
+            import pyproj
+            desc += "  PyProj %s\n" % pyproj.__version__
+        except:
+            pass
+        return desc
 
     ###########################################################################
     # 'Task' interface.
