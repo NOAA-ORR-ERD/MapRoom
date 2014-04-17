@@ -213,6 +213,8 @@ class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
     
+    id = 'maproom.project'
+    
     new_file_text = 'Maproom Project'
 
     #### Task interface #######################################################

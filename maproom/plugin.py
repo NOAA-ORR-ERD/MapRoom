@@ -2,12 +2,13 @@
 import os.path
 
 # Enthought library imports.
-from envisage.api import ExtensionPoint, Plugin
+from envisage.api import ExtensionPoint
 from envisage.ui.tasks.api import TaskFactory
 from traits.api import List
 
+from peppy2.framework.plugin import FrameworkPlugin
 
-class MaproomPlugin(Plugin):
+class MaproomPlugin(FrameworkPlugin):
     """ The sample framework plugin.
     """
 
@@ -34,11 +35,9 @@ class MaproomPlugin(Plugin):
     def _task_factories_default(self):
         from maproom.task import MaproomProjectTask
 
-        return [ 
-            TaskFactory(id = 'maproom.project',
-                        name = 'Maproom Project Task',
-                        factory = MaproomProjectTask),
-            ]
+        return self.task_factories_from_tasks([
+                MaproomProjectTask,
+            ])
 
     def _recognizer_default(self):
         from maproom.file_type.text import VerdatRecognizer, BNARecognizer
