@@ -17,16 +17,6 @@ from project_editor import ProjectEditor
 from panes import LayerSelectionPane, LayerInfoPane
 from layer_control_wx import LayerControl
 
-class OpenLayerAction(TaskAction):
-    name = 'Open Layer...'
-    accelerator = 'Ctrl+L'
-    tooltip = 'Open a file and add the layer to the current project'
-
-    def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control)
-        if dialog.open() == OK:
-            event.task.window.application.load_file(dialog.path, event.task, layer=True)
-
 class SaveImageAction(EditorAction):
     name = 'Save As Image...'
     tooltip = 'Save a bitmap image of the current view'
@@ -340,12 +330,6 @@ class MaproomProjectTask(FrameworkTask):
             id="edittools")
         actions = [
             # Menubar additions
-            SchemaAddition(id='OpenLayer',
-                           factory=OpenLayerAction,
-                           path='MenuBar/File',
-                           after="OpenGroup",
-                           before="OpenGroupEnd",
-                           ),
             SchemaAddition(id='SaveImage',
                            factory=SaveImageAction,
                            path='MenuBar/File',
@@ -407,14 +391,20 @@ class MaproomProjectTask(FrameworkTask):
         editor = ProjectEditor()
         return editor
 
-    def new(self, source=None, layer=False, **kwargs):
-        """ Opens a new tab, unless we are adding to the existing layers
+    def new(self, source=None, **kwargs):
+        """Open a maproom file.
+        
+        If the file is a maproom project, it will open a new tab.
+        
+        If the file is something that can be added as a layer, it will be added
+        to the current project, unless a project doesn't exist in which case
+        it will open in a new, empty project.
         
         :param source: optional :class:`FileGuess` or :class:`Editor` instance
         that will load a new file or create a new view of the existing editor,
         respectively.
         """
-        if layer and self.active_editor and hasattr(source, 'get_metadata'):
+        if self.active_editor and hasattr(source, 'get_metadata'):
             editor = self.active_editor
             editor.load(source, **kwargs)
             self._active_editor_changed()
