@@ -82,6 +82,15 @@ class NewLayerAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_manager.add_layer)
 
+class DeleteLayerAction(EditorAction):
+    name = 'Delete Layer'
+    tooltip = 'Remove the layer from the project'
+    enabled_name = 'layer_selected'
+    image = ImageResource('delete_layer')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_manager.delete_selected_layer)
+
 class RaiseLayerAction(EditorAction):
     name = 'Raise Layer'
     tooltip = 'Move layer up in the stacking order'
@@ -304,6 +313,7 @@ class MaproomProjectTask(FrameworkTask):
             NewLayerAction(),
             RaiseLayerAction(),
             LowerLayerAction(),
+            DeleteLayerAction(),
             id="layertools")
         layermenu = lambda : Group(
             Group(NewLayerAction(),
@@ -311,6 +321,8 @@ class MaproomProjectTask(FrameworkTask):
             Group(RaiseLayerAction(),
                   LowerLayerAction(),
                   id="raisegroup"),
+            Group(DeleteLayerAction(),
+                  id="deletegroup"),
             Group(ZoomModeAction(),
                   PanModeAction(),
                   AddPointsAction(),

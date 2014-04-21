@@ -29,6 +29,8 @@ class ProjectEditor(FrameworkEditor):
     
     layer_zoomable = Bool
     
+    layer_selected = Bool
+    
     layer_above = Bool
     
     layer_below = Bool
@@ -158,17 +160,19 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
+            self.layer_selected = not sel_layer.is_root()
             self.layer_zoomable = sel_layer.is_zoomable()
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
             # leave mouse_mode set to current setting
             self.mouse_mode_category = sel_layer.mouse_selection_mode + "ToolBar"
         else:
+            self.layer_selected = False
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
             self.mouse_mode = LayerControl.MODE_PAN
-        print "layer=%s, zoomable = %s" % (sel_layer, self.layer_zoomable)
+        print "layer=%s, root = %s, zoomable = %s" % (sel_layer, sel_layer.is_root(), self.layer_zoomable)
         self.update_layer_contents_ui(sel_layer)
     
     def update_layer_contents_ui(self, sel_layer=None):

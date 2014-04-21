@@ -14,6 +14,7 @@ from layers import Layer, RootLayer, Grid, VectorLayer, RasterLayer, constants
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event
+from pyface.api import YES, NO
 
 
 class LayerManager(LayerUndo):
@@ -331,30 +332,20 @@ class LayerManager(LayerUndo):
     def delete_selected_layer(self, layer=None):
         if (layer == None):
             layer = self.project.layer_tree_control.get_selected_layer()
-            if (layer == None):
-                wx.MessageDialog(
-                    self.project.control,
-                    message="You must select an item in the tree (either a single layer or a tree of layers) in the tree control before attempting to delete.",
-                    style=wx.OK | wx.ICON_ERROR
-                ).ShowModal()
+        task = self.project.editor_area.task
+        if (layer == None):
+            task.window.status_bar.message = "Selected layer to delete!."
+            return
 
-                return
+        if (layer.type == "root"):
+            m = "The root node of the layer tree is selected. This will delete all layers in the tree."
+        elif (layer.type == "folder"):
+            m = "A folder in the layer tree is selected. This will delete the entire sub-tree of layers."
+        else:
+            m = "Are you sure you want to delete " + layer.name + "?"
 
-            if (layer.type == "root"):
-                m = "The root node of the layer tree is selected. This will delete all layers in the tree."
-            elif (layer.type == "folder"):
-                m = "A folder in the layer tree is selected. This will delete the entire sub-tree of layers."
-            else:
-                m = "An individual layer in the layer tree is selected. This will delete the selected layer, " + layer.name + "."
-
-            dialog = wx.MessageDialog(
-                self.project.control,
-                caption="Delete",
-                message=m,
-                style=wx.OK | wx.CANCEL
-            )
-            if (dialog.ShowModal() != wx.ID_OK):
-                return
+        if task.window.confirm(m) != YES:
+            return
 
         self.destroy_recursive(layer)
 
@@ -381,7 +372,7 @@ class LayerManager(LayerUndo):
         if (self.layer_is_folder(layer)):
             for item in self.get_layer_children(layer):
                 self.destroy_recursive(item)
-        layer.destroy()
+        self.delete_undo_operations_for_layer(layer)
 
 
 def test():

@@ -71,6 +71,9 @@ class Layer(HasTraits):
         to determine if we can save this layer.
         """
         return True
+    
+    def is_root(self):
+        return False
 
     def get_visibility_dict(self):
         d = dict()
@@ -162,10 +165,6 @@ class Layer(HasTraits):
         if hasattr(self, "render_screen"):
             opengl_renderer.prepare_to_render_screen_objects()
             self.render_screen(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
-    
-    def destroy(self):
-        self.lm.delete_undo_operations_for_layer(self)
-        self.lm = None
 
 
 class Folder(Layer):
@@ -184,6 +183,9 @@ class RootLayer(Folder):
     name = Unicode("Root Layer")
     
     type = Str("root")
+    
+    def is_root(self):
+        return True
 
 
 class ProjectedLayer(Layer):
