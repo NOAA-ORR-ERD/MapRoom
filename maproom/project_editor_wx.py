@@ -111,7 +111,7 @@ class ProjectEditor(FrameworkEditor):
             # file, so just write the file here
             image.SaveFile(path, t)
         else:
-            self.editor_area.task.window.error("Unsupported image type %s" % ext)
+            self.window.error("Unsupported image type %s" % ext)
 
     ###########################################################################
     # Trait handlers.
@@ -135,11 +135,11 @@ class ProjectEditor(FrameworkEditor):
         self.control = LayerControl(parent, layer_manager=self.layer_manager, project=self)
         
         # Tree/Properties controls referenced from MapController
-        self.layer_tree_control = self.editor_area.task.window.get_dock_pane('maproom.layer_selection_pane').control
-        self.properties_panel = self.editor_area.task.window.get_dock_pane('maproom.layer_info_pane').control
+        self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
+        self.properties_panel = self.window.get_dock_pane('maproom.layer_info_pane').control
         self.properties_panel = None
         
-        print "LayerEditor: task=%s" % self.editor_area.task
+        print "LayerEditor: task=%s" % self.task
 
         return self.control
     
@@ -206,7 +206,7 @@ class ProjectEditor(FrameworkEditor):
         if self.control is None:
             return
         
-        self.editor_area.task.window._aui_manager.Update()
+        self.window._aui_manager.Update()
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
             self.control.Update()

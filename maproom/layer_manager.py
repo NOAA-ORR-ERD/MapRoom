@@ -332,9 +332,9 @@ class LayerManager(LayerUndo):
     def delete_selected_layer(self, layer=None):
         if (layer == None):
             layer = self.project.layer_tree_control.get_selected_layer()
-        task = self.project.editor_area.task
+        window = self.project.window
         if (layer == None):
-            task.window.status_bar.message = "Selected layer to delete!."
+            window.status_bar.message = "Selected layer to delete!."
             return
 
         if (layer.type == "root"):
@@ -344,7 +344,7 @@ class LayerManager(LayerUndo):
         else:
             m = "Are you sure you want to delete " + layer.name + "?"
 
-        if task.window.confirm(m) != YES:
+        if window.confirm(m) != YES:
             return
 
         self.destroy_recursive(layer)
