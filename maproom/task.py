@@ -322,7 +322,7 @@ class MaproomProjectTask(FrameworkTask):
                   LowerLayerAction(),
                   id="raisegroup"),
             Group(DeleteLayerAction(),
-                  id="deletegroup"),
+                  id="deletegroup", separator=False),
             Group(ZoomModeAction(),
                   PanModeAction(),
                   AddPointsAction(),
