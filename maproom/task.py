@@ -74,13 +74,20 @@ class ZoomToLayer(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
 
-class NewLayerAction(EditorAction):
-    name = 'New Vector Layer'
+class NewVectorLayerAction(EditorAction):
+    name = 'Vector Layer'
     tooltip = 'Create new vector (grid) layer'
     image = ImageResource('add_layer')
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_manager.add_layer)
+
+class NewLonLatLayerAction(EditorAction):
+    name = 'Lon/Lat Layer'
+    tooltip = 'Create new longitude/latitude grid layer'
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_manager.add_layer, "grid")
 
 class DeleteLayerAction(EditorAction):
     name = 'Delete Layer'
@@ -307,22 +314,31 @@ class MaproomProjectTask(FrameworkTask):
                                    ZoomToLayer(),
                                    id="zoomgroup")
         layer = lambda: SMenu(
+            Separator(id="LayerMenuStart", separator=False),
             id= 'Layer', name="Layer"
         )
         layertools = lambda : Group(
-            NewLayerAction(),
+            NewVectorLayerAction(),
             RaiseLayerAction(),
             LowerLayerAction(),
             DeleteLayerAction(),
             id="layertools")
+        layernew = lambda: SMenu(
+            Separator(id="LayerNewMenuStart", separator=False),
+            id= 'New', name="New"
+        )
+        layernewmenu = lambda : Group(
+            Group(NewVectorLayerAction(),
+                  NewLonLatLayerAction(),
+                  id="NewLayerGroup"),
+            id="layernewmenu")
         layermenu = lambda : Group(
-            Group(NewLayerAction(),
-                  id="addlayergroup"),
+            Separator(id="LayerMainMenuStart", separator=False),
             Group(RaiseLayerAction(),
                   LowerLayerAction(),
-                  id="raisegroup"),
+                  id="raisegroup", separator=False),
             Group(DeleteLayerAction(),
-                  id="deletegroup", separator=False),
+                  id="deletegroup"),
             Group(ZoomModeAction(),
                   PanModeAction(),
                   AddPointsAction(),
@@ -366,8 +382,16 @@ class MaproomProjectTask(FrameworkTask):
                            path='MenuBar',
                            after="Edit",
                            ),
+            SchemaAddition(factory=layernew,
+                           path='MenuBar/Layer',
+                           before="LayerMainMenuStart",
+                           ),
+            SchemaAddition(factory=layernewmenu,
+                           path='MenuBar/Layer/New',
+                           ),
             SchemaAddition(factory=layermenu,
                            path='MenuBar/Layer',
+                           after='New',
                            ),
             SchemaAddition(factory=zoomgroup,
                            path='MenuBar/View',

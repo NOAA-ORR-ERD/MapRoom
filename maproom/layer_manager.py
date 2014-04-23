@@ -316,8 +316,11 @@ class LayerManager(LayerUndo):
                                  caption="Error Saving Verdat File",
                                  style=wx.OK | wx.ICON_ERROR).ShowModal()
 
-    def add_layer(self):
-        layer = VectorLayer(self)
+    def add_layer(self, type=None):
+        if type is "grid":
+            layer = Grid(manager=self)
+        else:
+            layer = VectorLayer(manager=self)
         layer.new()
         self.dispatch_event('layer_loaded', layer)
         self.insert_layer(None, layer)

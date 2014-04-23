@@ -60,7 +60,7 @@ class Layer(HasTraits):
         return self.name
 
     def new(self):
-        self.name = "New %s" % self.default_name
+        self.name = "New %s" % self.name
         Layer.new_layer_index += 1
         if Layer.new_layer_index > 1:
             self.name += " %d" % Layer.new_layer_index
