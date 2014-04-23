@@ -11,11 +11,12 @@ class Triangle_dialog(wx.Dialog):
     SPACING = 15
     NAME = "Triangulate Layer"
 
-    def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, wx.ID_ANY, self.NAME,
+    def __init__(self, project):
+        self.project = project
+        wx.Dialog.__init__(self, project.window.control, wx.ID_ANY, self.NAME,
                            style=wx.DEFAULT_DIALOG_STYLE, name=self.NAME
                            )
-        self.SetIcon(app_globals.application.frame.GetIcon())
+        self.SetIcon(project.window.control.GetIcon())
 
         self.outer_sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -130,7 +131,7 @@ class Triangle_dialog(wx.Dialog):
 
                 return
 
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        layer = self.project.layer_tree_control.get_selected_layer()
         if (layer == None or layer.points == None):
                 wx.MessageBox("You must select a layer with points in the tree to triangulate.", "Triangulate")
 
@@ -142,8 +143,8 @@ class Triangle_dialog(wx.Dialog):
             print traceback.format_exc(e)
             wx.MessageBox(e.message, "Triangulate Error")
 
-        app_globals.application.refresh(rebuild_tree=True)
-        app_globals.application.layer_tree_control.select_layer(layer)
+        self.project.refresh()
+        self.project.layer_tree_control.select_layer(layer)
 
     def close(self, event):
         self.Destroy()

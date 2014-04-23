@@ -116,6 +116,16 @@ class LowerLayerAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer)
 
+class TriangulateLayerAction(EditorAction):
+    name = 'Triangulate Layer'
+    tooltip = 'Create triangular mesh'
+    enabled_name = 'layer_has_points'
+    image = ImageResource('triangulate.png')
+
+    def perform(self, event):
+        from ui.Triangle_dialog import Triangle_dialog
+        GUI.invoke_later(Triangle_dialog, self.active_editor)
+
 class JumpToCoordsAction(EditorAction):
     name = 'Jump to Coordinates'
     accelerator = 'Ctrl+J'
@@ -321,6 +331,7 @@ class MaproomProjectTask(FrameworkTask):
             NewVectorLayerAction(),
             RaiseLayerAction(),
             LowerLayerAction(),
+            TriangulateLayerAction(),
             DeleteLayerAction(),
             id="layertools")
         layernew = lambda: SMenu(
@@ -337,6 +348,8 @@ class MaproomProjectTask(FrameworkTask):
             Group(RaiseLayerAction(),
                   LowerLayerAction(),
                   id="raisegroup", separator=False),
+            Group(TriangulateLayerAction(),
+                  id="utilgroup"),
             Group(DeleteLayerAction(),
                   id="deletegroup"),
             Group(ZoomModeAction(),
