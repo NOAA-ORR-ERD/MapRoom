@@ -21,7 +21,7 @@ class MaproomPlugin(FrameworkPlugin):
     id = 'peppy2.tasks'
 
     # The plugin's name (suitable for displaying to the user).
-    name = 'Maproom'
+    name = 'MapRoom'
 
     #### Contributions to extension points made by this plugin ################
 

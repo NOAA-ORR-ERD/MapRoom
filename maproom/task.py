@@ -216,11 +216,11 @@ class MaproomProjectTask(FrameworkTask):
     
     id = 'maproom.project'
     
-    new_file_text = 'Maproom Project'
+    new_file_text = 'MapRoom Project'
 
     #### Task interface #######################################################
 
-    name = 'Maproom Project File'
+    name = 'MapRoom Project File'
     
     icon = ImageResource('maproom')
     
@@ -230,7 +230,7 @@ class MaproomProjectTask(FrameworkTask):
     
     about_version = Unicode
     
-    about_description = Unicode('Edit stuff.')
+    about_description = Unicode
     
     about_website = Str('http://www.noaa.gov')
     

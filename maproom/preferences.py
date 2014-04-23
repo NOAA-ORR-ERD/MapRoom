@@ -44,5 +44,5 @@ class MaproomPreferencesPane(PreferencesPane):
                HGroup(Item('wrap_lines'),
                       Label('Wrap lines'),
                       show_labels = False),
-               label='Maproom'),
+               label='MapRoom'),
         resizable=True)
