@@ -214,13 +214,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
         (target_category, target_layer) = self.GetItemPyData(item).Data
         if (target_category != "root" and target_category != "folder" and target_category != "layer"):
-            wx.MessageDialog(
-                self.project.application.frame,
-                caption="Invalid Layer Drag",
-                message="You can only drag a layer onto another layer, a folder, or the tree root.",
-                style=wx.OK | wx.ICON_ERROR,
-            ).ShowModal()
-
+            self.project.window.error("You can only drag a layer onto another layer, a folder, or the tree root.", "Invalid Layer Drag")
             return
 
         (source_category, source_layer) = self.GetItemPyData(local_dragged_item).Data
@@ -236,13 +230,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
             return
 
         if (len(mi_target) > len(mi_source) and mi_target[0: len(mi_source)] == mi_source):
-            wx.MessageDialog(
-                self.project.application.frame,
-                caption="Invalid Layer Move",
-                message="You cannot move folder into one of its sub-folders.",
-                style=wx.OK | wx.ICON_ERROR,
-            ).ShowModal()
-
+            self.project.window.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
             return
 
         lm.remove_layer(mi_source)
