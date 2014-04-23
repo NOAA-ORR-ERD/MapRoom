@@ -460,6 +460,9 @@ class MaproomProjectTask(FrameworkTask):
             self.activated()
         else:
             FrameworkTask.new(self, source, **kwargs)
+
+    def allow_different_task(self, guess, other_task):
+        return self.window.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
     
     @on_trait_change('active_editor.mouse_mode_category')
     def mode_toolbar_changed(self, changed_to):
