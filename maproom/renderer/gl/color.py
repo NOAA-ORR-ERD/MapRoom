@@ -30,7 +30,8 @@ def color_to_int(red, green, blue, alpha):
     ).view(np.uint32)[0]
 
 def int_to_color(color):
-    ints = np.frombuffer(color.tostring(), dtype=np.uint8)
+    c = np.uint32(color) # handle plain python integer being passed in
+    ints = np.frombuffer(c.tostring(), dtype=np.uint8)
     floats = tuple([i/255.0 for i in ints])
     return floats
 
