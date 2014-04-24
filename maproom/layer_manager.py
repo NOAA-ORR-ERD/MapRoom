@@ -238,6 +238,14 @@ class LayerManager(LayerUndo):
 
         return None
 
+    def count_layers(self):
+        n = 0
+        for layer in self.flatten():
+            if not layer.is_root():
+                n += 1
+        #
+        return n
+
     def count_raster_layers(self):
         n = 0
         for layer in self.flatten():
@@ -362,12 +370,18 @@ class LayerManager(LayerUndo):
             del l[mi[-1]]
 
         self.dispatch_event('layers_changed')
+    
+    def get_mergeable_layers(self):
+        layers = [layer for layer in self.flatten() if layer.has_points()]
+        layers.reverse()
+        return layers
 
     def merge_layers(self, layer_a, layer_b):
-        layer = Layer()
+        layer = VectorLayer(manager=self)
         layer.type = ".verdat"
         layer.name = "Merged"
         layer.merge_from_source_layers(layer_a, layer_b)
+        self.dispatch_event('layer_loaded', layer)
         self.insert_layer(None, layer)
         self.project.layer_tree_control.select_layer(layer)
 

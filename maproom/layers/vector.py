@@ -818,8 +818,6 @@ class VectorLayer(ProjectedLayer):
         ] = l_s_i_s
         # self.line_segment_indexes.state = 0
 
-        self.renderer_update_event = True
-
     # returns a list of pairs of point indexes
     def find_duplicates(self, distance_tolerance_degrees, depth_tolerance_percentage=-1):
         if (self.points == None or len(self.points) < 2):

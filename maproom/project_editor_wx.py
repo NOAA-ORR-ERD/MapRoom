@@ -35,6 +35,8 @@ class ProjectEditor(FrameworkEditor):
     
     layer_below = Bool
     
+    multiple_layers = Bool
+    
     layer_has_points = Bool
     
     layer_has_selection = Bool
@@ -172,6 +174,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_above = False
             self.layer_below = False
             self.mouse_mode = LayerControl.MODE_PAN
+        self.multiple_layers = self.layer_manager.count_layers() > 1
         print "layer=%s, root = %s, zoomable = %s" % (sel_layer, sel_layer.is_root(), self.layer_zoomable)
         self.update_layer_contents_ui(sel_layer)
     

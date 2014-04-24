@@ -126,6 +126,46 @@ class TriangulateLayerAction(EditorAction):
         from ui.Triangle_dialog import Triangle_dialog
         GUI.invoke_later(Triangle_dialog, self.active_editor)
 
+class MergeLayersAction(EditorAction):
+    name = 'Merge Layers'
+    tooltip = 'Merge two vector layers'
+    enabled_name = 'multiple_layers'
+    image = ImageResource('merge.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.show_dialog, self.active_editor)
+    
+    def show_dialog(self, project):
+        layers = project.layer_manager.get_mergeable_layers()
+
+        if len(layers) < 2:
+            project.window.error("Merge requires two vector layers.")
+            return
+
+        layer_names = [str(layer.name) for layer in layers]
+
+        import wx
+        dialog = wx.MultiChoiceDialog(
+            project.window.control,
+            "Please select two or more vector layers to merge together into one layer.\n\nOnly those layers that support merging are listed.",
+            "Merge Layers",
+            layer_names
+        )
+
+        # If there are exactly two layers, select them both as a convenience
+        # to the user.
+        if (len(layers) == 2):
+            dialog.SetSelections([0, 1])
+
+        result = dialog.ShowModal()
+        if result == wx.ID_OK:
+            selections = dialog.GetSelections()
+            if len(selections) != 2:
+                project.window.error("You must select exactly two layers to merge.")
+            else:
+                project.layer_manager.merge_layers(layers[selections[0]], layers[selections[1]])
+        dialog.Destroy()
+
 class JumpToCoordsAction(EditorAction):
     name = 'Jump to Coordinates'
     accelerator = 'Ctrl+J'
@@ -349,6 +389,7 @@ class MaproomProjectTask(FrameworkTask):
                   LowerLayerAction(),
                   id="raisegroup", separator=False),
             Group(TriangulateLayerAction(),
+                  MergeLayersAction(),
                   id="utilgroup"),
             Group(DeleteLayerAction(),
                   id="deletegroup"),
