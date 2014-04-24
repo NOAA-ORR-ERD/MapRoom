@@ -4,7 +4,6 @@
 import sys
 import traceback
 import wx
-import app_globals
 
 
 class Triangle_dialog(wx.Dialog):
