@@ -197,7 +197,8 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:layer_contents_triangulated')
     def layer_contents_triangulated(self, layer):
-        print "layer_contents_changed called!!!"
+        print "layer_contents_triangulated called!!!"
+        self.layer_tree_control.rebuild()
         self.control.rebuild_triangles_for_layer(layer)
     
     @on_trait_change('layer_manager:refresh_needed')
