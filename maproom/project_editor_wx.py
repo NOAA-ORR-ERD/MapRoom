@@ -198,6 +198,11 @@ class ProjectEditor(FrameworkEditor):
         print "layer_contents_changed called!!! layer=%s" % layer
         self.control.rebuild_points_and_lines_for_layer(layer)
     
+    @on_trait_change('layer_manager:layer_contents_deleted')
+    def layer_contents_deleted(self, layer):
+        print "layer_contents_deleted called!!! layer=%s" % layer
+        self.control.rebuild_points_and_lines_for_layer(layer)
+    
     @on_trait_change('layer_manager:layer_contents_triangulated')
     def layer_contents_triangulated(self, layer):
         print "layer_contents_triangulated called!!! layer=%s" % layer
