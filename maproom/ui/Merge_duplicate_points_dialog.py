@@ -1,11 +1,9 @@
 import sys
 import math
 import wx
-from wx.lib.pubsub import pub
 
-import Layer
-import app_globals
-import ui.controls.sliders as sliders
+from ..layers import constants
+import sliders
 
 
 class Distance_slider(wx.Panel):
@@ -77,12 +75,14 @@ class Merge_duplicate_points_dialog(wx.Dialog):
     list_contains_real_data = False
     dirty = False
 
-    def __init__(self, parent):
+    def __init__(self, project, trait_wrapper):
+        self.project = project
+        self.trait_wrapper = trait_wrapper
         wx.Dialog.__init__(
-            self, parent, wx.ID_ANY, self.NAME,
+            self, project.window.control, wx.ID_ANY, self.NAME,
             style=wx.DEFAULT_DIALOG_STYLE, name=self.NAME
         )
-        self.SetIcon(app_globals.application.frame.GetIcon())
+        self.SetIcon(project.window.control.GetIcon())
 
         self.outer_sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -129,13 +129,10 @@ class Merge_duplicate_points_dialog(wx.Dialog):
 
         self.sizer.Layout()
         self.Fit()
-        self.Show()
 
         self.find_button.Bind(wx.EVT_BUTTON, self.find_duplicates)
-        self.Bind(wx.EVT_CLOSE, self.on_close)
+        self.Bind(wx.EVT_CLOSE, self.trait_wrapper.wx_on_close)
         self.Bind(wx.EVT_CHECKBOX, self.on_depth_check)
-
-        pub.subscribe(self.on_points_deleted, ('layer', 'points', 'deleted'))
 
     def on_points_deleted(self, layer):
         if layer == self.layer:
@@ -145,20 +142,15 @@ class Merge_duplicate_points_dialog(wx.Dialog):
         self.depth_slider.Enable(event.IsChecked())
 
     def on_close(self, event):
-        for layer in app_globals.layer_manager.flatten():
-            layer.clear_all_selections(Layer.STATE_FLAGGED)
+        for layer in self.project.layer_manager.flatten():
+            layer.clear_all_selections(constants.STATE_FLAGGED)
         self.Destroy()
 
     def find_duplicates(self, event):
         # at the time the button is pressed, we commit to a layer
-        self.layer = app_globals.application.layer_tree_control.get_selected_layer()
+        self.layer = self.project.layer_tree_control.get_selected_layer()
         if (self.layer == None or self.layer.points == None or len(self.layer.points) < 2):
-            wx.MessageDialog(
-                self,
-                message="You must first select a layer with points in the layer tree.",
-                caption="Error",
-                style=wx.OK | wx.ICON_ERROR,
-            ).ShowModal()
+            self.project.window.error("You must first select a layer with points in the layer tree.")
             self.layer = None
 
             return
@@ -272,7 +264,7 @@ class Merge_duplicate_points_dialog(wx.Dialog):
         self.remove_button.Bind(wx.EVT_BUTTON, self.delete_selected_groups)
 
         self.Bind(wx.EVT_BUTTON, self.merge_clicked, id=self.merge_button_id)
-        self.Bind(wx.EVT_BUTTON, self.on_close, id=self.close_button_id)
+        self.Bind(wx.EVT_BUTTON, self.trait_wrapper.wx_on_close, id=self.close_button_id)
 
         self.sizer.Layout()
         self.Fit()
@@ -285,8 +277,8 @@ class Merge_duplicate_points_dialog(wx.Dialog):
         self.list_view.ClearAll()
         self.list_view.InsertStringItem(0, "Click Find Duplicates to search.")
 
-        for layer in app_globals.layer_manager.flatten():
-            layer.clear_all_selections(Layer.STATE_FLAGGED)
+        for layer in self.project.layer_manager.flatten():
+            layer.clear_all_selections(constants.STATE_FLAGGED)
 
         self.list_contains_real_data = False
         self.update_selection()
@@ -301,8 +293,8 @@ class Merge_duplicate_points_dialog(wx.Dialog):
         if (pair_count == 0):
             self.list_view.InsertStringItem(0, "No duplicate points found.")
 
-            for layer in app_globals.layer_manager.flatten():
-                layer.clear_all_selections(Layer.STATE_FLAGGED)
+            for layer in self.project.layer_manager.flatten():
+                layer.clear_all_selections(constants.STATE_FLAGGED)
 
             self.list_contains_real_data = False
             self.update_selection()
@@ -315,8 +307,8 @@ class Merge_duplicate_points_dialog(wx.Dialog):
                 "Too many duplicate points to display (%d pairs)." % pair_count
             )
 
-            for layer in app_globals.layer_manager.flatten():
-                layer.clear_all_selections(Layer.STATE_FLAGGED)
+            for layer in self.project.layer_manager.flatten():
+                layer.clear_all_selections(constants.STATE_FLAGGED)
 
             # self.list_view.SetItemData( 0, -1 )
 
@@ -380,15 +372,15 @@ class Merge_duplicate_points_dialog(wx.Dialog):
 
         point_count = len(points)
 
-        self.layer.clear_all_selections(Layer.STATE_FLAGGED)
+        self.layer.clear_all_selections(constants.STATE_FLAGGED)
 
         if (point_count == 0):
             return
 
-        self.layer.select_points(points, Layer.STATE_FLAGGED)
-        bounds = self.layer.compute_bounding_rect(Layer.STATE_FLAGGED)
-        app_globals.application.renderer.zoom_to_include_world_rect(bounds)
-        app_globals.application.refresh()
+        self.layer.select_points(points, constants.STATE_FLAGGED)
+        bounds = self.layer.compute_bounding_rect(constants.STATE_FLAGGED)
+        self.project.control.zoom_to_include_world_rect(bounds)
+        self.project.refresh()
 
     def key_pressed(self, event):
         key_code = event.GetKeyCode()
@@ -437,3 +429,30 @@ class Merge_duplicate_points_dialog(wx.Dialog):
 
         event.Skip()
         self.clear_results()
+
+# Enthought library imports.
+from traits.api import HasTraits, Any, on_trait_change
+
+class MergeDialog(HasTraits):
+    """Traits wrapper around dialog so we can use trait notifications
+    """
+    
+    control = Any
+    
+    project = Any
+    
+    def _control_default(self):
+        return Merge_duplicate_points_dialog(project=self.project, trait_wrapper=self)
+    
+    def show(self):
+        self.control.Show()
+    
+    def wx_on_close(self, evt):
+        self.control.on_close(evt)
+        self.control = None
+        
+    @on_trait_change('project.layer_manager:layer_contents_deleted')
+    def layer_contents_deleted(self, layer):
+        print "MergeDialog: layer_contents_deleted for layer %s" % layer
+        self.project.layer_contents_changed(layer)
+        self.control.on_points_deleted(layer)

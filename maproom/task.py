@@ -166,6 +166,20 @@ class MergeLayersAction(EditorAction):
                 project.layer_manager.merge_layers(layers[selections[0]], layers[selections[1]])
         dialog.Destroy()
 
+class MergePointsAction(EditorAction):
+    name = 'Merge Duplicate Points'
+    tooltip = 'Merge points within a layer'
+    enabled_name = 'layer_has_points'
+    image = ImageResource('merge_duplicates.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.show_dialog, self.active_editor)
+    
+    def show_dialog(self, project):
+        from ui.Merge_duplicate_points_dialog import MergeDialog
+        dialog = MergeDialog(project=project)
+        dialog.show()
+
 class JumpToCoordsAction(EditorAction):
     name = 'Jump to Coordinates'
     accelerator = 'Ctrl+J'
@@ -390,6 +404,7 @@ class MaproomProjectTask(FrameworkTask):
                   id="raisegroup", separator=False),
             Group(TriangulateLayerAction(),
                   MergeLayersAction(),
+                  MergePointsAction(),
                   id="utilgroup"),
             Group(DeleteLayerAction(),
                   id="deletegroup"),
