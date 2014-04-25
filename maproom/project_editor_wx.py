@@ -216,6 +216,8 @@ class ProjectEditor(FrameworkEditor):
             self.control.Update()
         self.control.Refresh()
         
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        self.update_layer_contents_ui(sel_layer)
         if (self.properties_panel is not None):
             layer = self.layer_tree_control.get_selected_layer()
             # note that the following call only does work if the properties for the layer have changed
