@@ -609,7 +609,7 @@ class VectorLayer(ProjectedLayer):
             self.new_points(1)
             self.points[0] = p
             point_index = 0
-            self.dispatch_event('refresh_needed')
+            self.manager.dispatch_event('refresh_needed')
             self.manager.project.layer_tree_control.select_layer(self)
         else:
             self.points = np.insert(self.points, point_index, p).view(np.recarray)
@@ -925,7 +925,7 @@ class VectorLayer(ProjectedLayer):
         if (len(points_to_delete) > 0):
             self.delete_points_and_lines(list(points_to_delete), None, True)
 
-        self.dispatch_event('refresh_needed')
+        self.manager.dispatch_event('refresh_needed')
     
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.
