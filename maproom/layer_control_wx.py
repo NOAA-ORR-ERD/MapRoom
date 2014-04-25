@@ -472,6 +472,11 @@ class LayerControl(glcanvas.GLCanvas):
     def rebuild_points_and_lines_for_layer(self, layer):
         if layer in self.layer_renderers:
             self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer)
+            print "points/lines renderer rebuilt"
+        else:
+            print "layer %s isn't in layer_renderers!" % layer
+            for layer in self.layer_renderers.keys():
+                print "  layer: %s" % layer
 
     def rebuild_triangles_for_layer(self, layer):
         if layer in self.layer_renderers:

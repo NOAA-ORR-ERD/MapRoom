@@ -118,6 +118,9 @@ class Label_set_renderer:
         relevant_indexes = np.where(mask)[0]
         n = np.alen(relevant_indexes)
         relevant_points = projected_points[relevant_indexes]
+#        
+#        print "%d depths: %s" % (len(depths), str(depths))
+#        print "%d relevant points: %s" % (len(relevant_points), str(relevant_points))
 
         t = time.clock() - t0  # t is wall seconds elapsed (floating point)
         # print "check a in {0} seconds".format( t )

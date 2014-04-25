@@ -43,6 +43,7 @@ class LayerUndo(HasTraits):
             setattr(self, name, value)
     
     def dispatch_event(self, event, value=True):
+        print "batch=%s: dispatching event %s = %s" % (self.batch, event, value)
         if self.batch:
             self.events.append((event, value))
         else:
