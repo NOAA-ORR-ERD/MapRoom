@@ -16,15 +16,6 @@ class Point_and_line_set_renderer:
     )
     """
 
-    oglr = None
-    # world_points = None
-    world_line_segment_points = None
-
-    vbo_point_xys = None
-    vbo_point_colors = None
-    vbo_line_segment_point_xys = None
-    vbo_line_segment_colors = None
-
     def __init__(self, opengl_renderer, points, point_colors, line_segment_indexes, line_segment_colors, projection, projection_is_identity):
         """
             points = 2 x np.float32, i.e., "2f4"
