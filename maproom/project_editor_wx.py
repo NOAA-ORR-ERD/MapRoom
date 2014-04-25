@@ -192,6 +192,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_points = False
             self.layer_has_selection = False
         print "has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection)
+        self.window._aui_manager.Update()
     
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
