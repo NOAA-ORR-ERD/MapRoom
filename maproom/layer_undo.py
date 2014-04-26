@@ -23,8 +23,6 @@ class LayerUndo(HasTraits):
     undo_stack_next_operation_number = Int
     
     undo_stack_changed = Event
-    
-    layer_points_changed = Event
 
     def start_batch_events(self):
         self.batch = True
@@ -116,8 +114,9 @@ class LayerUndo(HasTraits):
                 break
             self.undo_operation(self.undo_stack[self.undo_stack_next_index - 1], affected_layers)
             self.undo_stack_next_index -= 1
+        print "affected layers: %s" % str(affected_layers)
         for layer in affected_layers:
-            self.dispatch_event('layer_points_changed', layer)
+            self.dispatch_event('layer_contents_changed', layer)
         self.show_undo_redo_debug_dump("undo() done")
         self.undo_stack_changed = True
 
@@ -159,7 +158,7 @@ class LayerUndo(HasTraits):
             self.redo_operation(self.undo_stack[self.undo_stack_next_index], affected_layers)
             self.undo_stack_next_index += 1
         for layer in affected_layers:
-            self.dispatch_event('layer_points_changed', layer)
+            self.dispatch_event('layer_contents_changed', layer)
         self.show_undo_redo_debug_dump("redo() done")
         self.undo_stack_changed = True
 

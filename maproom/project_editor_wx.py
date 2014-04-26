@@ -114,6 +114,12 @@ class ProjectEditor(FrameworkEditor):
             image.SaveFile(path, t)
         else:
             self.window.error("Unsupported image type %s" % ext)
+    
+    def undo(self):
+        self.layer_manager.undo()
+    
+    def redo(self):
+        self.layer_manager.redo()
 
     ###########################################################################
     # Trait handlers.
@@ -192,7 +198,31 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_points = False
             self.layer_has_selection = False
         print "has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection)
+        self.update_undo_redo()
         self.window._aui_manager.Update()
+    
+    def update_undo_redo(self):
+        u = self.layer_manager.get_current_undoable_operation_text()
+        r = self.layer_manager.get_current_redoable_operation_text()
+
+        if (u == ""):
+            undo_label = "Undo"
+            self.can_undo = False
+        else:
+            undo_label = "Undo {0}".format(u)
+            self.can_undo = True
+
+        if (r == ""):
+            redo_label = "Redo"
+            self.can_redo = False
+        else:
+            redo_label = "Redo {0}".format(r)
+            self.can_redo = True
+    
+    @on_trait_change('layer_manager:undo_stack_changed')
+    def undo_stack_changed(self):
+        print "undo_stack_changed called!!!"
+        self.refresh()
     
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
