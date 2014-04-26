@@ -6,6 +6,7 @@ from pyface.tasks.api import DockPane, TraitsDockPane
 from traits.api import on_trait_change
 
 from Layer_tree_control import Layer_tree_control
+from ui.Properties_panel import Properties_panel
 
 class LayerSelectionPane(DockPane):
     #### TaskPane interface ###################################################
@@ -38,3 +39,7 @@ class LayerInfoPane(DockPane):
 
     id = 'maproom.layer_info_pane'
     name = 'Info'
+    
+    def create_contents(self, parent):
+        control = Properties_panel(parent, self.task.active_editor)
+        return control

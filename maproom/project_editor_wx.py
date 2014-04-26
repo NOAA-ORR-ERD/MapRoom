@@ -139,7 +139,6 @@ class ProjectEditor(FrameworkEditor):
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
         self.properties_panel = self.window.get_dock_pane('maproom.layer_info_pane').control
-        self.properties_panel = None
         
         print "LayerEditor: task=%s" % self.task
 
@@ -177,6 +176,7 @@ class ProjectEditor(FrameworkEditor):
         self.multiple_layers = self.layer_manager.count_layers() > 1
         print "layer=%s, root = %s, zoomable = %s" % (sel_layer, sel_layer.is_root(), self.layer_zoomable)
         self.update_layer_contents_ui(sel_layer)
+        self.properties_panel.display_panel_for_layer(self, sel_layer)
     
     def update_layer_contents_ui(self, sel_layer=None):
         if sel_layer is None:
@@ -224,10 +224,7 @@ class ProjectEditor(FrameworkEditor):
         
         sel_layer = self.layer_tree_control.get_selected_layer()
         self.update_layer_contents_ui(sel_layer)
-        if (self.properties_panel is not None):
-            layer = self.layer_tree_control.get_selected_layer()
-            # note that the following call only does work if the properties for the layer have changed
-            self.properties_panel.display_panel_for_layer(layer)
+        self.properties_panel.display_panel_for_layer(self, sel_layer)
     
     #### old Editor ########################################################
 

@@ -1,11 +1,8 @@
 import wx
 
-import app_globals
-from Editor import *
-import Layer
+from ..layers import constants
 import library.coordinates as coordinates
-
-from wx.lib.pubsub import pub
+from ..layer_undo import *
 
 
 class Properties_panel(wx.Panel):
@@ -17,7 +14,9 @@ class Properties_panel(wx.Panel):
     VALUE_SPACING = 10
     SIDE_SPACING = 5
 
-    def __init__(self, parent):
+    def __init__(self, parent, project):
+        self.project = project
+        
         self.layer_name_control = None
         self.depth_unit_control = None
         self.default_depth_control = None
@@ -27,17 +26,11 @@ class Properties_panel(wx.Panel):
         self.current_layer_change_count = -1
 
         wx.Panel.__init__(self, parent)
-        static_box = wx.StaticBox(self, label="Properties")
-        self.sizer = wx.StaticBoxSizer(static_box, wx.VERTICAL)
-        
-        # Future wx versions will require sizer managed controls to be children
-        # of the staticboxsizer, not children of the parent panel, but it's
-        # accepted now so we're going with it.
-        self.sizer_parent = static_box
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
-        self.sizer.Add(wx.Panel(self))
-
-    def display_panel_for_layer(self, layer):
+    
+    def display_panel_for_layer(self, project, layer):
+        self.project = project
 
         if (self.ignore_next_update):
             self.ignore_next_update = False
@@ -75,25 +68,28 @@ class Properties_panel(wx.Panel):
             elif (layer.type == ".bna"):
                 fields.extend(["Layer name", "Source file", "Polygon count"])
             else:
-                if layer.get_num_points_selected() > 0:
+                if layer.has_points() and layer.get_num_points_selected() > 0:
                     fields.extend(["Depth unit",  "Selected points", "Point depth"])
                     if layer.get_num_points_selected() == 1:
                         fields.extend(["Point coordinates"])
                 else:
-                    fields.extend(["Layer name", "Source file", "Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
+                    fields.extend(["Layer name", "Source file"])
+                    if layer.has_points():
+                        fields.extend(["Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
 
             self.sizer.AddSpacer(self.LABEL_SPACING)
             layer_name_control = None
             for field in fields:
-                if (field == "Triangle count" and layer.triangles == None):
-                    continue
-                if (field == "Selected points" or field == "Point depth"):
-                    if (layer.get_num_points_selected() == 0):
+                if layer.has_points():
+                    if (field == "Triangle count" and layer.triangles == None):
                         continue
-                if (field == "Flagged points"):
-                    if (layer.get_num_points_selected(Layer.STATE_FLAGGED) == 0):
-                        continue
-                label = wx.StaticText(self.sizer_parent, label=field)
+                    if (field == "Selected points" or field == "Point depth"):
+                        if (layer.get_num_points_selected() == 0):
+                            continue
+                    if (field == "Flagged points"):
+                        if (layer.get_num_points_selected(constants.STATE_FLAGGED) == 0):
+                            continue
+                label = wx.StaticText(self, label=field)
                 label.SetFont(bold_font)
                 self.sizer.Add(label, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
                 self.sizer.AddSpacer(self.LABEL_SPACING)
@@ -102,7 +98,7 @@ class Properties_panel(wx.Panel):
                     self.layer_name_control = self.add_text_field(field, layer.name, self.layer_name_changed, wx.EXPAND)
                 elif (field == "Source file"):
                     self.add_text_field(field, layer.file_path, None, wx.EXPAND, False)
-                elif (field == "Depth unit"):
+                if field == "Depth unit":
                     if layer.get_num_points_selected() > 0:
                         self.add_static_text_field(field, layer.depth_unit)
                     else:
@@ -118,7 +114,7 @@ class Properties_panel(wx.Panel):
                 elif (field == "Selected points"):
                     self.add_static_text_field(field, str(layer.get_num_points_selected()))
                 elif (field == "Flagged points"):
-                    self.add_static_text_field(field, str(layer.get_num_points_selected(Layer.STATE_FLAGGED)))
+                    self.add_static_text_field(field, str(layer.get_num_points_selected(constants.STATE_FLAGGED)))
                 elif (field == "Point depth"):
                     conflict = False
                     depth = -1
@@ -152,7 +148,7 @@ class Properties_panel(wx.Panel):
         self.Refresh()
 
     def add_text_field(self, field_name, default_text, changed_function, expand=0, enabled=True):
-        c = wx.TextCtrl(self.sizer_parent, value=default_text)
+        c = wx.TextCtrl(self, value=default_text)
         self.sizer.Add(c, 0, expand | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
         self.sizer.AddSpacer(self.VALUE_SPACING)
         c.Bind(wx.EVT_TEXT, changed_function)
@@ -162,7 +158,7 @@ class Properties_panel(wx.Panel):
         return c
 
     def add_drop_down(self, field_name, choices, default_choice, changed_function):
-        c = wx.Choice(self.sizer_parent, choices=choices)
+        c = wx.Choice(self, choices=choices)
         self.sizer.Add(c, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
         self.sizer.AddSpacer(self.VALUE_SPACING)
         c.SetSelection(choices.index(default_choice))
@@ -172,14 +168,14 @@ class Properties_panel(wx.Panel):
         return c
 
     def add_static_text_field(self, field_name, text):
-        c = wx.StaticText(self.sizer_parent, label=text)
+        c = wx.StaticText(self, label=text)
         self.sizer.Add(c, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
         self.sizer.AddSpacer(self.VALUE_SPACING)
 
         return c
 
     def layer_name_changed(self, event):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        layer = self.project.layer_tree_control.get_selected_layer()
         if (layer == None or self.layer_name_control == None):
             return
 
@@ -187,10 +183,10 @@ class Properties_panel(wx.Panel):
         layer.name = c.GetValue()
         self.ignore_next_update = True
         # a side effect of select_layer() is to make sure the layer name is up-to-date
-        app_globals.application.layer_tree_control.select_layer(layer)
+        self.project.layer_tree_control.select_layer(layer)
 
     def depth_unit_changed(self, event):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        layer = self.project.layer_tree_control.get_selected_layer()
         if (layer == None or self.depth_unit_control == None):
             return
 
@@ -198,7 +194,7 @@ class Properties_panel(wx.Panel):
         layer.depth_unit = c.GetString(c.GetSelection())
 
     def default_depth_changed(self, event):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        layer = self.project.layer_tree_control.get_selected_layer()
         if (layer == None or self.depth_unit_control == None):
             return
 
@@ -211,7 +207,7 @@ class Properties_panel(wx.Panel):
         c.Refresh()
 
     def point_coords_changed(self, event):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        layer = self.project.layer_tree_control.get_selected_layer()
         if layer == None:
             return
 
@@ -231,19 +227,19 @@ class Properties_panel(wx.Panel):
             params = (-x_diff, -y_diff)
 
             print "params = %r" % (params,)
-            app_globals.editor.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, index, params)
+            self.project.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, index, params)
             layer.offset_point(index, x_diff, y_diff)
-            pub.sendMessage(('layer', 'points', 'changed'), layer=layer)
-            app_globals.editor.end_operation_batch()
+            layer.manager.dispatch_event('layer_contents_changed', layer)
+            self.project.layer_manager.end_operation_batch()
         except Exception as e:
             import traceback
             print traceback.format_exc(e)
             c.SetBackgroundColour("#FF8080")
         # c.Refresh()
-        app_globals.application.refresh()
+        self.project.refresh()
 
     def point_depth_changed(self, event):
-        layer = app_globals.application.layer_tree_control.get_selected_layer()
+        layer = self.project.layer_tree_control.get_selected_layer()
         if layer == None:
             return
 
@@ -256,7 +252,7 @@ class Properties_panel(wx.Panel):
             selected_point_indexes = layer.get_selected_point_indexes()
             for i in selected_point_indexes:
                 params = (layer.points.z[i], depth)
-                app_globals.editor.add_undo_operation_to_operation_batch(OP_CHANGE_POINT_DEPTH, layer, i, params)
+                self.project.layer_manager.add_undo_operation_to_operation_batch(OP_CHANGE_POINT_DEPTH, layer, i, params)
                 layer.points.z[i] = depth
                 num_points_changed += 1
         except Exception as e:
@@ -264,5 +260,5 @@ class Properties_panel(wx.Panel):
         c.Refresh()
         # self.ignore_next_update = True
         if (num_points_changed > 0):
-            app_globals.editor.end_operation_batch()
-        app_globals.application.refresh()
+            self.project.layer_manager.end_operation_batch()
+        self.project.refresh()
