@@ -17,7 +17,3 @@ preferences = {
     # FIXME: preferences doesn't handle non-string items when saving/loading
     "Number of Recent Files": 20,
 }
-
-error_email_from = "maproombugreports@gmail.com"
-error_email_passwd = "bushy206"
-error_email_to = "rob.mcmullen@noaa.gov"
