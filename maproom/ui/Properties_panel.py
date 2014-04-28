@@ -1,3 +1,4 @@
+import sys
 import wx
 
 from ..layers import constants
@@ -26,6 +27,12 @@ class Properties_panel(wx.Panel):
         self.current_layer_change_count = -1
 
         wx.Panel.__init__(self, parent)
+        
+        # Mac needs this, otherwise background color is black
+        if sys.platform == "darwin":
+            attr = self.GetDefaultAttributes()
+            self.SetBackgroundColour(attr.colBg)
+        
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
     
