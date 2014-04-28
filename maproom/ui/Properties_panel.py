@@ -1,7 +1,7 @@
 import wx
 
 from ..layers import constants
-import library.coordinates as coordinates
+from ..library import coordinates
 from ..layer_undo import *
 
 
