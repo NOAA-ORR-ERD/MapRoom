@@ -43,3 +43,8 @@ class MaproomPlugin(FrameworkPlugin):
         from maproom.file_type.text import VerdatRecognizer, BNARecognizer
         from maproom.file_type.image import GDALRecognizer
         return [VerdatRecognizer(), BNARecognizer(), GDALRecognizer()]
+    
+    def start(self):
+        from maproom.task import MaproomProjectTask
+        dummy = MaproomProjectTask()
+        self.application.name = dummy.about_title
