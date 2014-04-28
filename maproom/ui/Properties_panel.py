@@ -28,10 +28,9 @@ class Properties_panel(wx.Panel):
 
         wx.Panel.__init__(self, parent)
         
-        # Mac needs this, otherwise background color is black
-        if sys.platform == "darwin":
-            attr = self.GetDefaultAttributes()
-            self.SetBackgroundColour(attr.colBg)
+        # Mac/Win needs this, otherwise background color is black
+        attr = self.GetDefaultAttributes()
+        self.SetBackgroundColour(attr.colBg)
         
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
