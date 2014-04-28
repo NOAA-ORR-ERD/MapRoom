@@ -115,12 +115,13 @@ if sys.platform.startswith('win'):
     # with py2app, we just include the entire package and these files are
     # copied over
     data_files.extend([
-        ("maproom/library/Opengl_renderer",
-            glob("maproom/library/Opengl_renderer/*.pyd")
+        ("maproom/renderer/gl",
+            glob("maproom/renderer/gl/*.pyd")
          ),
         ("maproom/library",
             glob("maproom/library/*.pyd")
          ),
+        ("pyproj/data", pyproj_data),
     ])
 
     # Add missing DLL files that py2exe doesn't pull in automatically.
@@ -136,6 +137,8 @@ common_includes = [
     "wx.lib.pubsub.core.*",
     "wx.lib.pubsub.core.kwargs.*",
     "multiprocessing",
+    "pkg_resources",
+    "configobj",
     
     "traits",
     
@@ -243,7 +246,7 @@ try:
                 optimize=2,
                 skip_archive=True,
                 compressed=False,
-                packages=['library'],
+                packages=['maproom.renderer', 'maproom.library'],
                 # See http://www.py2exe.org/index.cgi/PyOpenGL
                 # and http://www.py2exe.org/index.cgi/TkInter
                 includes=common_includes,
@@ -306,7 +309,7 @@ AppUpdatesURL=http://www.noaa.gov/
 DefaultDirName={pf}\Maproom
 DefaultGroupName=Maproom
 OutputBaseFilename=Maproom_%s
-SetupIconFile=..\..\icons\maproom.ico
+SetupIconFile=..\..\maproom\icons\maproom.ico
 Compression=lzma
 SolidCompression=yes
 
