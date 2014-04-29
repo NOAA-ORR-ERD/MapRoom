@@ -7,7 +7,7 @@ import wx
 from pytriangle import triangulate_simple
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str
+from traits.api import Int, Unicode, Any, Str, Float
 
 from ..library import File_loader, rect
 from ..library.scipy_ckdtree import cKDTree
@@ -42,6 +42,10 @@ class VectorLayer(ProjectedLayer):
     polygon_adjacency_array = Any  # parallels the points array
     
     merged_points_index = Int(0)
+    
+    default_depth = Float(1.0)
+    
+    depth_unit = Str("unknown")
 
     def new(self):
         Layer.new(self)
@@ -293,7 +297,7 @@ class VectorLayer(ProjectedLayer):
             self.increment_change_count()
 
     def has_points(self):
-        return self.points is not None and len(self.points) > 0
+        return True
 
     def select_point(self, point_index, mark_type=STATE_SELECTED):
         self.points.state[point_index] = self.points.state[point_index] | mark_type

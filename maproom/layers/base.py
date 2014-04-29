@@ -26,8 +26,6 @@ class Layer(HasTraits):
     
     file_path = Unicode
     
-    default_depth = Float(1.0)
-    
     color = Int(0)
     
     point_size = Float(4.0)
