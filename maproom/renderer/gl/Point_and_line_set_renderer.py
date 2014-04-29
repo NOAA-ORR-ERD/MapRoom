@@ -44,8 +44,7 @@ class Point_and_line_set_renderer:
             point_colors
         )
 
-        if (line_segment_indexes != None and len(line_segment_indexes) > 0):
-            self.build_line_segment_buffers(points, line_segment_indexes, line_segment_colors)
+        self.build_line_segment_buffers(points, line_segment_indexes, line_segment_colors)
 
         self.reproject(points, projection, projection_is_identity)
 
