@@ -122,14 +122,6 @@ class ProjectEditor(FrameworkEditor):
         self.layer_manager.redo()
 
     ###########################################################################
-    # Trait handlers.
-    ###########################################################################
-
-    def _path_changed(self):
-        if self.control is not None:
-            self.load()
-
-    ###########################################################################
     # Private interface.
     ###########################################################################
 
@@ -218,6 +210,8 @@ class ProjectEditor(FrameworkEditor):
         else:
             redo_label = "Redo {0}".format(r)
             self.can_redo = True
+        
+        self.dirty = self.can_undo
     
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
