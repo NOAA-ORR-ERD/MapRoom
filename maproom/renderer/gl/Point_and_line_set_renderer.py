@@ -28,6 +28,11 @@ class Point_and_line_set_renderer:
 
         self.oglr = opengl_renderer
         # self.world_points = points.copy() # .view( self.SIMPLE_POINT_DTYPE ) # .view( np.recarray )
+        self.vbo_point_xys = None
+        self.vbo_point_colors = None
+        self.world_line_segment_points = None
+        self.vbo_line_segment_point_xys = None
+        self.vbo_line_segment_colors = None
 
         if (points == None or len(points) == 0):
             return
