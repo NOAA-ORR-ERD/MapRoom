@@ -72,7 +72,7 @@ class Properties_panel(wx.Panel):
                 fields = ["Folder name"]
 
             elif (layer.type == ".bna"):
-                fields.extend(["Layer name", "Source file", "Polygon count"])
+                fields.extend(["Layer name", "Polygon count"])
             else:
                 if layer.has_points() and layer.get_num_points_selected() > 0:
                     fields.extend(["Depth unit",  "Selected points", "Point depth"])
