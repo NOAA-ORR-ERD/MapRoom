@@ -79,7 +79,7 @@ class Properties_panel(wx.Panel):
                     if layer.get_num_points_selected() == 1:
                         fields.extend(["Point coordinates"])
                 else:
-                    fields.extend(["Layer name", "Source file"])
+                    fields.extend(["Layer name"])
                     if layer.has_points():
                         fields.extend(["Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
 
@@ -102,8 +102,6 @@ class Properties_panel(wx.Panel):
 
                 if (field == "Layer name" or field == "Folder name"):
                     self.layer_name_control = self.add_text_field(field, layer.name, self.layer_name_changed, wx.EXPAND)
-                elif (field == "Source file"):
-                    self.add_text_field(field, layer.file_path, None, wx.EXPAND, False)
                 if field == "Depth unit":
                     if layer.get_num_points_selected() > 0:
                         self.add_static_text_field(field, layer.depth_unit)
