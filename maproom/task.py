@@ -80,14 +80,14 @@ class NewVectorLayerAction(EditorAction):
     image = ImageResource('add_layer')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_manager.add_layer)
+        GUI.invoke_later(self.active_editor.layer_manager.add_layer, "vector", self.active_editor)
 
 class NewLonLatLayerAction(EditorAction):
     name = 'Lon/Lat Layer'
     tooltip = 'Create new longitude/latitude grid layer'
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_manager.add_layer, "grid")
+        GUI.invoke_later(self.active_editor.layer_manager.add_layer, "grid", self.active_editor)
 
 class DeleteLayerAction(EditorAction):
     name = 'Delete Layer'

@@ -60,6 +60,8 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         return layer == selected
 
     def select_layer(self, layer):
+        if self.project is None:
+            return
         self.project.esc_key_pressed()
 
         if (layer == None):
@@ -99,13 +101,15 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         if self.project is None:
             # Wait till there's an active project
             return
+        selected = self.get_selected_layer()
         lm = self.project.layer_manager
         self.DeleteAllItems()
         # self.Freeze()
         print "LAYER_TREE: rebuiding layers = " + str(lm.layers)
         self.add_layers_recursive(lm.layers, None)
         # self.Thaw()
-        self.project.update_layer_selection_ui(self.get_selected_layer())
+        self.select_layer(selected)
+        self.project.update_layer_selection_ui(selected)
 
     def add_layers_recursive(self, layer_tree, parent):
         if (len(layer_tree) == 0):

@@ -14,7 +14,7 @@ from layers import Layer, RootLayer, Grid, VectorLayer, RasterLayer, constants
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event
-from pyface.api import YES, NO
+from pyface.api import YES, NO, GUI
 
 
 class LayerManager(LayerUndo):
@@ -98,7 +98,7 @@ class LayerManager(LayerUndo):
             layer.destroy()
         self.layers = []
 
-    def load_layer_from_metadata(self, metadata):
+    def load_layer_from_metadata(self, metadata, editor=None):
         # FIXME: load all layer types, not just vector!
         if metadata.mime == "application/x-maproom-verdat":
             layer = VectorLayer(manager=self)
@@ -115,10 +115,14 @@ class LayerManager(LayerUndo):
         if layer.load_error_string != "":
             print "LAYER LOAD ERROR: %s" % layer.load_error_string
             return None
-        index = None
-        self.dispatch_event('layer_loaded', layer)
-        self.insert_layer(index, layer)
+        self.insert_loaded_layer(layer, editor)
         return layer
+    
+    def insert_loaded_layer(self, layer, editor=None):
+        self.dispatch_event('layer_loaded', layer)
+        self.insert_layer(None, layer)
+        if editor is not None:
+            GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
 
     def insert_layer(self, at_multi_index, layer):
         if (at_multi_index == None or at_multi_index == []):
@@ -324,14 +328,13 @@ class LayerManager(LayerUndo):
                                  caption="Error Saving Verdat File",
                                  style=wx.OK | wx.ICON_ERROR).ShowModal()
 
-    def add_layer(self, type=None):
+    def add_layer(self, type=None, editor=None):
         if type is "grid":
             layer = Grid(manager=self)
         else:
             layer = VectorLayer(manager=self)
         layer.new()
-        self.dispatch_event('layer_loaded', layer)
-        self.insert_layer(None, layer)
+        self.insert_loaded_layer(layer, editor)
 
     def add_folder(self, name="New Folder"):
         # FIXME: doesn't work, so menu/toolbar items are disabled
