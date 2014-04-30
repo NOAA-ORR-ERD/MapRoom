@@ -75,7 +75,7 @@ class ZoomToLayer(EditorAction):
         GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
 
 class NewVectorLayerAction(EditorAction):
-    name = 'Vector Layer'
+    name = 'Ugrid Layer'
     tooltip = 'Create new vector (grid) layer'
     image = ImageResource('add_layer')
 

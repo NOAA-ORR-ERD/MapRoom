@@ -25,7 +25,7 @@ class VectorLayer(ProjectedLayer):
     """Layer for points/lines/polygons.
     
     """
-    name = Unicode("Vector Layer")
+    name = Unicode("Ugrid Layer")
     
     mouse_selection_mode = Str("VectorLayer")
     
