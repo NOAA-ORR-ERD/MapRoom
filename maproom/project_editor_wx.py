@@ -165,6 +165,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
             # leave mouse_mode set to current setting
             self.mouse_mode_category = sel_layer.mouse_selection_mode + "ToolBar"
+            self.mouse_mode = LayerControl.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_category)
         else:
             self.layer_selected = False
             self.layer_zoomable = False

@@ -29,6 +29,11 @@ class LayerControl(glcanvas.GLCanvas):
     MODE_ZOOM_RECT = 1
     MODE_EDIT_POINTS = 2
     MODE_EDIT_LINES = 3
+    
+    valid_mouse_modes = {
+        'VectorLayerToolBar': [0, 1, 2, 3],
+        'default': [0, 1],
+        }
 
     opengl_renderer = None
 
@@ -40,6 +45,17 @@ class LayerControl(glcanvas.GLCanvas):
 
     #is_initialized = False
     #is_closing = False
+    
+    @classmethod
+    def get_valid_mouse_mode(cls, mouse_mode, mode_mode_toolbar_name):
+        """Return a valid mouse mode for the specified toolbar
+        
+        Used when switching modes to guarantee a valid mouse mode.
+        """
+        valid = cls.valid_mouse_modes.get(mode_mode_toolbar_name, cls.valid_mouse_modes['default'])
+        if mouse_mode not in valid:
+            return valid[0]
+        return mouse_mode
 
     def __init__(self, *args, **kwargs):
         self.project = kwargs.pop('project')
