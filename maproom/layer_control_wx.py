@@ -454,7 +454,7 @@ class LayerControl(glcanvas.GLCanvas):
 
         def update_status(message):
             print message
-            self.project.task.status_bar.message = message
+            self.project.task.status_bar.debug = message
         wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
 
         if (event != None):

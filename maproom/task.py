@@ -295,6 +295,8 @@ class MaproomProjectTask(FrameworkTask):
     
     icon = ImageResource('maproom')
     
+    status_bar_debug_width = 300
+    
     #### 'IAbout' interface ###################################################
     
     about_title = Str('MapRoom')
