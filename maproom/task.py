@@ -523,6 +523,7 @@ class MaproomProjectTask(FrameworkTask):
             editor.load(source, **kwargs)
             self._active_editor_changed()
             self.activated()
+            self.window.application.successfully_loaded_event = source.metadata.uri
         else:
             FrameworkTask.new(self, source, **kwargs)
 
