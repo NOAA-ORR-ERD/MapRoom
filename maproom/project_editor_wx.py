@@ -172,7 +172,6 @@ class ProjectEditor(FrameworkEditor):
             self.layer_below = False
             self.mouse_mode = LayerControl.MODE_PAN
         self.multiple_layers = self.layer_manager.count_layers() > 1
-        print "layer=%s, root = %s, zoomable = %s" % (sel_layer, sel_layer.is_root(), self.layer_zoomable)
         self.update_layer_contents_ui(sel_layer)
         self.properties_panel.display_panel_for_layer(self, sel_layer)
     
