@@ -586,7 +586,6 @@ class MaproomProjectTask(FrameworkTask):
             # because we segfault without the GUI.invoke_later (equivalent
             # to wx.CallAfter)
             GUI.invoke_later(tree.control.set_project, self.active_editor)
-        self.window.control.Bind(wx.EVT_MOUSEWHEEL, self._wx_on_mousewheel)
     
     def _wx_on_mousewheel_from_window(self, event):
         if self.active_editor:
