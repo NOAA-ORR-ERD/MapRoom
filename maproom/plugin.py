@@ -8,12 +8,15 @@ from traits.api import List
 
 from peppy2.framework.plugin import FrameworkPlugin
 
+from preferences import MaproomPreferencesPane
+
 class MaproomPlugin(FrameworkPlugin):
     """ The sample framework plugin.
     """
 
     # Extension point IDs.
     TASK_FACTORIES  = 'envisage.ui.tasks.tasks'
+    PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
 
     #### 'IPlugin' interface ##################################################
 
@@ -26,11 +29,15 @@ class MaproomPlugin(FrameworkPlugin):
     #### Contributions to extension points made by this plugin ################
 
     task_factories = List(contributes_to=TASK_FACTORIES)
+    preferences_panes = List(contributes_to=PREFERENCES_PANES)
     recognizer = List(contributes_to='peppy2.file_recognizer')
 
     ###########################################################################
     # Protected interface.
     ###########################################################################
+
+    def _preferences_panes_default(self):
+        return [ MaproomPreferencesPane ]
 
     def _task_factories_default(self):
         from maproom.task import MaproomProjectTask

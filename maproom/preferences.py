@@ -17,11 +17,19 @@ class MaproomPreferences(PreferencesHelper):
 
     #### Preferences ##########################################################
 
-    # Display line numbers
-    show_line_numbers = Bool
+    # Lat/lon degree display format
+    coordinate_display_format = Enum(
+        "degrees decimal minutes",
+        "degrees minutes seconds",
+        "decimal degrees",
+        )
 
-    # Wrap lines (if True) or display horizontal scrollbar (if False)
-    wrap_lines = Bool
+    # mouse wheel zoom speed
+    zoom_speed = Enum(
+        "Slow",
+        "Medium",
+        "Fast",
+        )
 
 
 class MaproomPreferencesPane(PreferencesPane):
@@ -33,16 +41,16 @@ class MaproomPreferencesPane(PreferencesPane):
     # The factory to use for creating the preferences model object.
     model_factory = MaproomPreferences
 
-    category = Str('Editors')
+    category = Str('MapRoom')
 
     #### 'FrameworkPreferencesPane' interface ################################
 
     view = View(
-        VGroup(HGroup(Item('show_line_numbers'),
-                      Label('Show line numbers'),
+        VGroup(HGroup(Item('coordinate_display_format'),
+                      Label('Coordinate Display Format'),
                       show_labels = False),
-               HGroup(Item('wrap_lines'),
-                      Label('Wrap lines'),
+               HGroup(Item('zoom_speed'),
+                      Label('Scroll Zoom Speed'),
                       show_labels = False),
                label='MapRoom'),
         resizable=True)
