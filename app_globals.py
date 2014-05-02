@@ -9,11 +9,3 @@ version = None
 import sys
 import peppy2
 image_path = peppy2.get_image_path("maproom/ui/images", sys.modules[__name__])
-
-preferences = {
-    "Coordinate Display Format": "degrees decimal minutes",
-    "Scroll Zoom Speed": "Slow",
-    
-    # FIXME: preferences doesn't handle non-string items when saving/loading
-    "Number of Recent Files": 20,
-}
