@@ -38,6 +38,24 @@ class SaveProjectAsAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save(dialog.path)
 
+class SaveLayerAction(EditorAction):
+    name = 'Save Layer'
+    tooltip = 'Save the currently selected layer'
+    enabled_name = 'layer_saveable'
+
+    def perform(self, event):
+        self.active_editor.save_layer(None)
+
+class SaveLayerAsAction(EditorAction):
+    name = 'Save Layer As...'
+    tooltip = 'Save the current project with a new name'
+    enabled_name = 'layer_saveable'
+
+    def perform(self, event):
+        dialog = FileDialog(parent=event.task.window.control, action='save as')
+        if dialog.open() == OK:
+            self.active_editor.save_layer(dialog.path)
+
 class SaveImageAction(EditorAction):
     name = 'Save As Image...'
     tooltip = 'Save a bitmap image of the current view'
@@ -523,6 +541,8 @@ class MaproomProjectTask(FrameworkTask):
                     return [
                         SaveProjectAction(),
                         SaveProjectAsAction(),
+                        SaveLayerAction(),
+                        SaveLayerAsAction(),
                         SaveImageAction(),
                         ]
 

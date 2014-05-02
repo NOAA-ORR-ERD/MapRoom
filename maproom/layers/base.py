@@ -72,6 +72,12 @@ class Layer(HasTraits):
     
     def is_root(self):
         return False
+    
+    def can_save(self):
+        return False
+    
+    def save_to_file(self, file_path):
+        raise NotImplementedError
 
     def get_visibility_dict(self):
         d = dict()

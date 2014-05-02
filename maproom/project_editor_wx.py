@@ -29,6 +29,8 @@ class ProjectEditor(FrameworkEditor):
     
     layer_zoomable = Bool
     
+    layer_saveable = Bool
+    
     layer_selected = Bool
     
     layer_above = Bool
@@ -97,6 +99,15 @@ class ProjectEditor(FrameworkEditor):
         
         self.dirty = False
 
+    def save_layer(self, path):
+        """ Saves the contents of the editor in a maproom project file
+        """
+        error = self.layer_manager.save_layer(self.layer_tree_control.get_selected_layer(), path)
+        if error:
+            self.window.error(error)
+        else:
+            self.window.application.successfully_loaded_event = path
+
     def save_image(self, path):
         """ Saves the contents of the editor in a maproom project file
         """
@@ -159,6 +170,7 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
+            self.layer_saveable = sel_layer.can_save()
             self.layer_selected = not sel_layer.is_root()
             self.layer_zoomable = sel_layer.is_zoomable()
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
@@ -167,6 +179,7 @@ class ProjectEditor(FrameworkEditor):
             self.mouse_mode_category = sel_layer.mouse_selection_mode + "ToolBar"
             self.mouse_mode = LayerControl.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_category)
         else:
+            self.layer_saveable = False
             self.layer_selected = False
             self.layer_zoomable = False
             self.layer_above = False

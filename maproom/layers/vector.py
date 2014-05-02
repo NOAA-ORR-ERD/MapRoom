@@ -2,6 +2,8 @@ import os
 import os.path
 import time
 import sys
+import tempfile
+import shutil
 import numpy as np
 import wx
 from pytriangle import triangulate_simple
@@ -171,7 +173,7 @@ class VectorLayer(ProjectedLayer):
              f_line_segment_indexes,
              self.depth_unit) = File_loader.load_verdat_file(file_path)
             if (self.load_error_string == ""):
-                self.type = ext
+                self.type = ".verdat"
                 n = np.alen(f_points)
                 if (n > 0):
                     self.determine_layer_color()
@@ -198,6 +200,41 @@ class VectorLayer(ProjectedLayer):
 
         if (self.load_error_string == ""):
             self.update_bounds()
+    
+    def can_save(self):
+        return self.type == ".verdat"
+    
+    def save_to_file(self, file_path):
+        temp_dir = tempfile.mkdtemp()
+        temp_file = os.path.join(temp_dir, os.path.basename(file_path))
+
+        f = open(temp_file, "w")
+        error = ""
+        had_error = False
+        try:
+            verdat.write_layer_as_verdat(f, self)
+        except Exception as e:
+            import traceback
+            
+            had_error = True
+            print traceback.format_exc(e)
+            if hasattr(e, "points") and e.points != None:
+                self.clear_all_selections(STATE_FLAGGED)
+                for p in e.points:
+                    self.select_point(p, STATE_FLAGGED)
+                self.manager.dispatch_event('refresh_needed')
+            error = e.message
+        finally:
+            f.close()
+        if (not had_error and temp_file and os.path.exists(temp_file)):
+            try:
+                shutil.copy(temp_file, file_path)
+            except Exception as e:
+                import traceback
+            
+                error = "Unable to save file to disk. Make sure you have write permissions to the file.\n\nSystem error was: %s" % e.message
+                print traceback.format_exc(e)
+        return error
 
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()

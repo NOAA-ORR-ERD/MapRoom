@@ -118,6 +118,13 @@ class LayerManager(LayerUndo):
         self.insert_loaded_layer(layer, editor)
         return layer
     
+    def save_layer(self, layer, file_path):
+        if layer is not None:
+            if layer.can_save():
+                return layer.save_to_file(file_path)
+            return "Layer type %s cannot be saved." % layer.type
+        return "No selected layer."
+    
     def insert_loaded_layer(self, layer, editor=None):
         self.dispatch_event('layer_loaded', layer)
         self.insert_layer(None, layer)
@@ -293,40 +300,6 @@ class LayerManager(LayerUndo):
         length = len(list)
         for i, layer in enumerate(reversed(list)):
             layer.render(render_window, (length - 1 - i) * 10, pick_mode)
-
-    def save_layer(self, layer, path):
-        temp_dir = tempfile.mkdtemp()
-        temp_file = os.path.join(temp_dir, os.path.basename(path))
-
-        f = open(temp_file, "w")
-        had_error = False
-        try:
-            verdat.write_layer_as_verdat(f, layer)
-        except Exception as e:
-            had_error = True
-            print traceback.format_exc(e)
-            if hasattr(e, "points") and e.points != None:
-                layer.clear_all_selections(constants.STATE_FLAGGED)
-                for p in e.points:
-                    layer.select_point(p, constants.STATE_FLAGGED)
-                self.dispatch_event('refresh_needed')
-            wx.MessageDialog(
-                self.project.control,
-                message=e.message,
-                caption="Error Saving Verdat File",
-                style=wx.OK | wx.ICON_ERROR,
-            ).ShowModal()
-        finally:
-            f.close()
-        if (not had_error and temp_file and os.path.exists(temp_file)):
-            try:
-                shutil.copy(temp_file, path)
-            except Exception as e:
-                print traceback.format_exc(e)
-                wx.MessageDialog(self.project.control,
-                                 message="Unable to save file to disk. Make sure you have write permissions to the file.",
-                                 caption="Error Saving Verdat File",
-                                 style=wx.OK | wx.ICON_ERROR).ShowModal()
 
     def add_layer(self, type=None, editor=None):
         if type is "grid":
