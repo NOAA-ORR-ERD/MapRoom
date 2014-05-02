@@ -354,10 +354,6 @@ class MaproomProjectTask(FrameworkTask):
     
     #### 'IErrorReporter' interface ###########################################
     
-    error_email_from = Str('maproombugreports@gmail.com')
-    
-    error_email_passwd = Str('bushy206')
-    
     error_email_to = Str('rob.mcmullen@noaa.gov')
     
     def _about_version_default(self):
