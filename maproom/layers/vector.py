@@ -205,6 +205,8 @@ class VectorLayer(ProjectedLayer):
         return self.type == ".verdat"
     
     def save_to_file(self, file_path):
+        if file_path is None:
+            file_path = self.file_path
         temp_dir = tempfile.mkdtemp()
         temp_file = os.path.join(temp_dir, os.path.basename(file_path))
 
