@@ -1,8 +1,8 @@
 import wx
 import wx.lib.sized_controls as sc
 
-import library.coordinates as coordinates
-from library.textparse import parse_int_string
+from ..library import coordinates
+from ..library.textparse import parse_int_string
 
 class FindPointDialog(sc.SizedDialog):
 
