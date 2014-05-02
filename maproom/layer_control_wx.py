@@ -167,7 +167,9 @@ class LayerControl(glcanvas.GLCanvas):
         p = event.GetPosition()
         proj_p = self.get_world_point_from_screen_point(p)
         if (not self.mouse_is_down):
-            status_text = coordinates.format_coords_for_display(proj_p[0], proj_p[1])
+            prefs = self.project.task.get_preferences()
+            status_text = coordinates.format_coords_for_display(
+                proj_p[0], proj_p[1], prefs.coordinate_display_format)
 
             self.release_mouse()
             # print "mouse is not down"
@@ -292,10 +294,10 @@ class LayerControl(glcanvas.GLCanvas):
             
         world_point = self.get_world_point_from_screen_point(screen_point)
 
-        prefs = app_globals.preferences
+        prefs = self.project.task.get_preferences()
 
         zoom = 1.2
-        zoom_speed = prefs["Scroll Zoom Speed"]
+        zoom_speed = prefs.zoom_speed
         if zoom_speed == "Slow":
             zoom = 1.2
         elif zoom_speed == "Medium":
@@ -725,8 +727,9 @@ class LayerControl(glcanvas.GLCanvas):
         return [above, below, left, right]
 
     def do_jump_coords(self):
+        prefs = self.project.task.get_preferences()
         from ui.Jump_coords_dialog import JumpCoordsDialog
-        dialog = JumpCoordsDialog(self)
+        dialog = JumpCoordsDialog(self, prefs.coordinate_display_format)
         if dialog.ShowModalWithFocus() == wx.ID_OK:
             lat_lon = coordinates.lat_lon_from_format_string(dialog.coords_text.Value)
             self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)

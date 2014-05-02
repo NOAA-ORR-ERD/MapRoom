@@ -3,8 +3,6 @@ import re
 
 import unittest
 
-import app_globals
-
 
 def float_to_degrees_minutes_seconds(value, directions=None):
     direction = ""
@@ -126,8 +124,7 @@ def format_lat_lon_degrees(longitude, latitude):
     return u"%s, %s" % (lat, lon)
 
 
-def format_coords_for_display(longitude, latitude):
-    display_format = app_globals.preferences["Coordinate Display Format"]
+def format_coords_for_display(longitude, latitude, display_format):
     if display_format == "degrees minutes seconds":
         return format_lat_lon_degrees_minutes_seconds(longitude, latitude)
     elif display_format == "decimal degrees":

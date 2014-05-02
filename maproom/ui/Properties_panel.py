@@ -139,7 +139,8 @@ class Properties_panel(wx.Panel):
                     self.point_depth_control.SetFocus()
                 elif field == "Point coordinates":
                     index = layer.get_selected_point_indexes()[0]
-                    coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i])
+                    prefs = self.project.task.get_preferences()
+                    coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
                     self.point_coord_control = self.add_text_field(field, coords_text, self.point_coords_changed, expand=wx.EXPAND)
 
             self.sizer.Layout()

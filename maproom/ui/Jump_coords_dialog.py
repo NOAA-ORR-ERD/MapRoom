@@ -1,12 +1,12 @@
 import wx
 import wx.lib.sized_controls as sc
 
-import library.coordinates as coordinates
+from ..library import coordinates
 
 
 class JumpCoordsDialog(sc.SizedDialog):
 
-    def __init__(self, layer_control):
+    def __init__(self, layer_control, display_format):
         sc.SizedDialog.__init__(self, wx.GetTopLevelParent(layer_control), wx.ID_ANY, "Jump to Coordinates")
 
         panel = self.GetContentsPane()
@@ -17,7 +17,7 @@ class JumpCoordsDialog(sc.SizedDialog):
         self.coords_text.Bind(wx.EVT_TEXT, self.OnText)
 
         center_lat_lon = layer_control.get_world_point_from_projected_point(layer_control.projected_point_center)
-        self.coords_text.Value = coordinates.format_coords_for_display(center_lat_lon[0], center_lat_lon[1])
+        self.coords_text.Value = coordinates.format_coords_for_display(center_lat_lon[0], center_lat_lon[1], display_format)
 
         btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())

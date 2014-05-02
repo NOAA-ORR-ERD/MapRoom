@@ -16,6 +16,7 @@ from peppy2.framework.i_about import IAbout
 from project_editor import ProjectEditor
 from panes import LayerSelectionPane, LayerInfoPane
 from layer_control_wx import LayerControl
+from preferences import MaproomPreferences
 
 #class SaveProjectAction(EditorAction):
 class SaveProjectAction(Action):
@@ -337,6 +338,8 @@ class MaproomProjectTask(FrameworkTask):
     name = 'MapRoom Project File'
     
     icon = ImageResource('maproom')
+    
+    preferences_helper = MaproomPreferences
     
     status_bar_debug_width = 300
     
