@@ -5,7 +5,7 @@
 from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
 from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
     IEditorAreaPane, EditorAreaPane, Editor, DockPane, HSplitter, VSplitter
-from pyface.action.api import Group, Separator
+from pyface.action.api import Group, Separator, Action
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
     SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
 from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode
@@ -17,7 +17,9 @@ from project_editor import ProjectEditor
 from panes import LayerSelectionPane, LayerInfoPane
 from layer_control_wx import LayerControl
 
-class SaveProjectAction(EditorAction):
+#class SaveProjectAction(EditorAction):
+class SaveProjectAction(Action):
+    enabled = False
     name = 'Save Project'
     accelerator = 'Ctrl+S'
     tooltip = 'Save the current project'
@@ -27,7 +29,9 @@ class SaveProjectAction(EditorAction):
     def perform(self, event):
         self.active_editor.save(None)
 
-class SaveProjectAsAction(EditorAction):
+#class SaveProjectAsAction(EditorAction):
+class SaveProjectAsAction(Action):
+    enabled = False
     name = 'Save Project As...'
     accelerator = 'Ctrl+Shift+S'
     tooltip = 'Save the current project with a new name'
