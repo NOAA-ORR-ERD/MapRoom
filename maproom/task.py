@@ -17,6 +17,27 @@ from project_editor import ProjectEditor
 from panes import LayerSelectionPane, LayerInfoPane
 from layer_control_wx import LayerControl
 
+class SaveProjectAction(EditorAction):
+    name = 'Save Project'
+    accelerator = 'Ctrl+S'
+    tooltip = 'Save the current project'
+    image = ImageResource('file_save')
+    enabled_name = 'dirty' # enabled based on state of task.active_editor.dirty
+
+    def perform(self, event):
+        self.active_editor.save(None)
+
+class SaveProjectAsAction(EditorAction):
+    name = 'Save Project As...'
+    accelerator = 'Ctrl+Shift+S'
+    tooltip = 'Save the current project with a new name'
+    image = ImageResource('file_save_as')
+
+    def perform(self, event):
+        dialog = FileDialog(parent=event.task.window.control, action='save as')
+        if dialog.open() == OK:
+            self.active_editor.save(dialog.path)
+
 class SaveImageAction(EditorAction):
     name = 'Save As Image...'
     tooltip = 'Save a bitmap image of the current view'
@@ -437,12 +458,6 @@ class MaproomProjectTask(FrameworkTask):
             id="edittools")
         actions = [
             # Menubar additions
-            SchemaAddition(id='SaveImage',
-                           factory=SaveImageAction,
-                           path='MenuBar/File',
-                           after="SaveGroup",
-                           before="SaveGroupEnd",
-                           ),
             SchemaAddition(factory=editmenu,
                            path='MenuBar/Edit',
                            before="PrefGroup",
@@ -500,6 +515,27 @@ class MaproomProjectTask(FrameworkTask):
     ###########################################################################
     # 'FrameworkTask' interface.
     ###########################################################################
+    
+    def get_actions(self, location, menu_name, group_name):
+        if location == "Menu":
+            if menu_name == "File":
+                if group_name == "SaveGroup":
+                    return [
+                        SaveProjectAction(),
+                        SaveProjectAsAction(),
+                        SaveImageAction(),
+                        ]
+
+        if location.startswith("Tool"):
+            if menu_name == "File":
+                if group_name == "SaveGroup":
+                    return [
+                        SaveProjectAction(),
+                        SaveProjectAsAction(),
+                        ]
+        
+        # fall back to parent if it's not found here
+        return FrameworkTask.get_actions(self, location, menu_name, group_name)
 
     def get_editor(self, guess=None):
         """ Opens a new empty window
