@@ -395,10 +395,11 @@ class ProjectEditor(FrameworkEditor):
                 pass
             else:
                 point_indexes = layer.get_selected_point_indexes()
-                if (len(point_indexes == 1) and not layer.are_points_connected(point_index, point_indexes[0])):
-                    layer.insert_line_segment(point_index, point_indexes[0])
-                    self.layer_manager.end_operation_batch()
-                    layer.clear_all_point_selections()
+                if len(point_indexes == 1):
+                    if layer.are_points_connected(point_index, point_indexes[0]):
+                        layer.insert_line_segment(point_index, point_indexes[0])
+                        self.layer_manager.end_operation_batch()
+                        layer.clear_all_point_selections()
                     layer.select_point(point_index)
                 elif len(point_indexes) == 0:  # no currently selected point
                     # select this point
