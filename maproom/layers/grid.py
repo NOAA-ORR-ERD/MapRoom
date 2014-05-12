@@ -17,6 +17,8 @@ class Grid(ScreenLayer):
     
     type = Str("grid")
     
+    skip_on_insert = True
+    
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)
     # a nice amount of spacing between lines

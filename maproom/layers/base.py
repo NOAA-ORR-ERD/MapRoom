@@ -24,6 +24,8 @@ class Layer(HasTraits):
     
     type = Str("")
     
+    skip_on_insert = Bool(False)
+    
     file_path = Unicode
     
     color = Int(0)
@@ -190,6 +192,8 @@ class RootLayer(Folder):
     name = Unicode("Root Layer")
     
     type = Str("root")
+    
+    skip_on_insert = True
     
     def is_root(self):
         return True

@@ -130,10 +130,22 @@ class LayerManager(LayerUndo):
         self.insert_layer(None, layer)
         if editor is not None:
             GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
+    
+    def find_default_insert_layer(self):
+        # By default, lat/lon layers stay at the top and other layers will
+        # be inserted below them.  If the lat/lon layer has been moved down,
+        # other layers will be inserted in the first position.
+        pos = 0
+        for layer in self.layers:
+            if layer.skip_on_insert:
+                pos += 1
+            else:
+                break
+        return [pos]
 
     def insert_layer(self, at_multi_index, layer):
         if (at_multi_index == None or at_multi_index == []):
-            at_multi_index = [1]
+            at_multi_index = self.find_default_insert_layer()
 
         print "layers are " + str(self.layers)
         print "inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index)
