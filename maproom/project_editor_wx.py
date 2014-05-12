@@ -476,9 +476,10 @@ class ProjectEditor(FrameworkEditor):
                 self.esc_key_pressed()
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.control.release_mouse() # shouldn't be captured now anyway
-                layer.insert_point(world_point)
+                point_index = layer.insert_point(world_point)
+                layer.select_point(point_index)
                 layer.update_bounds()
-                self.layer_manager.end_operation_batch()
+                self.layer_manager.end_operation_batch(refresh=False)
                 self.refresh()
         print "2"
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
