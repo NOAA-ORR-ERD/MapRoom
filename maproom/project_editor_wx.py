@@ -388,6 +388,8 @@ class ProjectEditor(FrameworkEditor):
 
     def clicked_on_point(self, event, layer, point_index):
         act_like_point_tool = False
+        vis = self.layer_visibility[layer]['layer']
+        message = ""
 
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (event.ControlDown() or event.ShiftDown()):
@@ -400,6 +402,8 @@ class ProjectEditor(FrameworkEditor):
                         layer.insert_line_segment(point_index, point_indexes[0])
                         self.layer_manager.end_operation_batch()
                         layer.clear_all_point_selections()
+                        if not vis:
+                            message = "Added line to hidden layer %s" % layer.name
                     layer.select_point(point_index)
                 elif len(point_indexes) == 0:  # no currently selected point
                     # select this point
@@ -425,14 +429,20 @@ class ProjectEditor(FrameworkEditor):
                 layer.select_point(point_index)
 
         self.refresh()
+        if message:
+            self.task.status_bar.message = message
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        vis = self.layer_visibility[layer]['layer']
+
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
             if (not event.ControlDown() and not event.ShiftDown()):
                 self.esc_key_pressed()
                 layer.insert_point_in_line(world_point, line_segment_index)
                 self.layer_manager.end_operation_batch()
                 self.control.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
+                if not vis:
+                    self.task.status_bar.message = "Split line in hidden layer %s" % layer.name
 
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (event.ControlDown()):
@@ -470,6 +480,8 @@ class ProjectEditor(FrameworkEditor):
                 ).ShowModal()
 
                 return
+        vis = self.layer_visibility[layer]['layer']
+
         print "1: self.mouse_mode=%d" % self.mouse_mode
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
             if (not event.ControlDown() and not event.ShiftDown()):
@@ -482,6 +494,8 @@ class ProjectEditor(FrameworkEditor):
                 layer.update_bounds()
                 self.layer_manager.end_operation_batch(refresh=False)
                 self.refresh()
+                if not vis:
+                    self.task.status_bar.message = "Added point to hidden layer %s" % layer.name
         print "2"
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (not event.ControlDown() and not event.ShiftDown()):
@@ -496,6 +510,8 @@ class ProjectEditor(FrameworkEditor):
                     self.layer_manager.end_operation_batch()
                     layer.clear_all_point_selections()
                     layer.select_point(point_index)
+                    if not vis:
+                        self.task.status_bar.message = "Added line to hidden layer %s" % layer.name
                 self.refresh()
 
     def dragged(self, world_d_x, world_d_y):

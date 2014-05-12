@@ -188,8 +188,7 @@ class LayerControl(glcanvas.GLCanvas):
             else:
                 self.editor.clickable_object_mouse_is_over = None
 
-            tlw = wx.GetApp().GetTopWindow()
-            tlw.SetStatusText(status_text)
+            self.project.task.status_bar.message = status_text
 
         if (self.mouse_is_down):
             d_x = p[0] - self.mouse_down_position[0]
