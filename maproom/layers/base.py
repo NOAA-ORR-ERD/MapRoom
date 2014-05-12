@@ -142,6 +142,9 @@ class Layer(HasTraits):
 
     def has_points(self):
         return False
+    
+    def has_alpha(self):
+        return False
 
     def merge_from_source_layers(self, layer_a, layer_b):
         raise NotImplementedError

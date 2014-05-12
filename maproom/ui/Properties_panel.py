@@ -4,7 +4,7 @@ import wx
 from ..layers import constants
 from ..library import coordinates
 from ..layer_undo import *
-
+from ..ui import sliders
 
 class Properties_panel(wx.Panel):
 
@@ -80,6 +80,8 @@ class Properties_panel(wx.Panel):
                         fields.extend(["Point coordinates"])
                 else:
                     fields.extend(["Layer name"])
+                    if layer.has_alpha():
+                        fields.extend(["Alpha channel"])
                     if layer.has_points():
                         fields.extend(["Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
 
@@ -142,6 +144,8 @@ class Properties_panel(wx.Panel):
                     prefs = self.project.task.get_preferences()
                     coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
                     self.point_coord_control = self.add_text_field(field, coords_text, self.point_coords_changed, expand=wx.EXPAND)
+                elif field == "Alpha channel":
+                    self.alpha_control = self.add_float_slider(field, layer.alpha, 0.0, 1.0, 100, self.alpha_changed, expand=wx.EXPAND)
 
             self.sizer.Layout()
 
@@ -151,6 +155,14 @@ class Properties_panel(wx.Panel):
         self.Thaw()
         self.Update()
         self.Refresh()
+
+    def add_float_slider(self, field_name, value, minval, maxval, steps, changed_function, expand=0, enabled=True):
+        c = sliders.TextSlider(self, -1, value, minval, maxval, steps)
+        self.sizer.Add(c, 0, expand | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
+        self.sizer.AddSpacer(self.VALUE_SPACING)
+        c.Bind(wx.EVT_SLIDER, changed_function)
+
+        return c
 
     def add_text_field(self, field_name, default_text, changed_function, expand=0, enabled=True):
         c = wx.TextCtrl(self, value=default_text)
@@ -267,3 +279,20 @@ class Properties_panel(wx.Panel):
         if (num_points_changed > 0):
             self.project.layer_manager.end_operation_batch()
         self.project.refresh()
+
+    def alpha_changed(self, event):
+        layer = self.project.layer_tree_control.get_selected_layer()
+        if layer == None:
+            return
+
+        refresh = False
+        c = self.alpha_control
+        try:
+            layer.alpha = float(c.GetValue())
+            c.textCtrl.SetBackgroundColour("#FFFFFF")
+            refresh = True
+        except Exception as e:
+            c.textCtrl.SetBackgroundColour("#FF8080")
+        
+        if refresh:
+            self.project.refresh()

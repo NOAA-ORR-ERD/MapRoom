@@ -126,7 +126,7 @@ class Image_set_renderer:
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = vertex_data
 
-    def render(self, layer_index_base, pick_mode):
+    def render(self, layer_index_base, pick_mode, alpha=1.0):
         if (self.vbo_vertexes == None):
             return
 
@@ -146,7 +146,7 @@ class Image_set_renderer:
             self.vbo_texture_coordinates.bind()
             gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-            gl.glColor(1.0, 1.0, 1.0, 1.0)
+            gl.glColor(1.0, 1.0, 1.0, alpha)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glDrawArrays(gl.GL_QUADS, 0, 4)
 

@@ -7,7 +7,7 @@ import wx
 from pytriangle import triangulate_simple
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Any
+from traits.api import Unicode, Str, Any, Float
 
 from ..library import File_loader, rect
 from ..library.scipy_ckdtree import cKDTree
@@ -31,6 +31,11 @@ class RasterLayer(ProjectedLayer):
     image_sizes = Any
     
     image_world_rects = Any
+    
+    alpha = Float(1.0)
+    
+    def has_alpha(self):
+        return True
 
     def empty(self):
         """
@@ -145,4 +150,4 @@ class RasterLayer(ProjectedLayer):
             return
 
         if (renderer.image_set_renderer != None):
-            renderer.image_set_renderer.render(-1, pick_mode)
+            renderer.image_set_renderer.render(-1, pick_mode, self.alpha)
