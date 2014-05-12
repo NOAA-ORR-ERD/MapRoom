@@ -139,10 +139,10 @@ class FloatSlider(wx.PyPanel):
         self._ConstraintsUpdated()
 
         self.value = value
-        self.stepValue = value / self.step_size
+        self.stepValue = self.float_to_slider_value(value)
         self.valueUnit = valueUnit
 
-        self.sliderCtrl = wx.Slider(self, -1, self.stepValue, 1, steps, point, size, style & ~wx.SL_LABELS, validator, name)
+        self.sliderCtrl = wx.Slider(self, -1, self.stepValue, 0, steps+1, point, size, style & ~wx.SL_LABELS, validator, name)
         self.Sizer.Add(self.sliderCtrl, 0, wx.EXPAND | wx.ALL, BORDER)
 
         if style & wx.SL_LABELS:
@@ -156,14 +156,19 @@ class FloatSlider(wx.PyPanel):
 
     def Enable(self, enable=True):
         self.sliderCtrl.Enable(enable)
+    
+    def slider_value_to_float(self, slider_value):
+        return self.minValue + (slider_value * self.step_size)
+    
+    def float_to_slider_value(self, value):
+        return int((value - self.minValue) / self.step_size)
 
     def GetValue(self):
-        int_value = self.sliderCtrl.Value
-        return int_value * self.step_size
+        return self.slider_value_to_float(self.sliderCtrl.Value)
 
     def SetValue(self, value):
         self.value = value
-        self.stepValue = value / self.step_size
+        self.stepValue = self.float_to_slider_value(value)
         if self.stepValue > self.steps:
             print "Value %s is outside of slider bounds." % self.stepValue
             wx.Bell()
@@ -244,7 +249,7 @@ if __name__ == "__main__":
     app = wx.PySimpleApp()
 
     frame = wx.Frame(None, -1, "TextSlider test")
-    TextSlider(frame, -1, 0.6, 0.0, 1000.0, steps=10000, style=wx.SL_HORIZONTAL | wx.SL_LABELS)
+    TextSlider(frame, -1, 1000.6, 1000.0, 2000.0, steps=10000, style=wx.SL_HORIZONTAL | wx.SL_LABELS)
     frame.Show()
 
     app.MainLoop()
