@@ -700,6 +700,8 @@ class VectorLayer(ProjectedLayer):
         point_index_2 = self.line_segment_indexes.point2[line_segment_index]
         color = self.line_segment_indexes.color[line_segment_index]
         state = self.line_segment_indexes.state[line_segment_index]
+        depth = (self.points.z[point_index_1] + self.points.z[point_index_2])/2
+        self.points.z[new_point_index] = depth
         self.delete_line_segment(line_segment_index, True)
         self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, new_point_index, color, state, True)
         self.insert_line_segment_at_index(len(self.line_segment_indexes), new_point_index, point_index_2, color, state, True)
