@@ -220,7 +220,10 @@ class TextSlider(wx.PyPanel):
     def OnTextChanged(self, event):
         event.Skip()
         if event.String.strip() != "":
-            value = origValue = float(event.String)
+            try:
+                value = origValue = float(event.String)
+            except ValueError:
+                return
             if value < self.sliderCtrl.minValue:
                 value = self.sliderCtrl.minValue
             if value > self.sliderCtrl.maxValue:
