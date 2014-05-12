@@ -51,6 +51,7 @@ class VectorLayer(ProjectedLayer):
 
     def new(self):
         Layer.new(self)
+        self.type = ".verdat"
         self.new_points()
     
     def new_points(self, num=0):
