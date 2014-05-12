@@ -343,6 +343,8 @@ class MaproomProjectTask(FrameworkTask):
     
     status_bar_debug_width = 300
     
+    start_new_editor_in_new_window = True
+    
     #### 'IAbout' interface ###################################################
     
     about_title = Str('MapRoom')
