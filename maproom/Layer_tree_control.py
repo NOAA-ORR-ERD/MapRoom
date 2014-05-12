@@ -248,6 +248,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         if (target_category == "folder"):
             mi_target.append(1)
         lm.insert_layer(mi_target, source_layer)
+        self.select_layer(source_layer)
 
     def handle_selection_changed(self, event):
         self.project.esc_key_pressed()
