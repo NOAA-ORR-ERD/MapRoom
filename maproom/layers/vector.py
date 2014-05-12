@@ -216,6 +216,9 @@ class VectorLayer(ProjectedLayer):
         had_error = False
         try:
             verdat.write_layer_as_verdat(f, self)
+            if self.get_num_points_selected(STATE_FLAGGED):
+                self.clear_all_selections(STATE_FLAGGED)
+                self.manager.dispatch_event('refresh_needed')
         except Exception as e:
             import traceback
             
