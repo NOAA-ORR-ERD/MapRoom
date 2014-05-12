@@ -52,10 +52,11 @@ class LayerUndo(HasTraits):
         self.undo_stack.append({"n": self.undo_stack_next_operation_number, "op": op, "l": layer, "i": index, "p": params})
         self.undo_stack_next_index = len(self.undo_stack)
 
-    def end_operation_batch(self):
+    def end_operation_batch(self, refresh=True):
         self.show_undo_redo_debug_dump("end_operation_batch()")
         self.undo_stack_next_operation_number += 1
-        self.dispatch_event('refresh_needed')
+        if refresh:
+            self.dispatch_event('refresh_needed')
 
     def delete_undo_operations_for_layer(self, layer):
         self.clear_undo_stack_forward()
