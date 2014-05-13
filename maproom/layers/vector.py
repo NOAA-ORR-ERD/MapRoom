@@ -176,9 +176,9 @@ class VectorLayer(ProjectedLayer):
             if (self.load_error_string == ""):
                 self.type = ".verdat"
                 n = np.alen(f_points)
+                self.determine_layer_color()
+                self.points = self.make_points(n)
                 if (n > 0):
-                    self.determine_layer_color()
-                    self.points = self.make_points(n)
                     self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                         0: n
                     ] = f_points
@@ -293,7 +293,7 @@ class VectorLayer(ProjectedLayer):
     def compute_bounding_rect_of_points(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
 
-        if (self.points != None):
+        if (self.points != None and len(self.points) > 0):
             if (mark_type == STATE_NONE):
                 points = self.points
             else:
