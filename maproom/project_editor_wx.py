@@ -398,13 +398,18 @@ class ProjectEditor(FrameworkEditor):
             else:
                 point_indexes = layer.get_selected_point_indexes()
                 if len(point_indexes == 1):
-                    if layer.are_points_connected(point_index, point_indexes[0]):
+                    if not layer.are_points_connected(point_index, point_indexes[0]):
                         layer.insert_line_segment(point_index, point_indexes[0])
                         self.layer_manager.end_operation_batch()
-                        layer.clear_all_point_selections()
                         if not vis:
                             message = "Added line to hidden layer %s" % layer.name
-                    layer.select_point(point_index)
+                    layer.clear_all_point_selections()
+                    if point_indexes[0] != point_index:
+                        # allow for deselecting points by clicking them again.
+                        # Only if the old selected point is not the same
+                        # as the clicked point will the clicked point be
+                        # highlighted.
+                        layer.select_point(point_index)
                 elif len(point_indexes) == 0:  # no currently selected point
                     # select this point
                     layer.select_point(point_index)
