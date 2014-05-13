@@ -203,6 +203,9 @@ class VectorLayer(ProjectedLayer):
             self.update_bounds()
     
     def can_save(self):
+        return self.can_save_as() and bool(self.file_path)
+    
+    def can_save_as(self):
         return self.type == ".verdat"
     
     def save_to_file(self, file_path):
@@ -235,6 +238,7 @@ class VectorLayer(ProjectedLayer):
         if (not had_error and temp_file and os.path.exists(temp_file)):
             try:
                 shutil.copy(temp_file, file_path)
+                self.file_path = file_path
             except Exception as e:
                 import traceback
             

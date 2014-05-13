@@ -120,7 +120,7 @@ class LayerManager(LayerUndo):
     
     def save_layer(self, layer, file_path):
         if layer is not None:
-            if layer.can_save():
+            if layer.can_save_as():
                 return layer.save_to_file(file_path)
             return "Layer type %s cannot be saved." % layer.type
         return "No selected layer."

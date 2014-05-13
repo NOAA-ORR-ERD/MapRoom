@@ -46,7 +46,7 @@ class SaveProjectAsAction(Action):
 class SaveLayerAction(EditorAction):
     name = 'Save Layer'
     tooltip = 'Save the currently selected layer'
-    enabled_name = 'layer_saveable'
+    enabled_name = 'layer_can_save'
 
     def perform(self, event):
         self.active_editor.save_layer(None)
@@ -54,7 +54,7 @@ class SaveLayerAction(EditorAction):
 class SaveLayerAsAction(EditorAction):
     name = 'Save Layer As...'
     tooltip = 'Save the current project with a new name'
-    enabled_name = 'layer_saveable'
+    enabled_name = 'layer_can_save_as'
 
     def perform(self, event):
         dialog = FileDialog(parent=event.task.window.control, action='save as')

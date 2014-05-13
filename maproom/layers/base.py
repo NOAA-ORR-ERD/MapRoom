@@ -76,6 +76,11 @@ class Layer(HasTraits):
         return False
     
     def can_save(self):
+        """Can the layer be saved using the current filename?"""
+        return False
+    
+    def can_save_as(self):
+        """Can the layer be saved if given a new filename?"""
         return False
     
     def save_to_file(self, file_path):
