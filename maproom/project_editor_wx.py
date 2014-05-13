@@ -472,12 +472,8 @@ class ProjectEditor(FrameworkEditor):
         print "clicked on empty space: layer %s, point %s" % (layer, str(world_point)) 
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (layer.type == "root" or layer.type == "folder"):
-                wx.MessageDialog(
-                    wx.GetApp().GetTopWindow(),
-                    caption="Cannot Edit",
-                    message="You cannot add points or lines to folder layers.",
-                    style=wx.OK | wx.ICON_ERROR
-                ).ShowModal()
+                self.window.error("You cannot add points or lines to folder layers.",
+                                  "Cannot Edit")
 
                 return
         vis = self.layer_visibility[layer]['layer']
