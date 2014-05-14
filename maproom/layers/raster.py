@@ -20,6 +20,7 @@ from ..renderer import color_to_int, data_types
 from base import Layer, ProjectedLayer
 from constants import *
 
+
 class RasterLayer(ProjectedLayer):
     """Layer for raster images
     
@@ -32,6 +33,8 @@ class RasterLayer(ProjectedLayer):
     
     image_world_rects = Any
     
+    image_textures = Any
+    
     alpha = Float(1.0)
     
     def has_alpha(self):
@@ -42,9 +45,7 @@ class RasterLayer(ProjectedLayer):
         We shouldn't allow saving of a layer with no content, so we use this method
         to determine if we can save this layer.
         """
-        no_images = (self.images is None or len(self.images) == 0)
-
-        return no_images
+        return not bool(self.images)
     
     def get_allowable_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
@@ -54,6 +55,15 @@ class RasterLayer(ProjectedLayer):
     def visibility_item_exists(self, label):
         if label == "images":
             return self.images is not None
+    
+    def release_images(self):
+        """Free image data after renderer is done converting to textures.
+        
+        """
+        # release images by allowing garbage collector to collect the now
+        # unrefcounted images
+        print self.images
+        self.images = True
 
     def read_from_file(self, file_path):
         self.file_path = file_path

@@ -55,14 +55,20 @@ class LayerRenderer(object):
         return self.name
 
     def rebuild_image_set_renderer(self, layer):
-        if layer.images and not self.image_set_renderer:
-            self.image_set_renderer = Image_set_renderer.Image_set_renderer(
-                self.canvas.opengl_renderer,
-                layer.images,
-                layer.image_sizes,
-                layer.image_world_rects,
-                self.canvas.projection,
-                self.canvas.projection_is_identity)
+        if layer.images:
+            if not layer.image_textures:
+                layer.image_textures = Image_set_renderer.ImageTextures(
+                    self.canvas.opengl_renderer,
+                    layer.images,
+                    layer.image_sizes,
+                    layer.image_world_rects)
+                layer.release_images()
+            if not self.image_set_renderer:
+                self.image_set_renderer = Image_set_renderer.Image_set_renderer(
+                    self.canvas.opengl_renderer,
+                    layer.image_textures,
+                    self.canvas.projection,
+                    self.canvas.projection_is_identity)
 
     def set_up_labels(self, layer):
         if (layer.points != None and self.label_set_renderer == None):

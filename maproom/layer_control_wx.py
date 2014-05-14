@@ -56,6 +56,15 @@ class LayerControl(glcanvas.GLCanvas):
         if mouse_mode not in valid:
             return valid[0]
         return mouse_mode
+    
+    context = None
+    
+    @classmethod
+    def init_context(cls, canvas):
+        # Only one GLContext is needed for the entire application -- this way,
+        # textures can be shared among views
+        if cls.context is None:
+            cls.context = glcanvas.GLContext(canvas)
 
     def __init__(self, *args, **kwargs):
         self.project = kwargs.pop('project')
@@ -68,7 +77,7 @@ class LayerControl(glcanvas.GLCanvas):
                                 glcanvas.WX_GL_MIN_ALPHA, 8, )
         glcanvas.GLCanvas.__init__(self, *args, **kwargs)
 
-        self.context = glcanvas.GLContext(self)
+        self.init_context(self)
 
         p = os.path.join(app_globals.image_path, "cursors", "hand.ico")
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)

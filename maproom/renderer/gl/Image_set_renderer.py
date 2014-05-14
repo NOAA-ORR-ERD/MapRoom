@@ -8,18 +8,11 @@ import maproom.library.rect as rect
 from maproom.library.accumulator import flatten
 
 
-class Image_set_renderer:
-    oglr = None
-
-    textures = None  # flat list, one per image
-    image_sizes = None  # flat list, one per image
-    image_world_rects = None  # flat list, one per image
-    image_projected_rects = None  # flat list, one per image
-
-    vbo_vertexes = None  # flat list, one per texture
-    vbo_texture_coordinates = None  # just one, same one for all images
-
-    def __init__(self, opengl_renderer, images, image_sizes, image_world_rects, projection, projection_is_identity):
+class ImageTextures(object):
+    """Class to allow sharing of textures between views
+    
+    """
+    def __init__(self, opengl_renderer, images, image_sizes, image_world_rects):
         """
             images = list of lists, where each sublist is a row of images
                         and each image is a numpy array [ 0 : max_y, 0 : max_x, 0 : num_bands ]
@@ -34,24 +27,22 @@ class Image_set_renderer:
             image_world_rects = list of lists, the same shape as images,
                                 but where each item gives the world rect
                                 of the corresponding image
-            projection = a pyproj-style projection callable object, such that
-                         projection( world_x, world_y ) = ( projected_x, projected_y )
         """
 
-        self.oglr = opengl_renderer
         image_list = flatten(images)
         self.image_sizes = flatten(image_sizes)
         self.image_world_rects = flatten(image_world_rects)
 
-        total_image_count = len(image_list)
-
-        texcoord_data = np.zeros(
-            (1, ),
-            dtype=self.oglr.TEXTURE_COORDINATE_DTYPE,
-        ).view(np.recarray)
-
         self.textures = []
         self.vbo_vertexes = []
+        self.vbo_texture_coordinates = None  # just one, same one for all images
+        self.load(opengl_renderer, image_list)
+
+    def load(self, opengl_renderer, image_list):
+        texcoord_data = np.zeros(
+            (1, ),
+            dtype=opengl_renderer.TEXTURE_COORDINATE_DTYPE,
+        ).view(np.recarray)
 
         n = 0
         for i in xrange(len(image_list)):
@@ -82,7 +73,7 @@ class Image_set_renderer:
 
             vertex_data = np.zeros(
                 (1, ),
-                dtype=self.oglr.QUAD_VERTEX_DTYPE,
+                dtype=opengl_renderer.QUAD_VERTEX_DTYPE,
             ).view(np.recarray)
             # we fill the vbo_vertexes data in reproject() below
             self.vbo_vertexes.append(gl_vbo.VBO(vertex_data))
@@ -100,11 +91,27 @@ class Image_set_renderer:
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
+    def destroy(self):
+        for texture in self.textures:
+            gl.glDeleteTextures(np.array([texture], np.uint32))
+        self.vbo_vertexes = None
+        self.vbo_texture_coordinates = None
+
+
+class Image_set_renderer:
+    def __init__(self, opengl_renderer, image_textures, projection, projection_is_identity):
+        """
+            projection = a pyproj-style projection callable object, such that
+                         projection( world_x, world_y ) = ( projected_x, projected_y )
+        """
+
+        self.oglr = opengl_renderer
+        self.image_textures = image_textures
         self.reproject(projection, projection_is_identity)
 
     def reproject(self, projection, projection_is_identity):
         self.image_projected_rects = []
-        for r in self.image_world_rects:
+        for r in self.image_textures.image_world_rects:
             if (projection_is_identity):
                 left_bottom_projected = r[0]
                 right_top_projected = r[1]
@@ -114,7 +121,7 @@ class Image_set_renderer:
             self.image_projected_rects.append((left_bottom_projected, right_top_projected))
 
         for i, projected_rect in enumerate(self.image_projected_rects):
-            vertex_data = self.vbo_vertexes[i].data
+            vertex_data = self.image_textures.vbo_vertexes[i].data
             vertex_data.x_lb = projected_rect[0][0]
             vertex_data.y_lb = projected_rect[0][1]
             vertex_data.x_lt = projected_rect[0][0]
@@ -124,43 +131,36 @@ class Image_set_renderer:
             vertex_data.x_rb = projected_rect[1][0]
             vertex_data.y_rb = projected_rect[0][1]
 
-            self.vbo_vertexes[i][: np.alen(vertex_data)] = vertex_data
+            self.image_textures.vbo_vertexes[i][: np.alen(vertex_data)] = vertex_data
 
     def render(self, layer_index_base, pick_mode, alpha=1.0):
-        if (self.vbo_vertexes == None):
+        if (self.image_textures.vbo_vertexes == None):
             return
 
         # images can't be selected with mouse click
         if (pick_mode):
             return
 
-        for i, vbo in enumerate(self.vbo_vertexes):
+        for i, vbo in enumerate(self.image_textures.vbo_vertexes):
             gl.glEnable(gl.GL_TEXTURE_2D)
-            gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[i])
+            gl.glBindTexture(gl.GL_TEXTURE_2D, self.image_textures.textures[i])
 
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             vbo.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-            self.vbo_texture_coordinates.bind()
+            self.image_textures.vbo_texture_coordinates.bind()
             gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             gl.glColor(1.0, 1.0, 1.0, alpha)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glDrawArrays(gl.GL_QUADS, 0, 4)
 
-            self.vbo_texture_coordinates.unbind()
+            self.image_textures.vbo_texture_coordinates.unbind()
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
             vbo.unbind()
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-
-    def destroy(self):
-        if (self.textures != None):
-            for texture in self.textures:
-                gl.glDeleteTextures(np.array([texture], np.uint32))
-        self.vbo_vertexes = None
-        self.vbo_texture_coordinates = None
