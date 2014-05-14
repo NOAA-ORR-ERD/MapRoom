@@ -174,7 +174,9 @@ if __name__=='__main__':
     print "latest from changelog: %s" % version
     print "all from changelog: %s" % str(versions)
 
-    module=__import__("Version")
+    import importlib
+    module = importlib.import_module("maproom.Version")
+    print module
     print "module version: %s" % module.VERSION
     
     v_changelog = StrictVersion(version)

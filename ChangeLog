@@ -1,3 +1,247 @@
+05/14/2014
+---------------------------
+Released 3.0b5
+- RM Updated version for new beta release
+- RM Added image size properties to the info pane
+- RM Consolidated image data into new ImageData class
+- RM Attempt at reduced memory usage by sharing textures between renderers
+- RM Handle degenerate case of loading a zero point verdat file
+- RM Separated out save and save_as for enabling menu items
+- RM Fixed bug in new line selection
+- RM Changed from MessageDialog to task window error method
+- RM Lat/Lon layer stays on top when inserting new layers
+- RM Open empty project when opening new window
+- RM Fixed #551: added warning message when adding points/lines to hidden layer
+- RM Fixed #525: flagged points cleared on successful save
+- RM Fixed #510: allow endpoint selection when line selected
+- RM Fixed #524: depth is now averaged when new point is created on line
+- RM Fixed #567: depth value in properties panel now active after adding point
+- RM Added refresh option to end_operation_batch
+- RM Fixed layer tree control so dragged layer stays selected after drop
+- RM Fixed #204: Added alpha channel for images
+- RM Fixed sliders to work with non-zero minimum value
+- RM Handle illegal float value for slider text input
+- RM Set type of new vector layer so it can be saved
+
+05/04/2014
+---------------------------
+Released 3.0b4
+- RM Updated version for new beta
+- RM Save layer defaults to its original file name
+- RM Fixed relative imports
+- RM Removed fake preferences from app_globals
+- RM Removed old maproom 1.9x files
+- RM Using peppy2/ethought preferences instead of old app_globals stuff
+- RM Attached preferences to plugin so they show up in prefs dialog
+- RM Removed SMTP login info; now using webbrowser.open to send email
+- RM Temporarily disabled SaveProject menu items until it's actually working
+- RM Added layer save
+- RM Removed mistakenly entered mousewheel event
+- RM Changed Save/Save As to Save Project/Save Project As
+- RM Fixed mouse wheel scrolling on win
+
+04/30/2014
+---------------------------
+Released 3.0b3
+- RM Updated version
+- RM Check that mouse mode still valid after switching layers
+- RM Changed display name of Vector Layer to Ugrid Layer
+- RM Removed another reference to Source File
+- RM Removed unneeded debug print because layer might be None
+- RM Using new 2-field status bar; "render complete" messages now in 2nd field
+- RM Removed source file from properties panel
+- RM Fixed initial layer selection
+- RM Layer load now updates recently opened files list
+- RM Fixed bug where couldn't add points to a new vector layer
+- RM Another fix for unitialized data as a result of 8fc2e0
+- RM Set dirty flag, naively, to same state as can_undo
+
+04/29/2014
+---------------------------
+Released 3.0b2
+- RM Updated version for 2nd beta
+- RM fixed unitialized data as a result of 8fc2e0
+- RM py2exe fixes
+- RM Win also needs background color hack, so use it for all platforms
+- RM Changed application name to MapRoom (mostly for window titles)
+
+04/28/2014
+---------------------------
+Released 3.0b1
+- RM Updated version to 3.0b1
+- RM Fixed background color for properties panel on OS X
+- RM Fixed bad relative import
+- RM Added error handler from peppy2 framework
+- RM Added undo/redo support
+- RM Added properties panel
+- RM Fixed toolbar enable delay
+- RM Fixed point/line delete; was missing trait handler for layer_contents_deleted
+- RM Fixed clear selection/delete selection enable state
+- RM Added some debug printing
+- RM Removed unused class attributes
+- RM Fixed incorrect ref to dispatch_event
+- RM Added merge duplicate points
+- RM Removed unused app_globals import
+- RM Added Merge Layers
+- RM Refresh tree control when triangulated
+- RM Added prompt if the user is loading a non-maproom file
+- RM Handle plain integer as well as numpy.uint32 for int_to_color
+- RM Added Triangulate Layer
+- RM Added Layer -> New menu and ability to add lon/lat grids
+- RM Changed error dialogs to use TaskWindow convenience functions
+- RM Fixed labels to read "MapRoom" instead of "Maproom"
+- RM Workaround for duplicate separator after DeleteLayer
+- RM Use new task/window convenience methods of FrameworkEditor
+- RM Added DeleteLayer action
+- RM Removed OpenLayer; Open now adds layer to current project
+- RM Added about dialog
+- RM Now using task_factories_from_tasks in plugin
+- RM Forgot to return None when GDAL identify failed
+- RM Added MaproomProjecTask.new_file_task so maproom projects show up in File/New list
+- RM SaveImage now uses the "save as" dialog, which contains built-in check for overwriting file
+- RM Use agw.aui toolbar to workaround Mac refresh problem
+- RM Added "Save As Image"
+- RM Changed visible_name to enabled_name in actions to work around aui toolbar bug when hiding both toolbar items and full toolbars
+- RM Fixed space between toolbars when project first loaded
+- RM Added checks for active_editor in trait change handlers
+- RM Added different toolbars for each type of mouse selection mode
+- RM Moved edit mode tools into new toolbar
+- RM Changed some edit modes to use visible instead of enabled
+- RM Fixed order for gdal image detection
+
+04/10/2014
+---------------------------
+Released 3.0a4
+- RM Version 3.0a4
+- RM Added GDAL image recognizer
+- RM Fixed other view not updating when moving lines
+- RM Added editing rules documentation
+- RM fix for icon relocation in setup.py
+
+04/10/2014
+---------------------------
+Released 3.0a3
+- RM 3.0 alpha 3 release
+- RM Fixed BNA rendering
+- RM Added BNA file recognizer
+- RM fixed data_types import
+- RM Moved Editor into project_editor_wx
+- RM New 16x16 add points/add lines icons
+- RM fixed order of toolbar items
+- RM Update toolbar ui items when toggle buttons changed
+- RM Initial support for point and line editing
+- RM Layers now use Traits
+- RM Separated out LayerUndo into new file
+- RM Added Clear Selection
+- RM Added Find Points dialog
+- RM Added Jump to Coordinates dialog
+- RM added New Vector Layer in ui
+- RM Added raise/lower layer
+- RM Wait till there's an active project before rebuilding the tree
+- RM Maproom icon now appears when the maproom project is active task
+- RM Added Zoom functions to menubar/toolbar
+- RM Added "show bounding box" ui element
+- RM Added first implementation of raster layers
+- RM Now rendering layers in order, irrespective of projected or screen objects
+- RM Moved logic in create_necessary_renderers into layers
+- RM Added visibility items to Layer
+- RM Moved lon/lat grid into layer
+- RM Refactoring of Layer into layers subdir with separate vector/image subclasses
+- RM Moved point/line/etc data types into renderer/gl/data_types.py
+- RM Moved color conversion utils into renderer
+- RM Renamed Layer_manager.py to layer_manager.py
+- RM Restructured library/opengl_renderer to renderer/gl
+
+03/20/2014
+---------------------------
+Released 3.0a2
+- RM Updating version to second alpha! (really pre-pre-pre-pre alpha)
+- RM Force maproom to be the initial task
+- RM Added Open Layer menu item
+- RM Changed default tab name to "Untitled Project"
+- RM Changed image path calculation to use new peppy2 convenience function
+- RM Removed pubsub from LayerManager and changed to Traits events
+- RM Moved selected layer logic out of LayerManager and into the view components
+- RM Having problems with PyOpenGL_accelerate, so removed it from prerequisites
+- RM Added default width to LayerSelectionPane
+- RM Pulled layer visibility out of Layer and into ProjectEditor
+- RM Layer manager of new view must point to same layer manager
+- RM Assume root note is always expanded
+- RM Added the tree control to the LayerSelectionPane
+- RM Added ability to open new view of a maproom project
+- RM Removed circular references for [Layer|LayerManager].destroy
+- RM Removed app_globals from Layer
+- RM Removed XML verdat format
+- RM Removed app_globals from Layer_manager.py
+- RM Removed app_globals from Editor.py
+- RM Moved RenderController functions into project_editor_wx
+- RM Added an ERMA package to test data (both zipped and unzipped)
+- RM Removing distutils/command files from py2app bundle
+- RM Prevent render if not shown on screen
+- RM Call new peppy2.framework.application.run function for startup
+
+02/21/2014
+---------------------------
+Released 3.0a1
+- RM Stripping out useless binary stuff from site-packages.zip in py2app
+- RM Additional includes/excludes fixes for py2app
+- RM Fix for loading images resources in py2app frozen file
+- RM Updated includes for py2exe/py2app freezing
+- RM Added new start script based on peppy2 framework
+- RM Only try py2exe/py2app stuff if actually using py2exe or py2app
+- RM Zoom to fit layer after loading a new layer
+- RM Renamed the maproom3 layer editor to "project editor"
+- RM Added simple status bar display
+- RM OpenGL renderer must be created before update_renderers
+- RM Major directory restructuring for Enthought/peppy2 framework
+- RM Changed name of mac zipped bundle from Maproom-rX.Y.Z to Maproom-X.Y.Z
+- RM Fixed #565: added wheel event to top level frame & tree for windows
+- RM Changed setup.py so that mac and win are both buildable from same directory
+- RM Removed svn versioning stuff from setup.py
+- RM Speeded up BNA loading by only updating progress every 1000 points loaded
+- RM Added line number when BNA error found during load
+- RM Fixed #566: incorrect number of return values on bad BNA
+- RM Fixed incorrect number of return values on bad BNA
+- RM Menu items can't be enabled on linux till after they're added to the menu
+- RM Added linux support for pytriangle
+- RM Fixed #565: win needs keyboard focus on renderer for mouse wheel to work
+- RM Fixed #562: added try/except around file load
+- RM Fixed #560: added check for valid layer to fix find dialog crash
+- RM Fixed #563: fixed outdated reference in Save As Image
+- RM Allow user to copy error text and send email manually if auto sending fails
+- RM Added new error handler
+- RM Refs #550: following advice for wxPython 2.9.x, static box sizer children now children of box sizer instead of frame
+- RM Added missing constants for Windows/MinGW compilation
+- RM Removed redundant copy of pytriangle source files
+- RM Refs #550: updated about dialog to show versions
+- RM Refs #555: dialogs now have a wx.Frame as a parent
+- RM Fixed #558: About menu item now only appears on app menu
+- RM Fixed #547: disabled Add Folder UI until folders are implemented
+- RM Fixed #554: check for bad item when dropping layer in layer tree
+- RM Fixed #557: Added layer bounding box drawing
+- RM Fixed #556: lat/log grid menu item now references state stored in RenderWindow
+- RM Fixed #511: layer boundary now updated after adding each point
+- RM Fixed #527: added flush method to Logger object for py2app std[out|err]
+- RM Fixed #532: added integer range parsing to Find Point dialog
+- RM Fixed #548: added point selection count to properties panel
+- RM Added convenience function to put debug messages in correct status bar location
+- RM [Fixed #515]: added new layer count
+- RM Fixed #509: changed menu item text to New Grid Layer
+- RM Refs #546: radio button images only allowed on Mac
+- RM Fixed #516: removed extra dialog and placed info message in save dialog
+- RM Refs #138: added call to MacOpenFile with workaround for wx 2.9
+- RM Fixed #544: created split status bar
+- RM Refs #545: refactor to pull out Frame init from MapController into MapFrame class
+- RM Fixed #543: added a call to Center() which correctly adjusts for the dock position
+- RM Fixed #529: added point number to status text display on mouse motion
+- RM Added is_ugrid_point convenience function to Editor
+- RM Fixed #530: menu item enabled only when layer has points
+- RM Minor refoctor of Layer to separate out method to create new points
+- RM Refs #530: added check for layer with no points
+- RM Refs #530: added basic functionality to search for a point
+- RM Fixed #526: (again). handle whitespace in to/from conversion to dms
+- RM Fixed #542: moved Preferences menu item to app menu only on OSX
+
 01/14/2014
 ---------------------------
 Released 1.9.11
