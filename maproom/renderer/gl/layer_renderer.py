@@ -55,18 +55,18 @@ class LayerRenderer(object):
         return self.name
 
     def rebuild_image_set_renderer(self, layer):
-        if layer.images:
-            if not layer.image_textures:
-                layer.image_textures = Image_set_renderer.ImageTextures(
+        if layer.image_data:
+            if not layer.image_data.image_textures:
+                layer.image_data.image_textures = Image_set_renderer.ImageTextures(
                     self.canvas.opengl_renderer,
-                    layer.images,
-                    layer.image_sizes,
-                    layer.image_world_rects)
-                layer.release_images()
+                    layer.image_data.images,
+                    layer.image_data.image_sizes,
+                    layer.image_data.image_world_rects)
+                layer.image_data.release_images()
             if not self.image_set_renderer:
                 self.image_set_renderer = Image_set_renderer.Image_set_renderer(
                     self.canvas.opengl_renderer,
-                    layer.image_textures,
+                    layer.image_data.image_textures,
                     self.canvas.projection,
                     self.canvas.projection_is_identity)
 

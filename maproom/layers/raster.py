@@ -27,13 +27,7 @@ class RasterLayer(ProjectedLayer):
     """
     name = Unicode("Raster Layer")
 
-    images = Any
-    
-    image_sizes = Any
-    
-    image_world_rects = Any
-    
-    image_textures = Any
+    image_data = Any
     
     alpha = Float(1.0)
     
@@ -45,7 +39,7 @@ class RasterLayer(ProjectedLayer):
         We shouldn't allow saving of a layer with no content, so we use this method
         to determine if we can save this layer.
         """
-        return not bool(self.images)
+        return self.image_data is not None
     
     def get_allowable_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
@@ -54,16 +48,7 @@ class RasterLayer(ProjectedLayer):
     
     def visibility_item_exists(self, label):
         if label == "images":
-            return self.images is not None
-    
-    def release_images(self):
-        """Free image data after renderer is done converting to textures.
-        
-        """
-        # release images by allowing garbage collector to collect the now
-        # unrefcounted images
-        print self.images
-        self.images = True
+            return self.image_data is not None
 
     def read_from_file(self, file_path):
         self.file_path = file_path
@@ -71,11 +56,7 @@ class RasterLayer(ProjectedLayer):
         (base, ext) = os.path.splitext(file_path)
         ext = ext.lower()
 
-        (self.load_error_string,
-         self.images,
-         self.image_sizes,
-         self.image_world_rects,
-         projection) = File_loader.load_image_file(file_path)
+        self.load_error_string, self.image_data = File_loader.load_image_file(file_path)
 
         if (self.load_error_string == ""):
             self.type = ext
@@ -93,8 +74,8 @@ class RasterLayer(ProjectedLayer):
                 self.manager.dispatch_event('projection_changed', self)
             currently_merc = self.manager.project.control.projection.srs.find("+proj=merc") != -1
             currently_longlat = self.manager.project.control.projection.srs.find("+proj=longlat") != -1
-            incoming_merc = projection.srs.find("+proj=merc") != -1
-            incoming_longlat = projection.srs.find("+proj=longlat") != -1
+            incoming_merc = self.image_data.projection.srs.find("+proj=merc") != -1
+            incoming_longlat = self.image_data.projection.srs.find("+proj=longlat") != -1
 
             disagreement = (currently_merc != incoming_merc) or (currently_longlat != incoming_longlat)
             if (disagreement):
@@ -133,12 +114,8 @@ class RasterLayer(ProjectedLayer):
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
 
-        if (self.image_world_rects != None):
-            world_rect_flat_list = flatten(self.image_world_rects)
-            b = world_rect_flat_list[0]
-            for r in world_rect_flat_list[1:]:
-                b = rect.accumulate_rect(b, r)
-            bounds = rect.accumulate_rect(bounds, b)
+        if self.image_data is not None:
+            bounds = self.image_data.get_bounds()
 
         return bounds
     
@@ -151,7 +128,7 @@ class RasterLayer(ProjectedLayer):
         other views of this layer.
         
         """
-        if self.images and not renderer.image_set_renderer:
+        if self.image_data and not renderer.image_set_renderer:
             renderer.rebuild_image_set_renderer(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):

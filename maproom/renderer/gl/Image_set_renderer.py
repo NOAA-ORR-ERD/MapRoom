@@ -31,6 +31,7 @@ class ImageTextures(object):
 
         image_list = flatten(images)
         self.image_sizes = flatten(image_sizes)
+        print "image_sizes: %s" % str(self.image_sizes)
         self.image_world_rects = flatten(image_world_rects)
 
         self.textures = []

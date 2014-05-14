@@ -4,7 +4,7 @@ import time
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
-from maproom.library.accumulator import accumulator
+from maproom.library.accumulator import accumulator, flatten
 import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
 
@@ -175,6 +175,118 @@ def load_bna_file(file_path):
 
 #
 
+class ImageData(object):
+    NORTH_UP_TOLERANCE = 0.002
+    
+    def __init__(self, dataset):
+        self.nbands = dataset.RasterCount
+        self.x = dataset.RasterXSize
+        self.y = dataset.RasterYSize
+        self.projection = None
+        
+        self.images = []
+        self.image_sizes = []
+        self.image_world_rects = []
+        self.image_textures = []
+        
+        self.calc_projection(dataset)
+        
+        print "Image: %sx%s, %d band, %s" % (self.x, self.y, self.nbands, self.projection.srs)
+    
+    def release_images(self):
+        """Free image data after renderer is done converting to textures.
+        
+        """
+        # release images by allowing garbage collector to collect the now
+        # unrefcounted images
+        self.images = True
+    
+    def calc_projection(self, dataset):
+        if not (dataset.GetProjection() or dataset.GetGCPProjection()):
+            # no projection, assume latlong:
+            self.projection = pyproj.Proj("+proj=latlong")
+        else:
+            native_projection = osr.SpatialReference()
+            native_projection.ImportFromWkt(
+                dataset.GetProjection() or dataset.GetGCPProjection())
+            self.projection = pyproj.Proj(native_projection.ExportToProj4())
+
+        self.pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
+    
+    def is_north_up(self):
+        if (len(self.pixel_to_projected_transform) < 6 or
+            math.fabs(self.pixel_to_projected_transform[2]) > self.NORTH_UP_TOLERANCE or
+                math.fabs(self.pixel_to_projected_transform[4]) > self.NORTH_UP_TOLERANCE):
+            return False
+        return True
+    
+    def get_bounds(self):
+        bounds = rect.NONE_RECT
+
+        if (self.image_world_rects):
+            world_rect_flat_list = flatten(self.image_world_rects)
+            b = world_rect_flat_list[0]
+            for r in world_rect_flat_list[1:]:
+                b = rect.accumulate_rect(b, r)
+            bounds = rect.accumulate_rect(bounds, b)
+        
+        return bounds
+
+    def load_dataset(self, dataset, texture_size):
+        raster_bands = []
+
+        for band_index in range(1, dataset.RasterCount + 1):
+            raster_bands.append(dataset.GetRasterBand(band_index))
+
+        palette = get_palette(raster_bands[0])
+
+        num_cols = self.x / texture_size
+        if ((self.x % texture_size) != 0):
+            num_cols += 1
+        num_rows = self.y / texture_size
+        if ((self.y % texture_size) != 0):
+            num_rows += 1
+
+        for r in xrange(num_rows):
+            images_row = []
+            image_sizes_row = []
+            image_world_rects_row = []
+            selection_height = texture_size
+            if (((r + 1) * texture_size) > self.y):
+                selection_height -= (r + 1) * texture_size - self.y
+            for c in xrange(num_cols):
+                selection_origin = (c * texture_size, r * texture_size)
+                selection_width = texture_size
+                if (((c + 1) * texture_size) > self.x):
+                    selection_width -= (c + 1) * texture_size - self.x
+                image = get_image(raster_bands,
+                                  self.nbands,
+                                  palette,
+                                  selection_origin,
+                                  (selection_width, selection_height))
+                images_row.append(image)
+                image_sizes_row.append((selection_width, selection_height))
+                # we invert the y in going to projected coordinates
+                left_bottom_projected = apply_transform((selection_origin[0],
+                                                         selection_origin[1] + selection_height),
+                                                        self.pixel_to_projected_transform)
+                right_top_projected = apply_transform((selection_origin[0] + selection_width,
+                                                       selection_origin[1]),
+                                                      self.pixel_to_projected_transform)
+                if (self.projection.srs.find("+proj=longlat") != -1):
+                    # for longlat projection, apparently someone decided that since the projection
+                    # is the identity, it might as well do something and so it returns the coordinates as
+                    # radians instead of degrees; so here we avoid using the projection altogether
+                    left_bottom_world = left_bottom_projected
+                    right_top_world = right_top_projected
+                else:
+                    left_bottom_world = self.projection(left_bottom_projected[0], left_bottom_projected[1], inverse=True)
+                    right_top_world = self.projection(right_top_projected[0], right_top_projected[1], inverse=True)
+                image_world_rects_row.append((left_bottom_world, right_top_world))
+            self.images.append(images_row)
+            self.image_sizes.append(image_sizes_row)
+            self.image_world_rects.append(image_world_rects_row)
+
 
 def load_image_file(file_path):
     """
@@ -210,100 +322,23 @@ def load_image_file(file_path):
     dataset = gdal.Open(str(file_path))
 
     if (dataset is None):
-        return ("Unable to load the image file " + file_path, None, None, None, None)
+        return ("Unable to load the image file " + file_path, None)
 
     if (dataset.RasterCount < 0 or dataset.RasterCount > 3):
-        return ("The number of raster bands is unsupported for file " + file_path, None, None, None, None)
+        return ("The number of raster bands is unsupported for file " + file_path, None)
 
     has_scaline_data = False
     if (dataset.GetDriver().ShortName in SCANLINE_DRIVER_NAMES):
         has_scaline_data = True
 
-    if not (dataset.GetProjection() or dataset.GetGCPProjection()):
-        # no projection, assume latlong:
-        projection = pyproj.Proj("+proj=latlong")
-    else:
-        native_projection = osr.SpatialReference()
-        native_projection.ImportFromWkt(
-            dataset.GetProjection() or dataset.GetGCPProjection())
-        projection = pyproj.Proj(native_projection.ExportToProj4())
+    image_data = ImageData(dataset)
 
-    pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
-    # print "pixel_to_geo_transform = " + str( pixel_to_geo_transform )
-    TOLERANCE = 0.002
-    if (len(pixel_to_projected_transform) < 6 or
-        math.fabs(pixel_to_projected_transform[2]) > TOLERANCE or
-            math.fabs(pixel_to_projected_transform[4]) > TOLERANCE):
-        return ("The raster is not north-up for file " + file_path, None, None, None, None)
+    if (not image_data.is_north_up()):
+        return ("The raster is not north-up for file " + file_path, None)
 
-    """
-    geo_to_pixel_transform = invert_geo_transform( pixel_to_geo_transform )
-    if ( geo_to_pixel_transform == None ):
-        return ( "Unable to compute an inverse geo transform for file " + file_path, None, None, None )
-    """
+    image_data.load_dataset(dataset, TEXTURE_SIZE)
 
-    raster_bands = []
-
-    for band_index in range(1, dataset.RasterCount + 1):
-        raster_bands.append(dataset.GetRasterBand(band_index))
-
-    palette = get_palette(raster_bands[0])
-
-    num_cols = dataset.RasterXSize / TEXTURE_SIZE
-    if ((dataset.RasterXSize % TEXTURE_SIZE) != 0):
-        num_cols += 1
-    num_rows = dataset.RasterYSize / TEXTURE_SIZE
-    if ((dataset.RasterYSize % TEXTURE_SIZE) != 0):
-        num_rows += 1
-
-    images = []
-    image_sizes = []
-    image_world_rects = []
-    for r in xrange(num_rows):
-        images_row = []
-        image_sizes_row = []
-        image_world_rects_row = []
-        selection_height = TEXTURE_SIZE
-        if (((r + 1) * TEXTURE_SIZE) > dataset.RasterYSize):
-            selection_height -= (r + 1) * TEXTURE_SIZE - dataset.RasterYSize
-        for c in xrange(num_cols):
-            selection_origin = (c * TEXTURE_SIZE, r * TEXTURE_SIZE)
-            selection_width = TEXTURE_SIZE
-            if (((c + 1) * TEXTURE_SIZE) > dataset.RasterXSize):
-                selection_width -= (c + 1) * TEXTURE_SIZE - dataset.RasterXSize
-            image = get_image(raster_bands,
-                              dataset.RasterCount,
-                              palette,
-                              selection_origin,
-                              (selection_width, selection_height))
-            images_row.append(image)
-            image_sizes_row.append((selection_width, selection_height))
-            # we invert the y in going to projected coordinates
-            left_bottom_projected = apply_transform((selection_origin[0],
-                                                     selection_origin[1] + selection_height),
-                                                    pixel_to_projected_transform)
-            right_top_projected = apply_transform((selection_origin[0] + selection_width,
-                                                   selection_origin[1]),
-                                                  pixel_to_projected_transform)
-            if (projection.srs.find("+proj=longlat") != -1):
-                # for longlat projection, apparently someone decided that since the projection
-                # is the identity, it might as well do something and so it returns the coordinates as
-                # radians instead of degrees; so here we avoid using the projection altogether
-                left_bottom_world = left_bottom_projected
-                right_top_world = right_top_projected
-            else:
-                left_bottom_world = projection(left_bottom_projected[0], left_bottom_projected[1], inverse=True)
-                right_top_world = projection(right_top_projected[0], right_top_projected[1], inverse=True)
-            image_world_rects_row.append((left_bottom_world, right_top_world))
-        images.append(images_row)
-        image_sizes.append(image_sizes_row)
-        image_world_rects.append(image_world_rects_row)
-
-    return ("",
-            images,
-            image_sizes,
-            image_world_rects,
-            projection)
+    return ("", image_data)
 
 
 def calculate_pixel_to_projected_transform(dataset):
