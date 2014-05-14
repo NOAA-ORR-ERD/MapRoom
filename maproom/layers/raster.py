@@ -33,6 +33,15 @@ class RasterLayer(ProjectedLayer):
     
     def has_alpha(self):
         return True
+    
+    def display_properties(self):
+        return ["Raster Size", "Memory Used"]
+    
+    def get_display_property(self, prop):
+        if prop == "Raster Size":
+            return "%dx%d" % (self.image_data.x, self.image_data.y)
+        elif prop == "Memory Used":
+            return "%sM" % (self.image_data.x * self.image_data.y * 4 / 1024 / 1024)
 
     def empty(self):
         """

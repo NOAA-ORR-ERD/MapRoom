@@ -147,6 +147,14 @@ class Properties_panel(wx.Panel):
                 elif field == "Alpha channel":
                     self.alpha_control = self.add_float_slider(field, layer.alpha, 0.0, 1.0, 100, self.alpha_changed, expand=wx.EXPAND)
 
+            for field in layer.display_properties():
+                label = wx.StaticText(self, label=field)
+                label.SetFont(bold_font)
+                self.sizer.Add(label, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
+                self.sizer.AddSpacer(self.LABEL_SPACING)
+
+                self.add_static_text_field(field, layer.get_display_property(field))
+
             self.sizer.Layout()
 
             # self.layer_name_control.SetSelection( -1, -1 )

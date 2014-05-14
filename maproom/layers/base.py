@@ -152,6 +152,12 @@ class Layer(HasTraits):
     
     def has_alpha(self):
         return False
+    
+    def display_properties(self):
+        return []
+    
+    def get_display_property(self, prop):
+        return ""
 
     def merge_from_source_layers(self, layer_a, layer_b):
         raise NotImplementedError
