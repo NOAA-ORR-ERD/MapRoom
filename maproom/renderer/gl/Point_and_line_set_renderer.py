@@ -16,7 +16,7 @@ class Point_and_line_set_renderer:
     )
     """
 
-    def __init__(self, opengl_renderer, points, point_colors, line_segment_indexes, line_segment_colors, projection, projection_is_identity):
+    def __init__(self, opengl_renderer, points, point_colors, line_segment_indexes, line_segment_colors, triangle_point_indexes, projection, projection_is_identity):
         """
             points = 2 x np.float32, i.e., "2f4"
             point_colors = np array of np.uint32, one per point
@@ -33,6 +33,7 @@ class Point_and_line_set_renderer:
         self.world_line_segment_points = None
         self.vbo_line_segment_point_xys = None
         self.vbo_line_segment_colors = None
+        self.vbo_triangle_point_indexes = None
 
         if (points == None or len(points) == 0):
             return
@@ -50,6 +51,9 @@ class Point_and_line_set_renderer:
         )
 
         self.build_line_segment_buffers(points, line_segment_indexes, line_segment_colors)
+
+        if triangle_point_indexes is not None:
+            self.build_triangle_buffers(points, triangle_point_indexes)
 
         self.reproject(points, projection, projection_is_identity)
 
@@ -80,6 +84,22 @@ class Point_and_line_set_renderer:
             self.vbo_line_segment_colors = gl_vbo.VBO(
                 segment_colors.view(dtype=np.uint8)
             )
+
+    def build_triangle_buffers(self, points, triangle_point_indexes):
+        """
+        projected_triangle_point_data = np.zeros(
+            ( len( points ), 2 ),
+            dtype = np.float32
+        )
+        self.vbo_triangle_point_xys = gl_vbo.VBO(
+            projected_triangle_point_data
+        )
+        """
+        self.vbo_triangle_point_indexes = gl_vbo.VBO(
+            triangle_point_indexes.view(np.uint32),
+            usage="GL_STATIC_DRAW",
+            target="GL_ELEMENT_ARRAY_BUFFER"
+        )
 
     def reproject(self, points, projection, projection_is_identity):
         if (points == None or len(points) == 0):
@@ -113,6 +133,8 @@ class Point_and_line_set_renderer:
                line_width,
                draw_points=True,
                draw_line_segments=True,
+               draw_triangles=True,
+               triangle_line_width=1,
                selected_point_indexes=[],
                flagged_point_indexes=[],
                selected_line_segment_indexes=[],
@@ -129,6 +151,9 @@ class Point_and_line_set_renderer:
         if draw_points:
             self.render_points(layer_index_base, pick_mode, point_size,
                                selected_point_indexes, flagged_point_indexes)
+
+        if draw_triangles and self.vbo_triangle_point_indexes is not None:
+            self.render_triangles(pick_mode, triangle_line_width)
 
     def render_selected_line_segments(self, line_width, selected_line_segment_indexes=[]):
         if (self.vbo_line_segment_point_xys != None and len(self.vbo_line_segment_point_xys.data) > 0):
@@ -241,6 +266,42 @@ class Point_and_line_set_renderer:
             self.vbo_line_segment_point_xys.unbind()
 
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+
+
+    def render_triangles(self, pick_mode, line_width):
+        if pick_mode:
+            return
+
+        # the line segments
+        if (self.vbo_triangle_point_indexes != None and len(self.vbo_triangle_point_indexes.data) > 0):
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+            self.vbo_point_xys.bind()
+            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            gl.glEnableClientState(gl.GL_INDEX_ARRAY)  # FIXME: deprecated
+            self.vbo_triangle_point_indexes.bind()
+
+            gl.glColor(0.5, 0.5, 0.5, 0.75)
+            # gl.glEnableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
+            # self.vbo_triangle_colors.bind()
+            # gl.glColorPointer( self.CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None ) # FIXME: deprecated
+
+            gl.glLineWidth(line_width)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+
+            # import code; code.interact( local = locals() )
+            gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
+            # gl.glDrawArrays( gl.GL_TRIANGLES, 0, np.alen( self.vbo_triangle_point_indexes ) )
+
+            gl.glColor(1, 1, 1, 1)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+            # gl.glDisableClientState( gl.GL_COLOR_ARRAY ) # FIXME: deprecated
+            # self.vbo_triangle_colors.unbind()
+            gl.glDisableClientState(gl.GL_INDEX_ARRAY)  # FIXME: deprecated
+            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+            self.vbo_triangle_point_indexes.unbind()
+            self.vbo_point_xys.unbind()
 
     def destroy(self):
         self.world_line_segment_points = None

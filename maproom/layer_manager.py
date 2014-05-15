@@ -13,7 +13,7 @@ from layer_undo import LayerUndo
 from layers import Layer, RootLayer, Grid, VectorLayer, RasterLayer, constants
 
 # Enthought library imports.
-from traits.api import HasTraits, Int, Any, List, Set, Bool, Event
+from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict
 from pyface.api import YES, NO, GUI
 
 
@@ -34,6 +34,13 @@ class LayerManager(LayerUndo):
     
     layers = List(Any)
     
+    # A mapping of a layer to all layers that are built from the layer,
+    # as if it were a parent/child relationship.  dependents[layer]
+    # yields another mapping of dependent layer type to actual layer,
+    # so dependents[layer]["triangles"] is another layer that is the
+    # triangulation of layer
+    dependents = Dict(Any)
+    
     batch = Bool
     
     events = List(Any)
@@ -49,7 +56,7 @@ class LayerManager(LayerUndo):
     # re-find duplicates in order to create a valid list again
     layer_contents_deleted = Event
     
-    layer_contents_triangulated = Event
+    layer_metadata_changed = Event
     
     projection_changed = Event
     
@@ -125,9 +132,10 @@ class LayerManager(LayerUndo):
             return "Layer type %s cannot be saved." % layer.type
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None):
         self.dispatch_event('layer_loaded', layer)
-        self.insert_layer(None, layer)
+        mi = self.get_insertion_multi_index(before, after)
+        self.insert_layer(mi, layer)
         if editor is not None:
             GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
     
@@ -142,6 +150,20 @@ class LayerManager(LayerUndo):
             else:
                 break
         return [pos]
+    
+    def get_insertion_multi_index(self, before=None, after=None):
+        if before is not None:
+            mi = self.get_multi_index_of_layer(before)
+            print mi
+            mi[-1] -= 1
+        elif after is not None:
+            mi = self.get_multi_index_of_layer(after)
+            print mi
+            mi[-1] += 1
+        else:
+            mi = None
+        print mi
+        return mi
 
     def insert_layer(self, at_multi_index, layer):
         if (at_multi_index == None or at_multi_index == []):
@@ -163,16 +185,21 @@ class LayerManager(LayerUndo):
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
 
     def remove_layer(self, at_multi_index):
-        self.remove_layer_recursive(at_multi_index, self.layers)
+        layer = self.remove_layer_recursive(at_multi_index, self.layers)
+        if layer in self.dependents:
+            # remove the parent/child relationship of dependent layers
+            del self.dependents[layer]
         self.dispatch_event('layers_changed')
 
     def remove_layer_recursive(self, at_multi_index, tree):
         index = at_multi_index[0]
         if (len(at_multi_index) == 1):
+            layer = tree[index]
             del tree[index]
+            return layer
         else:
             sublist = tree[index]
-            self.remove_layer_recursive(at_multi_index[1:], sublist)
+            return self.remove_layer_recursive(at_multi_index[1:], sublist)
 
     def get_layer_by_multi_index(self, at_multi_index):
         if (at_multi_index == []):
@@ -209,6 +236,21 @@ class LayerManager(LayerUndo):
                     return r
 
         return None
+    
+    def find_dependent_layer(self, layer, dependent_type):
+        if layer in self.dependents:
+            if dependent_type in self.dependents[layer]:
+                return self.dependents[layer][dependent_type]
+        return None
+    
+    def set_dependent_layer(self, layer, dependent_type, dependent_layer):
+        d = self.find_dependent_layer(layer, dependent_type)
+        if d is not None:
+            mi = self.get_multi_index_of_layer(d)
+            self.remove_layer(mi)
+        if layer not in self.dependents:
+            self.dependents[layer] = {}
+        self.dependents[layer][dependent_type] = dependent_layer
 
     def layer_is_folder(self, layer):
         return layer.type == "root" or layer.type == "folder"
@@ -313,13 +355,14 @@ class LayerManager(LayerUndo):
         for i, layer in enumerate(reversed(list)):
             layer.render(render_window, (length - 1 - i) * 10, pick_mode)
 
-    def add_layer(self, type=None, editor=None):
+    def add_layer(self, type=None, editor=None, before=None, after=None):
         if type is "grid":
             layer = Grid(manager=self)
         else:
             layer = VectorLayer(manager=self)
         layer.new()
-        self.insert_loaded_layer(layer, editor)
+        self.insert_loaded_layer(layer, editor, before, after)
+        return layer
 
     def add_folder(self, name="New Folder"):
         # FIXME: doesn't work, so menu/toolbar items are disabled

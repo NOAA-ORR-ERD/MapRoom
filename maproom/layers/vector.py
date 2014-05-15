@@ -35,8 +35,6 @@ class VectorLayer(ProjectedLayer):
     
     line_segment_indexes = Any
     
-    triangle_points = Any
-    
     triangles = Any
     
     polygons = Any
@@ -48,6 +46,21 @@ class VectorLayer(ProjectedLayer):
     default_depth = Float(1.0)
     
     depth_unit = Str("unknown")
+
+    def __str__(self):
+        try:
+            num_p = len(self.points)
+        except:
+            num_p = 0
+        try:
+            num_l = len(self.line_segment_indexes)
+        except:
+            num_l = 0
+        try:
+            num_t = len(self.triangles)
+        except:
+            num_t = 0
+        return "Layer %s: %d points, %d lines, %d triangles" % (self.name, num_p, num_l, num_t)
 
     def new(self):
         Layer.new(self)
@@ -174,33 +187,43 @@ class VectorLayer(ProjectedLayer):
              f_line_segment_indexes,
              self.depth_unit) = File_loader.load_verdat_file(file_path)
             if (self.load_error_string == ""):
-                self.type = ".verdat"
-                n = np.alen(f_points)
-                self.determine_layer_color()
-                self.points = self.make_points(n)
-                if (n > 0):
-                    self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
-                        0: n
-                    ] = f_points
-                    self.points.z[
-                        0: n
-                    ] = f_depths
-                    self.points.color = self.color
-                    self.points.state = 0
-
-                    n = np.alen(f_line_segment_indexes)
-                    self.line_segment_indexes = self.make_line_segment_indexes(n)
-                    self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
-                        0: n
-                    ] = f_line_segment_indexes
-                    self.line_segment_indexes.color = self.color
-                    self.line_segment_indexes.state = 0
+                self.set_data(f_points, f_depths, f_line_segment_indexes)
 
         else:
             self.load_error_string = "unknown vector file type %s" % file_type,
 
         if (self.load_error_string == ""):
             self.update_bounds()
+    
+    def set_data(self, f_points, f_depths, f_line_segment_indexes, f_triangles=None):
+        self.type = ".verdat"
+        n = np.alen(f_points)
+        self.determine_layer_color()
+        self.points = self.make_points(n)
+        if (n > 0):
+            self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
+                0: n
+            ] = f_points
+            self.points.z[
+                0: n
+            ] = f_depths
+            self.points.color = self.color
+            self.points.state = 0
+
+            n = np.alen(f_line_segment_indexes)
+            self.line_segment_indexes = self.make_line_segment_indexes(n)
+            self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
+                0: n
+            ] = f_line_segment_indexes
+            self.line_segment_indexes.color = self.color
+            self.line_segment_indexes.state = 0
+            
+            if f_triangles is not None:
+                n = len(f_triangles)
+                if n > 0:
+                    self.triangles = self.make_triangles(n)
+                    self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = f_triangles
+        print self
     
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)
@@ -290,7 +313,7 @@ class VectorLayer(ProjectedLayer):
                 Layer.next_default_color_index + 1
             ) % len(DEFAULT_COLORS)
 
-    def compute_bounding_rect_of_points(self, mark_type=STATE_NONE):
+    def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
 
         if (self.points != None and len(self.points) > 0):
@@ -302,18 +325,6 @@ class VectorLayer(ProjectedLayer):
             r = points.x.max()
             b = points.y.min()
             t = points.y.max()
-            bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
-
-        return bounds
-
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
-        bounds = self.compute_bounding_rect_of_points(mark_type)
-
-        if (self.triangle_points != None):
-            l = self.triangle_points.x.min()
-            r = self.triangle_points.x.max()
-            b = self.triangle_points.y.min()
-            t = self.triangle_points.y.max()
             bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
 
         return bounds
@@ -774,7 +785,7 @@ class VectorLayer(ProjectedLayer):
             self.manager.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
 
-    def triangulate(self, q, a):
+    def get_triangulated_points(self, q, a):
         # determine the boundaries in this layer
         self.determine_layer_color()
         (boundaries, non_boundary_points) = find_boundaries(
@@ -824,23 +835,25 @@ class VectorLayer(ProjectedLayer):
             self.points.z[: len(self.points)].copy(),
             self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(self.line_segment_indexes)].view(np.uint32).copy(),
             hole_points_xy)
+        return (triangle_points_xy,
+         triangle_points_z,
+         triangle_line_segment_indexes,
+         triangles)
 
-        self.triangle_points = self.make_points(len(triangle_points_xy))
-        self.triangle_points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
-            0: len(triangle_points_xy)
-        ] = triangle_points_xy
-        self.triangle_points[0: len(triangle_points_xy)].z = triangle_points_z
-        self.triangle_points.color = self.color
-
-        # now un-project the points
+    def unproject_triangle_points(self, points):
         if (not self.manager.project.control.projection_is_identity):
             # import code; code.interact( local = locals() )
-            self.triangle_points.x, self.triangle_points.y = self.manager.project.control.projection(self.triangle_points.x, self.triangle_points.y, inverse=True)
+            points.x, points.y = self.manager.project.control.projection(points.x, points.y, inverse=True)
+    
+    def triangulate_from_data(self, points, depths, lines, triangles):
+        self.set_data(points, depths, lines, triangles)
+        self.unproject_triangle_points(self.points)
+        self.manager.dispatch_event('layer_contents_changed', self)
+        self.manager.dispatch_event('layer_metadata_changed', self)
 
-        self.triangles = self.make_triangles(len(triangles))
-        self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = triangles
-
-        self.manager.dispatch_event('layer_contents_triangulated', self)
+    def triangulate_from_layer(self, parent_layer, q, a):
+        points, depths, lines, triangles = parent_layer.get_triangulated_points(q, a)
+        self.triangulate_from_data(points, depths, lines, triangles)
 
     def merge_from_source_layers(self, layer_a, layer_b):
         # for now we only handle merging of points and lines
@@ -989,9 +1002,6 @@ class VectorLayer(ProjectedLayer):
         other views of this layer.
         
         """
-        if self.triangle_points != None and renderer.triangle_set_renderer == None:
-            renderer.rebuild_triangle_set_renderer(self)
-
         if self.points != None and renderer.point_and_line_set_renderer == None:
             if (self.line_segment_indexes == None):
                 self.line_segment_indexes = self.make_line_segment_indexes(0)
@@ -1016,12 +1026,6 @@ class VectorLayer(ProjectedLayer):
                                              color_to_int(0, 0, 0, 1.0),
                                              1)  # , self.get_selected_polygon_indexes()
 
-        # the triangle points and triangle line segments
-        if (renderer.triangle_set_renderer != None and layer_visibility["triangles"]):
-            renderer.triangle_set_renderer .render(pick_mode,
-                                               self.point_size + 10,
-                                               self.triangle_line_width)
-
         # the points and line segments
         if (renderer.point_and_line_set_renderer != None):
             renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
@@ -1030,6 +1034,8 @@ class VectorLayer(ProjectedLayer):
                                                     self.line_width,
                                                     layer_visibility["points"],
                                                     layer_visibility["lines"],
+                                                    layer_visibility["triangles"],
+                                                    self.triangle_line_width,
                                                     self.get_selected_point_indexes(),
                                                     self.get_selected_point_indexes(STATE_FLAGGED),
                                                     self.get_selected_line_segment_indexes(),

@@ -3,7 +3,6 @@ import time
 import sys
 import numpy as np
 import Point_and_line_set_renderer
-import Triangle_set_renderer
 import Polygon_set_renderer
 import Label_set_renderer
 import Image_set_renderer
@@ -46,7 +45,6 @@ class LayerRenderer(object):
         self.canvas = canvas
 
         self.point_and_line_set_renderer = None
-        self.triangle_set_renderer = None
         self.label_set_renderer = None
         self.polygon_set_renderer = None
         self.image_set_renderer = None
@@ -74,18 +72,6 @@ class LayerRenderer(object):
         if (layer.points != None and self.label_set_renderer == None):
             self.label_set_renderer = Label_set_renderer.Label_set_renderer(self.canvas.opengl_renderer, self.MAX_LABEL_CHARACTERS)
 
-    def rebuild_triangle_set_renderer(self, layer):
-        if self.triangle_set_renderer:
-            self.triangle_set_renderer.destroy()
-
-        self.triangle_set_renderer = Triangle_set_renderer.Triangle_set_renderer(
-            self.canvas.opengl_renderer,
-            layer.triangle_points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
-            layer.triangle_points.color.copy().view(dtype=np.uint8),
-            layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes,
-            self.canvas.projection,
-            self.canvas.projection_is_identity)
-
     def rebuild_point_and_line_set_renderer(self, layer, create=False):
         if self.point_and_line_set_renderer:
             create = True
@@ -93,12 +79,17 @@ class LayerRenderer(object):
 
         t0 = time.clock()
         if create:
+            if layer.triangles is None:
+                triangles = None
+            else:
+                triangles = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
             self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
                 self.canvas.opengl_renderer,
                 layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
                 layer.points.color.copy().view(dtype=np.uint8),
                 layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"],
                 layer.line_segment_indexes.color,
+                triangles,
                 self.canvas.projection,
                 self.canvas.projection_is_identity)
 
