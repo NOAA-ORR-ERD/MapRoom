@@ -81,7 +81,7 @@ class Properties_panel(wx.Panel):
                 else:
                     fields.extend(["Layer name"])
                     if layer.has_alpha():
-                        fields.extend(["Alpha channel"])
+                        fields.extend(["Transparency"])
                     if layer.has_points():
                         fields.extend(["Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
 
@@ -147,8 +147,8 @@ class Properties_panel(wx.Panel):
                     prefs = self.project.task.get_preferences()
                     coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
                     self.point_coord_control = self.add_text_field(field, coords_text, self.point_coords_changed, expand=wx.EXPAND)
-                elif field == "Alpha channel":
-                    self.alpha_control = self.add_float_slider(field, layer.alpha, 0.0, 1.0, 100, self.alpha_changed, expand=wx.EXPAND)
+                elif field == "Transparency":
+                    self.alpha_control = self.add_float_slider(field, int((1.0 - layer.alpha) * 100), 0, 100, 100, self.alpha_changed, expand=wx.EXPAND)
 
             for field in layer.display_properties():
                 label = wx.StaticText(self, label=field)
@@ -299,7 +299,8 @@ class Properties_panel(wx.Panel):
         refresh = False
         c = self.alpha_control
         try:
-            layer.alpha = float(c.GetValue())
+            val = 100 - int(c.GetValue())
+            layer.alpha = float(val) / 100.0
             c.textCtrl.SetBackgroundColour("#FFFFFF")
             refresh = True
         except Exception as e:
