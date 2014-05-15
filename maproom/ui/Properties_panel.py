@@ -117,6 +117,9 @@ class Properties_panel(wx.Panel):
                 elif (field == "Line segment count"):
                     if (layer.line_segment_indexes != None):
                         self.add_static_text_field(field, str(len(layer.line_segment_indexes)))
+                elif (field == "Triangle count"):
+                    if (layer.triangles != None):
+                        self.add_static_text_field(field, str(len(layer.triangles)))
                 elif (field == "Selected points"):
                     self.add_static_text_field(field, str(layer.get_num_points_selected()))
                 elif (field == "Flagged points"):
