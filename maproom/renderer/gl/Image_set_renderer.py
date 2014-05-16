@@ -165,3 +165,6 @@ class Image_set_renderer:
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+
+    def destroy(self):
+        self.image_textures.destroy()

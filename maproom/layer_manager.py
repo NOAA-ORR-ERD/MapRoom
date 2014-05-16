@@ -399,6 +399,8 @@ class LayerManager(LayerUndo):
             for index in mi[0: -1]:
                 l = l[index]
             del l[mi[-1]]
+        
+        self.project.control.remove_renderer_for_layer(layer)
 
         self.dispatch_event('layers_changed')
     

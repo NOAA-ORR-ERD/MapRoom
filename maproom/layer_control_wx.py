@@ -126,6 +126,10 @@ class LayerControl(glcanvas.GLCanvas):
                 r = renderer.LayerRenderer(self)
                 self.layer_renderers[layer] = r
                 layer.create_renderer(r)
+    
+    def remove_renderer_for_layer(self, layer):
+        if layer in self.layer_renderers:
+            del self.layer_renderers[layer]
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
