@@ -425,7 +425,7 @@ class ProjectEditor(FrameworkEditor):
                 else:
                     layer.select_point(point_index)
             elif (layer.is_point_selected(point_index)):
-                pass
+                layer.clear_all_selections()
             elif (event.ShiftDown()):
                 path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
                 if (path != []):
