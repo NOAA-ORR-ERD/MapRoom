@@ -323,6 +323,14 @@ class FindPointsAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.control.do_find_points)
 
+class CheckLayerErrorAction(EditorAction):
+    name = 'Check For Errors'
+    enabled_name = 'layer_selected'
+    tooltip = 'Check for valid layer construction'
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.check_for_errors)
+
 
 @provides(IAbout)
 class MaproomProjectTask(FrameworkTask):
@@ -468,6 +476,8 @@ class MaproomProjectTask(FrameworkTask):
                   AddPointsAction(),
                   AddLinesAction(),
                   id="modegroup"),
+            Group(CheckLayerErrorAction(),
+                  id="checkgroup"),
             id="layermenu")
         editmenu = lambda: Group(
             Group(ClearSelectionAction(),

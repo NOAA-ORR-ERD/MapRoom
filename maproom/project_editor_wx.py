@@ -581,3 +581,7 @@ class ProjectEditor(FrameworkEditor):
 
     def zoom_to_layer(self, layer):
         self.control.zoom_to_world_rect(layer.bounds)
+    
+    def check_for_errors(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        sel_layer.check_for_errors(self.window)

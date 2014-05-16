@@ -85,6 +85,9 @@ class Layer(HasTraits):
     
     def save_to_file(self, file_path):
         raise NotImplementedError
+    
+    def check_for_errors(self, window):
+        pass
 
     def get_visibility_dict(self):
         d = dict()

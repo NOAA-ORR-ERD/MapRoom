@@ -269,6 +269,19 @@ class VectorLayer(ProjectedLayer):
                 print traceback.format_exc(e)
         return error
 
+    def check_for_errors(self, window):
+        if self.type in ["", ".verdat"]:
+            try:
+                verdat.check_valid_verdat(self)
+                window.information("This file is a valid verdat file.", "No Errors Found")
+            except Exception, e:
+                if hasattr(e, "points") and e.points != None:
+                    self.clear_all_selections(STATE_FLAGGED)
+                    for p in e.points:
+                        self.select_point(p, STATE_FLAGGED)
+                self.manager.dispatch_event('refresh_needed')
+                window.error(e.message, "Verdat File Contains Errors")
+
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()
 
