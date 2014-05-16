@@ -504,10 +504,6 @@ class LayerControl(glcanvas.GLCanvas):
             for layer in self.layer_renderers.keys():
                 print "  layer: %s" % layer
 
-    def rebuild_triangles_for_layer(self, layer):
-        if layer in self.layer_renderers:
-            self.layer_renderers[layer].rebuild_triangle_set_renderer(layer)
-
     def resize_render_pane(self, event):
         if not self.GetContext():
             return
