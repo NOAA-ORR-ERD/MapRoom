@@ -14,7 +14,7 @@ from peppy2.framework.task import FrameworkTask
 from peppy2.framework.i_about import IAbout
 
 from project_editor import ProjectEditor
-from panes import LayerSelectionPane, LayerInfoPane
+from panes import LayerSelectionPane, LayerInfoPane, SelectionInfoPane
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 
@@ -400,12 +400,13 @@ class MaproomProjectTask(FrameworkTask):
             left=VSplitter(
                 PaneItem('maproom.layer_selection_pane'),
                 PaneItem('maproom.layer_info_pane'),
+                PaneItem('maproom.selection_info_pane'),
                 ))
 
     def create_dock_panes(self):
         """ Create the file browser and connect to its double click event.
         """
-        return [ LayerSelectionPane(), LayerInfoPane() ]
+        return [ LayerSelectionPane(), LayerInfoPane(), SelectionInfoPane() ]
 
     def _tool_bars_default(self):
         toolbars = [

@@ -6,7 +6,7 @@ from ..library import coordinates
 from ..layer_undo import *
 from ..ui import sliders
 
-class Properties_panel(wx.Panel):
+class InfoPanel(wx.Panel):
 
     """
     A panel for displaying and manipulating the properties of a layer.
@@ -55,6 +55,10 @@ class Properties_panel(wx.Panel):
         if (layer != None):
             self.current_layer_change_count = layer.change_count
 
+        fields = self.get_visible_fields(layer)
+        self.display_fields(layer, fields)
+
+    def display_fields(self, layer, fields):
         self.layer_name_control = None
         self.depth_unit_control = None
         self.default_depth_control = None
@@ -63,93 +67,75 @@ class Properties_panel(wx.Panel):
         self.Freeze()
         self.sizer.Clear(True)
 
-        if (layer != None and layer.type != "root"):
-            bold_font = self.GetFont()
-            bold_font.SetWeight(weight=wx.FONTWEIGHT_BOLD)
+        bold_font = self.GetFont()
+        bold_font.SetWeight(weight=wx.FONTWEIGHT_BOLD)
 
-            fields = []
-            if (layer.type == "folder"):
-                fields = ["Folder name"]
-
-            elif (layer.type == ".bna"):
-                fields.extend(["Layer name", "Polygon count"])
-            else:
-                if layer.has_points() and layer.get_num_points_selected() > 0:
-                    fields.extend(["Depth unit",  "Selected points", "Point depth"])
-                    if layer.get_num_points_selected() == 1:
-                        fields.extend(["Point coordinates"])
-                else:
-                    fields.extend(["Layer name"])
-                    if layer.has_alpha():
-                        fields.extend(["Transparency"])
-                    if layer.has_points():
-                        fields.extend(["Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
-
-            self.sizer.AddSpacer(self.LABEL_SPACING)
-            layer_name_control = None
-            for field in fields:
-                if layer.has_points():
-                    if (field == "Triangle count" and layer.triangles == None):
+        self.sizer.AddSpacer(self.LABEL_SPACING)
+        layer_name_control = None
+        for field in fields:
+            if layer.has_points():
+                if (field == "Triangle count" and layer.triangles == None):
+                    continue
+                if (field == "Selected points" or field == "Point depth"):
+                    if (layer.get_num_points_selected() == 0):
                         continue
-                    if (field == "Selected points" or field == "Point depth"):
-                        if (layer.get_num_points_selected() == 0):
-                            continue
-                    if (field == "Flagged points"):
-                        if (layer.get_num_points_selected(constants.STATE_FLAGGED) == 0):
-                            continue
-                label = wx.StaticText(self, label=field)
-                label.SetFont(bold_font)
-                self.sizer.Add(label, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
-                self.sizer.AddSpacer(self.LABEL_SPACING)
+                if (field == "Flagged points"):
+                    if (layer.get_num_points_selected(constants.STATE_FLAGGED) == 0):
+                        continue
+            label = wx.StaticText(self, label=field)
+            label.SetFont(bold_font)
+            self.sizer.Add(label, 0, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.SIDE_SPACING)
+            self.sizer.AddSpacer(self.LABEL_SPACING)
 
-                if (field == "Layer name" or field == "Folder name"):
-                    self.layer_name_control = self.add_text_field(field, layer.name, self.layer_name_changed, wx.EXPAND)
-                if field == "Depth unit":
-                    if layer.get_num_points_selected() > 0:
-                        self.add_static_text_field(field, layer.depth_unit)
-                    else:
-                        self.depth_unit_control = self.add_drop_down(field, ["meters", "feet", "fathoms", "unknown"], layer.depth_unit, self.depth_unit_changed)
-                elif (field == "Default depth"):
-                    self.default_depth_control = self.add_text_field(field, str(layer.default_depth), self.default_depth_changed)
-                elif (field == "Point count"):
-                    if (layer.points != None):
-                        self.add_static_text_field(field, str(len(layer.points)))
-                elif (field == "Line segment count"):
-                    if (layer.line_segment_indexes != None):
-                        self.add_static_text_field(field, str(len(layer.line_segment_indexes)))
-                elif (field == "Triangle count"):
-                    if (layer.triangles != None):
-                        self.add_static_text_field(field, str(len(layer.triangles)))
-                elif (field == "Selected points"):
-                    self.add_static_text_field(field, str(layer.get_num_points_selected()))
-                elif (field == "Flagged points"):
-                    self.add_static_text_field(field, str(layer.get_num_points_selected(constants.STATE_FLAGGED)))
-                elif (field == "Point depth"):
-                    conflict = False
-                    depth = -1
-                    selected_point_indexes = layer.get_selected_point_indexes()
-                    for i in selected_point_indexes:
-                        d = layer.points.z[i]
-                        if (d != depth):
-                            if (depth != -1):
-                                conflict = True
-                                break
-                            else:
-                                depth = d
-                    s = ""
-                    if (not conflict):
-                        s = str(depth)
-                    self.point_depth_control = self.add_text_field(field, s, self.point_depth_changed)
-                    self.point_depth_control.SetSelection(-1, -1)
-                    self.point_depth_control.SetFocus()
-                elif field == "Point coordinates":
-                    index = layer.get_selected_point_indexes()[0]
-                    prefs = self.project.task.get_preferences()
-                    coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
-                    self.point_coord_control = self.add_text_field(field, coords_text, self.point_coords_changed, expand=wx.EXPAND)
-                elif field == "Transparency":
-                    self.alpha_control = self.add_float_slider(field, int((1.0 - layer.alpha) * 100), 0, 100, 100, self.alpha_changed, expand=wx.EXPAND)
+            if (field == "Layer name" or field == "Folder name"):
+                self.layer_name_control = self.add_text_field(field, layer.name, self.layer_name_changed, wx.EXPAND)
+            if field == "Depth unit":
+                if layer.get_num_points_selected() > 0:
+                    self.add_static_text_field(field, layer.depth_unit)
+                else:
+                    self.depth_unit_control = self.add_drop_down(field, ["meters", "feet", "fathoms", "unknown"], layer.depth_unit, self.depth_unit_changed)
+            elif (field == "Default depth"):
+                self.default_depth_control = self.add_text_field(field, str(layer.default_depth), self.default_depth_changed)
+            elif (field == "Point count"):
+                if (layer.points != None):
+                    self.add_static_text_field(field, str(len(layer.points)))
+            elif (field == "Line segment count"):
+                if (layer.line_segment_indexes != None):
+                    self.add_static_text_field(field, str(len(layer.line_segment_indexes)))
+            elif (field == "Triangle count"):
+                if (layer.triangles != None):
+                    self.add_static_text_field(field, str(len(layer.triangles)))
+            elif (field == "Selected points"):
+                self.add_static_text_field(field, str(layer.get_num_points_selected()))
+            elif (field == "Flagged points"):
+                self.add_static_text_field(field, str(layer.get_num_points_selected(constants.STATE_FLAGGED)))
+            elif (field == "Point depth"):
+                conflict = False
+                depth = -1
+                selected_point_indexes = layer.get_selected_point_indexes()
+                for i in selected_point_indexes:
+                    d = layer.points.z[i]
+                    if (d != depth):
+                        if (depth != -1):
+                            conflict = True
+                            break
+                        else:
+                            depth = d
+                s = ""
+                if (not conflict):
+                    s = str(depth)
+                self.point_depth_control = self.add_text_field(field, s, self.point_depth_changed)
+                self.point_depth_control.SetSelection(-1, -1)
+                self.point_depth_control.SetFocus()
+            elif field == "Point coordinates":
+                index = layer.get_selected_point_indexes()[0]
+                prefs = self.project.task.get_preferences()
+                coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
+                self.point_coord_control = self.add_text_field(field, coords_text, self.point_coords_changed, expand=wx.EXPAND)
+            elif field == "Transparency":
+                self.alpha_control = self.add_float_slider(field, int((1.0 - layer.alpha) * 100), 0, 100, 100, self.alpha_changed, expand=wx.EXPAND)
 
+        if (layer != None):
             for field in layer.display_properties():
                 label = wx.StaticText(self, label=field)
                 label.SetFont(bold_font)
@@ -158,10 +144,10 @@ class Properties_panel(wx.Panel):
 
                 self.add_static_text_field(field, layer.get_display_property(field))
 
-            self.sizer.Layout()
+        self.sizer.Layout()
 
-            # self.layer_name_control.SetSelection( -1, -1 )
-            # self.layer_name_control.SetFocus()
+        # self.layer_name_control.SetSelection( -1, -1 )
+        # self.layer_name_control.SetFocus()
 
         self.Thaw()
         self.Update()
@@ -308,3 +294,32 @@ class Properties_panel(wx.Panel):
         
         if refresh:
             self.project.refresh()
+
+class LayerInfoPanel(InfoPanel):
+    def get_visible_fields(self, layer):
+        fields = []
+
+        if (layer != None and layer.type != "root"):
+            if (layer.type == "folder"):
+                fields = ["Folder name"]
+
+            elif (layer.type == ".bna"):
+                fields.extend(["Layer name", "Polygon count"])
+            else:
+                fields.extend(["Layer name"])
+                if layer.has_alpha():
+                    fields.extend(["Transparency"])
+                if layer.has_points():
+                    fields.extend(["Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
+        return fields
+
+class SelectionInfoPanel(InfoPanel):
+    def get_visible_fields(self, layer):
+        fields = []
+
+        if (layer != None and layer.type != "root"):
+            if layer.has_points() and layer.get_num_points_selected() > 0:
+                fields.extend(["Selected points", "Point depth"])
+                if layer.get_num_points_selected() == 1:
+                    fields.extend(["Point coordinates"])
+        return fields
