@@ -329,7 +329,7 @@ class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
     
-    id = 'maproom.project'
+    id = 'maproom.project.v2'
     
     new_file_text = 'MapRoom Project'
 
