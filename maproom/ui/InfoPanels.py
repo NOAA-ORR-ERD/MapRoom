@@ -90,10 +90,7 @@ class InfoPanel(wx.Panel):
             if (field == "Layer name" or field == "Folder name"):
                 self.layer_name_control = self.add_text_field(field, layer.name, self.layer_name_changed, wx.EXPAND)
             if field == "Depth unit":
-                if layer.get_num_points_selected() > 0:
-                    self.add_static_text_field(field, layer.depth_unit)
-                else:
-                    self.depth_unit_control = self.add_drop_down(field, ["meters", "feet", "fathoms", "unknown"], layer.depth_unit, self.depth_unit_changed)
+                self.depth_unit_control = self.add_drop_down(field, ["meters", "feet", "fathoms", "unknown"], layer.depth_unit, self.depth_unit_changed)
             elif (field == "Default depth"):
                 self.default_depth_control = self.add_text_field(field, str(layer.default_depth), self.default_depth_changed)
             elif (field == "Point count"):
