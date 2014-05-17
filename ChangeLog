@@ -1,3 +1,20 @@
+05/17/2014
+---------------------------
+Released 3.0b6
+- RM Remove triangulated layer on failure if it didn't exist before
+- RM Added layer removal by specifying layer
+- RM Fixed delete selection action so selected lines are able to be deleted
+- RM Added menu item to check verdat layer for errors
+- RM Depth unit appears as dropdown regardless if points selected
+- RM Changed task id to force new window layout
+- RM Added 3rd pane to display selection info
+- RM New feature: clicking on selected point deselects in point edit mode
+- RM Fixed memory leak when deleting layers
+- RM Removed reference to triangle set renderer
+- RM Changed image alpha label to "Transparency"
+- RM Triangles now created as separate layer
+- RM Fixed triangle count in properties panel
+
 05/14/2014
 ---------------------------
 Released 3.0b5
