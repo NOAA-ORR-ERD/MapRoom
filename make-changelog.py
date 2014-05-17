@@ -11,6 +11,9 @@ module=None
 
 dateformat = "%m/%d/%Y"
 
+versionre = "([0-9]+(\.[0-9]+)+([ab][0-9]+)?)"
+versionre = "(([0-9]+)\.([0-9]+)(?:\.([0-9]+))?(([ab])([0-9]+))?)"
+
 def findLatestChangeLogVersion(options):
     fh = open("ChangeLog")
     release_date = None
@@ -23,7 +26,7 @@ def findLatestChangeLogVersion(options):
                 if options.verbose: print 'found date %s' % match.group(1)
                 release_date = date.fromtimestamp(time.mktime(time.strptime(match.group(1),'%m/%d/%Y'))).strftime(dateformat)
         else:
-            match = re.match('[Rr]eleased ([0-9]+(\.[0-9]+)+)',line)
+            match = re.match('[Rr]eleased %s' % versionre,line)
             if match:
                 if options.verbose: print 'found version %s' % match.group(1)
                 version = match.group(1)
@@ -46,7 +49,7 @@ def findChangeLogVersionForGit(options):
         if match:
             if options.verbose: print 'found date %s' % match.group(1)
             release_date = date.fromtimestamp(time.mktime(time.strptime(match.group(1),'%Y-%m-%d'))).strftime(dateformat)
-        match = re.match('\s+\*\s*[Rr]eleased peppy-([0-9]+\.[0-9]+(?:\.[0-9]+)?) \"(.+)\"',line)
+        match = re.match('\s+\*\s*[Rr]eleased ([0-9]+\.[0-9]+(?:\.[0-9]+)?) \"(.+)\"',line)
         if match:
             if options.verbose: print 'found version %s' % match.group(1)
             version = match.group(1)
@@ -61,13 +64,29 @@ def findLatestInGit(options):
     version = StrictVersion("0.0")
     tags = subprocess.Popen(["git", "tag", "-l"], stdout=subprocess.PIPE).communicate()[0]
     for tag in tags.splitlines():
-        match = re.match(r'([0-9]+\.[0-9]+(?:(?:\.[0-9]+|[ab][0-9]+))?)$', tag)
+        match = re.match(r'%s$' % versionre, tag)
         if match:
             found = StrictVersion(match.group(1))
             if found > version:
                 version = found
             if options.verbose: print "found %s, latest = %s" % (found, version)
     return str(version)
+
+def next_version(tagged_version):
+    t = tagged_version.split(".")
+    print t
+    last = t[-1]
+    try:
+        last = str(int(last) + 1)
+    except ValueError:
+        for i in range(0, len(last) - 1):
+            try:
+                last = last[0:i+1] + str(int(last[i+1:]) + 1)
+                break
+            except ValueError:
+                pass
+    t[-1] = last
+    return ".".join(t)
 
 def getCurrentGitMD5s(tag, options):
     text = subprocess.Popen(["git", "rev-list", "%s..HEAD" % tag], stdout=subprocess.PIPE).communicate()[0]
@@ -165,9 +184,7 @@ if __name__=='__main__':
         print tagged_version
         sys.exit()
     if options.next_version:
-        t = tagged_version.split(".")
-        t[-1] = str(int(t[-1]) + 1)
-        print ".".join(t)
+        print next_version(tagged_version)
         sys.exit()
     
     version, latest_date, versions = findLatestChangeLogVersion(options)
