@@ -184,7 +184,11 @@ class LayerManager(LayerUndo):
             item = tree[at_multi_index[0]]
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
 
-    def remove_layer(self, at_multi_index):
+    def remove_layer(self, layer):
+        mi = self.get_multi_index_of_layer(layer)
+        self.remove_layer_at_multi_index(mi)
+
+    def remove_layer_at_multi_index(self, at_multi_index):
         layer = self.remove_layer_recursive(at_multi_index, self.layers)
         if layer in self.dependents:
             # remove the parent/child relationship of dependent layers
@@ -246,8 +250,7 @@ class LayerManager(LayerUndo):
     def set_dependent_layer(self, layer, dependent_type, dependent_layer):
         d = self.find_dependent_layer(layer, dependent_type)
         if d is not None:
-            mi = self.get_multi_index_of_layer(d)
-            self.remove_layer(mi)
+            self.remove_layer(d)
         if layer not in self.dependents:
             self.dependents[layer] = {}
         self.dependents[layer][dependent_type] = dependent_layer
@@ -463,13 +466,13 @@ def test():
 
     """
     print "removing a"
-    lm.remove_layer( [ 0, 0 ] )
+    lm.remove_layer_at_multi_index( [ 0, 0 ] )
     print lm.layers
     print "removing d"
-    lm.remove_layer( [ 1, 1, 0 ] )
+    lm.remove_layer_at_multi_index( [ 1, 1, 0 ] )
     print lm.layers
     print "removing e"
-    lm.remove_layer( [ 1, 1, 0 ] )
+    lm.remove_layer_at_multi_index( [ 1, 1, 0 ] )
     print lm.layers
     """
 

@@ -237,7 +237,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
             self.project.window.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
             return
 
-        lm.remove_layer(mi_source)
+        lm.remove_layer_at_multi_index(mi_source)
 
         # re-get the multi_index for the target, because it may have changed when the layer was removed
         mi_target = lm.get_multi_index_of_layer(target_layer)
@@ -271,7 +271,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         # here we "re-get" the source layer so that if it's a folder layer what we'll get is the
         # folder's list, not just the folder pseudo-layer
         source_layer = lm.get_layer_by_multi_index(mi_source)
-        lm.remove_layer(mi_source)
+        lm.remove_layer_at_multi_index(mi_source)
         lm.insert_layer(mi_target, source_layer)
         self.project.esc_key_pressed()
         self.select_layer(layer)
