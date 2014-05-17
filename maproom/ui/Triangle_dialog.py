@@ -141,10 +141,15 @@ class Triangle_dialog(wx.Dialog):
             t_layer = self.project.layer_manager.add_layer("vector", after=layer)
             self.project.layer_manager.set_dependent_layer(layer, "triangles", t_layer)
             t_layer.name = "Triangulated %s" % layer.name
+            remove_on_failure = True
+        else:
+            remove_on_failure = False
         try:
             t_layer.triangulate_from_layer(layer, q, a)
         except Exception as e:
             print traceback.format_exc(e)
+            if remove_on_failure:
+                self.project.layer_manager.remove_layer(t_layer)
             wx.MessageBox(e.message, "Triangulate Error")
 
         self.project.refresh()
