@@ -464,7 +464,7 @@ class VectorLayer(ProjectedLayer):
         return np.where((self.polygons.state & mark_type) != 0)[0]
 
     def get_num_points_selected(self, mark_type=STATE_SELECTED):
-        return len(self.get_selected_point_indexes(mark_type))
+        return len(self.get_selected_point_plus_line_point_indexes(mark_type))
 
     def get_all_line_point_indexes(self):
         indexes = np.arange(0)
