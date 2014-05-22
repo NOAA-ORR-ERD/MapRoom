@@ -35,6 +35,9 @@ def main(argv):
 
     plugins = [ MaproomPlugin() ]
     
+    import maproom.file_type
+    plugins.extend(maproom.file_type.plugins)
+    
     import maproom
     image_path = [get_image_path("icons", maproom)]
     run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task="maproom.project.v2")

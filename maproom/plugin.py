@@ -30,7 +30,6 @@ class MaproomPlugin(FrameworkPlugin):
 
     task_factories = List(contributes_to=TASK_FACTORIES)
     preferences_panes = List(contributes_to=PREFERENCES_PANES)
-    recognizer = List(contributes_to='peppy2.file_recognizer')
 
     ###########################################################################
     # Protected interface.
@@ -46,11 +45,6 @@ class MaproomPlugin(FrameworkPlugin):
                 MaproomProjectTask,
             ])
 
-    def _recognizer_default(self):
-        from maproom.file_type.text import VerdatRecognizer, BNARecognizer
-        from maproom.file_type.image import GDALRecognizer
-        return [VerdatRecognizer(), BNARecognizer(), GDALRecognizer()]
-    
     def start(self):
         from maproom.task import MaproomProjectTask
         dummy = MaproomProjectTask()
