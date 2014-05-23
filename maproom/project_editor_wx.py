@@ -550,7 +550,7 @@ class ProjectEditor(FrameworkEditor):
         (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
 
-        s_p_i_s = layer.get_selected_point_plus_line_point_indexes()
+        s_p_i_s = layer.get_selected_and_dependent_point_indexes()
         for point_index in s_p_i_s:
             params = (world_d_x, world_d_y)
             self.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)

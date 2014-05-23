@@ -190,6 +190,14 @@ class PointLayer(ProjectedLayer):
         #
         return np.where((self.points.state & mark_type) != 0)[0]
 
+    def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
+        """Get all points from selected objects.
+        
+        Subclasses should override to provide a list of points that are
+        implicitly selected by an object being selected.
+        """
+        return self.get_selected_point_indexes(mark_type)
+
     def get_num_points_selected(self, mark_type=STATE_SELECTED):
         return len(self.get_selected_point_indexes(mark_type))
 
@@ -451,7 +459,7 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.state[indexes] ^= mark_type
         self.increment_change_count()
 
-    def get_selected_point_plus_line_point_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
         indexes = np.arange(0)
         if (self.points != None):
             indexes = np.append(indexes, self.get_selected_point_indexes(mark_type))
@@ -463,7 +471,7 @@ class LineLayer(PointLayer):
         return np.unique(indexes)
 
     def get_num_points_selected(self, mark_type=STATE_SELECTED):
-        return len(self.get_selected_point_plus_line_point_indexes(mark_type))
+        return len(self.get_selected_and_dependent_point_indexes(mark_type))
 
     def get_selected_line_segment_indexes(self, mark_type=STATE_SELECTED):
         if (self.line_segment_indexes == None):
@@ -570,7 +578,7 @@ class LineLayer(PointLayer):
     def offset_selected_points(self, world_d_x, world_d_y):
         if (self.points != None):
             # offset our own copy of the points (which automatically updates our own line segments)
-            s_p_i_s = self.get_selected_point_plus_line_point_indexes()
+            s_p_i_s = self.get_selected_and_dependent_point_indexes()
             for point_index in s_p_i_s:
                 self.offset_point(point_index, world_d_x, world_d_y, True)
             # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
