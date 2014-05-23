@@ -5,14 +5,41 @@ from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import find_boundaries
 from maproom.library.Shape import points_outside_polygon
 
+from common import PointsError
+from maproom.layers import LineLayer
+
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-class Verdat_save_error(Exception):
-
-    def __init__(self, message, points=None):
-        Exception.__init__(self, message)
-        self.points = points
+class VerdatLoader(object):
+    mime = "application/x-maproom-verdat"
+    
+    def can_load(self, metadata):
+        return metadata.mime == self.mime
+    
+    def load(self, metadata, manager):
+        layer = LineLayer(manager=manager)
+        
+        (layer.load_error_string,
+         f_points,
+         f_depths,
+         f_line_segment_indexes,
+         layer.depth_unit) = load_verdat_file(metadata.uri)
+        if (layer.load_error_string == ""):
+            layer.set_data(f_points, f_depths, f_line_segment_indexes)
+            layer.file_path = metadata.uri
+            layer.name = os.path.split(layer.file_path)[1]
+            layer.mime = self.mime
+        return layer
+    
+    def can_save(self, layer):
+        return layer.type == "line"
+    
+    def check(self, layer):
+        check_valid_verdat(layer)
+    
+    def save_to_file(self, f, layer):
+        return write_layer_as_verdat(f, layer)
 
 
 def load_verdat_file(file_path):
@@ -131,7 +158,7 @@ def do_boundaries_check(points, boundaries, non_boundary_points):
         )
 
         if len(outside_point_indices) > 0:
-            raise Verdat_save_error(
+            raise PointsError(
                 "Points occur outside of the Verdat boundary.",
                 points=tuple(outside_point_indices)
             )

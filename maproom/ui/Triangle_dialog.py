@@ -138,7 +138,7 @@ class Triangle_dialog(wx.Dialog):
 
         t_layer = self.project.layer_manager.find_dependent_layer(layer, "triangles")
         if t_layer is None:
-            t_layer = self.project.layer_manager.add_layer("vector", after=layer)
+            t_layer = self.project.layer_manager.add_layer("triangle", after=layer)
             self.project.layer_manager.set_dependent_layer(layer, "triangles", t_layer)
             t_layer.name = "Triangulated %s" % layer.name
             remove_on_failure = True

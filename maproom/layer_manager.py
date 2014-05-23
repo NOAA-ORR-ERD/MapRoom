@@ -10,7 +10,7 @@ import library.rect as rect
 from library.accumulator import flatten
 
 from layer_undo import LayerUndo
-from layers import Layer, RootLayer, Grid, VectorLayer, RasterLayer, constants
+from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, constants, loaders
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict
@@ -107,29 +107,34 @@ class LayerManager(LayerUndo):
 
     def load_layer_from_metadata(self, metadata, editor=None):
         # FIXME: load all layer types, not just vector!
-        if metadata.mime == "application/x-maproom-verdat":
-            layer = VectorLayer(manager=self)
-            layer.read_from_file(metadata.uri)
-        elif metadata.mime == "application/x-maproom-bna":
-            layer = VectorLayer(manager=self)
-            layer.read_from_file(metadata.uri)
-        elif metadata.mime.startswith("image"):
-            layer = RasterLayer(manager=self)
-            layer.read_from_file(metadata.uri)
-        else:
-            layer = Layer(self)
-            layer.load_error_string = "Unknown file type %s for %s" % (metadata.mime, metadata.uri)
+        layer = loaders.load_layer(metadata, manager=self)
+        if layer is None:
+            print "LAYER LOAD ERROR: %s" % "Unknown file type %s for %s" % (metadata.mime, metadata.uri)
+            return None
+            
         if layer.load_error_string != "":
             print "LAYER LOAD ERROR: %s" % layer.load_error_string
             return None
         self.insert_loaded_layer(layer, editor)
         return layer
     
+    def check_layer(self, layer, window):
+        if layer is not None:
+            try:
+                message = loaders.check_layer(layer)
+                window.information(message, "No Errors Found")
+            except Exception, e:
+                if hasattr(e, "points") and e.points != None:
+                    layer.clear_all_selections(STATE_FLAGGED)
+                    for p in e.points:
+                        layer.select_point(p, STATE_FLAGGED)
+                self.dispatch_event('refresh_needed')
+                window.error(e.message, "File Contains Errors")
+        return "No selected layer."
+    
     def save_layer(self, layer, file_path):
         if layer is not None:
-            if layer.can_save_as():
-                return layer.save_to_file(file_path)
-            return "Layer type %s cannot be saved." % layer.type
+            return loaders.save_layer(layer, file_path)
         return "No selected layer."
     
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None):
@@ -359,10 +364,12 @@ class LayerManager(LayerUndo):
             layer.render(render_window, (length - 1 - i) * 10, pick_mode)
 
     def add_layer(self, type=None, editor=None, before=None, after=None):
-        if type is "grid":
+        if type == "grid":
             layer = Grid(manager=self)
+        elif type == "triangle":
+            layer = TriangleLayer(manager=self)
         else:
-            layer = VectorLayer(manager=self)
+            layer = LineLayer(manager=self)
         layer.new()
         self.insert_loaded_layer(layer, editor, before, after)
         return layer
@@ -413,8 +420,8 @@ class LayerManager(LayerUndo):
         return layers
 
     def merge_layers(self, layer_a, layer_b):
-        layer = VectorLayer(manager=self)
-        layer.type = ".verdat"
+        layer = LineLayer(manager=self)
+        layer.type = "line"
         layer.name = "Merged"
         layer.merge_from_source_layers(layer_a, layer_b)
         self.dispatch_event('layer_loaded', layer)

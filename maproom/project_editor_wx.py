@@ -584,4 +584,4 @@ class ProjectEditor(FrameworkEditor):
     
     def check_for_errors(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
-        sel_layer.check_for_errors(self.window)
+        self.layer_manager.check_layer(sel_layer, self.window)

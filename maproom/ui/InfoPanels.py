@@ -300,14 +300,19 @@ class LayerInfoPanel(InfoPanel):
             if (layer.type == "folder"):
                 fields = ["Folder name"]
 
-            elif (layer.type == ".bna"):
+            elif (layer.type == "polygon"):
                 fields.extend(["Layer name", "Polygon count"])
             else:
                 fields.extend(["Layer name"])
                 if layer.has_alpha():
                     fields.extend(["Transparency"])
                 if layer.has_points():
-                    fields.extend(["Default depth", "Depth unit", "Point count", "Line segment count", "Triangle count", "Flagged points", "Selected points"])
+                    fields.extend(["Default depth", "Depth unit", "Point count", "Flagged points", "Selected points"])
+                    if layer.type == "triangle":
+                        fields.extend(["Triangle count"])
+                    elif layer.type == "line":
+                        fields.extend(["Line segment count"])
+                        
         return fields
 
 class SelectionInfoPanel(InfoPanel):

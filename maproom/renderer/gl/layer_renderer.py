@@ -79,16 +79,22 @@ class LayerRenderer(object):
 
         t0 = time.clock()
         if create:
-            if layer.triangles is None:
-                triangles = None
-            else:
+            if hasattr(layer, 'triangles') and layer.triangles is not None:
                 triangles = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
+            else:
+                triangles = None
+            if hasattr(layer, 'line_segment_indexes') and layer.line_segment_indexes is not None:
+                lines = layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"]
+                line_color = layer.line_segment_indexes.color
+            else:
+                lines = None
+                line_color = layer.points.color.copy().view(dtype=np.uint8)
             self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
                 self.canvas.opengl_renderer,
                 layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
                 layer.points.color.copy().view(dtype=np.uint8),
-                layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"],
-                layer.line_segment_indexes.color,
+                lines,
+                line_color,
                 triangles,
                 self.canvas.projection,
                 self.canvas.projection_is_identity)

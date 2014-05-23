@@ -8,7 +8,39 @@ from maproom.library.accumulator import accumulator, flatten
 import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
 
-import maproom.library.formats.verdat as verdat
+from maproom.layers import PolygonLayer
+
+class BNALoader(object):
+    mime = "application/x-maproom-bna"
+    
+    def can_load(self, metadata):
+        return metadata.mime == self.mime
+    
+    def load(self, metadata, manager):
+        layer = PolygonLayer(manager=manager)
+        
+        (layer.load_error_string,
+         f_polygon_points,
+         f_polygon_starts,
+         f_polygon_counts,
+         f_polygon_types,
+         f_polygon_identifiers) = load_bna_file(metadata.uri)
+        if (layer.load_error_string == ""):
+            layer.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
+                           f_polygon_types, f_polygon_identifiers)
+            layer.file_path = metadata.uri
+            layer.name = os.path.split(layer.file_path)[1]
+            layer.type = self.mime
+        return layer
+    
+    def can_save(self, layer):
+        return False
+    
+    def check(self, layer):
+        raise RuntimeError("Not abte to check BNA files")
+    
+    def save_to_file(self, f, layer):
+        return "Can't save to BNA yet."
 
 
 def update_status(message):
@@ -16,16 +48,6 @@ def update_status(message):
     tlw = wx.GetApp().GetTopWindow()
     tlw.SetStatusText(message)
     wx.SafeYield()
-
-#
-
-
-def load_verdat_file(file_path):
-    return verdat.load_verdat_file(file_path)
-
-BNA_LAND_FEATURE_CODE = 1
-BNA_WATER_FEATURE_CODE = 2
-BNA_OTHER_FEATURE_CODE = 3
 
 
 def load_bna_file(file_path):

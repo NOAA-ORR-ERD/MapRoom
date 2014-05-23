@@ -50,7 +50,8 @@ class Point_and_line_set_renderer:
             point_colors
         )
 
-        self.build_line_segment_buffers(points, line_segment_indexes, line_segment_colors)
+        if line_segment_indexes is not None:
+            self.build_line_segment_buffers(points, line_segment_indexes, line_segment_colors)
 
         if triangle_point_indexes is not None:
             self.build_triangle_buffers(points, triangle_point_indexes)

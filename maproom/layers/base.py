@@ -24,6 +24,8 @@ class Layer(HasTraits):
     
     type = Str("")
     
+    mime = Str("")
+    
     skip_on_insert = Bool(False)
     
     file_path = Unicode
@@ -98,7 +100,7 @@ class Layer(HasTraits):
         d["lines"] = True
         d["triangles"] = True
         d["labels"] = True
-        if self.type == ".bna":
+        if self.type == "polygon":
             d["labels"] = False
             d["points"] = False
         return d

@@ -23,23 +23,17 @@ from ..layer_undo import *
 from base import Layer, ProjectedLayer
 from constants import *
 
-class VectorLayer(ProjectedLayer):
+class PointLayer(ProjectedLayer):
     """Layer for points/lines/polygons.
     
     """
-    name = Unicode("Ugrid Layer")
+    name = Unicode("Point Layer")
+    
+    type = Str("point")
     
     mouse_selection_mode = Str("VectorLayer")
     
     points = Any
-    
-    line_segment_indexes = Any
-    
-    triangles = Any
-    
-    polygons = Any
-    
-    polygon_adjacency_array = Any  # parallels the points array
     
     merged_points_index = Int(0)
     
@@ -49,22 +43,13 @@ class VectorLayer(ProjectedLayer):
 
     def __str__(self):
         try:
-            num_p = len(self.points)
+            points = len(self.points)
         except:
-            num_p = 0
-        try:
-            num_l = len(self.line_segment_indexes)
-        except:
-            num_l = 0
-        try:
-            num_t = len(self.triangles)
-        except:
-            num_t = 0
-        return "Layer %s: %d points, %d lines, %d triangles" % (self.name, num_p, num_l, num_t)
+            points = 0
+        return "Layer %s: %d points" % (self.name, points)
 
     def new(self):
         Layer.new(self)
-        self.type = ".verdat"
         self.new_points()
     
     def new_points(self, num=0):
@@ -77,126 +62,22 @@ class VectorLayer(ProjectedLayer):
         to determine if we can save this layer.
         """
         no_points = (self.points is None or len(self.points) == 0)
-        no_triangles = (self.triangles is None or len(self.triangles) == 0)
-        no_polygons = (self.polygons is None or len(self.polygons) == 0)
 
-        return no_points and no_triangles and no_polygons
+        return no_points
     
     def get_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
         """
-        return ["points", "lines", "polygons", "triangles", "labels"]
+        return ["points", "lines", "labels"]
     
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
         if label in ["points", "labels"]:
             return self.points is not None
-        if label == "lines":
-            return self.line_segment_indexes is not None
-        if label == "polygons":
-            return self.polygons is not None
-        if label == "triangles":
-            return self.triangles is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def guess_type_from_file_contents(self, file_path):
-        f = open(file_path, "r")
-        line = f.readline()
-        f.close()
-
-        if line.strip().startswith("DOGS"):
-            return ".verdat"
-
-        return ""
-
-    def read_from_file(self, file_path):
-        self.file_path = file_path
-        self.name = os.path.split(file_path)[1]
-        (base, ext) = os.path.splitext(file_path)
-        ext = ext.lower()
-        file_types = [".bna", ".verdat", ".dat", ".png", ".kap", ".tif"]
-        file_type = ""
-        if ext in file_types:
-            file_type = ext
-        else:
-            file_type = self.guess_type_from_file_contents(file_path)
-
-        if (file_type == ".bna"):
-            (self.load_error_string,
-             f_polygon_points,
-             f_polygon_starts,
-             f_polygon_counts,
-             f_polygon_types,
-             f_polygon_identifiers) = File_loader.load_bna_file(file_path)
-
-            if (self.load_error_string == ""):
-                self.determine_layer_color()
-                self.type = ext
-                n_points = np.alen(f_polygon_points)
-                n_polygons = np.alen(f_polygon_starts)
-                if (n_points > 0):
-                    self.points = self.make_points(n_points)
-                    self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
-                        0: n_points
-                    ] = f_polygon_points
-                    self.polygons = self.make_polygons(n_polygons)
-                    self.polygons.start[
-                        0: n_polygons
-                    ] = f_polygon_starts
-                    self.polygons.count[
-                        0: n_polygons
-                    ] = f_polygon_counts
-                    # TODO: for now we assume each polygon is its own group
-                    self.polygons.group = np.arange(n_polygons)
-                    self.polygon_adjacency_array = self.make_polygon_adjacency_array(n_points)
-                    total = 0
-                    for p in xrange(n_polygons):
-                        c = self.polygons.count[p]
-                        self.polygon_adjacency_array.polygon[total: total + c] = p
-                        self.polygon_adjacency_array.next[total: total + c] = np.arange(total + 1, total + c + 1)
-                        self.polygon_adjacency_array.next[total + c - 1] = total
-                        total += c
-
-                    green = color_to_int(0.25, 0.5, 0, 0.75)
-                    blue = color_to_int(0.0, 0.0, 0.5, 0.75)
-                    gray = color_to_int(0.5, 0.5, 0.5, 0.75)
-                    # the following "fancy indexing" relies on these particular values in f_polygon_types
-                    # BNA_LAND_FEATURE_CODE = 1
-                    # BNA_WATER_FEATURE_CODE = 2
-                    # BNA_OTHER_FEATURE_CODE = 3
-                    color_array = np.array((0, green, blue, gray), dtype=np.uint32)
-                    self.polygons.color = color_array[np.clip(f_polygon_types, 1, 3)]
-                    """
-                    def map_type_to_color( t ):
-                        if ( t == File_loader.BNA_LAND_FEATURE_CODE ):
-                            return green
-                        elif ( t == File_loader.BNA_WATER_FEATURE_CODE ):
-                            return blue
-                        else:
-                            return gray
-                    self.polygons.color = np.vectorize( map_type_to_color )( f_polygon_types )
-                    """
-
-                    self.points.state = 0
-
-        elif (file_type in [".verdat", ".dat"]):
-            (self.load_error_string,
-             f_points,
-             f_depths,
-             f_line_segment_indexes,
-             self.depth_unit) = File_loader.load_verdat_file(file_path)
-            if (self.load_error_string == ""):
-                self.set_data(f_points, f_depths, f_line_segment_indexes)
-
-        else:
-            self.load_error_string = "unknown vector file type %s" % file_type,
-
-        if (self.load_error_string == ""):
-            self.update_bounds()
-    
-    def set_data(self, f_points, f_depths, f_line_segment_indexes, f_triangles=None):
-        self.type = ".verdat"
+    def set_data(self, f_points, f_depths, f_line_segment_indexes):
         n = np.alen(f_points)
         self.determine_layer_color()
         self.points = self.make_points(n)
@@ -217,101 +98,19 @@ class VectorLayer(ProjectedLayer):
             ] = f_line_segment_indexes
             self.line_segment_indexes.color = self.color
             self.line_segment_indexes.state = 0
-            
-            if f_triangles is not None:
-                n = len(f_triangles)
-                if n > 0:
-                    self.triangles = self.make_triangles(n)
-                    self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = f_triangles
+        
+        self.update_bounds()
         print self
     
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)
     
-    def can_save_as(self):
-        return self.type == ".verdat"
-    
-    def save_to_file(self, file_path):
-        if file_path is None:
-            file_path = self.file_path
-        temp_dir = tempfile.mkdtemp()
-        temp_file = os.path.join(temp_dir, os.path.basename(file_path))
-
-        f = open(temp_file, "w")
-        error = ""
-        had_error = False
-        try:
-            verdat.write_layer_as_verdat(f, self)
-            if self.get_num_points_selected(STATE_FLAGGED):
-                self.clear_all_selections(STATE_FLAGGED)
-                self.manager.dispatch_event('refresh_needed')
-        except Exception as e:
-            import traceback
-            
-            had_error = True
-            print traceback.format_exc(e)
-            if hasattr(e, "points") and e.points != None:
-                self.clear_all_selections(STATE_FLAGGED)
-                for p in e.points:
-                    self.select_point(p, STATE_FLAGGED)
-                self.manager.dispatch_event('refresh_needed')
-            error = e.message
-        finally:
-            f.close()
-        if (not had_error and temp_file and os.path.exists(temp_file)):
-            try:
-                shutil.copy(temp_file, file_path)
-                self.file_path = file_path
-            except Exception as e:
-                import traceback
-            
-                error = "Unable to save file to disk. Make sure you have write permissions to the file.\n\nSystem error was: %s" % e.message
-                print traceback.format_exc(e)
-        return error
-
-    def check_for_errors(self, window):
-        if self.type in ["", ".verdat"]:
-            try:
-                verdat.check_valid_verdat(self)
-                window.information("This file is a valid verdat file.", "No Errors Found")
-            except Exception, e:
-                if hasattr(e, "points") and e.points != None:
-                    self.clear_all_selections(STATE_FLAGGED)
-                    for p in e.points:
-                        self.select_point(p, STATE_FLAGGED)
-                self.manager.dispatch_event('refresh_needed')
-                window.error(e.message, "Verdat File Contains Errors")
-
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()
 
     def make_points(self, count):
         return np.repeat(
             np.array([(np.nan, np.nan, np.nan, 0, 0)], dtype=data_types.POINT_DTYPE),
-            count,
-        ).view(np.recarray)
-
-    def make_line_segment_indexes(self, count):
-        return np.repeat(
-            np.array([(0, 0, 0, 0)], dtype=data_types.LINE_SEGMENT_DTYPE),
-            count,
-        ).view(np.recarray)
-
-    def make_triangles(self, count):
-        return np.repeat(
-            np.array([(0, 0, 0, 0, 0)], dtype=data_types.TRIANGLE_DTYPE),
-            count,
-        ).view(np.recarray)
-
-    def make_polygons(self, count):
-        return np.repeat(
-            np.array([(0, 0, 0, 0, 0)], dtype=data_types.POLYGON_DTYPE),
-            count,
-        ).view(np.recarray)
-
-    def make_polygon_adjacency_array(self, count):
-        return np.repeat(
-            np.array([(0, 0)], dtype=data_types.POLYGON_ADJACENCY_DTYPE),
             count,
         ).view(np.recarray)
 
@@ -348,23 +147,11 @@ class VectorLayer(ProjectedLayer):
 
     def clear_all_selections(self, mark_type=STATE_SELECTED):
         self.clear_all_point_selections(mark_type)
-        self.clear_all_line_segment_selections(mark_type)
-        self.clear_all_polygon_selections(mark_type)
         self.increment_change_count()
 
     def clear_all_point_selections(self, mark_type=STATE_SELECTED):
         if (self.points != None):
             self.points.state = self.points.state & (0xFFFFFFFF ^ mark_type)
-            self.increment_change_count()
-
-    def clear_all_line_segment_selections(self, mark_type=STATE_SELECTED):
-        if (self.line_segment_indexes != None):
-            self.line_segment_indexes.state = self.line_segment_indexes.state & (0xFFFFFFFF ^ mark_type)
-            self.increment_change_count()
-
-    def clear_all_polygon_selections(self, mark_type=STATE_SELECTED):
-        if (self.polygons != None):
-            self.polygons.state = self.polygons.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
     def has_points(self):
@@ -380,28 +167,6 @@ class VectorLayer(ProjectedLayer):
 
     def is_point_selected(self, point_index, mark_type=STATE_SELECTED):
         return self.points != None and (self.points.state[point_index] & mark_type) != 0
-
-    def select_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
-        self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] | mark_type
-        self.increment_change_count()
-
-    def deselect_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
-        self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] & (0xFFFFFFFF ^ mark_type)
-        self.increment_change_count()
-
-    def is_line_segment_selected(self, line_segment_index, mark_type=STATE_SELECTED):
-        return self.line_segment_indexes != None and (self.line_segment_indexes.state[line_segment_index] & mark_type) != 0
-
-    def select_polygon(self, polygon_index, mark_type=STATE_SELECTED):
-        self.polygons.state[polygon_index] = self.polygons.state[polygon_index] | mark_type
-        self.increment_change_count()
-
-    def deselect_polygon(self, polygon_index, mark_type=STATE_SELECTED):
-        self.polygons.state[polygon_index] = self.polygons.state[polygon_index] & (0xFFFFFFFF ^ mark_type)
-        self.increment_change_count()
-
-    def is_polygon_selected(self, polygon_index, mark_type=STATE_SELECTED):
-        return self.polygons != None and (self.polygons.state[polygon_index] & mark_type) != 0
 
     def select_points(self, indexes, mark_type=STATE_SELECTED):
         self.points.state[indexes] |= mark_type
@@ -419,6 +184,258 @@ class VectorLayer(ProjectedLayer):
             self.points.state[indexes] ^= mark_type
         self.increment_change_count()
 
+    def get_selected_point_indexes(self, mark_type=STATE_SELECTED):
+        if (self.points == None):
+            return []
+        #
+        return np.where((self.points.state & mark_type) != 0)[0]
+
+    def get_num_points_selected(self, mark_type=STATE_SELECTED):
+        return len(self.get_selected_point_indexes(mark_type))
+
+    def offset_selected_objects(self, world_d_x, world_d_y):
+        self.offset_selected_points(world_d_x, world_d_y)
+
+    def offset_selected_points(self, world_d_x, world_d_y):
+        if (self.points != None):
+            # offset our own copy of the points (which automatically updates our own line segments)
+            s_p_i_s = self.get_selected_point_indexes()
+            for point_index in s_p_i_s:
+                self.offset_point(point_index, world_d_x, world_d_y, True)
+            # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
+            self.manager.dispatch_event('layer_contents_changed', self)
+            self.increment_change_count()
+
+    def offset_point(self, point_index, world_d_x, world_d_y, add_undo_info=False):
+        self.points.x[point_index] += world_d_x
+        self.points.y[point_index] += world_d_y
+        """
+        # we don't set the undo information here because this function is called repeatedly as the mouse moves
+        if ( add_undo_info ):
+            params = ( world_d_x, world_d_y )
+            self.manager.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
+        """
+
+    """
+    def rebuild_for_offset_points( self ):
+        if ( self.line_segment_indexes != None ):
+            self.point_and_line_set_renderer.build_line_segment_buffers(
+                self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+                self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
+                None )
+        self.point_and_line_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+                                                    self.manager.project.control.projection,
+                                                    self.manager.project.control.projection_is_identity )
+    """
+
+    def insert_point(self, world_point):
+        if self.points is None:
+            index = -1
+        else:
+            index = len(self.points)
+        return self.insert_point_at_index(index, world_point, self.default_depth, self.color, STATE_SELECTED, True)
+
+    def insert_point_at_index(self, point_index, world_point, z, color, state, add_undo_info):
+        t0 = time.clock()
+        # insert it into the layer
+        p = np.array([(world_point[0], world_point[1], z, color, state)],
+                     dtype=data_types.POINT_DTYPE)
+        if (self.points == None):
+            self.new_points(1)
+            self.points[0] = p
+            point_index = 0
+            self.manager.dispatch_event('refresh_needed')
+            self.manager.project.layer_tree_control.select_layer(self)
+        else:
+            self.points = np.insert(self.points, point_index, p).view(np.recarray)
+        t = time.clock() - t0  # t is wall seconds elapsed (floating point)
+        # print "inserted new point in {0} seconds".format( t )
+
+        # update point indexes in the line segements to account for the inserted point
+        self.update_after_insert_point_at_index(point_index)
+
+        if (add_undo_info):
+            params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
+            self.manager.add_undo_operation_to_operation_batch(OP_ADD_POINT, self, point_index, params)
+
+        # insert it into the point_and_line_set_renderer (by simply rebuilding it)
+        # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
+        # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
+        if (add_undo_info):
+            self.manager.dispatch_event('layer_contents_changed', self)
+
+        """
+        t0 = time.clock()
+        # insert it into the label_set_renderer
+        if ( self.label_set_renderer != None ):
+            self.label_set_renderer.insert_point( len( self.points ) - 1,
+                                                  str( self.default_depth ),
+                                                  world_point,
+                                                  self.manager.project.control.projection,
+                                                  self.manager.project.control.projection_is_identity )
+        t = time.clock() - t0 # t is wall seconds elapsed (floating point)
+        print "inserted into label set renderer in {0} seconds".format( t )
+        """
+
+        return point_index
+
+    def update_after_insert_point_at_index(self, point_index):
+        """Hook for subclasses to update dependent items when a point is inserted.
+        """
+        pass
+
+    def delete_point(self, point_index, add_undo_info):
+        if (self.find_points_connected_to_point(point_index) != []):
+            raise Exception()
+
+        if (add_undo_info):
+            params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
+            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, point_index, params)
+        self.points = np.delete(self.points, point_index, 0)
+
+        # update point indexes in the line segements to account for the deleted point
+        self.update_after_delete_point(point_index)
+
+        self.manager.dispatch_event('layer_contents_changed', self)
+
+    def update_after_delete_point(self, point_index):
+        """Hook for subclasses to update dependent items when a point is deleted.
+        """
+        pass
+    
+    def create_renderer(self, renderer):
+        """Create the graphic renderer for this layer.
+        
+        There may be multiple views of this layer (e.g.  in different windows),
+        so we can't just create the renderer as an attribute of this object.
+        The storage parameter is attached to the view and independent of
+        other views of this layer.
+        
+        """
+        if self.points != None and renderer.point_and_line_set_renderer == None:
+            if (self.line_segment_indexes == None):
+                self.line_segment_indexes = self.make_line_segment_indexes(0)
+
+            renderer.rebuild_point_and_line_set_renderer(self, create=True)
+
+        renderer.set_up_labels(self)
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        if (not layer_visibility["layer"]):
+            return
+
+        # the points and line segments
+        if (renderer.point_and_line_set_renderer != None):
+            renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
+                                                    pick_mode,
+                                                    self.point_size,
+                                                    self.line_width,
+                                                    layer_visibility["points"],
+                                                    layer_visibility["lines"],
+                                                    layer_visibility["triangles"],
+                                                    self.triangle_line_width,
+                                                    self.get_selected_point_indexes(),
+                                                    self.get_selected_point_indexes(STATE_FLAGGED),
+                                                    self.get_selected_line_segment_indexes(),
+                                                    self.get_selected_line_segment_indexes(STATE_FLAGGED))
+
+            # the labels
+            if (renderer.label_set_renderer != None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys != None):
+                renderer.label_set_renderer.render(-1, pick_mode, s_r,
+                                               renderer.MAX_LABEL_CHARACTERS, self.points.z,
+                                               renderer.point_and_line_set_renderer.vbo_point_xys.data,
+                                               p_r, renderer.canvas.projected_units_per_pixel)
+
+        # render selections after everything else
+        if (renderer.point_and_line_set_renderer != None and not pick_mode):
+            if layer_visibility["lines"]:
+                renderer.point_and_line_set_renderer.render_selected_line_segments(self.line_width, self.get_selected_line_segment_indexes())
+
+            if layer_visibility["points"]:
+                renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
+                                                                        self.get_selected_point_indexes())
+
+
+class LineLayer(PointLayer):
+    """Layer for points/lines/polygons.
+    
+    """
+    name = Unicode("Ugrid Layer")
+    
+    type = Str("line")
+    
+    line_segment_indexes = Any
+    
+    def get_visibility_items(self):
+        """Return allowable keys for visibility dict lookups for this layer
+        """
+        return ["points", "lines", "labels"]
+    
+    def visibility_item_exists(self, label):
+        """Return keys for visibility dict lookups that currently exist in this layer
+        """
+        if label in ["points", "labels"]:
+            return self.points is not None
+        if label == "lines":
+            return self.line_segment_indexes is not None
+        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
+
+    def set_data(self, f_points, f_depths, f_line_segment_indexes):
+        n = np.alen(f_points)
+        self.determine_layer_color()
+        self.points = self.make_points(n)
+        if (n > 0):
+            self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
+                0: n
+            ] = f_points
+            self.points.z[
+                0: n
+            ] = f_depths
+            self.points.color = self.color
+            self.points.state = 0
+
+            n = np.alen(f_line_segment_indexes)
+            self.line_segment_indexes = self.make_line_segment_indexes(n)
+            self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
+                0: n
+            ] = f_line_segment_indexes
+            self.line_segment_indexes.color = self.color
+            self.line_segment_indexes.state = 0
+        
+        self.update_bounds()
+        print self
+
+    def can_save_as(self):
+        return True
+
+    def make_line_segment_indexes(self, count):
+        return np.repeat(
+            np.array([(0, 0, 0, 0)], dtype=data_types.LINE_SEGMENT_DTYPE),
+            count,
+        ).view(np.recarray)
+
+    def clear_all_selections(self, mark_type=STATE_SELECTED):
+        self.clear_all_point_selections(mark_type)
+        self.clear_all_line_segment_selections(mark_type)
+        self.increment_change_count()
+
+    def clear_all_line_segment_selections(self, mark_type=STATE_SELECTED):
+        if (self.line_segment_indexes != None):
+            self.line_segment_indexes.state = self.line_segment_indexes.state & (0xFFFFFFFF ^ mark_type)
+            self.increment_change_count()
+
+    def select_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
+        self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] | mark_type
+        self.increment_change_count()
+
+    def deselect_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
+        self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] & (0xFFFFFFFF ^ mark_type)
+        self.increment_change_count()
+
+    def is_line_segment_selected(self, line_segment_index, mark_type=STATE_SELECTED):
+        return self.line_segment_indexes != None and (self.line_segment_indexes.state[line_segment_index] & mark_type) != 0
+
     def select_line_segments_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
         if (not is_toggle_mode and not is_add_mode):
             self.clear_all_line_segment_selections()
@@ -434,12 +451,6 @@ class VectorLayer(ProjectedLayer):
             self.line_segment_indexes.state[indexes] ^= mark_type
         self.increment_change_count()
 
-    def get_selected_point_indexes(self, mark_type=STATE_SELECTED):
-        if (self.points == None):
-            return []
-        #
-        return np.where((self.points.state & mark_type) != 0)[0]
-
     def get_selected_point_plus_line_point_indexes(self, mark_type=STATE_SELECTED):
         indexes = np.arange(0)
         if (self.points != None):
@@ -451,20 +462,14 @@ class VectorLayer(ProjectedLayer):
         #
         return np.unique(indexes)
 
+    def get_num_points_selected(self, mark_type=STATE_SELECTED):
+        return len(self.get_selected_point_plus_line_point_indexes(mark_type))
+
     def get_selected_line_segment_indexes(self, mark_type=STATE_SELECTED):
         if (self.line_segment_indexes == None):
             return []
         #
         return np.where((self.line_segment_indexes.state & mark_type) != 0)[0]
-
-    def get_selected_polygon_indexes(self, mark_type=STATE_SELECTED):
-        if (self.polygons == None):
-            return []
-        #
-        return np.where((self.polygons.state & mark_type) != 0)[0]
-
-    def get_num_points_selected(self, mark_type=STATE_SELECTED):
-        return len(self.get_selected_point_plus_line_point_indexes(mark_type))
 
     def get_all_line_point_indexes(self):
         indexes = np.arange(0)
@@ -562,10 +567,6 @@ class VectorLayer(ProjectedLayer):
 
         return list(s)
 
-    def offset_selected_objects(self, world_d_x, world_d_y):
-        self.offset_selected_points(world_d_x, world_d_y)
-        self.offset_selected_polygons(world_d_x, world_d_y)
-
     def offset_selected_points(self, world_d_x, world_d_y):
         if (self.points != None):
             # offset our own copy of the points (which automatically updates our own line segments)
@@ -575,31 +576,6 @@ class VectorLayer(ProjectedLayer):
             # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
             self.manager.dispatch_event('layer_contents_changed', self)
             self.increment_change_count()
-
-    def offset_point(self, point_index, world_d_x, world_d_y, add_undo_info=False):
-        self.points.x[point_index] += world_d_x
-        self.points.y[point_index] += world_d_y
-        """
-        # we don't set the undo information here because this function is called repeatedly as the mouse moves
-        if ( add_undo_info ):
-            params = ( world_d_x, world_d_y )
-            self.manager.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
-        """
-
-    """
-    def rebuild_for_offset_points( self ):
-        if ( self.line_segment_indexes != None ):
-            self.point_and_line_set_renderer.build_line_segment_buffers(
-                self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
-                None )
-        self.point_and_line_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                                                    self.manager.project.control.projection,
-                                                    self.manager.project.control.projection_is_identity )
-    """
-
-    def offset_selected_polygons(self, world_d_x, world_d_y):
-        self.increment_change_count()
 
     def delete_all_selected_objects(self):
         point_indexes = self.get_selected_point_indexes()
@@ -668,29 +644,7 @@ class VectorLayer(ProjectedLayer):
         # become invalid; so force the user to re-find duplicates in order to create a valid list again
         self.manager.dispatch_event('layer_contents_deleted', self)
 
-    def insert_point(self, world_point):
-        if self.points is None:
-            index = -1
-        else:
-            index = len(self.points)
-        return self.insert_point_at_index(index, world_point, self.default_depth, self.color, STATE_SELECTED, True)
-
-    def insert_point_at_index(self, point_index, world_point, z, color, state, add_undo_info):
-        t0 = time.clock()
-        # insert it into the layer
-        p = np.array([(world_point[0], world_point[1], z, color, state)],
-                     dtype=data_types.POINT_DTYPE)
-        if (self.points == None):
-            self.new_points(1)
-            self.points[0] = p
-            point_index = 0
-            self.manager.dispatch_event('refresh_needed')
-            self.manager.project.layer_tree_control.select_layer(self)
-        else:
-            self.points = np.insert(self.points, point_index, p).view(np.recarray)
-        t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        # print "inserted new point in {0} seconds".format( t )
-
+    def update_after_insert_point_at_index(self, point_index):
         # update point indexes in the line segements to account for the inserted point
         if (self.line_segment_indexes != None):
             offsets = np.zeros(np.alen(self.line_segment_indexes))
@@ -699,32 +653,7 @@ class VectorLayer(ProjectedLayer):
             offsets[: np.alen(offsets)] = 0
             offsets += np.where(self.line_segment_indexes.point2 >= point_index, 1, 0)
             self.line_segment_indexes.point2 += offsets
-
-        if (add_undo_info):
-            params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            self.manager.add_undo_operation_to_operation_batch(OP_ADD_POINT, self, point_index, params)
-
-        # insert it into the point_and_line_set_renderer (by simply rebuilding it)
-        # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
-        # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
-        if (add_undo_info):
-            self.manager.dispatch_event('layer_contents_changed', self)
-
-        """
-        t0 = time.clock()
-        # insert it into the label_set_renderer
-        if ( self.label_set_renderer != None ):
-            self.label_set_renderer.insert_point( len( self.points ) - 1,
-                                                  str( self.default_depth ),
-                                                  world_point,
-                                                  self.manager.project.control.projection,
-                                                  self.manager.project.control.projection_is_identity )
-        t = time.clock() - t0 # t is wall seconds elapsed (floating point)
-        print "inserted into label set renderer in {0} seconds".format( t )
-        """
-
-        return point_index
-
+    
     def insert_point_in_line(self, world_point, line_segment_index):
         new_point_index = self.insert_point(world_point)
         point_index_1 = self.line_segment_indexes.point1[line_segment_index]
@@ -772,16 +701,7 @@ class VectorLayer(ProjectedLayer):
 
         return l_s_i
 
-    def delete_point(self, point_index, add_undo_info):
-        if (self.find_points_connected_to_point(point_index) != []):
-            raise Exception()
-
-        if (add_undo_info):
-            params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, point_index, params)
-        self.points = np.delete(self.points, point_index, 0)
-
-        # update point indexes in the line segements to account for the deleted point
+    def update_after_delete_point(self, point_index):
         if (self.line_segment_indexes != None):
             offsets = np.zeros(np.alen(self.line_segment_indexes))
             offsets += np.where(self.line_segment_indexes.point1 > point_index, 1, 0)
@@ -790,83 +710,11 @@ class VectorLayer(ProjectedLayer):
             offsets += np.where(self.line_segment_indexes.point2 > point_index, 1, 0)
             self.line_segment_indexes.point2 -= offsets
 
-        self.manager.dispatch_event('layer_contents_changed', self)
-
     def delete_line_segment(self, l_s_i, add_undo_info):
         if (add_undo_info):
             params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
             self.manager.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
-
-    def get_triangulated_points(self, q, a):
-        # determine the boundaries in this layer
-        self.determine_layer_color()
-        (boundaries, non_boundary_points) = find_boundaries(
-            points=self.points,
-            point_count=len(self.points),
-            lines=self.line_segment_indexes,
-            line_count=len(self.line_segment_indexes))
-
-        # calculate a hole point for each boundary
-        hole_points_xy = np.empty(
-            (len(boundaries), 2), np.float32,
-        )
-
-        for (boundary_index, (boundary, area)) in enumerate(boundaries):
-            if (len(boundary) < 3):
-                continue
-
-            # the "hole" point for the outer boundary (first in the list) should be outside of it
-            if boundary_index == 0:
-                hole_points_xy[boundary_index] = generate_outside_hole_point(boundary, self.points)
-            else:
-                hole_points_xy[boundary_index] = generate_inside_hole_point(boundary, self.points)
-
-        params = "V"
-        if (q is not None):
-            params = params + "q" + str(q)
-        if (a is not None):
-            params = params + "a" + str(a)
-
-        # we need to use projected points for the triangulation
-        projected_points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(self.points)].view(np.float32).copy()
-        if (self.manager.project.control.projection_is_identity):
-            projected_points[:, 0] = self.points[:, 0]
-            projected_points[:, 1] = self.points[:, 1]
-        else:
-            projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(self.points.x, self.points.y)
-            hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
-        print "params: " + params
-        print "hole points:"
-        print hole_points_xy
-        (triangle_points_xy,
-         triangle_points_z,
-         triangle_line_segment_indexes,  # not needed
-         triangles) = triangulate_simple(
-            params,
-            projected_points,
-            self.points.z[: len(self.points)].copy(),
-            self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(self.line_segment_indexes)].view(np.uint32).copy(),
-            hole_points_xy)
-        return (triangle_points_xy,
-         triangle_points_z,
-         triangle_line_segment_indexes,
-         triangles)
-
-    def unproject_triangle_points(self, points):
-        if (not self.manager.project.control.projection_is_identity):
-            # import code; code.interact( local = locals() )
-            points.x, points.y = self.manager.project.control.projection(points.x, points.y, inverse=True)
-    
-    def triangulate_from_data(self, points, depths, lines, triangles):
-        self.set_data(points, depths, lines, triangles)
-        self.unproject_triangle_points(self.points)
-        self.manager.dispatch_event('layer_contents_changed', self)
-        self.manager.dispatch_event('layer_metadata_changed', self)
-
-    def triangulate_from_layer(self, parent_layer, q, a):
-        points, depths, lines, triangles = parent_layer.get_triangulated_points(q, a)
-        self.triangulate_from_data(points, depths, lines, triangles)
 
     def merge_from_source_layers(self, layer_a, layer_b):
         # for now we only handle merging of points and lines
@@ -1021,23 +869,12 @@ class VectorLayer(ProjectedLayer):
 
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
 
-        if self.polygons != None and renderer.polygon_set_renderer == None:
-            renderer.rebuild_polygon_set_renderer(self)
-
         renderer.set_up_labels(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
         if (not layer_visibility["layer"]):
             return
-
-        # the polygons
-        if (renderer.polygon_set_renderer != None and layer_visibility["polygons"]):
-            renderer.polygon_set_renderer.render(layer_index_base + renderer.POLYGONS_SUB_LAYER_PICKER_OFFSET,
-                                             pick_mode,
-                                             self.polygons.color,
-                                             color_to_int(0, 0, 0, 1.0),
-                                             1)  # , self.get_selected_polygon_indexes()
 
         # the points and line segments
         if (renderer.point_and_line_set_renderer != None):
@@ -1047,7 +884,7 @@ class VectorLayer(ProjectedLayer):
                                                     self.line_width,
                                                     layer_visibility["points"],
                                                     layer_visibility["lines"],
-                                                    layer_visibility["triangles"],
+                                                    False,
                                                     self.triangle_line_width,
                                                     self.get_selected_point_indexes(),
                                                     self.get_selected_point_indexes(STATE_FLAGGED),
@@ -1069,4 +906,354 @@ class VectorLayer(ProjectedLayer):
             if layer_visibility["points"]:
                 renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
                                                                         self.get_selected_point_indexes())
+
+
+class TriangleLayer(PointLayer):
+    """Layer for triangles.
+    
+    """
+    type = Str("triangle")
+    
+    triangles = Any
+
+    def __str__(self):
+        try:
+            points = len(self.points)
+        except:
+            points = 0
+        try:
+            triangles = len(self.triangles)
+        except:
+            triangles = 0
+        return "TriangleLayer %s: %d points, %d triangles" % (self.name, points, triangles)
+
+    def empty(self):
+        """
+        We shouldn't allow saving of a layer with no content, so we use this method
+        to determine if we can save this layer.
+        """
+        no_points = (self.points is None or len(self.points) == 0)
+        no_triangles = (self.triangles is None or len(self.triangles) == 0)
+
+        return no_points and no_triangles
+    
+    def get_visibility_items(self):
+        """Return allowable keys for visibility dict lookups for this layer
+        """
+        return ["points", "triangles", "labels"]
+    
+    def visibility_item_exists(self, label):
+        """Return keys for visibility dict lookups that currently exist in this layer
+        """
+        if label in ["points", "labels"]:
+            return self.points is not None
+        if label == "triangles":
+            return self.triangles is not None
+        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
+
+    def set_data(self, f_points, f_depths, f_triangles):
+        n = np.alen(f_points)
+        self.determine_layer_color()
+        self.points = self.make_points(n)
+        if (n > 0):
+            self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
+                0: n
+            ] = f_points
+            self.points.z[
+                0: n
+            ] = f_depths
+            self.points.color = self.color
+            self.points.state = 0
+
+            n = len(f_triangles)
+            if n > 0:
+                self.triangles = self.make_triangles(n)
+                self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = f_triangles
         
+        self.update_bounds()
+        print self
+
+    def make_triangles(self, count):
+        return np.repeat(
+            np.array([(0, 0, 0, 0, 0)], dtype=data_types.TRIANGLE_DTYPE),
+            count,
+        ).view(np.recarray)
+
+    def get_triangulated_points(self, layer, q, a):
+        # determine the boundaries in the parent layer
+        (boundaries, non_boundary_points) = find_boundaries(
+            points=layer.points,
+            point_count=len(layer.points),
+            lines=layer.line_segment_indexes,
+            line_count=len(layer.line_segment_indexes))
+
+        # calculate a hole point for each boundary
+        hole_points_xy = np.empty(
+            (len(boundaries), 2), np.float32,
+        )
+
+        for (boundary_index, (boundary, area)) in enumerate(boundaries):
+            if (len(boundary) < 3):
+                continue
+
+            # the "hole" point for the outer boundary (first in the list) should be outside of it
+            if boundary_index == 0:
+                hole_points_xy[boundary_index] = generate_outside_hole_point(boundary, layer.points)
+            else:
+                hole_points_xy[boundary_index] = generate_inside_hole_point(boundary, layer.points)
+
+        params = "V"
+        if (q is not None):
+            params = params + "q" + str(q)
+        if (a is not None):
+            params = params + "a" + str(a)
+
+        # we need to use projected points for the triangulation
+        projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float32).copy()
+        if (self.manager.project.control.projection_is_identity):
+            projected_points[:, 0] = layer.points[:, 0]
+            projected_points[:, 1] = layer.points[:, 1]
+        else:
+            projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(layer.points.x, layer.points.y)
+            hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
+        print "params: " + params
+        print "hole points:"
+        print hole_points_xy
+        (triangle_points_xy,
+         triangle_points_z,
+         triangle_line_segment_indexes,  # not needed
+         triangles) = triangulate_simple(
+            params,
+            projected_points,
+            layer.points.z[: len(layer.points)].copy(),
+            layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(layer.line_segment_indexes)].view(np.uint32).copy(),
+            hole_points_xy)
+        return (triangle_points_xy,
+         triangle_points_z,
+         triangles)
+
+    def unproject_triangle_points(self, points):
+        if (not self.manager.project.control.projection_is_identity):
+            # import code; code.interact( local = locals() )
+            points.x, points.y = self.manager.project.control.projection(points.x, points.y, inverse=True)
+    
+    def triangulate_from_data(self, points, depths, triangles):
+        self.set_data(points, depths, triangles)
+        self.unproject_triangle_points(self.points)
+        self.manager.dispatch_event('layer_contents_changed', self)
+        self.manager.dispatch_event('layer_metadata_changed', self)
+
+    def triangulate_from_layer(self, parent_layer, q, a):
+        points, depths, triangles = self.get_triangulated_points(parent_layer, q, a)
+        self.triangulate_from_data(points, depths, triangles)
+
+    def create_renderer(self, renderer):
+        """Create the graphic renderer for this layer.
+        
+        There may be multiple views of this layer (e.g.  in different windows),
+        so we can't just create the renderer as an attribute of this object.
+        The storage parameter is attached to the view and independent of
+        other views of this layer.
+        
+        """
+        if self.points != None and renderer.point_and_line_set_renderer == None:
+
+            renderer.rebuild_point_and_line_set_renderer(self, create=True)
+
+        renderer.set_up_labels(self)
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        if (not layer_visibility["layer"]):
+            return
+
+        # the points and line segments
+        if (renderer.point_and_line_set_renderer != None):
+            renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
+                                                    pick_mode,
+                                                    self.point_size,
+                                                    self.line_width,
+                                                    layer_visibility["points"],
+                                                    False,
+                                                    layer_visibility["triangles"],
+                                                    self.triangle_line_width,
+                                                    self.get_selected_point_indexes(),
+                                                    self.get_selected_point_indexes(STATE_FLAGGED),
+                                                    [], [])
+
+            # the labels
+            if (renderer.label_set_renderer != None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys != None):
+                renderer.label_set_renderer.render(-1, pick_mode, s_r,
+                                               renderer.MAX_LABEL_CHARACTERS, self.points.z,
+                                               renderer.point_and_line_set_renderer.vbo_point_xys.data,
+                                               p_r, renderer.canvas.projected_units_per_pixel)
+
+        # render selections after everything else
+        if (renderer.point_and_line_set_renderer != None and not pick_mode):
+            if layer_visibility["points"]:
+                renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
+                                                                        self.get_selected_point_indexes())
+
+
+class PolygonLayer(PointLayer):
+    """Layer for polygons.
+    
+    """
+    type = Str("polygon")
+    
+    polygons = Any
+    
+    polygon_adjacency_array = Any  # parallels the points array
+
+    def __str__(self):
+        try:
+            points = len(self.points)
+        except:
+            points = 0
+        try:
+            polygons = len(self.polygons)
+        except:
+            polygons = 0
+        return "PolygonLayer %s: %d points, %d polygons" % (self.name, points, polygons)
+
+    def empty(self):
+        """
+        We shouldn't allow saving of a layer with no content, so we use this method
+        to determine if we can save this layer.
+        """
+        no_points = (self.points is None or len(self.points) == 0)
+        no_polygons = (self.polygons is None or len(self.polygons) == 0)
+
+        return no_points and no_polygons
+    
+    def get_visibility_items(self):
+        """Return allowable keys for visibility dict lookups for this layer
+        """
+        return ["points", "polygons"]
+    
+    def visibility_item_exists(self, label):
+        """Return keys for visibility dict lookups that currently exist in this layer
+        """
+        if label in ["points"]:
+            return self.points is not None
+        if label == "polygons":
+            return self.polygons is not None
+        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
+    
+    def set_data(self, f_polygon_points, f_polygon_starts, f_polygon_counts,
+                 f_polygon_types, f_polygon_identifiers):
+        self.determine_layer_color()
+        n_points = np.alen(f_polygon_points)
+        self.points = self.make_points(n_points)
+        if (n_points > 0):
+            n_polygons = np.alen(f_polygon_starts)
+            self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
+                0: n_points
+            ] = f_polygon_points
+            self.polygons = self.make_polygons(n_polygons)
+            self.polygons.start[
+                0: n_polygons
+            ] = f_polygon_starts
+            self.polygons.count[
+                0: n_polygons
+            ] = f_polygon_counts
+            # TODO: for now we assume each polygon is its own group
+            self.polygons.group = np.arange(n_polygons)
+            self.polygon_adjacency_array = self.make_polygon_adjacency_array(n_points)
+            total = 0
+            for p in xrange(n_polygons):
+                c = self.polygons.count[p]
+                self.polygon_adjacency_array.polygon[total: total + c] = p
+                self.polygon_adjacency_array.next[total: total + c] = np.arange(total + 1, total + c + 1)
+                self.polygon_adjacency_array.next[total + c - 1] = total
+                total += c
+
+            green = color_to_int(0.25, 0.5, 0, 0.75)
+            blue = color_to_int(0.0, 0.0, 0.5, 0.75)
+            gray = color_to_int(0.5, 0.5, 0.5, 0.75)
+            # the following "fancy indexing" relies on these particular values in f_polygon_types
+            # BNA_LAND_FEATURE_CODE = 1
+            # BNA_WATER_FEATURE_CODE = 2
+            # BNA_OTHER_FEATURE_CODE = 3
+            color_array = np.array((0, green, blue, gray), dtype=np.uint32)
+            self.polygons.color = color_array[np.clip(f_polygon_types, 1, 3)]
+            """
+            def map_type_to_color( t ):
+                if ( t == File_loader.BNA_LAND_FEATURE_CODE ):
+                    return green
+                elif ( t == File_loader.BNA_WATER_FEATURE_CODE ):
+                    return blue
+                else:
+                    return gray
+            self.polygons.color = np.vectorize( map_type_to_color )( f_polygon_types )
+            """
+
+            self.points.state = 0
+        print self
+        self.update_bounds()
+
+    def make_polygons(self, count):
+        return np.repeat(
+            np.array([(0, 0, 0, 0, 0)], dtype=data_types.POLYGON_DTYPE),
+            count,
+        ).view(np.recarray)
+
+    def make_polygon_adjacency_array(self, count):
+        return np.repeat(
+            np.array([(0, 0)], dtype=data_types.POLYGON_ADJACENCY_DTYPE),
+            count,
+        ).view(np.recarray)
+
+    def clear_all_polygon_selections(self, mark_type=STATE_SELECTED):
+        if (self.polygons != None):
+            self.polygons.state = self.polygons.state & (0xFFFFFFFF ^ mark_type)
+            self.increment_change_count()
+
+    def select_polygon(self, polygon_index, mark_type=STATE_SELECTED):
+        self.polygons.state[polygon_index] = self.polygons.state[polygon_index] | mark_type
+        self.increment_change_count()
+
+    def deselect_polygon(self, polygon_index, mark_type=STATE_SELECTED):
+        self.polygons.state[polygon_index] = self.polygons.state[polygon_index] & (0xFFFFFFFF ^ mark_type)
+        self.increment_change_count()
+
+    def is_polygon_selected(self, polygon_index, mark_type=STATE_SELECTED):
+        return self.polygons != None and (self.polygons.state[polygon_index] & mark_type) != 0
+
+    def get_selected_polygon_indexes(self, mark_type=STATE_SELECTED):
+        if (self.polygons == None):
+            return []
+        #
+        return np.where((self.polygons.state & mark_type) != 0)[0]
+
+    def offset_selected_objects(self, world_d_x, world_d_y):
+        self.offset_selected_points(world_d_x, world_d_y)
+        self.offset_selected_polygons(world_d_x, world_d_y)
+
+    def offset_selected_polygons(self, world_d_x, world_d_y):
+        self.increment_change_count()
+    
+    def create_renderer(self, renderer):
+        """Create the graphic renderer for this layer.
+        
+        There may be multiple views of this layer (e.g.  in different windows),
+        so we can't just create the renderer as an attribute of this object.
+        The storage parameter is attached to the view and independent of
+        other views of this layer.
+        
+        """
+        if self.polygons != None and renderer.polygon_set_renderer == None:
+            renderer.rebuild_polygon_set_renderer(self)
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        if (not layer_visibility["layer"]):
+            return
+
+        # the polygons
+        if (renderer.polygon_set_renderer != None and layer_visibility["polygons"]):
+            renderer.polygon_set_renderer.render(layer_index_base + renderer.POLYGONS_SUB_LAYER_PICKER_OFFSET,
+                                             pick_mode,
+                                             self.polygons.color,
+                                             color_to_int(0, 0, 0, 1.0),
+                                             1)  # , self.get_selected_polygon_indexes()
