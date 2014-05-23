@@ -201,9 +201,7 @@ class LayerManager(LayerUndo):
 
     def remove_layer_at_multi_index(self, at_multi_index):
         layer = self.remove_layer_recursive(at_multi_index, self.layers)
-        if layer in self.dependents:
-            # remove the parent/child relationship of dependent layers
-            del self.dependents[layer]
+        self.remove_layer_from_dependents(layer)
         self.dispatch_event('layers_changed')
 
     def remove_layer_recursive(self, at_multi_index, tree):
@@ -265,6 +263,17 @@ class LayerManager(LayerUndo):
         if layer not in self.dependents:
             self.dependents[layer] = {}
         self.dependents[layer][dependent_type] = dependent_layer
+    
+    def remove_layer_from_dependents(self, layer):
+        if layer in self.dependents:
+            # remove the parent/child relationship of dependent layers
+            del self.dependents[layer]
+        for parent, dep_map in self.dependents.iteritems():
+            d = dep_map.copy()
+            for dep_type in d:
+                if d[dep_type] == layer:
+                    print "Removing %s from dependencies: parent=%s type=%s" % (layer, parent, dep_type)
+                    del self.dependents[parent][dep_type]
 
     def layer_is_folder(self, layer):
         return layer.type == "root" or layer.type == "folder"
@@ -407,14 +416,7 @@ class LayerManager(LayerUndo):
 
         self.destroy_recursive(layer)
 
-        mi = self.get_multi_index_of_layer(layer)
-        if (mi == []):
-            self.layers = self.layers[0: 1]
-        else:
-            l = self.layers
-            for index in mi[0: -1]:
-                l = l[index]
-            del l[mi[-1]]
+        self.remove_layer(layer)
         
         self.project.control.remove_renderer_for_layer(layer)
 
