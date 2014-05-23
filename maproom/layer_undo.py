@@ -7,6 +7,8 @@ OP_ADD_LINE = 3  # params = None
 OP_DELETE_LINE = 4  # params = ( point_index_1, point_index_2, color, state )
 OP_MOVE_POINT = 5  # params = ( d_lon, d_lat )
 OP_CHANGE_POINT_DEPTH = 6  # params = ( old_depth, new_depth )
+OP_ADD_TRIANGLE = 7  # params = ( point_index_1, point_index_2, point_index_3, color, state )
+OP_DELETE_TRIANGLE = 8  # params = ( point_index_1, point_index_2, point_index_3, color, state )
 
 class LayerUndo(HasTraits):
     
@@ -88,9 +90,9 @@ class LayerUndo(HasTraits):
         return self.get_undo_redo_operation_text(op)
 
     def get_undo_redo_operation_text(self, op):
-        if (op == OP_ADD_POINT or op == OP_ADD_LINE):
+        if (op == OP_ADD_POINT or op == OP_ADD_LINE or op == OP_ADD_TRIANGLE):
             return "Add"
-        elif (op == OP_DELETE_POINT or op == OP_DELETE_LINE):
+        elif (op == OP_DELETE_POINT or op == OP_DELETE_LINE or op == OP_DELETE_TRIANGLE):
             return "Delete"
         elif (op == OP_MOVE_POINT):
             return "Move"
@@ -146,6 +148,10 @@ class LayerUndo(HasTraits):
         elif (op == OP_CHANGE_POINT_DEPTH):
             (old_depth, new_depth) = params
             layer.points.z[index] = old_depth
+        elif (op == OP_ADD_TRIANGLE):
+            layer.delete_triangle(index, False)
+        elif (op == OP_DELETE_TRIANGLE):
+            layer.insert_triangle_at_index(index, params, False)
 
     def redo(self):
         if (self.undo_stack_next_index >= len(self.undo_stack)):
@@ -188,6 +194,10 @@ class LayerUndo(HasTraits):
         elif (op == OP_CHANGE_POINT_DEPTH):
             (old_depth, new_depth) = params
             layer.points.z[index] = new_depth
+        elif (op == OP_ADD_TRIANGLE):
+            layer.insert_triangle_at_index(index, params, False)
+        elif (op == OP_DELETE_TRIANGLE):
+            layer.delete_triangle(index, False)
 
     def show_undo_redo_debug_dump(self, location_message):
         print location_message
