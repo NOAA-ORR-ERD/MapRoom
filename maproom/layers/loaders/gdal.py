@@ -13,6 +13,8 @@ from maproom.layers import RasterLayer
 class GDALLoader(object):
     mime = "image/*"
     
+    name = "GDAL"
+    
     def can_load(self, metadata):
         return metadata.mime.startswith("image/")
     

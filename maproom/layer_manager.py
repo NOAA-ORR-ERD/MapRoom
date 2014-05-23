@@ -131,9 +131,9 @@ class LayerManager(LayerUndo):
                 window.information(message, "No Errors Found")
             except Exception, e:
                 if hasattr(e, "points") and e.points != None:
-                    layer.clear_all_selections(STATE_FLAGGED)
+                    layer.clear_all_selections(constants.STATE_FLAGGED)
                     for p in e.points:
-                        layer.select_point(p, STATE_FLAGGED)
+                        layer.select_point(p, constants.STATE_FLAGGED)
                 self.dispatch_event('refresh_needed')
                 window.error(e.message, "File Contains Errors")
         return "No selected layer."

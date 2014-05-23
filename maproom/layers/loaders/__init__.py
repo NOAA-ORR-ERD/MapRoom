@@ -64,14 +64,14 @@ def load_layer(metadata, manager=None):
             return layer
     return None
 
-def check_layer(layer, info_handler, error_handler):
+def check_layer(layer):
     saver = None
     for loader in loaders:
         # FIXME: only the first loader that can check the layer is used.  How
         # would we present results of multiple loaders?
         if loader.can_save(layer):
             loader.check(layer)
-            return
+            return "This is a valid %s file" % loader.name
 
 def save_layer(layer, uri):
     saver = None

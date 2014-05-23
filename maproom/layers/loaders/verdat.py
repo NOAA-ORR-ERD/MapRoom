@@ -14,6 +14,8 @@ WHITESPACE_PATTERN = re.compile("\s+")
 class VerdatLoader(object):
     mime = "application/x-maproom-verdat"
     
+    name = "Verdat"
+    
     def can_load(self, metadata):
         return metadata.mime == self.mime
     

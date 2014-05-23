@@ -13,6 +13,8 @@ from maproom.layers import PolygonLayer
 class BNALoader(object):
     mime = "application/x-maproom-bna"
     
+    name = "BNA"
+    
     def can_load(self, metadata):
         return metadata.mime == self.mime
     
