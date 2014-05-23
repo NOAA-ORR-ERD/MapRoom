@@ -90,6 +90,9 @@ class Layer(HasTraits):
     
     def check_for_errors(self, window):
         pass
+    
+    def check_projection(self, window):
+        pass
 
     def get_visibility_dict(self):
         d = dict()

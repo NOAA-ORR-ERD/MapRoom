@@ -115,6 +115,12 @@ class LayerManager(LayerUndo):
         if layer.load_error_string != "":
             print "LAYER LOAD ERROR: %s" % layer.load_error_string
             return None
+        
+        layer.check_projection(editor.window)
+        if layer.load_error_string != "":
+            print "LAYER LOAD ERROR: %s" % layer.load_error_string
+            return None
+        
         self.insert_loaded_layer(layer, editor)
         return layer
     

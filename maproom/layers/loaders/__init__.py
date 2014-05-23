@@ -51,6 +51,8 @@
 loaders = []
 from bna import BNALoader
 loaders.append(BNALoader())
+from gdal import GDALLoader
+loaders.append(GDALLoader())
 from verdat import VerdatLoader
 loaders.append(VerdatLoader())
 # [[[end]]]

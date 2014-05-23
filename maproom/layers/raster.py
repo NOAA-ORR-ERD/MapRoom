@@ -8,6 +8,7 @@ from pytriangle import triangulate_simple
 
 # Enthought library imports.
 from traits.api import Unicode, Str, Any, Float
+from pyface.api import YES
 
 from ..library import File_loader, rect
 from ..library.scipy_ckdtree import cKDTree
@@ -26,6 +27,8 @@ class RasterLayer(ProjectedLayer):
     
     """
     name = Unicode("Raster Layer")
+
+    type = Str("image")
 
     image_data = Any
     
@@ -59,66 +62,44 @@ class RasterLayer(ProjectedLayer):
         if label == "images":
             return self.image_data is not None
 
-    def read_from_file(self, file_path):
-        self.file_path = file_path
-        self.name = os.path.split(file_path)[1]
-        (base, ext) = os.path.splitext(file_path)
-        ext = ext.lower()
+    def check_projection(self, window):
+        # change the app projection to latlong if this image is latlong projection
+        # and we don't currently have a mercator image loaded;
+        # alternatively, if we are in latlong and we don't currently have
+        # a latlong image loaded, and this image is mercator, change to mercator
 
-        self.load_error_string, self.image_data = File_loader.load_image_file(file_path)
+        # TODO: handle other projections besides +proj=merc and +proj=longlat
+        raster_layers = self.manager.count_raster_layers()
+        vector_layers = self.manager.count_vector_layers()
+        
+        if raster_layers == 0 and vector_layers == 0:
+            self.manager.dispatch_event('projection_changed', self)
+        currently_merc = self.manager.project.control.projection.srs.find("+proj=merc") != -1
+        currently_longlat = self.manager.project.control.projection.srs.find("+proj=longlat") != -1
+        incoming_merc = self.image_data.projection.srs.find("+proj=merc") != -1
+        incoming_longlat = self.image_data.projection.srs.find("+proj=longlat") != -1
 
-        if (self.load_error_string == ""):
-            self.type = ext
+        disagreement = (currently_merc != incoming_merc) or (currently_longlat != incoming_longlat)
+        if (disagreement):
+            if (incoming_merc):
+                type = "Mercator"
+                srs = "+proj=merc +units=m +over"
+            else:
+                type = "Longitude/Latitude"
+                srs = "+proj=longlat +over"
+            message = None
+            if (raster_layers > 0):
+                message = "The file you are loading is in " + type + " projection, but one or more other raster files already loaded have a different projection. Do you want to load this file anyway, with distortion?"
+            elif (vector_layers > 0):
+                message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
 
-            # change the app projection to latlong if this image is latlong projection
-            # and we don't currently have a mercator image loaded;
-            # alternatively, if we are in latlong and we don't currently have
-            # a latlong image loaded, and this image is mercator, change to mercator
+            if message is not None:
+                print message
+                if (window.confirm(m) != YES):
+                    self.load_error_string = "Projection conflict"
+                    return
 
-            # TODO: handle other projections besides +proj=merc and +proj=longlat
-            raster_layers = self.manager.count_raster_layers()
-            vector_layers = self.manager.count_vector_layers()
-            
-            if raster_layers == 0 and vector_layers == 0:
-                self.manager.dispatch_event('projection_changed', self)
-            currently_merc = self.manager.project.control.projection.srs.find("+proj=merc") != -1
-            currently_longlat = self.manager.project.control.projection.srs.find("+proj=longlat") != -1
-            incoming_merc = self.image_data.projection.srs.find("+proj=merc") != -1
-            incoming_longlat = self.image_data.projection.srs.find("+proj=longlat") != -1
-
-            disagreement = (currently_merc != incoming_merc) or (currently_longlat != incoming_longlat)
-            if (disagreement):
-                if (incoming_merc):
-                    type = "Mercator"
-                    srs = "+proj=merc +units=m +over"
-                else:
-                    type = "Longitude/Latitude"
-                    srs = "+proj=longlat +over"
-                message = None
-                if (raster_layers > 0):
-                    message = "The file you are loading is in " + type + " projection, but one or more other raster files already loaded have a different projection. Do you want to load this file anyway, with distortion?"
-                elif (vector_layers > 0):
-                    message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
-
-                if message is not None:
-                    print message
-                    tlw = wx.GetApp().GetTopWindow()
-                    dialog = wx.MessageDialog(
-                        tlw,
-                        message=message,
-                        caption="Projection Conflict",
-                        style=wx.OK | wx.CANCEL | wx.ICON_QUESTION,
-                    )
-
-                    if (dialog.ShowModal() != wx.ID_OK):
-                        self.load_error_string = "Projection conflict"
-                        #
-                        return
-
-                    self.manager.dispatch_event('projection_changed', self)
-
-        if (self.load_error_string == ""):
-            self.update_bounds()
+                self.manager.dispatch_event('projection_changed', self, srs)
 
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
