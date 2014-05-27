@@ -450,11 +450,13 @@ class ProjectEditor(FrameworkEditor):
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
             if (not event.ControlDown() and not event.ShiftDown()):
                 self.esc_key_pressed()
-                layer.insert_point_in_line(world_point, line_segment_index)
+                point_index = layer.insert_point_in_line(world_point, line_segment_index)
                 self.layer_manager.end_operation_batch()
                 self.control.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
                 if not vis:
                     self.task.status_bar.message = "Split line in hidden layer %s" % layer.name
+                else:
+                    layer.select_point(point_index)
 
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (event.ControlDown()):
