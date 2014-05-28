@@ -57,6 +57,12 @@ from verdat import VerdatLoader
 loaders.append(VerdatLoader())
 # [[[end]]]
 
+import os
+import tempfile
+import shutil
+
+from maproom.layers import constants
+
 def load_layer(metadata, manager=None):
     for loader in loaders:
         if loader.can_load(metadata):
@@ -91,8 +97,8 @@ def save_layer(layer, uri):
     had_error = False
     try:
         saver.save_to_file(f, layer)
-        if layer.get_num_points_selected(STATE_FLAGGED):
-            layer.clear_all_selections(STATE_FLAGGED)
+        if layer.get_num_points_selected(constants.STATE_FLAGGED):
+            layer.clear_all_selections(constants.STATE_FLAGGED)
             layer.manager.dispatch_event('refresh_needed')
     except Exception as e:
         import traceback
@@ -100,9 +106,9 @@ def save_layer(layer, uri):
         had_error = True
         print traceback.format_exc(e)
         if hasattr(e, "points") and e.points != None:
-            layer.clear_all_selections(STATE_FLAGGED)
+            layer.clear_all_selections(constants.STATE_FLAGGED)
             for p in e.points:
-                layer.select_point(p, STATE_FLAGGED)
+                layer.select_point(p, constants.STATE_FLAGGED)
             layer.manager.dispatch_event('refresh_needed')
         error = e.message
     finally:
