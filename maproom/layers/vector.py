@@ -1140,8 +1140,8 @@ class TriangleLayer(PointLayer):
         # we need to use projected points for the triangulation
         projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float32).copy()
         if (self.manager.project.control.projection_is_identity):
-            projected_points[:, 0] = layer.points[:, 0]
-            projected_points[:, 1] = layer.points[:, 1]
+            projected_points[:, 0] = layer.points.x[:]
+            projected_points[:, 1] = layer.points.y[:]
         else:
             projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(layer.points.x, layer.points.y)
             hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
