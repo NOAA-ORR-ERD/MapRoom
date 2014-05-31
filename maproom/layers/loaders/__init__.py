@@ -39,7 +39,7 @@
 #    members = inspect.getmembers(module, inspect.isclass)
 #    names = []
 #    for name, cls in members:
-#        if hasattr(cls, 'can_load'):
+#        if hasattr(cls, 'can_load') and name != "BaseLoader":
 #            # make sure class is from this module and not an imported dependency
 #            if cls.__module__.startswith(modname):
 #                names.append(name)
@@ -49,6 +49,8 @@
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
 loaders = []
+from ugrid import UGridLoader
+loaders.append(UGridLoader())
 from bna import BNALoader
 loaders.append(BNALoader())
 from gdal import GDALLoader
@@ -57,21 +59,17 @@ from verdat import VerdatLoader
 loaders.append(VerdatLoader())
 # [[[end]]]
 
-import os
-import tempfile
-import shutil
-
-from maproom.layers import constants
-
 def load_layer(metadata, manager=None):
     for loader in loaders:
+        print "trying loader %s" % loader.name
         if loader.can_load(metadata):
+            print " loading using loader %s!" % loader.name
             layer = loader.load(metadata, manager=manager)
+            print " loaded layer: %s" % layer
             return layer
     return None
 
 def check_layer(layer):
-    saver = None
     for loader in loaders:
         # FIXME: only the first loader that can check the layer is used.  How
         # would we present results of multiple loaders?
@@ -89,37 +87,6 @@ def save_layer(layer, uri):
     
     if uri is None:
         uri = layer.file_path
-    temp_dir = tempfile.mkdtemp()
-    temp_file = os.path.join(temp_dir, os.path.basename(uri))
-
-    f = open(temp_file, "w")
-    error = ""
-    had_error = False
-    try:
-        saver.save_to_file(f, layer)
-        if layer.get_num_points_selected(constants.STATE_FLAGGED):
-            layer.clear_all_selections(constants.STATE_FLAGGED)
-            layer.manager.dispatch_event('refresh_needed')
-    except Exception as e:
-        import traceback
-        
-        had_error = True
-        print traceback.format_exc(e)
-        if hasattr(e, "points") and e.points != None:
-            layer.clear_all_selections(constants.STATE_FLAGGED)
-            for p in e.points:
-                layer.select_point(p, constants.STATE_FLAGGED)
-            layer.manager.dispatch_event('refresh_needed')
-        error = e.message
-    finally:
-        f.close()
-    if (not had_error and temp_file and os.path.exists(temp_file)):
-        try:
-            shutil.copy(temp_file, uri)
-            layer.file_path = uri
-        except Exception as e:
-            import traceback
-        
-            error = "Unable to save file to disk. Make sure you have write permissions to the file.\n\nSystem error was: %s" % e.message
-            print traceback.format_exc(e)
+    
+    error = saver.save(uri, layer)
     return error

@@ -4,19 +4,18 @@ import time
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
-from maproom.library.accumulator import accumulator, flatten
-import maproom.library.rect as rect
-import maproom.library.Bitmap as Bitmap
+from maproom.library.accumulator import accumulator
 
 from maproom.layers import PolygonLayer
 
-class BNALoader(object):
+from common import BaseLoader
+
+class BNALoader(BaseLoader):
     mime = "application/x-maproom-bna"
     
-    name = "BNA"
+    layer_type = "polygon"
     
-    def can_load(self, metadata):
-        return metadata.mime == self.mime
+    name = "BNA"
     
     def load(self, metadata, manager):
         layer = PolygonLayer(manager=manager)
@@ -34,9 +33,6 @@ class BNALoader(object):
             layer.name = os.path.split(layer.file_path)[1]
             layer.type = self.mime
         return layer
-    
-    def can_save(self, layer):
-        return False
     
     def check(self, layer):
         raise RuntimeError("Not abte to check BNA files")

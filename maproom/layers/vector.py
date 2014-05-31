@@ -984,6 +984,9 @@ class TriangleLayer(PointLayer):
         self.update_bounds()
         print self
 
+    def can_save_as(self):
+        return True
+
     def update_after_insert_point_at_index(self, point_index):
         # update point indexes in the triangles to account for the inserted point
         if (self.triangles != None):

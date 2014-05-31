@@ -5,19 +5,18 @@ from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import find_boundaries
 from maproom.library.Shape import points_outside_polygon
 
-from common import PointsError
+from common import PointsError, BaseLoader
 from maproom.layers import LineLayer
 
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-class VerdatLoader(object):
+class VerdatLoader(BaseLoader):
     mime = "application/x-maproom-verdat"
     
-    name = "Verdat"
+    layer_type = "line"
     
-    def can_load(self, metadata):
-        return metadata.mime == self.mime
+    name = "Verdat"
     
     def load(self, metadata, manager):
         layer = LineLayer(manager=manager)
@@ -34,14 +33,11 @@ class VerdatLoader(object):
             layer.mime = self.mime
         return layer
     
-    def can_save(self, layer):
-        return layer.type == "line"
-    
     def check(self, layer):
         check_valid_verdat(layer)
     
-    def save_to_file(self, f, layer):
-        return write_layer_as_verdat(f, layer)
+    def save_to_fh(self, fh, layer):
+        return write_layer_as_verdat(fh, layer)
 
 
 def load_verdat_file(file_path):
