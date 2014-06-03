@@ -84,6 +84,12 @@ class TestVerdatConversion(object):
         tris.triangulate_from_layer(self.verdat, None, None)
         
         loaders.save_layer(tris, "negative-depth-triangles.nc")
+        
+        guess = FileGuess("negative-depth-triangles.nc")
+        guess.metadata.mime = "application/x-hdf"
+        t2 = loaders.load_layer(guess.metadata, self.manager)
+        
+        print t2.points
 
 
 

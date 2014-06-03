@@ -22,7 +22,7 @@ class UGridLoader(BaseLoader):
         
         ug = UGrid.from_ncfile(metadata.uri)
 
-        layer.set_data(ug.nodes, 1.0, ug.faces)
+        layer.set_data(ug.nodes, ug.depths, ug.faces)
         layer.file_path = metadata.uri
         layer.name = os.path.split(layer.file_path)[1]
         layer.mime = self.mime
@@ -35,9 +35,11 @@ class UGridLoader(BaseLoader):
         n = np.alen(layer.points)
         points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n]
         print points
+        depths = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).z[0:n]
+        print depths
         n = np.alen(layer.triangles)
         faces = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
         print faces
 
-        grid = UGrid(points, faces, [])
+        grid = UGrid(points, faces, [], depths, layer.depth_unit)
         grid.save_as_netcdf(filename)
