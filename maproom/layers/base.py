@@ -74,6 +74,10 @@ class Layer(HasTraits):
         """
         return True
     
+    def highlight_exception(self, e):
+        """Highlight items flagged in the exception"""
+        pass
+    
     def is_root(self):
         return False
     

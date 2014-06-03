@@ -65,6 +65,13 @@ class PointLayer(ProjectedLayer):
 
         return no_points
     
+    def highlight_exception(self, e):
+        if hasattr(e, "points") and e.points != None:
+            self.clear_all_selections(STATE_FLAGGED)
+            for p in e.points:
+                self.select_point(p, STATE_FLAGGED)
+            self.manager.dispatch_event('refresh_needed')
+    
     def get_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
         """

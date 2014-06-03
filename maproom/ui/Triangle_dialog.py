@@ -150,6 +150,7 @@ class Triangle_dialog(wx.Dialog):
             print traceback.format_exc(e)
             if remove_on_failure:
                 self.project.layer_manager.remove_layer(t_layer)
+            layer.highlight_exception(e)
             wx.MessageBox(e.message, "Triangulate Error")
 
         self.project.refresh()
