@@ -75,10 +75,10 @@ class ProjectEditor(FrameworkEditor):
             path = self.path
         else:
             metadata = guess.get_metadata()
-            layer = self.layer_manager.load_layer_from_metadata(metadata, self)
+            layers = self.layer_manager.load_layers_from_metadata(metadata, self)
             
-            if layer:
-                self.zoom_to_layer(layer)
+            if layers:
+                self.zoom_to_layers(layers)
 
         self.dirty = False
 
@@ -583,6 +583,10 @@ class ProjectEditor(FrameworkEditor):
 
     def zoom_to_layer(self, layer):
         self.control.zoom_to_world_rect(layer.bounds)
+
+    def zoom_to_layers(self, layers):
+        rect = self.layer_manager.accumulate_layer_bounds_from_list(layers)
+        self.control.zoom_to_world_rect(rect)
     
     def check_for_errors(self):
         sel_layer = self.layer_tree_control.get_selected_layer()

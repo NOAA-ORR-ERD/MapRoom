@@ -5,7 +5,7 @@ import re
 from pyugrid.ugrid import UGrid
 
 from common import PointsError, BaseLoader
-from maproom.layers import TriangleLayer
+from maproom.layers import LineLayer, TriangleLayer
 from maproom.renderer import data_types
 
 WHITESPACE_PATTERN = re.compile("\s+")
@@ -18,15 +18,25 @@ class UGridLoader(BaseLoader):
     name = "UGrid"
     
     def load(self, metadata, manager):
-        layer = TriangleLayer(manager=manager)
+        layers = []
         
         ug = UGrid.from_ncfile(metadata.uri)
+        if len(ug.edges) > 0:
+            layer = LineLayer(manager=manager)
+            layer.set_data(ug.nodes, ug.depths, ug.edges)
+            layer.file_path = metadata.uri
+            layer.name = os.path.split(layer.file_path)[1]
+            layer.mime = self.mime
+            layers.append(layer)
 
-        layer.set_data(ug.nodes, ug.depths, ug.faces)
-        layer.file_path = metadata.uri
-        layer.name = os.path.split(layer.file_path)[1]
-        layer.mime = self.mime
-        return layer
+        if len(ug.faces) > 0:
+            layer = TriangleLayer(manager=manager)
+            layer.set_data(ug.nodes, ug.depths, ug.faces)
+            layer.file_path = metadata.uri
+            layer.name = os.path.split(layer.file_path)[1]
+            layer.mime = self.mime
+            layers.append(layer)
+        return layers
     
     def check(self, layer):
         return True

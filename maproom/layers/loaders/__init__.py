@@ -59,14 +59,14 @@ from verdat import VerdatLoader
 loaders.append(VerdatLoader())
 # [[[end]]]
 
-def load_layer(metadata, manager=None):
+def load_layers(metadata, manager=None):
     for loader in loaders:
         print "trying loader %s" % loader.name
         if loader.can_load(metadata):
             print " loading using loader %s!" % loader.name
-            layer = loader.load(metadata, manager=manager)
-            print " loaded layer: %s" % layer
-            return layer
+            layers = loader.load(metadata, manager=manager)
+            print " loaded layers: \n  %s" % "\n  ".join([str(a) for a in layers])
+            return layers
     return None
 
 def check_layer(layer):

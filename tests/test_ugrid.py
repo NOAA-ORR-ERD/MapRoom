@@ -6,49 +6,6 @@ import numpy as np
 
 from pyugrid.ugrid import UGrid
 
-
-#def test_simple_read():
-#	""" can it be read at all """
-#	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
-#
-#	assert True
-#
-#def test_read_nodes():
-#	""" Do we get the right nodes array? """
-#	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
-#
-#	assert ug.nodes.shape == (11,2)
-#
-#	# not ideal to pull specific values out, but how else to test?
-#	assert np.array_equal( ug.nodes[0,:],	 (-62.242, 12.774999) )
-#	assert np.array_equal( ug.nodes[-1,:],	 (-34.911235,  29.29379) )
-#
-### no edge data in test file at this point
-## def test_read_edges():
-## 	""" Do we get the right edges array? """
-## 	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
-#
-## 	print ug.edges
-#
-## 	assert False
-#
-#def test_read_face_node_connectivity():
-#	""" Do we get the right connectivity array? """
-#	ug = UGrid.from_ncfile('files/ElevenPoints_UGRIDv0.9.nc')
-#
-#	assert ug.faces.shape == (13, 3)
-#
-#	# # not ideal to pull specific values out, but how else to test?
-#	## note: file is 1-indexed, so these values are adjusted
-#	assert np.array_equal( ug.faces[0,:],	 (2, 3, 10) )
-#	assert np.array_equal( ug.faces[-1,:],	 (10, 5, 6) )
-#
-## def test_simple_read():
-## 	ug = UGrid.from_ncfile('files/two_triangles.nc')
-#
-## 	assert False
-#
-
 from peppy2.utils.file_guess import FileGuess
 from maproom.layers import loaders, TriangleLayer
 from maproom.library.Boundary import find_boundaries
@@ -78,7 +35,7 @@ class TestVerdatConversion(object):
         guess.metadata.mime = "application/x-maproom-verdat"
         print guess
         print guess.metadata
-        self.verdat = loaders.load_layer(guess.metadata, manager=self.manager)
+        self.verdat = loaders.load_layers(guess.metadata, manager=self.manager)[0]
 
     def test_simple(self):
         eq_(23, np.alen(self.verdat.points))
@@ -91,7 +48,7 @@ class TestVerdatConversion(object):
         
         guess = FileGuess("negative-depth-triangles.nc")
         guess.metadata.mime = "application/x-hdf"
-        t2 = loaders.load_layer(guess.metadata, self.manager)
+        t2 = loaders.load_layers(guess.metadata, self.manager)[0]
         
         print t2.points
 
@@ -114,7 +71,7 @@ class TestJetty(object):
         guess.metadata.mime = "application/x-maproom-verdat"
         print guess
         print guess.metadata
-        self.verdat = loaders.load_layer(guess.metadata, manager=self.manager)
+        self.verdat = loaders.load_layers(guess.metadata, manager=self.manager)[0]
     
     def add_segments(self, point_list):
         start = point_list[0]
@@ -159,6 +116,22 @@ class TestJetty(object):
             line_count=len(layer.line_segment_indexes))
 
 
+class TestUGrid(object):
+    def setup(self):
+        self.manager = MockManager()
+        guess = FileGuess("../TestData/UGrid/2_triangles.nc")
+        guess.metadata.mime = "application/x-hdf"
+        print guess
+        print guess.metadata
+        self.layers = loaders.load_layers(guess.metadata, manager=self.manager)
+    
+    def test_load(self):
+        eq_(2, len(self.layers))
+        layer = self.layers[0]
+        eq_('line', layer.type)
+        layer = self.layers[1]
+        eq_('triangle', layer.type)
+
 if __name__ == "__main__":
     t = TestVerdatConversion()
     t.setup()
@@ -169,3 +142,6 @@ if __name__ == "__main__":
     t.test_channel()
     t.setup()
     t.test_jetty()
+    t = TestUGrid()
+    t.setup()
+    t.test_load()

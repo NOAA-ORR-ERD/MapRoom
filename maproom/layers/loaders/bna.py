@@ -32,7 +32,7 @@ class BNALoader(BaseLoader):
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.type = self.mime
-        return layer
+        return [layer]
     
     def check(self, layer):
         raise RuntimeError("Not abte to check BNA files")

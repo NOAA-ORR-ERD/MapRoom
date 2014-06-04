@@ -31,7 +31,7 @@ class VerdatLoader(BaseLoader):
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
-        return layer
+        return [layer]
     
     def check(self, layer):
         check_valid_verdat(layer)

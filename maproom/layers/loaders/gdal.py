@@ -27,7 +27,7 @@ class GDALLoader(object):
             layer.name = os.path.split(layer.file_path)[1]
             layer.type = self.mime
             layer.update_bounds()
-        return layer
+        return [layer]
     
     def can_save(self, layer):
         return False

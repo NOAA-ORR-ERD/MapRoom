@@ -105,24 +105,28 @@ class LayerManager(LayerUndo):
             layer.destroy()
         self.layers = []
 
-    def load_layer_from_metadata(self, metadata, editor=None):
+    def load_layers_from_metadata(self, metadata, editor=None):
         # FIXME: load all layer types, not just vector!
-        layer = loaders.load_layer(metadata, manager=self)
-        if layer is None:
+        layers = loaders.load_layers(metadata, manager=self)
+        if layers is None:
             print "LAYER LOAD ERROR: %s" % "Unknown file type %s for %s" % (metadata.mime, metadata.uri)
             return None
-            
-        if layer.load_error_string != "":
-            print "LAYER LOAD ERROR: %s" % layer.load_error_string
+        
+        errors = []
+        for layer in layers:
+            if layer.load_error_string != "":
+                errors.append("LAYER LOAD ERROR: %s" % layer.load_error_string)
+        
+            layer.check_projection(editor.window)
+            if layer.load_error_string != "":
+                errors.append("LAYER LOAD ERROR: %s" % layer.load_error_string)
+        
+        if errors:
             return None
         
-        layer.check_projection(editor.window)
-        if layer.load_error_string != "":
-            print "LAYER LOAD ERROR: %s" % layer.load_error_string
-            return None
-        
-        self.insert_loaded_layer(layer, editor)
-        return layer
+        for layer in layers:
+            self.insert_loaded_layer(layer, editor)
+        return layers
     
     def check_layer(self, layer, window):
         if layer is not None:
@@ -357,10 +361,18 @@ class LayerManager(LayerUndo):
         if (len(self.layers) == 0):
             return result
 
+        layers = []
         for layer in self.flatten():
             if (only_visible_layers and not layer_visibility[layer]["layer"]):
                 continue
+            layers.append(layer)
 
+        return self.accumulate_layer_bounds_from_list(layers)
+
+    def accumulate_layer_bounds_from_list(self, layers):
+        result = rect.NONE_RECT
+
+        for layer in layers:
             if (result == rect.NONE_RECT):
                 result = layer.bounds
             else:
