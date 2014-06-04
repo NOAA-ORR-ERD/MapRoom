@@ -140,7 +140,8 @@ def check_valid_verdat(layer):
         points=points,
         point_count=len(points),
         lines=lines,
-        line_count=len(lines)
+        line_count=len(lines),
+        allow_branches=False
     )
     do_boundaries_check(points, boundaries, non_boundary_points)
 
@@ -170,7 +171,8 @@ def write_layer_as_verdat(f, layer):
         points=points,
         point_count=len(points),
         lines=lines,
-        line_count=len(lines)
+        line_count=len(lines),
+        allow_branches=False
     )
 
     do_boundaries_check(points, boundaries, non_boundary_points)

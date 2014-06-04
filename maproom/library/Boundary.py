@@ -10,7 +10,7 @@ class Find_boundaries_error(Exception):
         self.points = points
 
 
-def find_boundaries(points, point_count, lines, line_count):
+def find_boundaries(points, point_count, lines, line_count, allow_branches=True):
     """
         points = a numpy array of points with at least .x and .y fields
         point_count = number of points to consider
@@ -50,6 +50,17 @@ def find_boundaries(points, point_count, lines, line_count):
             adjacent2.append(point1)
         non_boundary_points.discard(point1)
         non_boundary_points.discard(point2)
+    
+    if not allow_branches:
+        branch_points = set()
+        for point, adjacent in adjacency_map.iteritems():
+            if len(adjacent) > 2:
+                branch_points.add(point)
+                for a in adjacent:
+                    branch_points.add(a)
+        if len(branch_points) > 0:
+            raise Find_boundaries_error("Branching boundaries are not supported.",
+                                        points=tuple(branch_points))
     
     # find any endpoints of jetties and segments not connected to the boundary
     endpoints = []
