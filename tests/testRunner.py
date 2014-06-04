@@ -1,12 +1,10 @@
 import unittest
 import wx
 
-import library.coordinates
-import library.Projection
-import ui.RenderWindow
-import Editor
+import maproom.library.coordinates
+import maproom.library.Projection
 
-alltests = unittest.TestSuite([library.coordinates.getTestSuite(), library.Projection.getTestSuite(), ui.RenderWindow.getTestSuite(), Editor.getTestSuite()])
+alltests = unittest.TestSuite([maproom.library.coordinates.getTestSuite(), maproom.library.Projection.getTestSuite()])
 
 if __name__ == "__main__":
     class TestApp(wx.App):
