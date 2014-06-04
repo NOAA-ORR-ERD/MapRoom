@@ -46,7 +46,7 @@ class PointLayer(ProjectedLayer):
             points = len(self.points)
         except:
             points = 0
-        return "Layer %s: %d points" % (self.name, points)
+        return "%s layer '%s': %d points" % (self.type, self.name, points)
 
     def new(self):
         Layer.new(self)
@@ -384,6 +384,13 @@ class LineLayer(PointLayer):
     type = Str("line")
     
     line_segment_indexes = Any
+
+    def __str__(self):
+        try:
+            lines = len(self.line_segment_indexes)
+        except:
+            lines = 0
+        return PointLayer.__str__(self) + ", %d lines" % lines
     
     def get_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
@@ -936,14 +943,10 @@ class TriangleLayer(PointLayer):
 
     def __str__(self):
         try:
-            points = len(self.points)
-        except:
-            points = 0
-        try:
             triangles = len(self.triangles)
         except:
             triangles = 0
-        return "TriangleLayer %s: %d points, %d triangles" % (self.name, points, triangles)
+        return PointLayer.__str__(self) + ", %d triangles" % triangles
 
     def empty(self):
         """
