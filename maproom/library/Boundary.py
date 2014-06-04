@@ -44,23 +44,42 @@ def find_boundaries(points, point_count, lines, line_count):
         adjacent1 = adjacency_map.setdefault(point1, [])
         adjacent2 = adjacency_map.setdefault(point2, [])
 
-        if len(adjacent1) >= 2:
-            raise Find_boundaries_error(
-                "Branching boundaries are not supported.",
-                points=(point1, point2) + tuple(adjacent1),
-            )
-        if len(adjacent2) >= 2:
-            raise Find_boundaries_error(
-                "Branching boundaries are not supported.",
-                points=(point1, point2) + tuple(adjacent2),
-            )
-
         if point2 not in adjacent1:
             adjacent1.append(point2)
         if point1 not in adjacent2:
             adjacent2.append(point1)
         non_boundary_points.discard(point1)
         non_boundary_points.discard(point2)
+    
+    # find any endpoints of jetties and segments not connected to the boundary
+    endpoints = []
+    for point, adjacent in adjacency_map.iteritems():
+        if len(adjacent) == 1:
+            endpoints.append(point)
+    while len(endpoints) > 0:
+        endpoint = endpoints.pop()
+#        print "BEFORE REMOVING ENDPOINT %d: " % endpoint
+#        for point, adjacent in adjacency_map.iteritems():
+#            print "  point: %d  adjacent: %s" % (point, adjacent)
+        
+        # check if other points are connected to this point, otherwise we have
+        # found the other end of the segment and can skip to the next endpoint
+        if endpoint in adjacency_map:
+            adjacent = adjacency_map[endpoint]
+            other_end = adjacent[0]
+            del(adjacency_map[endpoint])
+            adjacent = adjacency_map[other_end]
+            adjacent.remove(endpoint)
+            if len(adjacent) == 0:
+                # found end of line segment
+                del(adjacency_map[other_end])
+            elif len(adjacent) == 1:
+                # creating new segment end
+                endpoints.append(other_end)
+    
+#    print "FINISHED REMOVING ENDPOINTS!"
+#    for point, adjacent in adjacency_map.iteritems():
+#        print "  point: %d  adjacent: %s" % (point, adjacent)
 
     # Walk the adjacency map to create a list of line boundaries.
     boundaries = []  # ( boundary point index list, boundary area )
