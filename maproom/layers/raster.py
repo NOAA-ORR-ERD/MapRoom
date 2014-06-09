@@ -95,11 +95,11 @@ class RasterLayer(ProjectedLayer):
 
             if message is not None:
                 print message
-                if (window.confirm(m) != YES):
+                if (window.confirm(message) != YES):
                     self.load_error_string = "Projection conflict"
                     return
 
-                self.manager.dispatch_event('projection_changed', self, srs)
+                self.manager.dispatch_event('projection_changed', self)
 
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
