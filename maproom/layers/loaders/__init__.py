@@ -59,6 +59,8 @@ from verdat import VerdatLoader
 loaders.append(VerdatLoader())
 # [[[end]]]
 
+import os
+
 def load_layers(metadata, manager=None):
     for loader in loaders:
         print "trying loader %s" % loader.name
@@ -77,16 +79,26 @@ def check_layer(layer):
             loader.check(layer)
             return "This is a valid %s file" % loader.name
 
+def find_best_saver(savers, uri):
+    name, ext = os.path.splitext(uri)
+    if len(savers) > 1:
+        for saver in savers:
+            if saver.is_valid_extension(ext):
+                return saver
+    return savers[0]
+
 def save_layer(layer, uri):
-    saver = None
+    savers = []
     for loader in loaders:
         if loader.can_save(layer):
-            saver = loader
-    if not saver:
-        return "Layer type %s cannot be saved." % layer.type
+            savers.append(loader)
     
     if uri is None:
         uri = layer.file_path
+    
+    saver = find_best_saver(savers, uri)
+    if not saver:
+        return "Layer type %s cannot be saved." % layer.type
     
     error = saver.save(uri, layer)
     return error

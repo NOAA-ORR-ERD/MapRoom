@@ -12,7 +12,9 @@ class PointsError(Exception):
 class BaseLoader(object):
     mime = None
     
-    layer_type = ""
+    layer_types = []
+    
+    extensions = []
     
     name = "Abstract loader"
     
@@ -23,10 +25,13 @@ class BaseLoader(object):
         raise NotImplementedError
     
     def can_save(self, layer):
-        return layer.type == self.layer_type
+        return layer.type in self.layer_types
     
     def check(self, layer):
         pass
+    
+    def is_valid_extension(self, extension):
+        return extension.lower() in self.extensions
     
     def save(self, uri, layer):
         if uri is None:

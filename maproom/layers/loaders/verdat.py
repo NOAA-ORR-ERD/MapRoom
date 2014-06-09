@@ -14,7 +14,9 @@ WHITESPACE_PATTERN = re.compile("\s+")
 class VerdatLoader(BaseLoader):
     mime = "application/x-maproom-verdat"
     
-    layer_type = "line"
+    layer_types = ["line"]
+    
+    extensions = [".verdat", ".dat"]
     
     name = "Verdat"
     

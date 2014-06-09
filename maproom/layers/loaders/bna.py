@@ -15,6 +15,8 @@ class BNALoader(BaseLoader):
     
     layer_type = "polygon"
     
+    extensions = [".bna"]
+    
     name = "BNA"
     
     def load(self, metadata, manager):

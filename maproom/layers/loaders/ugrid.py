@@ -13,7 +13,9 @@ WHITESPACE_PATTERN = re.compile("\s+")
 class UGridLoader(BaseLoader):
     mime = "application/x-hdf"
     
-    layer_type = "triangle"
+    layer_types = ["point", "line", "triangle"]
+    
+    extensions = [".nc"]
     
     name = "UGrid"
     
@@ -47,9 +49,15 @@ class UGridLoader(BaseLoader):
         print points
         depths = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).z[0:n]
         print depths
-        n = np.alen(layer.triangles)
-        faces = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
-        print faces
+        if layer.type == "triangle":
+            lines = []
+            n = np.alen(layer.triangles)
+            faces = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
+            print faces
+        elif layer.type == "line":
+            faces = []
+            lines = layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points
+            print lines
 
-        grid = UGrid(points, faces, [], depths, layer.depth_unit)
+        grid = UGrid(points, faces, lines, depths, layer.depth_unit)
         grid.save_as_netcdf(filename)
