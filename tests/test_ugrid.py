@@ -79,16 +79,20 @@ class TestJetty(object):
             self.verdat.insert_line_segment(start, end)
             start = end
 
-    def test_jetty(self):
+    def create_jetty(self):
         layer = self.verdat
-        eq_(5, np.alen(layer.line_segment_indexes))
         segments = [
-            (4, 5, 6, 7, 8, 9),
+            (2, 5, 6, 7, 8, 9),
             (7, 10, 11, 12),
             (6, 13, 14, 15),
             ]
         for segment in segments:
             self.add_segments(segment)
+
+    def test_jetty(self):
+        layer = self.verdat
+        eq_(5, np.alen(layer.line_segment_indexes))
+        self.create_jetty()
         eq_(16, np.alen(layer.line_segment_indexes))
         
         (boundaries, non_boundary_points) = find_boundaries(
@@ -97,9 +101,18 @@ class TestJetty(object):
             lines=layer.line_segment_indexes,
             line_count=len(layer.line_segment_indexes))
 
-    def test_channel(self):
+    def test_jetty_save_as_ugrid(self):
+        self.create_jetty()
+        uri = "tmp.jetty.nc"
+        loaders.save_layer(self.verdat, uri)
+        guess = FileGuess(uri)
+        guess.metadata.mime = "application/x-hdf"
+        layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        layer = layers[0]
+        eq_(16, np.alen(layer.line_segment_indexes))
+
+    def create_channel(self):
         layer = self.verdat
-        eq_(5, np.alen(layer.line_segment_indexes))
         segments = [
             (5, 6, 7, 8, 9),
             (7, 10, 11, 12),
@@ -107,6 +120,11 @@ class TestJetty(object):
             ]
         for segment in segments:
             self.add_segments(segment)
+
+    def test_channel(self):
+        layer = self.verdat
+        eq_(5, np.alen(layer.line_segment_indexes))
+        self.create_channel()
         eq_(15, np.alen(layer.line_segment_indexes))
         
         (boundaries, non_boundary_points) = find_boundaries(
@@ -114,6 +132,16 @@ class TestJetty(object):
             point_count=len(layer.points),
             lines=layer.line_segment_indexes,
             line_count=len(layer.line_segment_indexes))
+
+    def test_channel_save_as_ugrid(self):
+        self.create_channel()
+        uri = "tmp.channel.nc"
+        loaders.save_layer(self.verdat, uri)
+        guess = FileGuess(uri)
+        guess.metadata.mime = "application/x-hdf"
+        layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        layer = layers[0]
+        eq_(15, np.alen(layer.line_segment_indexes))
 
 
 class TestUGrid(object):
