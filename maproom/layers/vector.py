@@ -1189,32 +1189,46 @@ class TriangleLayer(PointLayer):
         points, depths, triangles = self.get_triangulated_points(parent_layer, q, a)
         self.triangulate_from_data(points, depths, triangles)
     
-    def color_interp(self, z, colormap):
-        first = colormap[0]
-        if z < first[0]:
-            return first[1]
+    def color_interp(self, z, colormap, alpha):
+        c0 = colormap[0]
+        if z < c0[0]:
+            return color_to_int(c0[1], c0[2], c0[3], alpha)
         for c in colormap[1:]:
-            if z >= first[0] and z <= c[0]:
-                return c[1]
-        return c[1]
+            if z >= c0[0] and z <= c[0]:
+                perc = (z - c0[0]) / float(c[0] - c0[0])
+                return color_to_int((c0[1] + (c[1] - c0[1]) * perc)/255.,
+                                    (c0[2] + (c[2] - c0[2]) * perc)/255.,
+                                    (c0[3] + (c[3] - c0[3]) * perc)/255.,
+                                    alpha)
+            c0 = c
+        return color_to_int(c[1]/255., c[2]/255., c[3]/255., alpha)
     
-    def get_triangle_point_colors(self):
+    def get_triangle_point_colors(self, alpha=.9):
         colors = np.zeros(len(self.points), dtype=np.uint32)
         if self.points != None:
+            
+            # Lots of points in the colormap doesn't help because the shading
+            # is only applied linearly based on the depth of the endpoints.
+            # So if there are colors at depths 10, 25, 50, and 100, but the
+            # triangle has points of depth 0 and 100, the naive GL shader
+            # skips the colors at 25 and 50.  If it were written as a GLSL
+            # shader, maybe a complicated palette could be implemented.  But I
+            # know nothing of GLSL at this moment.
             colormap = (
-                (-10, color_to_int(.8, .7, .5, .5)),
-                (-0.01, color_to_int(.8, .7, .5, .5)),
-                (0, color_to_int(.6, .9, .9, .5)),
-                (10, color_to_int(.6, .8, .9, .5)),
-                (20, color_to_int(.6, .7, .9, .5)),
-                (30, color_to_int(.6, .6, .9, .5)),
-                (40, color_to_int(.5, .5, .8, .5)),
-                (50, color_to_int(.5, .4, .8, .5)),
+                (-10, 0xf0, 0xeb, 0xc3),
+                (-0.01, 0xf0, 0xeb, 0xc3),
+                (0, 0xd6, 0xea, 0xeb),
+#                (10, 0x9b, 0xd3, 0xe0),
+#                (20, 0x54, 0xc0, 0xdc),
+#                (30, 0x00, 0xa0, 0xcc),
+#                (40, 0x00, 0x6a, 0xa4),
+#                (50, 0x1f, 0x48, 0x8a),
+                (100, 0x00, 0x04, 0x69),
                 )
                 
             for i in range(len(colors)):
                 d = self.points.z[i]
-                colors[i] = self.color_interp(d, colormap)
+                colors[i] = self.color_interp(d, colormap, alpha)
         print colors
         return colors
 
