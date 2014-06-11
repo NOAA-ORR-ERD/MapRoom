@@ -1188,6 +1188,35 @@ class TriangleLayer(PointLayer):
     def triangulate_from_layer(self, parent_layer, q, a):
         points, depths, triangles = self.get_triangulated_points(parent_layer, q, a)
         self.triangulate_from_data(points, depths, triangles)
+    
+    def color_interp(self, z, colormap):
+        first = colormap[0]
+        if z < first[0]:
+            return first[1]
+        for c in colormap[1:]:
+            if z >= first[0] and z <= c[0]:
+                return c[1]
+        return c[1]
+    
+    def get_triangle_point_colors(self):
+        colors = np.zeros(len(self.points), dtype=np.uint32)
+        if self.points != None:
+            colormap = (
+                (-10, color_to_int(.8, .7, .5, .5)),
+                (-0.01, color_to_int(.8, .7, .5, .5)),
+                (0, color_to_int(.6, .9, .9, .5)),
+                (10, color_to_int(.6, .8, .9, .5)),
+                (20, color_to_int(.6, .7, .9, .5)),
+                (30, color_to_int(.6, .6, .9, .5)),
+                (40, color_to_int(.5, .5, .8, .5)),
+                (50, color_to_int(.5, .4, .8, .5)),
+                )
+                
+            for i in range(len(colors)):
+                d = self.points.z[i]
+                colors[i] = self.color_interp(d, colormap)
+        print colors
+        return colors
 
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.

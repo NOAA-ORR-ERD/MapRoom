@@ -81,8 +81,11 @@ class LayerRenderer(object):
         if create:
             if hasattr(layer, 'triangles') and layer.triangles is not None:
                 triangles = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
+                tri_points_color = layer.get_triangle_point_colors()
+                print tri_points_color
             else:
                 triangles = None
+                tri_points_color = None
             if hasattr(layer, 'line_segment_indexes') and layer.line_segment_indexes is not None:
                 lines = layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"]
                 line_color = layer.line_segment_indexes.color
@@ -96,6 +99,7 @@ class LayerRenderer(object):
                 lines,
                 line_color,
                 triangles,
+                tri_points_color,
                 self.canvas.projection,
                 self.canvas.projection_is_identity)
 
