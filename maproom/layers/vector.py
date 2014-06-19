@@ -1192,7 +1192,7 @@ class TriangleLayer(PointLayer):
     def color_interp(self, z, colormap, alpha):
         c0 = colormap[0]
         if z < c0[0]:
-            return color_to_int(c0[1], c0[2], c0[3], alpha)
+            return color_to_int(c0[1]/255., c0[2]/255., c0[3]/255., alpha)
         for c in colormap[1:]:
             if z >= c0[0] and z <= c[0]:
                 perc = (z - c0[0]) / float(c[0] - c0[0])
