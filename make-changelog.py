@@ -74,7 +74,7 @@ def findLatestInGit(options):
 
 def next_version(tagged_version):
     t = tagged_version.split(".")
-    print t
+#    print t
     last = t[-1]
     try:
         last = str(int(last) + 1)

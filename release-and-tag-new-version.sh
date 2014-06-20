@@ -6,13 +6,13 @@
 VERSION=`python make-changelog.py --next-version`
 echo $VERSION
 
-cat Version.py|sed -e s/VERSION.*/VERSION\ =\ \"$VERSION\"/ > Version.py.new
-mv Version.py.new Version.py
+cat maproom/Version.py|sed -e s/VERSION.*/VERSION\ =\ \"$VERSION\"/ > Version.py.new
+mv Version.py.new maproom/Version.py
 
 python make-changelog.py 
 
-python setup.py py2app
-
-git commit -m "updated ChangeLog & Version.py for $VERSION" ChangeLog Version.py
+git commit -m "updated ChangeLog & Version.py for $VERSION" ChangeLog maproom/Version.py
 
 git tag -a $VERSION -m "Released $VERSION"
+
+python setup.py py2app
