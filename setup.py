@@ -162,6 +162,10 @@ common_includes = [
     "pyface.ui.wx.timer.*",
     "pyface.ui.wx.tasks.*",
     "pyface.ui.wx.workbench.*",
+    
+    "netCDF4",
+    "netCDF4_utils",
+    "netcdftime",
 ]
 common_includes.extend(peppy2.get_py2exe_toolkit_includes())
 common_includes.extend(peppy2.get_py2exe_toolkit_includes(maproom))
