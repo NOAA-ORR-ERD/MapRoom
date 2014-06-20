@@ -558,6 +558,18 @@ class MaproomProjectTask(FrameworkTask):
     # 'FrameworkTask' interface.
     ###########################################################################
     
+    def activated(self):
+        FrameworkTask.activated(self)
+        # List of initially visible panes; all others (like the triangulate
+        # pane) will be hidden.
+        visible = {
+            'maproom.layer_selection_pane',
+            'maproom.layer_info_pane',
+            'maproom.selection_info_pane',
+            }
+        for pane in self.window.dock_panes:
+            pane.visible = (pane.id in visible)
+    
     def get_actions(self, location, menu_name, group_name):
         if location == "Menu":
             if menu_name == "File":
