@@ -1,3 +1,40 @@
+06/20/2014
+---------------------------
+Released 3.0b7
+- RM Added netCDF libraries to py2exe/py2app requirements
+- RM Fixed background for triangle panel
+- RM Fix TrianglePanel import error
+- RM Set default pane visibility
+- RM Changed triangulate dialog to a pane
+- RM Fixed colormap interp for first depth value
+- RM Added linear color interpolation
+- RM Initial support for colormapped triangle layer
+- RM Added sample files for line layers stored in netcdf files
+- RM Added verdat overlay for 11361_4 image chart
+- RM Fixed bug in raster loading introduced in 006cd2e0
+- RM Added test for saving line layers as netcdf
+- RM Added support for saving layers in multiple formats
+- RM Added multiple layer loading support
+- RM Fixed testRunner imports
+- RM Updated string representation of vector layers
+- RM Restored check for branches in find_boundaries
+- RM Added support for branching boundaries: jetties and channels
+- RM Added highlight_exception to layer
+- RM Fixed triangle support using new pyugrid that supports depths
+- RM Added first cut at ugrid file handler
+- RM fixed triangulation for identity projection
+- RM Added build instructions for pyugrid and dependencies
+- RM Fixed missing imports from save file routine
+- RM Select point created after clicking on line in point edit mode
+- RM Points deleted from triangle layer now remove connected triangles
+- RM Fixed missing triangle layer after deleting and recreating triangulation
+- RM Changed get_selected_point_plus_line_point_indexes to get_selected_and_dependent_point_indexes
+- RM Fixed layer loader's error checking
+- RM Added image loading to new file loading scheme
+- RM Added vector layer subclasses and file loading
+- RM File type recognizers now their own plugin
+- RM Fixed changelog maker to recognize alpha, beta tags
+
 05/17/2014
 ---------------------------
 Released 3.0b6
