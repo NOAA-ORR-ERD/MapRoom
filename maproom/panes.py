@@ -7,7 +7,7 @@ from traits.api import on_trait_change
 
 from Layer_tree_control import Layer_tree_control
 from ui.InfoPanels import LayerInfoPanel, SelectionInfoPanel
-from ui.Triangle_dialog import TrianglePanel
+from ui.TrianglePanel import TrianglePanel
 
 class LayerSelectionPane(DockPane):
     #### TaskPane interface ###################################################
