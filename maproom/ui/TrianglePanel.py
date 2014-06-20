@@ -13,6 +13,11 @@ class TrianglePanel(wx.Panel):
     def __init__(self, parent, task):
         self.task = task
         wx.Panel.__init__(self, parent, wx.ID_ANY)
+        
+        # Mac/Win needs this, otherwise background color is black
+        attr = self.GetDefaultAttributes()
+        self.SetBackgroundColour(attr.colBg)
+
         self.SetHelpText("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
