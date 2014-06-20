@@ -40,7 +40,7 @@ def main(argv):
     
     import maproom
     image_path = [get_image_path("icons", maproom)]
-    run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task="maproom.project.v2")
+    run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task="maproom.project.v3")
 
     logging.shutdown()
 

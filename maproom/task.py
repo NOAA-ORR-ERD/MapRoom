@@ -14,7 +14,7 @@ from peppy2.framework.task import FrameworkTask
 from peppy2.framework.i_about import IAbout
 
 from project_editor import ProjectEditor
-from panes import LayerSelectionPane, LayerInfoPane, SelectionInfoPane
+from panes import *
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 
@@ -167,8 +167,9 @@ class TriangulateLayerAction(EditorAction):
     image = ImageResource('triangulate.png')
 
     def perform(self, event):
-        from ui.Triangle_dialog import Triangle_dialog
-        GUI.invoke_later(Triangle_dialog, self.active_editor)
+        task = self.active_editor.task
+        pane = task.window.get_dock_pane('maproom.triangulate_pane')
+        pane.visible = True
 
 class MergeLayersAction(EditorAction):
     name = 'Merge Layers'
@@ -337,7 +338,9 @@ class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
     
-    id = 'maproom.project.v2'
+    # If you change the project ID here (to allow for a new pane layout, for
+    # instance) make sure you update the startup_task in maproom.py
+    id = 'maproom.project.v3'
     
     new_file_text = 'MapRoom Project'
 
@@ -409,12 +412,17 @@ class MaproomProjectTask(FrameworkTask):
                 PaneItem('maproom.layer_selection_pane'),
                 PaneItem('maproom.layer_info_pane'),
                 PaneItem('maproom.selection_info_pane'),
-                ))
+                ),
+            right=VSplitter(
+                PaneItem('maproom.triangulate_pane'),
+                ),
+            )
 
     def create_dock_panes(self):
         """ Create the file browser and connect to its double click event.
         """
-        return [ LayerSelectionPane(), LayerInfoPane(), SelectionInfoPane() ]
+        return [ LayerSelectionPane(), LayerInfoPane(), SelectionInfoPane(),
+                 TriangulatePane() ]
 
     def _tool_bars_default(self):
         toolbars = [

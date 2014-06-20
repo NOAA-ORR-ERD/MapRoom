@@ -7,6 +7,7 @@ from traits.api import on_trait_change
 
 from Layer_tree_control import Layer_tree_control
 from ui.InfoPanels import LayerInfoPanel, SelectionInfoPanel
+from ui.Triangle_dialog import TrianglePanel
 
 class LayerSelectionPane(DockPane):
     #### TaskPane interface ###################################################
@@ -54,3 +55,21 @@ class SelectionInfoPane(DockPane):
     def create_contents(self, parent):
         control = SelectionInfoPanel(parent, self.task.active_editor)
         return control
+
+
+class TriangulatePane(DockPane):
+    #### TaskPane interface ###################################################
+
+    id = 'maproom.triangulate_pane'
+    name = 'Triangulate'
+    
+    def create_contents(self, parent):
+        control = TrianglePanel(parent, self.task)
+        return control
+    
+    #### trait change handlers
+    
+    def _task_changed(self):
+        print "TASK CHANGED IN TRIANGULATEPANE!!!! %s" % self.task
+        if self.control:
+            self.control.set_task(self.task)
