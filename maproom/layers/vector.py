@@ -779,19 +779,6 @@ class LineLayer(PointLayer):
             data_types.POINT_XY_VIEW_DTYPE
         ).xy[:].copy()
 
-        latlong_proj = Projection("+proj=latlong")
-
-        # If necessary, convert points to lat-long before find duplicates.
-        # This makes the distance tolerance work properly.
-        projection = self.manager.project.control.projection
-        if projection.srs != latlong_proj.srs:
-            points = points.view(
-                [("x", np.float32), ("y", np.float32)]
-            ).view(np.recarray)
-            latlong_proj.transform_many(
-                points, points, projection, set_cache=False
-            )
-
         # cKDTree doesn't handle NaNs gracefully, but it does handle infinity
         # values. So replace all the NaNs with infinity.
         points = points.view(np.float32)
