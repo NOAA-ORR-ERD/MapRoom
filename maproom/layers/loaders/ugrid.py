@@ -2,7 +2,7 @@ import os
 import numpy as np
 import re
 
-from pyugrid.ugrid import UGrid
+from pyugrid.ugrid import UGrid, DataSet
 
 from common import PointsError, BaseLoader
 from maproom.layers import LineLayer, TriangleLayer
@@ -18,22 +18,35 @@ class UGridLoader(BaseLoader):
     extensions = [".nc"]
     
     name = "UGrid"
+
+    def find_depths(self, grid):
+        found = grid.find_data_sets('sea_floor_depth_below_geoid', 'node')
+        if found:
+            return found.pop()
+        return None
     
     def load(self, metadata, manager):
         layers = []
         
-        ug = UGrid.from_ncfile(metadata.uri)
-        if len(ug.edges) > 0:
+        ug = UGrid.from_ncfile(metadata.uri, load_data=True)
+        dataset = self.find_depths(ug)
+        if dataset:
+            depths = dataset.data
+        else:
+            depths = 0.0
+        if ug.edges is not None and len(ug.edges) > 0:
             layer = LineLayer(manager=manager)
-            layer.set_data(ug.nodes, ug.depths, ug.edges)
+            layer.set_data(ug.nodes, depths, ug.edges)
+            layer.depth_unit = dataset.attributes.get('units', 'unknown')
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
             layers.append(layer)
 
-        if len(ug.faces) > 0:
+        if ug.faces is not None and len(ug.faces) > 0:
             layer = TriangleLayer(manager=manager)
-            layer.set_data(ug.nodes, ug.depths, ug.faces)
+            layer.set_data(ug.nodes, depths, ug.faces)
+            layer.depth_unit = dataset.attributes.get('units', 'unknown')
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
@@ -50,14 +63,19 @@ class UGridLoader(BaseLoader):
         depths = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).z[0:n]
         print depths
         if layer.type == "triangle":
-            lines = []
+            lines = None
             n = np.alen(layer.triangles)
             faces = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
             print faces
         elif layer.type == "line":
-            faces = []
+            faces = None
             lines = layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points
             print lines
 
-        grid = UGrid(points, faces, lines, depths, layer.depth_unit)
+        grid = UGrid(points, faces, lines)
+        dataset = DataSet('depth', location='node', data=depths)
+        dataset.attributes['units'] = layer.depth_unit
+        dataset.attributes['standard_name'] = "sea_floor_depth_below_geoid"
+        dataset.attributes['positive'] = "down"
+        grid.add_data(dataset)
         grid.save_as_netcdf(filename)
