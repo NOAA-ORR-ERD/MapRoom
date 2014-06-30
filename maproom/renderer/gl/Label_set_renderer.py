@@ -35,11 +35,13 @@ class Label_set_renderer:
             (max_label_characters, ),
             dtype=self.oglr.QUAD_VERTEX_DTYPE,
         ).view(np.recarray)
-
+        self.screen_vertexes_raw = self.screen_vertexes_data.view(dtype=np.float32).reshape(-1,8)
+        
         self.texture_coordinates_data = np.zeros(
             (max_label_characters, ),
             dtype=self.oglr.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
+        self.texture_coordinates_raw = self.texture_coordinates_data.view(dtype=np.float32).reshape(-1,8)
 
         t = time.clock() - t0  # t is wall seconds elapsed (floating point)
         # print "start in {0} seconds".format( t )
@@ -47,8 +49,12 @@ class Label_set_renderer:
 
         # note that the data for these vbo arrays is not yet set; it is set on
         # each render and depends on the number of points being labeled
-        self.vbo_screen_vertexes = gl_vbo.VBO(self.screen_vertexes_data)
-        self.vbo_texture_coordinates = gl_vbo.VBO(self.texture_coordinates_data)
+        #
+        # Also note that PyOpenGL 3.1 doesn't allow VBO data to be updated
+        # later when using a recarray, so force the VBO to use the raw view
+        # into the recarray
+        self.vbo_screen_vertexes = gl_vbo.VBO(self.screen_vertexes_raw)
+        self.vbo_texture_coordinates = gl_vbo.VBO(self.texture_coordinates_raw)
 
     def render(self, layer_index_base, pick_mode, screen_rect, max_label_characters, depths, projected_points, projected_rect, projected_units_per_pixel):
         if (self.vbo_screen_vertexes == None or len(self.vbo_screen_vertexes.data) == 0):
@@ -239,8 +245,8 @@ class Label_set_renderer:
         # print self.screen_vertexes_data[ 0 : n ]
         # print self.texture_coordinates_data[ 0 : n ]
 
-        self.vbo_screen_vertexes[0: n] = self.screen_vertexes_data[0: n]
-        self.vbo_texture_coordinates[0: n] = self.texture_coordinates_data[0: n]
+        self.vbo_screen_vertexes[0: n] = self.screen_vertexes_raw[0: n]
+        self.vbo_texture_coordinates[0: n] = self.texture_coordinates_raw[0: n]
 
         return n
 

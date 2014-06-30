@@ -261,6 +261,11 @@ class Opengl_renderer():
             (len(s), ),
             dtype=self.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
+        
+        # Create views into recarray data.  PyOpenGL 3.1 with PyOpenGL-
+        # accelerate doesn't allow VBO data in recarray form
+        screen_vertex_raw = screen_vertex_data.view(dtype=np.float32).reshape(-1,8)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
 
         # these are used just because it seems to be the fastest way to full numpy arrays
         screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
@@ -317,8 +322,8 @@ class Opengl_renderer():
         texcoord_data.u_rb = tex_coord_accumulators[6]
         texcoord_data.v_rb = tex_coord_accumulators[7]
 
-        vbo_screen_vertexes = gl_vbo.VBO(screen_vertex_data)
-        vbo_texture_coordinates = gl_vbo.VBO(texcoord_data)
+        vbo_screen_vertexes = gl_vbo.VBO(screen_vertex_raw)
+        vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
 
         gl.glEnable(gl.GL_TEXTURE_2D)
         gl.glColor(1.0, 1.0, 1.0, 1.0)
