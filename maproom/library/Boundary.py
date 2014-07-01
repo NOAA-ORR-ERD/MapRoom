@@ -59,7 +59,7 @@ def find_boundaries(points, point_count, lines, line_count, allow_branches=True)
                 for a in adjacent:
                     branch_points.add(a)
         if len(branch_points) > 0:
-            raise Find_boundaries_error("Branching boundaries are not supported in Verdat file.",
+            raise Find_boundaries_error("Branching boundaries are not supported in Verdat files.",
                                         points=tuple(branch_points))
     
     # find any endpoints of jetties and segments not connected to the boundary

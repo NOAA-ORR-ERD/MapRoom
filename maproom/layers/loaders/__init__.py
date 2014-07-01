@@ -60,6 +60,7 @@ loaders.append(VerdatLoader())
 # [[[end]]]
 
 import os
+from common import PointsError
 
 def load_layers(metadata, manager=None):
     for loader in loaders:
@@ -71,14 +72,38 @@ def load_layers(metadata, manager=None):
             return layers
     return None
 
-def check_layer(layer):
+def valid_save_formats(layer):
     valid = []
     for loader in loaders:
         if loader.can_save(layer):
-            loader.check(layer)
-            valid.append("%s: %s" % (loader.name, loader.get_pretty_extension_list()))
+            valid.append((loader, "%s: %s" % (loader.name, loader.get_pretty_extension_list())))
+    return valid
+
+def get_valid_string(valid, capitalize=True):
+    
+    return "This layer can be saved in the following formats:\n(with allowed filename extensions)\n\n" + "\n\n".join(v[1] for v in valid)
+
+def check_layer(layer):
+    possibilities = valid_save_formats(layer)
+    exceptions = []
+    valid = []
+    for loader, message in possibilities:
+        if loader.can_save(layer):
+            try:
+                loader.check(layer) # raises exception on failure
+                valid.append((loader, message))
+            except Exception, e:
+                if not exceptions:
+                    exceptions.append(e)
+                pass
+    if exceptions:
+        e = exceptions[0]
+        message = e.message
+        if valid:
+            message += "\n\n" + "However, other file formats are valid:\n\n" + get_valid_string(valid)
+        raise PointsError(message, e.points)
     if valid:
-        return "This layer is valid for saving in the following formats:\n(with valid filename extensions)\n\n" + "\n\n".join(valid)
+        return get_valid_string(valid)
     return "No file formats available\nto save '%s' layers" % layer.type
 
 def find_best_saver(savers, ext):
@@ -100,7 +125,9 @@ def save_layer(layer, uri):
     name, ext = os.path.splitext(uri)
     saver = find_best_saver(savers, ext)
     if not saver:
-        return "'%s' is not a valid extension for\nthe '%s' layer type." % (ext, layer.type)
+        valid = valid_save_formats(layer)
+        if valid:
+            return "The extension '%s' doesn't correspond to any format\nthat can save the '%s' layer type.\n\n%s" % (ext, layer.type, get_valid_string(valid))
     
     error = saver.save(uri, layer)
     return error
