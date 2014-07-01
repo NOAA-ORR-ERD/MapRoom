@@ -72,20 +72,21 @@ def load_layers(metadata, manager=None):
     return None
 
 def check_layer(layer):
+    valid = []
     for loader in loaders:
-        # FIXME: only the first loader that can check the layer is used.  How
-        # would we present results of multiple loaders?
         if loader.can_save(layer):
             loader.check(layer)
-            return "This is a valid %s file" % loader.name
+            valid.append("%s: %s" % (loader.name, loader.get_pretty_extension_list()))
+    if valid:
+        return "This layer is valid for saving in the following formats:\n(with valid filename extensions)\n\n" + "\n\n".join(valid)
+    return "No file formats available\nto save '%s' layers" % layer.type
 
-def find_best_saver(savers, uri):
-    name, ext = os.path.splitext(uri)
+def find_best_saver(savers, ext):
     if len(savers) > 1:
         for saver in savers:
             if saver.is_valid_extension(ext):
                 return saver
-    return savers[0]
+    return None
 
 def save_layer(layer, uri):
     savers = []
@@ -96,9 +97,10 @@ def save_layer(layer, uri):
     if uri is None:
         uri = layer.file_path
     
-    saver = find_best_saver(savers, uri)
+    name, ext = os.path.splitext(uri)
+    saver = find_best_saver(savers, ext)
     if not saver:
-        return "Layer type %s cannot be saved." % layer.type
+        return "'%s' is not a valid extension for\nthe '%s' layer type." % (ext, layer.type)
     
     error = saver.save(uri, layer)
     return error

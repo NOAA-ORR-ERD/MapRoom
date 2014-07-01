@@ -33,6 +33,9 @@ class BaseLoader(object):
     def is_valid_extension(self, extension):
         return extension.lower() in self.extensions
     
+    def get_pretty_extension_list(self):
+        return ", ".join(self.extensions)
+    
     def save(self, uri, layer):
         if uri is None:
             uri = layer.file_path
