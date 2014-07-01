@@ -419,7 +419,7 @@ class LayerManager(LayerUndo):
         else:
             m = "Are you sure you want to delete " + layer.name + "?"
 
-        if window.confirm(m) != YES:
+        if window.confirm(m, default=YES) != YES:
             return
 
         self.destroy_recursive(layer)
