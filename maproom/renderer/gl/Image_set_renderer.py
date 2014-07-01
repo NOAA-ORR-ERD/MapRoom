@@ -6,7 +6,7 @@ import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import maproom.library.rect as rect
 from maproom.library.accumulator import flatten
-
+from maproom.renderer import RendererDriver
 
 class ImageTextures(object):
     """Class to allow sharing of textures between views
@@ -44,6 +44,7 @@ class ImageTextures(object):
             (1, ),
             dtype=opengl_renderer.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
 
         n = 0
         for i in xrange(len(image_list)):
@@ -76,8 +77,9 @@ class ImageTextures(object):
                 (1, ),
                 dtype=opengl_renderer.QUAD_VERTEX_DTYPE,
             ).view(np.recarray)
+            vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1,8)
             # we fill the vbo_vertexes data in reproject() below
-            self.vbo_vertexes.append(gl_vbo.VBO(vertex_data))
+            self.vbo_vertexes.append(gl_vbo.VBO(vertex_raw))
 
         texcoord_data.u_lb = 0
         texcoord_data.v_lb = 1.0
@@ -88,7 +90,7 @@ class ImageTextures(object):
         texcoord_data.u_rb = 1.0
         texcoord_data.v_rb = 1.0
 
-        self.vbo_texture_coordinates = gl_vbo.VBO(texcoord_data)
+        self.vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
@@ -122,7 +124,8 @@ class Image_set_renderer:
             self.image_projected_rects.append((left_bottom_projected, right_top_projected))
 
         for i, projected_rect in enumerate(self.image_projected_rects):
-            vertex_data = self.image_textures.vbo_vertexes[i].data
+            raw = self.image_textures.vbo_vertexes[i].data
+            vertex_data = raw.view(dtype=RendererDriver.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = projected_rect[0][0]
             vertex_data.y_lb = projected_rect[0][1]
             vertex_data.x_lt = projected_rect[0][0]
@@ -132,7 +135,7 @@ class Image_set_renderer:
             vertex_data.x_rb = projected_rect[1][0]
             vertex_data.y_rb = projected_rect[0][1]
 
-            self.image_textures.vbo_vertexes[i][: np.alen(vertex_data)] = vertex_data
+            self.image_textures.vbo_vertexes[i][: np.alen(vertex_data)] = raw
 
     def render(self, layer_index_base, pick_mode, alpha=1.0):
         if (self.image_textures.vbo_vertexes == None):
