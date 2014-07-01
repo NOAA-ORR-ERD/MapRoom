@@ -1,3 +1,13 @@
+07/01/2014
+---------------------------
+Released 3.0b8
+- RM Changed default for delete layer confirmation to YES
+- RM Additional fix for PyOpenGL 3.1 in Image_set_renderer
+- RM Fixes for PyOpenGL 3.1 and pyopengl-accelerate on linux
+- RM Updated ugrid loading for new pyugrid
+- RM Removed invalid projection conversion in merge_duplicates
+- RM Fixed build scripts for Version.py location
+
 06/20/2014
 ---------------------------
 Released 3.0b7
