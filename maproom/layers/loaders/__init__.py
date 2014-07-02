@@ -107,10 +107,9 @@ def check_layer(layer):
     return "No file formats available\nto save '%s' layers" % layer.type
 
 def find_best_saver(savers, ext):
-    if len(savers) > 1:
-        for saver in savers:
-            if saver.is_valid_extension(ext):
-                return saver
+    for saver in savers:
+        if saver.is_valid_extension(ext):
+            return saver
     return None
 
 def save_layer(layer, uri):
