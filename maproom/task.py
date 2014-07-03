@@ -17,6 +17,7 @@ from project_editor import ProjectEditor
 from panes import *
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
+from library.mem_use import get_mem_use
 
 #class SaveProjectAction(EditorAction):
 class SaveProjectAction(Action):
@@ -362,7 +363,7 @@ class MaproomProjectTask(FrameworkTask):
     
     about_version = Unicode
     
-    about_description = Unicode
+    about_description = Property(Unicode)
     
     about_website = Str('http://www.noaa.gov')
     
@@ -376,8 +377,8 @@ class MaproomProjectTask(FrameworkTask):
         import Version
         return Version.VERSION
     
-    def _about_description_default(self):
-        desc = "High-performance 2d mapping developed by NOAA\n\nUsing:\n"
+    def _get_about_description(self):
+        desc = "High-performance 2d mapping developed by NOAA\n\nMemory usage: %.0fMB\n\nUsing libraries:\n" % get_mem_use()
         import wx
         desc += "  wxPython %s\n" % wx.version()
         try:
