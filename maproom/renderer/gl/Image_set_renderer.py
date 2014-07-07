@@ -70,7 +70,7 @@ class ImageTextures(object):
                 0,  # border
                 gl.GL_RGBA,
                 gl.GL_UNSIGNED_BYTE,
-                image_data.tostring()
+                image_data
             )
 
             vertex_data = np.zeros(
