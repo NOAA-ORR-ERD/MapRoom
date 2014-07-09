@@ -1,13 +1,14 @@
 # Standard library imports.
 import sys
 import os.path
+import time
 
 # Major package imports.
 import wx
 
 # Enthought library imports.
 from pyface.api import YES, NO
-from traits.api import provides, on_trait_change, Any, Bool, Int, Str
+from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float
 
 from peppy2.framework.editor import FrameworkEditor
 
@@ -46,6 +47,8 @@ class ProjectEditor(FrameworkEditor):
     layer_has_selection = Bool
     
     clickable_object_mouse_is_over = Any
+    
+    last_refresh = Float(0.0)
     
     # Force mouse mode category to be blank so that the initial trait change
     # that occurs during initialization of this class doesn't match a real
@@ -269,6 +272,16 @@ class ProjectEditor(FrameworkEditor):
         self.update_layer_contents_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer)
         self.selection_info.display_panel_for_layer(self, sel_layer)
+        self.last_refresh = time.clock()
+    
+    @on_trait_change('layer_manager:background_refresh_needed')
+    def background_refresh(self):
+        print "background refresh called"
+        t = time.clock()
+        if t < self.last_refresh + 0.5:
+            print "refreshed too recently; skipping."
+            return
+        self.refresh()
     
     #### old Editor ########################################################
 

@@ -18,6 +18,7 @@ from panes import *
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
+from library.jobs import create_global_job_manager
 
 #class SaveProjectAction(EditorAction):
 class SaveProjectAction(Action):
@@ -570,6 +571,8 @@ class MaproomProjectTask(FrameworkTask):
             }
         for pane in self.window.dock_panes:
             pane.visible = (pane.id in visible)
+        
+        self.init_background_processing()
     
     def get_actions(self, location, menu_name, group_name):
         if location == "Menu":
@@ -653,3 +656,21 @@ class MaproomProjectTask(FrameworkTask):
     def can_edit(cls, mime):
         return mime.startswith("image") or mime.startswith("application/x-maproom-") or mime == "application/x-hdf"
     
+    
+    
+    # Not traits, just normal class instances
+    
+    job_manager = None
+    
+    def init_background_processing(self):
+        if self.job_manager is None:
+            self.__class__.job_manager = create_global_job_manager(self.receive_job_event)
+    
+    def receive_job_event(self, event):
+        print "MaproomProjectTask.receive_job_event: received %s" % repr(event)
+        GUI.invoke_later(self.process_job_event, event)
+    
+    def process_job_event(self, event):
+        print "MaproomProjectTask.process_job_event: handling %s" % repr(event)
+        self.job_manager.get_finished()
+        self.job_manager.handle_job_id_callback(event)

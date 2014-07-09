@@ -61,6 +61,8 @@ class LayerManager(LayerUndo):
     projection_changed = Event
     
     refresh_needed = Event
+    
+    background_refresh_needed = Event
 
     @classmethod
     def create(cls, project):
@@ -104,7 +106,15 @@ class LayerManager(LayerUndo):
         for layer in self.flatten():
             layer.destroy()
         self.layers = []
-
+    
+    def post_event(self, event_name, *args):
+        print "event: %s.  args=%s" % (event_name, str(args))
+        
+    def get_event_callback(self, event):
+        import functools
+        callback = functools.partial(self.post_event, event)
+        return callback
+    
     def load_layers_from_metadata(self, metadata, editor=None):
         # FIXME: load all layer types, not just vector!
         layers = loaders.load_layers(metadata, manager=self)
@@ -126,6 +136,8 @@ class LayerManager(LayerUndo):
         
         for layer in layers:
             self.insert_loaded_layer(layer, editor)
+            if layer.needs_background_loading():
+                layer.start_background_loading()
         return layers
     
     def check_layer(self, layer, window):

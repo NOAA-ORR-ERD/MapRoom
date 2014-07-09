@@ -34,6 +34,22 @@ class RasterLayer(ProjectedLayer):
     
     alpha = Float(1.0)
     
+    def needs_background_loading(self):
+        return self.image_data and self.image_data.is_threaded()
+    
+    def get_background_job(self):
+        print "LOADING IN BACKGROUND!!!!! File=%s" % self.image_data.file_path
+        return self.image_data.get_job()
+    
+    def background_loading_callback(self, progress_report):
+        print "RECEIVED IMAGE FROM BACKGROUND LOAD!!! %s" % repr(progress_report)
+        self.image_data.image_textures.update_texture(progress_report)
+        if progress_report.is_finished():
+            print "FINISHED RECEIVING IMAGES FROM BACKGROUND LOAD!!! %s" % progress_report.job_id
+            self.manager.dispatch_event('refresh_needed', self)
+        else:
+            self.manager.dispatch_event('background_refresh_needed', self)
+    
     def has_alpha(self):
         return True
     

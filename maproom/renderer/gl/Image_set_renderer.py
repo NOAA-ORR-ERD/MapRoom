@@ -34,6 +34,7 @@ class ImageTextures(object):
         print "image_sizes: %s" % str(self.image_sizes)
         self.image_world_rects = flatten(image_world_rects)
 
+        self.blank = np.array([128, 128, 128, 128], 'B')
         self.textures = []
         self.vbo_vertexes = []
         self.vbo_texture_coordinates = None  # just one, same one for all images
@@ -47,8 +48,11 @@ class ImageTextures(object):
         texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
 
         n = 0
-        for i in xrange(len(image_list)):
-            image_data = image_list[i]
+        for i in xrange(len(self.image_sizes)):
+            if image_list:
+                image_data = image_list[i]
+            else:
+                image_data = None
             self.textures.append(gl.glGenTextures(1))
             gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[i])
             # Mipmap levels: half-sized, quarter-sized, etc.
@@ -61,17 +65,31 @@ class ImageTextures(object):
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
             gl.glTexEnvf(gl.GL_TEXTURE_FILTER_CONTROL, gl.GL_TEXTURE_LOD_BIAS, -0.5)
-            gl.glTexImage2D(
-                gl.GL_TEXTURE_2D,
-                0,  # level
-                gl.GL_RGBA8,
-                image_data.shape[1],  # width
-                image_data.shape[0],  # height
-                0,  # border
-                gl.GL_RGBA,
-                gl.GL_UNSIGNED_BYTE,
-                image_data
-            )
+            
+            if image_data:
+                gl.glTexImage2D(
+                    gl.GL_TEXTURE_2D,
+                    0,  # level
+                    gl.GL_RGBA8,
+                    image_data.shape[1],  # width
+                    image_data.shape[0],  # height
+                    0,  # border
+                    gl.GL_RGBA,
+                    gl.GL_UNSIGNED_BYTE,
+                    image_data
+                )
+            else:
+                gl.glTexImage2D(
+                    gl.GL_TEXTURE_2D,
+                    0,  # level
+                    gl.GL_RGBA8,
+                    1,  # width
+                    1,  # height
+                    0,  # border
+                    gl.GL_RGBA,
+                    gl.GL_UNSIGNED_BYTE,
+                    self.blank
+                )
 
             vertex_data = np.zeros(
                 (1, ),
@@ -93,6 +111,24 @@ class ImageTextures(object):
         self.vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+    
+    def update_texture(self, progress_report):
+        # ImageDataProgressReport
+        if not hasattr(progress_report, "texture_index"):
+            return
+        print "ImageData: loading texture index %d" % progress_report.texture_index
+        gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[progress_report.texture_index])
+        gl.glTexImage2D(
+            gl.GL_TEXTURE_2D,
+            0,  # level
+            gl.GL_RGBA8,
+            progress_report.size[0],  # width
+            progress_report.size[1],  # height
+            0,  # border
+            gl.GL_RGBA,
+            gl.GL_UNSIGNED_BYTE,
+            progress_report.image
+        )
 
     def destroy(self):
         for texture in self.textures:

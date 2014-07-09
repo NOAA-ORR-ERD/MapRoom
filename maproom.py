@@ -20,6 +20,7 @@ from peppy2.framework.application import run
 
 # Local imports.
 from maproom.plugin import MaproomPlugin
+from maproom.library.jobs import get_global_job_manager
 
 # Imports for py2exe/py2app
 import wx
@@ -41,6 +42,10 @@ def main(argv):
     import maproom
     image_path = [get_image_path("icons", maproom)]
     run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task="maproom.project.v3")
+    
+    job_manager = get_global_job_manager()
+    if job_manager is not None:
+        job_manager.shutdown()
 
     logging.shutdown()
 

@@ -7,6 +7,7 @@ from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode
 
 # MapRoom imports
 from ..library import rect
+from ..library.jobs import get_global_job_manager
 
 # local package imports
 from constants import *
@@ -73,6 +74,22 @@ class Layer(HasTraits):
         to determine if we can save this layer.
         """
         return True
+    
+    def needs_background_loading(self):
+        return False
+    
+    def start_background_loading(self):
+        job_manager = get_global_job_manager()
+        job = self.get_background_job()
+        if job is not None:
+            job_manager.register_job_id_callback(job.job_id, self.background_loading_callback)
+            job_manager.add_job(job)
+    
+    def get_background_job(self):
+        return None
+    
+    def background_loading_callback(self, progress_report):
+        pass
     
     def highlight_exception(self, e):
         """Highlight items flagged in the exception"""
