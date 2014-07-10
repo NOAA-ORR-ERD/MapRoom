@@ -12,13 +12,13 @@ from traits.api import provides, on_trait_change, Property, Instance, Str, Unico
 
 from peppy2.framework.task import FrameworkTask
 from peppy2.framework.i_about import IAbout
+from peppy2.utils.jobs import create_global_job_manager
 
 from project_editor import ProjectEditor
 from panes import *
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
-from library.jobs import create_global_job_manager
 
 import logging
 log = logging.getLogger(__name__)

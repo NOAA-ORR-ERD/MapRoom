@@ -4,10 +4,12 @@ import time
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
+
+from peppy2.utils.jobs import JobManager, LargeMemoryJob, ProgressReport, Finished
+
 from maproom.library.accumulator import accumulator, flatten
 import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
-from maproom.library.jobs import JobManager, LargeMemoryJob, ProgressReport, Finished
 
 from maproom.layers import RasterLayer
 
