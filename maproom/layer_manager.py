@@ -17,6 +17,10 @@ from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict
 from pyface.api import YES, NO, GUI
 
 
+import logging
+log = logging.getLogger(__name__)
+
+
 class LayerManager(LayerUndo):
 
     """
@@ -108,7 +112,7 @@ class LayerManager(LayerUndo):
         self.layers = []
     
     def post_event(self, event_name, *args):
-        print "event: %s.  args=%s" % (event_name, str(args))
+        log.debug("event: %s.  args=%s" % (event_name, str(args)))
         
     def get_event_callback(self, event):
         import functools
@@ -119,7 +123,7 @@ class LayerManager(LayerUndo):
         # FIXME: load all layer types, not just vector!
         layers = loaders.load_layers(metadata, manager=self)
         if layers is None:
-            print "LAYER LOAD ERROR: %s" % "Unknown file type %s for %s" % (metadata.mime, metadata.uri)
+            log.warning("LAYER LOAD ERROR: %s" % "Unknown file type %s for %s" % (metadata.mime, metadata.uri))
             return None
         
         errors = []
@@ -177,23 +181,20 @@ class LayerManager(LayerUndo):
     def get_insertion_multi_index(self, before=None, after=None):
         if before is not None:
             mi = self.get_multi_index_of_layer(before)
-            print mi
             mi[-1] -= 1
         elif after is not None:
             mi = self.get_multi_index_of_layer(after)
-            print mi
             mi[-1] += 1
         else:
             mi = None
-        print mi
         return mi
 
     def insert_layer(self, at_multi_index, layer):
         if (at_multi_index == None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
-        print "layers are " + str(self.layers)
-        print "inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index)
+        log.debug("layers are " + str(self.layers))
+        log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
         if (not isinstance(layer, list)):
             if (layer.type == "folder"):
                 layer = [layer]
@@ -284,7 +285,7 @@ class LayerManager(LayerUndo):
             d = dep_map.copy()
             for dep_type in d:
                 if d[dep_type] == layer:
-                    print "Removing %s from dependencies: parent=%s type=%s" % (layer, parent, dep_type)
+                    log.debug("Removing %s from dependencies: parent=%s type=%s" % (layer, parent, dep_type))
                     del self.dependents[parent][dep_type]
 
     def layer_is_folder(self, layer):

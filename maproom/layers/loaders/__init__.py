@@ -62,13 +62,16 @@ loaders.append(VerdatLoader())
 import os
 from common import PointsError
 
+import logging
+log = logging.getLogger(__name__)
+
 def load_layers(metadata, manager=None):
     for loader in loaders:
-        print "trying loader %s" % loader.name
+        log.debug("trying loader %s" % loader.name)
         if loader.can_load(metadata):
-            print " loading using loader %s!" % loader.name
+            log.debug(" loading using loader %s!" % loader.name)
             layers = loader.load(metadata, manager=manager)
-            print " loaded layers: \n  %s" % "\n  ".join([str(a) for a in layers])
+            log.debug(" loaded layers: \n  %s" % "\n  ".join([str(a) for a in layers]))
             return layers
     return None
 

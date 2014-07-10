@@ -19,6 +19,9 @@ from library.Projection import Projection
 The RenderWindow class -- where the opengl rendering really takes place.
 """
 
+import logging
+log = logging.getLogger(__name__)
+
 class LayerControl(glcanvas.GLCanvas):
 
     """
@@ -133,7 +136,7 @@ class LayerControl(glcanvas.GLCanvas):
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
-        print "in on_mouse_down: event=%s" % event
+        log.debug("in on_mouse_down: event=%s" % event)
         self.get_effective_tool_mode(event)  # update alt key state
         self.forced_cursor = None
         self.mouse_is_down = True
@@ -282,7 +285,7 @@ class LayerControl(glcanvas.GLCanvas):
         rotation = event.GetWheelRotation()
         delta = event.GetWheelDelta()
         window = event.GetEventObject()
-        print "on_mouse_wheel_scroll. delta=%d win=%s" % (delta, window)
+        log.debug("on_mouse_wheel_scroll. delta=%d win=%s" % (delta, window))
         if (delta == 0):
             return
 
@@ -298,10 +301,10 @@ class LayerControl(glcanvas.GLCanvas):
         if window != self:
             monitor_point = window.ClientToScreen(screen_point)
             screen_point = self.ScreenToClient(monitor_point)
-#            print "Mouse over other window at screen pos %s, window pos %s!" % (monitor_point, screen_point)
+#            log.debug("Mouse over other window at screen pos %s, window pos %s!" % (monitor_point, screen_point))
             size = self.GetSize()
             if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
-#                print "Mouse not over RenderWindow: skipping!"
+#                log.debug("Mouse not over RenderWindow: skipping!")
                 return
             
         world_point = self.get_world_point_from_screen_point(screen_point)
@@ -418,7 +421,7 @@ class LayerControl(glcanvas.GLCanvas):
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
         if not self.IsShownOnScreen():
-            print "layer_control_wx.render: not shown yet, so skipping render"
+            log.debug("layer_control_wx.render: not shown yet, so skipping render")
             return
 
         t0 = time.clock()
@@ -483,7 +486,6 @@ class LayerControl(glcanvas.GLCanvas):
         elapsed = time.clock() - t0
 
         def update_status(message):
-            print message
             self.project.task.status_bar.debug = message
         wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
 
@@ -502,11 +504,11 @@ class LayerControl(glcanvas.GLCanvas):
     def rebuild_points_and_lines_for_layer(self, layer):
         if layer in self.layer_renderers:
             self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer)
-            print "points/lines renderer rebuilt"
+            log.debug("points/lines renderer rebuilt")
         else:
-            print "layer %s isn't in layer_renderers!" % layer
+            log.warning("layer %s isn't in layer_renderers!" % layer)
             for layer in self.layer_renderers.keys():
-                print "  layer: %s" % layer
+                log.warning("  layer: %s" % layer)
 
     def resize_render_pane(self, event):
         if not self.GetContext():
@@ -615,18 +617,13 @@ class LayerControl(glcanvas.GLCanvas):
         size.y -= EDGE_PADDING * 2
         pixels_h = rect.width(p_r) / self.projected_units_per_pixel
         pixels_v = rect.height(p_r) / self.projected_units_per_pixel
-        print "pixels_h = {0}, pixels_v = {1}".format(pixels_h, pixels_v)
         ratio_h = float(pixels_h) / float(size[0])
         ratio_v = float(pixels_v) / float(size[1])
-        print "size = %r" % (size,)
-        print "ratio_h = %r, ratio_v = %r" % (ratio_h, ratio_v)
         ratio = max(ratio_h, ratio_v)
 
-        print "ratio = %r" % ratio
         self.projected_point_center = rect.center(p_r)
         self.projected_units_per_pixel *= ratio
         self.constrain_zoom()
-        print "self.projected_units_per_pixel = " + str(self.projected_units_per_pixel)
 
         self.render()
 
@@ -663,7 +660,7 @@ class LayerControl(glcanvas.GLCanvas):
             ratio = 360.0 / 40075016.6855801
         self.projected_units_per_pixel *= ratio
         self.constrain_zoom()
-        print "self.projected_units_per_pixel = " + str(self.projected_units_per_pixel)
+        log.debug("self.projected_units_per_pixel = " + str(self.projected_units_per_pixel))
         # import code; code.interact( local = locals() )
 
         self.projected_point_center = self.get_projected_point_from_world_point(w_c)
@@ -752,11 +749,9 @@ class LayerControl(glcanvas.GLCanvas):
                 values, error = dialog.get_values()
                 layer = dialog.layer
                 if len(values) > 0 and layer.has_points():
-                    print "selected indexes: %s" % str(values)
                     layer.clear_all_point_selections()
                     layer.select_points(values)
                     w_r = layer.compute_selected_bounding_rect()
-                    print "w_r = %s" % str(w_r)
                     self.zoom_to_include_world_rect(w_r)
                     self.project.update_layer_contents_ui()
                     self.project.refresh()

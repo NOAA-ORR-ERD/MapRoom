@@ -5,6 +5,9 @@ from traits.api import HasTraits, provides
 
 from peppy2.file_type.i_file_recognizer import IFileRecognizer
 
+import logging
+log = logging.getLogger(__name__)
+
 @provides(IFileRecognizer)
 class GDALRecognizer(HasTraits):
     """Default plain text identifier based on percentage of non-ASCII bytes.
@@ -18,6 +21,6 @@ class GDALRecognizer(HasTraits):
         try:
             dataset = gdal.Open(guess.metadata.uri)
         except RuntimeError:
-            print "GDAL can't open %s; not an image"
+            log.debug("GDAL can't open %s; not an image")
             return None
         return "image/x-gdal"

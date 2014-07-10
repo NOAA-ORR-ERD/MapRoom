@@ -12,13 +12,16 @@ from traits.api import provides, on_trait_change, Property, Instance, Str, Unico
 
 from peppy2.framework.task import FrameworkTask
 from peppy2.framework.i_about import IAbout
+from peppy2.utils.jobs import create_global_job_manager
 
 from project_editor import ProjectEditor
 from panes import *
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
-from library.jobs import create_global_job_manager
+
+import logging
+log = logging.getLogger(__name__)
 
 #class SaveProjectAction(EditorAction):
 class SaveProjectAction(Action):
@@ -637,7 +640,7 @@ class MaproomProjectTask(FrameworkTask):
             else:
                 state = False
             toolbar.visible = state
-            print "toolbar: %s = %s" % (name, state)
+            log.debug("toolbar: %s = %s" % (name, state))
 
     def _active_editor_changed(self):
         tree = self.window.get_dock_pane('maproom.layer_selection_pane')
@@ -667,10 +670,10 @@ class MaproomProjectTask(FrameworkTask):
             self.__class__.job_manager = create_global_job_manager(self.receive_job_event)
     
     def receive_job_event(self, event):
-        print "MaproomProjectTask.receive_job_event: received %s" % repr(event)
+        log.debug("receive_job_event: received %s" % repr(event))
         GUI.invoke_later(self.process_job_event, event)
     
     def process_job_event(self, event):
-        print "MaproomProjectTask.process_job_event: handling %s" % repr(event)
+        log.debug("process_job_event: handling %s" % repr(event))
         self.job_manager.get_finished()
         self.job_manager.handle_job_id_callback(event)

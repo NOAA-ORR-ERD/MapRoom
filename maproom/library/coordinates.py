@@ -130,8 +130,6 @@ def format_coords_for_display(longitude, latitude, display_format):
     elif display_format == "decimal degrees":
         return format_lat_lon_degrees(longitude, latitude)
     else:
-        if display_format != "degrees decimal minutes":
-            print "ERROR: Unknown format %s specified when formatting coordinates" % display_format
         return format_lat_lon_degrees_minutes(longitude, latitude)
 
 

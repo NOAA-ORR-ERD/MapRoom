@@ -20,6 +20,9 @@ from layer_undo import *
 import Layer_tree_control
 import renderer
 
+import logging
+log = logging.getLogger(__name__)
+
 @provides(IProjectEditor)
 class ProjectEditor(FrameworkEditor):
     """The wx implementation of a ProjectEditor.
@@ -156,7 +159,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_info = self.window.get_dock_pane('maproom.layer_info_pane').control
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
         
-        print "LayerEditor: task=%s" % self.task
+        log.debug("LayerEditor: task=%s" % self.task)
 
         return self.control
     
@@ -164,12 +167,12 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:layer_loaded')
     def layer_loaded(self, layer):
-        print "layer_loaded called for %s" % layer
+        log.debug("layer_loaded called for %s" % layer)
         self.layer_visibility[layer] = layer.get_visibility_dict()
     
     @on_trait_change('layer_manager:layers_changed')
     def layers_changed(self):
-        print "layers_changed called!!!"
+        log.debug("layers_changed called!!!")
         self.layer_tree_control.rebuild()
         self.refresh()
     
@@ -205,14 +208,14 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is not None:
             self.layer_has_points = sel_layer.has_points()
             if self.layer_has_points:
-                print "selected points: %s"  % sel_layer.get_num_points_selected()
+                log.debug("selected points: %s"  % sel_layer.get_num_points_selected())
                 self.layer_has_selection = sel_layer.get_num_points_selected() > 0
             else:
                 self.layer_has_selection = False
         else:
             self.layer_has_points = False
             self.layer_has_selection = False
-        print "has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection)
+        log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
         self.update_undo_redo()
         self.window._aui_manager.Update()
     
@@ -238,27 +241,27 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
-        print "undo_stack_changed called!!!"
+        log.debug("undo_stack_changed called!!!")
         self.refresh()
     
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
-        print "layer_contents_changed called!!! layer=%s" % layer
+        log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.control.rebuild_points_and_lines_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
-        print "layer_contents_deleted called!!! layer=%s" % layer
+        log.debug("layer_contents_deleted called!!! layer=%s" % layer)
         self.control.rebuild_points_and_lines_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, layer):
-        print "layer_metadata_changed called!!! layer=%s" % layer
+        log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
     
     @on_trait_change('layer_manager:refresh_needed')
     def refresh(self):
-        print "refresh called"
+        log.debug("refresh called")
         if self.control is None:
             return
         
@@ -276,10 +279,10 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:background_refresh_needed')
     def background_refresh(self):
-        print "background refresh called"
+        log.debug("background refresh called")
         t = time.clock()
         if t < self.last_refresh + 0.5:
-            print "refreshed too recently; skipping."
+            log.debug("refreshed too recently; skipping.")
             return
         self.refresh()
     
@@ -496,7 +499,7 @@ class ProjectEditor(FrameworkEditor):
         pass
 
     def clicked_on_empty_space(self, event, layer, world_point):
-        print "clicked on empty space: layer %s, point %s" % (layer, str(world_point)) 
+        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (layer.type == "root" or layer.type == "folder"):
                 self.window.error("You cannot add points or lines to folder layers.",
@@ -505,10 +508,10 @@ class ProjectEditor(FrameworkEditor):
                 return
         vis = self.layer_visibility[layer]['layer']
 
-        print "1: self.mouse_mode=%d" % self.mouse_mode
+        log.debug("1: self.mouse_mode=%d" % self.mouse_mode)
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
             if (not event.ControlDown() and not event.ShiftDown()):
-                print "1.1"
+                log.debug("1.1")
                 self.esc_key_pressed()
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.control.release_mouse() # shouldn't be captured now anyway
@@ -519,7 +522,7 @@ class ProjectEditor(FrameworkEditor):
                 self.refresh()
                 if not vis:
                     self.task.status_bar.message = "Added point to hidden layer %s" % layer.name
-        print "2"
+        log.debug("2")
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (not event.ControlDown() and not event.ShiftDown()):
                 point_indexes = layer.get_selected_point_indexes()
@@ -590,7 +593,7 @@ class ProjectEditor(FrameworkEditor):
     
     def zoom_to_selected_layer(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
-        print "Selected layer = %r" % sel_layer
+        log.debug("Selected layer = %r" % sel_layer)
         if sel_layer is not None:
             self.zoom_to_layer(sel_layer)
 

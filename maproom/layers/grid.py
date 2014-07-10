@@ -8,6 +8,9 @@ from ..library import rect, coordinates
 
 from base import ScreenLayer
 
+import logging
+log = logging.getLogger(__name__)
+
 class Grid(ScreenLayer):
     """Root layer
     
@@ -97,7 +100,7 @@ class Grid(ScreenLayer):
     def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
         if (not layer_visibility["layer"] or pick_mode):
             return
-        print "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        log.log(5, "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         render_window = storage.canvas
         opengl_renderer = render_window.opengl_renderer
 #        print "projected_rect = %r" % (projected_rect,)

@@ -59,18 +59,14 @@ class UGridLoader(BaseLoader):
     def save_to_local_file(self, filename, layer):
         n = np.alen(layer.points)
         points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n]
-        print points
         depths = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).z[0:n]
-        print depths
         if layer.type == "triangle":
             lines = None
             n = np.alen(layer.triangles)
             faces = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
-            print faces
         elif layer.type == "line":
             faces = None
             lines = layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points
-            print lines
 
         grid = UGrid(points, faces, lines)
         dataset = DataSet('depth', location='node', data=depths)

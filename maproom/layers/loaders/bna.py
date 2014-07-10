@@ -10,6 +10,9 @@ from maproom.layers import PolygonLayer
 
 from common import BaseLoader
 
+import logging
+log = logging.getLogger(__name__)
+
 class BNALoader(BaseLoader):
     mime = "application/x-maproom-bna"
     
@@ -66,53 +69,53 @@ def load_bna_file(file_path):
         polygon_identifiers = list
     """
 
-    print "******** START"
+    log.debug("******** START")
     t0 = time.clock()
     f = file(file_path)
     s = f.read()
     f.close()
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    print "read in {0} seconds".format(t)
+    log.debug("read in {0} seconds".format(t))
 
     # arr = np.fromstring(str, dtype=np.float32, sep=' ')
     t0 = time.clock()
     length = len(s)
-    print "length = " + str(length)
+    log.debug("length = " + str(length))
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    print "length in {0} seconds".format(t)
+    log.debug("length in {0} seconds".format(t))
 
     t0 = time.clock()
     nr = s.count("\r")
-    print "num \\r = = " + str(nr)
+    log.debug("num \\r = = " + str(nr))
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    print "count in {0} seconds".format(t)
+    log.debug("count in {0} seconds".format(t))
 
     t0 = time.clock()
     nn = s.count("\n")
-    print "num \\n = = " + str(nn)
+    log.debug("num \\n = = " + str(nn))
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    print "count in {0} seconds".format(t)
+    log.debug("count in {0} seconds".format(t))
 
     if (nr > 0 and nn > 0):
         t0 = time.clock()
         s = s.replace("\r", "")
         t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        print "replace \\r with empty in {0} seconds".format(t)
+        log.debug("replace \\r with empty in {0} seconds".format(t))
         nr = 0
 
     if (nr > 0):
         t0 = time.clock()
         s = s.replace("\r", "\n")
         t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        print "replace \\r with \\n in {0} seconds".format(t)
+        log.debug("replace \\r with \\n in {0} seconds".format(t))
         nr = 0
 
     t0 = time.clock()
     lines = s.split("\n")
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    print lines[0]
-    print lines[1]
-    print "split in {0} seconds".format(t)
+    log.debug(lines[0])
+    log.debug(lines[1])
+    log.debug("split in {0} seconds".format(t))
 
     polygon_points = accumulator(block_shape=(2,), dtype=np.float32)
     polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
@@ -184,8 +187,8 @@ def load_bna_file(file_path):
         total_points += num_points
 
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    print "loop in {0} seconds".format(t)
-    print "******** END"
+    log.debug("loop in {0} seconds".format(t))
+    log.debug("******** END")
     update_status("Loaded %d data points in %.2fs." % (num_lines, t))
 
     return ("",

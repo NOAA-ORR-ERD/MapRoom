@@ -10,6 +10,9 @@ OP_CHANGE_POINT_DEPTH = 6  # params = ( old_depth, new_depth )
 OP_ADD_TRIANGLE = 7  # params = ( point_index_1, point_index_2, point_index_3, color, state )
 OP_DELETE_TRIANGLE = 8  # params = ( point_index_1, point_index_2, point_index_3, color, state )
 
+import logging
+log = logging.getLogger(__name__)
+
 class LayerUndo(HasTraits):
     
     #### Traits definitions
@@ -43,7 +46,7 @@ class LayerUndo(HasTraits):
             setattr(self, name, value)
     
     def dispatch_event(self, event, value=True):
-        print "batch=%s: dispatching event %s = %s" % (self.batch, event, value)
+        log.debug("batch=%s: dispatching event %s = %s" % (self.batch, event, value))
         if self.batch:
             self.events.append((event, value))
         else:
@@ -117,7 +120,7 @@ class LayerUndo(HasTraits):
                 break
             self.undo_operation(self.undo_stack[self.undo_stack_next_index - 1], affected_layers)
             self.undo_stack_next_index -= 1
-        print "affected layers: %s" % str(affected_layers)
+        log.debug("affected layers: %s" % str(affected_layers))
         for layer in affected_layers:
             self.dispatch_event('layer_contents_changed', layer)
         self.show_undo_redo_debug_dump("undo() done")
@@ -200,11 +203,11 @@ class LayerUndo(HasTraits):
             layer.delete_triangle(index, False)
 
     def show_undo_redo_debug_dump(self, location_message):
-        print location_message
-        print "the undo_stack is now: "
-        if (len(self.undo_stack) <= 100):
-            for item in self.undo_stack:
-                print "    " + str(item)
-        else:
-            print "    longer than 100 items"
-        print "undo_stack_next_index is now: " + str(self.undo_stack_next_index)
+        if log.getEffectiveLevel() <= logging.DEBUG:
+            log.debug(location_message + ": the undo_stack is now: ")
+            if (len(self.undo_stack) <= 100):
+                for item in self.undo_stack:
+                    print "    " + str(item)
+            else:
+                print "    longer than 100 items"
+            print "undo_stack_next_index is now: " + str(self.undo_stack_next_index)

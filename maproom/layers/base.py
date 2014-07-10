@@ -5,9 +5,10 @@ import numpy as np
 # Enthought library imports.
 from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
 
+from peppy2.utils.jobs import get_global_job_manager
+
 # MapRoom imports
 from ..library import rect
-from ..library.jobs import get_global_job_manager
 
 # local package imports
 from constants import *
@@ -143,12 +144,10 @@ class Layer(HasTraits):
         self.bounds = self.compute_bounding_rect()
     
     def is_zoomable(self):
-        print "bounds! %s" % str(self.bounds)
         return self.bounds != rect.NONE_RECT
 
     def determine_layer_color(self):
         if not self.color:
-            print "setting layer color?"
             self.color = DEFAULT_COLORS[
                 Layer.next_default_color_index
             ]
