@@ -21,6 +21,8 @@ from ..renderer import color_to_int, data_types
 from base import Layer, ProjectedLayer
 from constants import *
 
+import logging
+log = logging.getLogger(__name__)
 
 class RasterLayer(ProjectedLayer):
     """Layer for raster images
@@ -38,14 +40,14 @@ class RasterLayer(ProjectedLayer):
         return self.image_data and self.image_data.is_threaded()
     
     def get_background_job(self):
-        print "LOADING IN BACKGROUND!!!!! File=%s" % self.image_data.file_path
+        log.debug("LOADING IN BACKGROUND!!!!! File=%s" % self.image_data.file_path)
         return self.image_data.get_job()
     
     def background_loading_callback(self, progress_report):
-        print "RECEIVED IMAGE FROM BACKGROUND LOAD!!! %s" % repr(progress_report)
+        log.debug("RECEIVED IMAGE FROM BACKGROUND LOAD!!! %s" % repr(progress_report))
         self.image_data.image_textures.update_texture(progress_report)
         if progress_report.is_finished():
-            print "FINISHED RECEIVING IMAGES FROM BACKGROUND LOAD!!! %s" % progress_report.job_id
+            log.debug("FINISHED RECEIVING IMAGES FROM BACKGROUND LOAD!!! %s" % progress_report.job_id)
             self.manager.dispatch_event('refresh_needed', self)
         else:
             self.manager.dispatch_event('background_refresh_needed', self)
@@ -110,7 +112,6 @@ class RasterLayer(ProjectedLayer):
                 message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
 
             if message is not None:
-                print message
                 if (window.confirm(message) != YES):
                     self.load_error_string = "Projection conflict"
                     return
@@ -138,7 +139,7 @@ class RasterLayer(ProjectedLayer):
             renderer.rebuild_image_set_renderer(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        print "Rendering raster!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        log.debug("Rendering raster!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 

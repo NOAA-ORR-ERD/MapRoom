@@ -77,12 +77,10 @@ class LayerRenderer(object):
             create = True
             self.point_and_line_set_renderer.destroy()
 
-        t0 = time.clock()
         if create:
             if hasattr(layer, 'triangles') and layer.triangles is not None:
                 triangles = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
                 tri_points_color = layer.get_triangle_point_colors()
-                print tri_points_color
             else:
                 triangles = None
                 tri_points_color = None
@@ -102,9 +100,6 @@ class LayerRenderer(object):
                 tri_points_color,
                 self.canvas.projection,
                 self.canvas.projection_is_identity)
-
-        t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        print "rebuilt point and line set renderer in {0} seconds".format(t)
 
     def rebuild_polygon_set_renderer(self, layer):
         if self.polygon_set_renderer:

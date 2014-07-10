@@ -28,9 +28,6 @@ class Label_set_renderer:
 
         self.oglr = opengl_renderer
 
-        print "******** START"
-        t0 = time.clock()
-
         self.screen_vertexes_data = np.zeros(
             (max_label_characters, ),
             dtype=self.oglr.QUAD_VERTEX_DTYPE,
@@ -42,10 +39,6 @@ class Label_set_renderer:
             dtype=self.oglr.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
         self.texture_coordinates_raw = self.texture_coordinates_data.view(dtype=np.float32).reshape(-1,8)
-
-        t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        # print "start in {0} seconds".format( t )
-        t0 = time.clock()
 
         # note that the data for these vbo arrays is not yet set; it is set on
         # each render and depends on the number of points being labeled

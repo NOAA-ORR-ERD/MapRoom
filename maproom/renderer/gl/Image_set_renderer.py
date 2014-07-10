@@ -31,7 +31,6 @@ class ImageTextures(object):
 
         image_list = flatten(images)
         self.image_sizes = flatten(image_sizes)
-        print "image_sizes: %s" % str(self.image_sizes)
         self.image_world_rects = flatten(image_world_rects)
 
         self.blank = np.array([128, 128, 128, 128], 'B')
@@ -116,7 +115,7 @@ class ImageTextures(object):
         # ImageDataProgressReport
         if not hasattr(progress_report, "texture_index"):
             return
-        print "ImageData: loading texture index %d" % progress_report.texture_index
+#        print "ImageData: loading texture index %d" % progress_report.texture_index
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[progress_report.texture_index])
         gl.glTexImage2D(
             gl.GL_TEXTURE_2D,

@@ -143,12 +143,10 @@ class Layer(HasTraits):
         self.bounds = self.compute_bounding_rect()
     
     def is_zoomable(self):
-        print "bounds! %s" % str(self.bounds)
         return self.bounds != rect.NONE_RECT
 
     def determine_layer_color(self):
         if not self.color:
-            print "setting layer color?"
             self.color = DEFAULT_COLORS[
                 Layer.next_default_color_index
             ]

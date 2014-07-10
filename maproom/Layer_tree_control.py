@@ -9,6 +9,9 @@ except ImportError:
 from layers import Layer
 
 
+import logging
+log = logging.getLogger(__name__)
+
 class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     dragged_item = None
@@ -105,7 +108,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         lm = self.project.layer_manager
         self.DeleteAllItems()
         # self.Freeze()
-        print "LAYER_TREE: rebuiding layers = " + str(lm.layers)
+        log.debug("LAYER_TREE: rebuiding layers = " + str(lm.layers))
         self.add_layers_recursive(lm.layers, None)
         # self.Thaw()
         self.select_layer(selected)
@@ -126,7 +129,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
                 self.add_layers_recursive(item, folder_node)
 
     def add_layer(self, layer, parent):
-        print "LAYER_TREE: adding layer = " + str(layer.name)
+        log.debug("LAYER_TREE: adding layer = " + str(layer.name))
         if (parent == None):
             data = wx.TreeItemData()
             data.SetData(("root", layer))

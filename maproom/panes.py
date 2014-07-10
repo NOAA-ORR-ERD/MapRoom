@@ -9,6 +9,9 @@ from Layer_tree_control import Layer_tree_control
 from ui.InfoPanels import LayerInfoPanel, SelectionInfoPanel
 from ui.TrianglePanel import TrianglePanel
 
+import logging
+log = logging.getLogger(__name__)
+
 class LayerSelectionPane(DockPane):
     #### TaskPane interface ###################################################
 
@@ -22,7 +25,7 @@ class LayerSelectionPane(DockPane):
     #### trait change handlers
     
     def _task_changed(self):
-        print "TASK CHANGED IN LAYERSELECTIONPANE!!!! %s" % self.task
+        log.debug("TASK CHANGED IN LAYERSELECTIONPANE!!!! %s" % self.task)
         if self.control:
             self.control.set_project(self.task.active_editor)
 
@@ -32,7 +35,7 @@ class LayerSelectionPane(DockPane):
 #
 #    @on_trait_change('task.active_editor')
 #    def _active_editor_changed(self):
-#        print "ACTIVE EDITOR CHANGED IN LayerSelectionPane!!!! %s" % self.task.active_editor
+#        log.debug("ACTIVE EDITOR CHANGED IN LayerSelectionPane!!!! %s" % self.task.active_editor)
 
 
 class LayerInfoPane(DockPane):
@@ -70,6 +73,6 @@ class TriangulatePane(DockPane):
     #### trait change handlers
     
     def _task_changed(self):
-        print "TASK CHANGED IN TRIANGULATEPANE!!!! %s" % self.task
+        log.debug("TASK CHANGED IN TRIANGULATEPANE!!!! %s" % self.task)
         if self.control:
             self.control.set_task(self.task)

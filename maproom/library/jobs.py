@@ -310,7 +310,7 @@ class Timer(threading.Thread):
                 if self._want_abort:
                     return
                 time.sleep(self._resolution)
-#                print "timer!!!!"
+#                log.debug("timer!!!!")
                 self._event_callback()
                 if time.time() > self._expire_time:
                     self.stop_ticks()
@@ -326,10 +326,10 @@ class Timer(threading.Thread):
     def stop_ticks(self):
         if not self._want_abort:
             self._event.clear()
-        print "Timer.stop_ticks: timer expired!!!"
+        log.debug("Timer.stop_ticks: timer expired!!!")
 
     def abort(self):
-        print "Timer.abort: stopping timer!!!"
+        log.debug("Timer.abort: stopping timer!!!")
         self._want_abort = True
         self._event.set()
 
@@ -446,15 +446,15 @@ class JobManager(object):
             job_id = event.job_id
             callback = self.job_id_handlers.get(job_id, None)
             if callback is not None:
-                print "handle_job_id_callback: found callback for %s!" % job_id
+                log.debug("handle_job_id_callback: found callback for %s!" % job_id)
                 callback(event)
                 if isinstance(event, Finished):
                     # automatically remove handler
                     del self.job_id_handlers[job_id]
             else:
-                print "handle_job_id_callback: no callback for %s!" % job_id
+                log.debug("handle_job_id_callback: no callback for %s!" % job_id)
         else:
-            print "handle_job_id_callback: no callback for generic event %s!" % event
+            log.debug("handle_job_id_callback: no callback for generic event %s!" % event)
 
 
 GlobalJobManager = None

@@ -11,6 +11,9 @@ from maproom.library.jobs import JobManager, LargeMemoryJob, ProgressReport, Fin
 
 from maproom.layers import RasterLayer
 
+import logging
+log = logging.getLogger(__name__)
+
 class GDALLoader(object):
     mime = "image/*"
     
@@ -56,7 +59,7 @@ class ImageData(object):
         
         self.calc_projection(dataset)
         
-        print "Image: %sx%s, %d band, %s" % (self.x, self.y, self.nbands, self.projection.srs)
+        log.debug("Image: %sx%s, %d band, %s" % (self.x, self.y, self.nbands, self.projection.srs))
     
     def is_threaded(self):
         return False
@@ -217,7 +220,7 @@ def load_image_file(file_path):
     if (not image_data.is_north_up()):
         return ("The raster is not north-up for file " + file_path, None)
     image_data.load_dataset(dataset, TEXTURE_SIZE)
-    print "GDAL load time: ", (time.clock() - t0)
+    log.debug("GDAL load time: ", (time.clock() - t0))
     
     return ("", image_data)
 
@@ -304,7 +307,7 @@ def load_image_file_subprocess(file_path):
     if (not image_data.is_north_up()):
         return ("The raster is not north-up for file " + file_path, None)
     image_data.load_dataset(dataset, TEXTURE_SIZE)
-    print "GDAL load time: ", (time.clock() - t0)
+    log.debug("GDAL load time: ", (time.clock() - t0))
     
     return ("", image_data)
 

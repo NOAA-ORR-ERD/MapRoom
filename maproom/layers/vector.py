@@ -23,6 +23,9 @@ from ..layer_undo import *
 from base import Layer, ProjectedLayer
 from constants import *
 
+import logging
+log = logging.getLogger(__name__)
+
 class PointLayer(ProjectedLayer):
     """Layer for points/lines/polygons.
     
@@ -107,7 +110,6 @@ class PointLayer(ProjectedLayer):
             self.line_segment_indexes.state = 0
         
         self.update_bounds()
-        print self
     
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)
@@ -123,7 +125,6 @@ class PointLayer(ProjectedLayer):
 
     def determine_layer_color(self):
         if not self.color:
-            print "setting layer color?"
             self.color = DEFAULT_COLORS[
                 Layer.next_default_color_index
             ]
@@ -339,7 +340,7 @@ class PointLayer(ProjectedLayer):
         renderer.set_up_labels(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        log.log(5, "Rendering point layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 
@@ -429,7 +430,6 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.state = 0
         
         self.update_bounds()
-        print self
 
     def can_save_as(self):
         return True
@@ -884,7 +884,7 @@ class LineLayer(PointLayer):
         renderer.set_up_labels(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 
@@ -979,7 +979,6 @@ class TriangleLayer(PointLayer):
                 self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = f_triangles
         
         self.update_bounds()
-        print self
 
     def can_save_as(self):
         return True
@@ -1145,9 +1144,9 @@ class TriangleLayer(PointLayer):
         else:
             projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(layer.points.x, layer.points.y)
             hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
-        print "params: " + params
-        print "hole points:"
-        print hole_points_xy
+#        print "params: " + params
+#        print "hole points:"
+#        print hole_points_xy
         (triangle_points_xy,
          triangle_points_z,
          triangle_line_segment_indexes,  # not needed
@@ -1216,7 +1215,6 @@ class TriangleLayer(PointLayer):
             for i in range(len(colors)):
                 d = self.points.z[i]
                 colors[i] = self.color_interp(d, colormap, alpha)
-        print colors
         return colors
 
     def create_renderer(self, renderer):
@@ -1235,7 +1233,7 @@ class TriangleLayer(PointLayer):
         renderer.set_up_labels(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        log.log(5, "Rendering triangle layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 
@@ -1361,7 +1359,6 @@ class PolygonLayer(PointLayer):
             """
 
             self.points.state = 0
-        print self
         self.update_bounds()
 
     def make_polygons(self, count):
@@ -1418,7 +1415,7 @@ class PolygonLayer(PointLayer):
             renderer.rebuild_polygon_set_renderer(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        print "Rendering vector!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode)
+        log.log(5, "Rendering polygon layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 
