@@ -198,6 +198,8 @@ class LayerControl(glcanvas.GLCanvas):
                 layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
                 if (self.project.layer_tree_control.is_selected_layer(layer)):
                     self.editor.clickable_object_mouse_is_over = o
+                else:
+                    self.editor.clickable_object_mouse_is_over = None
                 if renderer.is_ugrid_point(o):
                     status_text += "  Point %s on %s" % (object_index + 1, str(layer))
 
