@@ -21,6 +21,8 @@ The RenderWindow class -- where the opengl rendering really takes place.
 
 import logging
 log = logging.getLogger(__name__)
+mouselog = logging.getLogger("mouse")
+mouselog.setLevel(logging.INFO)
 
 class LayerControl(glcanvas.GLCanvas):
 
@@ -136,7 +138,7 @@ class LayerControl(glcanvas.GLCanvas):
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
-        log.debug("in on_mouse_down: event=%s" % event)
+        mouselog.debug("in on_mouse_down: event=%s" % event)
         self.get_effective_tool_mode(event)  # update alt key state
         self.forced_cursor = None
         self.mouse_is_down = True
@@ -192,7 +194,6 @@ class LayerControl(glcanvas.GLCanvas):
             o = None
             if self.opengl_renderer is not None:
                 o = self.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
-            # print "object that is under mouse:", o
             if (o != None):
                 (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
                 layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
@@ -205,6 +206,7 @@ class LayerControl(glcanvas.GLCanvas):
 
             else:
                 self.editor.clickable_object_mouse_is_over = None
+            mouselog.debug("object under mouse: %s, on current layer: %s" % (o, self.editor.clickable_object_mouse_is_over is not None))
 
             self.project.task.status_bar.message = status_text
 
@@ -287,7 +289,7 @@ class LayerControl(glcanvas.GLCanvas):
         rotation = event.GetWheelRotation()
         delta = event.GetWheelDelta()
         window = event.GetEventObject()
-        log.debug("on_mouse_wheel_scroll. delta=%d win=%s" % (delta, window))
+        mouselog.debug("on_mouse_wheel_scroll. delta=%d win=%s" % (delta, window))
         if (delta == 0):
             return
 
@@ -303,10 +305,10 @@ class LayerControl(glcanvas.GLCanvas):
         if window != self:
             monitor_point = window.ClientToScreen(screen_point)
             screen_point = self.ScreenToClient(monitor_point)
-#            log.debug("Mouse over other window at screen pos %s, window pos %s!" % (monitor_point, screen_point))
+            mouselog.debug("Mouse over other window at screen pos %s, window pos %s!" % (monitor_point, screen_point))
             size = self.GetSize()
             if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
-#                log.debug("Mouse not over RenderWindow: skipping!")
+                mouselog.debug("Mouse not over RenderWindow: skipping!")
                 return
             
         world_point = self.get_world_point_from_screen_point(screen_point)
