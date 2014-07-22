@@ -32,6 +32,9 @@ def main(argv):
     logging.basicConfig(level=logging.WARNING)
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
+    for toolkit in ['pyface', 'envisage', 'traits', 'traitsui', 'apptools']:
+        _ = logging.getLogger(toolkit)
+        _.setLevel(logging.WARNING)
 
     plugins = [ MaproomPlugin() ]
     
