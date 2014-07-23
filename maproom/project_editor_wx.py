@@ -8,7 +8,7 @@ import wx
 
 # Enthought library imports.
 from pyface.api import YES, NO
-from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float
+from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float, Event
 
 from peppy2.framework.editor import FrameworkEditor
 
@@ -107,10 +107,10 @@ class ProjectEditor(FrameworkEditor):
         
         self.dirty = False
 
-    def save_layer(self, path):
+    def save_layer(self, path, loader=None):
         """ Saves the contents of the editor in a maproom project file
         """
-        error = self.layer_manager.save_layer(self.layer_tree_control.get_selected_layer(), path)
+        error = self.layer_manager.save_layer(self.layer_tree_control.get_selected_layer(), path, loader)
         if error:
             self.window.error(error)
         else:
@@ -201,6 +201,7 @@ class ProjectEditor(FrameworkEditor):
         self.update_layer_contents_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer)
         self.selection_info.display_panel_for_layer(self, sel_layer)
+        self.task.layer_selection_changed = sel_layer
     
     def update_layer_contents_ui(self, sel_layer=None):
         if sel_layer is None:

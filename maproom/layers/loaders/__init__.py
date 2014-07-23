@@ -115,17 +115,19 @@ def find_best_saver(savers, ext):
             return saver
     return None
 
-def save_layer(layer, uri):
-    savers = []
-    for loader in loaders:
-        if loader.can_save(layer):
-            savers.append(loader)
-    
+def save_layer(layer, uri, saver=None):
     if uri is None:
         uri = layer.file_path
     
     name, ext = os.path.splitext(uri)
-    saver = find_best_saver(savers, ext)
+    
+    if not saver:
+        savers = []
+        for loader in loaders:
+            if loader.can_save(layer):
+                savers.append(loader)
+        saver = find_best_saver(savers, ext)
+    
     if not saver:
         valid = valid_save_formats(layer)
         if valid:

@@ -5,10 +5,10 @@
 from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
 from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
     IEditorAreaPane, EditorAreaPane, Editor, DockPane, HSplitter, VSplitter
-from pyface.action.api import Group, Separator, Action
+from pyface.action.api import Group, Separator, Action, ActionItem
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
     SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
-from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode
+from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event
 
 from peppy2.framework.task import FrameworkTask
 from peppy2.framework.i_about import IAbout
@@ -65,6 +65,94 @@ class SaveLayerAsAction(EditorAction):
         dialog = FileDialog(parent=event.task.window.control, action='save as')
         if dialog.open() == OK:
             self.active_editor.save_layer(dialog.path)
+
+class SaveLayerAsFormatAction(EditorAction):
+    loader = Any
+    
+    def _name_default(self):
+        return "%s (%s)" % (self.loader.name, self.loader.extensions[0])
+    
+    def perform(self, event):
+        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="*%s" % self.loader.extensions[0])
+        if dialog.open() == OK:
+            self.active_editor.save_layer(dialog.path)
+
+class SaveLayerGroup(Group):
+    """ A menu for changing the active task in a task window.
+    """
+
+    #### 'ActionManager' interface ############################################
+
+    id = 'SaveLayerGroup'
+    items = List
+
+    #### 'TaskChangeMenuManager' interface ####################################
+
+    # The ActionManager to which the group belongs.
+    manager = Any
+
+    # The window that contains the group.
+    task = Instance('peppy2.framework.task.FrameworkTask')
+
+    # ENTHOUGHT QUIRK: This doesn't work: can't have a property depending on
+    # a task because this forces task_default to be called very early in the
+    # initialization process, before the window hierarchy is defined.
+    #
+    # active_editor = Property(Instance(IEditor),
+    #                         depends_on='task.active_editor')
+        
+    ###########################################################################
+    # Private interface.
+    ###########################################################################
+
+    def _get_items(self, layer=None):
+        items = []
+        if layer is not None:
+            from layers.loaders import valid_save_formats
+            valid = valid_save_formats(layer)
+            
+            log.debug("Save Layer As: layer=%s, formats=%s" % (layer, valid))
+            if valid:
+                for item in valid:
+                    action = SaveLayerAsFormatAction(loader=item[0])
+                    items.append(ActionItem(action=action))
+            
+        return items
+
+    def _rebuild(self, layer=None):
+        # Clear out the old group, then build the new one.
+        self.destroy()
+        self.items = self._get_items(layer)
+
+        # Inform our manager that it needs to be rebuilt.
+        self.manager.changed = True
+        
+    #### Trait initializers ###################################################
+
+    def _items_default(self):
+        log.debug("SAVELAYERGROUP: _items_default!!!")
+        self.task.on_trait_change(self._rebuild, 'layer_selection_changed')
+        return self._get_items()
+
+    def _manager_default(self):
+        manager = self
+        while isinstance(manager, Group):
+            manager = manager.parent
+        log.debug("SAVELAYERGROUP: _manager_default=%s!!!" % manager)
+        return manager
+    
+    def _task_default(self):
+        log.debug("SAVELAYERGROUP: _task_default=%s!!!" % self.manager.controller.task)
+        return self.manager.controller.task
+    
+    # ENTHOUGHT QUIRK: This doesn't work: the trait change decorator never
+    # seems to get called, however specifying the on_trait_change in the
+    # _items_default method works.
+    #
+    #    @on_trait_change('task.layer_selection_changed')
+    #    def updated_fired(self, event):
+    #        log.debug("SAVELAYERGROUP: updated!!!")
+    #        self._rebuild(event)
 
 class SaveImageAction(EditorAction):
     name = 'Save As Image...'
@@ -377,6 +465,16 @@ class MaproomProjectTask(FrameworkTask):
     
     error_email_to = Str('rob.mcmullen@noaa.gov')
     
+    #### Menu events ##########################################################
+    
+    # Layer selection event placed here instead of in the ProjectEditor
+    # because the trait events don't seem to be triggered in the
+    # menu items on task.active_editor.layer_selection_changed
+    # but they are on task.layer_selection_changed.  This means
+    # ProjectEditor.update_layer_selection_ui() sets an event here in the
+    # MaproomTask rather than in itself.
+    layer_selection_changed = Event
+    
     def _about_version_default(self):
         import Version
         return Version.VERSION
@@ -492,23 +590,12 @@ class MaproomProjectTask(FrameworkTask):
             Group(CheckLayerErrorAction(),
                   id="checkgroup"),
             id="layermenu")
-        editmenu = lambda: Group(
-            Group(ClearSelectionAction(),
-                  DeleteSelectionAction(),
-                  id="findgroup", separator=False),
-            Group(FindPointsAction(),
-                  id="findgroup"),
-            id="editmenu")
         edittools = lambda : Group(
             ClearSelectionAction(),
             DeleteSelectionAction(),
             id="edittools")
         actions = [
             # Menubar additions
-            SchemaAddition(factory=editmenu,
-                           path='MenuBar/Edit',
-                           before="PrefGroup",
-                           ),
             SchemaAddition(id='bb',
                            factory=BoundingBoxAction,
                            path='MenuBar/View',
@@ -585,8 +672,19 @@ class MaproomProjectTask(FrameworkTask):
                         SaveProjectAction(),
                         SaveProjectAsAction(),
                         SaveLayerAction(),
-                        SaveLayerAsAction(),
+                        SMenu(SaveLayerGroup(),
+                            id='SaveLayerAsSubmenu', name="Save Layer As"),
                         SaveImageAction(),
+                        ]
+            if menu_name == "Edit":
+                if group_name == "SelectGroup":
+                    return [
+                        ClearSelectionAction(),
+                        DeleteSelectionAction(),
+                        ]
+                elif group_name == "FindGroup":
+                    return [
+                        FindPointsAction(),
                         ]
 
         if location.startswith("Tool"):
