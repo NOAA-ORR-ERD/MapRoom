@@ -1,3 +1,14 @@
+07/23/2014
+---------------------------
+Released 3.0b12
+- RM Added file dialog wildcard convenience fuction to BaseLoader
+- RM Implemented Save Layer As menu item that shows appropriate file formats for the selected layer
+- RM Turn off Enthought debug prints by default
+- RM Added new logger for mouse actions
+- RM Fixed bug when adding verdat point editing over visible portions of BNA layer
+- RM Moved background processing library to peppy2
+- RM Changed debug prints into log messages
+
 07/09/2014
 ---------------------------
 Released 3.0b11
