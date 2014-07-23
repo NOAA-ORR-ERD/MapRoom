@@ -14,6 +14,9 @@ class BaseLoader(object):
     
     layer_types = []
     
+    # List of supported filename extensions, including the leading ".".  If
+    # multiple extensions are supported, put the most common one first so that
+    # the file dialog will display that as the default.
     extensions = []
     
     name = "Abstract loader"
@@ -35,6 +38,14 @@ class BaseLoader(object):
     
     def get_pretty_extension_list(self):
         return ", ".join(self.extensions)
+    
+    def get_file_dialog_wildcard(self):
+        # Using only the first extension
+        wildcards = []
+        if self.extensions:
+            ext = self.extensions[0]
+            wildcards.append("%s (*%s)|*%s" % (self.name, ext, ext))
+        return "|".join(wildcards)
     
     def save(self, uri, layer):
         if uri is None:

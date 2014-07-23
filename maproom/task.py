@@ -73,7 +73,7 @@ class SaveLayerAsFormatAction(EditorAction):
         return "%s (%s)" % (self.loader.name, self.loader.extensions[0])
     
     def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="*%s" % self.loader.extensions[0])
+        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard=self.loader.get_file_dialog_wildcard())
         if dialog.open() == OK:
             self.active_editor.save_layer(dialog.path)
 
