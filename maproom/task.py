@@ -23,9 +23,7 @@ from library.mem_use import get_mem_use
 import logging
 log = logging.getLogger(__name__)
 
-#class SaveProjectAction(EditorAction):
-class SaveProjectAction(Action):
-    enabled = False
+class SaveProjectAction(EditorAction):
     name = 'Save Project'
     accelerator = 'Ctrl+S'
     tooltip = 'Save the current project'
@@ -35,9 +33,7 @@ class SaveProjectAction(Action):
     def perform(self, event):
         self.active_editor.save(None)
 
-#class SaveProjectAsAction(EditorAction):
-class SaveProjectAsAction(Action):
-    enabled = False
+class SaveProjectAsAction(EditorAction):
     name = 'Save Project As...'
     accelerator = 'Ctrl+Shift+S'
     tooltip = 'Save the current project with a new name'
@@ -717,7 +713,7 @@ class MaproomProjectTask(FrameworkTask):
         that will load a new file or create a new view of the existing editor,
         respectively.
         """
-        if self.active_editor and hasattr(source, 'get_metadata'):
+        if self.active_editor and hasattr(source, 'get_metadata') and not self.active_editor.load_in_new_tab(source):
             editor = self.active_editor
             editor.load(source, **kwargs)
             self._active_editor_changed()

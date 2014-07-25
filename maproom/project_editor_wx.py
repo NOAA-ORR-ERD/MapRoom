@@ -73,6 +73,12 @@ class ProjectEditor(FrameworkEditor):
 
     def create(self, parent):
         self.control = self._create_control(parent)
+    
+    def load_in_new_tab(self, guess):
+        metadata = guess.get_metadata()
+        if metadata.mime == "application/x-maproom-project-json":
+            return self.layer_manager.has_user_created_layers()
+        return False
 
     def load(self, guess=None, layer=False, **kwargs):
         """ Loads the contents of the editor.
@@ -102,8 +108,13 @@ class ProjectEditor(FrameworkEditor):
         """
         if path is None:
             path = self.path
+        if not path:
+            path = "untitled.maproom"
         
         # FIXME: need to determine the project file format!!!
+        error = self.layer_manager.save_all(path)
+        if error:
+            self.window.error(error)
         
         self.dirty = False
 

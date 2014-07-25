@@ -3,6 +3,8 @@ import shutil
 import tempfile
 import time
 import traceback
+import json
+
 import numpy as np
 import wx
 import library.formats.verdat as verdat
@@ -100,6 +102,34 @@ class LayerManager(LayerUndo):
 
         return result
     
+    def flatten_with_indexes(self):
+        return self.flatten_with_indexes_recursive(self.layers, [])
+
+    def flatten_with_indexes_recursive(self, tree, indexes):
+        result = []
+
+        index = 0
+        indexes.append(index)
+        for item in tree:
+            indexes[-1] = index
+            if (isinstance(item, Layer)):
+                result.append((tuple(indexes), item))
+            else:
+                result.extend(self.flatten_with_indexes_recursive(item, indexes))
+            index += 1
+
+        return result
+    
+    def has_user_created_layers(self):
+        """Returns true if all the layers can be recreated automatically
+        
+        If any layer has any user-created data, this will return False.
+        """
+        for layer in self.flatten():
+            if not layer.skip_on_insert:
+                return True
+        return False
+    
     def get_default_visibility(self):
         layer_visibility = dict()
         for layer in self.flatten():
@@ -121,7 +151,7 @@ class LayerManager(LayerUndo):
     
     def load_layers_from_metadata(self, metadata, editor=None):
         # FIXME: load all layer types, not just vector!
-        layers = loaders.load_layers(metadata, manager=self)
+        loader, layers = loaders.load_layers(metadata, manager=self)
         if layers is None:
             log.warning("LAYER LOAD ERROR: %s" % "Unknown file type %s for %s" % (metadata.mime, metadata.uri))
             return None
@@ -138,6 +168,14 @@ class LayerManager(LayerUndo):
         if errors:
             return None
         
+        if loader.project:
+            # remove all other layers so the project can be inserted in the
+            # correct order
+            existing = self.flatten()
+            for layer in existing:
+                if not layer.is_root():
+                    self.remove_layer(layer)
+        
         for layer in layers:
             self.insert_loaded_layer(layer, editor)
             if layer.needs_background_loading():
@@ -153,6 +191,35 @@ class LayerManager(LayerUndo):
                 layer.highlight_exception(e)
                 window.error(e.message, "File Contains Errors")
         return "No selected layer."
+    
+    def load_all(self, file_path):
+        with open(file_path, "w") as fh:
+            line = fh.readline()
+            if line != "# -*- MapRoom project file -*-\n":
+                return "Not a MapRoom project file!"
+            project = json.load(fh)
+            print project
+    
+    def save_all(self, file_path):
+        log.debug("saving layers in project file: " + file_path)
+        layer_info = self.flatten_with_indexes()
+        log.debug("layers are:\n" + "\n".join([str(s) for s in layer_info]))
+        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t,s  in Layer.get_subclasses().iteritems()]))
+        project = []
+        for index, layer in layer_info:
+            print "index=%s, layer=%s, path=%s" % (index, layer, layer.file_path)
+            data = layer.serialize_json(index)
+            if data is not None:
+                project.append(data)
+        
+        try:
+            with open(file_path, "w") as fh:
+                print project
+                fh.write("# -*- MapRoom project file -*-\n")
+                json.dump(project, fh)
+        except Exception, e:
+            return "Failed saving %s: %s" % (file_path, e)
+        return ""
     
     def save_layer(self, layer, file_path, loader=None):
         if layer is not None:

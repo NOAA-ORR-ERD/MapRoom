@@ -53,8 +53,9 @@ from image import GDALRecognizer
 recognizers.append(GDALRecognizer())
 from binary import HDF5Recognizer
 recognizers.append(HDF5Recognizer())
-from text import BNARecognizer, VerdatRecognizer
+from text import BNARecognizer, MapRoomProjectRecognizer, VerdatRecognizer
 recognizers.append(BNARecognizer())
+recognizers.append(MapRoomProjectRecognizer())
 recognizers.append(VerdatRecognizer())
 # [[[end]]]
 

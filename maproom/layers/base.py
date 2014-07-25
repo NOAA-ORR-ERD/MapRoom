@@ -6,12 +6,16 @@ import numpy as np
 from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
 
 from peppy2.utils.jobs import get_global_job_manager
+from peppy2.utils.runtime import get_all_subclasses
 
 # MapRoom imports
 from ..library import rect
 
 # local package imports
 from constants import *
+
+import logging
+log = logging.getLogger(__name__)
 
 class Layer(HasTraits):
     """Base Layer class with some abstract methods.
@@ -24,6 +28,9 @@ class Layer(HasTraits):
     
     name = Unicode("Empty Layer")
     
+    # type is a string identifier that uniquely refers to a layer class.
+    # Base classes should use an empty string to show that they won't be
+    # serializable.
     type = Str("")
     
     mime = Str("")
@@ -109,6 +116,68 @@ class Layer(HasTraits):
     
     def save_to_file(self, file_path):
         raise NotImplementedError
+    
+    def serialize_json(self, index):
+        """Create json representation that can restore layer.
+        
+        Layers don't know their own indexes, so the manager must pass the index
+        here so it can be serialized with the rest of the data.
+        """
+        json = {
+            'index': index,
+            'type': self.type,
+            'version': 1,
+            }
+        if self.file_path:
+            json['url'] = os.path.abspath(self.file_path)
+            json['mime'] = self.mime
+        return json
+    
+    def unserialize_json(self, json):
+        """Restore layer from json representation.
+        
+        The json data passed to this function will be the subset of the json
+        applicable to this layer only, so it doesn't have to deal with parsing
+        anything other than what's necessary to restore itself.
+        """
+        pass
+    
+    type_to_class_defs = {}
+    
+    @classmethod
+    def get_subclasses(cls):
+        if not cls.type_to_class_defs:
+            subclasses = get_all_subclasses(Layer)
+            for kls in subclasses:
+                print kls
+                layer = kls()
+                if layer.type:
+                    cls.type_to_class_defs[layer.type] = kls
+        return cls.type_to_class_defs
+            
+    @classmethod
+    def type_to_class(cls, type_string):
+        cls.get_subclasses()
+        return cls.type_to_class_defs[type_string]
+    
+    @classmethod
+    def load_from_json(cls, json_data, manager):
+        t = json_data['type']
+        kls = cls.type_to_class(t)
+        log.debug("loading from json %s" % json_data)
+        log.debug("found type %s, class=%s" % (t, kls))
+        if 'url' in json_data:
+            from maproom.layers import loaders
+            
+            log.debug("Loading layers from url %s" % json_data['url'])
+            loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'])
+        else:
+            log.debug("Loading layers from json encoded data")
+            layer = kls(manager=manager)
+            layer.unserialize_json(json_data)
+            layers = [layer]
+        log.debug("returning layers: %s" % str(layers))
+        return layers
     
     def check_for_errors(self, window):
         pass
@@ -236,6 +305,9 @@ class RootLayer(Folder):
     
     def is_root(self):
         return True
+    
+    def serialize_json(self, index):
+        pass
 
 
 class ProjectedLayer(Layer):

@@ -21,6 +21,8 @@ class BaseLoader(object):
     
     name = "Abstract loader"
     
+    project = False
+    
     def can_load(self, metadata):
         return metadata.mime == self.mime
     

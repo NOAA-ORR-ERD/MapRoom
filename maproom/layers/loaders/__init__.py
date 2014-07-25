@@ -51,6 +51,8 @@
 loaders = []
 from ugrid import UGridLoader
 loaders.append(UGridLoader())
+from project import ProjectLoader
+loaders.append(ProjectLoader())
 from bna import BNALoader
 loaders.append(BNALoader())
 from gdal import GDALLoader
@@ -65,6 +67,14 @@ from common import PointsError
 import logging
 log = logging.getLogger(__name__)
 
+def load_layers_from_url(url, mime, manager=None):
+    from peppy2.utils.file_guess import FileGuess
+    
+    guess = FileGuess(url)
+    guess.metadata.mime = mime
+    metadata = guess.get_metadata()
+    return load_layers(metadata, manager)
+
 def load_layers(metadata, manager=None):
     for loader in loaders:
         log.debug("trying loader %s" % loader.name)
@@ -72,8 +82,8 @@ def load_layers(metadata, manager=None):
             log.debug(" loading using loader %s!" % loader.name)
             layers = loader.load(metadata, manager=manager)
             log.debug(" loaded layers: \n  %s" % "\n  ".join([str(a) for a in layers]))
-            return layers
-    return None
+            return loader, layers
+    return None, None
 
 def valid_save_formats(layer):
     valid = []
