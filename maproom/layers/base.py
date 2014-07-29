@@ -127,20 +127,44 @@ class Layer(HasTraits):
             'index': index,
             'type': self.type,
             'version': 1,
+            'has encoded data': False,
+            'name': self.name,
             }
         if self.file_path:
             json['url'] = os.path.abspath(self.file_path)
             json['mime'] = self.mime
         return json
     
-    def unserialize_json(self, json):
+    def unserialize_json(self, json_data):
+        """Restore layer from json representation.
+        
+        The json data passed to this function will be the subset of the json
+        applicable to this layer only, so it doesn't have to deal with parsing
+        anything other than what's necessary to restore itself.
+        
+        This is the driver routine and will call the version-specific routine
+        based on the 'version' keyword in json_data.  The method should be
+        named 'unserialize_json_versionX' where X is the version number.
+        """
+        name = "unserialize_json_version" + str(json_data['version'])
+        try:
+            method = getattr(self, name)
+        except AttributeEror:
+            raise
+        log.debug("Restoring JSON data using %s" % name)
+        method(json_data)
+    
+    def unserialize_json_version1(self, json_data):
         """Restore layer from json representation.
         
         The json data passed to this function will be the subset of the json
         applicable to this layer only, so it doesn't have to deal with parsing
         anything other than what's necessary to restore itself.
         """
-        pass
+        self.name = json_data['name']
+        if 'url' in json_data:
+            self.file_path = json_data['url']
+            self.mime = json_data['mime']
     
     type_to_class_defs = {}
     
@@ -166,7 +190,7 @@ class Layer(HasTraits):
         kls = cls.type_to_class(t)
         log.debug("loading from json %s" % json_data)
         log.debug("found type %s, class=%s" % (t, kls))
-        if 'url' in json_data:
+        if 'url' in json_data and not json_data['has encoded data']:
             from maproom.layers import loaders
             
             log.debug("Loading layers from url %s" % json_data['url'])

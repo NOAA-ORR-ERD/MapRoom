@@ -88,6 +88,8 @@ class ProjectEditor(FrameworkEditor):
         else:
             metadata = guess.get_metadata()
             layers = self.layer_manager.load_layers_from_metadata(metadata, self)
+            if metadata.mime == "application/x-maproom-project-json":
+                self.path = metadata.uri
             
             if layers:
                 self.zoom_to_layers(layers)
@@ -109,13 +111,14 @@ class ProjectEditor(FrameworkEditor):
         if path is None:
             path = self.path
         if not path:
-            path = "untitled.maproom"
+            path = "%s.maproom" % self.name
         
         # FIXME: need to determine the project file format!!!
         error = self.layer_manager.save_all(path)
         if error:
             self.window.error(error)
-        
+        else:
+            self.path = path
         self.dirty = False
 
     def save_layer(self, path, loader=None):

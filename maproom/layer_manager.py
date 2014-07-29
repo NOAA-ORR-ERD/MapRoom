@@ -175,6 +175,10 @@ class LayerManager(LayerUndo):
             for layer in existing:
                 if not layer.is_root():
                     self.remove_layer(layer)
+            
+            # layers are inserted from the beginning, so reverse loaded layers
+            # so they won't show up backwards
+            layers.reverse()
         
         for layer in layers:
             self.insert_loaded_layer(layer, editor)

@@ -114,6 +114,25 @@ class PointLayer(ProjectedLayer):
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)
     
+    def serialize_json(self, index):
+        json = Layer.serialize_json(self, index)
+        update = {
+            'has encoded data': True,
+            'points': self.points.tolist(),
+            'default_depth': self.default_depth,
+            'depth_unit': self.depth_unit,
+        }
+        json.update(update)
+        return json
+    
+    def unserialize_json_version1(self, json_data):
+        Layer.unserialize_json_version1(self, json_data)
+        # numpy can't restore an array of arrays; must be array of tuples
+        self.points = np.array([tuple(i) for i in json_data['points']], data_types.POINT_DTYPE).view(np.recarray)
+        self.default_depth = json_data['default_depth']
+        self.depth_unit = json_data['depth_unit']
+        self.update_bounds()
+    
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()
 
@@ -433,6 +452,18 @@ class LineLayer(PointLayer):
 
     def can_save_as(self):
         return True
+    
+    def serialize_json(self, index):
+        json = PointLayer.serialize_json(self, index)
+        update = {
+            'lines': self.line_segment_indexes.tolist(),
+        }
+        json.update(update)
+        return json
+    
+    def unserialize_json_version1(self, json_data):
+        PointLayer.unserialize_json_version1(self, json_data)
+        self.line_segment_indexes = np.array([tuple(i) for i in json_data['lines']], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
 
     def make_line_segment_indexes(self, count):
         return np.repeat(
@@ -982,6 +1013,18 @@ class TriangleLayer(PointLayer):
 
     def can_save_as(self):
         return True
+
+    def serialize_json(self, index):
+        json = PointLayer.serialize_json(self, index)
+        update = {
+            'triangles': self.triangles.tolist(),
+        }
+        json.update(update)
+        return json
+    
+    def unserialize_json_version1(self, json_data):
+        PointLayer.unserialize_json_version1(self, json_data)
+        self.triangles = np.array([tuple(i) for i in json_data['triangles']], data_types.TRIANGLE_DTYPE).view(np.recarray)
 
     def update_after_insert_point_at_index(self, point_index):
         # update point indexes in the triangles to account for the inserted point

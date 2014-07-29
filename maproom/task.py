@@ -40,7 +40,7 @@ class SaveProjectAsAction(EditorAction):
     image = ImageResource('file_save_as')
 
     def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control, action='save as')
+        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom")
         if dialog.open() == OK:
             self.active_editor.save(dialog.path)
 
