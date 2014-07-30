@@ -3,6 +3,7 @@ import wx
 
 from ..layers import constants
 from ..library import coordinates
+from ..library.textparse import parse_int_string, int_list_to_string
 from ..layer_undo import *
 from ..ui import sliders
 
@@ -21,6 +22,7 @@ class InfoPanel(wx.Panel):
         self.layer_name_control = None
         self.depth_unit_control = None
         self.default_depth_control = None
+        self.point_index_control = None
         self.point_depth_control = None
         self.ignore_next_update = False
         self.current_layer_displayed = None
@@ -62,6 +64,7 @@ class InfoPanel(wx.Panel):
         self.layer_name_control = None
         self.depth_unit_control = None
         self.default_depth_control = None
+        self.point_index_control = None
         self.point_depth_control = None
 
         self.Freeze()
@@ -106,6 +109,20 @@ class InfoPanel(wx.Panel):
                 self.add_static_text_field(field, str(layer.get_num_points_selected()))
             elif (field == "Flagged points"):
                 self.add_static_text_field(field, str(layer.get_num_points_selected(constants.STATE_FLAGGED)))
+            elif (field == "Point index"):
+                selected_point_indexes = layer.get_selected_point_indexes()
+                if len(selected_point_indexes) > 0:
+                    values = [x + 1 for x in selected_point_indexes]
+                    s = int_list_to_string(values)
+                else:
+                    s = ""
+                # FIXME: editing ability turned off for now due to the text
+                # selection box being reset to the point depth box after
+                # every update.  Maybe this can be changed when the panes are
+                # recoded to reuse existing controls rather than rebuilding
+                # the entire layout every time
+                self.point_index_control = self.add_text_field(field, s, self.point_indexes_changed, wx.EXPAND, enabled=False)
+                self.point_index_control.SetSelection(-1, -1)
             elif (field == "Point depth"):
                 conflict = False
                 depth = -1
@@ -217,6 +234,22 @@ class InfoPanel(wx.Panel):
             c.SetBackgroundColour("#FF8080")
         c.Refresh()
 
+    def point_indexes_changed(self, event):
+        layer = self.project.layer_tree_control.get_selected_layer()
+        if layer == None:
+            return
+
+        c = self.point_index_control
+        c.SetBackgroundColour("#FFFFFF")
+        try:
+            one_based_values, error = parse_int_string(c.GetValue())
+            values = [x - 1 for x in one_based_values]
+            self.project.control.do_select_points(layer, values)
+        except Exception as e:
+            import traceback
+            print traceback.format_exc(e)
+            c.SetBackgroundColour("#FF8080")
+
     def point_coords_changed(self, event):
         layer = self.project.layer_tree_control.get_selected_layer()
         if layer == None:
@@ -321,7 +354,7 @@ class SelectionInfoPanel(InfoPanel):
 
         if (layer != None and layer.type != "root"):
             if layer.has_points() and layer.get_num_points_selected() > 0:
-                fields.extend(["Selected points", "Point depth"])
+                fields.extend(["Selected points", "Point index", "Point depth"])
                 if layer.get_num_points_selected() == 1:
                     fields.extend(["Point coordinates"])
         return fields

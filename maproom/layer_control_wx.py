@@ -744,6 +744,15 @@ class LayerControl(glcanvas.GLCanvas):
             self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)
             self.project.refresh()
         dialog.Destroy()
+    
+    def do_select_points(self, layer, indexes):
+        if len(indexes) > 0 and layer.has_points():
+            layer.clear_all_point_selections()
+            layer.select_points(indexes)
+            w_r = layer.compute_selected_bounding_rect()
+            self.zoom_to_include_world_rect(w_r)
+            self.project.update_layer_contents_ui()
+            self.project.refresh()
 
     def do_find_points(self):
         from ui.Find_point_dialog import FindPointDialog
@@ -752,22 +761,16 @@ class LayerControl(glcanvas.GLCanvas):
             try:
                 values, error = dialog.get_values()
                 layer = dialog.layer
-                if len(values) > 0 and layer.has_points():
-                    layer.clear_all_point_selections()
-                    layer.select_points(values)
-                    w_r = layer.compute_selected_bounding_rect()
-                    self.zoom_to_include_world_rect(w_r)
-                    self.project.update_layer_contents_ui()
-                    self.project.refresh()
+                self.do_select_points(layer, values)
                 if error:
                     tlw = wx.GetApp().GetTopWindow()
                     tlw.SetStatusText(error)
             except IndexError:
                 tlw = wx.GetApp().GetTopWindow()
-                tlw.SetStatusText(u"No point #%s in this layer" % value)
+                tlw.SetStatusText(u"No point #%s in this layer" % values)
             except ValueError:
                 tlw = wx.GetApp().GetTopWindow()
-                tlw.SetStatusText(u"Point number must be an integer, not '%s'" % value)
+                tlw.SetStatusText(u"Point number must be an integer, not '%s'" % values)
             except:
                 raise
         dialog.Destroy()
