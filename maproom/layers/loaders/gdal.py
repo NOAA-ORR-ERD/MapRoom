@@ -31,7 +31,7 @@ class GDALLoader(object):
         if (layer.load_error_string == ""):
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
-            layer.type = self.mime
+            layer.mime = self.mime
             layer.update_bounds()
         return [layer]
     

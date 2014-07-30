@@ -36,7 +36,7 @@ class BNALoader(BaseLoader):
                            f_polygon_types, f_polygon_identifiers)
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
-            layer.type = self.mime
+            layer.mime = self.mime
         return [layer]
     
     def check(self, layer):
