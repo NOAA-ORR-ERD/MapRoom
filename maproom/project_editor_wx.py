@@ -122,13 +122,17 @@ class ProjectEditor(FrameworkEditor):
         self.dirty = False
 
     def save_layer(self, path, loader=None):
-        """ Saves the contents of the editor in a maproom project file
+        """ Saves the contents of the current layer in an appropriate file
         """
-        error = self.layer_manager.save_layer(self.layer_tree_control.get_selected_layer(), path, loader)
+        layer = self.layer_tree_control.get_selected_layer()
+        if layer is None:
+            return
+        error = self.layer_manager.save_layer(layer, path, loader)
         if error:
             self.window.error(error)
         else:
             self.window.application.successfully_loaded_event = path
+        self.layer_metadata_changed(layer)
         self.update_layer_selection_ui()
 
     def save_image(self, path):

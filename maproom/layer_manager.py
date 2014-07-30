@@ -227,7 +227,11 @@ class LayerManager(LayerUndo):
     
     def save_layer(self, layer, file_path, loader=None):
         if layer is not None:
-            return loaders.save_layer(layer, file_path, loader)
+            error = loaders.save_layer(layer, file_path, loader)
+            if not error:
+                layer.name = os.path.basename(file_path)
+                layer.file_path = file_path
+            return error
         return "No selected layer."
     
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None):
