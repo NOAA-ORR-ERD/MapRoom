@@ -307,7 +307,7 @@ class LayerInfoPanel(InfoPanel):
                 if layer.has_alpha():
                     fields.extend(["Transparency"])
                 if layer.has_points():
-                    fields.extend(["Default depth", "Depth unit", "Point count", "Flagged points", "Selected points"])
+                    fields.extend(["Default depth", "Depth unit", "Point count", "Flagged points"])
                     if layer.type == "triangle":
                         fields.extend(["Triangle count"])
                     elif layer.type == "line":
