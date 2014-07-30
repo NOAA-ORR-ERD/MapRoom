@@ -43,6 +43,13 @@ class FindPointDialog(sc.SizedDialog):
         self.EndModal(wx.ID_CANCEL)
     
     def get_values(self):
-        values, error = parse_int_string(self.text.Value)
+        """Return indexes of points.
+        
+        Note that point indexes are stored internally numbered from zero,
+        but the user expects indexes starting from 1.  Returned values are
+        zero-based.
+        """
+        one_based_values, error = parse_int_string(self.text.Value)
+        values = [x - 1 for x in one_based_values]
         return values, error
 
