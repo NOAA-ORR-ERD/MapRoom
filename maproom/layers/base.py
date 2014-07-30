@@ -173,7 +173,6 @@ class Layer(HasTraits):
         if not cls.type_to_class_defs:
             subclasses = get_all_subclasses(Layer)
             for kls in subclasses:
-                print kls
                 layer = kls()
                 if layer.type:
                     cls.type_to_class_defs[layer.type] = kls
@@ -188,8 +187,7 @@ class Layer(HasTraits):
     def load_from_json(cls, json_data, manager):
         t = json_data['type']
         kls = cls.type_to_class(t)
-        log.debug("loading from json %s" % json_data)
-        log.debug("found type %s, class=%s" % (t, kls))
+        log.debug("load_from_json: found type %s, class=%s" % (t, kls))
         if 'url' in json_data and not json_data['has encoded data']:
             from maproom.layers import loaders
             

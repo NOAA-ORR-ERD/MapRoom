@@ -32,7 +32,6 @@ class ProjectLoader(BaseLoader):
                 return "Not a MapRoom project file!"
             
             project = json.load(fh)
-            print project
         
         layers = []
         for serialized_data in project:
