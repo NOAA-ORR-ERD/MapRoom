@@ -1404,6 +1404,20 @@ class PolygonLayer(PointLayer):
             self.points.state = 0
         self.update_bounds()
 
+    def serialize_json(self, index):
+        json = PointLayer.serialize_json(self, index)
+        update = {
+            'polygons': self.polygons.tolist(),
+            'adjacency': self.polygon_adjacency_array.tolist(),
+        }
+        json.update(update)
+        return json
+    
+    def unserialize_json_version1(self, json_data):
+        PointLayer.unserialize_json_version1(self, json_data)
+        self.polygons = np.array([tuple(i) for i in json_data['polygons']], data_types.POLYGON_DTYPE).view(np.recarray)
+        self.polygon_adjacency_array = np.array([tuple(i) for i in json_data['adjacency']], data_types.POLYGON_ADJACENCY_DTYPE).view(np.recarray)
+
     def make_polygons(self, count):
         return np.repeat(
             np.array([(0, 0, 0, 0, 0)], dtype=data_types.POLYGON_DTYPE),
