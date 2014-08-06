@@ -35,9 +35,11 @@ class TestVerdatConversion(object):
         guess.metadata.mime = "application/x-maproom-verdat"
         print guess
         print guess.metadata
-        self.verdat = loaders.load_layers(guess.metadata, manager=self.manager)[0]
+        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        self.verdat = layers[0]
 
     def test_simple(self):
+        print self.verdat
         eq_(23, np.alen(self.verdat.points))
         print self.verdat.points
         
@@ -48,7 +50,8 @@ class TestVerdatConversion(object):
         
         guess = FileGuess("negative-depth-triangles.nc")
         guess.metadata.mime = "application/x-hdf"
-        t2 = loaders.load_layers(guess.metadata, self.manager)[0]
+        loader, layers = loaders.load_layers(guess.metadata, self.manager)
+        t2 = layers[0]
         
         print t2.points
 
@@ -71,7 +74,8 @@ class TestJetty(object):
         guess.metadata.mime = "application/x-maproom-verdat"
         print guess
         print guess.metadata
-        self.verdat = loaders.load_layers(guess.metadata, manager=self.manager)[0]
+        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        self.verdat = layers[0]
     
     def add_segments(self, point_list):
         start = point_list[0]
@@ -107,7 +111,7 @@ class TestJetty(object):
         loaders.save_layer(self.verdat, uri)
         guess = FileGuess(uri)
         guess.metadata.mime = "application/x-hdf"
-        layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
         layer = layers[0]
         eq_(16, np.alen(layer.line_segment_indexes))
 
@@ -139,7 +143,7 @@ class TestJetty(object):
         loaders.save_layer(self.verdat, uri)
         guess = FileGuess(uri)
         guess.metadata.mime = "application/x-hdf"
-        layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
         layer = layers[0]
         eq_(15, np.alen(layer.line_segment_indexes))
 
@@ -151,7 +155,7 @@ class TestUGrid(object):
         guess.metadata.mime = "application/x-hdf"
         print guess
         print guess.metadata
-        self.layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        loader, self.layers = loaders.load_layers(guess.metadata, manager=self.manager)
     
     def test_load(self):
         eq_(2, len(self.layers))
