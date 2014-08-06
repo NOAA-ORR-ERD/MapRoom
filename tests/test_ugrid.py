@@ -6,37 +6,15 @@ import numpy as np
 
 from pyugrid.ugrid import UGrid
 
-from peppy2.utils.file_guess import FileGuess
 from maproom.layers import loaders, TriangleLayer
 from maproom.library.Boundary import find_boundaries
 
-class MockControl(object):
-    def __init__(self):
-        self.projection_is_identity = True
-
-class MockProject(object):
-    def __init__(self):
-        self.control = MockControl()
-
-class MockManager(object):
-    def __init__(self):
-        self.project = MockProject()
-    
-    def dispatch_event(self, event, value=True):
-        pass
-    
-    def add_undo_operation_to_operation_batch(self, op, layer, index, values):
-        pass
+from mock import *
 
 class TestVerdatConversion(object):
     def setup(self):
         self.manager = MockManager()
-        guess = FileGuess("../TestData/Verdat/negative-depth-triangles.verdat")
-        guess.metadata.mime = "application/x-maproom-verdat"
-        print guess
-        print guess.metadata
-        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
-        self.verdat = layers[0]
+        self.verdat = self.manager.load_first_layer("../TestData/Verdat/negative-depth-triangles.verdat", "application/x-maproom-verdat")
 
     def test_simple(self):
         print self.verdat
@@ -48,11 +26,7 @@ class TestVerdatConversion(object):
         
         loaders.save_layer(tris, "negative-depth-triangles.nc")
         
-        guess = FileGuess("negative-depth-triangles.nc")
-        guess.metadata.mime = "application/x-hdf"
-        loader, layers = loaders.load_layers(guess.metadata, self.manager)
-        t2 = layers[0]
-        
+        t2 = self.manager.load_first_layer("negative-depth-triangles.nc", "application/x-hdf")
         print t2.points
 
     def test_jetty(self):
@@ -70,12 +44,7 @@ class TestVerdatConversion(object):
 class TestJetty(object):
     def setup(self):
         self.manager = MockManager()
-        guess = FileGuess("../TestData/Verdat/jetty.verdat")
-        guess.metadata.mime = "application/x-maproom-verdat"
-        print guess
-        print guess.metadata
-        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
-        self.verdat = layers[0]
+        self.verdat = self.manager.load_first_layer("../TestData/Verdat/jetty.verdat", "application/x-maproom-verdat")
     
     def add_segments(self, point_list):
         start = point_list[0]
@@ -109,10 +78,7 @@ class TestJetty(object):
         self.create_jetty()
         uri = "tmp.jetty.nc"
         loaders.save_layer(self.verdat, uri)
-        guess = FileGuess(uri)
-        guess.metadata.mime = "application/x-hdf"
-        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
-        layer = layers[0]
+        layer = self.manager.load_first_layer(uri, "application/x-hdf")
         eq_(16, np.alen(layer.line_segment_indexes))
 
     def create_channel(self):
@@ -141,21 +107,14 @@ class TestJetty(object):
         self.create_channel()
         uri = "tmp.channel.nc"
         loaders.save_layer(self.verdat, uri)
-        guess = FileGuess(uri)
-        guess.metadata.mime = "application/x-hdf"
-        loader, layers = loaders.load_layers(guess.metadata, manager=self.manager)
-        layer = layers[0]
+        layer = self.manager.load_first_layer(uri, "application/x-hdf")
         eq_(15, np.alen(layer.line_segment_indexes))
 
 
 class TestUGrid(object):
     def setup(self):
         self.manager = MockManager()
-        guess = FileGuess("../TestData/UGrid/2_triangles.nc")
-        guess.metadata.mime = "application/x-hdf"
-        print guess
-        print guess.metadata
-        loader, self.layers = loaders.load_layers(guess.metadata, manager=self.manager)
+        self.layers = self.manager.load_all_layers("../TestData/UGrid/2_triangles.nc", "application/x-hdf")
     
     def test_load(self):
         eq_(2, len(self.layers))
