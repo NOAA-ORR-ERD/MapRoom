@@ -238,3 +238,94 @@ def generate_outside_hole_point(boundary, points):
             raise Find_boundaries_error("Cannot find an outer boundary hole for triangulation.")
 
     return (candidate_x, candidate_y)
+
+# from Planar, 2D geometery library: http://pypi.python.org/pypi/planar/
+#############################################################################
+# Copyright (c) 2010 by Casey Duncan
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# * Redistributions of source code must retain the above copyright notice, 
+#   this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# * Neither the name(s) of the copyright holders nor the names of its
+#   contributors may be used to endorse or promote products derived from this
+#   software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AS IS AND ANY EXPRESS OR
+# IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+# EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY DIRECT, INDIRECT,
+# INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+# OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#############################################################################
+
+def segments_intersect(a, b, c, d):
+    """Return True if the line segment a->b intersects with
+    line segment c->d
+    """
+    dir1 = (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
+    dir2 = (b[0] - a[0])*(d[1] - a[1]) - (d[0] - a[0])*(b[1] - a[1])
+    if (dir1 > 0.0) != (dir2 > 0.0) or (not dir1) != (not dir2): 
+        dir1 = (d[0] - c[0])*(a[1] - c[1]) - (a[0] - c[0])*(d[1] - c[1])
+        dir2 = (d[0] - c[0])*(b[1] - c[1]) - (b[0] - c[0])*(d[1] - c[1])
+        return ((dir1 > 0.0) != (dir2 > 0.0) 
+            or (not dir1) != (not dir2))
+    return False
+
+def self_intersection_check(points):
+    """Check the polygon for self-intersection and cache the result
+
+    We use a simplified plane sweep algorithm. Worst case, it still takes
+    O(n^2) time like a brute force intersection test, but it will typically
+    be O(n log n) for common simple non-convex polygons. It should
+    also quickly identify self-intersecting polygons in most cases,
+    although it is slower for severely self-intersecting cases due to
+    its startup cost.
+    
+    :returns: list of intersecting segments, where each entry contains
+    two tuples each representing one of the intersecting segments.  Each
+    tuple contains 4 items representingthe intersecting segment: a tuple
+    of coordinates for the start point of the segment, a tuple containing
+    coordinates of the endpoint of the segment, and the indexes into :point:
+    for both the start and end point in the segment.
+    """
+    last_index = len(points) - 1
+    indices = range(len(points))
+    points = ([(tuple(points[i - 1]), tuple(points[i]), i) for i in indices] 
+        + [(tuple(points[i]), tuple(points[i - 1]), i) for i in indices])
+#    points = ([(tuple(points.x[i - 1], points.y[i-1]),
+#                tuple(points.x[i], points.y[i]),
+#                i) for i in indices] +
+#              [(tuple(points.x[i], points.y[i]),
+#                tuple(points.x[i - 1], points.y[i-1]),
+#                i) for i in indices])
+#    points = ([(tuple(self[i - 1]), tuple(self[i]), i) for i in indices] 
+#        + [(tuple(self[i]), tuple(self[i - 1]), i) for i in indices])
+    points.sort() # lexicographical sort
+    open_segments = {}
+    
+    intersecting_segments = []
+
+    for point in points:
+        seg_start, seg_end, index = point
+        if index not in open_segments:
+            # Segment start point
+            for open_start, open_end, open_index in open_segments.values():
+                # ignore adjacent edges
+                if (last_index > abs(index - open_index) > 1
+                    and segments_intersect(seg_start, seg_end, open_start, open_end)):
+                    intersecting_segments.append(((seg_start, seg_end, index-1, index), (open_start, open_end, open_index, open_index-1)))
+            open_segments[index] = point
+        else:
+            # Segment end point
+            del open_segments[index]
+    return intersecting_segments

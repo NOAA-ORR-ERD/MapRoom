@@ -2,7 +2,7 @@ import os
 import numpy as np
 import re
 from maproom.library.accumulator import accumulator
-from maproom.library.Boundary import find_boundaries
+from maproom.library.Boundary import find_boundaries, self_intersection_check
 from maproom.library.Shape import points_outside_polygon
 
 from common import PointsError, BaseLoader
@@ -149,20 +149,48 @@ def check_valid_verdat(layer):
 
 
 def do_boundaries_check(points, boundaries, non_boundary_points):
+    errors = set()
+    error_points = set()
+    
     if len(boundaries) > 0:
+        outer_boundary, area = boundaries[0]
+        
         # ensure that all points are within (or on) the outer boundary
         outside_point_indices = points_outside_polygon(
             points.x,
             points.y,
             point_count=len(points),
-            polygon=np.array(boundaries[0][0], np.uint32)
+            polygon=np.array(outer_boundary, np.uint32)
         )
-
         if len(outside_point_indices) > 0:
-            raise PointsError(
-                "Points occur outside of the Verdat boundary.",
-                points=tuple(outside_point_indices)
-            )
+            errors.add("Points occur outside the outer boundary.")
+            error_points.update(outside_point_indices)
+        
+        for boundary, area in boundaries:
+            # test for boundary self-crossings (i.e. making a non-simple polygon)
+            boundary_points = [(points.x[i], points.y[i]) for i in boundary]
+            intersecting_segments = self_intersection_check(boundary_points)
+            if len(intersecting_segments) > 0:
+                # Get all the point indexes in the boundary point array:
+                #>>> s = [(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))]
+                #>>> {segment for segment in s}
+                #set([(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))])
+                #>>> {item for segment in s for item in segment}
+                #set([((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13)])
+                #>>> {point for segment in s for item in segment for point in item}
+                #set([(2.1, 3.2), (1.1, 2.2), 13, 14, 15, 16, (2.2, 3.3), (1.3, 2.3)])
+                #>>> {point for segment in s for item in segment for point in item[2:]}
+                #set([16, 13, 14, 15])
+
+                errors.add("Boundary crosses itself.")
+                error_points.update({boundary[point] for segment in intersecting_segments for item in segment for point in item[2:]})
+
+    if errors:
+        print "error points: %s" % sorted(list(error_points))
+        raise PointsError(
+            "\n".join(errors),
+            points=tuple(error_points)
+        )
 
 
 def write_layer_as_verdat(f, layer):
