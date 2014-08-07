@@ -229,8 +229,7 @@ class LayerManager(LayerUndo):
         if layer is not None:
             error = loaders.save_layer(layer, file_path, loader)
             if not error:
-                layer.name = os.path.basename(file_path)
-                layer.file_path = file_path
+                layer.name = os.path.basename(layer.file_path)
             return error
         return "No selected layer."
     
