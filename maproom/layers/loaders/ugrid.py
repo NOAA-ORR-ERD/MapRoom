@@ -4,7 +4,7 @@ import re
 
 from pyugrid.ugrid import UGrid, DataSet
 
-from common import PointsError, BaseLoader
+from common import BaseLoader
 from maproom.layers import LineLayer, TriangleLayer
 from maproom.renderer import data_types
 

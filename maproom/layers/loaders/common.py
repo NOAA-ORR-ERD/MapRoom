@@ -4,11 +4,6 @@ import shutil
 
 from maproom.layers import constants
 
-class PointsError(Exception):
-    def __init__(self, message, points=None):
-        Exception.__init__(self, message)
-        self.points = points
-
 class BaseLoader(object):
     mime = None
     

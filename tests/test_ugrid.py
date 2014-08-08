@@ -7,7 +7,7 @@ import numpy as np
 from pyugrid.ugrid import UGrid
 
 from maproom.layers import loaders, TriangleLayer
-from maproom.library.Boundary import find_boundaries
+from maproom.library.Boundary import Boundaries
 
 from mock import *
 
@@ -35,11 +35,8 @@ class TestVerdatConversion(object):
         layer.insert_line_segment(2, 17)
         eq_(17, np.alen(layer.line_segment_indexes))
         
-        (boundaries, non_boundary_points) = find_boundaries(
-            points=layer.points,
-            point_count=len(layer.points),
-            lines=layer.line_segment_indexes,
-            line_count=len(layer.line_segment_indexes))
+        b = Boundaries(layer, allow_branches=False)
+        b.check_errors(True)
 
 class TestJetty(object):
     def setup(self):
@@ -68,11 +65,8 @@ class TestJetty(object):
         self.create_jetty()
         eq_(16, np.alen(layer.line_segment_indexes))
         
-        (boundaries, non_boundary_points) = find_boundaries(
-            points=layer.points,
-            point_count=len(layer.points),
-            lines=layer.line_segment_indexes,
-            line_count=len(layer.line_segment_indexes))
+        b = Boundaries(layer, allow_branches=False)
+        b.check_errors(True)
 
     def test_jetty_save_as_ugrid(self):
         self.create_jetty()
@@ -97,11 +91,8 @@ class TestJetty(object):
         self.create_channel()
         eq_(15, np.alen(layer.line_segment_indexes))
         
-        (boundaries, non_boundary_points) = find_boundaries(
-            points=layer.points,
-            point_count=len(layer.points),
-            lines=layer.line_segment_indexes,
-            line_count=len(layer.line_segment_indexes))
+        b = Boundaries(layer, allow_branches=False)
+        b.check_errors(True)
 
     def test_channel_save_as_ugrid(self):
         self.create_channel()

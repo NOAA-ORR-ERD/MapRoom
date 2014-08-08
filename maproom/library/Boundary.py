@@ -1,243 +1,369 @@
 import random
 import numpy as np
-from maproom.library.Shape import point_in_polygon
+from maproom.library.Shape import point_in_polygon, points_outside_polygon
 
 
-class Find_boundaries_error(Exception):
-
+class PointsError(Exception):
     def __init__(self, message, points=None):
         Exception.__init__(self, message)
         self.points = points
 
 
-def find_boundaries(points, point_count, lines, line_count, allow_branches=True):
-    """
-        points = a numpy array of points with at least .x and .y fields
-        point_count = number of points to consider
-        lines = numpy array of point-to-point line segments with at least .point1 and point2 fields
-                (where point1 and point2 are indexes into the points array)
-        line_count = number of line segments to consider
-        
-        output: ( boundaries, non_boundary_points )
-                    where:
-                      boundaries = a python list of ( boundary, area )
-                        where:
-                          boundary = a python list of ordered point indexes for the boundary
-                          area = the area of the boundary (in coordinate space)
-                      non_boundary_points = a python set of the points non included in a boundary
-    """
+class Boundary(object):
+    # max number of iterations for finding inside/outside hole points
+    MAX_SEARCH_COUNT = 10000
 
-    adjacency_map = {}
-    non_boundary_points = set(xrange(0, point_count))
-
-    # Build up a map of adjacency lists: point index -> list of indexes
-    # of adjacent points connected by line segments.
-    for line_index in xrange(line_count):
-        point1 = lines.point1[line_index]
-        point2 = lines.point2[line_index]
-
-        if point1 == point2:
-            continue
-        if np.isnan(points.x[point1]) or np.isnan(points.x[point2]):
-            continue
-
-        adjacent1 = adjacency_map.setdefault(point1, [])
-        adjacent2 = adjacency_map.setdefault(point2, [])
-
-        if point2 not in adjacent1:
-            adjacent1.append(point2)
-        if point1 not in adjacent2:
-            adjacent2.append(point1)
-        non_boundary_points.discard(point1)
-        non_boundary_points.discard(point2)
+    def __init__(self, parent, points, area):
+        self.parent = parent
+        self.point_indexes = points
+        self.area = area
     
-    if not allow_branches:
+    def __len__(self):
+        return len(self.point_indexes)
+    
+    def __getitem__(self, index):
+        return self.point_indexes[index]
+    
+    def get_xy_point_tuples(self):
+        points = self.parent.points
+        return [(points.x[i], points.y[i]) for i in self.point_indexes]
+    
+    def generate_inside_hole_point(self):
+        """
+            bounday = a boundary point index list as returned from find_boundaries() above
+            points = a numpy array of points with at least .x and .y fields
+        """
+        points = self.parent.points
+        boundary_size = len(self)
+        inside = False
+        search_count = 0
+
+        while inside is False:
+            # pick three random boundary points and take the average of their coordinates
+            (point1, point2, point3) = random.sample(self.point_indexes, 3)
+
+            candidate_x = (points.x[point1] + points.x[point2] + points.x[point3]) / 3.0
+            candidate_y = (points.y[point1] + points.y[point2] + points.y[point3]) / 3.0
+
+            inside = point_in_polygon(
+                points_x=points.x,
+                points_y=points.y,
+                point_count=len(points),
+                polygon=np.array(self.point_indexes, np.uint32),
+                x=candidate_x,
+                y=candidate_y
+            )
+
+            search_count += 1
+            if search_count > self.MAX_SEARCH_COUNT:
+                raise Find_boundaries_error("Cannot find an inner boundary hole for triangulation.")
+
+        return (candidate_x, candidate_y)
+
+    def generate_outside_hole_point(self):
+        """
+            bounday = a boundary point index list as returned from find_boundaries() above
+            points = a numpy array of points with at least .x and .y fields
+        """
+        points = self.parent.points
+        boundary_size = len(self)
+        inside = True
+        search_count = 0
+
+        while inside is True:
+            # pick two consecutive boundary points, take the average of their coordinates, then perturb randomly
+            point1 = random.randint(0, boundary_size - 1)
+            point2 = (point1 + 1) % boundary_size
+
+            candidate_x = (points.x[point1] + points.x[point2]) / 2.0
+            candidate_y = (points.y[point1] + points.y[point2]) / 2.0
+
+            candidate_x *= random.random() + 0.5
+            candidate_y *= random.random() + 0.5
+
+            inside = point_in_polygon(
+                points_x=points.x,
+                points_y=points.y,
+                point_count=len(points),
+                polygon=np.array(self.point_indexes, np.uint32),
+                x=candidate_x,
+                y=candidate_y
+            )
+
+            search_count += 1
+            if search_count > self.MAX_SEARCH_COUNT:
+                raise Find_boundaries_error("Cannot find an outer boundary hole for triangulation.")
+
+        return (candidate_x, candidate_y)
+
+    def check_boundary_self_crossing(self):
+        points = self.parent.points
+        lines = self.parent.lines
+        
+        error_points = set()
+        
+        # test for boundary self-crossings (i.e. making a non-simple polygon)
+        boundary_points = [(points.x[i], points.y[i]) for i in self]
+        intersecting_segments = self_intersection_check(boundary_points)
+        if len(intersecting_segments) > 0:
+            # Get all the point indexes in the boundary point array:
+            #>>> s = [(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))]
+            #>>> {segment for segment in s}
+            #set([(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))])
+            #>>> {item for segment in s for item in segment}
+            #set([((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13)])
+            #>>> {point for segment in s for item in segment for point in item}
+            #set([(2.1, 3.2), (1.1, 2.2), 13, 14, 15, 16, (2.2, 3.3), (1.3, 2.3)])
+            #>>> {point for segment in s for item in segment for point in item[2:]}
+            #set([16, 13, 14, 15])
+
+            error_points.update({self[point] for segment in intersecting_segments for item in segment for point in item[2:]})
+
+        return tuple(error_points)
+
+class Boundaries(object):
+    def __init__(self, layer, allow_branches=True):
+        self.points = layer.points
+        self.point_count = len(layer.points)
+        self.lines = layer.line_segment_indexes
+        self.line_count = len(layer.line_segment_indexes)
+        
+        self.allow_branches = allow_branches
+        self.branch_points = []
+        self.boundaries = []
+        self.non_boundary_points = []
+        self.find_boundaries()
+    
+    def __len__(self):
+        return len(self.boundaries)
+    
+    def __getitem__(self, index):
+        return self.boundaries[index]
+    
+    def has_branches(self):
+        return len(self.branch_points) > 0
+    
+    def num_boundaries(self):
+        return len(self.boundaries)
+    
+    def get_outer_boundary(self):
+        if len(self) > 0:
+            return self.boundaries[0]
+        return None
+    
+    def raise_errors(self):
+        if self.has_branches():
+            raise Find_boundaries_error("Branching boundaries are not supported in Verdat files.",
+                                        points=tuple(self.branch_points))
+
+    def find_boundaries(self):
+        """
+            points = a numpy array of points with at least .x and .y fields
+            point_count = number of points to consider
+            lines = numpy array of point-to-point line segments with at least .point1 and point2 fields
+                    (where point1 and point2 are indexes into the points array)
+            line_count = number of line segments to consider
+            
+            output: ( boundaries, non_boundary_points )
+                        where:
+                          boundaries = a python list of ( boundary, area )
+                            where:
+                              boundary = a python list of ordered point indexes for the boundary
+                              area = the area of the boundary (in coordinate space)
+                          non_boundary_points = a python set of the points non included in a boundary
+        """
+        points = self.points
+        lines = self.lines
+
+        adjacency_map = {}
+        non_boundary_points = set(xrange(0, self.point_count))
+
+        # Build up a map of adjacency lists: point index -> list of indexes
+        # of adjacent points connected by line segments.
+        for line_index in xrange(self.line_count):
+            point1 = lines.point1[line_index]
+            point2 = lines.point2[line_index]
+
+            if point1 == point2:
+                continue
+            if np.isnan(points.x[point1]) or np.isnan(points.x[point2]):
+                continue
+
+            adjacent1 = adjacency_map.setdefault(point1, [])
+            adjacent2 = adjacency_map.setdefault(point2, [])
+
+            if point2 not in adjacent1:
+                adjacent1.append(point2)
+            if point1 not in adjacent2:
+                adjacent2.append(point1)
+            non_boundary_points.discard(point1)
+            non_boundary_points.discard(point2)
+        
         branch_points = set()
         for point, adjacent in adjacency_map.iteritems():
             if len(adjacent) > 2:
                 branch_points.add(point)
                 for a in adjacent:
                     branch_points.add(a)
-        if len(branch_points) > 0:
-            raise Find_boundaries_error("Branching boundaries are not supported in Verdat files.",
-                                        points=tuple(branch_points))
-    
-    # find any endpoints of jetties and segments not connected to the boundary
-    endpoints = []
-    for point, adjacent in adjacency_map.iteritems():
-        if len(adjacent) == 1:
-            endpoints.append(point)
-    while len(endpoints) > 0:
-        endpoint = endpoints.pop()
-#        print "BEFORE REMOVING ENDPOINT %d: " % endpoint
-#        for point, adjacent in adjacency_map.iteritems():
-#            print "  point: %d  adjacent: %s" % (point, adjacent)
         
-        # check if other points are connected to this point, otherwise we have
-        # found the other end of the segment and can skip to the next endpoint
-        if endpoint in adjacency_map:
-            adjacent = adjacency_map[endpoint]
-            other_end = adjacent[0]
-            del(adjacency_map[endpoint])
-            adjacent = adjacency_map[other_end]
-            adjacent.remove(endpoint)
-            if len(adjacent) == 0:
-                # found end of line segment
-                del(adjacency_map[other_end])
-            elif len(adjacent) == 1:
-                # creating new segment end
-                endpoints.append(other_end)
-    
-#    print "FINISHED REMOVING ENDPOINTS!"
-#    for point, adjacent in adjacency_map.iteritems():
-#        print "  point: %d  adjacent: %s" % (point, adjacent)
-
-    # Walk the adjacency map to create a list of line boundaries.
-    boundaries = []  # ( boundary point index list, boundary area )
-
-    while len(adjacency_map) > 0:
-        boundary = []
-        area = 0.0
-        previous_point = None
-
-        # Start from an arbitrary point.
-        (point, adjacent) = adjacency_map.iteritems().next()
-        boundary.append(point)
-        del(adjacency_map[point])
-
-        while True:
-            # If the first adjacent point is not the previous point, add it
-            # to the boundary. Otherwise, try adding the second adjacent
-            # point. If there isn't one, then the boundary isn't closed.
+        # find any endpoints of jetties and segments not connected to the boundary
+        endpoints = []
+        for point, adjacent in adjacency_map.iteritems():
             if len(adjacent) == 1:
-                raise Find_boundaries_error(
-                    "Only closed boundaries are supported.",
-                    points=(boundary[-2], boundary[-1], )
-                    if len(boundary) >= 2
-                    else (boundary[0], adjacent[0]),
-                )
-            elif adjacent[0] != previous_point:
-                adjacent_point = adjacent[0]
-            elif adjacent[1] != previous_point:
-                adjacent_point = adjacent[1]
-            elif adjacent[0] == adjacent[1]:
-                adjacent_point = adjacent[0]
-            else:
-                raise Find_boundaries_error(
-                    "Two points are connected by multiple line segments.",
-                    points=(previous_point, ) + tuple(adjacent),
-                )
+                endpoints.append(point)
+        while len(endpoints) > 0:
+            endpoint = endpoints.pop()
+    #        print "BEFORE REMOVING ENDPOINT %d: " % endpoint
+    #        for point, adjacent in adjacency_map.iteritems():
+    #            print "  point: %d  adjacent: %s" % (point, adjacent)
+            
+            # check if other points are connected to this point, otherwise we have
+            # found the other end of the segment and can skip to the next endpoint
+            if endpoint in adjacency_map:
+                adjacent = adjacency_map[endpoint]
+                other_end = adjacent[0]
+                del(adjacency_map[endpoint])
+                adjacent = adjacency_map[other_end]
+                adjacent.remove(endpoint)
+                if len(adjacent) == 0:
+                    # found end of line segment
+                    del(adjacency_map[other_end])
+                elif len(adjacent) == 1:
+                    # creating new segment end
+                    endpoints.append(other_end)
+        
+    #    print "FINISHED REMOVING ENDPOINTS!"
+    #    for point, adjacent in adjacency_map.iteritems():
+    #        print "  point: %d  adjacent: %s" % (point, adjacent)
 
-            previous_point = boundary[-1]
+        # Walk the adjacency map to create a list of line boundaries.
+        boundaries = []  # ( boundary point index list, boundary area )
 
-            if adjacent_point != boundary[0]:
-                # Delete the map as we walk through it so we know when we're
-                # done.
-                boundary.append(adjacent_point)
-                adjacent = adjacency_map.pop(adjacent_point)
+        while len(adjacency_map) > 0:
+            boundary = []
+            area = 0.0
+            previous_point = None
 
-            # See http://alienryderflex.com/polygon_area/
-            area += \
-                ( points.x[ previous_point ] + points.x[ adjacent_point ] ) * \
-                (points.y[previous_point] - points.y[adjacent_point])
+            # Start from an arbitrary point.
+            (point, adjacent) = adjacency_map.iteritems().next()
+            boundary.append(point)
+            del(adjacency_map[point])
 
-            # If the adjacent point is the first point in the boundary,
-            # the boundary is now closed and we're done with it.
-            if adjacent_point == boundary[0]:
-                break
+            while True:
+                # If the first adjacent point is not the previous point, add it
+                # to the boundary. Otherwise, try adding the second adjacent
+                # point. If there isn't one, then the boundary isn't closed.
+                if len(adjacent) == 1:
+                    raise Find_boundaries_error(
+                        "Only closed boundaries are supported.",
+                        points=(boundary[-2], boundary[-1], )
+                        if len(boundary) >= 2
+                        else (boundary[0], adjacent[0]),
+                    )
+                elif adjacent[0] != previous_point:
+                    adjacent_point = adjacent[0]
+                elif adjacent[1] != previous_point:
+                    adjacent_point = adjacent[1]
+                elif adjacent[0] == adjacent[1]:
+                    adjacent_point = adjacent[0]
+                else:
+                    raise Find_boundaries_error(
+                        "Two points are connected by multiple line segments.",
+                        points=(previous_point, ) + tuple(adjacent),
+                    )
 
-        boundaries.append((boundary, 0.5 * area))
+                previous_point = boundary[-1]
 
-    # Find the outer boundary that contains all the other boundaries.
-    # Determine this by simply selecting the boundary with the biggest
-    # interior area.
-    outer_boundary = None
-    outer_boundary_index = None
-    outer_boundary_area = None
+                if adjacent_point != boundary[0]:
+                    # Delete the map as we walk through it so we know when we're
+                    # done.
+                    boundary.append(adjacent_point)
+                    adjacent = adjacency_map.pop(adjacent_point)
 
-    for (index, (boundary, area)) in enumerate(boundaries):
-        if outer_boundary_area is None or abs(area) > abs(outer_boundary_area):
-            outer_boundary = boundary
-            outer_boundary_index = index
-            outer_boundary_area = area
+                # See http://alienryderflex.com/polygon_area/
+                area += \
+                    ( points.x[ previous_point ] + points.x[ adjacent_point ] ) * \
+                    (points.y[previous_point] - points.y[adjacent_point])
 
-    # Make the outer boundary first in the list of boundaries if it's not
-    # there already.
-    if outer_boundary_index is not None and outer_boundary_index != 0:
-        del(boundaries[outer_boundary_index])
-        boundaries.insert(0, (outer_boundary, outer_boundary_area))
+                # If the adjacent point is the first point in the boundary,
+                # the boundary is now closed and we're done with it.
+                if adjacent_point == boundary[0]:
+                    break
 
-    return (boundaries, non_boundary_points)
+            boundaries.append(Boundary(self, boundary, 0.5 * area))
 
-MAX_SEARCH_COUNT = 10000
+        # Find the outer boundary that contains all the other boundaries.
+        # Determine this by simply selecting the boundary with the biggest
+        # interior area.
+        outer_boundary = None
+        outer_boundary_index = None
 
+        for (index, boundary) in enumerate(boundaries):
+            if outer_boundary is None or abs(boundary.area) > abs(outer_boundary.area):
+                outer_boundary = boundary
+                outer_boundary_index = index
 
-def generate_inside_hole_point(boundary, points):
-    """
-        bounday = a boundary point index list as returned from find_boundaries() above
-        points = a numpy array of points with at least .x and .y fields
-    """
-    boundary_size = len(boundary)
-    inside = False
-    search_count = 0
+        # Make the outer boundary first in the list of boundaries if it's not
+        # there already.
+        if outer_boundary_index is not None and outer_boundary_index != 0:
+            del(boundaries[outer_boundary_index])
+            boundaries.insert(0, outer_boundary)
 
-    while inside is False:
-        # pick three random boundary points and take the average of their coordinates
-        (point1, point2, point3) = random.sample(boundary, 3)
+        self.boundaries = boundaries
+        self.non_boundary_points = non_boundary_points
 
-        candidate_x = (points.x[point1] + points.x[point2] + points.x[point3]) / 3.0
-        candidate_y = (points.y[point1] + points.y[point2] + points.y[point3]) / 3.0
+    def check_boundary_self_crossing(self):
+        error_points = set()
+        
+        for boundary in self.boundaries:
+            error_points.update(boundary.check_boundary_self_crossing())
 
-        inside = point_in_polygon(
-            points_x=points.x,
-            points_y=points.y,
+        return tuple(error_points)
+    
+    def check_outside_outer_boundary(self):
+        if len(self) == 0:
+            return []
+        
+        points = self.points
+        outer_boundary = self.boundaries[0]
+        
+        # ensure that all points are within (or on) the outer boundary
+        outside_point_indices = points_outside_polygon(
+            points.x,
+            points.y,
             point_count=len(points),
-            polygon=np.array(boundary, np.uint32),
-            x=candidate_x,
-            y=candidate_y
+            polygon=np.array(outer_boundary, np.uint32)
         )
+        
+        return outside_point_indices
 
-        search_count += 1
-        if search_count > MAX_SEARCH_COUNT:
-            raise Find_boundaries_error("Cannot find an inner boundary hole for triangulation.")
+    def check_errors(self, throw_exception=False):
+        errors = set()
+        error_points = set()
+        
+        if len(self.branch_points) > 0 and self.allow_branches == False:
+            errors.add("Branching boundaries are not supported.")
+            error_points.update(self.branch_points)
+        
+        point_indexes = self.check_outside_outer_boundary()
+        if len(point_indexes) > 0:
+            errors.add("Points occur outside the outer boundary.")
+            error_points.update(point_indexes)
+        
+        point_indexes = self.check_boundary_self_crossing()
+        if len(point_indexes) > 0:
+            errors.add("Boundary crosses itself.")
+            error_points.update(point_indexes)
 
-    return (candidate_x, candidate_y)
+        if errors and throw_exception:
+            print "error points: %s" % sorted(list(error_points))
+            raise PointsError(
+                "\n".join(errors),
+                points=tuple(error_points)
+            )
+        
+        return errors, error_points
 
-
-def generate_outside_hole_point(boundary, points):
-    """
-        bounday = a boundary point index list as returned from find_boundaries() above
-        points = a numpy array of points with at least .x and .y fields
-    """
-    boundary_size = len(boundary)
-    inside = True
-    search_count = 0
-
-    while inside is True:
-        # pick two consecutive boundary points, take the average of their coordinates, then perturb randomly
-        point1 = random.randint(0, boundary_size - 1)
-        point2 = (point1 + 1) % boundary_size
-
-        candidate_x = (points.x[point1] + points.x[point2]) / 2.0
-        candidate_y = (points.y[point1] + points.y[point2]) / 2.0
-
-        candidate_x *= random.random() + 0.5
-        candidate_y *= random.random() + 0.5
-
-        inside = point_in_polygon(
-            points_x=points.x,
-            points_y=points.y,
-            point_count=len(points),
-            polygon=np.array(boundary, np.uint32),
-            x=candidate_x,
-            y=candidate_y
-        )
-
-        search_count += 1
-        if search_count > MAX_SEARCH_COUNT:
-            raise Find_boundaries_error("Cannot find an outer boundary hole for triangulation.")
-
-    return (candidate_x, candidate_y)
 
 # from Planar, 2D geometery library: http://pypi.python.org/pypi/planar/
 #############################################################################

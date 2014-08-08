@@ -2,10 +2,9 @@ import os
 import numpy as np
 import re
 from maproom.library.accumulator import accumulator
-from maproom.library.Boundary import find_boundaries, self_intersection_check
-from maproom.library.Shape import points_outside_polygon
+from maproom.library.Boundary import Boundaries
 
-from common import PointsError, BaseLoader
+from common import BaseLoader
 from maproom.layers import LineLayer
 
 WHITESPACE_PATTERN = re.compile("\s+")
@@ -135,77 +134,16 @@ def load_verdat_file(file_path):
 
 
 def check_valid_verdat(layer):
-    points = layer.points
-    lines = layer.line_segment_indexes
-
-    (boundaries, non_boundary_points) = find_boundaries(
-        points=points,
-        point_count=len(points),
-        lines=lines,
-        line_count=len(lines),
-        allow_branches=False
-    )
-    do_boundaries_check(points, boundaries, non_boundary_points)
-
-
-def do_boundaries_check(points, boundaries, non_boundary_points):
-    errors = set()
-    error_points = set()
-    
-    if len(boundaries) > 0:
-        outer_boundary, area = boundaries[0]
-        
-        # ensure that all points are within (or on) the outer boundary
-        outside_point_indices = points_outside_polygon(
-            points.x,
-            points.y,
-            point_count=len(points),
-            polygon=np.array(outer_boundary, np.uint32)
-        )
-        if len(outside_point_indices) > 0:
-            errors.add("Points occur outside the outer boundary.")
-            error_points.update(outside_point_indices)
-        
-        for boundary, area in boundaries:
-            # test for boundary self-crossings (i.e. making a non-simple polygon)
-            boundary_points = [(points.x[i], points.y[i]) for i in boundary]
-            intersecting_segments = self_intersection_check(boundary_points)
-            if len(intersecting_segments) > 0:
-                # Get all the point indexes in the boundary point array:
-                #>>> s = [(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))]
-                #>>> {segment for segment in s}
-                #set([(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))])
-                #>>> {item for segment in s for item in segment}
-                #set([((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13)])
-                #>>> {point for segment in s for item in segment for point in item}
-                #set([(2.1, 3.2), (1.1, 2.2), 13, 14, 15, 16, (2.2, 3.3), (1.3, 2.3)])
-                #>>> {point for segment in s for item in segment for point in item[2:]}
-                #set([16, 13, 14, 15])
-
-                errors.add("Boundary crosses itself.")
-                error_points.update({boundary[point] for segment in intersecting_segments for item in segment for point in item[2:]})
-
-    if errors:
-        print "error points: %s" % sorted(list(error_points))
-        raise PointsError(
-            "\n".join(errors),
-            points=tuple(error_points)
-        )
+    boundaries = Boundaries(layer, allow_branches=False)
+    boundaries.check_errors(True)
 
 
 def write_layer_as_verdat(f, layer):
+    boundaries = Boundaries(layer, allow_branches=False)
+    boundaries.check_errors(True)
+    
     points = layer.points
     lines = layer.line_segment_indexes
-
-    (boundaries, non_boundary_points) = find_boundaries(
-        points=points,
-        point_count=len(points),
-        lines=lines,
-        line_count=len(lines),
-        allow_branches=False
-    )
-
-    do_boundaries_check(points, boundaries, non_boundary_points)
 
     f.write("DOGS")
     if layer.depth_unit != None and layer.depth_unit != "unknown":
@@ -219,16 +157,16 @@ def write_layer_as_verdat(f, layer):
 
     # write all boundary points to the file
     # print "writing boundaries"
-    for (boundary_index, (boundary, area)) in enumerate(boundaries):
+    for (boundary_index, boundary) in enumerate(boundaries):
         # if the outer boundary's area is positive, then reverse its
         # points so that they're wound counter-clockwise
         # print "index:", boundary_index, "area:", area, "len( boundary ):", len( boundary )
         if boundary_index == 0:
-            if area > 0.0:
+            if boundary.area > 0.0:
                 boundary = reversed(boundary)
         # if any other boundary has a negative area, then reverse its
         # points so that they're wound clockwise
-        elif area < 0.0:
+        elif boundary.area < 0.0:
             boundary = reversed(boundary)
 
         for point_index in boundary:
@@ -243,7 +181,7 @@ def write_layer_as_verdat(f, layer):
         boundary_endpoints.append(file_point_index - 1)
 
     # Write non-boundary points to file.
-    for point_index in non_boundary_points:
+    for point_index in boundaries.non_boundary_points:
         x = points.x[point_index]
         if np.isnan(x):
             continue

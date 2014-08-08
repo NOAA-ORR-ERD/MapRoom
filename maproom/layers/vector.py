@@ -11,12 +11,11 @@ from pytriangle import triangulate_simple
 # Enthought library imports.
 from traits.api import Int, Unicode, Any, Str, Float
 
-from ..library import File_loader, rect
+from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
-from ..library.formats import verdat
 from ..library.accumulator import flatten
 from ..library.Projection import Projection
-from ..library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
+from ..library.Boundary import Boundaries
 from ..renderer import color_to_int, data_types
 from ..layer_undo import *
 
@@ -1152,26 +1151,25 @@ class TriangleLayer(PointLayer):
 
     def get_triangulated_points(self, layer, q, a):
         # determine the boundaries in the parent layer
-        (boundaries, non_boundary_points) = find_boundaries(
-            points=layer.points,
-            point_count=len(layer.points),
-            lines=layer.line_segment_indexes,
-            line_count=len(layer.line_segment_indexes))
+        boundaries = Boundaries(layer)
 
         # calculate a hole point for each boundary
         hole_points_xy = np.empty(
             (len(boundaries), 2), np.float32,
         )
 
-        for (boundary_index, (boundary, area)) in enumerate(boundaries):
-            if (len(boundary) < 3):
+        for (boundary_index, boundary) in enumerate(boundaries):
+            print boundary_index, boundary
+
+        for (boundary_index, boundary) in enumerate(boundaries):
+            if (len(boundary.point_indexes) < 3):
                 continue
 
             # the "hole" point for the outer boundary (first in the list) should be outside of it
             if boundary_index == 0:
-                hole_points_xy[boundary_index] = generate_outside_hole_point(boundary, layer.points)
+                hole_points_xy[boundary_index] = boundary.generate_outside_hole_point()
             else:
-                hole_points_xy[boundary_index] = generate_inside_hole_point(boundary, layer.points)
+                hole_points_xy[boundary_index] = boundary.generate_inside_hole_point()
 
         params = "V"
         if (q is not None):

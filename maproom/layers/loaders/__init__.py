@@ -62,7 +62,7 @@ loaders.append(VerdatLoader())
 # [[[end]]]
 
 import os
-from common import PointsError
+from maproom.library.Boundary import PointsError
 
 import logging
 log = logging.getLogger(__name__)

@@ -3,11 +3,7 @@ import numpy as np
 import re
 import json
 
-from maproom.library.accumulator import accumulator
-from maproom.library.Boundary import find_boundaries
-from maproom.library.Shape import points_outside_polygon
-
-from common import PointsError, BaseLoader
+from common import BaseLoader
 from maproom.layers import Layer
 
 WHITESPACE_PATTERN = re.compile("\s+")

@@ -10,12 +10,10 @@ from pytriangle import triangulate_simple
 from traits.api import Unicode, Str, Any, Float
 from pyface.api import YES
 
-from ..library import File_loader, rect
+from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
-from ..library.formats import verdat
 from ..library.accumulator import flatten
 from ..library.Projection import Projection
-from ..library.Boundary import find_boundaries, generate_inside_hole_point, generate_outside_hole_point
 from ..renderer import color_to_int, data_types
 
 from base import Layer, ProjectedLayer

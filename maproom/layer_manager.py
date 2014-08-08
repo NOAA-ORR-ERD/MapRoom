@@ -7,7 +7,6 @@ import json
 
 import numpy as np
 import wx
-import library.formats.verdat as verdat
 import library.rect as rect
 from library.accumulator import flatten
 
