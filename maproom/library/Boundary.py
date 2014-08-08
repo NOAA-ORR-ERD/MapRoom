@@ -341,19 +341,34 @@ class Boundaries(object):
         errors = set()
         error_points = set()
         
+        import time
+        t0 = time.clock()
+        
         if len(self.branch_points) > 0 and self.allow_branches == False:
             errors.add("Branching boundaries are not supported.")
             error_points.update(self.branch_points)
+    
+        t = time.clock() - t0
+        print "DONE WITH BRANCH CHECK! %f" % t
+        t0 = time.clock()
         
         point_indexes = self.check_outside_outer_boundary()
         if len(point_indexes) > 0:
             errors.add("Points occur outside the outer boundary.")
             error_points.update(point_indexes)
+    
+        t = time.clock() - t0
+        print "DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t
+        t0 = time.clock()
         
         point_indexes = self.check_boundary_self_crossing()
         if len(point_indexes) > 0:
             errors.add("Boundary crosses itself.")
             error_points.update(point_indexes)
+    
+        t = time.clock() - t0
+        print "DONE WITH BOUNDARY CROSSING CHECK! %f" % t
+        t0 = time.clock()
 
         if errors and throw_exception:
             print "error points: %s" % sorted(list(error_points))
