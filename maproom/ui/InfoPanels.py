@@ -108,7 +108,9 @@ class InfoPanel(wx.Panel):
             elif (field == "Selected points"):
                 self.add_static_text_field(field, str(layer.get_num_points_selected()))
             elif (field == "Flagged points"):
-                self.add_static_text_field(field, str(layer.get_num_points_selected(constants.STATE_FLAGGED)))
+                selected = ["Total flagged: %d" % layer.get_num_points_selected(constants.STATE_FLAGGED)]
+                selected += [str(i + 1) for i in layer.get_selected_point_indexes(constants.STATE_FLAGGED)]
+                self.flagged_points_control = self.add_drop_down(field, selected, selected[0], self.find_flagged_point)
             elif (field == "Point index"):
                 selected_point_indexes = layer.get_selected_point_indexes()
                 if len(selected_point_indexes) > 0:
@@ -324,6 +326,17 @@ class InfoPanel(wx.Panel):
         
         if refresh:
             self.project.refresh()
+
+    def find_flagged_point(self, event):
+        layer = self.project.layer_tree_control.get_selected_layer()
+        c = self.flagged_points_control
+        if (layer == None or c == None):
+            return
+        item_num = c.GetSelection()
+        if item_num > 0:
+            point_index = int(c.GetString(item_num)) - 1
+            print point_index
+            self.project.control.do_select_points(layer, [point_index])
 
 class LayerInfoPanel(InfoPanel):
     def get_visible_fields(self, layer):
