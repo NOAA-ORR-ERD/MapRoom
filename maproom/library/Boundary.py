@@ -122,13 +122,14 @@ class Boundary(object):
         return tuple(error_points)
 
 class Boundaries(object):
-    def __init__(self, layer, allow_branches=True):
+    def __init__(self, layer, allow_branches=True, allow_self_crossing=True):
         self.points = layer.points
         self.point_count = len(layer.points)
         self.lines = layer.line_segment_indexes
         self.line_count = len(layer.line_segment_indexes)
         
         self.allow_branches = allow_branches
+        self.allow_self_crossing = allow_self_crossing
         self.branch_points = []
         self.boundaries = []
         self.non_boundary_points = []
@@ -361,10 +362,11 @@ class Boundaries(object):
         print "DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t
         t0 = time.clock()
         
-        point_indexes = self.check_boundary_self_crossing()
-        if len(point_indexes) > 0:
-            errors.add("Boundary crosses itself.")
-            error_points.update(point_indexes)
+        if not self.allow_self_crossing:
+            point_indexes = self.check_boundary_self_crossing()
+            if len(point_indexes) > 0:
+                errors.add("Boundary crosses itself.")
+                error_points.update(point_indexes)
     
         t = time.clock() - t0
         print "DONE WITH BOUNDARY CROSSING CHECK! %f" % t

@@ -134,7 +134,7 @@ def load_verdat_file(file_path):
 
 
 def check_valid_verdat(layer):
-    boundaries = Boundaries(layer, allow_branches=False)
+    boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False)
     boundaries.check_errors(True)
 
 
