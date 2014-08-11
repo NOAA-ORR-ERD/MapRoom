@@ -96,29 +96,6 @@ def get_valid_string(valid, capitalize=True):
     
     return "This layer can be saved in the following formats:\n(with allowed filename extensions)\n\n" + "\n\n".join(v[1] for v in valid)
 
-def check_layer(layer):
-    possibilities = valid_save_formats(layer)
-    exceptions = []
-    valid = []
-    for loader, message in possibilities:
-        if loader.can_save(layer):
-            try:
-                loader.check(layer) # raises exception on failure
-                valid.append((loader, message))
-            except Exception, e:
-                if not exceptions:
-                    exceptions.append(e)
-                pass
-    if exceptions:
-        e = exceptions[0]
-        message = e.message
-        if valid:
-            message += "\n\n" + "However, other file formats are valid:\n\n" + get_valid_string(valid)
-        raise PointsError(message, e.points)
-    if valid:
-        return get_valid_string(valid)
-    return "No file formats available\nto save '%s' layers" % layer.type
-
 def find_best_saver(savers, ext):
     for saver in savers:
         if saver.is_valid_extension(ext):

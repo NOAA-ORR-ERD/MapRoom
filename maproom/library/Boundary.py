@@ -206,6 +206,7 @@ class Boundaries(object):
                 branch_points.add(point)
                 for a in adjacent:
                     branch_points.add(a)
+        self.branch_points = sorted(list(branch_points))
         
         # find any endpoints of jetties and segments not connected to the boundary
         endpoints = []
@@ -346,7 +347,7 @@ class Boundaries(object):
         t0 = time.clock()
         
         if len(self.branch_points) > 0 and self.allow_branches == False:
-            errors.add("Branching boundaries are not supported.")
+            errors.add("Branching boundaries.")
             error_points.update(self.branch_points)
     
         t = time.clock() - t0
@@ -375,7 +376,7 @@ class Boundaries(object):
         if errors and throw_exception:
             print "error points: %s" % sorted(list(error_points))
             raise PointsError(
-                "\n".join(errors),
+                "\n\n".join(errors),
                 points=tuple(error_points)
             )
         

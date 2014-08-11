@@ -201,7 +201,7 @@ class Layer(HasTraits):
         log.debug("returning layers: %s" % str(layers))
         return layers
     
-    def check_for_errors(self, window):
+    def check_for_problems(self, window):
         pass
     
     def check_projection(self, window):

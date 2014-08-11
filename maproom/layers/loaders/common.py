@@ -27,9 +27,6 @@ class BaseLoader(object):
     def can_save(self, layer):
         return layer.type in self.layer_types
     
-    def check(self, layer):
-        pass
-    
     def is_valid_extension(self, extension):
         return extension.lower() in self.extensions
     

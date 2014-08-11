@@ -463,6 +463,11 @@ class LineLayer(PointLayer):
     def unserialize_json_version1(self, json_data):
         PointLayer.unserialize_json_version1(self, json_data)
         self.line_segment_indexes = np.array([tuple(i) for i in json_data['lines']], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
+    
+    def check_for_problems(self, window):
+        # determine the boundaries in the parent layer
+        boundaries = Boundaries(self, allow_branches=False, allow_self_crossing=False)
+        boundaries.check_errors(True)
 
     def make_line_segment_indexes(self, count):
         return np.repeat(
@@ -1151,7 +1156,8 @@ class TriangleLayer(PointLayer):
 
     def get_triangulated_points(self, layer, q, a):
         # determine the boundaries in the parent layer
-        boundaries = Boundaries(layer)
+        boundaries = Boundaries(layer, allow_branches=True, allow_self_crossing=False)
+        boundaries.check_errors(True)
 
         # calculate a hole point for each boundary
         hole_points_xy = np.empty(

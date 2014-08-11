@@ -38,9 +38,6 @@ class GDALLoader(object):
     def can_save(self, layer):
         return False
     
-    def check(self, layer):
-        raise RuntimeError("Not abte to check BNA files")
-    
     def save_to_file(self, f, layer):
         return "Can't save to BNA yet."
 

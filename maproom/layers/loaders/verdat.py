@@ -2,7 +2,7 @@ import os
 import numpy as np
 import re
 from maproom.library.accumulator import accumulator
-from maproom.library.Boundary import Boundaries
+from maproom.library.Boundary import Boundaries, PointsError
 
 from common import BaseLoader
 from maproom.layers import LineLayer
@@ -33,9 +33,6 @@ class VerdatLoader(BaseLoader):
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
-    
-    def check(self, layer):
-        check_valid_verdat(layer)
     
     def save_to_fh(self, fh, layer):
         return write_layer_as_verdat(fh, layer)
@@ -133,14 +130,11 @@ def load_verdat_file(file_path):
             depth_unit)
 
 
-def check_valid_verdat(layer):
-    boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False)
-    boundaries.check_errors(True)
-
-
 def write_layer_as_verdat(f, layer):
     boundaries = Boundaries(layer, allow_branches=False)
-    boundaries.check_errors(True)
+    errors, error_points = boundaries.check_errors()
+    if errors:
+        raise PointsError("Layer can't be saved as Verdat:\n\n%s" % "\n\n".join(errors), error_points)
     
     points = layer.points
     lines = layer.line_segment_indexes

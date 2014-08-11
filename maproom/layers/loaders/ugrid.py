@@ -53,9 +53,6 @@ class UGridLoader(BaseLoader):
             layers.append(layer)
         return layers
     
-    def check(self, layer):
-        return True
-    
     def save_to_local_file(self, filename, layer):
         n = np.alen(layer.points)
         points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n]
