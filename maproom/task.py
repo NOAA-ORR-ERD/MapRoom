@@ -307,12 +307,9 @@ class MergePointsAction(EditorAction):
     image = ImageResource('merge_duplicates.png')
 
     def perform(self, event):
-        GUI.invoke_later(self.show_dialog, self.active_editor)
-    
-    def show_dialog(self, project):
-        from ui.Merge_duplicate_points_dialog import MergeDialog
-        dialog = MergeDialog(project=project)
-        dialog.show()
+        task = self.active_editor.task
+        pane = task.window.get_dock_pane('maproom.merge_points_pane')
+        pane.visible = True
 
 class JumpToCoordsAction(EditorAction):
     name = 'Jump to Coordinates'
@@ -429,7 +426,7 @@ class MaproomProjectTask(FrameworkTask):
     
     # If you change the project ID here (to allow for a new pane layout, for
     # instance) make sure you update the startup_task in maproom.py
-    id = 'maproom.project.v3'
+    id = 'maproom.project.v4'
     
     new_file_text = 'MapRoom Project'
 
@@ -512,8 +509,9 @@ class MaproomProjectTask(FrameworkTask):
                 PaneItem('maproom.layer_info_pane'),
                 PaneItem('maproom.selection_info_pane'),
                 ),
-            right=VSplitter(
+            right=HSplitter(
                 PaneItem('maproom.triangulate_pane'),
+                PaneItem('maproom.merge_points_pane'),
                 ),
             )
 
@@ -521,7 +519,7 @@ class MaproomProjectTask(FrameworkTask):
         """ Create the file browser and connect to its double click event.
         """
         return [ LayerSelectionPane(), LayerInfoPane(), SelectionInfoPane(),
-                 TriangulatePane() ]
+                 TriangulatePane(), MergePointsPane() ]
 
     def _tool_bars_default(self):
         toolbars = [

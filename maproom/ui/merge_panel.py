@@ -65,9 +65,10 @@ class Distance_slider(wx.Panel):
         return int(value * Distance_slider.SECONDS_TO_METERS)
 
 
-class Merge_duplicate_points_dialog(wx.Dialog):
-    SPACING = 15
-    SLIDER_MIN_WIDTH = 400
+
+class MergePointsPanel(wx.Panel):
+    SPACING = 5
+    SLIDER_MIN_WIDTH = 100
     NAME = "Merge Duplicate Points"
 
     layer = None
@@ -75,120 +76,51 @@ class Merge_duplicate_points_dialog(wx.Dialog):
     list_contains_real_data = False
     dirty = False
 
-    def __init__(self, project, trait_wrapper):
-        self.project = project
-        self.trait_wrapper = trait_wrapper
-        wx.Dialog.__init__(
-            self, project.window.control, wx.ID_ANY, self.NAME,
-            style=wx.DEFAULT_DIALOG_STYLE, name=self.NAME
-        )
-        self.SetIcon(project.window.control.GetIcon())
+    def __init__(self, parent, task):
+        self.task = task
+        wx.Panel.__init__(self, parent, wx.ID_ANY)
+        
+        # Mac/Win needs this, otherwise background color is black
+        attr = self.GetDefaultAttributes()
+        self.SetBackgroundColour(attr.colBg)
 
-        self.outer_sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.panel = wx.Panel(self, wx.ID_ANY)
-        self.outer_sizer.Add(self.panel, 1, wx.EXPAND)
-
-        self.distance_slider = Distance_slider(self.panel)
+        self.distance_slider = Distance_slider(self)
         self.distance_slider.SetMinSize((self.SLIDER_MIN_WIDTH, -1))
         self.sizer.Add(
             self.distance_slider,
             0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border=self.SPACING
         )
 
-        self.depth_check = wx.CheckBox(self.panel, -1, "Enable Depth Tolerance Check for Duplicate Points")
+        self.depth_check = wx.CheckBox(self, -1, "Enable Depth Tolerance Check for Duplicate Points")
         self.sizer.Add(self.depth_check, 0, wx.TOP | wx.LEFT | wx.RIGHT, border=self.SPACING)
 
-        self.depth_slider = sliders.TextSlider(self.panel, -1, 100, minValue=0, maxValue=1000, steps=1000, valueUnit="%", style=wx.SL_HORIZONTAL | wx.SL_LABELS)
+        self.depth_slider = sliders.TextSlider(self, -1, 100, minValue=0, maxValue=1000, steps=1000, valueUnit="%", style=wx.SL_HORIZONTAL | wx.SL_LABELS)
         self.depth_slider.Enable(False)
 
         self.sizer.Add(self.depth_slider, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, self.SPACING)
 
-        #self.depth_slider = Depth_slider( self.panel )
+        #self.depth_slider = Depth_slider( self )
         self.depth_slider.SetMinSize((self.SLIDER_MIN_WIDTH, -1))
 
         self.find_button_id = wx.NewId()
         self.find_button = wx.Button(
-            self.panel,
+            self,
             self.find_button_id,
-            "Find Duplicates"
+            "Step 1: Find Duplicates"
         )
         self.find_button.SetDefault()
         self.find_button_id = wx.NewId()
+        self.find_button.SetToolTipString("Click Find Duplicates to display a list of possible duplicate points, grouped into pairs and displayed as point index numbers. Click on a pair to highlight its points on the map.")
         self.sizer.Add(
             self.find_button, 0,
             wx.ALIGN_LEFT | wx.ALL,
             border=self.SPACING
         )
 
-        self.label = None
-
-        self.panel.SetSizer(self.sizer)
-        self.SetSizer(self.outer_sizer)
-
-        self.sizer.Layout()
-        self.Fit()
-
-        self.find_button.Bind(wx.EVT_BUTTON, self.find_duplicates)
-        self.Bind(wx.EVT_CLOSE, self.trait_wrapper.wx_on_close)
-        self.Bind(wx.EVT_CHECKBOX, self.on_depth_check)
-
-    def on_points_deleted(self, layer):
-        if layer == self.layer:
-            self.clear_results()
-
-    def on_depth_check(self, event):
-        self.depth_slider.Enable(event.IsChecked())
-
-    def on_close(self, event):
-        for layer in self.project.layer_manager.flatten():
-            layer.clear_all_selections(constants.STATE_FLAGGED)
-        self.Destroy()
-
-    def find_duplicates(self, event):
-        # at the time the button is pressed, we commit to a layer
-        self.layer = self.project.layer_tree_control.get_selected_layer()
-        if (self.layer == None or self.layer.points == None or len(self.layer.points) < 2):
-            self.project.window.error("You must first select a layer with points in the layer tree.")
-            self.layer = None
-
-            return
-
-        self.SetTitle("Merge Duplicate Points -- Layer '" + self.layer.name + "'")
-
-        depth_value = -1
-        if self.depth_check.IsChecked():
-            depth_value = self.depth_slider.GetValue()
-
-        self.duplicates = self.layer.find_duplicates(self.distance_slider.value / (60 * 60), depth_value)
-        # print self.duplicates
-        self.create_results_area()
-        self.display_results()
-
-    def create_results_area(self):
-        if (self.label is not None):
-            return
-
-        self.Freeze()
-
-        self.label_text = "Below is a list of possible duplicate points, " + \
-                          "grouped into pairs and displayed as point index numbers. " + \
-                          "Click on a pair to highlight its points on the map."
-
-        self.label = wx.StaticText(
-            self.panel,
-            wx.ID_ANY,
-            self.label_text,
-            style=wx.ST_NO_AUTORESIZE
-        )
-        self.sizer.Add(
-            self.label,
-            0, wx.EXPAND | wx.LEFT | wx.RIGHT, border=self.SPACING
-        )
-
-        self.list_view = wx.ListView(self.panel, wx.ID_ANY, style=wx.LC_LIST)
-        self.list_view.SetMinSize((-1, 150))
+        self.list_view = wx.ListView(self, wx.ID_ANY, style=wx.LC_LIST)
+        self.list_view.SetMinSize((100, 150))
 
         self.sizer.Add(
             self.list_view, 1, wx.EXPAND | wx.ALL,
@@ -197,7 +129,7 @@ class Merge_duplicate_points_dialog(wx.Dialog):
 
         self.remove_button_id = wx.NewId()
         self.remove_button = wx.Button(
-            self.panel,
+            self,
             self.remove_button_id,
             "Remove from Merge List"
         )
@@ -208,55 +140,22 @@ class Merge_duplicate_points_dialog(wx.Dialog):
             border=self.SPACING
         )
 
-        self.merge_label_text = \
-            "Click Merge to merge each pair into a single point. " + \
-            "Pairs that cannot be merged automatically are indicated " + \
-            "in red and will be skipped during merging. (You can merge " + \
-            "such points manually.)"
-
-        self.merge_label = wx.StaticText(
-            self.panel,
-            wx.ID_ANY,
-            self.merge_label_text,
-            style=wx.ST_NO_AUTORESIZE
-        )
-        self.sizer.Add(
-            self.merge_label, 0,
-            wx.ALIGN_LEFT | wx.BOTTOM | wx.LEFT | wx.RIGHT,
-            border=self.SPACING
-        )
-
         self.button_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.merge_button_id = wx.NewId()
         self.merge_button = wx.Button(
-            self.panel,
+            self,
             self.merge_button_id,
-            "Merge"
+            "Step 2: Merge"
         )
-
-        self.close_button_id = wx.NewId()
-        self.close_button = wx.Button(
-            self.panel,
-            self.close_button_id,
-            "Close"
-        )
-
-        # Dialog button ordering, by convention, is backwards on Windows.
-        if sys.platform.startswith("win"):
-            self.button_sizer.Add(self.merge_button, 0, wx.LEFT, border=self.SPACING)
-            self.button_sizer.Add(self.close_button, 0, wx.LEFT, border=self.SPACING)
-        else:
-            self.button_sizer.Add(self.close_button, 0, wx.LEFT, border=self.SPACING)
-            self.button_sizer.Add(self.merge_button, 0, wx.LEFT, border=self.SPACING)
+        self.merge_button.SetToolTipString("Click Merge to merge each pair into a single point. Pairs that cannot be merged automatically are indicated in red and will be skipped during merging. (You can merge such points manually.)")
+        self.merge_button.Enable(False)
+        self.button_sizer.Add(self.merge_button, 0, wx.LEFT, border=self.SPACING)
 
         self.sizer.Add(
             self.button_sizer, 0, wx.ALIGN_RIGHT | wx.BOTTOM | wx.LEFT | wx.RIGHT,
             border=self.SPACING
         )
-
-        self.label.Wrap(self.sizer.GetSize()[0] - self.SPACING * 2)
-        self.merge_label.Wrap(self.sizer.GetSize()[0] - self.SPACING * 2)
 
         self.list_view.Bind(wx.EVT_LIST_ITEM_SELECTED, self.update_selection_once)
         self.list_view.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.update_selection_once)
@@ -264,40 +163,70 @@ class Merge_duplicate_points_dialog(wx.Dialog):
         self.remove_button.Bind(wx.EVT_BUTTON, self.delete_selected_groups)
 
         self.Bind(wx.EVT_BUTTON, self.merge_clicked, id=self.merge_button_id)
-        self.Bind(wx.EVT_BUTTON, self.trait_wrapper.wx_on_close, id=self.close_button_id)
 
+        self.SetSizer(self.sizer)
         self.sizer.Layout()
         self.Fit()
-        self.Thaw()
 
-    def clear_results(self):
-        if (self.label is None):
+        self.find_button.Bind(wx.EVT_BUTTON, self.find_duplicates)
+        self.Bind(wx.EVT_CHECKBOX, self.on_depth_check)
+    
+    def set_task(self, task):
+        self.task = task
+
+    def on_points_deleted(self, layer):
+        if layer == self.layer:
+            self.clear_results()
+
+    def on_depth_check(self, event):
+        self.depth_slider.Enable(event.IsChecked())
+
+    def find_duplicates(self, event):
+        # at the time the button is pressed, we commit to a layer
+        project = self.task.active_editor
+        self.layer = project.layer_tree_control.get_selected_layer()
+        if (self.layer == None or self.layer.points == None or len(self.layer.points) < 2):
+            project.window.error("You must first select a layer with points in the layer tree.")
+            self.layer = None
+
             return
 
+        depth_value = -1
+        if self.depth_check.IsChecked():
+            depth_value = self.depth_slider.GetValue()
+
+        self.duplicates = self.layer.find_duplicates(self.distance_slider.value / (60 * 60), depth_value)
+        # print self.duplicates
+#        self.create_results_area()
+        self.display_results()
+
+    def clear_results(self):
         self.list_view.ClearAll()
         self.list_view.InsertStringItem(0, "Click Find Duplicates to search.")
 
-        for layer in self.project.layer_manager.flatten():
+        project = self.task.active_editor
+        for layer in project.layer_manager.flatten():
             layer.clear_all_selections(constants.STATE_FLAGGED)
 
         self.list_contains_real_data = False
         self.update_selection()
 
     def display_results(self):
+        project = self.task.active_editor
         self.list_view.ClearAll()
-        # self.list_points = []
+        self.layer.clear_all_selections(constants.STATE_FLAGGED)
+
         MAX_POINTS_TO_LIST = 500
 
         pair_count = len(self.duplicates)
 
+        self.merge_button.Enable(False)
         if (pair_count == 0):
             self.list_view.InsertStringItem(0, "No duplicate points found.")
 
-            for layer in self.project.layer_manager.flatten():
-                layer.clear_all_selections(constants.STATE_FLAGGED)
-
             self.list_contains_real_data = False
             self.update_selection()
+            project.refresh()
 
             return
 
@@ -307,17 +236,16 @@ class Merge_duplicate_points_dialog(wx.Dialog):
                 "Too many duplicate points to display (%d pairs)." % pair_count
             )
 
-            for layer in self.project.layer_manager.flatten():
-                layer.clear_all_selections(constants.STATE_FLAGGED)
-
             # self.list_view.SetItemData( 0, -1 )
 
             # self.list_points.extend( duplicates )
 
             self.list_contains_real_data = False
             self.update_selection()
+            project.refresh()
 
             return
+        self.merge_button.Enable(True)
 
         self.list_contains_real_data = True
         points_in_lines = self.layer.get_all_line_point_indexes()
@@ -350,6 +278,7 @@ class Merge_duplicate_points_dialog(wx.Dialog):
         if (not self.list_contains_real_data):
             return
 
+        project = self.task.active_editor
         self.dirty = False
 
         points = []
@@ -379,8 +308,8 @@ class Merge_duplicate_points_dialog(wx.Dialog):
 
         self.layer.select_points(points, constants.STATE_FLAGGED)
         bounds = self.layer.compute_bounding_rect(constants.STATE_FLAGGED)
-        self.project.control.zoom_to_include_world_rect(bounds)
-        self.project.refresh()
+        project.control.zoom_to_include_world_rect(bounds)
+        project.refresh()
 
     def key_pressed(self, event):
         key_code = event.GetKeyCode()
@@ -429,30 +358,3 @@ class Merge_duplicate_points_dialog(wx.Dialog):
 
         event.Skip()
         self.clear_results()
-
-# Enthought library imports.
-from traits.api import HasTraits, Any, on_trait_change
-
-class MergeDialog(HasTraits):
-    """Traits wrapper around dialog so we can use trait notifications
-    """
-    
-    control = Any
-    
-    project = Any
-    
-    def _control_default(self):
-        return Merge_duplicate_points_dialog(project=self.project, trait_wrapper=self)
-    
-    def show(self):
-        self.control.Show()
-    
-    def wx_on_close(self, evt):
-        self.control.on_close(evt)
-        self.control = None
-        
-    @on_trait_change('project.layer_manager:layer_contents_deleted')
-    def layer_contents_deleted(self, layer):
-        print "MergeDialog: layer_contents_deleted for layer %s" % layer
-        self.project.layer_contents_changed(layer)
-        self.control.on_points_deleted(layer)

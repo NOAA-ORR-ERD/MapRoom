@@ -8,6 +8,7 @@ from traits.api import on_trait_change
 from Layer_tree_control import Layer_tree_control
 from ui.InfoPanels import LayerInfoPanel, SelectionInfoPanel
 from ui.TrianglePanel import TrianglePanel
+from ui.merge_panel import MergePointsPanel
 
 import logging
 log = logging.getLogger(__name__)
@@ -76,3 +77,29 @@ class TriangulatePane(DockPane):
         log.debug("TASK CHANGED IN TRIANGULATEPANE!!!! %s" % self.task)
         if self.control:
             self.control.set_task(self.task)
+
+
+class MergePointsPane(DockPane):
+    #### TaskPane interface ###################################################
+
+    id = 'maproom.merge_points_pane'
+    name = 'Merge Points'
+    
+    def create_contents(self, parent):
+        control = MergePointsPanel(parent, self.task)
+        return control
+    
+    #### trait change handlers
+    
+    def _task_changed(self):
+        log.debug("TASK CHANGED IN MERGEPOINTSPANE!!!! %s" % self.task)
+        if self.control:
+            self.control.set_task(self.task)
+        
+    # FIXME: from the old Merge Points dialog: need to update control when
+    # points change
+#    @on_trait_change('project.layer_manager:layer_contents_deleted')
+#    def layer_contents_deleted(self, layer):
+#        print "MergeDialog: layer_contents_deleted for layer %s" % layer
+#        self.project.layer_contents_changed(layer)
+#        self.control.on_points_deleted(layer)
