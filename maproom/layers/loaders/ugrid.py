@@ -36,18 +36,18 @@ class UGridLoader(BaseLoader):
             depths = 0.0
         if ug.edges is not None and len(ug.edges) > 0:
             layer = LineLayer(manager=manager)
+            layer.file_path = metadata.uri
             layer.set_data(ug.nodes, depths, ug.edges)
             layer.depth_unit = dataset.attributes.get('units', 'unknown')
-            layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
             layers.append(layer)
 
         if ug.faces is not None and len(ug.faces) > 0:
             layer = TriangleLayer(manager=manager)
+            layer.file_path = metadata.uri
             layer.set_data(ug.nodes, depths, ug.faces)
             layer.depth_unit = dataset.attributes.get('units', 'unknown')
-            layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
             layers.append(layer)

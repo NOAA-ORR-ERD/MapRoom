@@ -9,7 +9,7 @@ import wx
 from pytriangle import triangulate_simple
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float
+from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
@@ -41,7 +41,27 @@ class PointLayer(ProjectedLayer):
     
     default_depth = Float(1.0)
     
-    depth_unit = Str("unknown")
+    depth_unit = Property(Str)
+    
+    _depth_unit = Enum("unknown", "meters", "feet", "fathoms")
+    
+    # Trait setters/getters
+    def _get_depth_unit(self):
+        return self._depth_unit
+    
+    def _set_depth_unit(self, unit):
+        unit = unit.lower()
+        if unit in ['meter', 'meters', 'm']:
+            unit = 'meters'
+        elif unit in ['foot', 'feet', 'ft']:
+            unit = 'feet'
+        elif unit in ['fathom', 'fathoms', 'ftm']:
+            unit = 'fathoms'
+        else:
+            log.warning("Depth unit '%s' in %s; set to 'unknown'" % (unit, self.file_path))
+            unit = 'unknown'
+        self._depth_unit = unit
+
 
     def __str__(self):
         try:
