@@ -90,7 +90,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             try:
                 metadata = guess.get_metadata()
-                load_log.info("START")
+                load_log.info("START=%s" % metadata.uri)
                 layers = self.layer_manager.load_layers_from_metadata(metadata, self)
                 if metadata.mime == "application/x-maproom-project-json":
                     self.path = metadata.uri
@@ -121,7 +121,7 @@ class ProjectEditor(FrameworkEditor):
             path = "%s.maproom" % self.name
         
         try:
-            save_log.info("START")
+            save_log.info("START=%s" % path)
             
             # FIXME: need to determine the project file format!!!
             error = self.layer_manager.save_all(path)

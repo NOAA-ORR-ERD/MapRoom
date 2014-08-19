@@ -66,6 +66,8 @@ from maproom.library.Boundary import PointsError
 
 import logging
 log = logging.getLogger(__name__)
+load_log = logging.getLogger("load")
+save_log = logging.getLogger("save")
 
 def load_layers_from_url(url, mime, manager=None):
     from peppy2.utils.file_guess import FileGuess
@@ -120,5 +122,6 @@ def save_layer(layer, uri, saver=None):
         if valid:
             return "The extension '%s' doesn't correspond to any format\nthat can save the '%s' layer type.\n\n%s" % (ext, layer.type, get_valid_string(valid))
     
+    save_log.info("TITLE=%s" % uri)
     error = saver.save(uri, layer)
     return error

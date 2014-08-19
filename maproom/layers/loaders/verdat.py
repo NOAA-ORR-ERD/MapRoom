@@ -9,7 +9,7 @@ from maproom.layers import LineLayer
 
 import logging
 load_log = logging.getLogger("load")
-save_log = logging.getLogger("load")
+save_log = logging.getLogger("save")
 
 WHITESPACE_PATTERN = re.compile("\s+")
 
