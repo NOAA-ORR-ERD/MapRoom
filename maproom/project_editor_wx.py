@@ -22,6 +22,8 @@ import renderer
 
 import logging
 log = logging.getLogger(__name__)
+load_log = logging.getLogger("load")
+save_log = logging.getLogger("save")
 
 @provides(IProjectEditor)
 class ProjectEditor(FrameworkEditor):
@@ -86,13 +88,18 @@ class ProjectEditor(FrameworkEditor):
         if guess is None:
             path = self.path
         else:
-            metadata = guess.get_metadata()
-            layers = self.layer_manager.load_layers_from_metadata(metadata, self)
-            if metadata.mime == "application/x-maproom-project-json":
-                self.path = metadata.uri
+            try:
+                metadata = guess.get_metadata()
+                load_log.info("START")
+                layers = self.layer_manager.load_layers_from_metadata(metadata, self)
+                if metadata.mime == "application/x-maproom-project-json":
+                    self.path = metadata.uri
+                
+                if layers:
+                    self.zoom_to_layers(layers)
             
-            if layers:
-                self.zoom_to_layers(layers)
+            finally:
+                load_log.info("END")
 
         self.dirty = False
 
@@ -113,8 +120,14 @@ class ProjectEditor(FrameworkEditor):
         if not path:
             path = "%s.maproom" % self.name
         
-        # FIXME: need to determine the project file format!!!
-        error = self.layer_manager.save_all(path)
+        try:
+            save_log.info("START")
+            
+            # FIXME: need to determine the project file format!!!
+            error = self.layer_manager.save_all(path)
+        finally:
+            save_log.info("END")
+        
         if error:
             self.window.error(error)
         else:
@@ -127,7 +140,11 @@ class ProjectEditor(FrameworkEditor):
         layer = self.layer_tree_control.get_selected_layer()
         if layer is None:
             return
-        error = self.layer_manager.save_layer(layer, path, loader)
+        try:
+            save_log.info("START")
+            error = self.layer_manager.save_layer(layer, path, loader)
+        finally:
+            save_log.info("END")
         if error:
             self.window.error(error)
         else:

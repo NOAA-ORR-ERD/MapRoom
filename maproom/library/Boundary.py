@@ -147,6 +147,12 @@ class Boundaries(object):
     def num_boundaries(self):
         return len(self.boundaries)
     
+    def num_points(self):
+        points = 0
+        for boundary in self.boundaries:
+            points += len(boundary)
+        return points + len(self.non_boundary_points)
+    
     def get_outer_boundary(self):
         if len(self) > 0:
             return self.boundaries[0]
@@ -339,12 +345,15 @@ class Boundaries(object):
         
         return outside_point_indices
 
-    def check_errors(self, throw_exception=False):
+    def check_errors(self, throw_exception=False, log=None):
         errors = set()
         error_points = set()
         
         import time
         t0 = time.clock()
+        
+        if log:
+            log.info("Checking for branching boundaries...")
         
         if len(self.branch_points) > 0 and self.allow_branches == False:
             errors.add("Branching boundaries.")
@@ -353,6 +362,9 @@ class Boundaries(object):
         t = time.clock() - t0
         print "DONE WITH BRANCH CHECK! %f" % t
         t0 = time.clock()
+        
+        if log:
+            log.info("Checking for points outside outer boundary...")
         
         point_indexes = self.check_outside_outer_boundary()
         if len(point_indexes) > 0:
@@ -364,6 +376,9 @@ class Boundaries(object):
         t0 = time.clock()
         
         if not self.allow_self_crossing:
+            if log:
+                log.info("Checking for boundary crossing itself...")
+            
             point_indexes = self.check_boundary_self_crossing()
             if len(point_indexes) > 0:
                 errors.add("Boundary crosses itself.")
