@@ -11,12 +11,13 @@ from maproom.library.accumulator import accumulator, flatten
 import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
 
+from common import BaseLoader
 from maproom.layers import RasterLayer
 
 import logging
 log = logging.getLogger(__name__)
 
-class GDALLoader(object):
+class GDALLoader(BaseLoader):
     mime = "image/*"
     
     name = "GDAL"
@@ -306,7 +307,7 @@ def load_image_file_subprocess(file_path):
     if (not image_data.is_north_up()):
         return ("The raster is not north-up for file " + file_path, None)
     image_data.load_dataset(dataset, TEXTURE_SIZE)
-    log.debug("GDAL load time: ", (time.clock() - t0))
+    log.debug("GDAL load time: %f", (time.clock() - t0))
     
     return ("", image_data)
 
