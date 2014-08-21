@@ -11,6 +11,7 @@ from pyface.api import YES, NO
 from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float, Event
 
 from peppy2.framework.editor import FrameworkEditor
+from peppy2.framework.errors import ProgressCancelError
 
 # Local imports.
 from i_project_editor import IProjectEditor
@@ -97,7 +98,8 @@ class ProjectEditor(FrameworkEditor):
                 
                 if layers:
                     self.zoom_to_layers(layers)
-            
+            except ProgressCancelError, e:
+                self.window.error(e.message)
             finally:
                 load_log.info("END")
 
@@ -125,6 +127,8 @@ class ProjectEditor(FrameworkEditor):
             
             # FIXME: need to determine the project file format!!!
             error = self.layer_manager.save_all(path)
+        except ProgressCancelError, e:
+            error = e.message
         finally:
             save_log.info("END")
         
@@ -143,6 +147,8 @@ class ProjectEditor(FrameworkEditor):
         try:
             save_log.info("START")
             error = self.layer_manager.save_layer(layer, path, loader)
+        except ProgressCancelError, e:
+            error = e.message
         finally:
             save_log.info("END")
         if error:
