@@ -23,8 +23,7 @@ import renderer
 
 import logging
 log = logging.getLogger(__name__)
-load_log = logging.getLogger("load")
-save_log = logging.getLogger("save")
+progress_log = logging.getLogger("progress")
 
 @provides(IProjectEditor)
 class ProjectEditor(FrameworkEditor):
@@ -91,7 +90,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             try:
                 metadata = guess.get_metadata()
-                load_log.info("START=%s" % metadata.uri)
+                progress_log.info("START=Loading %s" % metadata.uri)
                 layers = self.layer_manager.load_layers_from_metadata(metadata, self)
                 if metadata.mime == "application/x-maproom-project-json":
                     self.path = metadata.uri
@@ -101,7 +100,7 @@ class ProjectEditor(FrameworkEditor):
             except ProgressCancelError, e:
                 self.window.error(e.message)
             finally:
-                load_log.info("END")
+                progress_log.info("END")
 
         self.dirty = False
 
@@ -123,14 +122,14 @@ class ProjectEditor(FrameworkEditor):
             path = "%s.maproom" % self.name
         
         try:
-            save_log.info("START=%s" % path)
+            progress_log.info("START=Saving %s" % path)
             
             # FIXME: need to determine the project file format!!!
             error = self.layer_manager.save_all(path)
         except ProgressCancelError, e:
             error = e.message
         finally:
-            save_log.info("END")
+            progress_log.info("END")
         
         if error:
             self.window.error(error)
@@ -145,12 +144,12 @@ class ProjectEditor(FrameworkEditor):
         if layer is None:
             return
         try:
-            save_log.info("START")
+            progress_log.info("START")
             error = self.layer_manager.save_layer(layer, path, loader)
         except ProgressCancelError, e:
             error = e.message
         finally:
-            save_log.info("END")
+            progress_log.info("END")
         if error:
             self.window.error(error)
         else:

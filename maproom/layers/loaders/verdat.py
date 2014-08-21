@@ -8,8 +8,7 @@ from common import BaseLoader
 from maproom.layers import LineLayer
 
 import logging
-load_log = logging.getLogger("load")
-save_log = logging.getLogger("save")
+progress_log = logging.getLogger("progress")
 
 WHITESPACE_PATTERN = re.compile("\s+")
 
@@ -28,14 +27,14 @@ class VerdatLoader(BaseLoader):
     def load(self, metadata, manager):
         layer = LineLayer(manager=manager)
         
-        load_log.info("Loading from %s" % metadata.uri)
+        progress_log.info("Loading from %s" % metadata.uri)
         (layer.load_error_string,
          f_points,
          f_depths,
          f_line_segment_indexes,
          layer.depth_unit) = load_verdat_file(metadata.uri)
         if (layer.load_error_string == ""):
-            load_log.info("Finished loading %s" % metadata.uri)
+            progress_log.info("Finished loading %s" % metadata.uri)
             layer.set_data(f_points, f_depths, f_line_segment_indexes)
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
@@ -101,7 +100,7 @@ def load_verdat_file(file_path):
         points.append((longitude, latitude))
         depths.append(depth)
         if (index % VerdatLoader.points_per_tick) == 0:
-            load_log.info("Loaded %s points" % int(index))
+            progress_log.info("Loaded %s points" % int(index))
 
     # read the boundary polygon indexes
 
@@ -141,10 +140,10 @@ def load_verdat_file(file_path):
 
 
 def write_layer_as_verdat(f, layer):
-    save_log.info("Scanning layer boundaries...")
+    progress_log.info("Scanning layer boundaries...")
     boundaries = Boundaries(layer, allow_branches=False)
-    save_log.info("Checking for boundary errors...")
-    errors, error_points = boundaries.check_errors(log=save_log)
+    progress_log.info("Checking for boundary errors...")
+    errors, error_points = boundaries.check_errors(log=progress_log)
     if errors:
         raise PointsError("Layer can't be saved as Verdat:\n\n%s" % "\n\n".join(errors), error_points)
     
@@ -162,7 +161,7 @@ def write_layer_as_verdat(f, layer):
     file_point_index = 1  # one-based instead of zero-based
 
     ticks = (boundaries.num_points() / VerdatLoader.points_per_tick) + 1
-    save_log.info("TICKS=%d" % ticks)
+    progress_log.info("TICKS=%d" % ticks)
 
     # write all boundary points to the file
     # print "writing boundaries"
@@ -188,7 +187,7 @@ def write_layer_as_verdat(f, layer):
             file_point_index += 1
             
             if file_point_index % VerdatLoader.points_per_tick == 0:
-                save_log.info("Saved %d points" % file_point_index)
+                progress_log.info("Saved %d points" % file_point_index)
 
         boundary_endpoints.append(file_point_index - 1)
 
@@ -208,7 +207,7 @@ def write_layer_as_verdat(f, layer):
         file_point_index += 1
         
         if file_point_index % VerdatLoader.points_per_tick == 0:
-            save_log.info("Saved %d points" % file_point_index)
+            progress_log.info("Saved %d points" % file_point_index)
 
     # zero record signals the end of the points section
     f.write(POINT_FORMAT % (0, 0.0, 0.0, 0.0))
@@ -219,4 +218,4 @@ def write_layer_as_verdat(f, layer):
     for endpoint in boundary_endpoints:
         f.write("{0}\n".format(endpoint))
     
-    save_log.info("Saved verdat")
+    progress_log.info("Saved verdat")
