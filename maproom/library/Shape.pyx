@@ -2,6 +2,8 @@ import cython
 import numpy as np
 cimport numpy as np
 
+import logging
+progress_log = logging.getLogger("progress")
 
 @cython.boundscheck( False )
 @cython.cdivision( True )
@@ -35,8 +37,16 @@ def points_outside_polygon(
     cdef np.ndarray[ np.uint32_t ] outside_indices = \
         np.ndarray( ( point_count, ), np.uint32 )
     cdef np.uint32_t outside_add_index = 0
+    cdef int count = 0
+    cdef int points_per_tick = 700
 
+    progress_log.info("TICKS=%d" % ((point_count/points_per_tick) + 1))
     for point_index in range( point_count ):
+        if count >= points_per_tick:
+            count = 0
+            progress_log.info("Boundary check: %d points, %d outside boundary" % (point_index, outside_add_index))
+        count += 1
+        
         # See http://alienryderflex.com/polygon/
         x = points_x[ point_index ]
         if x != x: # NaN test
