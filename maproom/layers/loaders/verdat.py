@@ -140,10 +140,8 @@ def load_verdat_file(file_path):
 
 
 def write_layer_as_verdat(f, layer):
-    progress_log.info("Scanning layer boundaries...")
     boundaries = Boundaries(layer, allow_branches=False)
-    progress_log.info("Checking for boundary errors...")
-    errors, error_points = boundaries.check_errors(log=progress_log)
+    errors, error_points = boundaries.check_errors()
     if errors:
         raise PointsError("Layer can't be saved as Verdat:\n\n%s" % "\n\n".join(errors), error_points)
     

@@ -1,6 +1,10 @@
+import time
 import random
 import numpy as np
 from maproom.library.Shape import point_in_polygon, points_outside_polygon
+
+import logging
+progress_log = logging.getLogger("progress")
 
 
 class PointsError(Exception):
@@ -179,6 +183,7 @@ class Boundaries(object):
                               area = the area of the boundary (in coordinate space)
                           non_boundary_points = a python set of the points non included in a boundary
         """
+        progress_log.info("Determining boundaries...")
         points = self.points
         lines = self.lines
 
@@ -205,6 +210,8 @@ class Boundaries(object):
                 adjacent2.append(point1)
             non_boundary_points.discard(point1)
             non_boundary_points.discard(point2)
+        
+        progress_log.info("PULSE")
         
         branch_points = set()
         for point, adjacent in adjacency_map.iteritems():
@@ -240,6 +247,8 @@ class Boundaries(object):
                     # creating new segment end
                     endpoints.append(other_end)
         
+        progress_log.info("PULSE")
+        
     #    print "FINISHED REMOVING ENDPOINTS!"
     #    for point, adjacent in adjacency_map.iteritems():
     #        print "  point: %d  adjacent: %s" % (point, adjacent)
@@ -256,6 +265,8 @@ class Boundaries(object):
             (point, adjacent) = adjacency_map.iteritems().next()
             boundary.append(point)
             del(adjacency_map[point])
+
+            count = 0
 
             while True:
                 # If the first adjacent point is not the previous point, add it
@@ -297,6 +308,11 @@ class Boundaries(object):
                 # the boundary is now closed and we're done with it.
                 if adjacent_point == boundary[0]:
                     break
+                
+                count += 1
+                if count > 500:
+                    count = 0
+                    progress_log.info("PULSE")
 
             boundaries.append(Boundary(self, boundary, 0.5 * area))
 
@@ -345,15 +361,13 @@ class Boundaries(object):
         
         return outside_point_indices
 
-    def check_errors(self, throw_exception=False, log=None):
+    def check_errors(self, throw_exception=False):
         errors = set()
         error_points = set()
         
-        import time
         t0 = time.clock()
         
-        if log:
-            log.info("Checking for branching boundaries...")
+        progress_log.info("Checking for branching boundaries...")
         
         if len(self.branch_points) > 0 and self.allow_branches == False:
             errors.add("Branching boundaries.")
@@ -363,8 +377,7 @@ class Boundaries(object):
         print "DONE WITH BRANCH CHECK! %f" % t
         t0 = time.clock()
         
-        if log:
-            log.info("Checking for points outside outer boundary...")
+        progress_log.info("Checking for points outside outer boundary...")
         
         point_indexes = self.check_outside_outer_boundary()
         if len(point_indexes) > 0:
@@ -376,8 +389,7 @@ class Boundaries(object):
         t0 = time.clock()
         
         if not self.allow_self_crossing:
-            if log:
-                log.info("Checking for boundary crossing itself...")
+            progress_log.info("Checking for boundary crossing itself...")
             
             point_indexes = self.check_boundary_self_crossing()
             if len(point_indexes) > 0:
@@ -469,11 +481,13 @@ def self_intersection_check(points):
 #                i) for i in indices])
 #    points = ([(tuple(self[i - 1]), tuple(self[i]), i) for i in indices] 
 #        + [(tuple(self[i]), tuple(self[i - 1]), i) for i in indices])
+    progress_log.info("PULSE")
     points.sort() # lexicographical sort
     open_segments = {}
     
     intersecting_segments = []
 
+    count = 0
     for point in points:
         seg_start, seg_end, index = point
         if index not in open_segments:
@@ -487,4 +501,9 @@ def self_intersection_check(points):
         else:
             # Segment end point
             del open_segments[index]
+        
+        count += 1
+        if count > 500:
+            count = 0
+            progress_log.info("PULSE")
     return intersecting_segments
