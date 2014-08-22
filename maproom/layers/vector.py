@@ -24,6 +24,8 @@ from constants import *
 
 import logging
 log = logging.getLogger(__name__)
+progress_log = logging.getLogger("progress")
+
 
 class PointLayer(ProjectedLayer):
     """Layer for points/lines/polygons.
@@ -1178,6 +1180,8 @@ class TriangleLayer(PointLayer):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(layer, allow_branches=True, allow_self_crossing=False)
         boundaries.check_errors(True)
+        
+        progress_log.info("Triangulating...")
 
         # calculate a hole point for each boundary
         hole_points_xy = np.empty(
