@@ -1,3 +1,40 @@
+08/22/2014
+---------------------------
+Released 3.0b13
+- RM Fixed error when attempting to triangulate a layer without points
+- RM Added progress log title when beginning triangulation
+- RM Added progress dialog for triangulation
+- RM Added progress log updates to the cython code Shape.pyx
+- RM Updated progress log calls in Boundary.py
+- RM Added progress dialog to Layer -> Check For Errors
+- RM Changed save and load loggers into single progess log
+- RM Added progress cancel handlers to load/save
+- RM Added chart 16003 that shows rendering (or loading?) errors:
+- RM Fixed GDALLoader base class and typo in logging message
+- RM Added filename to progress dialog title
+- RM Added special load/save loggers to display busy cursor and progress
+- RM Added depth unit abbreviations and coercing to standard values
+- RM Added small test file for duplicate points
+- RM Converted merge points dialog into pane
+- RM Updated error checking
+- RM Allow verdat saving with self-crossing boundary
+- RM Added dropdown in Current Layer Info to select flagged points
+- RM Instrumented Boundaries.check_errors for time
+- RM Refactored boundary checking into classes
+- RM Added boundary self-crossing check for verdat files
+- RM Fixed bug in save_layer with default layer name
+- RM Moved mock objects into separate file mock.py
+- RM Fixed ugrid tests for change in loaders API back in 5ed8e20e
+- RM Updated layer name in UI when saved to new filename
+- RM Added point index display to Current Selection pane
+- RM Removed "Selected points" from Current Layer pane
+- RM Fixed off-by-one error for point indexes returned by find dialog
+- RM Cleaned up some debug prints in project loading/saving
+- RM Added Polygon (i.e. BNA) layer json serialization
+- RM Fixed mislocated mime type assignment in BNA and GDAL loaders
+- RM Self-contained project support for point, line, and triangle layers
+- RM First cut at project save files
+
 07/23/2014
 ---------------------------
 Released 3.0b12
