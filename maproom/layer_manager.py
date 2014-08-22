@@ -191,8 +191,11 @@ class LayerManager(LayerUndo):
                 layer.check_for_problems(window)
                 window.information("Layer %s OK" % layer.name, "No Problems Found")
             except Exception, e:
-                layer.highlight_exception(e)
-                window.error(e.message, "Layer Contains Problems")
+                if hasattr(e, 'points'):
+                    layer.highlight_exception(e)
+                    window.error(e.message, "Layer Contains Problems")
+                else:
+                    raise
         return "No selected layer."
     
     def load_all(self, file_path):

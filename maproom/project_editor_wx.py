@@ -646,5 +646,12 @@ class ProjectEditor(FrameworkEditor):
         self.control.zoom_to_world_rect(rect)
     
     def check_for_errors(self):
+        error = None
         sel_layer = self.layer_tree_control.get_selected_layer()
-        self.layer_manager.check_layer(sel_layer, self.window)
+        try:
+            progress_log.info("START=Checking layer %s" % sel_layer.name)
+            self.layer_manager.check_layer(sel_layer, self.window)
+        except ProgressCancelError, e:
+            pass
+        finally:
+            progress_log.info("END")
