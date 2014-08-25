@@ -12,6 +12,7 @@ from common import BaseLoader
 
 import logging
 log = logging.getLogger(__name__)
+progress_log = logging.getLogger("progress")
 
 class BNALoader(BaseLoader):
     mime = "application/x-maproom-bna"
@@ -31,6 +32,7 @@ class BNALoader(BaseLoader):
          f_polygon_counts,
          f_polygon_types,
          f_polygon_identifiers) = load_bna_file(metadata.uri)
+        progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
             layer.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
                            f_polygon_types, f_polygon_identifiers)
@@ -41,13 +43,6 @@ class BNALoader(BaseLoader):
     
     def save_to_file(self, f, layer):
         return "Can't save to BNA yet."
-
-
-def update_status(message):
-    import wx
-    tlw = wx.GetApp().GetTopWindow()
-    tlw.SetStatusText(message)
-    wx.SafeYield()
 
 
 def load_bna_file(file_path):
@@ -121,20 +116,17 @@ def load_bna_file(file_path):
     polygon_identifiers = []
 
     t0 = time.clock()
-    update_interval = .1
     update_every = 1000
-    t_update = t0 + update_interval
     total_points = 0
     i = 0
     num_lines = len(lines)
+    progress_log.info("TICKS=%d" % num_lines)
+    progress_log.info("Loading %d points..." % num_lines)
     while True:
         if (i >= num_lines):
             break
         if (i % update_every) == 0:
-            t = time.clock()
-            if t > t_update:
-                update_status("Loading %d of %d data points." % (i, num_lines))
-                t_update = t + update_interval
+            progress_log.info("TICK=%d" % i)
         line = lines[i].strip()
         i += 1
         if (len(line) == 0):
@@ -182,11 +174,11 @@ def load_bna_file(file_path):
         polygon_counts.append(num_points)
         polygon_types.append(feature_code)
         total_points += num_points
+    progress_log.info("TICK=%d" % num_points)
 
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
     log.debug("loop in {0} seconds".format(t))
     log.debug("******** END")
-    update_status("Loaded %d data points in %.2fs." % (num_lines, t))
 
     return ("",
             np.asarray(polygon_points),
