@@ -91,16 +91,22 @@ class ProjectEditor(FrameworkEditor):
             try:
                 metadata = guess.get_metadata()
                 progress_log.info("START=Loading %s" % metadata.uri)
-                layers = self.layer_manager.load_layers_from_metadata(metadata, self)
-                if metadata.mime == "application/x-maproom-project-json":
-                    self.path = metadata.uri
-                
-                if layers:
-                    self.zoom_to_layers(layers)
+                layers, errors, is_project = self.layer_manager.load_layers_from_metadata(metadata)
             except ProgressCancelError, e:
-                self.window.error(e.message)
+                errors = [e.message]
             finally:
                 progress_log.info("END")
+            
+            if errors:
+                text = "\n\n".join(errors)
+                self.window.error(e.message)
+                return
+
+            self.layer_manager.add_layers(layers, is_project, self)
+            if is_project:
+                self.path = metadata.uri
+            if layers:
+                self.zoom_to_layers(layers)
 
         self.dirty = False
 

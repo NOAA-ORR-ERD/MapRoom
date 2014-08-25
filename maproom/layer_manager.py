@@ -148,8 +148,7 @@ class LayerManager(LayerUndo):
         callback = functools.partial(self.post_event, event)
         return callback
     
-    def load_layers_from_metadata(self, metadata, editor=None):
-        # FIXME: load all layer types, not just vector!
+    def load_layers_from_metadata(self, metadata):
         loader, layers = loaders.load_layers(metadata, manager=self)
         if layers is None:
             log.warning("LAYER LOAD ERROR: %s" % "Unknown file type %s for %s" % (metadata.mime, metadata.uri))
@@ -160,14 +159,10 @@ class LayerManager(LayerUndo):
             if layer.load_error_string != "":
                 errors.append("LAYER LOAD ERROR: %s" % layer.load_error_string)
         
-            layer.check_projection(editor.window)
-            if layer.load_error_string != "":
-                errors.append("LAYER LOAD ERROR: %s" % layer.load_error_string)
-        
-        if errors:
-            return None
-        
-        if loader.project:
+        return layers, errors, loader.project
+    
+    def add_layers(self, layers, is_project, editor):
+        if is_project:
             # remove all other layers so the project can be inserted in the
             # correct order
             existing = self.flatten()
@@ -180,9 +175,11 @@ class LayerManager(LayerUndo):
             layers.reverse()
         
         for layer in layers:
-            self.insert_loaded_layer(layer, editor)
-            if layer.needs_background_loading():
-                layer.start_background_loading()
+            layer.check_projection(editor.window)
+            if not layer.load_error_string:
+                self.insert_loaded_layer(layer, editor)
+                if layer.needs_background_loading():
+                    layer.start_background_loading()
         return layers
     
     def check_layer(self, layer, window):
