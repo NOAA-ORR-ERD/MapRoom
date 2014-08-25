@@ -121,7 +121,7 @@ def load_bna_file(file_path):
     i = 0
     num_lines = len(lines)
     progress_log.info("TICKS=%d" % num_lines)
-    progress_log.info("Loading %d points..." % num_lines)
+    progress_log.info("Loading BNA...")
     while True:
         if (i >= num_lines):
             break
@@ -174,7 +174,7 @@ def load_bna_file(file_path):
         polygon_counts.append(num_points)
         polygon_types.append(feature_code)
         total_points += num_points
-    progress_log.info("TICK=%d" % num_points)
+    progress_log.info("TICK=%d" % num_lines)
 
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
     log.debug("loop in {0} seconds".format(t))
