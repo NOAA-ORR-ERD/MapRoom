@@ -9,6 +9,7 @@ import library.coordinates as coordinates
 import renderer
 import library.rect as rect
 import app_globals
+from mouse_handler import MouseHandler
 
 import OpenGL
 import OpenGL.GL as gl
@@ -48,9 +49,6 @@ class LayerControl(glcanvas.GLCanvas):
     mouse_down_position = (0, 0)
     mouse_move_position = (0, 0)
 
-    #is_initialized = False
-    #is_closing = False
-    
     @classmethod
     def get_valid_mouse_mode(cls, mouse_mode, mode_mode_toolbar_name):
         """Return a valid mouse mode for the specified toolbar
@@ -109,7 +107,13 @@ class LayerControl(glcanvas.GLCanvas):
 
         self.Bind(wx.EVT_IDLE, self.on_idle)  # not sure about this -- but it's where the cursors are set.
         self.Bind(wx.EVT_PAINT, self.render)
+        # Prevent flashing on Windows by doing nothing on an erase background event.
+        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
         self.Bind(wx.EVT_SIZE, self.resize_render_pane)
+        
+        # mouse handler events
+        self.mouse_handler = MouseHandler(self)
+        
         self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
@@ -118,9 +122,6 @@ class LayerControl(glcanvas.GLCanvas):
         self.Bind(wx.EVT_CHAR, self.on_key_char)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
-        # Prevent flashing on Windows by doing nothing on an erase background event.
-        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
-        #self.is_initialized = True
     
     def change_view(self, layer_manager):
         self.layer_manager = layer_manager
@@ -146,9 +147,9 @@ class LayerControl(glcanvas.GLCanvas):
         self.mouse_down_position = event.GetPosition()
         self.mouse_move_position = self.mouse_down_position
 
-        if (self.get_effective_tool_mode(event) == self.MODE_PAN):
-            return
+        self.mouse_handler.process_mouse_down(event)
 
+    def select_object(self, event):
         e = self.project
         lm = self.layer_manager
 
@@ -181,193 +182,44 @@ class LayerControl(glcanvas.GLCanvas):
 
     def on_mouse_motion(self, event):
         self.get_effective_tool_mode(event)  # update alt key state
-
-        p = event.GetPosition()
-        proj_p = self.get_world_point_from_screen_point(p)
-        if (not self.mouse_is_down):
-            prefs = self.project.task.get_preferences()
-            status_text = coordinates.format_coords_for_display(
-                proj_p[0], proj_p[1], prefs.coordinate_display_format)
-
-            self.release_mouse()
-            # print "mouse is not down"
-            o = None
-            if self.opengl_renderer is not None:
-                o = self.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
-            if (o != None):
-                (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
-                layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
-                if (self.project.layer_tree_control.is_selected_layer(layer)):
-                    self.editor.clickable_object_mouse_is_over = o
-                else:
-                    self.editor.clickable_object_mouse_is_over = None
-                if renderer.is_ugrid_point(o):
-                    status_text += "  Point %s on %s" % (object_index + 1, str(layer))
-
-            else:
-                self.editor.clickable_object_mouse_is_over = None
-            mouselog.debug("object under mouse: %s, on current layer: %s" % (o, self.editor.clickable_object_mouse_is_over is not None))
-
-            self.project.task.status_bar.message = status_text
-
-        if (self.mouse_is_down):
-            d_x = p[0] - self.mouse_down_position[0]
-            d_y = self.mouse_down_position[1] - p[1]
-            # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
-            if (self.get_effective_tool_mode(event) == self.MODE_PAN):
-                if (d_x != 0 or d_y != 0):
-                    # the user has panned the map
-                    d_x_p = d_x * self.projected_units_per_pixel
-                    d_y_p = d_y * self.projected_units_per_pixel
-                    self.projected_point_center = (self.projected_point_center[0] - d_x_p,
-                                                   self.projected_point_center[1] - d_y_p)
-                    self.mouse_down_position = p
-                    self.render(event)
-            elif (self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT or self.selection_box_is_being_defined):
-                self.mouse_move_position = event.GetPosition()
-                self.render(event)
-            else:
-                if (d_x != 0 or d_y != 0):
-                    w_p0 = self.get_world_point_from_screen_point(self.mouse_down_position)
-                    w_p1 = self.get_world_point_from_screen_point(p)
-                    if not self.HasCapture():
-                        self.CaptureMouse()
-                    self.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
-                    self.mouse_down_position = p
-                    self.render(event)
+        
+        self.mouse_handler.process_mouse_motion(event)
 
     def on_mouse_up(self, event):
         self.get_effective_tool_mode(event)  # update alt key state
-
         self.forced_cursor = None
-
-        if (not self.mouse_is_down):
-            self.selection_box_is_being_defined = False
-
-            return
-
-        self.mouse_is_down = False
-        self.release_mouse()  # it's hard to know for sure when the mouse may be captured
-
-        if (self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT):
-            self.mouse_move_position = event.GetPosition()
-            (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
-                                                               self.mouse_move_position)
-            d_x = x2 - x1
-            d_y = y2 - y1
-            if (d_x >= 5 and d_y >= 5):
-                p_r = self.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
-                self.projected_point_center = rect.center(p_r)
-                s_r = self.get_screen_rect()
-                ratio_h = float(d_x) / float(rect.width(s_r))
-                ratio_v = float(d_y) / float(rect.height(s_r))
-                self.projected_units_per_pixel *= max(ratio_h, ratio_v)
-                self.constrain_zoom()
-                self.render()
-        elif (self.get_effective_tool_mode(event) == self.MODE_EDIT_POINTS or self.get_effective_tool_mode(event) == self.MODE_EDIT_LINES):
-            if (self.selection_box_is_being_defined):
-                self.mouse_move_position = event.GetPosition()
-                (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
-                                                                   self.mouse_move_position)
-                p_r = self.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
-                w_r = self.get_world_rect_from_projected_rect(p_r)
-                layer = self.layer_tree_control.get_selected_layer()
-                if (layer != None):
-                    if (self.get_effective_tool_mode(event) == self.MODE_EDIT_POINTS):
-                        layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), w_r)
-                    else:
-                        layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), w_r)
-                self.selection_box_is_being_defined = False
-                self.render()
-            else:
-                self.editor.finished_drag(self.mouse_down_position, self.mouse_move_position)
-        self.selection_box_is_being_defined = False
+        
+        self.mouse_handler.process_mouse_up(event)
 
     def on_mouse_wheel_scroll(self, event):
         self.get_effective_tool_mode(event)  # update alt key state
-
-        rotation = event.GetWheelRotation()
-        delta = event.GetWheelDelta()
-        window = event.GetEventObject()
-        mouselog.debug("on_mouse_wheel_scroll. delta=%d win=%s" % (delta, window))
-        if (delta == 0):
-            return
-
-        amount = rotation / delta
-
-        screen_point = event.GetPosition()
         
-        # On windows, the mouse wheel events are only passed to controls with
-        # the text focus.  So we are forced to grab mouse wheel events on the
-        # Frame because the events are propagated up from the control with
-        # the focus to the Frame.  The coordinates will be relative to the
-        # control, not the map, so we have to transate them here.
-        if window != self:
-            monitor_point = window.ClientToScreen(screen_point)
-            screen_point = self.ScreenToClient(monitor_point)
-            mouselog.debug("Mouse over other window at screen pos %s, window pos %s!" % (monitor_point, screen_point))
-            size = self.GetSize()
-            if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
-                mouselog.debug("Mouse not over RenderWindow: skipping!")
-                return
-            
-        world_point = self.get_world_point_from_screen_point(screen_point)
-
-        prefs = self.project.task.get_preferences()
-
-        zoom = 1.2
-        zoom_speed = prefs.zoom_speed
-        if zoom_speed == "Slow":
-            zoom = 1.2
-        elif zoom_speed == "Medium":
-            zoom = 1.6
-        elif zoom_speed == "Fast":
-            zoom = 2.0
-
-        if (amount < 0):
-            self.projected_units_per_pixel *= zoom
-
-        else:
-            self.projected_units_per_pixel /= zoom
-        self.constrain_zoom()
-
-        projected_point = self.get_projected_point_from_screen_point(screen_point)
-        new_projected_point = self.get_projected_point_from_world_point(world_point)
-
-        delta = (new_projected_point[0] - projected_point[0], new_projected_point[1] - projected_point[1])
-
-        self.projected_point_center = (self.projected_point_center[0] + delta[0],
-                                       self.projected_point_center[1] + delta[1])
-
-        self.render()
+        self.mouse_handler.process_mouse_wheel_scroll(event)
 
     def on_mouse_leave(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-        # this messes up object dragging when the mouse goes outside the window
-        # self.editor.clickable_object_mouse_is_over = None
+        
+        self.mouse_handler.process_mouse_leave(event)
 
     def on_key_down(self, event):
         self.get_effective_tool_mode(event)
+        
+        self.mouse_handler.process_key_down(event)
+        
         event.Skip()
 
     def on_key_up(self, event):
         self.get_effective_tool_mode(event)
+        
+        self.mouse_handler.process_key_up(event)
+        
         event.Skip()
 
     def on_key_char(self, event):
         self.get_effective_tool_mode(event)
         self.set_cursor()
-
-        if (self.mouse_is_down and self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT):
-            if (event.GetKeyCode() == wx.WXK_ESCAPE):
-                self.mouse_is_down = False
-                self.ReleaseMouse()
-                self.render()
-        else:
-            if (event.GetKeyCode() == wx.WXK_ESCAPE):
-                self.editor.esc_key_pressed()
-            if (event.GetKeyCode() == wx.WXK_BACK):
-                self.editor.delete_key_pressed()
+        
+        self.mouse_handler.process_key_char(event)
 
     def on_idle(self, event):
         # self.get_effective_tool_mode( event ) # update alt key state (not needed, it gets called in set_cursor anyway
@@ -407,13 +259,18 @@ class LayerControl(glcanvas.GLCanvas):
         self.SetCursor(c)
 
     def get_effective_tool_mode(self, event):
+        middle_down = False
         if (event != None):
             try:
                 self.is_alt_key_down = event.AltDown()
                 # print self.is_alt_key_down
             except:
                 pass
-        if (self.is_alt_key_down):
+            try:
+                middle_down = event.MiddleIsDown()
+            except:
+                pass
+        if self.is_alt_key_down or middle_down:
             mode = self.MODE_PAN
         else:
             mode = self.project.mouse_mode
