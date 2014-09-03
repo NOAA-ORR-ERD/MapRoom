@@ -654,10 +654,21 @@ class ProjectEditor(FrameworkEditor):
     def check_for_errors(self):
         error = None
         sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is None:
+            return
+        
         try:
             progress_log.info("START=Checking layer %s" % sel_layer.name)
-            self.layer_manager.check_layer(sel_layer, self.window)
+            error = self.layer_manager.check_layer(sel_layer, self.window)
         except ProgressCancelError, e:
-            pass
+            error = "cancel"
         finally:
             progress_log.info("END")
+        
+        if error == "cancel":
+            return
+        elif error is not None:
+            sel_layer.highlight_exception(error)
+            self.window.error(error.message, "Layer Contains Problems")
+        else:
+            self.window.information("Layer %s OK" % sel_layer.name, "No Problems Found")

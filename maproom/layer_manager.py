@@ -186,14 +186,12 @@ class LayerManager(LayerUndo):
         if layer is not None:
             try:
                 layer.check_for_problems(window)
-                window.information("Layer %s OK" % layer.name, "No Problems Found")
             except Exception, e:
                 if hasattr(e, 'points'):
-                    layer.highlight_exception(e)
-                    window.error(e.message, "Layer Contains Problems")
+                    return e
                 else:
                     raise
-        return "No selected layer."
+        return None
     
     def load_all(self, file_path):
         with open(file_path, "w") as fh:
