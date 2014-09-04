@@ -297,7 +297,13 @@ class Boundaries(object):
                     # Delete the map as we walk through it so we know when we're
                     # done.
                     boundary.append(adjacent_point)
-                    adjacent = adjacency_map.pop(adjacent_point)
+                    try:
+                        adjacent = adjacency_map.pop(adjacent_point)
+                    except KeyError:
+                        # already removed point due to branch connecting
+                        # multiple boundaries, so it's been handled before and
+                        # we can skip the area calculation
+                        break
 
                 # See http://alienryderflex.com/polygon_area/
                 area += \
