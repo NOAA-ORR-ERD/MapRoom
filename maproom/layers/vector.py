@@ -96,6 +96,11 @@ class PointLayer(ProjectedLayer):
                 self.select_point(p, STATE_FLAGGED)
             self.manager.dispatch_event('refresh_needed')
     
+    def clear_flagged(self, refresh=False):
+        self.clear_all_selections(STATE_FLAGGED)
+        if refresh:
+            self.manager.dispatch_event('refresh_needed')
+    
     def get_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
         """

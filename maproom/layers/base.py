@@ -103,6 +103,10 @@ class Layer(HasTraits):
         """Highlight items flagged in the exception"""
         pass
     
+    def clear_flagged(self, refresh=False):
+        """Clear any items previously flagged with highlight_exception"""
+        pass
+    
     def is_root(self):
         return False
     

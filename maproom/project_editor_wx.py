@@ -671,4 +671,5 @@ class ProjectEditor(FrameworkEditor):
             sel_layer.highlight_exception(error)
             self.window.error(error.message, "Layer Contains Problems")
         else:
+            sel_layer.clear_flagged(refresh=True)
             self.window.information("Layer %s OK" % sel_layer.name, "No Problems Found")
