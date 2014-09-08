@@ -1,3 +1,14 @@
+09/08/2014
+---------------------------
+Released 3.0b14
+- RM Clear flagged points when layer check is OK
+- RM Fixed #576: handle already removed point in adjacency map
+- RM Progress dialog prevented from popping up after OK/Error alert
+- RM Beginnings of mouse handler refactoring
+- RM Corrected status bar size in BNA loading
+- RM Changed BNA loading to use progress dialog
+- RM Separate layer loading from layer insertion on file load
+
 08/22/2014
 ---------------------------
 Released 3.0b13
