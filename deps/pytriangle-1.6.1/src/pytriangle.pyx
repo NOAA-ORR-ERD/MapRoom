@@ -268,7 +268,7 @@ def triangulate_simple_child( connection, utf8_param_text ):
     If the triangulation is not successful, then the child process may simply
     terminate or even hang.
     """
-    switchesP = "pqzB" + utf8_param_text # TODO: Add -a# -q# -Q
+    switchesP = "pzB" + utf8_param_text # TODO: Add -a# -q# -Q
     cdef char* switches = switchesP
     cdef triangulateio in_data, out_data
 
