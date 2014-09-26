@@ -3,6 +3,7 @@ import numpy as np
 cimport numpy as np
 cimport opengl as gl
 cimport libc.stdlib as stdlib
+cimport libc.stdio as stdio
 
 ## this should have come from opengl.pxd
 ctypedef   void ( __stdcall *_GLUfuncptr)()   nogil
@@ -26,6 +27,10 @@ ctypedef struct State:
     Point* points                      # Points for current polygon.
     np.uint32_t point_count            # Number of points in this polygon.
     np.uint32_t point_capacity         # Capacity of points array.
+
+    Point* scratch_points              # Points used by combine_data callback
+    np.uint32_t scratch_point_count
+    np.uint32_t scratch_point_capacity
 
 ctypedef void ( __stdcall *glGenBuffers_pointer )( gl.GLsizei, gl.GLuint* ) nogil
 ctypedef void ( __stdcall *glBindBuffer_pointer )( gl.GLenum, gl.GLuint ) nogil
@@ -153,11 +158,18 @@ def tessellate(
     state.current_points = <Point*>stdlib.malloc( sizeof( Point ) * 256 )
     state.current_point_count = 0
     state.current_point_capacity = 256
+    
+    # small number of scratch points may be necessary if the tessellator needs
+    # to create new points to handle an intersection
+    state.scratch_points = <Point*>stdlib.malloc( sizeof( Point ) * 256 )
+    state.scratch_point_count = 0
+    state.scratch_point_capacity = 256
 
     gl.gluTessCallback( tess, gl.GLU_TESS_BEGIN_DATA, <_GLUfuncptr>begin )
     gl.gluTessCallback( tess, gl.GLU_TESS_END_DATA, <_GLUfuncptr>end )
     gl.gluTessCallback( tess, gl.GLU_TESS_VERTEX_DATA, <_GLUfuncptr>vertex )
-    gl.gluTessCallback( tess, gl.GLU_TESS_COMBINE, <_GLUfuncptr>combine )
+    gl.gluTessCallback( tess, gl.GLU_TESS_COMBINE_DATA, <_GLUfuncptr>combine )
+    gl.gluTessCallback( tess, gl.GLU_TESS_ERROR, <_GLUfuncptr>error )
     gl.gluTessProperty(
         tess, gl.GLU_TESS_WINDING_RULE, gl.GLU_TESS_WINDING_ODD,
     )
@@ -170,6 +182,10 @@ def tessellate(
         state.points = <Point*>stdlib.malloc( sizeof( Point ) * 2048 )
         state.point_count = 0
         state.point_capacity = 2048
+        
+        # reset counter for scratch points since they aren't reused between
+        # polygons
+        state.scratch_point_count = 0
 
         start_point_index = polygon_starts[ loop_index ]
         polygon_index = point_polygons[ start_point_index ]
@@ -226,6 +242,7 @@ def tessellate(
                     <gl.GLvoid*>&raw_points[ point_index ],
                 )
                 polygon_point_index += 1
+#                print "Tessellator.pyx: loop #%d, point_index=%d capacity=%d count=%d" % (loop_index, polygon_point_index, state.point_capacity, state.point_count)
 
             point_index = point_adjacency[ point_index ]
             if point_index == start_point_index:
@@ -235,6 +252,7 @@ def tessellate(
         if loop_index == polygon_starts_count - 1 or \
            polygon_groups[ loop_index + 1 ] != group:
             gl.gluTessEndPolygon( tess )
+#            print "Tessellator.pyx: closed polygon #%d" % (loop_index)
 
         stdlib.free( double_points )
 
@@ -242,6 +260,7 @@ def tessellate(
         triangle_vertex_counts[ group_polygon_index ] += state.point_count
 
         # Make vertex and color buffers from the triangle point data.
+#        print "Tessellator.pyx: group_index=%d capacity=%d count=%d" % (group_polygon_index, state.point_capacity, state.point_count)
         if state.point_count > 0:
             glBindBuffer(
                 gl.GL_ARRAY_BUFFER,
@@ -273,6 +292,7 @@ def tessellate(
     glBindBuffer( gl.GL_ELEMENT_ARRAY_BUFFER, 0 )
 
     stdlib.free( state.current_points )
+    stdlib.free( state.scratch_points )
 
     gl.gluDeleteTess( tess )
 
@@ -371,9 +391,30 @@ cdef void __stdcall vertex( np.float32_t* point, State* state ) nogil:
             sizeof( Point ) * state[ 0 ].current_point_capacity,
         )
 
+#    stdio.printf("Tessellator.pyx: VERTEX CALLBACK! storing x=%f, y=%f\n", point[0], point[1])
     state[ 0 ].current_points[ state.current_point_count ] = ( <Point*>point )[ 0 ]
     state[ 0 ].current_point_count += 1
 
-cdef void __stdcall combine( Double_point* position, void** points,
-                             gl.GLfloat* weights, void** outData ) nogil:
-    outData = <void**>&position
+cdef void __stdcall combine( Double_point* position, Point* points,
+                             gl.GLfloat* weights, void** outData, State* state ) nogil:
+    cdef Point* new_pt
+
+    # Need to create a point that is not on the stack because it may be
+    # referenced much later in the tessellation process.  So, have to add it
+    # to the scratch array and handle cleanup later.
+    if state[0].scratch_point_count == state[0].scratch_point_capacity:
+        state[0].scratch_point_capacity *= 2
+        state[0].scratch_points = <Point*>stdlib.realloc(
+            <void*>state[0].scratch_points,
+            sizeof(Point) * state[0].scratch_point_capacity,
+        )
+
+    new_pt = &state[0].scratch_points[state.scratch_point_count]
+    new_pt.x = position[0].x
+    new_pt.y = position[0].y 
+#    stdio.printf("Tessellator.pyx: COMBINE CALLBACK! x=%f, y=%f\n", new_pt.x, new_pt.y)
+    state[0].scratch_point_count += 1
+    outData[0] = <void *>new_pt
+
+cdef void __stdcall error(gl.GLenum errno) nogil:
+    stdio.printf("Tessellator.pyx: Tessellation error #%d\n", errno)
