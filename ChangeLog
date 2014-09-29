@@ -1,3 +1,9 @@
+09/29/2014
+---------------------------
+Released 3.0b15
+- RM Fixed #578: fixed GLU tessellator's combine_data callback
+- RM Triangle meshing now does not generate any new points unless minimum angle is specified
+
 09/08/2014
 ---------------------------
 Released 3.0b14
