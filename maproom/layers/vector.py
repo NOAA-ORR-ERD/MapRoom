@@ -1492,6 +1492,9 @@ class PolygonLayer(PointLayer):
     def offset_selected_polygons(self, world_d_x, world_d_y):
         self.increment_change_count()
     
+    def insert_line_segment(self, point_index_1, point_index_2):
+        raise RuntimeError("Not implemented yet for polygon layer!")
+
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.
         
