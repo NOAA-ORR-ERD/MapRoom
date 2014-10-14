@@ -44,6 +44,7 @@ class MouseHandler(object):
         c = self.layer_control
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
+        effective_mode = c.get_effective_tool_mode(event)
         if (not c.mouse_is_down):
             prefs = c.project.task.get_preferences()
             status_text = coordinates.format_coords_for_display(
@@ -74,7 +75,7 @@ class MouseHandler(object):
             d_x = p[0] - c.mouse_down_position[0]
             d_y = c.mouse_down_position[1] - p[1]
             # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
-            if (c.get_effective_tool_mode(event) == c.MODE_PAN):
+            if (effective_mode == c.MODE_PAN):
                 if (d_x != 0 or d_y != 0):
                     # the user has panned the map
                     d_x_p = d_x * c.projected_units_per_pixel
@@ -83,7 +84,7 @@ class MouseHandler(object):
                                                    c.projected_point_center[1] - d_y_p)
                     c.mouse_down_position = p
                     c.render(event)
-            elif (c.get_effective_tool_mode(event) == c.MODE_ZOOM_RECT or c.selection_box_is_being_defined):
+            elif (effective_mode == c.MODE_ZOOM_RECT or effective_mode == c.MODE_CROP or c.selection_box_is_being_defined):
                 c.mouse_move_position = event.GetPosition()
                 c.render(event)
             else:
@@ -104,8 +105,9 @@ class MouseHandler(object):
 
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        effective_mode = c.get_effective_tool_mode(event)
 
-        if (c.get_effective_tool_mode(event) == c.MODE_ZOOM_RECT):
+        if (effective_mode == c.MODE_ZOOM_RECT):
             c.mouse_move_position = event.GetPosition()
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
                                                                c.mouse_move_position)
@@ -120,7 +122,19 @@ class MouseHandler(object):
                 c.projected_units_per_pixel *= max(ratio_h, ratio_v)
                 c.constrain_zoom()
                 c.render()
-        elif (c.get_effective_tool_mode(event) == c.MODE_EDIT_POINTS or c.get_effective_tool_mode(event) == c.MODE_EDIT_LINES):
+        elif (effective_mode == c.MODE_CROP):
+            c.mouse_move_position = event.GetPosition()
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                               c.mouse_move_position)
+            p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
+            w_r = c.get_world_rect_from_projected_rect(p_r)
+            print "CROPPING!!!!  ", w_r
+            layer = c.project.layer_tree_control.get_selected_layer()
+            if (layer != None and layer.can_crop()):
+                layer.crop_rectangle(w_r)
+                c.project.layer_manager.renderer_rebuild_event = True
+            c.render()
+        elif (effective_mode == c.MODE_EDIT_POINTS or effective_mode == c.MODE_EDIT_LINES):
             if (c.selection_box_is_being_defined):
                 c.mouse_move_position = event.GetPosition()
                 (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
@@ -129,7 +143,7 @@ class MouseHandler(object):
                 w_r = c.get_world_rect_from_projected_rect(p_r)
                 layer = c.layer_tree_control.get_selected_layer()
                 if (layer != None):
-                    if (c.get_effective_tool_mode(event) == c.MODE_EDIT_POINTS):
+                    if (effective_mode == c.MODE_EDIT_POINTS):
                         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), w_r)
                     else:
                         layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), w_r)
@@ -208,11 +222,13 @@ class MouseHandler(object):
 
     def process_key_char(self, event):
         c = self.layer_control
-        if (c.mouse_is_down and c.get_effective_tool_mode(event) == c.MODE_ZOOM_RECT):
-            if (event.GetKeyCode() == wx.WXK_ESCAPE):
-                c.mouse_is_down = False
-                c.ReleaseMouse()
-                c.render()
+        if c.mouse_is_down:
+            effective_mode = c.get_effective_tool_mode(event)
+            if effective_mode == c.MODE_ZOOM_RECT or effective_mode == c.MODE_CROP:
+                if (event.GetKeyCode() == wx.WXK_ESCAPE):
+                    c.mouse_is_down = False
+                    c.ReleaseMouse()
+                    c.render()
         else:
             if (event.GetKeyCode() == wx.WXK_ESCAPE):
                 c.editor.esc_key_pressed()

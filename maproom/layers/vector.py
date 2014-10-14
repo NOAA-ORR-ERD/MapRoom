@@ -1348,6 +1348,8 @@ class PolygonLayer(PointLayer):
     """
     type = Str("polygon")
     
+    mouse_selection_mode = Str("PolygonLayer")
+    
     polygons = Any
     
     polygon_adjacency_array = Any  # parallels the points array

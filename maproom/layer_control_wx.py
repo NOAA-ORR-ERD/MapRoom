@@ -35,9 +35,11 @@ class LayerControl(glcanvas.GLCanvas):
     MODE_ZOOM_RECT = 1
     MODE_EDIT_POINTS = 2
     MODE_EDIT_LINES = 3
+    MODE_CROP = 4
     
     valid_mouse_modes = {
         'VectorLayerToolBar': [0, 1, 2, 3],
+        'PolygonLayerToolBar': [0, 1, 4],
         'default': [0, 1],
         }
 
@@ -137,6 +139,11 @@ class LayerControl(glcanvas.GLCanvas):
         if layer in self.layer_renderers:
             del self.layer_renderers[layer]
 
+    def rebuild_renderers(self):
+        for layer in self.layer_manager.layers:
+            self.remove_renderer_for_layer(layer)
+        self.update_renderers()
+
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
         mouselog.debug("in on_mouse_down: event=%s" % event)
@@ -232,9 +239,11 @@ class LayerControl(glcanvas.GLCanvas):
             #
             return
 
+        effective_mode = self.get_effective_tool_mode(None)
+        
         if (self.editor.clickable_object_mouse_is_over != None and
-                (self.get_effective_tool_mode(None) == self.MODE_EDIT_POINTS or self.get_effective_tool_mode(None) == self.MODE_EDIT_LINES)):
-            if (self.get_effective_tool_mode(None) == self.MODE_EDIT_POINTS and self.editor.clickable_object_is_ugrid_line()):
+                (effective_mode == self.MODE_EDIT_POINTS or effective_mode == self.MODE_EDIT_LINES)):
+            if (effective_mode == self.MODE_EDIT_POINTS and self.editor.clickable_object_is_ugrid_line()):
                 self.SetCursor(wx.StockCursor(wx.CURSOR_BULLSEYE))
             else:
                 self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
@@ -242,7 +251,7 @@ class LayerControl(glcanvas.GLCanvas):
             return
 
         if (self.mouse_is_down):
-            if (self.get_effective_tool_mode(None) == self.MODE_PAN):
+            if (effective_mode == self.MODE_PAN):
                 self.SetCursor(self.hand_closed_cursor)
             #
             return
@@ -250,11 +259,11 @@ class LayerControl(glcanvas.GLCanvas):
         # w = wx.FindWindowAtPointer() is this needed?
         # if ( w == self.renderer ):
         c = wx.StockCursor(wx.CURSOR_ARROW)
-        if (self.get_effective_tool_mode(None) == self.MODE_PAN):
+        if (effective_mode == self.MODE_PAN):
             c = self.hand_cursor
-        if (self.get_effective_tool_mode(None) == self.MODE_ZOOM_RECT):
+        if (effective_mode == self.MODE_ZOOM_RECT or effective_mode == self.MODE_CROP):
             c = wx.StockCursor(wx.CURSOR_CROSS)
-        if (self.get_effective_tool_mode(None) == self.MODE_EDIT_POINTS or self.get_effective_tool_mode(None) == self.MODE_EDIT_LINES):
+        if (effective_mode == self.MODE_EDIT_POINTS or effective_mode == self.MODE_EDIT_LINES):
             c = wx.StockCursor(wx.CURSOR_PENCIL)
         self.SetCursor(c)
 
@@ -321,7 +330,8 @@ class LayerControl(glcanvas.GLCanvas):
         self.opengl_renderer.prepare_to_render_screen_objects()
         if (self.bounding_boxes_shown):
             self.draw_bounding_boxes()
-        if ((self.get_effective_tool_mode(event) == self.MODE_ZOOM_RECT or self.selection_box_is_being_defined) and self.mouse_is_down):
+        effective_mode = self.get_effective_tool_mode(event)
+        if ((effective_mode == self.MODE_ZOOM_RECT or effective_mode == self.MODE_CROP or self.selection_box_is_being_defined) and self.mouse_is_down):
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
                                                                self.mouse_move_position)
             # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )

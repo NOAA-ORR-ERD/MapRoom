@@ -401,6 +401,21 @@ class AddLinesAction(EditorAction):
         if self.active_editor:
             self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_LINES
 
+class CropAction(EditorAction):
+    name = 'Crop'
+    tooltip = 'Crop layer'
+    image = ImageResource('crop.png')
+    style = 'radio'
+
+    def perform(self, event):
+        self.active_editor.mouse_mode = LayerControl.MODE_CROP
+        self.active_editor.update_layer_selection_ui()
+
+    @on_trait_change('active_editor.mouse_mode')
+    def _update_checked(self):
+        if self.active_editor:
+            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_CROP
+
 class FindPointsAction(EditorAction):
     name = 'Find Points'
     accelerator = 'Ctrl+F'
@@ -534,6 +549,11 @@ class MaproomProjectTask(FrameworkTask):
                            AddLinesAction()),
                      show_tool_names=False,
                      id="VectorLayerToolBar",),
+            SToolBar(Group(ZoomModeAction(),
+                           PanModeAction(),
+                           CropAction()),
+                     show_tool_names=False,
+                     id="PolygonLayerToolBar",),
             ]
         toolbars.extend(FrameworkTask._tool_bars_default(self))
         return toolbars

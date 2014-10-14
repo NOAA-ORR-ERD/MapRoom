@@ -222,6 +222,11 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
         self.refresh()
     
+    @on_trait_change('layer_manager:renderer_rebuild_event')
+    def renderer_rebuild_event(self):
+        log.debug("renderer_rebuild_event called!!!")
+        self.control.rebuild_renderers()
+    
     def update_layer_selection_ui(self, sel_layer=None):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
