@@ -7,6 +7,7 @@ import shutil
 import numpy as np
 import wx
 from pytriangle import triangulate_simple
+from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
 
 # Enthought library imports.
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
@@ -1494,6 +1495,98 @@ class PolygonLayer(PointLayer):
     
     def insert_line_segment(self, point_index_1, point_index_2):
         raise RuntimeError("Not implemented yet for polygon layer!")
+    
+    def can_crop(self):
+        return True
+    
+    def get_shapely_polygon(self, index, debug=False):
+        start = self.polygons.start[index]
+        count = self.polygons.count[index]
+        boundary = self.points
+        points = np.c_[boundary.x[start:start + count], boundary.y[start:start + count]]
+        points = np.require(points, np.float64, ["C", "OWNDATA"])
+        if np.alen(points) > 2:
+            poly = Polygon(points)
+        else:
+            poly = LineString(points)
+        if debug:
+            print "points tuples:", points
+            print "numpy:", points.__array_interface__, points.shape, id(points), points.flags
+            print "shapely polygon:", poly.bounds
+        return poly
+    
+    def crop_rectangle(self, w_r):
+        print "Cropping to %s" % str(w_r)
+        
+        crop_rect = box(w_r[0][0], w_r[1][1], w_r[1][0], w_r[0][1])
+        
+        class AccumulatePolygons(object):
+            """Helper class to store results from stepping through the clipped
+            polygons
+            """
+            polygon_points = None
+            polygon_starts = []
+            polygon_counts = []
+            polygon_types = []
+            polygon_color = []
+            polygon_identifiers = []
+            total_points = 0
+            
+            def add_polygon(self, cropped_poly, color):
+                #print cropped_poly.exterior.coords.xy
+                points = np.require(cropped_poly.exterior.coords.xy, np.float32, ["C", "OWNDATA"])
+                #print points
+                print points.shape
+                num_points = points.shape[1]
+                if self.polygon_points is None:
+                    self.polygon_points = np.zeros((num_points, 2), dtype=np.float32)
+                    # Need an array that owns its own data, otherwise the
+                    # subsequent resize can be messed up
+                    self.polygon_points = np.require(points.T, requirements=["C", "OWNDATA"])
+                    print "initial shape: ", self.polygon_points.shape
+                    #print self.polygon_points
+                else:
+                    self.polygon_points.resize((self.total_points + num_points, 2))
+                    self.polygon_points[self.total_points:,:] = points.T
+                    print "after rezise shape: ", self.polygon_points.shape
+                    #print self.polygon_points
+                self.polygon_starts.append(self.total_points)
+                self.polygon_counts.append(num_points)
+                self.polygon_types.append(1) # dummy feature code to assign arbitrary color
+                self.polygon_color.append(color)
+                self.total_points += num_points
+        
+        new_polys = AccumulatePolygons()
+        for n in range(np.alen(self.polygons)):
+            poly = self.get_shapely_polygon(n)
+            try:
+                cropped_poly = crop_rect.intersection(poly)
+                print "cropped result #%d: %s empty=%s" % (n, cropped_poly.geom_type, cropped_poly.is_empty)
+            except Exception, e:
+                print "Shapely intersection exception", e
+                print poly
+                print poly.is_valid
+                raise
+                
+            if not cropped_poly.is_empty:
+                print "  points:"
+                if not hasattr(cropped_poly, 'exterior'):
+                    print "Temporarily skipping %s" % cropped_poly.geom_type
+                    continue
+                new_polys.add_polygon(cropped_poly, self.polygons.color[n])
+        self.set_data(new_polys.polygon_points,
+                      np.asarray(new_polys.polygon_starts, dtype=np.uint32),
+                      np.asarray(new_polys.polygon_counts, dtype=np.uint32),
+                      np.asarray(new_polys.polygon_types, dtype=np.uint32),
+                      new_polys.polygon_identifiers)
+        for n in range(np.alen(self.polygons)):
+            self.polygons.color[n] = new_polys.polygon_color[n]
+
+        # NOTE: Renderers need to be updated after setting new data, but this
+        # can't be done here because 1) we don't know the layer control that
+        # contains the renderer data, and 2) it may affect multiple views of
+        # this layer.  Need to rely on the caller to rebuild renderers.
+
 
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.

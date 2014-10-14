@@ -290,6 +290,12 @@ class Layer(HasTraits):
         if (self.change_count == sys.maxint):
             self.change_count = 0
     
+    def can_crop(self):
+        return False
+    
+    def crop_rectangle(self, world_rect):
+        raise NotImplementedError
+    
     def create_renderer(self, storage):
         """Create the graphic renderer for this layer.
         

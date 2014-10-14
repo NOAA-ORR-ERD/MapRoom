@@ -32,6 +32,12 @@ class Boundary(object):
         points = self.parent.points
         return [(points.x[i], points.y[i]) for i in self.point_indexes]
     
+    def get_xy_point_float64(self):
+        points = self.parent.points
+        view = np.c_[points.x[self.point_indexes], points.y[self.point_indexes]]
+        return view.astype(np.float64)
+        return view
+    
     def generate_inside_hole_point(self):
         """
             bounday = a boundary point index list as returned from find_boundaries() above
