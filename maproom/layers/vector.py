@@ -4,6 +4,7 @@ import time
 import sys
 import tempfile
 import shutil
+from StringIO import StringIO
 import numpy as np
 import wx
 from pytriangle import triangulate_simple
@@ -16,7 +17,7 @@ from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
 from ..library.accumulator import flatten
 from ..library.Projection import Projection
-from ..library.Boundary import Boundaries
+from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
 from ..layer_undo import *
 
@@ -1454,6 +1455,30 @@ class PolygonLayer(PointLayer):
         self.polygons = np.array([tuple(i) for i in json_data['polygons']], data_types.POLYGON_DTYPE).view(np.recarray)
         self.polygon_adjacency_array = np.array([tuple(i) for i in json_data['adjacency']], data_types.POLYGON_ADJACENCY_DTYPE).view(np.recarray)
 
+    def check_for_problems(self, window):
+        problems = []
+        # record log messages from the shapely package
+        templog = logging.getLogger("shapely.geos")
+        buf = StringIO()
+        handler = logging.StreamHandler(buf)
+        formatter = logging.Formatter("%(message)s")
+        handler.setFormatter(formatter)
+        templog.addHandler(handler)
+        for n in range(np.alen(self.polygons)):
+            poly = self.get_shapely_polygon(n)
+            if not poly.is_valid:
+                problems.append(poly)
+                #print "\n".join(str(a) for a in list(poly.exterior.coords))
+                try:
+                    templog.warning("in polygon #%d (%d points in polygon)" % (n, len(poly.exterior.coords)))
+                except:
+                    templog.warning("in polygon #%d\n" % (n,))
+        templog.removeHandler(handler)
+        handler.flush()
+        buf.flush()
+        errors = buf.getvalue()
+        raise PointsError(errors)
+    
     def make_polygons(self, count):
         return np.repeat(
             np.array([(0, 0, 0, 0, 0)], dtype=data_types.POLYGON_DTYPE),
