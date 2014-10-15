@@ -116,7 +116,7 @@ class Polygon_set_renderer:
 
         projected_points = np.ndarray(
             (np.alen(self.points), 2),
-            dtype=np.float32
+            dtype=np.float64
         )
         if (projection_is_identity):
             projected_points[:, 0] = self.points[:, 0]

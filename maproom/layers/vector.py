@@ -845,7 +845,7 @@ class LineLayer(PointLayer):
 
         # cKDTree doesn't handle NaNs gracefully, but it does handle infinity
         # values. So replace all the NaNs with infinity.
-        points = points.view(np.float32)
+        points = points.view(np.float64)
         points[np.isnan(points)] = np.inf
 
         tree = cKDTree(points)
@@ -1192,7 +1192,7 @@ class TriangleLayer(PointLayer):
 
         # calculate a hole point for each boundary
         hole_points_xy = np.empty(
-            (len(boundaries), 2), np.float32,
+            (len(boundaries), 2), np.float64,
         )
 
         for (boundary_index, boundary) in enumerate(boundaries):
@@ -1215,7 +1215,7 @@ class TriangleLayer(PointLayer):
             params = params + "a" + str(a)
 
         # we need to use projected points for the triangulation
-        projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float32).copy()
+        projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float64).copy()
         if (self.manager.project.control.projection_is_identity):
             projected_points[:, 0] = layer.points.x[:]
             projected_points[:, 1] = layer.points.y[:]
@@ -1561,12 +1561,12 @@ class PolygonLayer(PointLayer):
             
             def add_polygon(self, cropped_poly, color):
                 #print cropped_poly.exterior.coords.xy
-                points = np.require(cropped_poly.exterior.coords.xy, np.float32, ["C", "OWNDATA"])
+                points = np.require(cropped_poly.exterior.coords.xy, np.float64, ["C", "OWNDATA"])
                 #print points
                 print points.shape
                 num_points = points.shape[1]
                 if self.polygon_points is None:
-                    self.polygon_points = np.zeros((num_points, 2), dtype=np.float32)
+                    self.polygon_points = np.zeros((num_points, 2), dtype=np.float64)
                     # Need an array that owns its own data, otherwise the
                     # subsequent resize can be messed up
                     self.polygon_points = np.require(points.T, requirements=["C", "OWNDATA"])

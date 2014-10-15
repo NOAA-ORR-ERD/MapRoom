@@ -53,13 +53,13 @@ def load_verdat_file(file_path):
     
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
-        points = numpy array (type = 2 x np.float32)
+        points = numpy array (type = 2 x np.float64)
         depths = numpy array (type = 1 x np.float32)
         line_segment_indexes = numpy array (type = 2 x np.uint32)
         depth_unit = string
     """
 
-    points = accumulator(block_shape=(2,), dtype=np.float32)
+    points = accumulator(block_shape=(2,), dtype=np.float64)
     depths = accumulator(dtype=np.float32)
     line_segment_indexes = accumulator(block_shape=(2,), dtype = np.uint32)
 

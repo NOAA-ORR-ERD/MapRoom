@@ -2,20 +2,15 @@ import numpy as np
 
 
 POINT_DTYPE = np.dtype([
-    ("x", np.float32),
-    ("y", np.float32),
+    ("x", np.float64),
+    ("y", np.float64),
     ("z", np.float32),
     ("color", np.uint32),
     ("state", np.uint32)
 ])
 POINT_XY_VIEW_DTYPE = np.dtype([
-    ("xy", "2f4"),
+    ("xy", "2f8"),
     ("z", np.float32),
-    ("color", np.uint32),
-    ("state", np.uint32)
-])
-POINT_XYZ_VIEW_DTYPE = np.dtype([
-    ("xyz", "3f4"),
     ("color", np.uint32),
     ("state", np.uint32)
 ])

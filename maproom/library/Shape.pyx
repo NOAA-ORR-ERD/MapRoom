@@ -8,8 +8,8 @@ progress_log = logging.getLogger("progress")
 @cython.boundscheck( False )
 @cython.cdivision( True )
 def points_outside_polygon(
-    np.ndarray[ np.float32_t ] points_x not None,
-    np.ndarray[ np.float32_t ] points_y not None,
+    np.ndarray[ np.float64_t ] points_x not None,
+    np.ndarray[ np.float64_t ] points_y not None,
     np.uint32_t point_count,
     np.ndarray[ np.uint32_t ] polygon not None,
 ):
@@ -18,9 +18,9 @@ def points_outside_polygon(
     given polygon.
 
     :param points_x: x coordinates of the points
-    :type points_x: scalar numpy array of type float32 elements
+    :type points_x: scalar numpy array of type float64 elements
     :param points_y: y coordinates of the points
-    :type points_y: scalar numpy array of type float32 elements
+    :type points_y: scalar numpy array of type float64 elements
     :param point_count: number of points to check, starting from point 0
     :type point_count: uint32
     :param polygon: indices of polygon boundary points in the points_x and
@@ -32,7 +32,7 @@ def points_outside_polygon(
     cdef np.uint32_t point_index, polygon_index
     cdef np.uint32_t polygon_point_index, next_polygon_point_index
     cdef np.uint32_t polygon_point_count = polygon.shape[ 0 ]
-    cdef np.float32_t x, y, b1x, b1y, b2x, b2y
+    cdef np.float64_t x, y, b1x, b1y, b2x, b2y
     cdef bint outside
     cdef np.ndarray[ np.uint32_t ] outside_indices = \
         np.ndarray( ( point_count, ), np.uint32 )
@@ -146,37 +146,37 @@ def points_inside_polygon(
 @cython.boundscheck( False )
 @cython.cdivision( True )
 def point_in_polygon(
-    np.ndarray[ np.float32_t ] points_x not None,
-    np.ndarray[ np.float32_t ] points_y not None,
+    np.ndarray[ np.float64_t ] points_x not None,
+    np.ndarray[ np.float64_t ] points_y not None,
     np.uint32_t point_count,
     np.ndarray[ np.uint32_t ] polygon not None,
-    np.float32_t x,
-    np.float32_t y,
+    np.float64_t x,
+    np.float64_t y,
 ):
     """
     Return whether the given candidate point occurs inside the boundary of
     the given polygon.
 
     :param points_x: x coordinates of the points
-    :type points_x: scalar numpy array of type float32 elements
+    :type points_x: scalar numpy array of type float64 elements
     :param points_y: y coordinates of the points
-    :type points_y: scalar numpy array of type float32 elements
+    :type points_y: scalar numpy array of type float64 elements
     :param point_count: number of points in points_x and points_y
     :type point_count: uint32
     :param polygon: indices of polygon boundary points in the points_x and
                     points_y arrays
     :type polygon: scalar numpy array of type uint32 elements
     :param x: x coordinate of point to test
-    :type x: float32
+    :type x: float64
     :param y: y coordinate of point to test
-    :type y: float32
+    :type y: float64
     :return: True if the point falls within the given boundary polygon
     :rtype: bool
     """
     cdef np.uint32_t polygon_index
     cdef np.uint32_t polygon_point_index, next_polygon_point_index
     cdef np.uint32_t polygon_point_count = polygon.shape[ 0 ]
-    cdef np.float32_t b1x, b1y, b2x, b2y
+    cdef np.float64_t b1x, b1y, b2x, b2y
     cdef bint inside
 
     if x != x: # NaN test

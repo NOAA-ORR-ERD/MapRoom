@@ -54,7 +54,7 @@ def load_bna_file(file_path):
     
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
-        polygon_points = numpy array (type = 2 x np.float32)
+        polygon_points = numpy array (type = 2 x np.float64)
         polygon_starts = numpy array (type = 1 x np.uint32)
         polygon_counts = numpy array (type = 1 x np.uint32)
         polygon_types = numpy array (type = 1 x np.uint32) (these are the BNA feature codes)
@@ -69,7 +69,7 @@ def load_bna_file(file_path):
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
     log.debug("read in {0} seconds".format(t))
 
-    # arr = np.fromstring(str, dtype=np.float32, sep=' ')
+    # arr = np.fromstring(str, dtype=np.float64, sep=' ')
     t0 = time.clock()
     length = len(s)
     log.debug("length = " + str(length))
@@ -109,7 +109,7 @@ def load_bna_file(file_path):
     log.debug(lines[1])
     log.debug("split in {0} seconds".format(t))
 
-    polygon_points = accumulator(block_shape=(2,), dtype=np.float32)
+    polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
     polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_types = accumulator(block_shape=(1,), dtype = np.uint32)

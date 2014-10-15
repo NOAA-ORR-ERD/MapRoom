@@ -151,8 +151,8 @@ def triangulate_simple(
         raise RuntimeError( "Triangulation timeout." )
     cdef unsigned int out_point_count = <unsigned int>connection.recv()
 
-    cdef np.ndarray[ np.float32_t, ndim = 2 ] out_points_xy = \
-       np.ndarray( ( out_point_count, 2 ), np.float32 )
+    cdef np.ndarray[ np.float64_t, ndim = 2 ] out_points_xy = \
+       np.ndarray( ( out_point_count, 2 ), np.float64 )
 
     poll_with_timeout( connection, child )
     connection.recv_bytes_into( out_points_xy )
@@ -278,8 +278,8 @@ def triangulate_simple_child( connection, utf8_param_text ):
 
     # Receive as 32-bit floats, then convert to 64-bit floats below, so the
     # Triangle library has more precision to work with.
-    cdef np.ndarray[ np.float32_t, ndim = 2 ] points_xy = \
-       np.ndarray( ( point_count, 2 ), np.float32 )
+    cdef np.ndarray[ np.float64_t, ndim = 2 ] points_xy = \
+       np.ndarray( ( point_count, 2 ), np.float64 )
 
     if not connection.poll( TIMEOUT ): return
     connection.recv_bytes_into( points_xy )
@@ -308,8 +308,8 @@ def triangulate_simple_child( connection, utf8_param_text ):
     if not connection.poll( TIMEOUT ): return
     cdef unsigned int hole_point_count = <unsigned int>connection.recv()
 
-    cdef np.ndarray[ np.float32_t, ndim = 2 ] hole_points_xy = \
-       np.ndarray( ( hole_point_count, 2 ), np.float32 )
+    cdef np.ndarray[ np.float64_t, ndim = 2 ] hole_points_xy = \
+       np.ndarray( ( hole_point_count, 2 ), np.float64 )
 
     if not connection.poll( TIMEOUT ): return
     connection.recv_bytes_into( hole_points_xy )
@@ -352,7 +352,7 @@ def triangulate_simple_child( connection, utf8_param_text ):
     cdef np.ndarray[ float, ndim = 2 ] out_points_xy = \
         np.PyArray_SimpleNewFromData(
             2, out_points_xy_dims, np.NPY_DOUBLE, out_data.pointlist,
-        ).astype( np.float32 )
+        ).astype( np.float64 )
     ( <PyArrayObject*>out_points_xy )[ 0 ].flags |= np.NPY_OWNDATA
 
     cdef np.npy_intp* out_points_z_dims = [ out_data.numberofpoints ]

@@ -12,13 +12,13 @@ class Point_and_line_set_renderer:
 
     """
     SIMPLE_POINT_DTYPE = np.dtype(
-        [ ( "x", np.float32 ), ( "y", np.float32 ) ],
+        [ ( "x", np.float64 ), ( "y", np.float64 ) ],
     )
     """
 
     def __init__(self, opengl_renderer, points, point_colors, line_segment_indexes, line_segment_colors, triangle_point_indexes, triangle_point_colors, projection, projection_is_identity):
         """
-            points = 2 x np.float32, i.e., "2f4"
+            points = 2 x np.float64, i.e., "2f4"
             point_colors = np array of np.uint32, one per point
             line_segment_indexes = 2 x np.uint32, i.e., "2u4"
             line_segment_colors = np array of np.uint32, one per line segment
@@ -41,7 +41,7 @@ class Point_and_line_set_renderer:
 
         projected_point_data = np.zeros(
             (len(points), 2),
-            dtype=np.float32
+            dtype=np.float64
         )
 
         self.vbo_point_xys = gl_vbo.VBO(
@@ -75,7 +75,7 @@ class Point_and_line_set_renderer:
         ].copy().reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
         projected_line_segment_point_data = np.zeros(
             (len(self.world_line_segment_points), 2),
-            dtype=np.float32
+            dtype=np.float64
         )
         self.vbo_line_segment_point_xys = gl_vbo.VBO(
             projected_line_segment_point_data
@@ -91,7 +91,7 @@ class Point_and_line_set_renderer:
         """
         projected_triangle_point_data = np.zeros(
             ( len( points ), 2 ),
-            dtype = np.float32
+            dtype = np.float64
         )
         self.vbo_triangle_point_xys = gl_vbo.VBO(
             projected_triangle_point_data
@@ -201,7 +201,7 @@ class Point_and_line_set_renderer:
 
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             self.vbo_point_xys.bind()
-            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+            gl.glVertexPointer(2, gl.GL_DOUBLE, 0, None)  # FIXME: deprecated
 
             if (not pick_mode):
                 # To make the points stand out better, especially when rendered on top
@@ -243,7 +243,7 @@ class Point_and_line_set_renderer:
         if (self.vbo_line_segment_point_xys != None and len(self.vbo_line_segment_point_xys.data) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             self.vbo_line_segment_point_xys.bind()
-            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+            gl.glVertexPointer(2, gl.GL_DOUBLE, 0, None)  # FIXME: deprecated
 
             if (pick_mode):
                 self.oglr.picker.bind_picker_colors(layer_index_base + LINES_SUB_LAYER_PICKER_OFFSET,
@@ -280,7 +280,7 @@ class Point_and_line_set_renderer:
         if (self.vbo_triangle_point_indexes != None and len(self.vbo_triangle_point_indexes.data) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             self.vbo_point_xys.bind()
-            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+            gl.glVertexPointer(2, gl.GL_DOUBLE, 0, None)  # FIXME: deprecated
 
             gl.glEnableClientState(gl.GL_INDEX_ARRAY)  # FIXME: deprecated
             self.vbo_triangle_point_indexes.bind()
