@@ -38,7 +38,7 @@ def render_buffers_with_colors(
             gl.GL_ARRAY_BUFFER,
             vertex_buffers[ buffer_index ],
         )
-        gl.glVertexPointer( 2, gl.GL_DOUBLE, 0, NULL ) # FIXME: deprecated
+        gl.glVertexPointer( 2, gl.GL_FLOAT, 0, NULL ) # FIXME: deprecated
 
         gl.glDrawArrays(
             primitive_type,
@@ -87,7 +87,7 @@ def render_buffers_with_one_color(
             gl.GL_ARRAY_BUFFER,
             vertex_buffers[ buffer_index ],
         )
-        gl.glVertexPointer( 2, gl.GL_DOUBLE, 0, NULL ) # FIXME: deprecated
+        gl.glVertexPointer( 2, gl.GL_FLOAT, 0, NULL ) # FIXME: deprecated
 
         if buffer_index == alternate_type_index:
             gl.glDrawArrays(

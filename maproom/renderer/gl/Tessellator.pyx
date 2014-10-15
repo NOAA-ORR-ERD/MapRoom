@@ -9,8 +9,8 @@ cimport libc.stdio as stdio
 ctypedef   void ( __stdcall *_GLUfuncptr)()   nogil
     
 ctypedef struct Point:
-    np.float64_t x
-    np.float64_t y
+    np.float32_t x
+    np.float32_t y
 
 ctypedef struct Double_point:
     np.double_t x
@@ -81,7 +81,7 @@ def init_vertex_buffers(
 
 @cython.boundscheck( False )
 def tessellate(
-    np.ndarray[ np.float64_t, ndim = 2 ] points not None,
+    np.ndarray[ np.float32_t, ndim = 2 ] points not None,
     np.ndarray[ np.uint32_t ] point_adjacency not None,
     np.ndarray[ np.uint32_t ] point_polygons not None,
     np.ndarray[ np.uint32_t ] polygon_starts not None,
@@ -383,7 +383,7 @@ cdef void __stdcall end( State* state ) nogil:
     state[ 0 ].current_type = 0
     state[ 0 ].current_point_count = 0
 
-cdef void __stdcall vertex( np.float64_t* point, State* state ) nogil:
+cdef void __stdcall vertex( np.float32_t* point, State* state ) nogil:
     if state[ 0 ].current_point_count == state[ 0 ].current_point_capacity:
         state[ 0 ].current_point_capacity *= 2
         state[ 0 ].current_points = <Point*>stdlib.realloc(

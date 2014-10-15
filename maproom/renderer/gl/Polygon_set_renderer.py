@@ -51,7 +51,7 @@ class Polygon_set_renderer:
         # gl.glEnable( gl.GL_LINE_SMOOTH )
         # gl.glHint( gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE )
 
-        self.points = points.copy()
+        self.points = points.astype(np.float32)
         self.point_adjacency_array = point_adjacency_array.copy()
         self.polygons = polygons.copy()
         self.polygon_count = np.alen(polygons)
@@ -116,7 +116,7 @@ class Polygon_set_renderer:
 
         projected_points = np.ndarray(
             (np.alen(self.points), 2),
-            dtype=np.float64
+            dtype=np.float32
         )
         if (projection_is_identity):
             projected_points[:, 0] = self.points[:, 0]
