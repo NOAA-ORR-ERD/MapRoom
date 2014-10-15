@@ -571,7 +571,7 @@ class LayerControl(glcanvas.GLCanvas):
             min_val = 0.00001
             max_val = 1
         else:
-            min_val = 1
+            min_val = .02
             max_val = 80000
         self.projected_units_per_pixel = max(self.projected_units_per_pixel, min_val)
         self.projected_units_per_pixel = min(self.projected_units_per_pixel, max_val)
