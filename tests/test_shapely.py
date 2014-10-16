@@ -154,6 +154,10 @@ class TestShapelyBNA(ClipBase):
         w_r = ((-117.21561639930427, 32.56583226472319), (-117.03282298967024, 32.67074950148222))
         self.layer.crop_rectangle(w_r)
 
+    def test_clip_multipolygon(self):
+        w_r = ((-117.2658988858227, 32.63249047752771), (-117.07014217231291, 32.69989978984453))
+        self.layer.crop_rectangle(w_r)
+
 
 if __name__ == "__main__":
 #    t = TestShapelyVerdat()
@@ -165,3 +169,4 @@ if __name__ == "__main__":
     t = TestShapelyBNA()
     t.setup()
     t.test_clip_rect()
+    t.test_clip_multipolygon()

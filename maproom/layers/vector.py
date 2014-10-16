@@ -1596,8 +1596,11 @@ class PolygonLayer(PointLayer):
                 raise
                 
             if not cropped_poly.is_empty:
-                print "  points:"
-                if not hasattr(cropped_poly, 'exterior'):
+                if cropped_poly.geom_type == "MultiPolygon":
+                    for p in cropped_poly:
+                        new_polys.add_polygon(p, self.polygons.color[n])
+                    continue
+                elif not hasattr(cropped_poly, 'exterior'):
                     print "Temporarily skipping %s" % cropped_poly.geom_type
                     continue
                 new_polys.add_polygon(cropped_poly, self.polygons.color[n])
