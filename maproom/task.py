@@ -23,6 +23,16 @@ from library.mem_use import get_mem_use
 import logging
 log = logging.getLogger(__name__)
 
+class NewProjectAction(Action):
+    """ An action for creating a new empty file that can be edited by a particular task
+    """
+    name = 'New Project'
+    tooltip = 'Open an empty grid to create new layers'
+    
+    def perform(self, event=None):
+        task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
+        task.new()
+
 class SaveProjectAction(EditorAction):
     name = 'Save Project'
     accelerator = 'Ctrl+S'
@@ -208,7 +218,7 @@ class ZoomToLayer(EditorAction):
         GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
 
 class NewVectorLayerAction(EditorAction):
-    name = 'Ugrid Layer'
+    name = 'New Ugrid Layer'
     tooltip = 'Create new vector (grid) layer'
     image = ImageResource('add_layer')
 
@@ -216,7 +226,7 @@ class NewVectorLayerAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_manager.add_layer, "vector", self.active_editor)
 
 class NewLonLatLayerAction(EditorAction):
-    name = 'Lon/Lat Layer'
+    name = 'New Lon/Lat Layer'
     tooltip = 'Create new longitude/latitude grid layer'
 
     def perform(self, event):
@@ -563,15 +573,6 @@ class MaproomProjectTask(FrameworkTask):
             TriangulateLayerAction(),
             DeleteLayerAction(),
             id="layertools")
-        layernew = lambda: SMenu(
-            Separator(id="LayerNewMenuStart", separator=False),
-            id= 'New', name="New"
-        )
-        layernewmenu = lambda : Group(
-            Group(NewVectorLayerAction(),
-                  NewLonLatLayerAction(),
-                  id="NewLayerGroup"),
-            id="layernewmenu")
         layermenu = lambda : Group(
             Separator(id="LayerMainMenuStart", separator=False),
             Group(RaiseLayerAction(),
@@ -610,13 +611,6 @@ class MaproomProjectTask(FrameworkTask):
             SchemaAddition(factory=layer,
                            path='MenuBar',
                            after="Edit",
-                           ),
-            SchemaAddition(factory=layernew,
-                           path='MenuBar/Layer',
-                           before="LayerMainMenuStart",
-                           ),
-            SchemaAddition(factory=layernewmenu,
-                           path='MenuBar/Layer/New',
                            ),
             SchemaAddition(factory=layermenu,
                            path='MenuBar/Layer',
@@ -662,7 +656,13 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions(self, location, menu_name, group_name):
         if location == "Menu":
             if menu_name == "File":
-                if group_name == "SaveGroup":
+                if group_name == "NewGroup":
+                    return [
+                        NewProjectAction(),
+                        NewVectorLayerAction(),
+                        NewLonLatLayerAction(),
+                        ]
+                elif group_name == "SaveGroup":
                     return [
                         SaveProjectAction(),
                         SaveProjectAsAction(),
