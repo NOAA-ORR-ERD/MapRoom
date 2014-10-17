@@ -3,8 +3,8 @@
 """
 # Enthought library imports.
 from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
-from pyface.tasks.api import Task, TaskWindow, TaskLayout, PaneItem, IEditor, \
-    IEditorAreaPane, EditorAreaPane, Editor, DockPane, HSplitter, VSplitter
+from pyface.tasks.api import Task, TaskWindow, IEditor, \
+    IEditorAreaPane, EditorAreaPane, Editor, DockPane
 from pyface.action.api import Group, Separator, Action, ActionItem
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
     SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
@@ -15,7 +15,7 @@ from peppy2.framework.i_about import IAbout
 from peppy2.utils.jobs import create_global_job_manager
 
 from project_editor import ProjectEditor
-from panes import *
+import pane_layout
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
@@ -439,9 +439,7 @@ class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
     
-    # If you change the project ID here (to allow for a new pane layout, for
-    # instance) make sure you update the startup_task in maproom.py
-    id = 'maproom.project.v4'
+    id = pane_layout.task_id_with_pane_layout
     
     new_file_text = 'MapRoom Project'
 
@@ -518,23 +516,12 @@ class MaproomProjectTask(FrameworkTask):
     ###########################################################################
 
     def _default_layout_default(self):
-        return TaskLayout(
-            left=VSplitter(
-                PaneItem('maproom.layer_selection_pane'),
-                PaneItem('maproom.layer_info_pane'),
-                PaneItem('maproom.selection_info_pane'),
-                ),
-            right=HSplitter(
-                PaneItem('maproom.triangulate_pane'),
-                PaneItem('maproom.merge_points_pane'),
-                ),
-            )
+        return pane_layout.pane_layout()
 
     def create_dock_panes(self):
         """ Create the file browser and connect to its double click event.
         """
-        return [ LayerSelectionPane(), LayerInfoPane(), SelectionInfoPane(),
-                 TriangulatePane(), MergePointsPane() ]
+        return pane_layout.pane_create()
 
     def _tool_bars_default(self):
         toolbars = [
@@ -666,13 +653,7 @@ class MaproomProjectTask(FrameworkTask):
     
     def activated(self):
         FrameworkTask.activated(self)
-        # List of initially visible panes; all others (like the triangulate
-        # pane) will be hidden.
-        visible = {
-            'maproom.layer_selection_pane',
-            'maproom.layer_info_pane',
-            'maproom.selection_info_pane',
-            }
+        visible = pane_layout.pane_initially_visible()
         for pane in self.window.dock_panes:
             pane.visible = (pane.id in visible)
         

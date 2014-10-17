@@ -19,6 +19,7 @@ from peppy2 import get_image_path
 from peppy2.framework.application import run
 
 # Local imports.
+from maproom.pane_layout import task_id_with_pane_layout
 from maproom.plugin import MaproomPlugin
 
 # Imports for py2exe/py2app
@@ -43,7 +44,7 @@ def main(argv):
     
     import maproom
     image_path = [get_image_path("icons", maproom)]
-    run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task="maproom.project.v4")
+    run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task=task_id_with_pane_layout)
 
     logging.shutdown()
 
