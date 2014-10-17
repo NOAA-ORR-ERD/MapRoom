@@ -141,7 +141,11 @@ class LayerControl(glcanvas.GLCanvas):
 
     def rebuild_renderers(self):
         for layer in self.layer_manager.layers:
-            self.remove_renderer_for_layer(layer)
+            # Don't rebuild image layers because their numpy data has been
+            # thrown away.  If editing of image data is allowed at some future
+            # point, we'll have to rethink this.
+            if not layer.type == "image":
+                self.remove_renderer_for_layer(layer)
         self.update_renderers()
 
     def on_mouse_down(self, event):
