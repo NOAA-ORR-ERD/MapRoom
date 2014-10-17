@@ -132,6 +132,7 @@ class MouseHandler(object):
             layer = c.project.layer_tree_control.get_selected_layer()
             if (layer != None and layer.can_crop()):
                 layer.crop_rectangle(w_r)
+                layer.manager.end_operation_batch()
                 c.project.layer_manager.renderer_rebuild_event = True
             c.render()
         elif (effective_mode == c.MODE_EDIT_POINTS or effective_mode == c.MODE_EDIT_LINES):

@@ -1542,7 +1542,7 @@ class PolygonLayer(PointLayer):
             print "shapely polygon:", poly.bounds
         return poly
     
-    def crop_rectangle(self, w_r):
+    def crop_rectangle(self, w_r, add_undo_info=True):
         print "Cropping to %s" % str(w_r)
         
         crop_rect = box(w_r[0][0], w_r[1][1], w_r[1][0], w_r[0][1])
@@ -1604,6 +1604,8 @@ class PolygonLayer(PointLayer):
                     print "Temporarily skipping %s" % cropped_poly.geom_type
                     continue
                 new_polys.add_polygon(cropped_poly, self.polygons.color[n])
+                
+        old_state = self.get_restore_state()
         self.set_data(new_polys.polygon_points,
                       np.asarray(new_polys.polygon_starts, dtype=np.uint32),
                       np.asarray(new_polys.polygon_counts, dtype=np.uint32),
@@ -1611,12 +1613,23 @@ class PolygonLayer(PointLayer):
                       new_polys.polygon_identifiers)
         for n in range(np.alen(self.polygons)):
             self.polygons.color[n] = new_polys.polygon_color[n]
+        
+        if add_undo_info:
+            new_state = self.get_restore_state()
+            self.manager.add_undo_operation_to_operation_batch(OP_CLIP, self, -1, (old_state, new_state))
 
         # NOTE: Renderers need to be updated after setting new data, but this
         # can't be done here because 1) we don't know the layer control that
         # contains the renderer data, and 2) it may affect multiple views of
         # this layer.  Need to rely on the caller to rebuild renderers.
-
+    
+    def get_restore_state(self):
+        return self.points.copy(), self.polygons.copy(), self.polygon_adjacency_array.copy()
+    
+    def set_state(self, params):
+        self.points, self.polygons, self.polygon_adjacency_array = params
+        self.update_bounds()
+        self.manager.renderer_rebuild_event = True
 
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.

@@ -9,6 +9,7 @@ OP_MOVE_POINT = 5  # params = ( d_lon, d_lat )
 OP_CHANGE_POINT_DEPTH = 6  # params = ( old_depth, new_depth )
 OP_ADD_TRIANGLE = 7  # params = ( point_index_1, point_index_2, point_index_3, color, state )
 OP_DELETE_TRIANGLE = 8  # params = ( point_index_1, point_index_2, point_index_3, color, state )
+OP_CLIP = 9  # params = ( point_index_1, point_index_2, point_index_3, color, state )
 
 import logging
 log = logging.getLogger(__name__)
@@ -101,6 +102,8 @@ class LayerUndo(HasTraits):
             return "Move"
         elif (op == OP_CHANGE_POINT_DEPTH):
             return "Depth Change"
+        elif (op == OP_CLIP):
+            return "Clip"
 
         return ""
 
@@ -155,6 +158,9 @@ class LayerUndo(HasTraits):
             layer.delete_triangle(index, False)
         elif (op == OP_DELETE_TRIANGLE):
             layer.insert_triangle_at_index(index, params, False)
+        elif (op == OP_CLIP):
+            (old_state, new_state) = params
+            layer.set_state(old_state)
 
     def redo(self):
         if (self.undo_stack_next_index >= len(self.undo_stack)):
@@ -201,6 +207,9 @@ class LayerUndo(HasTraits):
             layer.insert_triangle_at_index(index, params, False)
         elif (op == OP_DELETE_TRIANGLE):
             layer.delete_triangle(index, False)
+        elif (op == OP_CLIP):
+            (old_state, new_state) = params
+            layer.set_state(new_state)
 
     def show_undo_redo_debug_dump(self, location_message):
         if log.getEffectiveLevel() <= logging.DEBUG:
