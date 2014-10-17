@@ -1,3 +1,19 @@
+10/17/2014
+---------------------------
+Released 3.0b16
+- RM Moved new layer menu items to File menu
+- RM Pane layout configuration is now in one file, maproom/pane_layout.py
+- RM Fix for image layers disappearing after BNA clipping
+- RM Added undo support for BNA clipping
+- RM Multipolygon support for shapely clipping
+- RM Changed OpenGL rendering back to float32
+- RM Initial conversion to float64
+- RM Increased allowable zoom level
+- RM Added check for valid polygons in BNA files
+- RM Refs #577: added UI for BNA crop to rectangle
+- RM Refs #577: added initial BNA clipping
+- RM Raise error when attempting to add line segments to polygon layer
+
 09/29/2014
 ---------------------------
 Released 3.0b15
