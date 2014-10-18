@@ -114,6 +114,8 @@ data_files.extend(peppy2.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/p
 if sys.platform.startswith('win'):
     # with py2app, we just include the entire package and these files are
     # copied over
+    import shapely
+    libgeos = os.path.join(os.path.dirname(shapely.__file__), "geos_c.dll")
     data_files.extend([
         ("maproom/renderer/gl",
             glob("maproom/renderer/gl/*.pyd")
@@ -122,6 +124,7 @@ if sys.platform.startswith('win'):
             glob("maproom/library/*.pyd")
          ),
         ("pyproj/data", pyproj_data),
+        ("shapely", [libgeos]),
     ])
 
     # Add missing DLL files that py2exe doesn't pull in automatically.
