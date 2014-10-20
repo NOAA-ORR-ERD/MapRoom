@@ -72,10 +72,10 @@ cdef unsigned int TIMEOUT = 1
 @cython.boundscheck( False )
 def triangulate_simple(
     param_text,
-    np.ndarray[ float, ndim = 2 ] points_xy not None,
+    np.ndarray[ double, ndim = 2 ] points_xy not None,
     np.ndarray[ float ] points_z not None,
     np.ndarray[ unsigned int, ndim = 2 ] lines not None,
-    np.ndarray[ float, ndim = 2 ] hole_points_xy not None,
+    np.ndarray[ double, ndim = 2 ] hole_points_xy not None,
 ):
     """
     Triangulate the area bounded by the given lines and using the given
@@ -349,7 +349,7 @@ def triangulate_simple_child( connection, utf8_param_text ):
     # 64-bit floats to 32-bit floats before sending out.
     ## fixme: why run triangle in 64 bit mode?
     cdef np.npy_intp* out_points_xy_dims = [ out_data.numberofpoints, 2 ]
-    cdef np.ndarray[ float, ndim = 2 ] out_points_xy = \
+    cdef np.ndarray[ double, ndim = 2 ] out_points_xy = \
         np.PyArray_SimpleNewFromData(
             2, out_points_xy_dims, np.NPY_DOUBLE, out_data.pointlist,
         ).astype( np.float64 )
