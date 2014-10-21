@@ -270,7 +270,7 @@ class InfoPanel(wx.Panel):
             current_point = (layer.points.x[index], layer.points.y[index])
             x_diff = new_point[0] - current_point[0]
             y_diff = new_point[1] - current_point[1]
-            params = (-x_diff, -y_diff)
+            params = (-x_diff, -y_diff, layer.points.state[index])
 
             print "params = %r" % (params,)
             self.project.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, index, params)

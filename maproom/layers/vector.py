@@ -258,6 +258,9 @@ class PointLayer(ProjectedLayer):
 
     def get_num_points_flagged(self):
         return len(self.get_selected_point_indexes(STATE_FLAGGED))
+    
+    def get_state(self, index):
+        return self.points.state[index]
 
     def offset_selected_objects(self, world_d_x, world_d_y):
         self.offset_selected_points(world_d_x, world_d_y)

@@ -20,6 +20,7 @@ from layer_manager import LayerManager
 from layer_undo import *
 import Layer_tree_control
 import renderer
+from layers.constants import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -634,7 +635,9 @@ class ProjectEditor(FrameworkEditor):
 
         s_p_i_s = layer.get_selected_and_dependent_point_indexes()
         for point_index in s_p_i_s:
-            params = (world_d_x, world_d_y)
+            state = layer.get_state(point_index)
+            params = (world_d_x, world_d_y, state)
+            layer.deselect_point(point_index, STATE_FLAGGED)
             self.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)
 
         self.layer_manager.end_operation_batch()

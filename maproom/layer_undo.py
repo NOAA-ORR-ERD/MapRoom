@@ -149,7 +149,7 @@ class LayerUndo(HasTraits):
             (point_index_1, point_index_2, color, state) = params
             layer.insert_line_segment_at_index(index, point_index_1, point_index_2, color, state, False)
         elif (op == OP_MOVE_POINT):
-            (world_d_x, world_d_y) = params
+            (world_d_x, world_d_y, state) = params
             layer.offset_point(index, world_d_x, world_d_y, False)
         elif (op == OP_CHANGE_POINT_DEPTH):
             (old_depth, new_depth) = params
@@ -198,7 +198,7 @@ class LayerUndo(HasTraits):
         elif (op == OP_DELETE_LINE):
             layer.delete_line_segment(index, False)
         elif (op == OP_MOVE_POINT):
-            (world_d_x, world_d_y) = params
+            (world_d_x, world_d_y, state) = params
             layer.offset_point(index, -world_d_x, -world_d_y, False)
         elif (op == OP_CHANGE_POINT_DEPTH):
             (old_depth, new_depth) = params
