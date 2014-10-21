@@ -17,7 +17,7 @@ progress_log = logging.getLogger("progress")
 class BNALoader(BaseLoader):
     mime = "application/x-maproom-bna"
     
-    layer_type = "polygon"
+    layer_types = ["polygon"]
     
     extensions = [".bna"]
     
@@ -40,8 +40,8 @@ class BNALoader(BaseLoader):
             layer.mime = self.mime
         return [layer]
     
-    def save_to_file(self, f, layer):
-        return "Can't save to BNA yet."
+    def save_to_fh(self, fh, layer):
+        save_bna_file(fh, layer)
 
 
 def load_bna_file(file_path):
@@ -186,3 +186,25 @@ def load_bna_file(file_path):
             np.asarray(polygon_starts)[:, 0],
             np.asarray(polygon_counts)[:, 0],
             polygon_identifiers)
+
+
+def save_bna_file(f, layer):
+    update_every = 1000
+    ticks = 0
+    progress_log.info("TICKS=%d" % np.alen(layer.points))
+    progress_log.info("Saving BNA...")
+    for i, p in enumerate(layer.iter_polygons()):
+        print "polygon #%d" % i
+        polygon = p[0]
+        count = np.alen(polygon)
+        ident = p[1]
+        print ident
+        f.write('"%s","%s", %d\n' % (ident['name'], ident['feature_code'], count))
+        for j in range(count):
+            f.write("%s,%s\n" % (polygon[j][0], polygon[j][1]))
+            ticks += 1
+                
+            if (ticks % update_every) == 0:
+                progress_log.info("TICK=%d" % ticks)
+    progress_log.info("TICK=%d" % ticks)
+    progress_log.info("Saved BNA")

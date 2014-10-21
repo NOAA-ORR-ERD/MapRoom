@@ -1432,6 +1432,10 @@ class PolygonLayer(PointLayer):
             self.points.state = 0
         self.update_bounds()
 
+
+    def can_save_as(self):
+        return True
+
     def serialize_json(self, index):
         json = PointLayer.serialize_json(self, index)
         update = {
@@ -1519,12 +1523,21 @@ class PolygonLayer(PointLayer):
     def can_crop(self):
         return True
     
-    def get_shapely_polygon(self, index, debug=False):
+    def get_polygon(self, index):
         start = self.polygons.start[index]
         count = self.polygons.count[index]
         boundary = self.points
         points = np.c_[boundary.x[start:start + count], boundary.y[start:start + count]]
         points = np.require(points, np.float64, ["C", "OWNDATA"])
+        return points, self.polygon_identifiers[index]
+    
+    def iter_polygons(self):
+        for n in range(np.alen(self.polygons)):
+            poly = self.get_polygon(n)
+            yield poly
+    
+    def get_shapely_polygon(self, index, debug=False):
+        points, ident = self.get_polygon(index)
         if np.alen(points) > 2:
             poly = Polygon(points)
         else:
