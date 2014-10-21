@@ -252,6 +252,21 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
     def handle_selection_changed(self, event):
         self.project.esc_key_pressed()
         self.project.update_layer_selection_ui(self.get_selected_layer())
+        
+        prefs = self.project.task.get_preferences()
+        selected = self.GetSelection()
+        root = self.GetRootItem()
+        child, cookie = self.GetFirstChild(root)
+        while child:
+            if child == selected:
+                # Always expand selected layer
+                self.Expand(child)
+            elif prefs.tree_selected_sublayers_only:
+                # Per user preference, to reduce clutter and emphasize the
+                # currently selected layer, hide any sublayers of all other
+                # layers
+                self.Collapse(child)
+            (child, cookie) = self.GetNextChild(root, cookie)
 
     def raise_selected_layer(self):
         self.move_selected_layer(-1)
