@@ -31,7 +31,9 @@
 #cog.msg("top dir     : %s" % top)
 #import glob
 #cog.outl("loaders = []")
-#for filename in glob.iglob(os.path.join(path, "*.py")):
+#source_files = glob.glob(os.path.join(path, "*.py"))
+#source_files.sort()
+#for filename in source_files:
 #    if filename.endswith("__init__.py"):
 #        continue
 #    modname = filename.rstrip(".py").split("/")[-1]
@@ -49,14 +51,14 @@
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
 loaders = []
-from ugrid import UGridLoader
-loaders.append(UGridLoader())
-from project import ProjectLoader
-loaders.append(ProjectLoader())
 from bna import BNALoader
 loaders.append(BNALoader())
 from gdal import GDALLoader
 loaders.append(GDALLoader())
+from project import ProjectLoader
+loaders.append(ProjectLoader())
+from ugrid import UGridLoader
+loaders.append(UGridLoader())
 from verdat import VerdatLoader
 loaders.append(VerdatLoader())
 # [[[end]]]

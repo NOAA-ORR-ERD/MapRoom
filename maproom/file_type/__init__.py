@@ -31,7 +31,9 @@
 #cog.msg("top dir     : %s" % top)
 #import glob
 #cog.outl("recognizers = []")
-#for filename in glob.iglob(os.path.join(path, "*.py")):
+#source_files = glob.glob(os.path.join(path, "*.py"))
+#source_files.sort()
+#for filename in source_files:
 #    if filename.endswith("__init__.py"):
 #        continue
 #    modname = filename.split(".py")[0].split("/")[-1]
@@ -49,10 +51,10 @@
 #           cog.outl("recognizers.append(%s())" % name)
 # ]]]*/
 recognizers = []
-from image import GDALRecognizer
-recognizers.append(GDALRecognizer())
 from binary import HDF5Recognizer
 recognizers.append(HDF5Recognizer())
+from image import GDALRecognizer
+recognizers.append(GDALRecognizer())
 from text import BNARecognizer, MapRoomProjectRecognizer, VerdatRecognizer
 recognizers.append(BNARecognizer())
 recognizers.append(MapRoomProjectRecognizer())
