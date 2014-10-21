@@ -433,7 +433,7 @@ class ProjectEditor(FrameworkEditor):
                 self.update_layer_contents_ui()
                 self.refresh()
 
-    def clear_flagged(self):
+    def clear_all_flagged(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             sel_layer.clear_flagged(refresh=False)

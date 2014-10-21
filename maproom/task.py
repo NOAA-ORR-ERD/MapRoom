@@ -355,7 +355,7 @@ class ClearFlaggedAction(EditorAction):
     tooltip = 'Deselects all flagged items in the current layer'
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.clear_flagged)
+        GUI.invoke_later(self.active_editor.clear_all_flagged)
 
 class ZoomModeAction(EditorAction):
     name = 'Zoom Mode'
