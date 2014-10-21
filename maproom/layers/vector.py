@@ -1354,6 +1354,8 @@ class PolygonLayer(PointLayer):
     polygons = Any
     
     polygon_adjacency_array = Any  # parallels the points array
+    
+    polygon_identifiers = Any
 
     def __str__(self):
         try:
@@ -1391,7 +1393,7 @@ class PolygonLayer(PointLayer):
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
     
     def set_data(self, f_polygon_points, f_polygon_starts, f_polygon_counts,
-                 f_polygon_types, f_polygon_identifiers):
+                 f_polygon_identifiers):
         self.determine_layer_color()
         n_points = np.alen(f_polygon_points)
         self.points = self.make_points(n_points)
@@ -1410,6 +1412,13 @@ class PolygonLayer(PointLayer):
             # TODO: for now we assume each polygon is its own group
             self.polygons.group = np.arange(n_polygons)
             self.polygon_adjacency_array = self.make_polygon_adjacency_array(n_points)
+            
+            # set up feature code to color map
+            green = color_to_int(0.25, 0.5, 0, 0.75)
+            blue = color_to_int(0.0, 0.0, 0.5, 0.75)
+            gray = color_to_int(0.5, 0.5, 0.5, 0.75)
+            color_array = np.array((0, green, blue, gray), dtype=np.uint32)
+            
             total = 0
             for p in xrange(n_polygons):
                 c = self.polygons.count[p]
@@ -1417,27 +1426,9 @@ class PolygonLayer(PointLayer):
                 self.polygon_adjacency_array.next[total: total + c] = np.arange(total + 1, total + c + 1)
                 self.polygon_adjacency_array.next[total + c - 1] = total
                 total += c
+                self.polygons.color[p] = color_array[np.clip(f_polygon_identifiers[p]['feature_code'], 1, 3)]
 
-            green = color_to_int(0.25, 0.5, 0, 0.75)
-            blue = color_to_int(0.0, 0.0, 0.5, 0.75)
-            gray = color_to_int(0.5, 0.5, 0.5, 0.75)
-            # the following "fancy indexing" relies on these particular values in f_polygon_types
-            # BNA_LAND_FEATURE_CODE = 1
-            # BNA_WATER_FEATURE_CODE = 2
-            # BNA_OTHER_FEATURE_CODE = 3
-            color_array = np.array((0, green, blue, gray), dtype=np.uint32)
-            self.polygons.color = color_array[np.clip(f_polygon_types, 1, 3)]
-            """
-            def map_type_to_color( t ):
-                if ( t == File_loader.BNA_LAND_FEATURE_CODE ):
-                    return green
-                elif ( t == File_loader.BNA_WATER_FEATURE_CODE ):
-                    return blue
-                else:
-                    return gray
-            self.polygons.color = np.vectorize( map_type_to_color )( f_polygon_types )
-            """
-
+            self.polygon_identifiers = list(f_polygon_identifiers)
             self.points.state = 0
         self.update_bounds()
 
@@ -1446,6 +1437,7 @@ class PolygonLayer(PointLayer):
         update = {
             'polygons': self.polygons.tolist(),
             'adjacency': self.polygon_adjacency_array.tolist(),
+            'identifiers': self.polygon_identifiers,
         }
         json.update(update)
         return json
@@ -1454,6 +1446,7 @@ class PolygonLayer(PointLayer):
         PointLayer.unserialize_json_version1(self, json_data)
         self.polygons = np.array([tuple(i) for i in json_data['polygons']], data_types.POLYGON_DTYPE).view(np.recarray)
         self.polygon_adjacency_array = np.array([tuple(i) for i in json_data['adjacency']], data_types.POLYGON_ADJACENCY_DTYPE).view(np.recarray)
+        self.polygon_identifiers = json_data['identifiers']
 
     def check_for_problems(self, window):
         problems = []
@@ -1551,36 +1544,27 @@ class PolygonLayer(PointLayer):
             """Helper class to store results from stepping through the clipped
             polygons
             """
-            polygon_points = None
-            polygon_starts = []
-            polygon_counts = []
-            polygon_types = []
-            polygon_color = []
-            polygon_identifiers = []
-            total_points = 0
+            def __init__(self):
+                self.p_points = None
+                self.p_starts = []
+                self.p_counts = []
+                self.p_identifiers = []
+                self.total_points = 0
             
-            def add_polygon(self, cropped_poly, color):
-                #print cropped_poly.exterior.coords.xy
+            def add_polygon(self, cropped_poly, ident):
                 points = np.require(cropped_poly.exterior.coords.xy, np.float64, ["C", "OWNDATA"])
-                #print points
-                print points.shape
                 num_points = points.shape[1]
-                if self.polygon_points is None:
-                    self.polygon_points = np.zeros((num_points, 2), dtype=np.float64)
+                if self.p_points is None:
+                    self.p_points = np.zeros((num_points, 2), dtype=np.float64)
                     # Need an array that owns its own data, otherwise the
                     # subsequent resize can be messed up
-                    self.polygon_points = np.require(points.T, requirements=["C", "OWNDATA"])
-                    print "initial shape: ", self.polygon_points.shape
-                    #print self.polygon_points
+                    self.p_points = np.require(points.T, requirements=["C", "OWNDATA"])
                 else:
-                    self.polygon_points.resize((self.total_points + num_points, 2))
-                    self.polygon_points[self.total_points:,:] = points.T
-                    print "after rezise shape: ", self.polygon_points.shape
-                    #print self.polygon_points
-                self.polygon_starts.append(self.total_points)
-                self.polygon_counts.append(num_points)
-                self.polygon_types.append(1) # dummy feature code to assign arbitrary color
-                self.polygon_color.append(color)
+                    self.p_points.resize((self.total_points + num_points, 2))
+                    self.p_points[self.total_points:,:] = points.T
+                self.p_starts.append(self.total_points)
+                self.p_counts.append(num_points)
+                self.p_identifiers.append(ident)
                 self.total_points += num_points
         
         new_polys = AccumulatePolygons()
@@ -1588,7 +1572,6 @@ class PolygonLayer(PointLayer):
             poly = self.get_shapely_polygon(n)
             try:
                 cropped_poly = crop_rect.intersection(poly)
-                print "cropped result #%d: %s empty=%s" % (n, cropped_poly.geom_type, cropped_poly.is_empty)
             except Exception, e:
                 print "Shapely intersection exception", e
                 print poly
@@ -1597,22 +1580,23 @@ class PolygonLayer(PointLayer):
                 
             if not cropped_poly.is_empty:
                 if cropped_poly.geom_type == "MultiPolygon":
-                    for p in cropped_poly:
-                        new_polys.add_polygon(p, self.polygons.color[n])
+                    for i, p in enumerate(cropped_poly):
+                        ident = dict({
+                            'name': '%s (cropped part #%d)' % (self.polygon_identifiers[n]['name'], i + 1),
+                            'feature_code': self.polygon_identifiers[n]['feature_code'],
+                            })
+                        new_polys.add_polygon(p, ident)
                     continue
                 elif not hasattr(cropped_poly, 'exterior'):
                     print "Temporarily skipping %s" % cropped_poly.geom_type
                     continue
-                new_polys.add_polygon(cropped_poly, self.polygons.color[n])
+                new_polys.add_polygon(cropped_poly, self.polygon_identifiers[n])
                 
         old_state = self.get_restore_state()
-        self.set_data(new_polys.polygon_points,
-                      np.asarray(new_polys.polygon_starts, dtype=np.uint32),
-                      np.asarray(new_polys.polygon_counts, dtype=np.uint32),
-                      np.asarray(new_polys.polygon_types, dtype=np.uint32),
-                      new_polys.polygon_identifiers)
-        for n in range(np.alen(self.polygons)):
-            self.polygons.color[n] = new_polys.polygon_color[n]
+        self.set_data(new_polys.p_points,
+                      np.asarray(new_polys.p_starts, dtype=np.uint32),
+                      np.asarray(new_polys.p_counts, dtype=np.uint32),
+                      new_polys.p_identifiers)
         
         if add_undo_info:
             new_state = self.get_restore_state()
@@ -1624,10 +1608,10 @@ class PolygonLayer(PointLayer):
         # this layer.  Need to rely on the caller to rebuild renderers.
     
     def get_restore_state(self):
-        return self.points.copy(), self.polygons.copy(), self.polygon_adjacency_array.copy()
+        return self.points.copy(), self.polygons.copy(), self.polygon_adjacency_array.copy(), list(self.polygon_identifiers)
     
     def set_state(self, params):
-        self.points, self.polygons, self.polygon_adjacency_array = params
+        self.points, self.polygons, self.polygon_adjacency_array, self.polygon_identifiers = params
         self.update_bounds()
         self.manager.renderer_rebuild_event = True
 

@@ -30,12 +30,11 @@ class BNALoader(BaseLoader):
          f_polygon_points,
          f_polygon_starts,
          f_polygon_counts,
-         f_polygon_types,
          f_polygon_identifiers) = load_bna_file(metadata.uri)
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
             layer.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
-                           f_polygon_types, f_polygon_identifiers)
+                           f_polygon_identifiers)
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
@@ -112,7 +111,6 @@ def load_bna_file(file_path):
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
     polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
-    polygon_types = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_identifiers = []
 
     t0 = time.clock()
@@ -136,11 +134,15 @@ def load_bna_file(file_path):
         pieces = line.split(",")
         if len(pieces) != 3:
             return ("The .bna file {0} is invalid. Error at line {1}.".format(file_path, i), None, None, None, None, None)
-        polygon_identifiers.append(pieces[0].strip('"'))
         try:
             feature_code = int(pieces[1].strip('"'))
         except ValueError:
             feature_code = 0
+        polygon_identifiers.append(
+            {'name': pieces[0].strip('"'),
+             'feature_code': feature_code}
+            )
+            
         num_points = int(pieces[2])
         original_num_points = num_points
 
@@ -172,7 +174,6 @@ def load_bna_file(file_path):
 
         polygon_starts.append(total_points)
         polygon_counts.append(num_points)
-        polygon_types.append(feature_code)
         total_points += num_points
     progress_log.info("TICK=%d" % num_lines)
 
@@ -184,5 +185,4 @@ def load_bna_file(file_path):
             np.asarray(polygon_points),
             np.asarray(polygon_starts)[:, 0],
             np.asarray(polygon_counts)[:, 0],
-            np.asarray(polygon_types)[:, 0],
             polygon_identifiers)
