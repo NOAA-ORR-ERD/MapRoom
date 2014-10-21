@@ -349,6 +349,14 @@ class DeleteSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.delete_selection)
 
+class ClearFlaggedAction(EditorAction):
+    name = 'Clear Flagged'
+    enabled_name = 'layer_has_flagged'
+    tooltip = 'Deselects all flagged items in the current layer'
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.clear_flagged)
+
 class ZoomModeAction(EditorAction):
     name = 'Zoom Mode'
     tooltip = 'Zoom to box'
@@ -676,6 +684,8 @@ class MaproomProjectTask(FrameworkTask):
                     return [
                         ClearSelectionAction(),
                         DeleteSelectionAction(),
+                        Separator(),
+                        ClearFlaggedAction(),
                         ]
                 elif group_name == "FindGroup":
                     return [

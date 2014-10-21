@@ -51,6 +51,8 @@ class ProjectEditor(FrameworkEditor):
     
     layer_has_selection = Bool
     
+    layer_has_flagged = Bool
+    
     clickable_object_mouse_is_over = Any
     
     last_refresh = Float(0.0)
@@ -262,11 +264,14 @@ class ProjectEditor(FrameworkEditor):
             if self.layer_has_points:
                 log.debug("selected points: %s"  % sel_layer.get_num_points_selected())
                 self.layer_has_selection = sel_layer.get_num_points_selected() > 0
+                self.layer_has_flagged = sel_layer.get_num_points_flagged() > 0
             else:
                 self.layer_has_selection = False
+                self.layer_has_flagged = False
         else:
             self.layer_has_points = False
             self.layer_has_selection = False
+            self.layer_has_flagged = False
         log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
         self.update_undo_redo()
         self.window._aui_manager.Update()
@@ -427,6 +432,13 @@ class ProjectEditor(FrameworkEditor):
                 self.layer_manager.end_operation_batch()
                 self.update_layer_contents_ui()
                 self.refresh()
+
+    def clear_flagged(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            sel_layer.clear_flagged(refresh=False)
+            self.update_layer_contents_ui()
+            self.refresh()
 
     def point_tool_selected(self):
         for layer in self.layer_manager.flatten():
