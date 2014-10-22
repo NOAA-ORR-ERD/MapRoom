@@ -376,9 +376,9 @@ class LayerControl(glcanvas.GLCanvas):
                 r, g, b, a = renderer.int_to_color(layer.color)
                 self.opengl_renderer.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
-    def rebuild_points_and_lines_for_layer(self, layer):
+    def rebuild_points_and_lines_for_layer(self, layer, in_place=False):
         if layer in self.layer_renderers:
-            self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer)
+            self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer, in_place=in_place)
             log.debug("points/lines renderer rebuilt")
         else:
             log.warning("layer %s isn't in layer_renderers!" % layer)

@@ -307,6 +307,11 @@ class ProjectEditor(FrameworkEditor):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.control.rebuild_points_and_lines_for_layer(layer)
     
+    @on_trait_change('layer_manager:layer_contents_changed_in_place')
+    def layer_contents_changed_in_place(self, layer):
+        log.debug("layer_contents_changed called!!! layer=%s" % layer)
+        self.control.rebuild_points_and_lines_for_layer(layer, in_place=True)
+    
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)

@@ -272,7 +272,12 @@ class PointLayer(ProjectedLayer):
             for point_index in s_p_i_s:
                 self.offset_point(point_index, world_d_x, world_d_y, True)
             # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
-            self.manager.dispatch_event('layer_contents_changed', self)
+            
+            # Rebuilding the renderer by using the event layer_contents_changed
+            # is super slow for large data sets.  This is a different event
+            # that updates the point positions given the requirement that no
+            # points have been added or removed
+            self.manager.dispatch_event('layer_contents_changed_in_place', self)
             self.increment_change_count()
 
     def offset_point(self, point_index, world_d_x, world_d_y, add_undo_info=False):
@@ -284,18 +289,6 @@ class PointLayer(ProjectedLayer):
             params = ( world_d_x, world_d_y )
             self.manager.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
         """
-
-    """
-    def rebuild_for_offset_points( self ):
-        if ( self.line_segment_indexes != None ):
-            self.point_and_line_set_renderer.build_line_segment_buffers(
-                self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
-                None )
-        self.point_and_line_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                                                    self.manager.project.control.projection,
-                                                    self.manager.project.control.projection_is_identity )
-    """
 
     def insert_point(self, world_point):
         if self.points is None:
