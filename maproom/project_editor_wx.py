@@ -431,13 +431,12 @@ class ProjectEditor(FrameworkEditor):
             self.refresh()
 
     def delete_selection(self):
-        if (self.mouse_mode == LayerControl.MODE_EDIT_POINTS or self.mouse_mode == LayerControl.MODE_EDIT_LINES):
-            sel_layer = self.layer_tree_control.get_selected_layer()
-            if sel_layer is not None:
-                sel_layer.delete_all_selected_objects()
-                self.layer_manager.end_operation_batch()
-                self.update_layer_contents_ui()
-                self.refresh()
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            sel_layer.delete_all_selected_objects()
+            self.layer_manager.end_operation_batch()
+            self.update_layer_contents_ui()
+            self.refresh()
 
     def clear_all_flagged(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
