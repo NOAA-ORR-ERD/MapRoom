@@ -446,6 +446,13 @@ class ProjectEditor(FrameworkEditor):
             self.update_layer_contents_ui()
             self.refresh()
 
+    def select_all_flagged(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            sel_layer.select_flagged(refresh=False)
+            self.update_layer_contents_ui()
+            self.refresh()
+
     def point_tool_selected(self):
         for layer in self.layer_manager.flatten():
             layer.clear_all_line_segment_selections()
