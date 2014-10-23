@@ -22,7 +22,9 @@ test_data_dir = os.path.normpath(os.path.join(this_dir,"../TestData/"))
 
 ## Auto-generated tests from various file types, etc.
 FILES = [ ( (os.path.join(test_data_dir, "NC_particles", "Mobile_test.nc") ), binary.NC_ParticleRecognizer ),
-          ( (os.path.join(test_data_dir, "UGrid", "21_triangles.nc") ), binary.HDF5Recognizer ),
+          ( (os.path.join(test_data_dir, "UGrid", "21_triangles.nc") ), binary.UGRID_Recognizer ),
+          ( (os.path.join(test_data_dir, "UGrid", "2_triangles.nc") ), binary.UGRID_Recognizer ),
+          ( (os.path.join(test_data_dir, "UGrid", "full_example.nc") ), binary.UGRID_Recognizer ),
         ]
 
 def test_identify():

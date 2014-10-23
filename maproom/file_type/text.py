@@ -18,7 +18,7 @@ class MapRoomProjectRecognizer(HasTraits):
 
 @provides(IFileRecognizer)
 class VerdatRecognizer(HasTraits):
-    """Default plain text identifier based on percentage of non-ASCII bytes.
+    """Finds verdat files -- looks for the "DOGS" in the header.
     
     """
     id = "application/x-maproom-verdat"
@@ -32,7 +32,7 @@ class VerdatRecognizer(HasTraits):
 
 @provides(IFileRecognizer)
 class BNARecognizer(HasTraits):
-    """Default plain text identifier based on percentage of non-ASCII bytes.
+    """Finds bna files -- simply looks for extension
     
     """
     id = "application/x-maproom-bna"
