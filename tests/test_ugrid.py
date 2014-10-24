@@ -26,7 +26,7 @@ class TestVerdatConversion(object):
         
         loaders.save_layer(tris, "negative-depth-triangles.nc")
         
-        t2 = self.manager.load_first_layer("negative-depth-triangles.nc", "application/x-hdf")
+        t2 = self.manager.load_first_layer("negative-depth-triangles.nc", "application/x-nc_ugrid")
         print t2.points
 
     def test_jetty(self):
@@ -72,7 +72,7 @@ class TestJetty(object):
         self.create_jetty()
         uri = "tmp.jetty.nc"
         loaders.save_layer(self.verdat, uri)
-        layer = self.manager.load_first_layer(uri, "application/x-hdf")
+        layer = self.manager.load_first_layer(uri, "application/x-nc_ugrid")
         eq_(16, np.alen(layer.line_segment_indexes))
 
     def create_channel(self):
@@ -98,14 +98,14 @@ class TestJetty(object):
         self.create_channel()
         uri = "tmp.channel.nc"
         loaders.save_layer(self.verdat, uri)
-        layer = self.manager.load_first_layer(uri, "application/x-hdf")
+        layer = self.manager.load_first_layer(uri, "application/x-nc_ugrid")
         eq_(15, np.alen(layer.line_segment_indexes))
 
 
 class TestUGrid(object):
     def setup(self):
         self.manager = MockManager()
-        self.layers = self.manager.load_all_layers("../TestData/UGrid/2_triangles.nc", "application/x-hdf")
+        self.layers = self.manager.load_all_layers("../TestData/UGrid/2_triangles.nc", "application/x-nc_ugrid")
     
     def test_load(self):
         eq_(2, len(self.layers))

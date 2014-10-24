@@ -769,7 +769,7 @@ class MaproomProjectTask(FrameworkTask):
     ###
     @classmethod
     def can_edit(cls, mime):
-        return mime.startswith("image") or mime.startswith("application/x-maproom-") or mime == "application/x-hdf"
+        return mime.startswith("image") or mime.startswith("application/x-maproom-") or mime == "application/x-nc_ugrid"
     
     
     

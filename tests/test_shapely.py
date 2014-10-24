@@ -97,7 +97,7 @@ class TestShapelyVerdat(ClipBase):
 class TestShapelyUGridLines(ClipBase):
     def setup(self):
         self.manager = MockManager()
-        self.verdat = self.manager.load_first_layer("../TestData/UGrid/jetty.nc", "application/x-hdf")
+        self.verdat = self.manager.load_first_layer("../TestData/UGrid/jetty.nc", "application/x-nc_ugrid")
 
     def get_clip_points(self):
         boundary = self.manager.get_outer_boundary(self.verdat)

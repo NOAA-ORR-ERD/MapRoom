@@ -2,20 +2,21 @@ from traits.api import HasTraits, provides
 
 from peppy2.file_type.i_file_recognizer import IFileRecognizer
 
-@provides(IFileRecognizer)
-class HDF5Recognizer(HasTraits):
-    """Recognizer for HDF5
+## replaced with the UGRID_Recognizer
+# @provides(IFileRecognizer)
+# class HDF5Recognizer(HasTraits):
+#     """Recognizer for HDF5
     
-    """
-    id = "application/x-hdf"
+#     """
+#     id = "application/x-hdf"
     
-    # GDAL recognizes HDF files, so this needs to be before the GDAL recognizer
-    before = "image/x-gdal"
+#     # GDAL recognizes HDF files, so this needs to be before the GDAL recognizer
+#     before = "image/x-gdal"
     
-    def identify(self, guess):
-        byte_stream = guess.bytes
-        if byte_stream[0:8] == "\211HDF\r\n\032\n":
-            return self.id
+#     def identify(self, guess):
+#         byte_stream = guess.bytes
+#         if byte_stream[0:8] == "\211HDF\r\n\032\n":
+#             return self.id
 
 @provides(IFileRecognizer)
 class UGRID_Recognizer(HasTraits):

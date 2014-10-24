@@ -11,7 +11,7 @@ from maproom.renderer import data_types
 WHITESPACE_PATTERN = re.compile("\s+")
 
 class UGridLoader(BaseLoader):
-    mime = "application/x-hdf"
+    mime = "application/x-nc_ugrid"
     
     layer_types = ["point", "line", "triangle"]
     

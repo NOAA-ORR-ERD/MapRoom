@@ -18,10 +18,8 @@ this_dir = os.path.split(os.path.abspath(__file__))[0]
 test_data_dir = os.path.normpath(os.path.join(this_dir,"../TestData/")) 
 
 
-## fixme -- need test to make sure that only one identifier returns for each file.
-
 ## List for auto-generated tests from various file types, etc.
-## fixme -- maybe this should scan the TestDAta dir instead of hard coding all of them...
+## fixme -- maybe this should scan the TestData dir instead of hard coding all of them...
 FILES = [ 
           # nc_particles
           ( (os.path.join(test_data_dir, "NC_particles", "Mobile_test.nc") ), binary.NC_ParticleRecognizer ),
