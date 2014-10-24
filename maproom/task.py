@@ -765,6 +765,11 @@ class MaproomProjectTask(FrameworkTask):
     def _wx_on_mousewheel_from_window(self, event):
         if self.active_editor:
             self.active_editor.control.on_mouse_wheel_scroll(event)
+    
+    @on_trait_change('window.application.preferences_changed_event')
+    def preferences_changed(self, evt):
+        if self.active_editor:
+            self.active_editor.refresh()
 
     ###
     @classmethod
