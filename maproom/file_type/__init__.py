@@ -51,8 +51,9 @@
 #           cog.outl("recognizers.append(%s())" % name)
 # ]]]*/
 recognizers = []
-from binary import HDF5Recognizer
+from binary import HDF5Recognizer, NC_ParticleRecognizer
 recognizers.append(HDF5Recognizer())
+recognizers.append(NC_ParticleRecognizer)
 from image import GDALRecognizer
 recognizers.append(GDALRecognizer())
 from text import BNARecognizer, MapRoomProjectRecognizer, VerdatRecognizer
