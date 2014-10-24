@@ -307,6 +307,11 @@ class ProjectEditor(FrameworkEditor):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.control.rebuild_points_and_lines_for_layer(layer)
     
+    @on_trait_change('layer_manager:layer_contents_changed_in_place')
+    def layer_contents_changed_in_place(self, layer):
+        log.debug("layer_contents_changed called!!! layer=%s" % layer)
+        self.control.rebuild_points_and_lines_for_layer(layer, in_place=True)
+    
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
@@ -426,18 +431,24 @@ class ProjectEditor(FrameworkEditor):
             self.refresh()
 
     def delete_selection(self):
-        if (self.mouse_mode == LayerControl.MODE_EDIT_POINTS or self.mouse_mode == LayerControl.MODE_EDIT_LINES):
-            sel_layer = self.layer_tree_control.get_selected_layer()
-            if sel_layer is not None:
-                sel_layer.delete_all_selected_objects()
-                self.layer_manager.end_operation_batch()
-                self.update_layer_contents_ui()
-                self.refresh()
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            sel_layer.delete_all_selected_objects()
+            self.layer_manager.end_operation_batch()
+            self.update_layer_contents_ui()
+            self.refresh()
 
     def clear_all_flagged(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             sel_layer.clear_flagged(refresh=False)
+            self.update_layer_contents_ui()
+            self.refresh()
+
+    def select_all_flagged(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            sel_layer.select_flagged(refresh=False)
             self.update_layer_contents_ui()
             self.refresh()
 

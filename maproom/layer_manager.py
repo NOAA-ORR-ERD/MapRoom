@@ -56,6 +56,8 @@ class LayerManager(LayerUndo):
     
     layer_contents_changed = Event
     
+    layer_contents_changed_in_place = Event
+    
     # when points are deleted from a layer the indexes of the points in the
     # merge dialog box become invalid; so this event will trigger the user to
     # re-find duplicates in order to create a valid list again

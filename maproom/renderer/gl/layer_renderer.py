@@ -72,10 +72,22 @@ class LayerRenderer(object):
         if (layer.points != None and self.label_set_renderer == None):
             self.label_set_renderer = Label_set_renderer.Label_set_renderer(self.canvas.opengl_renderer, self.MAX_LABEL_CHARACTERS)
 
-    def rebuild_point_and_line_set_renderer(self, layer, create=False):
+    def rebuild_point_and_line_set_renderer(self, layer, create=False, in_place=False):
         if self.point_and_line_set_renderer:
-            create = True
-            self.point_and_line_set_renderer.destroy()
+            if in_place:
+                create = False
+#                if ( layer.line_segment_indexes != None ):
+#                    self.point_and_line_set_renderer.build_line_segment_buffers(
+#                        self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+#                        self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
+#                        None )
+                self.point_and_line_set_renderer.reproject(
+                    layer.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+                    layer.manager.project.control.projection,
+                    layer.manager.project.control.projection_is_identity )
+            else:
+                create = True
+                self.point_and_line_set_renderer.destroy()
 
         if create:
             if hasattr(layer, 'triangles') and layer.triangles is not None:

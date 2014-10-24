@@ -1,3 +1,20 @@
+10/23/2014
+---------------------------
+Released 3.0b17
+- RM Fixed bug where deleting points via menu item only worked when in point or line editing mode.
+- RM Added command to turn flagged points into selected points
+- RM Added optimized renderer rebuild when point coords change but number of points stays the same
+- RM Add user preference, when a layer is selected, to hide sublayers of other layers
+- RM Clear flagged point when moved
+- RM Renamed project editor function to clear_all_flagged
+- RM Added menu item to clear flagged points
+- RM Added BNA saving
+- RM Fixed Polygon layer to store name and feature code from BNA loading
+- RM Added Makefile to automatically build generated files (.pyx -> .c, etc)
+- RM Removed unnecessary import from loaders
+- RM Fixed float64 conversion in triangulation
+- RM Updated setup.py to include the GEOS dll in py2exe build
+
 10/17/2014
 ---------------------------
 Released 3.0b16
