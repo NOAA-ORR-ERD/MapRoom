@@ -10,8 +10,10 @@ log = logging.getLogger(__name__)
 
 @provides(IFileRecognizer)
 class GDALRecognizer(HasTraits):
-    """Default plain text identifier based on percentage of non-ASCII bytes.
-    
+    """Check to see if GDAL can open this -- if so, it returns OK
+
+       fixme -- ideally, this would check not ony GDAL, but whether
+       it is a dataset we know how to deal with.    
     """
     id = "image/x-gdal"
     
