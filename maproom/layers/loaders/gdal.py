@@ -122,23 +122,37 @@ class ImageData(object):
     
     def calc_world_rect(self, selection_origin, selection_width, selection_height):
         # we invert the y in going to projected coordinates
-        left_bottom_projected = apply_transform((selection_origin[0],
-                                                 selection_origin[1] + selection_height),
-                                                self.pixel_to_projected_transform)
-        right_top_projected = apply_transform((selection_origin[0] + selection_width,
-                                               selection_origin[1]),
-                                              self.pixel_to_projected_transform)
+        left_bottom_projected = apply_transform(
+            (selection_origin[0],
+             selection_origin[1] + selection_height),
+            self.pixel_to_projected_transform)
+        left_top_projected = apply_transform(
+            (selection_origin[0],
+             selection_origin[1]),
+            self.pixel_to_projected_transform)
+        right_top_projected = apply_transform(
+            (selection_origin[0] + selection_width,
+             selection_origin[1]),
+            self.pixel_to_projected_transform)
+        right_bottom_projected = apply_transform(
+            (selection_origin[0] + selection_width,
+             selection_origin[1] + selection_height),
+            self.pixel_to_projected_transform)
         if (self.projection.srs.find("+proj=longlat") != -1):
             # for longlat projection, apparently someone decided that since the projection
             # is the identity, it might as well do something and so it returns the coordinates as
             # radians instead of degrees; so here we avoid using the projection altogether
             left_bottom_world = left_bottom_projected
+            left_top_world = left_top_projected
             right_top_world = right_top_projected
+            right_bottom_world = right_bottom_projected
         else:
             left_bottom_world = self.projection(left_bottom_projected[0], left_bottom_projected[1], inverse=True)
+            left_top_world = self.projection(left_top_projected[0], left_top_projected[1], inverse=True)
             right_top_world = self.projection(right_top_projected[0], right_top_projected[1], inverse=True)
+            right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
         
-        return left_bottom_world, right_top_world
+        return left_bottom_world, left_top_world, right_top_world, right_bottom_world
 
 class ImageDataBlocks(ImageData):
     """Version of ImageData to load using GDAL blocks.

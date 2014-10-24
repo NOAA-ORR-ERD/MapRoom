@@ -149,26 +149,30 @@ class Image_set_renderer:
 
     def reproject(self, projection, projection_is_identity):
         self.image_projected_rects = []
-        for r in self.image_textures.image_world_rects:
+        for lb, lt, rt, rb in self.image_textures.image_world_rects:
             if (projection_is_identity):
-                left_bottom_projected = r[0]
-                right_top_projected = r[1]
+                left_bottom_projected = lb
+                left_top_projected = lt
+                right_top_projected = rt
+                right_bottom_projected = rb
             else:
-                left_bottom_projected = projection(r[0][0], r[0][1])
-                right_top_projected = projection(r[1][0], r[1][1])
-            self.image_projected_rects.append((left_bottom_projected, right_top_projected))
+                left_bottom_projected = projection(lb[0], lb[1])
+                left_top_projected = projection(lt[0], lt[1])
+                right_top_projected = projection(rt[0], rt[1])
+                right_bottom_projected = projection(rb[0], rb[1])
+            self.image_projected_rects.append((left_bottom_projected, left_top_projected, right_top_projected, right_bottom_projected))
 
         for i, projected_rect in enumerate(self.image_projected_rects):
             raw = self.image_textures.vbo_vertexes[i].data
             vertex_data = raw.view(dtype=RendererDriver.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = projected_rect[0][0]
             vertex_data.y_lb = projected_rect[0][1]
-            vertex_data.x_lt = projected_rect[0][0]
+            vertex_data.x_lt = projected_rect[1][0]
             vertex_data.y_lt = projected_rect[1][1]
-            vertex_data.x_rt = projected_rect[1][0]
-            vertex_data.y_rt = projected_rect[1][1]
-            vertex_data.x_rb = projected_rect[1][0]
-            vertex_data.y_rb = projected_rect[0][1]
+            vertex_data.x_rt = projected_rect[2][0]
+            vertex_data.y_rt = projected_rect[2][1]
+            vertex_data.x_rb = projected_rect[3][0]
+            vertex_data.y_rb = projected_rect[3][1]
 
             self.image_textures.vbo_vertexes[i][: np.alen(vertex_data)] = raw
 
