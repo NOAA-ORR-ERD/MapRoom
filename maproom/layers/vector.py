@@ -817,7 +817,8 @@ class LineLayer(PointLayer):
 
     def merge_from_source_layers(self, layer_a, layer_b):
         # for now we only handle merging of points and lines
-
+        self.new()
+        
         self.merged_points_index = len(layer_a.points)
 
         n = len(layer_a.points) + len(layer_b.points)
