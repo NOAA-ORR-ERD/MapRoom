@@ -452,6 +452,32 @@ class ProjectEditor(FrameworkEditor):
             self.update_layer_contents_ui()
             self.refresh()
 
+    def select_boundary(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is None:
+            return
+        
+        error = None
+        try:
+            progress_log.info("START=Finding outer boundary for %s" % sel_layer.name)
+            status = sel_layer.select_outer_boundary()
+        except ProgressCancelError, e:
+            error = "cancel"
+        except Exception, e:
+            error = "Can't determine boundary"
+        finally:
+            progress_log.info("END")
+        
+        if error == "cancel":
+            return
+        elif error is not None:
+            self.window.error(error, sel_layer.name)
+        elif status is None:
+            self.window.error("No complete boundary", sel_layer.name)
+        else:
+            self.update_layer_contents_ui()
+            self.refresh()
+
     def point_tool_selected(self):
         for layer in self.layer_manager.flatten():
             layer.clear_all_line_segment_selections()

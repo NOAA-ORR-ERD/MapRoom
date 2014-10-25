@@ -507,6 +507,15 @@ class LineLayer(PointLayer):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(self, allow_branches=False, allow_self_crossing=False)
         boundaries.check_errors(True)
+    
+    def select_outer_boundary(self):
+        # determine the boundaries in the parent layer
+        boundaries = Boundaries(self, allow_branches=True, allow_self_crossing=True)
+        if len(boundaries) > 0:
+            self.select_points(boundaries[0].point_indexes)
+        else:
+            return None
+        return boundaries[0]
 
     def make_line_segment_indexes(self, count):
         return np.repeat(

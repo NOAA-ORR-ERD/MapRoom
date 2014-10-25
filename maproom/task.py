@@ -365,6 +365,14 @@ class FlaggedToSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.select_all_flagged)
 
+class BoundaryToSelectionAction(EditorAction):
+    name = 'Select Boundary'
+    enabled_name = 'layer_has_points'
+    tooltip = 'Select the boundary of the current layer'
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.select_boundary)
+
 class ZoomModeAction(EditorAction):
     name = 'Zoom Mode'
     tooltip = 'Zoom to box'
@@ -692,6 +700,8 @@ class MaproomProjectTask(FrameworkTask):
                     return [
                         ClearSelectionAction(),
                         DeleteSelectionAction(),
+                        Separator(),
+                        BoundaryToSelectionAction(),
                         Separator(),
                         ClearFlaggedAction(),
                         FlaggedToSelectionAction(),
