@@ -85,6 +85,7 @@ class ImageData(object):
         self.pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
     
     def is_north_up(self):
+        log.debug("PROJECTED TRANSFORM: %s" % str(self.pixel_to_projected_transform))
         if (len(self.pixel_to_projected_transform) < 6 or
             math.fabs(self.pixel_to_projected_transform[2]) > self.NORTH_UP_TOLERANCE or
                 math.fabs(self.pixel_to_projected_transform[4]) > self.NORTH_UP_TOLERANCE):
