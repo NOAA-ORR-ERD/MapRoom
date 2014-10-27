@@ -102,7 +102,7 @@ class ProjectEditor(FrameworkEditor):
             
             if errors:
                 text = "\n\n".join(errors)
-                self.window.error(e.message)
+                self.window.error(text)
                 return
 
             self.layer_manager.add_layers(layers, is_project, self)
