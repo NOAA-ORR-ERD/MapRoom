@@ -12,6 +12,7 @@ from library.accumulator import flatten
 
 from layer_undo import LayerUndo
 from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, constants, loaders
+from command import UndoStack
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict
@@ -36,6 +37,8 @@ class LayerManager(LayerUndo):
     purpose at present is to hold the folder name.
     """
     project = Any
+    
+    undo_stack = Any
     
     layers = List(Any)
     
@@ -85,6 +88,7 @@ class LayerManager(LayerUndo):
         """
         self = cls()
         self.project = project
+        self.undo_stack = UndoStack()
         layer = RootLayer(manager=self)
         self.insert_layer([0], layer)
         grid = Grid(manager=self)

@@ -21,6 +21,7 @@ from layer_undo import *
 import Layer_tree_control
 import renderer
 from layers.constants import *
+from mouse_commands import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -183,12 +184,6 @@ class ProjectEditor(FrameworkEditor):
             image.SaveFile(path, t)
         else:
             self.window.error("Unsupported image type %s" % ext)
-    
-    def undo(self):
-        self.layer_manager.undo()
-    
-    def redo(self):
-        self.layer_manager.redo()
 
     ###########################################################################
     # Private interface.
@@ -278,23 +273,23 @@ class ProjectEditor(FrameworkEditor):
         self.window._aui_manager.Update()
     
     def update_undo_redo(self):
-        u = self.layer_manager.get_current_undoable_operation_text()
-        r = self.layer_manager.get_current_redoable_operation_text()
-
-        if (u == ""):
-            undo_label = "Undo"
+        command = self.layer_manager.undo_stack.get_undo_command()
+        print "LABEL: undo command: %s" % command
+        if command is None:
+            self.undo_label = "Undo"
             self.can_undo = False
         else:
-            undo_label = "Undo {0}".format(u)
+            self.undo_label = "Undo {0}".format(command)
             self.can_undo = True
-
-        if (r == ""):
-            redo_label = "Redo"
+            
+        command = self.layer_manager.undo_stack.get_redo_command()
+        if command is None:
+            self.redo_label = "Redo"
             self.can_redo = False
         else:
-            redo_label = "Redo {0}".format(r)
+            self.redo_label = "Redo {0}".format(command)
             self.can_redo = True
-        
+            
         self.dirty = self.can_undo
     
     @on_trait_change('layer_manager:undo_stack_changed')
@@ -349,6 +344,53 @@ class ProjectEditor(FrameworkEditor):
             return
         self.refresh()
     
+    
+    
+    # New Command processor
+    
+    def update_undo_redo(self):
+        command = self.layer_manager.undo_stack.get_undo_command()
+        print "LABEL: undo command: %s" % command
+        if command is None:
+            self.undo_label = "Undo"
+            self.can_undo = False
+        else:
+            self.undo_label = "Undo {0}".format(command)
+            self.can_undo = True
+            
+        command = self.layer_manager.undo_stack.get_redo_command()
+        if command is None:
+            self.redo_label = "Redo"
+            self.can_redo = False
+        else:
+            self.redo_label = "Redo {0}".format(command)
+            self.can_redo = True
+            
+        self.dirty = self.can_undo
+    
+    def undo(self):
+        undo = self.layer_manager.undo_stack.undo(self)
+        self.process_flags(undo.flags)
+    
+    def redo(self):
+        undo = self.layer_manager.undo_stack.redo(self)
+        self.process_flags(undo.flags)
+    
+    def process_command(self, command):
+        undo = command.perform(self)
+        self.layer_manager.undo_stack.add_command(command)
+        self.process_flags(undo.flags)
+    
+    def process_flags(self, f):
+        if f.select_layer:
+            self.layer_tree_control.select_layer(f.select_layer)
+        if f.layer_contents_changed:
+            self.layer_contents_changed(f.layer_contents_changed)
+            f.refresh_needed = True
+        
+        if f.refresh_needed:
+            self.refresh()
+
     #### old Editor ########################################################
 
 #    editing rules:
@@ -617,13 +659,15 @@ class ProjectEditor(FrameworkEditor):
                 self.esc_key_pressed()
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.control.release_mouse() # shouldn't be captured now anyway
-                point_index = layer.insert_point(world_point)
-                layer.select_point(point_index)
-                layer.update_bounds()
-                self.layer_manager.end_operation_batch(refresh=False)
-                self.refresh()
-                if not vis:
-                    self.task.status_bar.message = "Added point to hidden layer %s" % layer.name
+                cmd = InsertPointCommand(layer, world_point)
+                self.process_command(cmd)
+#                point_index = layer.insert_point(world_point)
+#                layer.select_point(point_index)
+#                layer.update_bounds()
+#                self.layer_manager.end_operation_batch(refresh=False)
+#                self.refresh()
+#                if not vis:
+#                    self.task.status_bar.message = "Added point to hidden layer %s" % layer.name
         log.debug("2")
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (not event.ControlDown() and not event.ShiftDown()):
