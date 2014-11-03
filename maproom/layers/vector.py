@@ -183,7 +183,7 @@ class PointLayer(ProjectedLayer):
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
 
-        if (self.points != None and len(self.points) > 0):
+        if (self.points is not None and len(self.points) > 0):
             if (mark_type == STATE_NONE):
                 points = self.points
             else:

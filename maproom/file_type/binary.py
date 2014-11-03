@@ -24,7 +24,7 @@ class UGRID_Recognizer(HasTraits):
 
     These can be HDF (netcdf4) or CDF (netcdf3)
 
-    but this looks for the file attributes that it should have
+    but this looks for the file attributes that it should have, so should find either.
     """
 
     id = "application/x-nc_ugrid"

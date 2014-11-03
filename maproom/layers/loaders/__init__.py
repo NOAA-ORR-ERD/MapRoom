@@ -55,6 +55,8 @@ from bna import BNALoader
 loaders.append(BNALoader())
 from gdal import GDALLoader
 loaders.append(GDALLoader())
+from nc_particles import ParticleLoader
+loaders.append(ParticleLoader())
 from project import ProjectLoader
 loaders.append(ProjectLoader())
 from ugrid import UGridLoader

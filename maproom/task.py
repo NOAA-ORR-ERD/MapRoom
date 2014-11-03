@@ -731,6 +731,8 @@ class MaproomProjectTask(FrameworkTask):
         that will load a new file or create a new view of the existing editor,
         respectively.
         """
+        log.debug("In new...")
+        log.debug(" active editor is: %s"%self.active_editor)
         if self.active_editor and hasattr(source, 'get_metadata') and not self.active_editor.load_in_new_tab(source):
             editor = self.active_editor
             editor.load(source, **kwargs)
@@ -769,8 +771,11 @@ class MaproomProjectTask(FrameworkTask):
     ###
     @classmethod
     def can_edit(cls, mime):
-        return mime.startswith("image") or mime.startswith("application/x-maproom-") or mime == "application/x-nc_ugrid"
-    
+        return ( mime.startswith("image") or
+                 mime.startswith("application/x-maproom-") or
+                 mime == "application/x-nc_ugrid" or
+                 mime == "application/x-nc_particles"
+                 )
     
     
     # Not traits, just normal class instances
