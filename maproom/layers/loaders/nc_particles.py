@@ -16,6 +16,38 @@ progress_log = logging.getLogger("progress")
 
 from post_gnome import nc_particles
 
+class nc_particles_file_loader():
+    """
+    iterator for loading all the timesteps in an nc_particles file
+
+    note: this should probably be in the nc_particles lib...
+
+    """
+    def __init__(self, file_path):
+        self.reader = nc_particles.Reader(file_path)
+        self.current_timestep = 20 # fixme## hard coded limit!!!!!
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.current_timestep >= len(self.reader.times):
+            raise StopIteration       
+        data = self.reader.get_timestep( self.current_timestep)
+        time = self.reader.times[self.current_timestep]
+        self.current_timestep += 1
+        f_points = np.c_[data['longitude'], data['latitude']]
+        num_points = f_points.shape[0]
+        f_depths = np.zeros((num_points,), dtype = np.float32)
+        f_line_segment_indexes = np.zeros( (num_points, 2), dtype=np.uint32 )
+        return { 'error_string': "",
+                 'f_points': f_points,
+                 'f_depths': f_depths,
+                 'f_line_segment_indexes':f_line_segment_indexes,
+                 'depth_unit': "unknown",
+                 'time': time
+                 }
+
 class ParticleLoader(BaseLoader):
     mime = "application/x-nc_particles"
     
@@ -34,40 +66,40 @@ class ParticleLoader(BaseLoader):
         :param manager: The layer manager
 
         """
+        layers = []
+        for data in nc_particles_file_loader(metadata.uri):
+            print "*******"
+            print "loading timestep"
+            print "*************"
+            if data.pop('error_string') == "":
+                layer = LineLayer(manager=manager)
+                progress_log.info("Finished loading %s" % metadata.uri)
+                layer.file_path = metadata.uri
+                layer.name = os.path.split(layer.file_path)[1] + data.pop('time').isoformat().rsplit(':',1)[0]
+                data.pop('depth_unit')
+                layer.set_data(**data)
+                layer.mime = self.mime
 
-        layer = LineLayer(manager=manager)
+            layers.append(layer)
+        return layers
 
-        # load the data
-        progress_log.info("Loading from %s" % metadata.uri)
-        (layer.load_error_string,
-         f_points,
-         f_depths,
-         f_line_segment_indexes,
-         layer.depth_unit) = load_nc_particles_file(metadata.uri)
+    # def load_nc_particles_file(self, file_path, timestep):
 
-        if (layer.load_error_string == ""):
-            progress_log.info("Finished loading %s" % metadata.uri)
-            layer.set_data(f_points, f_depths, f_line_segment_indexes)
-            layer.file_path = metadata.uri
-            layer.name = os.path.split(layer.file_path)[1]
-            layer.mime = "application/x-maproom-verdat" #fixme: wrong mime type!
-        return [layer]
+    #     reader = nc_particles.Reader(file_path)
+    #     data = reader.get_timestep( len(reader.times)-1-timestep )
+    #     f_points = np.c_[data['longitude'], data['latitude']]
+    #     num_points = f_points.shape[0]
+    #     load_error_string = ""
+    #     depth_unit = "unknown"
+    #     f_depths = np.zeros((num_points,), dtype = np.float32)
+    #     f_line_segment_indexes = np.zeros( (num_points, 2), dtype=np.uint32 )
+    #     return { 'error': load_error_string,
+    #              'f_points': f_points,
+    #              'f_depths': f_depths,
+    #              'f_line_segment_indexes':f_line_segment_indexes,
+    #              'depth_unit':depth_unit,
+    #              }
 
-def load_nc_particles_file(file_path):
-
-        reader = nc_particles.Reader(file_path)
-        data = reader.get_timestep( len(reader.times)-1 ) #fixme: only the last timestep for now!
-        f_points = np.c_[data['longitude'], data['latitude']]
-        num_points = f_points.shape[0]
-        load_error_string = ""
-        depth_unit = "unknown"
-        f_depths = np.zeros((num_points,), dtype = np.float32)
-        f_line_segment_indexes = np.zeros( (num_points, 2), dtype=np.uint32 )
-        return ( load_error_string,
-                 f_points,
-                 f_depths,
-                 f_line_segment_indexes,
-                 depth_unit)
 
 
 # def write_layer_as_verdat(f, layer):
