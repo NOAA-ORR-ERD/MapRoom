@@ -9,7 +9,7 @@ import numpy as np
 #import re
 
 from common import BaseLoader
-from maproom.layers import LineLayer
+from maproom.layers import PointLayer
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -43,7 +43,6 @@ class nc_particles_file_loader():
         return { 'error_string': "",
                  'f_points': f_points,
                  'f_depths': f_depths,
-                 'f_line_segment_indexes':f_line_segment_indexes,
                  'depth_unit': "unknown",
                  'time': time
                  }
@@ -72,7 +71,7 @@ class ParticleLoader(BaseLoader):
             print "loading timestep"
             print "*************"
             if data.pop('error_string') == "":
-                layer = LineLayer(manager=manager)
+                layer = PointLayer(manager=manager)
                 progress_log.info("Finished loading %s" % metadata.uri)
                 layer.file_path = metadata.uri
                 layer.name = os.path.split(layer.file_path)[1] + data.pop('time').isoformat().rsplit(':',1)[0]

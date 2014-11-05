@@ -103,10 +103,15 @@ class PointLayer(ProjectedLayer):
         if refresh:
             self.manager.dispatch_event('refresh_needed')
     
+    def get_visibility_dict(self):
+        d = ProjectedLayer.get_visibility_dict(self)
+        d["labels"] = False
+        return d
+
     def get_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
         """
-        return ["points", "lines", "labels"]
+        return ["points", "labels"]
     
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
@@ -115,7 +120,7 @@ class PointLayer(ProjectedLayer):
             return self.points is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def set_data(self, f_points, f_depths, f_line_segment_indexes):
+    def set_data(self, f_points, f_depths):
         n = np.alen(f_points)
         self.determine_layer_color()
         self.points = self.make_points(n)
@@ -129,14 +134,6 @@ class PointLayer(ProjectedLayer):
             self.points.color = self.color
             self.points.state = 0
 
-            n = np.alen(f_line_segment_indexes)
-            self.line_segment_indexes = self.make_line_segment_indexes(n)
-            self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
-                0: n
-            ] = f_line_segment_indexes
-            self.line_segment_indexes.color = self.color
-            self.line_segment_indexes.state = 0
-        
         self.update_bounds()
     
     def can_save(self):
@@ -389,9 +386,6 @@ class PointLayer(ProjectedLayer):
         
         """
         if self.points != None and renderer.point_and_line_set_renderer == None:
-            if (self.line_segment_indexes == None):
-                self.line_segment_indexes = self.make_line_segment_indexes(0)
-
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
 
         renderer.set_up_labels(self)
@@ -408,13 +402,13 @@ class PointLayer(ProjectedLayer):
                                                     self.point_size,
                                                     self.line_width,
                                                     layer_visibility["points"],
-                                                    layer_visibility["lines"],
-                                                    layer_visibility["triangles"],
-                                                    self.triangle_line_width,
+                                                    False,
+                                                    False,
+                                                    0,
                                                     self.get_selected_point_indexes(),
                                                     self.get_selected_point_indexes(STATE_FLAGGED),
-                                                    self.get_selected_line_segment_indexes(),
-                                                    self.get_selected_line_segment_indexes(STATE_FLAGGED))
+                                                    [],
+                                                    [])
 
             # the labels
             if (renderer.label_set_renderer != None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys != None):
@@ -425,9 +419,6 @@ class PointLayer(ProjectedLayer):
 
         # render selections after everything else
         if (renderer.point_and_line_set_renderer != None and not pick_mode):
-            if layer_visibility["lines"]:
-                renderer.point_and_line_set_renderer.render_selected_line_segments(self.line_width, self.get_selected_line_segment_indexes())
-
             if layer_visibility["points"]:
                 renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
                                                                         self.get_selected_point_indexes())
