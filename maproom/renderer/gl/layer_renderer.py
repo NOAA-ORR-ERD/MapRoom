@@ -45,6 +45,7 @@ class LayerRenderer(object):
         self.canvas = canvas
 
         self.point_and_line_set_renderer = None
+        self.point_renderer = None
         self.label_set_renderer = None
         self.polygon_set_renderer = None
         self.image_set_renderer = None
@@ -145,6 +146,9 @@ class LayerRenderer(object):
         if (self.point_and_line_set_renderer != None):
             self.point_and_line_set_renderer.destroy()
             self.point_and_line_set_renderer = None
+        if (self.point_renderer != None):
+            self.point_renderer.destroy()
+            self.point_renderer = None
         if (self.polygon_set_renderer != None):
             self.polygon_set_renderer.destroy()
             self.polygon_set_renderer = None

@@ -16,7 +16,16 @@ class Point_and_line_set_renderer:
     )
     """
 
-    def __init__(self, opengl_renderer, points, point_colors, line_segment_indexes, line_segment_colors, triangle_point_indexes, triangle_point_colors, projection, projection_is_identity):
+    def __init__(self,
+                 opengl_renderer,
+                 points,
+                 point_colors,
+                 line_segment_indexes,
+                 line_segment_colors,
+                 triangle_point_indexes,
+                 triangle_point_colors,
+                 projection,
+                 projection_is_identity):
         """
             points = 2 x np.float64, i.e., "2f4"
             point_colors = np array of np.uint32, one per point
