@@ -9,7 +9,7 @@ import numpy as np
 #import re
 
 from common import BaseLoader
-from maproom.layers import PointLayer
+from maproom.layers.particles import ParticleLayer
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -67,11 +67,8 @@ class ParticleLoader(BaseLoader):
         """
         layers = []
         for data in nc_particles_file_loader(metadata.uri):
-            print "*******"
-            print "loading timestep"
-            print "*************"
             if data.pop('error_string') == "":
-                layer = PointLayer(manager=manager)
+                layer = ParticleLayer(manager=manager)
                 progress_log.info("Finished loading %s" % metadata.uri)
                 layer.file_path = metadata.uri
                 layer.name = os.path.split(layer.file_path)[1] + data.pop('time').isoformat().rsplit(':',1)[0]

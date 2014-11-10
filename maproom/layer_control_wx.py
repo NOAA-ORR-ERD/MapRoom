@@ -53,7 +53,8 @@ class LayerControl(glcanvas.GLCanvas):
 
     @classmethod
     def get_valid_mouse_mode(cls, mouse_mode, mode_mode_toolbar_name):
-        """Return a valid mouse mode for the specified toolbar
+        """
+        Return a valid mouse mode for the specified toolbar
         
         Used when switching modes to guarantee a valid mouse mode.
         """
@@ -67,7 +68,7 @@ class LayerControl(glcanvas.GLCanvas):
     @classmethod
     def init_context(cls, canvas):
         # Only one GLContext is needed for the entire application -- this way,
-        # textures can be shared among views
+        # textures can be shared among views.
         if cls.context is None:
             cls.context = glcanvas.GLContext(canvas)
 
@@ -80,6 +81,7 @@ class LayerControl(glcanvas.GLCanvas):
         kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
                                 glcanvas.WX_GL_DOUBLEBUFFER,
                                 glcanvas.WX_GL_MIN_ALPHA, 8, )
+
         glcanvas.GLCanvas.__init__(self, *args, **kwargs)
 
         self.init_context(self)
@@ -233,8 +235,6 @@ class LayerControl(glcanvas.GLCanvas):
         self.mouse_handler.process_key_char(event)
 
     def on_idle(self, event):
-        # self.get_effective_tool_mode( event ) # update alt key state (not needed, it gets called in set_cursor anyway
-        # print self.mouse_is_down
         self.set_cursor()
 
     def set_cursor(self):
@@ -306,11 +306,8 @@ class LayerControl(glcanvas.GLCanvas):
         self.update_renderers()
 
         s_r = self.get_screen_rect()
-        # print "s_r = " + str( s_r )
         p_r = self.get_projected_rect_from_screen_rect(s_r)
-        # print "p_r = " + str( p_r )
         w_r = self.get_world_rect_from_projected_rect(p_r)
-        # print "w_r = " + str( w_r )
 
         if not self.opengl_renderer.prepare_to_render(p_r, s_r):
             return
@@ -322,12 +319,17 @@ class LayerControl(glcanvas.GLCanvas):
         self.set_render_projection_matrix()
         """
 
+        ## fixme -- why is this a function defined in here??
         def render_layers(pick_mode=False):
             list = self.layer_manager.flatten()
             length = len(list)
             for i, layer in enumerate(reversed(list)):
                 renderer = self.layer_renderers[layer]
-                layer.render(self.opengl_renderer, renderer, w_r, p_r, s_r, self.project.layer_visibility[layer], (length - 1 - i) * 10, pick_mode)
+                layer.render(self.opengl_renderer,
+                             renderer,
+                             w_r, p_r, s_r,
+                             self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
+                             (length - 1 - i) * 10, pick_mode)
 
         render_layers()
 
@@ -520,13 +522,11 @@ class LayerControl(glcanvas.GLCanvas):
         w_c = self.get_world_point_from_screen_point(s_c)
         was_identity = self.projection_is_identity
 
-        # print "self.projected_units_per_pixel A = " + str( self.projected_units_per_pixel )
         self.projection = Projection(srs)
         self.projection_is_identity = self.projection.srs.find("+proj=longlat") != -1
 
         for layer in self.layer_manager.flatten():
             self.layer_renderers[layer].reproject(self.projection, self.projection_is_identity)
-        # print "self.projected_units_per_pixel B = " + str( self.projected_units_per_pixel )
 
         ratio = 1.0
         if (was_identity and not self.projection_is_identity):

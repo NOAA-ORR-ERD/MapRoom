@@ -26,13 +26,16 @@ class Opengl_renderer():
          ("u_rb", np.float32), ("v_rb", np.float32)]
     )
 
+    NUM_COLOR_CHANNELS = 4 #i.e. RGBA
+
     picker = None
 
     def __init__(self, create_picker=False):
-        if gl.glGetInteger( gl.GL_RED_BITS ) != 8 or \
-            gl.glGetInteger( gl.GL_GREEN_BITS ) != 8 or \
-            gl.glGetInteger( gl.GL_BLUE_BITS ) != 8 or \
-                gl.glGetInteger(gl.GL_ALPHA_BITS) != 8:
+        if  ( gl.glGetInteger( gl.GL_RED_BITS ) != 8 or
+              gl.glGetInteger( gl.GL_GREEN_BITS ) != 8 or
+              gl.glGetInteger( gl.GL_BLUE_BITS ) != 8 or
+              gl.glGetInteger( gl.GL_ALPHA_BITS) != 8
+              ):
             raise Exception("Your display must support 32-bit color.")
 
         if not __debug__ or hasattr(sys, "frozen"):
@@ -111,7 +114,7 @@ class Opengl_renderer():
 
         # Make an alpha channel that is opaque where the pixels are black
         # and semi-transparent where the pixels are white.
-        buffer_with_alpha = np.empty((width, height, 4), np.uint8)
+        buffer_with_alpha = np.empty((width, height, self.NUM_COLOR_CHANNELS), np.uint8)
         buffer_with_alpha[:, :, 0: 3] = buffer
         buffer_with_alpha[:, :, 3] = (
             255 - buffer[:, :, 0: 3].sum(axis=2) / 3
@@ -249,6 +252,10 @@ class Opengl_renderer():
         gl.glEnable(gl.GL_TEXTURE_2D)
 
     def draw_screen_string(self, point, s):
+        ##fixme: Is this is the right place?
+        ##fixme: This should be done with shaders anyway.
+        ##fixme:  if not shaders, Cython could help a lot, too
+
         # flip y to treat point as normal screen coordinates
         point = (point[0], rect.height(self.screen_rect) - point[1])
 
@@ -268,6 +275,8 @@ class Opengl_renderer():
         texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
 
         # these are used just because it seems to be the fastest way to full numpy arrays
+        # fixme: -- yes, but if you know how big the arrays are going to be
+        #           better to build the array once. 
         screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
         tex_coord_accumulators = [[], [], [], [], [], [], [], []]
 

@@ -307,7 +307,14 @@ class Layer(HasTraits):
         """
         pass
 
-    def render(self, opengl_renderer, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+    def render(self, opengl_renderer,
+               renderer,
+               world_rect,
+               projected_rect,
+               screen_rect,
+               layer_visibility,
+               layer_index_base,
+               pick_mode=False):
         if hasattr(self, "render_projected"):
             opengl_renderer.prepare_to_render_projected_objects()
             self.render_projected(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)

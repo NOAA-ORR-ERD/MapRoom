@@ -3,6 +3,7 @@ import time
 import sys
 import numpy as np
 import Point_and_line_set_renderer
+import Point_renderer
 import Polygon_set_renderer
 import Label_set_renderer
 import Image_set_renderer
@@ -39,6 +40,7 @@ class LayerRenderer(object):
     POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET = 0
     POLYGONS_SUB_LAYER_PICKER_OFFSET = 5
 
+    #fixme: maybe put this somewhere more central?
     MAX_LABEL_CHARACTERS = 1000 * 5
 
     def __init__(self, canvas):
@@ -50,8 +52,9 @@ class LayerRenderer(object):
         self.polygon_set_renderer = None
         self.image_set_renderer = None
 
-    def __repr__(self):
-        return self.name
+    # don't define unless more useful -- and there is no self.name anyway
+    # def __repr__(self):
+    #     return self.name
 
     def rebuild_image_set_renderer(self, layer):
         if layer.image_data:
@@ -70,14 +73,36 @@ class LayerRenderer(object):
                     self.canvas.projection_is_identity)
 
     def set_up_labels(self, layer):
-        if (layer.points != None and self.label_set_renderer == None):
-            self.label_set_renderer = Label_set_renderer.Label_set_renderer(self.canvas.opengl_renderer, self.MAX_LABEL_CHARACTERS)
+        if (layer.points is not None and self.label_set_renderer is None):
+            self.label_set_renderer = Label_set_renderer.Label_set_renderer(self.canvas.opengl_renderer,
+                                                                            self.MAX_LABEL_CHARACTERS)
+
+    def rebuild_point_renderer(self, layer, create=False, in_place=False):
+
+        ## fixme: this seems like odd logic...
+        ##        maybe craeting and rebuilding should be distict.
+        if self.point_renderer is not None:
+            if in_place:
+                create = False
+                self.point_renderer.reproject( layer.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+                                               layer.manager.project.control.projection,
+                                               layer.manager.project.control.projection_is_identity )
+            else:
+                create = True
+                self.point_renderer.destroy()
+
+        if create:
+            self.point_renderer = Point_renderer.Point_renderer(self.canvas.opengl_renderer,
+                                                                layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
+                                                                layer.points.color.copy().view(dtype=np.uint8),
+                                                                self.canvas.projection,
+                                                                self.canvas.projection_is_identity)
 
     def rebuild_point_and_line_set_renderer(self, layer, create=False, in_place=False):
         if self.point_and_line_set_renderer:
             if in_place:
                 create = False
-#                if ( layer.line_segment_indexes != None ):
+#                if ( layer.line_segment_indexes is not None ):
 #                    self.point_and_line_set_renderer.build_line_segment_buffers(
 #                        self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
 #                        self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
@@ -119,42 +144,47 @@ class LayerRenderer(object):
             self.polygon_set_renderer.destroy()
 
         self.polygon_set_renderer = Polygon_set_renderer.Polygon_set_renderer(
-            self.canvas.opengl_renderer,
-            layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].copy(),
-            layer.polygon_adjacency_array,
-            layer.polygons,
-            self.canvas.projection,
-            self.canvas.projection_is_identity)
+                                        self.canvas.opengl_renderer,
+                                        layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].copy(),
+                                        layer.polygon_adjacency_array,
+                                        layer.polygons,
+                                        self.canvas.projection,
+                                        self.canvas.projection_is_identity)
 
     def reproject(self, projection, projection_is_identity):
-        if (self.point_and_line_set_renderer != None):
+        if (self.point_renderer is not None):
+            self.point_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
+                                                                 projection,
+                                                                 projection_is_identity)
+        if (self.point_and_line_set_renderer is not None):
             self.point_and_line_set_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
                                                        projection,
                                                        projection_is_identity)
-        if (self.polygon_set_renderer != None):
+        if (self.polygon_set_renderer is not None):
             self.polygon_set_renderer.reproject(projection, projection_is_identity)
         """
-        if ( self.label_set_renderer != None ):
+        if ( self.label_set_renderer is not None ):
             self.label_set_renderer.reproject( self.layer.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
                                                projection,
                                                projection_is_identity )
         """
-        if (self.image_set_renderer != None):
+        if (self.image_set_renderer is not None):
             self.image_set_renderer.reproject(projection, projection_is_identity)
 
     def __del__(self):
-        if (self.point_and_line_set_renderer != None):
+        ## fixme:  why does destroy() need to be called?
+        if (self.point_and_line_set_renderer is not None):
             self.point_and_line_set_renderer.destroy()
             self.point_and_line_set_renderer = None
-        if (self.point_renderer != None):
+        if (self.point_renderer is not None):
             self.point_renderer.destroy()
             self.point_renderer = None
-        if (self.polygon_set_renderer != None):
+        if (self.polygon_set_renderer is not None):
             self.polygon_set_renderer.destroy()
             self.polygon_set_renderer = None
-        if (self.label_set_renderer != None):
+        if (self.label_set_renderer is not None):
             self.label_set_renderer.destroy()
             self.label_set_renderer = None
-        if (self.image_set_renderer != None):
+        if (self.image_set_renderer is not None):
             self.image_set_renderer.destroy()
             self.image_set_renderer = None

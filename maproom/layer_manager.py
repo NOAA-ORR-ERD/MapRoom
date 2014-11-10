@@ -6,7 +6,6 @@ import traceback
 import json
 
 import numpy as np
-import wx
 import library.rect as rect
 from library.accumulator import flatten
 
@@ -539,56 +538,50 @@ class LayerManager(LayerUndo):
         self.delete_undo_operations_for_layer(layer)
 
 
-def test():
-    """
-    a = Layer()
-    a.name = "a"
-    b = Layer()
-    b.name = "b"
-    c = Layer()
-    c.name = "c"
-    d = Layer()
-    d.name = "d"
-    e = Layer()
-    e.name = "e"
-    f = Layer()
-    f.name = "f"
-    g = Layer()
-    g.name = "g"
-    h = Layer()
-    h.name = "h"
+# def test():
+#     a = Layer()
+#     a.name = "a"
+#     b = Layer()
+#     b.name = "b"
+#     c = Layer()
+#     c.name = "c"
+#     d = Layer()
+#     d.name = "d"
+#     e = Layer()
+#     e.name = "e"
+#     f = Layer()
+#     f.name = "f"
+#     g = Layer()
+#     g.name = "g"
+#     h = Layer()
+#     h.name = "h"
 
-    tree = [ [ a, b ], [c, [ d, e ] ], f, [ g, h ] ]
-    print a
-    print tree
+#     tree = [ [ a, b ], [c, [ d, e ] ], f, [ g, h ] ]
+#     print a
+#     print tree
 
-    lm = LayerManager()
-    lm.layers = tree
+#     lm = LayerManager()
+#     lm.layers = tree
 
-    print "lm.flatten()"
-    print lm.flatten()
+#     print "lm.flatten()"
+#     print lm.flatten()
 
-    for layer in [ a, b, c, d, e, f, g, h ]:
-        print "lm.get_multi_index_of_layer( {0} )".format( layer )
-        mi = lm.get_multi_index_of_layer( layer )
-        print mi
-        print lm.get_layer_by_multi_index( mi )
-    """
+#     for layer in [ a, b, c, d, e, f, g, h ]:
+#         print "lm.get_multi_index_of_layer( {0} )".format( layer )
+#         mi = lm.get_multi_index_of_layer( layer )
+#         print mi
+#         print lm.get_layer_by_multi_index( mi )
 
-    """
-    print "removing a"
-    lm.remove_layer_at_multi_index( [ 0, 0 ] )
-    print lm.layers
-    print "removing d"
-    lm.remove_layer_at_multi_index( [ 1, 1, 0 ] )
-    print lm.layers
-    print "removing e"
-    lm.remove_layer_at_multi_index( [ 1, 1, 0 ] )
-    print lm.layers
-    """
+#     print "removing a"
+#     lm.remove_layer_at_multi_index( [ 0, 0 ] )
+#     print lm.layers
+#     print "removing d"
+#     lm.remove_layer_at_multi_index( [ 1, 1, 0 ] )
+#     print lm.layers
+#     print "removing e"
+#     lm.remove_layer_at_multi_index( [ 1, 1, 0 ] )
 
-    """
-    print "inserting a"
-    lm.insert_layer( [ 1, 1, 1 ], a )
-    print lm.layers
-    """
+#     print lm.layers
+#     print "inserting a"
+#     lm.insert_layer( [ 1, 1, 1 ], a )
+#     print lm.layers
