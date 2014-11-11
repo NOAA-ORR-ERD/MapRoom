@@ -74,7 +74,7 @@ class MouseHandler(object):
         if (c.mouse_is_down):
             d_x = p[0] - c.mouse_down_position[0]
             d_y = c.mouse_down_position[1] - p[1]
-            # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+            print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
             if (effective_mode == c.MODE_PAN):
                 if (d_x != 0 or d_y != 0):
                     # the user has panned the map
@@ -95,6 +95,8 @@ class MouseHandler(object):
                         c.CaptureMouse()
                     c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
                     c.mouse_down_position = p
+                    print "move: %s" % str(c.mouse_move_position)
+                    print "down: %s" % str(c.mouse_down_position)
                     c.render(event)
 
     def process_mouse_up(self, event):
@@ -151,7 +153,12 @@ class MouseHandler(object):
                 c.selection_box_is_being_defined = False
                 c.render()
             else:
-                c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position)
+                p = event.GetPosition()
+                w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
+                w_p1 = c.get_world_point_from_screen_point(p)
+                print "move: %s" % str(c.mouse_move_position)
+                print "down: %s" % str(c.mouse_down_position)
+                c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
         c.selection_box_is_being_defined = False
 
     def process_mouse_wheel_scroll(self, event):

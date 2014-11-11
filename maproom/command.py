@@ -49,8 +49,12 @@ class UndoStack(list):
         self.batch.list_contents()
     
     def insert_at_index(self, command):
-        self[self.insert_index:] = [command]
-        self.insert_index += 1
+        last = self.get_undo_command()
+        if last is not None and last.coalesce(command):
+            return
+        if command.is_recordable():
+            self[self.insert_index:] = [command]
+            self.insert_index += 1
     
     def list_contents(self):
         for i, command in enumerate(self):
@@ -61,10 +65,13 @@ class CommandStatus(object):
     def __init__(self):
         self.message = None
         self.refresh_needed = False
-        self.layer_contents_changed = False
-        self.layer_contents_deleted = False
-        self.layer_metadata_changed = False
         self.projection_changed = False
+        
+        # Set the following to the layer object if affected
+        self.layer_items_moved = None
+        self.layer_contents_added = None
+        self.layer_contents_deleted = None
+        self.layer_metadata_changed = None
         
         self.select_layer = None
 
@@ -74,11 +81,20 @@ class UndoInfo(object):
         self.index = -1
         self.data = None
         self.flags = CommandStatus()
+    
+    def __str__(self):
+        return "index=%d, flags=%s" % (self.index, str(dir(self.flags)))
 
 class Command(object):
     def __str__(self):
         return "<unnamed command>"
     
+    def coalesce(self, next_command):
+        return False
+    
+    def is_recordable(self):
+        return True
+    
     def perform(self, editor):
         pass
     
@@ -86,24 +102,17 @@ class Command(object):
         pass
 
 
-class Batch(Command):
+class Batch(UndoStack):
     """A batch is immutable once created, so there's no need to allow
     intermediate index points.
     """
-    def __init__(self, *args, **kwargs):
-        self.commands = []
-    
     def __str__(self):
         return "<batch>"
     
-    def insert_at_index(self, command):
-        self.commands.append(command)
-    
     def perform(self, editor):
-        for c in self.commands:
+        for c in self:
             c.perform(editor)
     
     def undo(self, editor):
-        for c in reversed(self.commands):
+        for c in reversed(self):
             c.undo(editor)
-

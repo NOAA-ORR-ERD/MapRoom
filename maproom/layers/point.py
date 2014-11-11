@@ -12,6 +12,7 @@ from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
 from ..layer_undo import *
 from ..command import UndoInfo
+from ..mouse_commands import MovePointsCommand
 
 from base import Layer, ProjectedLayer
 from constants import *
@@ -292,7 +293,12 @@ class PointLayer(ProjectedLayer):
             params = ( world_d_x, world_d_y )
             self.manager.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
         """
-
+    
+    def dragging_selected_objects(self, world_dx, world_dy):
+        indexes = self.get_selected_and_dependent_point_indexes()
+        cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
+        return cmd
+    
     def insert_point(self, world_point):
         if self.points is None:
             index = -1
@@ -316,7 +322,8 @@ class PointLayer(ProjectedLayer):
             self.points = np.insert(self.points, point_index, p).view(np.recarray)
         undo.index = point_index
         undo.data = np.copy(p)
-        undo.flags.layer_contents_changed = self
+        undo.flags.items_moved = True
+        undo.flags.layer_contents_added = self
 
         # update point indexes in the line segements to account for the inserted point
         self.update_after_insert_point_at_index(point_index)
@@ -338,7 +345,8 @@ class PointLayer(ProjectedLayer):
         undo.index = point_index
         undo.data = np.copy(p)
         undo.flags.refresh_needed = True
-        undo.flags.layer_contents_changed = self
+        undo.flags.items_moved = True
+        undo.flags.layer_contents_deleted = self
         self.points = np.delete(self.points, point_index, 0)
 
         # update point indexes in the line segements to account for the deleted point

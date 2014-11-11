@@ -272,26 +272,6 @@ class ProjectEditor(FrameworkEditor):
         self.update_undo_redo()
         self.window._aui_manager.Update()
     
-    def update_undo_redo(self):
-        command = self.layer_manager.undo_stack.get_undo_command()
-        print "LABEL: undo command: %s" % command
-        if command is None:
-            self.undo_label = "Undo"
-            self.can_undo = False
-        else:
-            self.undo_label = "Undo {0}".format(command)
-            self.can_undo = True
-            
-        command = self.layer_manager.undo_stack.get_redo_command()
-        if command is None:
-            self.redo_label = "Redo"
-            self.can_redo = False
-        else:
-            self.redo_label = "Redo {0}".format(command)
-            self.can_redo = True
-            
-        self.dirty = self.can_undo
-    
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
         log.debug("undo_stack_changed called!!!")
@@ -355,7 +335,7 @@ class ProjectEditor(FrameworkEditor):
             self.undo_label = "Undo"
             self.can_undo = False
         else:
-            self.undo_label = "Undo {0}".format(command)
+            self.undo_label = "Undo: {0}".format(command)
             self.can_undo = True
             
         command = self.layer_manager.undo_stack.get_redo_command()
@@ -363,7 +343,7 @@ class ProjectEditor(FrameworkEditor):
             self.redo_label = "Redo"
             self.can_redo = False
         else:
-            self.redo_label = "Redo {0}".format(command)
+            self.redo_label = "Redo: {0}".format(command)
             self.can_redo = True
             
         self.dirty = self.can_undo
@@ -384,8 +364,12 @@ class ProjectEditor(FrameworkEditor):
     def process_flags(self, f):
         if f.select_layer:
             self.layer_tree_control.select_layer(f.select_layer)
-        if f.layer_contents_changed:
-            self.layer_contents_changed(f.layer_contents_changed)
+        if f.layer_items_moved:
+            f.layer_items_moved.update_bounds()
+            self.control.rebuild_points_and_lines_for_layer(f.layer_items_moved, in_place=True)
+        if f.layer_contents_added or f.layer_contents_deleted:
+            layer = f.layer_contents_added or f.layer_contents_deleted
+            self.control.rebuild_points_and_lines_for_layer(layer)
             f.refresh_needed = True
         
         if f.refresh_needed:
@@ -692,36 +676,30 @@ class ProjectEditor(FrameworkEditor):
 
         (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
-        layer.offset_selected_objects(world_d_x, world_d_y)
-        # self.layer_manager.end_operation_batch()
-        self.refresh()
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
+        self.process_command(cmd)
 
-    def finished_drag(self, mouse_down_position, mouse_move_position):
+    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y):
         if (self.clickable_object_mouse_is_over == None):
             return
 
-        d_x = mouse_move_position[0] - mouse_down_position[0]
-        d_y = mouse_down_position[1] - mouse_move_position[1]
-
-        if (d_x == 0 and d_y == 0):
+        # Can't compare mouse positions in screen coordinates, because the
+        # screen may have been scrolled or zoomed.  Have to look at world
+        # coords to see if there has been a change.
+        
+        if (world_d_x == 0 and world_d_y == 0):
             return
 
-        w_p0 = self.control.get_world_point_from_screen_point(mouse_down_position)
-        w_p1 = self.control.get_world_point_from_screen_point(mouse_move_position)
-        world_d_x = w_p1[0] - w_p0[0]
-        world_d_y = w_p1[1] - w_p0[1]
+#        w_p0 = self.control.get_world_point_from_screen_point(mouse_down_position)
+#        w_p1 = self.control.get_world_point_from_screen_point(mouse_move_position)
+#        world_d_x = w_p1[0] - w_p0[0]
+#        world_d_y = w_p1[1] - w_p0[1]
 
         (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
 
-        s_p_i_s = layer.get_selected_and_dependent_point_indexes()
-        for point_index in s_p_i_s:
-            state = layer.get_state(point_index)
-            params = (world_d_x, world_d_y, state)
-            layer.deselect_point(point_index, STATE_FLAGGED)
-            self.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)
-
-        self.layer_manager.end_operation_batch()
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
+        self.process_command(cmd)
 
     def clickable_object_is_ugrid_point(self):
         return renderer.is_ugrid_point(self.clickable_object_mouse_is_over)
