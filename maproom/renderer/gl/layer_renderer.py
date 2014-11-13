@@ -84,7 +84,7 @@ class LayerRenderer(object):
         if self.point_renderer is not None:
             if in_place:
                 create = False
-                self.point_renderer.reproject( layer.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+                self.point_renderer.reproject( layer.points.view( data_types.POINT_XY_VIEW_SIMPLE_DTYPE ).xy,
                                                layer.manager.project.control.projection,
                                                layer.manager.project.control.projection_is_identity )
             else:
@@ -93,7 +93,7 @@ class LayerRenderer(object):
 
         if create:
             self.point_renderer = Point_renderer.Point_renderer(self.canvas.opengl_renderer,
-                                                                layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
+                                                                layer.points.view(data_types.POINT_XY_VIEW_SIMPLE_DTYPE).xy,
                                                                 layer.points.color.copy().view(dtype=np.uint8),
                                                                 self.canvas.projection,
                                                                 self.canvas.projection_is_identity)
@@ -153,7 +153,7 @@ class LayerRenderer(object):
 
     def reproject(self, projection, projection_is_identity):
         if (self.point_renderer is not None):
-            self.point_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
+            self.point_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_SIMPLE_DTYPE).xy,
                                                                  projection,
                                                                  projection_is_identity)
         if (self.point_and_line_set_renderer is not None):

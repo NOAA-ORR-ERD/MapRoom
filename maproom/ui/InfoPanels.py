@@ -345,10 +345,11 @@ class LayerInfoPanel(InfoPanel):
         if (layer != None and layer.type != "root"):
             if (layer.type == "folder"):
                 fields = ["Folder name"]
-
             elif (layer.type == "polygon"):
                 fields.extend(["Layer name", "Polygon count"])
-            else:
+            elif (layer.type == "particle"):
+                fields.extend(["Layer name", ])    
+            else: ## fixme --  shouldn't this be looping for LineLayer -- or whatever?
                 fields.extend(["Layer name"])
                 if layer.has_alpha():
                     fields.extend(["Transparency"])

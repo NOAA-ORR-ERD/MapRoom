@@ -8,6 +8,17 @@ POINT_DTYPE = np.dtype([
     ("color", np.uint32),
     ("state", np.uint32)
 ])
+POINT_SIMPLE_DTYPE = np.dtype([
+    ("x", np.float64),
+    ("y", np.float64),
+    ("color", np.uint32),
+    ("state", np.uint32)
+])
+POINT_XY_VIEW_SIMPLE_DTYPE = np.dtype([
+    ("xy", "2f8"),
+    ("color", np.uint32),
+    ("state", np.uint32)
+])
 POINT_XY_VIEW_DTYPE = np.dtype([
     ("xy", "2f8"),
     ("z", np.float32),
