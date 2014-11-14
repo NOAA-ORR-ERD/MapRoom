@@ -67,6 +67,8 @@ class Layer(HasTraits):
     
     manager = Any
 
+    pickable = False # is this a layer that support picking?
+
     def __repr__(self):
         return self.name
 
@@ -212,6 +214,7 @@ class Layer(HasTraits):
         pass
 
     def get_visibility_dict(self):
+        ##fixme: you'be GOT to be kidding me!
         d = dict()
         d["layer"] = True
         d["images"] = True

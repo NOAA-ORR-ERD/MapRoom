@@ -25,7 +25,7 @@ class nc_particles_file_loader():
     """
     def __init__(self, file_path):
         self.reader = nc_particles.Reader(file_path)
-        self.current_timestep = 5 # fixme## hard coded limit!!!!!
+        self.current_timestep = 4 # fixme## hard coded limit!!!!!
 
     def __iter__(self):
         return self

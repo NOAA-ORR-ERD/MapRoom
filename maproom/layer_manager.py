@@ -72,6 +72,8 @@ class LayerManager(LayerUndo):
     
     renderer_rebuild_event = Event
 
+    pick_layer_index_map = {} # fixme: managed by the layer_control_wx -- horrible coupling!
+
     @classmethod
     def create(cls, project):
         """Convenience function to create a new, empty LayerManager
@@ -139,6 +141,7 @@ class LayerManager(LayerUndo):
         return layer_visibility
 
     def destroy(self):
+        ## fixme: why do layers need a destroy() method???
         for layer in self.flatten():
             layer.destroy()
         self.layers = []
@@ -317,6 +320,9 @@ class LayerManager(LayerUndo):
     def get_multi_index_of_layer(self, layer):
         return self.get_multi_index_of_layer_recursive(layer, self.layers)
 
+    def get_layer_by_pick_index(self, pick_index):
+        return self.pick_layer_index_map[pick_index]
+
     def get_multi_index_of_layer_recursive(self, layer, tree):
         for i, item in enumerate(tree):
             if (isinstance(item, Layer)):
@@ -365,6 +371,7 @@ class LayerManager(LayerUndo):
     def layer_is_folder(self, layer):
         return layer.type == "root" or layer.type == "folder"
 
+    ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???    
     def is_raisable(self, layer):
         if layer.type != "root":
             mi = self.get_multi_index_of_layer(layer)

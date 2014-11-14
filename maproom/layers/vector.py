@@ -434,6 +434,8 @@ class LineLayer(PointLayer):
     
     line_segment_indexes = Any
 
+    pickable = True
+
     def __str__(self):
         try:
             lines = len(self.line_segment_indexes)

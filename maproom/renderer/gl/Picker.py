@@ -70,7 +70,6 @@ class Picker:
         self.screen_rect = screen_rect
 
     def done_rendering(self):
-
         self.unbind_frame_buffer()
 
     def bind_frame_buffer(self):
@@ -82,21 +81,32 @@ class Picker:
         gl.glDrawBuffer(gl.GL_BACK)
 
     def bind_picker_colors(self, layer_index, object_count, doubled=False):
+        """
+        bind the colors in the OpenGL context (right word?)
 
+        for a bunch of object in a layer
+
+        :param layer_index: the first index to use -- this will be pick-layer index plus the sublayer index
+
+        :param object_count: how many objects need colors
+
+        :param doubled = False: whether to double the array (not sure why you would!) 
+        """
+        print " *************** "
+        print " in  bind_picker_colors. layer_index = ", layer_index
+        print " *************** "
         if (layer_index > 255):
-
-            raise Exception("invalid layer_index: " + str(layer_index))
+            raise ValueError("invalid layer_index: %s"%layer_index)
 
         # fill the color buffer with a different color for each object
         start_color = layer_index << 24
-        color_data = np.arange(start_color, start_color + object_count, dtype=np.uint32)
+        color_data = np.arange(start_color, start_color+object_count, dtype=np.uint32)
 
+        ## fix me: why would you want it doubled?
         if doubled:
             color_data = np.c_[color_data, color_data].reshape(-1)
 
-        self.vbo_colors = gl_vbo.VBO(
-            color_data.view(dtype=np.uint8)
-        )
+        self.vbo_colors = gl_vbo.VBO( color_data.view(dtype=np.uint8) )
 
         gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
         self.vbo_colors.bind()
@@ -120,29 +130,27 @@ class Picker:
             # pixels in the window (y coordinate 0)
             color_string = None
         else:
-            color_string = gl.glReadPixels(
-                x=screen_point[0],
-                # glReadPixels() expects coordinates with a lower-left origin
-                y=rect.height(self.screen_rect) - screen_point[1],
-                width=1,
-                height=1,
-                format=gl.GL_RGBA,
-                type=gl.GL_UNSIGNED_BYTE,
-                outputType=str,
-            )
+            color_string = gl.glReadPixels(x=screen_point[0],
+                                           # glReadPixels() expects coordinates with a lower-left origin
+                                           y=rect.height(self.screen_rect) - screen_point[1],
+                                           width=1,
+                                           height=1,
+                                           format=gl.GL_RGBA,
+                                           type=gl.GL_UNSIGNED_BYTE,
+                                           outputType=str,
+                                           )
 
-        if (color_string != None) and (color_string[0: 3] != self.BACKGROUND_COLOR_STRING):
+        if (color_string is not None) and (color_string[0: 3] != self.BACKGROUND_COLOR_STRING):
 
-            full_string = gl.glReadPixels(
-                x=0,
-                # glReadPixels() expects coordinates with a lower-left origin
-                y=0,
-                width=rect.width(self.screen_rect),
-                height=rect.height(self.screen_rect),
-                format=gl.GL_RGBA,
-                type=gl.GL_UNSIGNED_BYTE,  # gl.GL_UNSIGNED_INT_8_8_8_8
-                outputType=str,
-            )
+            full_string = gl.glReadPixels(x=0,
+                                          # glReadPixels() expects coordinates with a lower-left origin
+                                          y=0,
+                                          width=rect.width(self.screen_rect),
+                                          height=rect.height(self.screen_rect),
+                                          format=gl.GL_RGBA,
+                                          type=gl.GL_UNSIGNED_BYTE,  # gl.GL_UNSIGNED_INT_8_8_8_8
+                                          outputType=str,
+                                          )
 
         self.unbind_frame_buffer()
 
@@ -153,29 +161,20 @@ class Picker:
         # im.save( "x.png" )
         # print color_string.__repr__()
         if (sys.byteorder == "big"):
-
             # most-significant byte first
-
             b = np.frombuffer(color_string, dtype=np.uint8)
-
             layer_index = b[0]
-
             object_index = (b[1] << 16) + (b[2] << 8) + b[3]
         else:
-
             # least-significant byte first
-
             b = np.frombuffer(color_string, dtype=np.uint8)
-
             layer_index = b[3]
-
             object_index = (b[2] << 16) + (b[1] << 8) + b[0]
 
         return (layer_index, object_index)
 
 
 """
-
         if self.frame_buffer is None:
             gl.glClear( gl.GL_COLOR_BUFFER_BIT )
         

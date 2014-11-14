@@ -1,6 +1,10 @@
 import numpy as np
 
 
+# data type used for point coordinates in the renderer
+POINT_COORD_VIEW_DTYPE = np.float32
+
+
 POINT_DTYPE = np.dtype([
     ("x", np.float64),
     ("y", np.float64),

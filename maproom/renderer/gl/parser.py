@@ -23,11 +23,12 @@ def is_polygon_point(self):
     return type == LayerRenderer.POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == Point_and_line_set_renderer.POINTS_SUB_LAYER_PICKER_OFFSET
 
 def parse_clickable_object(o):
-    if (o == None):
+    if (o is None):
         return (None, None, None, None)
 
     # see Layer.py for layer types
     # see Point_and_line_set_renderer.py and Polygon_set_renderer.py for subtypes
+    ## fixme: OMG! I can't believe how hard-coded this is!!!
     (layer_index, object_index) = o
     type_and_subtype = layer_index % 10
     type = (type_and_subtype / 5) * 5

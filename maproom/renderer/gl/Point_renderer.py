@@ -10,12 +10,12 @@ Used for GNOME particles for now
 import numpy as np
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
+from.data_types import POINT_COORD_VIEW_DTYPE
+
 
 POINTS_SUB_LAYER_PICKER_OFFSET = 0
 LINES_SUB_LAYER_PICKER_OFFSET = 1
 
-##fixme: should this be a centrally defined parameter somewhere?
-POINT_COORD_DTYPE=np.float32
 
 class Point_renderer(object):
     """
@@ -57,7 +57,7 @@ class Point_renderer(object):
             self.vbo_point_xys = None
             self.vbo_point_colors = None
         else:
-            self.vbo_point_xys = gl_vbo.VBO( np.zeros( points.shape, dtype=POINT_COORD_DTYPE ) )
+            self.vbo_point_xys = gl_vbo.VBO( np.zeros( points.shape, dtype=POINT_COORD_VIEW_DTYPE ) )
             self.vbo_point_colors = gl_vbo.VBO( point_colors )
             self.reproject(points, projection, projection_is_identity)
 
@@ -69,11 +69,11 @@ class Point_renderer(object):
 
         projected_point_data = self.vbo_point_xys.data
         if (projection_is_identity):
-            projected_point_data[:] = points[:].astype(POINT_COORD_DTYPE)
+            projected_point_data[:] = points[:].astype(POINT_COORD_VIEW_DTYPE)
         else:
             ## fixme -- why each axis individually?
-            ##          -- how the projection works? that should be cleaned up in the projection code.
-            projected_point_data[:, 0], projected_point_data[:, 1] = projection(points[:, 0].astype(POINT_COORD_DTYPE), points[:, 1].astype(POINT_COORD_DTYPE))
+            ##          -- how the projection works? that could be cleaned up in the projection code.
+            projected_point_data[:, 0], projected_point_data[:, 1] = projection(points[:, 0].astype(POINT_COORD_VIEW_DTYPE), points[:, 1].astype(POINT_COORD_VIEW_DTYPE))
 
         self.vbo_point_xys[:] = projected_point_data
 

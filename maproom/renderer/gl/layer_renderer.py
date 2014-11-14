@@ -152,6 +152,8 @@ class LayerRenderer(object):
                                         self.canvas.projection_is_identity)
 
     def reproject(self, projection, projection_is_identity):
+        ## fixme: can we put the re-projection code in the renderers (layers?)
+        ##        then this can be a loop that calls each reproject method.
         if (self.point_renderer is not None):
             self.point_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_SIMPLE_DTYPE).xy,
                                                                  projection,
@@ -173,6 +175,8 @@ class LayerRenderer(object):
 
     def __del__(self):
         ## fixme:  why does destroy() need to be called?
+        ## and if it does, why not something like:
+        ##   [renderer.destroy() for renderer in all_renderers]
         if (self.point_and_line_set_renderer is not None):
             self.point_and_line_set_renderer.destroy()
             self.point_and_line_set_renderer = None

@@ -105,6 +105,8 @@ class LayerControl(glcanvas.GLCanvas):
         # radians instead of degrees; so here we use this variable to avoid using the longlat projection
         self.projection_is_identity = False
 
+        self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
+
         #self.frame.Bind( wx.EVT_MOVE, self.refresh )
         #self.frame.Bind( wx.EVT_IDLE, self.on_idle )
         # self.frame.Bind( wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll )
@@ -166,7 +168,7 @@ class LayerControl(glcanvas.GLCanvas):
         e = self.project
         lm = self.layer_manager
 
-        if (e.clickable_object_mouse_is_over != None):  # the mouse is on a clickable object
+        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
             layer = lm.get_layer_by_flattened_index(layer_index)
             if (self.project.layer_tree_control.is_selected_layer(layer)):
@@ -323,14 +325,19 @@ class LayerControl(glcanvas.GLCanvas):
         def render_layers(pick_mode=False):
             list = self.layer_manager.flatten()
             length = len(list)
+            self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
+            pick_layer_index = -1
             for i, layer in enumerate(reversed(list)):
                 renderer = self.layer_renderers[layer]
+                if layer.pickable:
+                    pick_layer_index += 1
+                    self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
                 layer.render(self.opengl_renderer,
                              renderer,
                              w_r, p_r, s_r,
                              self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                             (length - 1 - i) * 10, pick_mode)
-
+                             pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
+                             pick_mode)
         render_layers()
 
         self.opengl_renderer.prepare_to_render_screen_objects()

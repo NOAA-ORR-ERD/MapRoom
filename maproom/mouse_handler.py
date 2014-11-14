@@ -55,9 +55,9 @@ class MouseHandler(object):
             o = None
             if c.opengl_renderer is not None:
                 o = c.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
-            if (o != None):
-                (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
-                layer = c.layer_manager.get_layer_by_flattened_index(layer_index)
+            if (o is not None):
+                (pick_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
+                layer = c.layer_manager.get_layer_by_pick_index(pick_index)
                 if (c.project.layer_tree_control.is_selected_layer(layer)):
                     c.editor.clickable_object_mouse_is_over = o
                 else:
