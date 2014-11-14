@@ -164,31 +164,6 @@ class LayerControl(glcanvas.GLCanvas):
 
         self.mouse_handler.process_mouse_down(event)
 
-    def select_object(self, event):
-        e = self.project
-        lm = self.layer_manager
-
-        if (e.clickable_object_mouse_is_over != None):  # the mouse is on a clickable object
-            (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
-            layer = lm.get_layer_by_flattened_index(layer_index)
-            if (self.project.layer_tree_control.is_selected_layer(layer)):
-                if (e.clickable_object_is_ugrid_point()):
-                    e.clicked_on_point(event, layer, object_index)
-                if (e.clickable_object_is_ugrid_line()):
-                    world_point = self.get_world_point_from_screen_point(event.GetPosition())
-                    e.clicked_on_line_segment(event, layer, object_index, world_point)
-        else:  # the mouse is not on a clickable object
-            # fixme: there should be a reference to the layer manager in the RenderWindow
-            # and we could get the selected layer from there -- or is selected purely a UI concept?
-            layer = self.project.layer_tree_control.get_selected_layer()
-            if (layer != None):
-                if (event.ControlDown() or event.ShiftDown()):
-                    self.selection_box_is_being_defined = True
-                    self.CaptureMouse()
-                else:
-                    world_point = self.get_world_point_from_screen_point(event.GetPosition())
-                    e.clicked_on_empty_space(event, layer, world_point)
-
     def release_mouse(self):
         self.mouse_is_down = False
         self.selection_box_is_being_defined = False

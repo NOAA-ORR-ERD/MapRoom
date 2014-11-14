@@ -5,13 +5,14 @@ import wx
 import wx.glcanvas as glcanvas
 import pyproj
 
+import OpenGL
+import OpenGL.GL as gl
+
 import library.coordinates as coordinates
 import renderer
 import library.rect as rect
 import app_globals
-
-import OpenGL
-import OpenGL.GL as gl
+from mouse_commands import *
 
 from library.Projection import Projection
 
@@ -236,7 +237,29 @@ class ObjectSelectionMode(MouseHandler):
 
     def process_mouse_down(self, event):
         c = self.layer_control
-        c.select_object(event)
+        e = c.project
+        lm = c.layer_manager
+
+        if (e.clickable_object_mouse_is_over != None):  # the mouse is on a clickable object
+            (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
+            layer = lm.get_layer_by_flattened_index(layer_index)
+            if (e.layer_tree_control.is_selected_layer(layer)):
+                if (e.clickable_object_is_ugrid_point()):
+                    self.clicked_on_point(event, layer, object_index)
+                if (e.clickable_object_is_ugrid_line()):
+                    world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                    self.clicked_on_line_segment(event, layer, object_index, world_point)
+        else:  # the mouse is not on a clickable object
+            # fixme: there should be a reference to the layer manager in the RenderWindow
+            # and we could get the selected layer from there -- or is selected purely a UI concept?
+            layer = e.layer_tree_control.get_selected_layer()
+            if (layer != None):
+                if (event.ControlDown() or event.ShiftDown()):
+                    c.selection_box_is_being_defined = True
+                    c.CaptureMouse()
+                else:
+                    world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                    self.clicked_on_empty_space(event, layer, world_point)
 
     def process_mouse_motion_down(self, event):
         c = self.layer_control
@@ -290,6 +313,18 @@ class ObjectSelectionMode(MouseHandler):
     def delete_key_pressed(self):
         self.layer_control.editor.delete_all_selections()
         
+    def clicked_on_point(self, event, layer, point_index):
+        pass
+
+    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        pass
+
+    def clicked_on_polygon(self, layer, polygon_index):
+        pass
+
+    def clicked_on_empty_space(self, event, layer, world_point):
+        pass
+
     def select_objects_in_rect(self, event, rect, layer):
         raise RuntimeError("Abstract method")
 
@@ -308,10 +343,70 @@ class PointSelectionMode(ObjectSelectionMode):
                 return wx.StockCursor(wx.CURSOR_HAND)
         return wx.StockCursor(wx.CURSOR_PENCIL)
 
+    def clicked_on_point(self, event, layer, point_index):
+        c = self.layer_control
+        e = c.project
+        vis = e.layer_visibility[layer]['layer']
+
+        if (event.ControlDown()):
+            if (layer.is_point_selected(point_index)):
+                layer.deselect_point(point_index)
+            else:
+                layer.select_point(point_index)
+        elif (layer.is_point_selected(point_index)):
+            layer.clear_all_selections()
+        elif (event.ShiftDown()):
+            path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
+            if (path != []):
+                for p_index in path:
+                    layer.select_point(p_index)
+            else:
+                layer.select_point(point_index)
+        else:
+            layer.clear_all_selections()
+            layer.select_point(point_index)
+
+        e.refresh()
+
+    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        c = self.layer_control
+        e = c.project
+        lm = c.layer_manager
+        vis = e.layer_visibility[layer]['layer']
+
+        if (not event.ControlDown() and not event.ShiftDown()):
+            e.clear_all_selections(False)
+            point_index = layer.insert_point_in_line(world_point, line_segment_index)
+            lm.end_operation_batch()
+            c.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
+            if not vis:
+                e.task.status_bar.message = "Split line in hidden layer %s" % layer.name
+            else:
+                layer.select_point(point_index)
+
+    def clicked_on_empty_space(self, event, layer, world_point):
+        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
+        c = self.layer_control
+        e = c.project
+        vis = e.layer_visibility[layer]['layer']
+        if (layer.type == "root" or layer.type == "folder"):
+            e.window.error("You cannot add points to folder layers.", "Cannot Edit")
+            return
+
+        if (not event.ControlDown() and not event.ShiftDown()):
+            e.clear_all_selections(False)
+            
+            # FIXME: this comment is from pre maproom3. Is it still applicable?
+            # we release the focus because we don't want to immediately drag the new object (if any)
+            # self.control.release_mouse() # shouldn't be captured now anyway
+            
+            cmd = InsertPointCommand(layer, world_point)
+            e.process_command(cmd)
+
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
-class LineSelectionMode(ObjectSelectionMode):
+class LineSelectionMode(PointSelectionMode):
     icon = "add_lines.png"
     menu_item_name = "Line Edit Mode"
     menu_item_tooltip = "Edit and add lines in the current layer"
@@ -322,6 +417,90 @@ class LineSelectionMode(ObjectSelectionMode):
         if e.clickable_object_mouse_is_over != None:
             return wx.StockCursor(wx.CURSOR_HAND)
         return wx.StockCursor(wx.CURSOR_PENCIL)
+
+    def clicked_on_point(self, event, layer, point_index):
+        c = self.layer_control
+        e = c.project
+        lm = c.layer_manager
+        vis = e.layer_visibility[layer]['layer']
+        message = ""
+
+        if (event.ControlDown() or event.ShiftDown()):
+            return PointSelectionMode.clicked_on_point(self, event, layer, point_index)
+
+        point_indexes = layer.get_selected_point_indexes()
+        if len(point_indexes == 1):
+            if not layer.are_points_connected(point_index, point_indexes[0]):
+                layer.insert_line_segment(point_index, point_indexes[0])
+                lm.end_operation_batch()
+                if not vis:
+                    message = "Added line to hidden layer %s" % layer.name
+            layer.clear_all_point_selections()
+            if point_indexes[0] != point_index:
+                # allow for deselecting points by clicking them again.
+                # Only if the old selected point is not the same
+                # as the clicked point will the clicked point be
+                # highlighted.
+                layer.select_point(point_index)
+        elif len(point_indexes) == 0:  # no currently selected point
+            # select this point
+            layer.select_point(point_index)
+
+        e.refresh()
+        if message:
+            e.task.status_bar.message = message
+
+    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        c = self.layer_control
+        e = c.project
+        lm = c.layer_manager
+        vis = e.layer_visibility[layer]['layer']
+
+        if (event.ControlDown()):
+            if (layer.is_line_segment_selected(line_segment_index)):
+                layer.deselect_line_segment(line_segment_index)
+            else:
+                layer.select_line_segment(line_segment_index)
+        elif (layer.is_line_segment_selected(line_segment_index)):
+            pass
+        elif (event.ShiftDown()):
+            path = layer.find_lines_on_shortest_path_from_line_to_selected_line(line_segment_index)
+            if (path != []):
+                for l_s_i in path:
+                    layer.select_line_segment(l_s_i)
+            else:
+                layer.select_line_segment(line_segment_index)
+        else:
+            layer.clear_all_selections()
+            layer.select_line_segment(line_segment_index)
+
+        e.refresh()
+        
+    def clicked_on_empty_space(self, event, layer, world_point):
+        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
+        c = self.layer_control
+        e = c.project
+        lm = c.layer_manager
+        vis = e.layer_visibility[layer]['layer']
+        if (layer.type == "root" or layer.type == "folder"):
+            e.window.error("You cannot add lines to folder layers.", "Cannot Edit")
+            return
+        
+        if (not event.ControlDown() and not event.ShiftDown()):
+            point_indexes = layer.get_selected_point_indexes()
+            if (len(point_indexes == 1)):
+                e.clear_all_selections(False)
+                # we release the focus because we don't want to immediately drag the new object (if any)
+                # self.control.release_mouse()
+                point_index = layer.insert_point(world_point)
+                layer.update_bounds()
+                layer.insert_line_segment(point_index, point_indexes[0])
+                lm.end_operation_batch()
+                layer.clear_all_point_selections()
+                layer.select_point(point_index)
+                if not vis:
+                    e.task.status_bar.message = "Added line to hidden layer %s" % layer.name
+            e.refresh()
 
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), rect)
