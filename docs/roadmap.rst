@@ -135,4 +135,4 @@ Rendering
 Useful OpenGL links:
 
 * `Modern OpenGL tutorial by Nicolas Rougier <http://www.loria.fr/~rougier/teaching/opengl/>`_
-* http://pyopengl.sourceforge.net/context/tutorials/shader_1.html
+* `PyOpenGL tutorials, including a set of Shader tutorials <http://pyopengl.sourceforge.net/context/tutorials/>`_

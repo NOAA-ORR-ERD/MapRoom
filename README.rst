@@ -29,15 +29,31 @@ following steps are required:
 
 git clone https://github.com/MacPython/gattai.git
 cd gattai
-python setup install
+python setup.py install
 cd ..
 git clone https://github.com/MacPython/mac-builds.git
 cd mac-builds/packages/netCDF4
 gattai netcdf.gattai
-cd ..
+cd ../../..
 git clone https://github.com/pyugrid/pyugrid.git
 cd pyugrid
 python setup install
+
+
+
+
+netcdf:
+
+./configure --prefix=/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild --disable-shared CFLAGS=-I/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/include -fPIC CXXFLAGS=-I/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/include -fPIC LDFLAGS=-L/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/lib prefix=/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild LIBS=-ldl
+
+
+
+GEOS and Shapely
+----------------
+
+brew install geos
+pip install shapely
+
 
 
 Usage
