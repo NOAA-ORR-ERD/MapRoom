@@ -365,6 +365,14 @@ class FlaggedToSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.select_all_flagged)
 
+class BoundaryToSelectionAction(EditorAction):
+    name = 'Select Boundary'
+    enabled_name = 'layer_has_points'
+    tooltip = 'Select the boundary of the current layer'
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.select_boundary)
+
 class ZoomModeAction(EditorAction):
     name = 'Zoom Mode'
     tooltip = 'Zoom to box'
@@ -693,6 +701,8 @@ class MaproomProjectTask(FrameworkTask):
                         ClearSelectionAction(),
                         DeleteSelectionAction(),
                         Separator(),
+                        BoundaryToSelectionAction(),
+                        Separator(),
                         ClearFlaggedAction(),
                         FlaggedToSelectionAction(),
                         ]
@@ -765,6 +775,11 @@ class MaproomProjectTask(FrameworkTask):
     def _wx_on_mousewheel_from_window(self, event):
         if self.active_editor:
             self.active_editor.control.on_mouse_wheel_scroll(event)
+    
+    @on_trait_change('window.application.preferences_changed_event')
+    def preferences_changed(self, evt):
+        if self.active_editor:
+            self.active_editor.refresh()
 
     ###
     @classmethod

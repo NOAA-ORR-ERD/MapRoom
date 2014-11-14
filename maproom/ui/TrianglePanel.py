@@ -136,6 +136,7 @@ class TrianglePanel(wx.Panel):
             if remove_on_failure:
                 project.layer_manager.remove_layer(t_layer)
         except Exception as e:
+            progress_log.info("END")
             print traceback.format_exc(e)
             if remove_on_failure:
                 project.layer_manager.remove_layer(t_layer)

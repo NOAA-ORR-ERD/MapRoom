@@ -236,6 +236,7 @@ try:
                 semi_standalone=False,
                 includes=common_includes + py2app_includes,
                 excludes=common_excludes,
+                frameworks=['libgeos_c.dylib'],
                 iconfile="maproom/icons/maproom.icns",
                 plist=dict(
                     CFBundleName="Maproom",

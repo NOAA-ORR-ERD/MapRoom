@@ -102,7 +102,7 @@ class ProjectEditor(FrameworkEditor):
             
             if errors:
                 text = "\n\n".join(errors)
-                self.window.error(e.message)
+                self.window.error(text)
                 return
 
             self.layer_manager.add_layers(layers, is_project, self)
@@ -449,6 +449,32 @@ class ProjectEditor(FrameworkEditor):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             sel_layer.select_flagged(refresh=False)
+            self.update_layer_contents_ui()
+            self.refresh()
+
+    def select_boundary(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is None:
+            return
+        
+        error = None
+        try:
+            progress_log.info("START=Finding outer boundary for %s" % sel_layer.name)
+            status = sel_layer.select_outer_boundary()
+        except ProgressCancelError, e:
+            error = "cancel"
+        except Exception, e:
+            error = "Can't determine boundary"
+        finally:
+            progress_log.info("END")
+        
+        if error == "cancel":
+            return
+        elif error is not None:
+            self.window.error(error, sel_layer.name)
+        elif status is None:
+            self.window.error("No complete boundary", sel_layer.name)
+        else:
             self.update_layer_contents_ui()
             self.refresh()
 
