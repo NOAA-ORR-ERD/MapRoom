@@ -53,7 +53,7 @@ class Layer(HasTraits):
     
     bounds = Any(rect.NONE_RECT)
     
-    mouse_selection_mode = Str("BaseLayer")
+    mouse_mode_toolbar = Str("BaseLayerToolBar")
     
     # this is any change that might affect the properties panel (e.g., number
     # of points selected)

@@ -29,7 +29,7 @@ class PolygonLayer(PointLayer):
     """
     type = Str("polygon")
     
-    mouse_selection_mode = Str("PolygonLayer")
+    mouse_mode_toolbar = Str("PolygonLayerToolBar")
     
     polygons = Any
     

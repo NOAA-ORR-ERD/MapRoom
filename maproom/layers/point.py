@@ -30,7 +30,7 @@ class PointLayer(ProjectedLayer):
     
     type = Str("point")
     
-    mouse_selection_mode = Str("VectorLayer")
+    mouse_mode_toolbar = Str("VectorLayerToolBar")
     
     points = Any
     

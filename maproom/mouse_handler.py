@@ -27,138 +27,63 @@ mouselog.setLevel(logging.INFO)
 class MouseHandler(object):
     """Processing of mouse events, separate from the rendering window
     
-    This is a precursor to an object-based control system of mouse modes
+    This is an object-based control system of mouse modes
     """
+    icon = "help.png"
+    menu_item_name = "Generic Mouse Handler"
+    menu_item_tooltip = "Tooltip for generic mouse handler"
+    editor_trait_for_enabled = ""
 
     def __init__(self, layer_control):
         self.layer_control = layer_control
+    
+    def get_cursor(self):
+        return wx.StockCursor(wx.CURSOR_ARROW)
 
     def process_mouse_down(self, event):
-        c = self.layer_control
-        if (c.get_effective_tool_mode(event) == c.MODE_PAN):
-            return
+        return
 
-        c.select_object(event)
-
-    def process_mouse_motion(self, event):
+    def process_mouse_motion_up(self, event):
         c = self.layer_control
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
-        effective_mode = c.get_effective_tool_mode(event)
-        if (not c.mouse_is_down):
-            prefs = c.project.task.get_preferences()
-            status_text = coordinates.format_coords_for_display(
-                proj_p[0], proj_p[1], prefs.coordinate_display_format)
+        prefs = c.project.task.get_preferences()
+        status_text = coordinates.format_coords_for_display(
+            proj_p[0], proj_p[1], prefs.coordinate_display_format)
 
-            c.release_mouse()
-            # print "mouse is not down"
-            o = None
-            if c.opengl_renderer is not None:
-                o = c.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
-            if (o != None):
-                (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
-                layer = c.layer_manager.get_layer_by_flattened_index(layer_index)
-                if (c.project.layer_tree_control.is_selected_layer(layer)):
-                    c.editor.clickable_object_mouse_is_over = o
-                else:
-                    c.editor.clickable_object_mouse_is_over = None
-                if renderer.is_ugrid_point(o):
-                    status_text += "  Point %s on %s" % (object_index + 1, str(layer))
-
+        c.release_mouse()
+        # print "mouse is not down"
+        o = None
+        if c.opengl_renderer is not None:
+            o = c.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
+        if (o != None):
+            (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
+            layer = c.layer_manager.get_layer_by_flattened_index(layer_index)
+            if (c.project.layer_tree_control.is_selected_layer(layer)):
+                c.editor.clickable_object_mouse_is_over = o
             else:
                 c.editor.clickable_object_mouse_is_over = None
-            mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.editor.clickable_object_mouse_is_over is not None))
+            if renderer.is_ugrid_point(o):
+                status_text += "  Point %s on %s" % (object_index + 1, str(layer))
 
-            c.project.task.status_bar.message = status_text
+        else:
+            c.editor.clickable_object_mouse_is_over = None
+        mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.editor.clickable_object_mouse_is_over is not None))
 
-        if (c.mouse_is_down):
-            d_x = p[0] - c.mouse_down_position[0]
-            d_y = c.mouse_down_position[1] - p[1]
-            print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
-            if (effective_mode == c.MODE_PAN):
-                if (d_x != 0 or d_y != 0):
-                    # the user has panned the map
-                    d_x_p = d_x * c.projected_units_per_pixel
-                    d_y_p = d_y * c.projected_units_per_pixel
-                    c.projected_point_center = (c.projected_point_center[0] - d_x_p,
-                                                   c.projected_point_center[1] - d_y_p)
-                    c.mouse_down_position = p
-                    c.render(event)
-            elif (effective_mode == c.MODE_ZOOM_RECT or effective_mode == c.MODE_CROP or c.selection_box_is_being_defined):
-                c.mouse_move_position = event.GetPosition()
-                c.render(event)
-            else:
-                if (d_x != 0 or d_y != 0):
-                    w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
-                    w_p1 = c.get_world_point_from_screen_point(p)
-                    if not c.HasCapture():
-                        c.CaptureMouse()
-                    c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
-                    c.mouse_down_position = p
-                    print "move: %s" % str(c.mouse_move_position)
-                    print "down: %s" % str(c.mouse_down_position)
-                    c.render(event)
+        c.project.task.status_bar.message = status_text
+
+    def process_mouse_motion_down(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        proj_p = c.get_world_point_from_screen_point(p)
+        d_x = p[0] - c.mouse_down_position[0]
+        d_y = c.mouse_down_position[1] - p[1]
+        print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
 
     def process_mouse_up(self, event):
         c = self.layer_control
-        if (not c.mouse_is_down):
-            c.selection_box_is_being_defined = False
-            return
-
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        effective_mode = c.get_effective_tool_mode(event)
-
-        if (effective_mode == c.MODE_ZOOM_RECT):
-            c.mouse_move_position = event.GetPosition()
-            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                               c.mouse_move_position)
-            d_x = x2 - x1
-            d_y = y2 - y1
-            if (d_x >= 5 and d_y >= 5):
-                p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
-                c.projected_point_center = rect.center(p_r)
-                s_r = c.get_screen_rect()
-                ratio_h = float(d_x) / float(rect.width(s_r))
-                ratio_v = float(d_y) / float(rect.height(s_r))
-                c.projected_units_per_pixel *= max(ratio_h, ratio_v)
-                c.constrain_zoom()
-                c.render()
-        elif (effective_mode == c.MODE_CROP):
-            c.mouse_move_position = event.GetPosition()
-            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                               c.mouse_move_position)
-            p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
-            w_r = c.get_world_rect_from_projected_rect(p_r)
-            print "CROPPING!!!!  ", w_r
-            layer = c.project.layer_tree_control.get_selected_layer()
-            if (layer != None and layer.can_crop()):
-                layer.crop_rectangle(w_r)
-                layer.manager.end_operation_batch()
-                c.project.layer_manager.renderer_rebuild_event = True
-            c.render()
-        elif (effective_mode == c.MODE_EDIT_POINTS or effective_mode == c.MODE_EDIT_LINES):
-            if (c.selection_box_is_being_defined):
-                c.mouse_move_position = event.GetPosition()
-                (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                                   c.mouse_move_position)
-                p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
-                w_r = c.get_world_rect_from_projected_rect(p_r)
-                layer = c.layer_tree_control.get_selected_layer()
-                if (layer != None):
-                    if (effective_mode == c.MODE_EDIT_POINTS):
-                        layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), w_r)
-                    else:
-                        layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), w_r)
-                c.selection_box_is_being_defined = False
-                c.render()
-            else:
-                p = event.GetPosition()
-                w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
-                w_p1 = c.get_world_point_from_screen_point(p)
-                print "move: %s" % str(c.mouse_move_position)
-                print "down: %s" % str(c.mouse_down_position)
-                c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
         c.selection_box_is_being_defined = False
 
     def process_mouse_wheel_scroll(self, event):
@@ -239,6 +164,247 @@ class MouseHandler(object):
                     c.render()
         else:
             if (event.GetKeyCode() == wx.WXK_ESCAPE):
-                c.editor.esc_key_pressed()
+                self.esc_key_pressed()
             if (event.GetKeyCode() == wx.WXK_BACK):
-                c.editor.delete_key_pressed()
+                self.delete_key_pressed()
+    
+    def esc_key_pressed(self):
+        self.layer_control.editor.clear_all_selections()
+    
+    def delete_key_pressed(self):
+        pass
+
+    def render_overlay(self):
+        """Render additional graphics on canvas
+        
+        
+        """
+        pass
+
+class PanMode(MouseHandler):
+    """Mouse mode to pan the viewport
+    """
+    icon = "pan.png"
+    menu_item_name = "Pan Mode"
+    menu_item_tooltip = "Scroll the viewport by holding down the mouse"
+    editor_trait_for_enabled = ""
+
+    def get_cursor(self):
+        c = self.layer_control
+        if c.mouse_is_down:
+            return self.layer_control.hand_closed_cursor
+        return self.layer_control.hand_cursor
+
+    def process_mouse_down(self, event):
+        return
+
+    def process_mouse_motion_down(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        proj_p = c.get_world_point_from_screen_point(p)
+        d_x = p[0] - c.mouse_down_position[0]
+        d_y = c.mouse_down_position[1] - p[1]
+        print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        if (d_x != 0 or d_y != 0):
+            # the user has panned the map
+            d_x_p = d_x * c.projected_units_per_pixel
+            d_y_p = d_y * c.projected_units_per_pixel
+            c.projected_point_center = (c.projected_point_center[0] - d_x_p,
+                                           c.projected_point_center[1] - d_y_p)
+            c.mouse_down_position = p
+            c.render(event)
+
+    def process_mouse_up(self, event):
+        c = self.layer_control
+        if (not c.mouse_is_down):
+            c.selection_box_is_being_defined = False
+            return
+
+        c.mouse_is_down = False
+        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        c.selection_box_is_being_defined = False
+
+
+class ObjectSelectionMode(MouseHandler):
+    """Processing of mouse events, separate from the rendering window
+    
+    This is a precursor to an object-based control system of mouse modes
+    """
+
+    def __init__(self, layer_control):
+        self.layer_control = layer_control
+
+    def process_mouse_down(self, event):
+        c = self.layer_control
+        c.select_object(event)
+
+    def process_mouse_motion_down(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        proj_p = c.get_world_point_from_screen_point(p)
+        effective_mode = c.get_effective_tool_mode(event)
+        d_x = p[0] - c.mouse_down_position[0]
+        d_y = c.mouse_down_position[1] - p[1]
+        print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        if (d_x != 0 or d_y != 0):
+            w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
+            w_p1 = c.get_world_point_from_screen_point(p)
+            if not c.HasCapture():
+                c.CaptureMouse()
+            c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
+            c.mouse_down_position = p
+            print "move: %s" % str(c.mouse_move_position)
+            print "down: %s" % str(c.mouse_down_position)
+            c.render(event)
+
+    def process_mouse_up(self, event):
+        c = self.layer_control
+        if (not c.mouse_is_down):
+            c.selection_box_is_being_defined = False
+            return
+
+        c.mouse_is_down = False
+        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        effective_mode = c.get_effective_tool_mode(event)
+
+        if (c.selection_box_is_being_defined):
+            c.mouse_move_position = event.GetPosition()
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                               c.mouse_move_position)
+            p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
+            w_r = c.get_world_rect_from_projected_rect(p_r)
+            layer = c.layer_tree_control.get_selected_layer()
+            if (layer != None):
+                self.select_objects_in_rect(event, w_r, layer)
+            c.selection_box_is_being_defined = False
+            c.render()
+        else:
+            p = event.GetPosition()
+            w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
+            w_p1 = c.get_world_point_from_screen_point(p)
+            print "move: %s" % str(c.mouse_move_position)
+            print "down: %s" % str(c.mouse_down_position)
+            c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
+        c.selection_box_is_being_defined = False
+    
+    def delete_key_pressed(self):
+        self.layer_control.editor.delete_all_selections()
+        
+    def select_objects_in_rect(self, event, rect, layer):
+        raise RuntimeError("Abstract method")
+
+class PointSelectionMode(ObjectSelectionMode):
+    icon = "add_points.png"
+    menu_item_name = "Point Edit Mode"
+    menu_item_tooltip = "Edit and add points in the current layer"
+    editor_trait_for_enabled = "layer_has_points"
+
+    def get_cursor(self):
+        e = self.layer_control.editor
+        if e.clickable_object_mouse_is_over != None:
+            if e.clickable_object_is_ugrid_line():
+                return wx.StockCursor(wx.CURSOR_BULLSEYE)
+            else:
+                return wx.StockCursor(wx.CURSOR_HAND)
+        return wx.StockCursor(wx.CURSOR_PENCIL)
+
+    def select_objects_in_rect(self, event, rect, layer):
+        layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+
+class LineSelectionMode(ObjectSelectionMode):
+    icon = "add_lines.png"
+    menu_item_name = "Line Edit Mode"
+    menu_item_tooltip = "Edit and add lines in the current layer"
+    editor_trait_for_enabled = "layer_has_points"
+
+    def get_cursor(self):
+        e = self.layer_control.editor
+        if e.clickable_object_mouse_is_over != None:
+            return wx.StockCursor(wx.CURSOR_HAND)
+        return wx.StockCursor(wx.CURSOR_PENCIL)
+
+    def select_objects_in_rect(self, event, rect, layer):
+        layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+
+class RectSelectMode(MouseHandler):
+    def get_cursor(self):
+        return wx.StockCursor(wx.CURSOR_CROSS)
+    
+    def process_mouse_motion_down(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        c.mouse_move_position = event.GetPosition()
+        c.render(event)
+
+    def render_overlay(self):
+        c = self.layer_control
+        if self.mouse_is_down:
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                               c.mouse_move_position)
+            # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )
+            rects = c.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
+            for r in rects:
+                if (r != rect.EMPTY_RECT):
+                    c.opengl_renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
+            # small adjustments to make stipple overlap gray rects perfectly
+            y1 -= 1
+            x2 += 1
+            c.opengl_renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            c.opengl_renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            c.opengl_renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            c.opengl_renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+
+
+class ZoomRectMode(RectSelectMode):
+    icon = "zoom_box.png"
+    menu_item_name = "Zoom Mode"
+    menu_item_tooltip = "Zoom in to increase magnification of the current layer"
+
+    def process_mouse_up(self, event):
+        c = self.layer_control
+        if (not c.mouse_is_down):
+            c.selection_box_is_being_defined = False
+            return
+
+        c.mouse_is_down = False
+        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        c.mouse_move_position = event.GetPosition()
+        (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                           c.mouse_move_position)
+        d_x = x2 - x1
+        d_y = y2 - y1
+        if (d_x >= 5 and d_y >= 5):
+            p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
+            c.projected_point_center = rect.center(p_r)
+            s_r = c.get_screen_rect()
+            ratio_h = float(d_x) / float(rect.width(s_r))
+            ratio_v = float(d_y) / float(rect.height(s_r))
+            c.projected_units_per_pixel *= max(ratio_h, ratio_v)
+            c.constrain_zoom()
+            c.render()
+
+class CropRectMode(RectSelectMode):
+    icon = "crop.png"
+    menu_item_name = "Crop Mode"
+    menu_item_tooltip = "Crop the current layer"
+
+    def process_mouse_up(self, event):
+        c = self.layer_control
+        if (not c.mouse_is_down):
+            c.selection_box_is_being_defined = False
+            return
+
+        c.mouse_is_down = False
+        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        c.mouse_move_position = event.GetPosition()
+        (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                           c.mouse_move_position)
+        p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
+        w_r = c.get_world_rect_from_projected_rect(p_r)
+        print "CROPPING!!!!  ", w_r
+        layer = c.project.layer_tree_control.get_selected_layer()
+        if (layer != None and layer.can_crop()):
+            layer.crop_rectangle(w_r)
+            layer.manager.end_operation_batch()
+            c.project.layer_manager.renderer_rebuild_event = True
+        c.render()

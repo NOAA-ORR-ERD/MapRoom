@@ -22,6 +22,7 @@ import Layer_tree_control
 import renderer
 from layers.constants import *
 from mouse_commands import *
+from mouse_handler import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -59,14 +60,14 @@ class ProjectEditor(FrameworkEditor):
     
     last_refresh = Float(0.0)
     
-    # Force mouse mode category to be blank so that the initial trait change
+    # Force mouse mode toolbar to be blank so that the initial trait change
     # that occurs during initialization of this class doesn't match a real
     # mouse mode.  If it does match, the toolbar won't be properly adjusted
     # during the first trait change in response to update_layer_selection_ui
     # and there will be an empty between named toolbars
-    mouse_mode_category = Str("")
+    mouse_mode_toolbar = Str("")
     
-    mouse_mode = Int(LayerControl.MODE_PAN)
+    mouse_mode = Any(PanMode)
 
     #### property getters
 
@@ -236,8 +237,8 @@ class ProjectEditor(FrameworkEditor):
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
             # leave mouse_mode set to current setting
-            self.mouse_mode_category = sel_layer.mouse_selection_mode + "ToolBar"
-            self.mouse_mode = LayerControl.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_category)
+            self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
+            self.mouse_mode = LayerControl.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
         else:
             self.layer_can_save = False
             self.layer_can_save_as = False
@@ -245,7 +246,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
-            self.mouse_mode = LayerControl.MODE_PAN
+            self.mouse_mode = PanMode
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_layer_contents_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer)
@@ -524,25 +525,24 @@ class ProjectEditor(FrameworkEditor):
     def line_tool_deselected(self):
         pass
 
-    def esc_key_pressed(self):
+    def clear_all_selections(self):
         for layer in self.layer_manager.flatten():
             layer.clear_all_selections()
         self.refresh()
 
-    def delete_key_pressed(self):
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
-            layer = self.layer_tree_control.get_selected_layer()
-            if (layer != None):
-                layer.delete_all_selected_objects()
-                self.layer_manager.end_operation_batch()
-                self.refresh()
+    def delete_all_selections(self):
+        layer = self.layer_tree_control.get_selected_layer()
+        if (layer != None):
+            layer.delete_all_selected_objects()
+            self.layer_manager.end_operation_batch()
+            self.refresh()
 
     def clicked_on_point(self, event, layer, point_index):
         act_like_point_tool = False
         vis = self.layer_visibility[layer]['layer']
         message = ""
 
-        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
+        if (self.mouse_mode == LineSelectionMode):
             if (event.ControlDown() or event.ShiftDown()):
                 act_like_point_tool = True
                 pass
@@ -565,7 +565,7 @@ class ProjectEditor(FrameworkEditor):
                     # select this point
                     layer.select_point(point_index)
 
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or act_like_point_tool):
+        if (self.mouse_mode == PointSelectionMode or act_like_point_tool):
             if (event.ControlDown()):
                 if (layer.is_point_selected(point_index)):
                     layer.deselect_point(point_index)
@@ -591,7 +591,7 @@ class ProjectEditor(FrameworkEditor):
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         vis = self.layer_visibility[layer]['layer']
 
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
+        if (self.mouse_mode == PointSelectionMode):
             if (not event.ControlDown() and not event.ShiftDown()):
                 self.esc_key_pressed()
                 point_index = layer.insert_point_in_line(world_point, line_segment_index)
@@ -602,7 +602,7 @@ class ProjectEditor(FrameworkEditor):
                 else:
                     layer.select_point(point_index)
 
-        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
+        if (self.mouse_mode == LineSelectionMode):
             if (event.ControlDown()):
                 if (layer.is_line_segment_selected(line_segment_index)):
                     layer.deselect_line_segment(line_segment_index)
@@ -628,7 +628,7 @@ class ProjectEditor(FrameworkEditor):
 
     def clicked_on_empty_space(self, event, layer, world_point):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
+        if (self.mouse_mode == PointSelectionMode or self.mouse_mode == LineSelectionMode):
             if (layer.type == "root" or layer.type == "folder"):
                 self.window.error("You cannot add points or lines to folder layers.",
                                   "Cannot Edit")
@@ -637,7 +637,7 @@ class ProjectEditor(FrameworkEditor):
         vis = self.layer_visibility[layer]['layer']
 
         log.debug("1: self.mouse_mode=%d" % self.mouse_mode)
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
+        if (self.mouse_mode == PointSelectionMode):
             if (not event.ControlDown() and not event.ShiftDown()):
                 log.debug("1.1")
                 self.esc_key_pressed()
@@ -653,7 +653,7 @@ class ProjectEditor(FrameworkEditor):
 #                if not vis:
 #                    self.task.status_bar.message = "Added point to hidden layer %s" % layer.name
         log.debug("2")
-        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
+        if (self.mouse_mode == LineSelectionMode):
             if (not event.ControlDown() and not event.ShiftDown()):
                 point_indexes = layer.get_selected_point_indexes()
                 if (len(point_indexes == 1)):
