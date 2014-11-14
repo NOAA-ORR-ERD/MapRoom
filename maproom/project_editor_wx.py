@@ -525,10 +525,11 @@ class ProjectEditor(FrameworkEditor):
     def line_tool_deselected(self):
         pass
 
-    def clear_all_selections(self):
+    def clear_all_selections(self, refresh=True):
         for layer in self.layer_manager.flatten():
             layer.clear_all_selections()
-        self.refresh()
+        if refresh:
+            self.refresh()
 
     def delete_all_selections(self):
         layer = self.layer_tree_control.get_selected_layer()
@@ -593,7 +594,7 @@ class ProjectEditor(FrameworkEditor):
 
         if (self.mouse_mode == PointSelectionMode):
             if (not event.ControlDown() and not event.ShiftDown()):
-                self.esc_key_pressed()
+                self.clear_all_selections(False)
                 point_index = layer.insert_point_in_line(world_point, line_segment_index)
                 self.layer_manager.end_operation_batch()
                 self.control.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
@@ -636,11 +637,11 @@ class ProjectEditor(FrameworkEditor):
                 return
         vis = self.layer_visibility[layer]['layer']
 
-        log.debug("1: self.mouse_mode=%d" % self.mouse_mode)
+        log.debug("1: self.mouse_mode=%s" % self.mouse_mode)
         if (self.mouse_mode == PointSelectionMode):
             if (not event.ControlDown() and not event.ShiftDown()):
                 log.debug("1.1")
-                self.esc_key_pressed()
+                self.clear_all_selections(False)
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.control.release_mouse() # shouldn't be captured now anyway
                 cmd = InsertPointCommand(layer, world_point)
@@ -657,7 +658,7 @@ class ProjectEditor(FrameworkEditor):
             if (not event.ControlDown() and not event.ShiftDown()):
                 point_indexes = layer.get_selected_point_indexes()
                 if (len(point_indexes == 1)):
-                    self.esc_key_pressed()
+                    self.clear_all_selections(False)
                     # we release the focus because we don't want to immediately drag the new object (if any)
                     # self.control.release_mouse()
                     point_index = layer.insert_point(world_point)
