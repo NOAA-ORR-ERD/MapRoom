@@ -147,6 +147,10 @@ class LayerControl(glcanvas.GLCanvas):
             if not layer.type == "image":
                 self.remove_renderer_for_layer(layer)
         self.update_renderers()
+    
+    def set_mouse_handler(self, mode):
+        self.release_mouse()
+        self.mouse_handler = mode(self)
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?

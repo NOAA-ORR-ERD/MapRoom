@@ -338,7 +338,7 @@ class RectSelectMode(MouseHandler):
 
     def render_overlay(self):
         c = self.layer_control
-        if self.mouse_is_down:
+        if c.mouse_is_down:
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
                                                                c.mouse_move_position)
             # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )

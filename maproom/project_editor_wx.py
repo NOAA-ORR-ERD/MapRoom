@@ -247,6 +247,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_above = False
             self.layer_below = False
             self.mouse_mode = PanMode
+        self.control.set_mouse_handler(self.mouse_mode)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_layer_contents_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer)
