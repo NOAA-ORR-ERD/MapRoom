@@ -25,7 +25,8 @@ mouselog = logging.getLogger("mouse")
 mouselog.setLevel(logging.INFO)
 
 class MouseHandler(object):
-    """Processing of mouse events, separate from the rendering window
+    """
+    Processing of mouse events, separate from the rendering window
     
     This is a precursor to an object-based control system of mouse modes
     """
@@ -48,17 +49,20 @@ class MouseHandler(object):
         if (not c.mouse_is_down):
             prefs = c.project.task.get_preferences()
             status_text = coordinates.format_coords_for_display(
-                proj_p[0], proj_p[1], prefs.coordinate_display_format)
+                              proj_p[0], proj_p[1], prefs.coordinate_display_format)
 
             c.release_mouse()
-            # print "mouse is not down"
             o = None
             if c.opengl_renderer is not None:
                 o = c.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
+
             if (o is not None):
                 (pick_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
                 layer = c.layer_manager.get_layer_by_pick_index(pick_index)
+
+                ## fixme: shouldn't we only do the whole picking thing for the selected object???
                 if (c.project.layer_tree_control.is_selected_layer(layer)):
+                    ## fixme: why isn't this just the layer" rather than this wierd index stuff???
                     c.editor.clickable_object_mouse_is_over = o
                 else:
                     c.editor.clickable_object_mouse_is_over = None
@@ -67,7 +71,6 @@ class MouseHandler(object):
 
             else:
                 c.editor.clickable_object_mouse_is_over = None
-            mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.editor.clickable_object_mouse_is_over is not None))
 
             c.project.task.status_bar.message = status_text
 
@@ -130,7 +133,7 @@ class MouseHandler(object):
             w_r = c.get_world_rect_from_projected_rect(p_r)
             print "CROPPING!!!!  ", w_r
             layer = c.project.layer_tree_control.get_selected_layer()
-            if (layer != None and layer.can_crop()):
+            if (layer is not None and layer.can_crop()):
                 layer.crop_rectangle(w_r)
                 layer.manager.end_operation_batch()
                 c.project.layer_manager.renderer_rebuild_event = True
@@ -143,7 +146,7 @@ class MouseHandler(object):
                 p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
                 w_r = c.get_world_rect_from_projected_rect(p_r)
                 layer = c.layer_tree_control.get_selected_layer()
-                if (layer != None):
+                if (layer is not None):
                     if (effective_mode == c.MODE_EDIT_POINTS):
                         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), w_r)
                     else:

@@ -33,7 +33,7 @@ class Picker:
         self.vbo_colors = None
 
     def prepare_to_render(self, screen_rect):
-        if (screen_rect != self.screen_rect and self.frame_buffer != None):
+        if (screen_rect != self.screen_rect and self.frame_buffer is not None):
             gl_fbo.glDeleteFramebuffersEXT(
                 1, np.array([self.frame_buffer], dtype=np.uint32),
             )
@@ -92,9 +92,6 @@ class Picker:
 
         :param doubled = False: whether to double the array (not sure why you would!) 
         """
-        print " *************** "
-        print " in  bind_picker_colors. layer_index = ", layer_index
-        print " *************** "
         if (layer_index > 255):
             raise ValueError("invalid layer_index: %s"%layer_index)
 

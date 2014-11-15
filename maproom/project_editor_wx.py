@@ -208,7 +208,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_info = self.window.get_dock_pane('maproom.layer_info_pane').control
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
         
-        log.debug("LayerEditor: task=%s" % self.task)
+        # log.debug("LayerEditor: task=%s" % self.task)
 
         return self.control
     
@@ -216,12 +216,12 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:layer_loaded')
     def layer_loaded(self, layer):
-        log.debug("layer_loaded called for %s" % layer)
+        # log.debug("layer_loaded called for %s" % layer)
         self.layer_visibility[layer] = layer.get_visibility_dict()
     
     @on_trait_change('layer_manager:layers_changed')
     def layers_changed(self):
-        log.debug("layers_changed called!!!")
+        # log.debug("layers_changed called!!!")
         self.layer_tree_control.rebuild()
         self.refresh()
     
@@ -263,7 +263,7 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is not None:
             self.layer_has_points = sel_layer.has_points()
             if self.layer_has_points:
-                log.debug("selected points: %s"  % sel_layer.get_num_points_selected())
+                # log.debug("selected points: %s"  % sel_layer.get_num_points_selected())
                 self.layer_has_selection = sel_layer.get_num_points_selected() > 0
                 self.layer_has_flagged = sel_layer.get_num_points_flagged() > 0
             else:
@@ -273,7 +273,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_points = False
             self.layer_has_selection = False
             self.layer_has_flagged = False
-        log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
+        # log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
         self.update_undo_redo()
         self.window._aui_manager.Update()
     
@@ -299,27 +299,27 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
-        log.debug("undo_stack_changed called!!!")
+        # log.debug("undo_stack_changed called!!!")
         self.refresh()
     
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
-        log.debug("layer_contents_changed called!!! layer=%s" % layer)
+        # log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.control.rebuild_points_and_lines_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_contents_changed_in_place')
     def layer_contents_changed_in_place(self, layer):
-        log.debug("layer_contents_changed called!!! layer=%s" % layer)
+        # log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.control.rebuild_points_and_lines_for_layer(layer, in_place=True)
     
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
-        log.debug("layer_contents_deleted called!!! layer=%s" % layer)
+        # log.debug("layer_contents_deleted called!!! layer=%s" % layer)
         self.control.rebuild_points_and_lines_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, layer):
-        log.debug("layer_metadata_changed called!!! layer=%s" % layer)
+        # log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
     
     @on_trait_change('layer_manager:refresh_needed')
@@ -575,7 +575,7 @@ class ProjectEditor(FrameworkEditor):
         pass
 
     def clicked_on_empty_space(self, event, layer, world_point):
-        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
+        # log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (layer.type == "root" or layer.type == "folder"):
                 self.window.error("You cannot add points or lines to folder layers.",
@@ -584,10 +584,10 @@ class ProjectEditor(FrameworkEditor):
                 return
         vis = self.layer_visibility[layer]['layer']
 
-        log.debug("1: self.mouse_mode=%d" % self.mouse_mode)
+        # log.debug("1: self.mouse_mode=%d" % self.mouse_mode)
         if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
             if (not event.ControlDown() and not event.ShiftDown()):
-                log.debug("1.1")
+                # log.debug("1.1")
                 self.esc_key_pressed()
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.control.release_mouse() # shouldn't be captured now anyway
@@ -598,7 +598,7 @@ class ProjectEditor(FrameworkEditor):
                 self.refresh()
                 if not vis:
                     self.task.status_bar.message = "Added point to hidden layer %s" % layer.name
-        log.debug("2")
+        # log.debug("2")
         if (self.mouse_mode == self.control.MODE_EDIT_LINES):
             if (not event.ControlDown() and not event.ShiftDown()):
                 point_indexes = layer.get_selected_point_indexes()
@@ -620,8 +620,9 @@ class ProjectEditor(FrameworkEditor):
         if (self.clickable_object_mouse_is_over == None):
             return
 
-        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
-        layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
+        (layer_pick_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
+        layer = self.layer_manager.get_layer_by_pick_index(layer_pick_index)
+
         layer.offset_selected_objects(world_d_x, world_d_y)
         # self.layer_manager.end_operation_batch()
         self.refresh()
@@ -642,7 +643,7 @@ class ProjectEditor(FrameworkEditor):
         world_d_y = w_p1[1] - w_p0[1]
 
         (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
-        layer = self.layer_manager.get_layer_by_flattened_index(layer_index)
+        layer = self.layer_manager.get_layer_by_pick_index(layer_index)
 
         s_p_i_s = layer.get_selected_and_dependent_point_indexes()
         for point_index in s_p_i_s:
@@ -671,7 +672,6 @@ class ProjectEditor(FrameworkEditor):
     
     def zoom_to_selected_layer(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
-        log.debug("Selected layer = %r" % sel_layer)
         if sel_layer is not None:
             self.zoom_to_layer(sel_layer)
 

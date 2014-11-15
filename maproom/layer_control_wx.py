@@ -169,8 +169,8 @@ class LayerControl(glcanvas.GLCanvas):
         lm = self.layer_manager
 
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
-            layer = lm.get_layer_by_flattened_index(layer_index)
+            (layer_pick_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
+            layer = lm.get_layer_by_pick_index(layer_pick_index)
             if (self.project.layer_tree_control.is_selected_layer(layer)):
                 if (e.clickable_object_is_ugrid_point()):
                     e.clicked_on_point(event, layer, object_index)
@@ -297,7 +297,7 @@ class LayerControl(glcanvas.GLCanvas):
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
         if not self.IsShownOnScreen():
-            log.debug("layer_control_wx.render: not shown yet, so skipping render")
+            # log.debug("layer_control_wx.render: not shown yet, so skipping render")
             return
 
         t0 = time.clock()
@@ -388,7 +388,7 @@ class LayerControl(glcanvas.GLCanvas):
     def rebuild_points_and_lines_for_layer(self, layer, in_place=False):
         if layer in self.layer_renderers:
             self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer, in_place=in_place)
-            log.debug("points/lines renderer rebuilt")
+            #log.debug("points/lines renderer rebuilt")
         else:
             log.warning("layer %s isn't in layer_renderers!" % layer)
             for layer in self.layer_renderers.keys():
@@ -542,7 +542,7 @@ class LayerControl(glcanvas.GLCanvas):
             ratio = 360.0 / 40075016.6855801
         self.projected_units_per_pixel *= ratio
         self.constrain_zoom()
-        log.debug("self.projected_units_per_pixel = " + str(self.projected_units_per_pixel))
+        # log.debug("self.projected_units_per_pixel = " + str(self.projected_units_per_pixel))
         # import code; code.interact( local = locals() )
 
         self.projected_point_center = self.get_projected_point_from_world_point(w_c)

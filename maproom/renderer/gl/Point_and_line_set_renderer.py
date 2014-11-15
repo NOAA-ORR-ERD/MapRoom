@@ -157,9 +157,7 @@ class Point_and_line_set_renderer:
         layer_index_base = the base number of this layer renderer for pick buffer purposes
         pick_mode = True if we are drawing to the off-screen pick buffer
         """
-        log.debug("*******************************")
-        log.debug("in Point_and_line_set_renderer, layer_index_base:%s"%layer_index_base)
-        log.debug("*******************************")
+        #log.debug("in Point_and_line_set_renderer, layer_index_base:%s"%layer_index_base)
         if draw_line_segments:
             self.render_lines(layer_index_base, pick_mode, point_size, line_width,
                               selected_line_segment_indexes, flagged_line_segment_indexes)
@@ -200,9 +198,7 @@ class Point_and_line_set_renderer:
                       point_size,
                       selected_point_indexes=[],
                       flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
-        log.debug("*******************************")
-        log.debug("in Point_and_line_set_renderer.render_points, layer_index_base:%s, pick_mode:%s"%(layer_index_base, pick_mode) )
-        log.debug("*******************************")
+        #log.debug("in Point_and_line_set_renderer.render_points, layer_index_base:%s, pick_mode:%s"%(layer_index_base, pick_mode) )
 
         if (self.vbo_point_xys != None and len(self.vbo_point_xys) > 0):
             if (not pick_mode and len(flagged_point_indexes) != 0):
@@ -255,9 +251,7 @@ class Point_and_line_set_renderer:
                      selected_line_segment_indexes=[],
                      flagged_line_segment_indexes=[]):  # flagged_line_segment_indexes not yet used
         # the line segments
-        log.debug("*******************************")
-        log.debug("in Point_and_line_set_renderer.render_lines, layer_index_base:%s, pick_mode:%s"%(layer_index_base, pick_mode) )
-        log.debug("*******************************")
+        # log.debug("in Point_and_line_set_renderer.render_lines, layer_index_base:%s, pick_mode:%s"%(layer_index_base, pick_mode) )
 
         if (self.vbo_line_segment_point_xys != None and len(self.vbo_line_segment_point_xys.data) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated

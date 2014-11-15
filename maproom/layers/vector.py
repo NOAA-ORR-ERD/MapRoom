@@ -248,9 +248,9 @@ class PointLayer(ProjectedLayer):
         self.increment_change_count()
 
     def get_selected_point_indexes(self, mark_type=STATE_SELECTED):
-        if (self.points == None):
+        if (self.points is None):
             return []
-        #
+        #fixme: do you need the != 0 doesn't where do this anyway?
         return np.where((self.points.state & mark_type) != 0)[0]
 
     def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
@@ -663,6 +663,7 @@ class LineLayer(PointLayer):
         if (self.points != None):
             # offset our own copy of the points (which automatically updates our own line segments)
             s_p_i_s = self.get_selected_and_dependent_point_indexes()
+            #fixme: couldn't this be numpy-ified?
             for point_index in s_p_i_s:
                 self.offset_point(point_index, world_d_x, world_d_y, True)
             # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )

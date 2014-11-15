@@ -29,11 +29,11 @@ def parse_clickable_object(o):
     # see Layer.py for layer types
     # see Point_and_line_set_renderer.py and Polygon_set_renderer.py for subtypes
     ## fixme: OMG! I can't believe how hard-coded this is!!!
-    (layer_index, object_index) = o
-    type_and_subtype = layer_index % 10
-    type = (type_and_subtype / 5) * 5
+    (layer_pick_index, object_index) = o
+    type_and_subtype = layer_pick_index % 10
+    type = (type_and_subtype // 5) * 5
     subtype = type_and_subtype % 5
-    layer_index = layer_index / 10
+    layer_pick_index = layer_pick_index // 10
     # print str( obj ) + "," + str( ( layer_index, type, subtype ) )
     #
-    return (layer_index, type, subtype, object_index)
+    return (layer_pick_index, type, subtype, object_index)

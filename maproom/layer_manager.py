@@ -321,7 +321,10 @@ class LayerManager(LayerUndo):
         return self.get_multi_index_of_layer_recursive(layer, self.layers)
 
     def get_layer_by_pick_index(self, pick_index):
-        return self.pick_layer_index_map[pick_index]
+        layer = self.get_layer_by_flattened_index(self.pick_layer_index_map[pick_index])
+        # log.debug("pick_index: %s"%pick_index)
+        # log.debug("layer: %s"%layer)
+        return layer
 
     def get_multi_index_of_layer_recursive(self, layer, tree):
         for i, item in enumerate(tree):
@@ -429,6 +432,9 @@ class LayerManager(LayerUndo):
         return n
 
     def count_raster_layers(self):
+        ## fixme -- what  in the world are these used for?
+        ## and if there is a need, maybe it should be more  like 
+        ## count_layer_of_type(self, layer_type="")
         n = 0
         for layer in self.flatten():
             if (hasattr(layer, "images") and layer.images != None):
