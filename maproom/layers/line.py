@@ -11,6 +11,7 @@ from ..library import rect
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
 from ..layer_undo import *
+from ..command import UndoInfo
 
 from point import PointLayer
 from constants import *
@@ -378,23 +379,19 @@ class LineLayer(PointLayer):
     """
 
     def insert_line_segment(self, point_index_1, point_index_2):
-        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.color, STATE_NONE, True)
+        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.color, STATE_NONE)
 
-    def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state, add_undo_info):
+    def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state):
         l_s = np.array([(point_index_1, point_index_2, color, state)],
                        dtype=data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
         self.line_segment_indexes = np.insert(self.line_segment_indexes, l_s_i, l_s).view(np.recarray)
 
-        if (add_undo_info):
-            params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            self.manager.add_undo_operation_to_operation_batch(OP_ADD_LINE, self, l_s_i, params)
+        undo = UndoInfo()
+        undo.index = l_s_i
+        undo.data = np.copy(l_s)
+        undo.flags.layer_contents_added = self
 
-        # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
-        # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
-        if (add_undo_info):
-            self.manager.dispatch_event('layer_contents_changed', self)
-
-        return l_s_i
+        return undo
 
     def update_after_delete_point(self, point_index):
         if (self.line_segment_indexes != None):
@@ -405,10 +402,15 @@ class LineLayer(PointLayer):
             offsets += np.where(self.line_segment_indexes.point2 > point_index, 1, 0)
             self.line_segment_indexes.point2 -= offsets
 
-    def delete_line_segment(self, l_s_i, add_undo_info):
-        if (add_undo_info):
-            params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
+    def delete_line_segment(self, l_s_i):
+        undo = UndoInfo()
+        p = self.line_segment_indexes[l_s_i]
+        print "LABEL: deleting line: %s" % str(p)
+        undo.index = l_s_i
+        undo.data = np.copy(p)
+        undo.flags.refresh_needed = True
+        undo.flags.layer_contents_deleted = self
+
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
 
     def merge_from_source_layers(self, layer_a, layer_b):

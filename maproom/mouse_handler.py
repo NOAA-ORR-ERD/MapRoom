@@ -492,15 +492,8 @@ class LineSelectionMode(PointSelectionMode):
                 e.clear_all_selections(False)
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.control.release_mouse()
-                point_index = layer.insert_point(world_point)
-                layer.update_bounds()
-                layer.insert_line_segment(point_index, point_indexes[0])
-                lm.end_operation_batch()
-                layer.clear_all_point_selections()
-                layer.select_point(point_index)
-                if not vis:
-                    e.task.status_bar.message = "Added line to hidden layer %s" % layer.name
-            e.refresh()
+                cmd = InsertLineCommand(layer, point_indexes[0], world_point)
+                e.process_command(cmd)
 
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), rect)

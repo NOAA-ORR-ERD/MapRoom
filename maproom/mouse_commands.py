@@ -66,3 +66,30 @@ class MovePointsCommand(Command):
         self.layer.points.x[self.indexes] = old_x
         self.layer.points.y[self.indexes] = old_y
         return self.undo_info
+
+class InsertLineCommand(Command):
+    def __init__(self, layer, index, world_point):
+        self.layer = layer
+        self.index = index
+        self.world_point = world_point
+        self.undo_point = None
+        self.undo_line = None
+    
+    def __str__(self):
+        return "Line From Point #%d" % self.index
+    
+    def perform(self, editor):
+        self.undo_point = self.layer.insert_point(self.world_point)
+        self.undo_line = self.layer.insert_line_segment(self.undo_point.index, self.index)
+        self.layer.select_point(self.undo_point.index)
+        vis = editor.layer_visibility[self.layer]['layer']
+        if not vis:
+            self.undo_point.message = "Added line to hidden layer %s" % layer.name
+        # FIXME: merge undo status
+        return self.undo_point
+
+    def undo(self, editor):
+        # FIXME: merge undo status
+        undo_info = self.layer.delete_line_segment(self.undo_line.index)
+        undo_info = self.layer.delete_point(self.undo_point.index)
+        return undo_info
