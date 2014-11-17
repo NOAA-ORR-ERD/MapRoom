@@ -93,3 +93,21 @@ class InsertLineCommand(Command):
         undo_info = self.layer.delete_line_segment(self.undo_line.index)
         undo_info = self.layer.delete_point(self.undo_point.index)
         return undo_info
+
+class CropRectCommand(Command):
+    def __init__(self, layer, world_rect):
+        self.layer = layer
+        self.world_rect = world_rect
+        self.undo_info = None
+    
+    def __str__(self):
+        return "Crop"
+    
+    def perform(self, editor):
+        self.undo_info = self.layer.crop_rectangle(self.world_rect)
+        return self.undo_info
+
+    def undo(self, editor):
+        old_state = self.undo_info.data
+        undo_info = self.layer.set_state(old_state)
+        return undo_info

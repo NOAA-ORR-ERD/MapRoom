@@ -562,6 +562,7 @@ class CropRectMode(RectSelectMode):
 
     def process_mouse_up(self, event):
         c = self.layer_control
+        e = c.project
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
             return
@@ -576,7 +577,5 @@ class CropRectMode(RectSelectMode):
         print "CROPPING!!!!  ", w_r
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer != None and layer.can_crop()):
-            layer.crop_rectangle(w_r)
-            layer.manager.end_operation_batch()
-            c.project.layer_manager.renderer_rebuild_event = True
-        c.render()
+            cmd = CropRectCommand(layer, w_r)
+            e.process_command(cmd)

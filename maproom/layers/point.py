@@ -378,6 +378,9 @@ class PointLayer(ProjectedLayer):
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
 
         renderer.set_up_labels(self)
+    
+    def rebuild_renderer(self, renderer, in_place=False):
+        renderer.rebuild_point_and_line_set_renderer(self, in_place=in_place)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         log.log(5, "Rendering point layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))

@@ -221,11 +221,6 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
         self.refresh()
     
-    @on_trait_change('layer_manager:renderer_rebuild_event')
-    def renderer_rebuild_event(self):
-        log.debug("renderer_rebuild_event called!!!")
-        self.control.rebuild_renderers()
-    
     def update_layer_selection_ui(self, sel_layer=None):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
@@ -282,17 +277,17 @@ class ProjectEditor(FrameworkEditor):
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
-        self.control.rebuild_points_and_lines_for_layer(layer)
+        self.control.rebuild_renderer_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_contents_changed_in_place')
     def layer_contents_changed_in_place(self, layer):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
-        self.control.rebuild_points_and_lines_for_layer(layer, in_place=True)
+        self.control.rebuild_renderer_for_layer(layer, in_place=True)
     
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
-        self.control.rebuild_points_and_lines_for_layer(layer)
+        self.control.rebuild_renderer_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, layer):
@@ -368,10 +363,10 @@ class ProjectEditor(FrameworkEditor):
             self.layer_tree_control.select_layer(f.select_layer)
         if f.layer_items_moved:
             f.layer_items_moved.update_bounds()
-            self.control.rebuild_points_and_lines_for_layer(f.layer_items_moved, in_place=True)
+            self.control.rebuild_renderer_for_layer(f.layer_items_moved, in_place=True)
         if f.layer_contents_added or f.layer_contents_deleted:
             layer = f.layer_contents_added or f.layer_contents_deleted
-            self.control.rebuild_points_and_lines_for_layer(layer)
+            self.control.rebuild_renderer_for_layer(layer)
             f.refresh_needed = True
         
         if f.refresh_needed:

@@ -147,6 +147,15 @@ class LayerControl(glcanvas.GLCanvas):
             if not layer.type == "image":
                 self.remove_renderer_for_layer(layer)
         self.update_renderers()
+
+    def rebuild_renderer_for_layer(self, layer, in_place=False):
+        if layer in self.layer_renderers:
+            layer.rebuild_renderer(self.layer_renderers[layer], in_place)
+            log.debug("renderer rebuilt")
+        else:
+            log.warning("layer %s isn't in layer_renderers!" % layer)
+            for layer in self.layer_renderers.keys():
+                log.warning("  layer: %s" % layer)
     
     def set_mouse_handler(self, mode):
         self.release_mouse()
@@ -317,15 +326,6 @@ class LayerControl(glcanvas.GLCanvas):
                 s_r = self.get_screen_rect_from_world_rect(w_r)
                 r, g, b, a = renderer.int_to_color(layer.color)
                 self.opengl_renderer.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
-
-    def rebuild_points_and_lines_for_layer(self, layer, in_place=False):
-        if layer in self.layer_renderers:
-            self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer, in_place=in_place)
-            log.debug("points/lines renderer rebuilt")
-        else:
-            log.warning("layer %s isn't in layer_renderers!" % layer)
-            for layer in self.layer_renderers.keys():
-                log.warning("  layer: %s" % layer)
 
     def resize_render_pane(self, event):
         if not self.GetContext():

@@ -73,8 +73,6 @@ class LayerManager(LayerUndo):
     refresh_needed = Event
     
     background_refresh_needed = Event
-    
-    renderer_rebuild_event = Event
 
     @classmethod
     def create(cls, project):

@@ -306,6 +306,12 @@ class Layer(HasTraits):
         
         """
         pass
+    
+    def rebuild_renderer(self, layer_renderer, in_place=False):
+        """Update renderer
+        
+        """
+        pass
 
     def render(self, opengl_renderer, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
         if hasattr(self, "render_projected"):
