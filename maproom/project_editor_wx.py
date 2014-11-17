@@ -202,6 +202,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
         self.layer_info = self.window.get_dock_pane('maproom.layer_info_pane').control
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
+        self.undo_history = self.window.get_dock_pane('maproom.undo_history_pane').control
         
         log.debug("LayerEditor: task=%s" % self.task)
 
@@ -375,6 +376,7 @@ class ProjectEditor(FrameworkEditor):
         
         if f.refresh_needed:
             self.refresh()
+        self.undo_history.update_history()
 
     #### old Editor ########################################################
 

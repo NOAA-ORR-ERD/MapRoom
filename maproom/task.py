@@ -656,7 +656,8 @@ class MaproomProjectTask(FrameworkTask):
         FrameworkTask.activated(self)
         visible = pane_layout.pane_initially_visible()
         for pane in self.window.dock_panes:
-            pane.visible = (pane.id in visible)
+            if pane.id in visible:
+                pane.visible = visible[pane.id]
         
         self.init_background_processing()
     

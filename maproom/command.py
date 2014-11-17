@@ -46,7 +46,7 @@ class UndoStack(list):
 
     def add_command(self, command):
         self.batch.insert_at_index(command)
-        self.batch.list_contents()
+        print self.batch.history_list()
     
     def insert_at_index(self, command):
         last = self.get_undo_command()
@@ -56,9 +56,9 @@ class UndoStack(list):
             self[self.insert_index:] = [command]
             self.insert_index += 1
     
-    def list_contents(self):
-        for i, command in enumerate(self):
-            print "%03d" % i, command
+    def history_list(self):
+        h = [str(c) for c in self]
+        return h
 
 
 class CommandStatus(object):
