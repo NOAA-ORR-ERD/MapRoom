@@ -5,6 +5,7 @@ from ..layers import constants
 from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..layer_undo import *
+from ..mouse_commands import *
 from ..ui import sliders
 
 class InfoPanel(wx.Panel):
@@ -289,25 +290,21 @@ class InfoPanel(wx.Panel):
         if layer == None:
             return
 
-        num_points_changed = 0
+        cmd = None
         c = self.point_depth_control
         c.SetBackgroundColour("#FFFFFF")
         try:
             # layer.default_depth = float( c.GetValue() )
             depth = float(c.GetValue())
             selected_point_indexes = layer.get_selected_point_indexes()
-            for i in selected_point_indexes:
-                params = (layer.points.z[i], depth)
-                self.project.layer_manager.add_undo_operation_to_operation_batch(OP_CHANGE_POINT_DEPTH, layer, i, params)
-                layer.points.z[i] = depth
-                num_points_changed += 1
+            if len(selected_point_indexes > 0):
+                cmd = ChangeDepthCommand(layer, selected_point_indexes, depth)
+                self.project.process_command(cmd)
         except Exception as e:
+            print e
             c.SetBackgroundColour("#FF8080")
         c.Refresh()
         # self.ignore_next_update = True
-        if (num_points_changed > 0):
-            self.project.layer_manager.end_operation_batch()
-        self.project.refresh()
 
     def alpha_changed(self, event):
         layer = self.project.layer_tree_control.get_selected_layer()

@@ -67,6 +67,39 @@ class MovePointsCommand(Command):
         self.layer.points.y[self.indexes] = old_y
         return self.undo_info
 
+class ChangeDepthCommand(Command):
+    def __init__(self, layer, indexes, depth):
+        self.layer = layer
+        self.indexes = indexes
+        self.depth = depth
+        self.undo_info = None
+    
+    def __str__(self):
+        return "Set Depth to %s" % str(self.depth)
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer and np.array_equal(next_command.indexes, self.indexes):
+                self.depth = next_command.depth
+                return True
+    
+    def is_recordable(self):
+        return len(self.indexes) > 0
+    
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        old_depths = np.copy(self.layer.points.z[self.indexes])
+        undo.data = old_depths
+        undo.flags.refresh_needed = True
+        undo.flags.layer_items_moved = self.layer
+        self.layer.points.z[self.indexes] = self.depth
+        return self.undo_info
+
+    def undo(self, editor):
+        (old_depths) = self.undo_info.data
+        self.layer.points.z[self.indexes] = old_depths
+        return self.undo_info
+
 class InsertLineCommand(Command):
     def __init__(self, layer, index, world_point):
         self.layer = layer
