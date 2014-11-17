@@ -55,7 +55,6 @@ class MouseHandler(object):
             o = None
             if c.opengl_renderer is not None:
                 o = c.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
-
             if (o is not None):
                 (pick_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
                 layer = c.layer_manager.get_layer_by_pick_index(pick_index)

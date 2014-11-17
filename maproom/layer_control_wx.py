@@ -322,28 +322,42 @@ class LayerControl(glcanvas.GLCanvas):
         """
 
         ## fixme -- why is this a function defined in here??
+        ##   so that it can be called with and without pick-mode turned on
+        ##   but it seems to be in the wrong place -- make it a regular  method?
         def render_layers(pick_mode=False):
             list = self.layer_manager.flatten()
             length = len(list)
             self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
             pick_layer_index = -1
             for i, layer in enumerate(reversed(list)):
-                renderer = self.layer_renderers[layer]
-                if layer.pickable:
-                    pick_layer_index += 1
-                    self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
-                layer.render(self.opengl_renderer,
-                             renderer,
-                             w_r, p_r, s_r,
-                             self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                             pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
-                             pick_mode)
+                if pick_mode:
+                    if layer.pickable:
+                        pick_layer_index += 1
+                        self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
+                        renderer = self.layer_renderers[layer]
+                        layer.render(self.opengl_renderer,
+                                     renderer,
+                                     w_r, p_r, s_r,
+                                     self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
+                                     pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
+                                     pick_mode)
+                else: # not in pick-mode
+                    renderer = self.layer_renderers[layer]
+                    layer.render(self.opengl_renderer,
+                                 renderer,
+                                 w_r, p_r, s_r,
+                                 self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
+                                 pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
+                                 pick_mode)
+
         render_layers()
 
         self.opengl_renderer.prepare_to_render_screen_objects()
         if (self.bounding_boxes_shown):
             self.draw_bounding_boxes()
         effective_mode = self.get_effective_tool_mode(event)
+        ## fixme: can this logic / drawing be moved to a GUI mode somehow?
+        ##        i.e.  
         if ((effective_mode == self.MODE_ZOOM_RECT or effective_mode == self.MODE_CROP or self.selection_box_is_being_defined) and self.mouse_is_down):
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
                                                                self.mouse_move_position)
