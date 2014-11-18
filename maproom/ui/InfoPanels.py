@@ -271,19 +271,13 @@ class InfoPanel(wx.Panel):
             current_point = (layer.points.x[index], layer.points.y[index])
             x_diff = new_point[0] - current_point[0]
             y_diff = new_point[1] - current_point[1]
-            params = (-x_diff, -y_diff, layer.points.state[index])
-
-            print "params = %r" % (params,)
-            self.project.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, index, params)
-            layer.offset_point(index, x_diff, y_diff)
-            layer.manager.dispatch_event('layer_contents_changed', layer)
-            self.project.layer_manager.end_operation_batch()
+            cmd = MovePointsCommand(layer, [index], x_diff, y_diff)
+            self.project.process_command(cmd)
         except Exception as e:
             import traceback
             print traceback.format_exc(e)
             c.SetBackgroundColour("#FF8080")
         # c.Refresh()
-        self.project.refresh()
 
     def point_depth_changed(self, event):
         layer = self.project.layer_tree_control.get_selected_layer()
