@@ -266,34 +266,6 @@ class PointLayer(ProjectedLayer):
     def get_state(self, index):
         return self.points.state[index]
 
-    def offset_selected_objects(self, world_d_x, world_d_y):
-        self.offset_selected_points(world_d_x, world_d_y)
-
-    def offset_selected_points(self, world_d_x, world_d_y):
-        if (self.points != None):
-            # offset our own copy of the points (which automatically updates our own line segments)
-            s_p_i_s = self.get_selected_point_indexes()
-            for point_index in s_p_i_s:
-                self.offset_point(point_index, world_d_x, world_d_y, True)
-            # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
-            
-            # Rebuilding the renderer by using the event layer_contents_changed
-            # is super slow for large data sets.  This is a different event
-            # that updates the point positions given the requirement that no
-            # points have been added or removed
-            self.manager.dispatch_event('layer_contents_changed_in_place', self)
-            self.increment_change_count()
-
-    def offset_point(self, point_index, world_d_x, world_d_y, add_undo_info=False):
-        self.points.x[point_index] += world_d_x
-        self.points.y[point_index] += world_d_y
-        """
-        # we don't set the undo information here because this function is called repeatedly as the mouse moves
-        if ( add_undo_info ):
-            params = ( world_d_x, world_d_y )
-            self.manager.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
-        """
-    
     def dragging_selected_objects(self, world_dx, world_dy):
         indexes = self.get_selected_and_dependent_point_indexes()
         cmd = MovePointsCommand(self, indexes, world_dx, world_dy)

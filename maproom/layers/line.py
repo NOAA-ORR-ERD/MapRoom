@@ -263,16 +263,6 @@ class LineLayer(PointLayer):
 
         return list(s)
 
-    def offset_selected_points(self, world_d_x, world_d_y):
-        if (self.points != None):
-            # offset our own copy of the points (which automatically updates our own line segments)
-            s_p_i_s = self.get_selected_and_dependent_point_indexes()
-            for point_index in s_p_i_s:
-                self.offset_point(point_index, world_d_x, world_d_y, True)
-            # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
-            self.manager.dispatch_event('layer_contents_changed', self)
-            self.increment_change_count()
-
     def delete_all_selected_objects(self):
         point_indexes = self.get_selected_point_indexes()
         l_s_i_s = None

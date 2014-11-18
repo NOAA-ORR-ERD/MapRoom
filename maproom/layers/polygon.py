@@ -190,13 +190,6 @@ class PolygonLayer(PointLayer):
         #
         return np.where((self.polygons.state & mark_type) != 0)[0]
 
-    def offset_selected_objects(self, world_d_x, world_d_y):
-        self.offset_selected_points(world_d_x, world_d_y)
-        self.offset_selected_polygons(world_d_x, world_d_y)
-
-    def offset_selected_polygons(self, world_d_x, world_d_y):
-        self.increment_change_count()
-    
     def insert_line_segment(self, point_index_1, point_index_2):
         raise RuntimeError("Not implemented yet for polygon layer!")
     
