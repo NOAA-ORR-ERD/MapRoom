@@ -12,6 +12,9 @@ import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 from.data_types import POINT_COORD_VIEW_DTYPE
 
+import logging
+log = logging.getLogger(__name__)
+
 
 POINTS_SUB_LAYER_PICKER_OFFSET = 0
 LINES_SUB_LAYER_PICKER_OFFSET = 1
@@ -31,8 +34,7 @@ class Point_renderer(object):
                  opengl_renderer,
                  points,
                  point_colors,
-                 projection,
-                 projection_is_identity):
+                 projection ):
         """
         initilize a Point_renderer
 
@@ -48,9 +50,7 @@ class Point_renderer(object):
         :type projection: a pyproj-style projection callable object, such that
                             projection( world_x, world_y ) = ( projected_x, projected_y )
 
-        :param  projection_is_identity: flag to indicate whether to ignore the projection                           
         """
-
         self.oglr = opengl_renderer
 
         if ( points is None or len(points) == 0 ):
@@ -59,21 +59,17 @@ class Point_renderer(object):
         else:
             self.vbo_point_xys = gl_vbo.VBO( np.zeros( points.shape, dtype=POINT_COORD_VIEW_DTYPE ) )
             self.vbo_point_colors = gl_vbo.VBO( point_colors )
-            self.reproject(points, projection, projection_is_identity)
+            self.reproject(points, projection )
 
-    def reproject(self, points, projection, projection_is_identity):
+    def reproject(self, points, projection ):
         if (points is None or len(points) == 0):
             self.vbo_point_xys = None
             self.vbo_point_colors = None
             return
 
         projected_point_data = self.vbo_point_xys.data
-        if (projection_is_identity):
-            projected_point_data[:] = points[:].astype(POINT_COORD_VIEW_DTYPE)
-        else:
-            ## fixme -- why each axis individually?
-            ##          -- how the projection works? that could be cleaned up in the projection code.
-            projected_point_data[:, 0], projected_point_data[:, 1] = projection(points[:, 0].astype(POINT_COORD_VIEW_DTYPE), points[:, 1].astype(POINT_COORD_VIEW_DTYPE))
+        ## fixme -- why each axis individually --  proj takes an Nx2 array
+        projected_point_data[:, 0], projected_point_data[:, 1] = projection(points[:, 0].astype(POINT_COORD_VIEW_DTYPE), points[:, 1].astype(POINT_COORD_VIEW_DTYPE))
 
         self.vbo_point_xys[:] = projected_point_data
 

@@ -13,7 +13,6 @@ import app_globals
 import OpenGL
 import OpenGL.GL as gl
 
-from library.Projection import Projection
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.

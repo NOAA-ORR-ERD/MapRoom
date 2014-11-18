@@ -137,7 +137,7 @@ class ImageTextures(object):
 
 
 class Image_set_renderer:
-    def __init__(self, opengl_renderer, image_textures, projection, projection_is_identity):
+    def __init__(self, opengl_renderer, image_textures, projection ):
         """
             projection = a pyproj-style projection callable object, such that
                          projection( world_x, world_y ) = ( projected_x, projected_y )
@@ -145,22 +145,19 @@ class Image_set_renderer:
 
         self.oglr = opengl_renderer
         self.image_textures = image_textures
-        self.reproject(projection, projection_is_identity)
+        self.reproject(projection)
 
-    def reproject(self, projection, projection_is_identity):
+    def reproject(self, projection ):
         self.image_projected_rects = []
         for lb, lt, rt, rb in self.image_textures.image_world_rects:
-            if (projection_is_identity):
-                left_bottom_projected = lb
-                left_top_projected = lt
-                right_top_projected = rt
-                right_bottom_projected = rb
-            else:
-                left_bottom_projected = projection(lb[0], lb[1])
-                left_top_projected = projection(lt[0], lt[1])
-                right_top_projected = projection(rt[0], rt[1])
-                right_bottom_projected = projection(rb[0], rb[1])
-            self.image_projected_rects.append((left_bottom_projected, left_top_projected, right_top_projected, right_bottom_projected))
+            left_bottom_projected = projection(lb[0], lb[1])
+            left_top_projected = projection(lt[0], lt[1])
+            right_top_projected = projection(rt[0], rt[1])
+            right_bottom_projected = projection(rb[0], rb[1])
+            self.image_projected_rects.append( (left_bottom_projected,
+                                                left_top_projected,
+                                                right_top_projected,
+                                                right_bottom_projected) )
 
         for i, projected_rect in enumerate(self.image_projected_rects):
             raw = self.image_textures.vbo_vertexes[i].data

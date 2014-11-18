@@ -23,7 +23,7 @@ class Polygon_set_renderer:
     line_vertex_counts = None
     line_nan_counts = None
 
-    def __init__(self, opengl_renderer, points, point_adjacency_array, polygons, projection, projection_is_identity):
+    def __init__(self, opengl_renderer, points, point_adjacency_array, polygons, projection):
         """
         points = 2 x np.float32, i.e., "2f4"
         point_adjacency = np array of
@@ -57,7 +57,7 @@ class Polygon_set_renderer:
         self.polygon_count = np.alen(polygons)
         self.line_vertex_counts = polygons.count.copy()
 
-        self.reproject(projection, projection_is_identity)
+        self.reproject(projection)
 
     def set_invalid_polygons(self, polygons, polygon_count):
         # Invalid polygons are those that couldn't be tessellated and thus
@@ -83,7 +83,7 @@ class Polygon_set_renderer:
         )
         """
 
-    def reproject(self, projection, projection_is_identity):
+    def reproject(self, projection ):
         if (self.polygon_count == 0):
             return
 
@@ -118,11 +118,8 @@ class Polygon_set_renderer:
             (np.alen(self.points), 2),
             dtype=np.float32
         )
-        if (projection_is_identity):
-            projected_points[:, 0] = self.points[:, 0]
-            projected_points[:, 1] = self.points[:, 1]
-        else:
-            projected_points[:, 0], projected_points[:, 1] = projection(self.points[:, 0], self.points[:, 1])
+
+        projected_points[:, 0], projected_points[:, 1] = projection(self.points[:, 0], self.points[:, 1])
 
         tessellate(
             projected_points,  # used to be: self.points

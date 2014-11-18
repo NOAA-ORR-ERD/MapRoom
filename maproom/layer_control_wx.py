@@ -14,7 +14,9 @@ from mouse_handler import MouseHandler
 import OpenGL
 import OpenGL.GL as gl
 
-from library.Projection import Projection
+from library.projection import Projection, NullProjection
+
+import preferences
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.
@@ -97,13 +99,11 @@ class LayerControl(glcanvas.GLCanvas):
         # two variables keep track of what's visible on the screen:
         # (1) the projected point at the center of the screen
         self.projected_point_center = (0, 0)
-        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)
+        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)        
+        ## does this get re-set anyway? pretty arbitrary.
         self.projected_units_per_pixel = 10000
-        self.projection = Projection("+proj=merc +units=m +over")
-        # for longlat projection, apparently someone decided that since the projection
-        # is the identity, it might as well do something and so it returns the coordinates as
-        # radians instead of degrees; so here we use this variable to avoid using the longlat projection
-        self.projection_is_identity = False
+
+        self.projection = Projection(preferences.DEFAULT_PROJECTION_STRING)
 
         self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
 
@@ -114,6 +114,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.Bind(wx.EVT_IDLE, self.on_idle)  # not sure about this -- but it's where the cursors are set.
         self.Bind(wx.EVT_PAINT, self.render)
         # Prevent flashing on Windows by doing nothing on an erase background event.
+        ## fixme -- I think you can pass a flag to the Window instead...
         self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
         self.Bind(wx.EVT_SIZE, self.resize_render_pane)
         
@@ -536,32 +537,31 @@ class LayerControl(glcanvas.GLCanvas):
                 # otherwise we have to zoom (i.e., zoom out because panning didn't work)
                 self.zoom_to_world_rect(w_r)
 
-    def reproject_all(self, srs):
-        self.update_renderers()
-        s_r = self.get_screen_rect()
-        s_c = rect.center(s_r)
-        w_c = self.get_world_point_from_screen_point(s_c)
-        was_identity = self.projection_is_identity
+    # not used???
+    # def reproject_all(self, srs):
+    #     self.update_renderers()
+    #     s_r = self.get_screen_rect()
+    #     s_c = rect.center(s_r)
+    #     w_c = self.get_world_point_from_screen_point(s_c)
 
-        self.projection = Projection(srs)
-        self.projection_is_identity = self.projection.srs.find("+proj=longlat") != -1
+    #     self.projection = Projection(srs)
 
-        for layer in self.layer_manager.flatten():
-            self.layer_renderers[layer].reproject(self.projection, self.projection_is_identity)
+    #     for layer in self.layer_manager.flatten():
+    #         self.layer_renderers[layer].reproject(self.projection)
 
-        ratio = 1.0
-        if (was_identity and not self.projection_is_identity):
-            ratio = 40075016.6855801 / 360.0
-        if (not was_identity and self.projection_is_identity):
-            ratio = 360.0 / 40075016.6855801
-        self.projected_units_per_pixel *= ratio
-        self.constrain_zoom()
-        # log.debug("self.projected_units_per_pixel = " + str(self.projected_units_per_pixel))
-        # import code; code.interact( local = locals() )
+    #     ratio = 1.0
+    #     if (was_identity and not self.projection_is_identity):
+    #         ratio = 40075016.6855801 / 360.0
+    #     if (not was_identity and self.projection_is_identity):
+    #         ratio = 360.0 / 40075016.6855801
+    #     self.projected_units_per_pixel *= ratio
+    #     self.constrain_zoom()
+    #     # log.debug("self.projected_units_per_pixel = " + str(self.projected_units_per_pixel))
+    #     # import code; code.interact( local = locals() )
 
-        self.projected_point_center = self.get_projected_point_from_world_point(w_c)
+    #     self.projected_point_center = self.get_projected_point_from_world_point(w_c)
 
-        self.render()
+    #     self.render()
 
     def get_canvas_as_image(self):
         window_size = self.GetClientSize()
@@ -592,12 +592,10 @@ class LayerControl(glcanvas.GLCanvas):
         return screenshot
 
     def constrain_zoom(self):
-        if (self.projection_is_identity):
-            min_val = 0.00001
-            max_val = 1
-        else:
-            min_val = .02
-            max_val = 80000
+        ## fixme: this  should not be hard coded -- could scale to projection(90,90, inverse=True or ??)
+        ## Also should be in some kind of app preferences location...
+        min_val = .02
+        max_val = 80000
         self.projected_units_per_pixel = max(self.projected_units_per_pixel, min_val)
         self.projected_units_per_pixel = min(self.projected_units_per_pixel, max_val)
 

@@ -21,7 +21,6 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
 from ..library.accumulator import flatten
-from ..library.Projection import Projection
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
 from ..layer_undo import *
@@ -159,7 +158,7 @@ class ParticleLayer(ProjectedLayer):
             renderer.rebuild_point_renderer(self, create=True)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        log.log(5, "Rendering point layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
+        log.log(5, "Rendering ParticleLayer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 

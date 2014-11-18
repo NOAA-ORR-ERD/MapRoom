@@ -12,7 +12,9 @@ from maproom.library.Boundary import Boundaries
 
 class MockControl(object):
     def __init__(self):
-        self.projection_is_identity = True
+        pass
+        ## projection_is_identity is no more.
+        #self.projection_is_identity = True
 
 class MockProject(object):
     def __init__(self):

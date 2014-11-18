@@ -451,9 +451,9 @@ class LayerManager(LayerUndo):
         #
         return n
 
-    def reproject_all(self, projection, projection_is_identity):
+    def reproject_all( self, projection ):
         for layer in self.flatten():
-            layer.reproject(projection, projection_is_identity)
+            layer.reproject( projection )
 
     def accumulate_layer_rects(self, layer_visibility, only_visible_layers=True):
         result = rect.NONE_RECT

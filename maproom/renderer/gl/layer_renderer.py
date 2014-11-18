@@ -60,17 +60,16 @@ class LayerRenderer(object):
         if layer.image_data:
             if not layer.image_data.image_textures:
                 layer.image_data.image_textures = Image_set_renderer.ImageTextures(
-                    self.canvas.opengl_renderer,
-                    layer.image_data.images,
-                    layer.image_data.image_sizes,
-                    layer.image_data.image_world_rects)
+                                                      self.canvas.opengl_renderer,
+                                                      layer.image_data.images,
+                                                      layer.image_data.image_sizes,
+                                                      layer.image_data.image_world_rects)
                 layer.image_data.release_images()
             if not self.image_set_renderer:
                 self.image_set_renderer = Image_set_renderer.Image_set_renderer(
-                    self.canvas.opengl_renderer,
-                    layer.image_data.image_textures,
-                    self.canvas.projection,
-                    self.canvas.projection_is_identity)
+                                                                self.canvas.opengl_renderer,
+                                                                layer.image_data.image_textures,
+                                                                self.canvas.projection)
 
     def set_up_labels(self, layer):
         if (layer.points is not None and self.label_set_renderer is None):
@@ -85,8 +84,7 @@ class LayerRenderer(object):
             if in_place:
                 create = False
                 self.point_renderer.reproject( layer.points.view( data_types.POINT_XY_VIEW_SIMPLE_DTYPE ).xy,
-                                               layer.manager.project.control.projection,
-                                               layer.manager.project.control.projection_is_identity )
+                                               layer.manager.project.control.projection )
             else:
                 create = True
                 self.point_renderer.destroy()
@@ -95,8 +93,7 @@ class LayerRenderer(object):
             self.point_renderer = Point_renderer.Point_renderer(self.canvas.opengl_renderer,
                                                                 layer.points.view(data_types.POINT_XY_VIEW_SIMPLE_DTYPE).xy,
                                                                 layer.points.color.copy().view(dtype=np.uint8),
-                                                                self.canvas.projection,
-                                                                self.canvas.projection_is_identity)
+                                                                self.canvas.projection )
 
     def rebuild_point_and_line_set_renderer(self, layer, create=False, in_place=False):
         if self.point_and_line_set_renderer:
@@ -107,10 +104,8 @@ class LayerRenderer(object):
 #                        self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
 #                        self.line_segment_indexes.view( data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE )[ "points" ],
 #                        None )
-                self.point_and_line_set_renderer.reproject(
-                    layer.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                    layer.manager.project.control.projection,
-                    layer.manager.project.control.projection_is_identity )
+                self.point_and_line_set_renderer.reproject(layer.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
+                                                           layer.manager.project.control.projection )
             else:
                 create = True
                 self.point_and_line_set_renderer.destroy()
@@ -129,15 +124,14 @@ class LayerRenderer(object):
                 lines = None
                 line_color = layer.points.color.copy().view(dtype=np.uint8)
             self.point_and_line_set_renderer = Point_and_line_set_renderer.Point_and_line_set_renderer(
-                self.canvas.opengl_renderer,
-                layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
-                layer.points.color.copy().view(dtype=np.uint8),
-                lines,
-                line_color,
-                triangles,
-                tri_points_color,
-                self.canvas.projection,
-                self.canvas.projection_is_identity)
+                                                     self.canvas.opengl_renderer,
+                                                     layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
+                                                     layer.points.color.copy().view(dtype=np.uint8),
+                                                     lines,
+                                                     line_color,
+                                                     triangles,
+                                                     tri_points_color,
+                                                     self.canvas.projection )
 
     def rebuild_polygon_set_renderer(self, layer):
         if self.polygon_set_renderer:
@@ -148,30 +142,26 @@ class LayerRenderer(object):
                                         layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].copy(),
                                         layer.polygon_adjacency_array,
                                         layer.polygons,
-                                        self.canvas.projection,
-                                        self.canvas.projection_is_identity)
+                                        self.canvas.projection )
 
-    def reproject(self, projection, projection_is_identity):
+    def reproject(self, projection ):
         ## fixme: can we put the re-projection code in the renderers (layers?)
         ##        then this can be a loop that calls each reproject method.
         if (self.point_renderer is not None):
             self.point_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_SIMPLE_DTYPE).xy,
-                                                                 projection,
-                                                                 projection_is_identity)
+                                                                 projection )
         if (self.point_and_line_set_renderer is not None):
             self.point_and_line_set_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
-                                                       projection,
-                                                       projection_is_identity)
+                                                       projection )
         if (self.polygon_set_renderer is not None):
-            self.polygon_set_renderer.reproject(projection, projection_is_identity)
+            self.polygon_set_renderer.reproject(projection )
         """
         if ( self.label_set_renderer is not None ):
             self.label_set_renderer.reproject( self.layer.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                               projection,
-                                               projection_is_identity )
+                                               projection )
         """
         if (self.image_set_renderer is not None):
-            self.image_set_renderer.reproject(projection, projection_is_identity)
+            self.image_set_renderer.reproject(projection )
 
     def __del__(self):
         ## fixme:  why does destroy() need to be called?

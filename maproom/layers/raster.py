@@ -13,7 +13,7 @@ from pyface.api import YES
 from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
 from ..library.accumulator import flatten
-from ..library.Projection import Projection
+from ..library.projection import Projection
 from ..renderer import color_to_int, data_types
 
 from base import Layer, ProjectedLayer
@@ -137,7 +137,7 @@ class RasterLayer(ProjectedLayer):
             renderer.rebuild_image_set_renderer(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        log.debug("Rendering raster!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
+        # log.debug("Rendering raster!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 

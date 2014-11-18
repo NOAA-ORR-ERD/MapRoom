@@ -5,6 +5,11 @@ from traits.api import Bool, Dict, Enum, List, Str, Unicode
 from traitsui.api import EnumEditor, HGroup, VGroup, Item, Label, \
     View
 
+## fixme:
+## Some hard_coded stuff just to put it in a central place -- shoudl be handles smarter
+
+DEFAULT_PROJECTION_STRING = "+proj=merc +units=m +over"
+
 
 class MaproomPreferences(PreferencesHelper):
     """ The preferences helper for the Framework application.

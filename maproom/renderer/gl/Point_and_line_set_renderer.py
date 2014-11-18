@@ -25,8 +25,7 @@ class Point_and_line_set_renderer:
                  line_segment_colors,
                  triangle_point_indexes,
                  triangle_point_colors,
-                 projection,
-                 projection_is_identity):
+                 projection):
         """
             points = 2 x np.float64, i.e., "2f4"
             point_colors = np array of np.uint32, one per point
@@ -67,7 +66,7 @@ class Point_and_line_set_renderer:
         if triangle_point_indexes is not None:
             self.build_triangle_buffers(points, triangle_point_indexes, triangle_point_colors)
 
-        self.reproject(points, projection, projection_is_identity)
+        self.reproject(points, projection )
 
     def build_line_segment_buffers(self, points, line_segment_indexes, line_segment_colors):
         if (line_segment_indexes == None or np.alen(line_segment_indexes) == 0):
@@ -115,22 +114,21 @@ class Point_and_line_set_renderer:
         if (triangle_point_colors != None):
             self.vbo_triangle_point_colors = gl_vbo.VBO(triangle_point_colors)
 
-    def reproject(self, points, projection, projection_is_identity):
+    def reproject(self, points, projection ):
         if (points == None or len(points) == 0):
             self.vbo_point_xys = None
             self.vbo_point_colors = None
             self.world_line_segment_points = None
             self.vbo_line_segment_point_xys = None
             self.vbo_line_segment_colors = None
-            #
+
             return
+
+        ##fixme -- this could probably be optimized -- proj can take a Nx2 array
         projected_point_data = self.vbo_point_xys.data
-        if (projection_is_identity):
-            projected_point_data[:, 0] = points[:, 0].astype(np.float32)
-            projected_point_data[:, 1] = points[:, 1].astype(np.float32)
-        else:
-            projected_point_data[:, 0], projected_point_data[:, 1] = projection(points[:, 0].astype(np.float32), points[:, 1].astype(np.float32))
+        projected_point_data[:, 0], projected_point_data[:, 1] = projection(points[:, 0].astype(np.float32), points[:, 1].astype(np.float32))
         self.vbo_point_xys[: np.alen(projected_point_data)] = projected_point_data
+
         if (self.vbo_line_segment_point_xys != None and len(self.vbo_line_segment_point_xys.data) > 0):
             projected_line_segment_point_data = self.vbo_line_segment_point_xys.data
             if (projection.srs.find("+proj=longlat") != -1):
