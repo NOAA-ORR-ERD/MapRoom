@@ -354,6 +354,8 @@ class ProjectEditor(FrameworkEditor):
         self.process_flags(undo.flags)
     
     def process_command(self, command):
+        if command is None:
+            return
         undo = command.perform(self)
         self.layer_manager.undo_stack.add_command(command)
         self.process_flags(undo.flags)
@@ -457,10 +459,8 @@ class ProjectEditor(FrameworkEditor):
     def delete_selection(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
-            sel_layer.delete_all_selected_objects()
-            self.layer_manager.end_operation_batch()
-            self.update_layer_contents_ui()
-            self.refresh()
+            cmd = sel_layer.delete_all_selected_objects()
+            self.process_command(cmd)
 
     def clear_all_flagged(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
@@ -526,13 +526,6 @@ class ProjectEditor(FrameworkEditor):
         for layer in self.layer_manager.flatten():
             layer.clear_all_selections()
         if refresh:
-            self.refresh()
-
-    def delete_all_selections(self):
-        layer = self.layer_tree_control.get_selected_layer()
-        if (layer != None):
-            layer.delete_all_selected_objects()
-            self.layer_manager.end_operation_batch()
             self.refresh()
 
     def dragged(self, world_d_x, world_d_y):

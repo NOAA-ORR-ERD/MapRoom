@@ -311,7 +311,7 @@ class ObjectSelectionMode(MouseHandler):
         c.selection_box_is_being_defined = False
     
     def delete_key_pressed(self):
-        self.layer_control.editor.delete_all_selections()
+        self.layer_control.project.delete_selection()
         
     def clicked_on_point(self, event, layer, point_index):
         pass

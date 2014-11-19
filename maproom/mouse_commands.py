@@ -127,6 +127,65 @@ class InsertLineCommand(Command):
         undo_info = self.layer.delete_point(self.undo_point.index)
         return undo_info
 
+class DeleteLinesCommand(Command):
+    def __init__(self, layer, point_indexes, line_indexes):
+        self.layer = layer
+        self.point_indexes = point_indexes
+        self.line_indexes = line_indexes
+        self.undo_point = None
+        self.undo_line = None
+    
+    def __str__(self):
+        if len(self.line_indexes) == 1:
+            return "Delete Line #%d" % self.line_indexes[0]
+        return "Delete %d Lines" % len(self.line_indexes)
+    
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        old_line_indexes = self.layer.get_lines_connected_to_points(self.point_indexes)
+        if self.line_indexes is not None:
+            old_line_indexes = np.unique(np.append(old_line_indexes, self.line_indexes))
+        old_line_segments = np.copy(self.layer.line_segment_indexes[old_line_indexes])
+        old_points = np.copy(self.layer.points[self.point_indexes])
+        undo.data = (old_points, old_line_segments, old_line_indexes)
+        print "DeleteLinesCommand: %s" % str(undo.data)
+        undo.flags.refresh_needed = True
+        undo.flags.layer_items_moved = self.layer
+        undo.flags.layer_contents_deleted = self.layer
+        self.layer.remove_points_and_lines(self.point_indexes, old_line_indexes)
+        return self.undo_info
+
+    def undo(self, editor):
+        """
+        Using the batch numpy.insert, it expects the point indexes to be
+        relative to the current state of the array, not the original indexes.
+
+        >>> a=np.arange(10)
+        >>> a
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        >>> indexes=[2,5,7,9]
+        >>> b=np.delete(a,indexes,0)
+        >>> b
+        array([0, 1, 3, 4, 6, 8])
+        >>> np.insert(b, indexes, indexes)
+        IndexError: index 12 is out of bounds for axis 1 with size 10
+        >>> fixed = indexes - np.arange(4)
+        >>> np.insert(b, fixed, indexes)
+        array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        """
+        old_points, old_line_segments, old_line_indexes = self.undo_info.data
+        offset = np.arange(len(self.point_indexes))
+        indexes = self.point_indexes - offset
+        self.layer.points = np.insert(self.layer.points, indexes, old_points).view(np.recarray)
+        offset = np.arange(len(old_line_indexes))
+        indexes = old_line_indexes - offset
+        self.layer.line_segment_indexes = np.insert(self.layer.line_segment_indexes, indexes, old_line_segments).view(np.recarray)
+        undo = UndoInfo()
+        undo.flags.refresh_needed = True
+        undo.flags.layer_items_moved = self.layer
+        undo.flags.layer_contents_added = self.layer
+        return undo
+
 class CropRectCommand(Command):
     def __init__(self, layer, world_rect):
         self.layer = layer
