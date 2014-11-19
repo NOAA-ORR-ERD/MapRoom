@@ -1,0 +1,38 @@
+## this is a list of files in the TestData set that work or don't work (now)
+# at some point, this should be automated
+# 
+# and finished -- only a few here
+
+Updated: 11/19/2014
+Version: 3.0b15
+
+
+Test files that work: 
+
+
+ChartsAndImages:
+11361_1.KAP
+11361_2.KAP
+11361_3.KAP
+
+13260_1.png
+
+
+13260_1.KAP
+16592_1.KAP
+NOAA18649_partial.png
+
+
+
+Test files that don't work:
+
+ChartsAndImages:
+11370_1.KAP  # not north up
+11370_2.KAP  # not north up
+11370_3.KAP  # not north up
+
+14771_1.KP  # not north up - -maybe different projection
+14771_1.png # crash -- not sure why
+
+SST.png # non errors, doesn't show image. It's a color table image, so??
+
