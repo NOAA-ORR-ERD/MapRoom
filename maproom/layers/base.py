@@ -53,7 +53,7 @@ class Layer(HasTraits):
     
     bounds = Any(rect.NONE_RECT)
     
-    mouse_selection_mode = Str("BaseLayer")
+    mouse_mode_toolbar = Str("BaseLayerToolBar")
     
     # this is any change that might affect the properties panel (e.g., number
     # of points selected)
@@ -306,6 +306,12 @@ class Layer(HasTraits):
         so we can't just create the renderer as an attribute of this object.
         The storage parameter is attached to the view and independent of
         other views of this layer.
+        
+        """
+        pass
+    
+    def rebuild_renderer(self, layer_renderer, in_place=False):
+        """Update renderer
         
         """
         pass

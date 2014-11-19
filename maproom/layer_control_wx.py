@@ -9,7 +9,7 @@ import library.coordinates as coordinates
 import renderer
 import library.rect as rect
 import app_globals
-from mouse_handler import MouseHandler
+from mouse_handler import *
 
 import OpenGL
 import OpenGL.GL as gl
@@ -40,9 +40,9 @@ class LayerControl(glcanvas.GLCanvas):
     MODE_CROP = 4
     
     valid_mouse_modes = {
-        'VectorLayerToolBar': [0, 1, 2, 3],
-        'PolygonLayerToolBar': [0, 1, 4],
-        'default': [0, 1],
+        'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
+        'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
+        'default': [PanMode, ZoomRectMode],
         }
 
     opengl_renderer = None
@@ -119,7 +119,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.Bind(wx.EVT_SIZE, self.resize_render_pane)
         
         # mouse handler events
-        self.mouse_handler = MouseHandler(self)
+        self.mouse_handler = PanMode(self)
         
         self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
@@ -153,6 +153,19 @@ class LayerControl(glcanvas.GLCanvas):
                 self.remove_renderer_for_layer(layer)
         self.update_renderers()
 
+    def rebuild_renderer_for_layer(self, layer, in_place=False):
+        if layer in self.layer_renderers:
+            layer.rebuild_renderer(self.layer_renderers[layer], in_place)
+            log.debug("renderer rebuilt")
+        else:
+            log.warning("layer %s isn't in layer_renderers!" % layer)
+            for layer in self.layer_renderers.keys():
+                log.warning("  layer: %s" % layer)
+    
+    def set_mouse_handler(self, mode):
+        self.release_mouse()
+        self.mouse_handler = mode(self)
+
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
         mouselog.debug("in on_mouse_down: event=%s" % event)
@@ -165,31 +178,6 @@ class LayerControl(glcanvas.GLCanvas):
 
         self.mouse_handler.process_mouse_down(event)
 
-    def select_object(self, event):
-        e = self.project
-        lm = self.layer_manager
-
-        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            (layer_pick_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
-            layer = lm.get_layer_by_pick_index(layer_pick_index)
-            if (self.project.layer_tree_control.is_selected_layer(layer)):
-                if (e.clickable_object_is_ugrid_point()):
-                    e.clicked_on_point(event, layer, object_index)
-                if (e.clickable_object_is_ugrid_line()):
-                    world_point = self.get_world_point_from_screen_point(event.GetPosition())
-                    e.clicked_on_line_segment(event, layer, object_index, world_point)
-        else:  # the mouse is not on a clickable object
-            # fixme: there should be a reference to the layer manager in the RenderWindow
-            # and we could get the selected layer from there -- or is selected purely a UI concept?
-            layer = self.project.layer_tree_control.get_selected_layer()
-            if (layer != None):
-                if (event.ControlDown() or event.ShiftDown()):
-                    self.selection_box_is_being_defined = True
-                    self.CaptureMouse()
-                else:
-                    world_point = self.get_world_point_from_screen_point(event.GetPosition())
-                    e.clicked_on_empty_space(event, layer, world_point)
-
     def release_mouse(self):
         self.mouse_is_down = False
         self.selection_box_is_being_defined = False
@@ -198,8 +186,10 @@ class LayerControl(glcanvas.GLCanvas):
 
     def on_mouse_motion(self, event):
         self.get_effective_tool_mode(event)  # update alt key state
-        
-        self.mouse_handler.process_mouse_motion(event)
+        if self.mouse_is_down:
+            self.mouse_handler.process_mouse_motion_down(event)
+        else:
+            self.mouse_handler.process_mouse_motion_up(event)
 
     def on_mouse_up(self, event):
         self.get_effective_tool_mode(event)  # update alt key state
@@ -246,32 +236,7 @@ class LayerControl(glcanvas.GLCanvas):
             #
             return
 
-        effective_mode = self.get_effective_tool_mode(None)
-        
-        if (self.editor.clickable_object_mouse_is_over != None and
-                (effective_mode == self.MODE_EDIT_POINTS or effective_mode == self.MODE_EDIT_LINES)):
-            if (effective_mode == self.MODE_EDIT_POINTS and self.editor.clickable_object_is_ugrid_line()):
-                self.SetCursor(wx.StockCursor(wx.CURSOR_BULLSEYE))
-            else:
-                self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
-            #
-            return
-
-        if (self.mouse_is_down):
-            if (effective_mode == self.MODE_PAN):
-                self.SetCursor(self.hand_closed_cursor)
-            #
-            return
-
-        # w = wx.FindWindowAtPointer() is this needed?
-        # if ( w == self.renderer ):
-        c = wx.StockCursor(wx.CURSOR_ARROW)
-        if (effective_mode == self.MODE_PAN):
-            c = self.hand_cursor
-        if (effective_mode == self.MODE_ZOOM_RECT or effective_mode == self.MODE_CROP):
-            c = wx.StockCursor(wx.CURSOR_CROSS)
-        if (effective_mode == self.MODE_EDIT_POINTS or effective_mode == self.MODE_EDIT_LINES):
-            c = wx.StockCursor(wx.CURSOR_PENCIL)
+        c = self.mouse_handler.get_cursor()
         self.SetCursor(c)
 
     def get_effective_tool_mode(self, event):
@@ -287,7 +252,7 @@ class LayerControl(glcanvas.GLCanvas):
             except:
                 pass
         if self.is_alt_key_down or middle_down:
-            mode = self.MODE_PAN
+            mode = PanMode
         else:
             mode = self.project.mouse_mode
         return mode
@@ -356,24 +321,8 @@ class LayerControl(glcanvas.GLCanvas):
         self.opengl_renderer.prepare_to_render_screen_objects()
         if (self.bounding_boxes_shown):
             self.draw_bounding_boxes()
-        effective_mode = self.get_effective_tool_mode(event)
-        ## fixme: can this logic / drawing be moved to a GUI mode somehow?
-        ##        i.e.  
-        if ((effective_mode == self.MODE_ZOOM_RECT or effective_mode == self.MODE_CROP or self.selection_box_is_being_defined) and self.mouse_is_down):
-            (x1, y1, x2, y2) = rect.get_normalized_coordinates(self.mouse_down_position,
-                                                               self.mouse_move_position)
-            # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )
-            rects = self.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
-            for r in rects:
-                if (r != rect.EMPTY_RECT):
-                    self.opengl_renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
-            # small adjustments to make stipple overlap gray rects perfectly
-            y1 -= 1
-            x2 += 1
-            self.opengl_renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            self.opengl_renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            self.opengl_renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            self.opengl_renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+        
+        self.mouse_handler.render_overlay()
 
         self.SwapBuffers()
 
@@ -399,15 +348,6 @@ class LayerControl(glcanvas.GLCanvas):
                 s_r = self.get_screen_rect_from_world_rect(w_r)
                 r, g, b, a = renderer.int_to_color(layer.color)
                 self.opengl_renderer.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
-
-    def rebuild_points_and_lines_for_layer(self, layer, in_place=False):
-        if layer in self.layer_renderers:
-            self.layer_renderers[layer].rebuild_point_and_line_set_renderer(layer, in_place=in_place)
-            #log.debug("points/lines renderer rebuilt")
-        else:
-            log.warning("layer %s isn't in layer_renderers!" % layer)
-            for layer in self.layer_renderers.keys():
-                log.warning("  layer: %s" % layer)
 
     def resize_render_pane(self, event):
         if not self.GetContext():

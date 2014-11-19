@@ -11,6 +11,8 @@ from ..library import rect
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
 from ..layer_undo import *
+from ..command import UndoInfo
+from ..mouse_commands import MovePointsCommand
 
 from base import Layer, ProjectedLayer
 from constants import *
@@ -28,7 +30,7 @@ class PointLayer(ProjectedLayer):
     
     type = Str("point")
     
-    mouse_selection_mode = Str("VectorLayer")
+    mouse_mode_toolbar = Str("VectorLayerToolBar")
     
     points = Any
     
@@ -266,103 +268,65 @@ class PointLayer(ProjectedLayer):
     def get_state(self, index):
         return self.points.state[index]
 
-    def offset_selected_objects(self, world_d_x, world_d_y):
-        self.offset_selected_points(world_d_x, world_d_y)
-
-    def offset_selected_points(self, world_d_x, world_d_y):
-        if (self.points != None):
-            # offset our own copy of the points (which automatically updates our own line segments)
-            s_p_i_s = self.get_selected_point_indexes()
-            for point_index in s_p_i_s:
-                self.offset_point(point_index, world_d_x, world_d_y, True)
-            # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
-            
-            # Rebuilding the renderer by using the event layer_contents_changed
-            # is super slow for large data sets.  This is a different event
-            # that updates the point positions given the requirement that no
-            # points have been added or removed
-            self.manager.dispatch_event('layer_contents_changed_in_place', self)
-            self.increment_change_count()
-
-    def offset_point(self, point_index, world_d_x, world_d_y, add_undo_info=False):
-        self.points.x[point_index] += world_d_x
-        self.points.y[point_index] += world_d_y
-        """
-        # we don't set the undo information here because this function is called repeatedly as the mouse moves
-        if ( add_undo_info ):
-            params = ( world_d_x, world_d_y )
-            self.manager.add_undo_operation_to_operation_batch( OP_MOVE_POINT, self, point_index, params )
-        """
-
+    def dragging_selected_objects(self, world_dx, world_dy):
+        indexes = self.get_selected_and_dependent_point_indexes()
+        cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
+        return cmd
+    
     def insert_point(self, world_point):
         if self.points is None:
             index = -1
         else:
             index = len(self.points)
-        return self.insert_point_at_index(index, world_point, self.default_depth, self.color, STATE_SELECTED, True)
+        return self.insert_point_at_index(index, world_point, self.default_depth, self.color, STATE_SELECTED)
 
-    def insert_point_at_index(self, point_index, world_point, z, color, state, add_undo_info):
+    def insert_point_at_index(self, point_index, world_point, z, color, state):
         t0 = time.clock()
         # insert it into the layer
         p = np.array([(world_point[0], world_point[1], z, color, state)],
                      dtype=data_types.POINT_DTYPE)
+        undo = UndoInfo()
         if (self.points == None):
             self.new_points(1)
             self.points[0] = p
             point_index = 0
-            self.manager.dispatch_event('refresh_needed')
-            self.manager.project.layer_tree_control.select_layer(self)
+            undo.flags.refresh_needed = True
+            undo.flags.select_layer = self
         else:
             self.points = np.insert(self.points, point_index, p).view(np.recarray)
-        t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        # print "inserted new point in {0} seconds".format( t )
+        undo.index = point_index
+        undo.data = np.copy(p)
+        undo.flags.items_moved = True
+        undo.flags.layer_contents_added = self
 
         # update point indexes in the line segements to account for the inserted point
         self.update_after_insert_point_at_index(point_index)
 
-        if (add_undo_info):
-            params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            self.manager.add_undo_operation_to_operation_batch(OP_ADD_POINT, self, point_index, params)
-
-        # insert it into the point_and_line_set_renderer (by simply rebuilding it)
-        # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
-        # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
-        if (add_undo_info):
-            self.manager.dispatch_event('layer_contents_changed', self)
-
-        """
-        t0 = time.clock()
-        # insert it into the label_set_renderer
-        if ( self.label_set_renderer != None ):
-            self.label_set_renderer.insert_point( len( self.points ) - 1,
-                                                  str( self.default_depth ),
-                                                  world_point,
-                                                  self.manager.project.control.projection,
-                                                  self.manager.project.control.projection_is_identity )
-        t = time.clock() - t0 # t is wall seconds elapsed (floating point)
-        print "inserted into label set renderer in {0} seconds".format( t )
-        """
-
-        return point_index
+        return undo
 
     def update_after_insert_point_at_index(self, point_index):
         """Hook for subclasses to update dependent items when a point is inserted.
         """
         pass
 
-    def delete_point(self, point_index, add_undo_info):
+    def delete_point(self, point_index):
         if (self.find_points_connected_to_point(point_index) != []):
             raise Exception()
 
-        if (add_undo_info):
-            params = ((self.points.x[point_index], self.points.y[point_index]), self.points.z[point_index], self.points.color[point_index], self.points.state[point_index])
-            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, point_index, params)
+        undo = UndoInfo()
+        p = self.points[point_index]
+        print "LABEL: deleting point: %s" % str(p)
+        undo.index = point_index
+        undo.data = np.copy(p)
+        undo.flags.refresh_needed = True
+        undo.flags.items_moved = True
+        undo.flags.layer_contents_deleted = self
         self.points = np.delete(self.points, point_index, 0)
 
         # update point indexes in the line segements to account for the deleted point
         self.update_after_delete_point(point_index)
 
-        self.manager.dispatch_event('layer_contents_changed', self)
+        return undo
 
     def find_points_connected_to_point(self, point_index):
         return []
@@ -388,6 +352,9 @@ class PointLayer(ProjectedLayer):
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
 
         renderer.set_up_labels(self)
+    
+    def rebuild_renderer(self, renderer, in_place=False):
+        renderer.rebuild_point_and_line_set_renderer(self, in_place=in_place)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         log.log(5, "Rendering point layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))

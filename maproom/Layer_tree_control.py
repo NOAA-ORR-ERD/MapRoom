@@ -65,7 +65,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
     def select_layer(self, layer):
         if self.project is None:
             return
-        self.project.esc_key_pressed()
+        self.project.clear_all_selections(False)
 
         if (layer == None):
             self.UnselectAll()
@@ -250,7 +250,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         self.select_layer(source_layer)
 
     def handle_selection_changed(self, event):
-        self.project.esc_key_pressed()
+        self.project.clear_all_selections(False)
         self.project.update_layer_selection_ui(self.get_selected_layer())
         
         prefs = self.project.task.get_preferences()
@@ -287,7 +287,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         source_layer = lm.get_layer_by_multi_index(mi_source)
         lm.remove_layer_at_multi_index(mi_source)
         lm.insert_layer(mi_target, source_layer)
-        self.project.esc_key_pressed()
+        self.project.clear_all_selections(False)
         self.select_layer(layer)
 
     def mouse_pressed(self, event):

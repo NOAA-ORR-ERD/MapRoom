@@ -22,13 +22,13 @@ class LayerUndo(HasTraits):
     # { "n" : <int operation number>, "op" : <int operation enum>, "l" :
     # <layer>, "i" : <point or line index in layer>, "p" : ( params depending
     # on op enum ) }
-    undo_stack = List(Any)
+    old_undo_stack = List(Any)
     
-    undo_stack_next_index = Int
+    old_undo_stack_next_index = Int
     
-    undo_stack_next_operation_number = Int
+    old_undo_stack_next_operation_number = Int
     
-    undo_stack_changed = Event
+    old_undo_stack_changed = Event
 
     def start_batch_events(self):
         self.batch = True
@@ -54,42 +54,42 @@ class LayerUndo(HasTraits):
             setattr(self, event, value)
 
     def add_undo_operation_to_operation_batch(self, op, layer, index, params):
-        self.clear_undo_stack_forward()
-        self.undo_stack.append({"n": self.undo_stack_next_operation_number, "op": op, "l": layer, "i": index, "p": params})
-        self.undo_stack_next_index = len(self.undo_stack)
+        self.clear_old_undo_stack_forward()
+        self.old_undo_stack.append({"n": self.old_undo_stack_next_operation_number, "op": op, "l": layer, "i": index, "p": params})
+        self.old_undo_stack_next_index = len(self.old_undo_stack)
 
     def end_operation_batch(self, refresh=True):
         self.show_undo_redo_debug_dump("end_operation_batch()")
-        self.undo_stack_next_operation_number += 1
+        self.old_undo_stack_next_operation_number += 1
         if refresh:
             self.dispatch_event('refresh_needed')
 
     def delete_undo_operations_for_layer(self, layer):
-        self.clear_undo_stack_forward()
+        self.clear_old_undo_stack_forward()
         new_stack = []
-        for o in self.undo_stack:
+        for o in self.old_undo_stack:
             if (o["l"] != layer):
                 new_stack.append(o)
-        self.undo_stack = new_stack
-        self.undo_stack_next_index = len(self.undo_stack)
+        self.old_undo_stack = new_stack
+        self.old_undo_stack_next_index = len(self.old_undo_stack)
 
-    def clear_undo_stack_forward(self):
-        if (len(self.undo_stack) > self.undo_stack_next_index):
-            self.undo_stack = self.undo_stack[0: self.undo_stack_next_index]
+    def clear_old_undo_stack_forward(self):
+        if (len(self.old_undo_stack) > self.old_undo_stack_next_index):
+            self.old_undo_stack = self.old_undo_stack[0: self.old_undo_stack_next_index]
 
     def get_current_undoable_operation_text(self):
-        if (self.undo_stack_next_index == 0):
+        if (self.old_undo_stack_next_index == 0):
             return ""
 
-        op = self.undo_stack[self.undo_stack_next_index - 1]["op"]
+        op = self.old_undo_stack[self.old_undo_stack_next_index - 1]["op"]
 
         return self.get_undo_redo_operation_text(op)
 
     def get_current_redoable_operation_text(self):
-        if (self.undo_stack_next_index >= len(self.undo_stack)):
+        if (self.old_undo_stack_next_index >= len(self.old_undo_stack)):
             return ""
 
-        op = self.undo_stack[self.undo_stack_next_index]["op"]
+        op = self.old_undo_stack[self.old_undo_stack_next_index]["op"]
 
         return self.get_undo_redo_operation_text(op)
 
@@ -108,26 +108,26 @@ class LayerUndo(HasTraits):
         return ""
 
     def undo(self):
-        if (self.undo_stack_next_index == 0):
+        if (self.old_undo_stack_next_index == 0):
             return
-        operation_number = self.undo_stack[self.undo_stack_next_index - 1]["n"]
+        operation_number = self.old_undo_stack[self.old_undo_stack_next_index - 1]["n"]
         # here we assume that all operations in the batch are actually from the same layer
         # we also assume that as point and line deletions are undone, the objects come back already in selected state,
         # which is true because they had to be in selected state at the time they were deleted
-        layer = self.undo_stack[self.undo_stack_next_index - 1]["l"]
+        layer = self.old_undo_stack[self.old_undo_stack_next_index - 1]["l"]
         layer.clear_all_selections()
         # walk backward until we get to a different operation number or hit the start of the stack
         affected_layers = set()
         while (True):
-            if (self.undo_stack_next_index == 0 or self.undo_stack[self.undo_stack_next_index - 1]["n"] != operation_number):
+            if (self.old_undo_stack_next_index == 0 or self.old_undo_stack[self.old_undo_stack_next_index - 1]["n"] != operation_number):
                 break
-            self.undo_operation(self.undo_stack[self.undo_stack_next_index - 1], affected_layers)
-            self.undo_stack_next_index -= 1
+            self.undo_operation(self.old_undo_stack[self.old_undo_stack_next_index - 1], affected_layers)
+            self.old_undo_stack_next_index -= 1
         log.debug("affected layers: %s" % str(affected_layers))
         for layer in affected_layers:
             self.dispatch_event('layer_contents_changed', layer)
         self.show_undo_redo_debug_dump("undo() done")
-        self.undo_stack_changed = True
+        self.old_undo_stack_changed = True
 
     def undo_operation(self, o, affected_layers):
         operation_number = o["n"]
@@ -163,20 +163,20 @@ class LayerUndo(HasTraits):
             layer.set_state(old_state)
 
     def redo(self):
-        if (self.undo_stack_next_index >= len(self.undo_stack)):
+        if (self.old_undo_stack_next_index >= len(self.old_undo_stack)):
             return
-        operation_number = self.undo_stack[self.undo_stack_next_index]["n"]
+        operation_number = self.old_undo_stack[self.old_undo_stack_next_index]["n"]
         # walk forward until we get to a different operation number or hit the end of the stack
         affected_layers = set()
         while (True):
-            if (self.undo_stack_next_index == len(self.undo_stack) or self.undo_stack[self.undo_stack_next_index]["n"] != operation_number):
+            if (self.old_undo_stack_next_index == len(self.old_undo_stack) or self.old_undo_stack[self.old_undo_stack_next_index]["n"] != operation_number):
                 break
-            self.redo_operation(self.undo_stack[self.undo_stack_next_index], affected_layers)
-            self.undo_stack_next_index += 1
+            self.redo_operation(self.old_undo_stack[self.old_undo_stack_next_index], affected_layers)
+            self.old_undo_stack_next_index += 1
         for layer in affected_layers:
             self.dispatch_event('layer_contents_changed', layer)
         self.show_undo_redo_debug_dump("redo() done")
-        self.undo_stack_changed = True
+        self.old_undo_stack_changed = True
 
     def redo_operation(self, o, affected_layers):
         operation_number = o["n"]
@@ -213,10 +213,10 @@ class LayerUndo(HasTraits):
 
     def show_undo_redo_debug_dump(self, location_message):
         if log.getEffectiveLevel() <= logging.DEBUG:
-            log.debug(location_message + ": the undo_stack is now: ")
-            if (len(self.undo_stack) <= 100):
-                for item in self.undo_stack:
+            log.debug(location_message + ": the old_undo_stack is now: ")
+            if (len(self.old_undo_stack) <= 100):
+                for item in self.old_undo_stack:
                     print "    " + str(item)
             else:
                 print "    longer than 100 items"
-            print "undo_stack_next_index is now: " + str(self.undo_stack_next_index)
+            print "old_undo_stack_next_index is now: " + str(self.old_undo_stack_next_index)

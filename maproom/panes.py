@@ -9,6 +9,7 @@ from Layer_tree_control import Layer_tree_control
 from ui.InfoPanels import LayerInfoPanel, SelectionInfoPanel
 from ui.TrianglePanel import TrianglePanel
 from ui.merge_panel import MergePointsPanel
+from ui.undo_panel import UndoHistoryPanel
 
 import logging
 log = logging.getLogger(__name__)
@@ -103,3 +104,21 @@ class MergePointsPane(DockPane):
 #        print "MergeDialog: layer_contents_deleted for layer %s" % layer
 #        self.project.layer_contents_changed(layer)
 #        self.control.on_points_deleted(layer)
+
+
+class UndoHistoryPane(DockPane):
+    #### TaskPane interface ###################################################
+
+    id = 'maproom.undo_history_pane'
+    name = 'Undo History'
+    
+    def create_contents(self, parent):
+        control = UndoHistoryPanel(parent, self.task)
+        return control
+    
+    #### trait change handlers
+    
+    def _task_changed(self):
+        log.debug("TASK CHANGED IN UNDOHISTORYPANE!!!! %s" % self.task)
+        if self.control:
+            self.control.set_task(self.task)

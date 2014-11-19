@@ -19,6 +19,7 @@ import pane_layout
 from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
+from mouse_handler import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -373,82 +374,64 @@ class BoundaryToSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.select_boundary)
 
-class ZoomModeAction(EditorAction):
-    name = 'Zoom Mode'
-    tooltip = 'Zoom to box'
-    image = ImageResource('zoom_box.png')
+class MouseHandlerBaseAction(EditorAction):
+    """Save a bit of boilerplate with a base class for toolbar mouse mode buttons
+    
+    Note that the traits for name, tooltip, and image must be repeated
+    in subclasses because the trait initialization appears to reference
+    the handler in the class that is named, not superclasses.  E.g.:
+    handler.menu_item_name in this base class doesn't appear to look at the
+    handler class attribute of subclasses.
+    """
+    handler = MouseHandler # Not a trait
+    
+    # Traits
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
     style = 'radio'
 
     def perform(self, event):
-        self.active_editor.mouse_mode = LayerControl.MODE_ZOOM_RECT
+        self.active_editor.mouse_mode = self.__class__.handler
         self.active_editor.update_layer_selection_ui()
 
     @on_trait_change('active_editor.mouse_mode')
     def _update_checked(self):
         if self.active_editor:
-            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_ZOOM_RECT
+            self.checked = self.active_editor.mouse_mode == self.__class__.handler
 
-class PanModeAction(EditorAction):
-    name = 'Pan Mode'
-    tooltip = 'Pan the viewport'
-    image = ImageResource('pan.png')
-    style = 'radio'
+class ZoomModeAction(MouseHandlerBaseAction):
+    handler = ZoomRectMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
 
-    def perform(self, event):
-        self.active_editor.mouse_mode = LayerControl.MODE_PAN
-        self.active_editor.update_layer_selection_ui()
+class PanModeAction(MouseHandlerBaseAction):
+    handler = PanMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
 
-    @on_trait_change('active_editor.mouse_mode')
-    def _update_checked(self):
-        if self.active_editor:
-            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_PAN
+class AddPointsAction(MouseHandlerBaseAction):
+    handler = PointSelectionMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+    enabled_name = handler.editor_trait_for_enabled
 
-class AddPointsAction(EditorAction):
-    name = 'Add Points Mode'
-    enabled_name = 'layer_has_points'
-    tooltip = 'Add points to the current layer'
-    image = ImageResource('add_points.png')
-    style = 'radio'
+class AddLinesAction(MouseHandlerBaseAction):
+    handler = LineSelectionMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+    enabled_name = handler.editor_trait_for_enabled
 
-    def perform(self, event):
-        self.active_editor.mouse_mode = LayerControl.MODE_EDIT_POINTS
-        self.active_editor.update_layer_selection_ui()
+class CropAction(MouseHandlerBaseAction):
+    handler = CropRectMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
 
-    @on_trait_change('active_editor.mouse_mode')
-    def _update_checked(self):
-        if self.active_editor:
-            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_POINTS
-
-class AddLinesAction(EditorAction):
-    name = 'Add Lines Mode'
-    enabled_name = 'layer_has_points'
-    tooltip = 'Add lines to the current layer'
-    image = ImageResource('add_lines.png')
-    style = 'radio'
-
-    def perform(self, event):
-        self.active_editor.mouse_mode = LayerControl.MODE_EDIT_LINES
-        self.active_editor.update_layer_selection_ui()
-
-    @on_trait_change('active_editor.mouse_mode')
-    def _update_checked(self):
-        if self.active_editor:
-            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_EDIT_LINES
-
-class CropAction(EditorAction):
-    name = 'Crop'
-    tooltip = 'Crop layer'
-    image = ImageResource('crop.png')
-    style = 'radio'
-
-    def perform(self, event):
-        self.active_editor.mouse_mode = LayerControl.MODE_CROP
-        self.active_editor.update_layer_selection_ui()
-
-    @on_trait_change('active_editor.mouse_mode')
-    def _update_checked(self):
-        if self.active_editor:
-            self.checked = self.active_editor.mouse_mode == LayerControl.MODE_CROP
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
@@ -673,7 +656,8 @@ class MaproomProjectTask(FrameworkTask):
         FrameworkTask.activated(self)
         visible = pane_layout.pane_initially_visible()
         for pane in self.window.dock_panes:
-            pane.visible = (pane.id in visible)
+            if pane.id in visible:
+                pane.visible = visible[pane.id]
         
         self.init_background_processing()
     
@@ -755,7 +739,7 @@ class MaproomProjectTask(FrameworkTask):
     def allow_different_task(self, guess, other_task):
         return self.window.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
     
-    @on_trait_change('active_editor.mouse_mode_category')
+    @on_trait_change('active_editor.mouse_mode_toolbar')
     def mode_toolbar_changed(self, changed_to):
         for toolbar in self.window.tool_bar_managers:
             name = toolbar.id

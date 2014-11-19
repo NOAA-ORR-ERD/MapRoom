@@ -21,6 +21,7 @@ from layer_undo import *
 import Layer_tree_control
 import renderer
 from layers.constants import *
+from mouse_handler import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -58,14 +59,14 @@ class ProjectEditor(FrameworkEditor):
     
     last_refresh = Float(0.0)
     
-    # Force mouse mode category to be blank so that the initial trait change
+    # Force mouse mode toolbar to be blank so that the initial trait change
     # that occurs during initialization of this class doesn't match a real
     # mouse mode.  If it does match, the toolbar won't be properly adjusted
     # during the first trait change in response to update_layer_selection_ui
     # and there will be an empty between named toolbars
-    mouse_mode_category = Str("")
+    mouse_mode_toolbar = Str("")
     
-    mouse_mode = Int(LayerControl.MODE_PAN)
+    mouse_mode = Any(PanMode)
 
     #### property getters
 
@@ -183,12 +184,6 @@ class ProjectEditor(FrameworkEditor):
             image.SaveFile(path, t)
         else:
             self.window.error("Unsupported image type %s" % ext)
-    
-    def undo(self):
-        self.layer_manager.undo()
-    
-    def redo(self):
-        self.layer_manager.redo()
 
     ###########################################################################
     # Private interface.
@@ -207,6 +202,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
         self.layer_info = self.window.get_dock_pane('maproom.layer_info_pane').control
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
+        self.undo_history = self.window.get_dock_pane('maproom.undo_history_pane').control
         
         # log.debug("LayerEditor: task=%s" % self.task)
 
@@ -225,11 +221,6 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
         self.refresh()
     
-    @on_trait_change('layer_manager:renderer_rebuild_event')
-    def renderer_rebuild_event(self):
-        log.debug("renderer_rebuild_event called!!!")
-        self.control.rebuild_renderers()
-    
     def update_layer_selection_ui(self, sel_layer=None):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
@@ -241,8 +232,8 @@ class ProjectEditor(FrameworkEditor):
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
             # leave mouse_mode set to current setting
-            self.mouse_mode_category = sel_layer.mouse_selection_mode + "ToolBar"
-            self.mouse_mode = LayerControl.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_category)
+            self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
+            self.mouse_mode = LayerControl.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
         else:
             self.layer_can_save = False
             self.layer_can_save_as = False
@@ -250,7 +241,8 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
-            self.mouse_mode = LayerControl.MODE_PAN
+            self.mouse_mode = PanMode
+        self.control.set_mouse_handler(self.mouse_mode)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_layer_contents_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer)
@@ -277,26 +269,6 @@ class ProjectEditor(FrameworkEditor):
         self.update_undo_redo()
         self.window._aui_manager.Update()
     
-    def update_undo_redo(self):
-        u = self.layer_manager.get_current_undoable_operation_text()
-        r = self.layer_manager.get_current_redoable_operation_text()
-
-        if (u == ""):
-            undo_label = "Undo"
-            self.can_undo = False
-        else:
-            undo_label = "Undo {0}".format(u)
-            self.can_undo = True
-
-        if (r == ""):
-            redo_label = "Redo"
-            self.can_redo = False
-        else:
-            redo_label = "Redo {0}".format(r)
-            self.can_redo = True
-        
-        self.dirty = self.can_undo
-    
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
         # log.debug("undo_stack_changed called!!!")
@@ -304,18 +276,18 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
-        # log.debug("layer_contents_changed called!!! layer=%s" % layer)
-        self.control.rebuild_points_and_lines_for_layer(layer)
+        log.debug("layer_contents_changed called!!! layer=%s" % layer)
+        self.control.rebuild_renderer_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_contents_changed_in_place')
     def layer_contents_changed_in_place(self, layer):
-        # log.debug("layer_contents_changed called!!! layer=%s" % layer)
-        self.control.rebuild_points_and_lines_for_layer(layer, in_place=True)
+        log.debug("layer_contents_changed called!!! layer=%s" % layer)
+        self.control.rebuild_renderer_for_layer(layer, in_place=True)
     
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
-        # log.debug("layer_contents_deleted called!!! layer=%s" % layer)
-        self.control.rebuild_points_and_lines_for_layer(layer)
+        log.debug("layer_contents_deleted called!!! layer=%s" % layer)
+        self.control.rebuild_renderer_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, layer):
@@ -349,6 +321,65 @@ class ProjectEditor(FrameworkEditor):
             return
         self.refresh()
     
+    
+    
+    # New Command processor
+    
+    def update_undo_redo(self):
+        command = self.layer_manager.undo_stack.get_undo_command()
+        print "LABEL: undo command: %s" % command
+        if command is None:
+            self.undo_label = "Undo"
+            self.can_undo = False
+        else:
+            self.undo_label = "Undo: {0}".format(command)
+            self.can_undo = True
+            
+        command = self.layer_manager.undo_stack.get_redo_command()
+        if command is None:
+            self.redo_label = "Redo"
+            self.can_redo = False
+        else:
+            self.redo_label = "Redo: {0}".format(command)
+            self.can_redo = True
+            
+        self.dirty = self.can_undo
+    
+    def undo(self):
+        undo = self.layer_manager.undo_stack.undo(self)
+        self.process_flags(undo.flags)
+    
+    def redo(self):
+        undo = self.layer_manager.undo_stack.redo(self)
+        self.process_flags(undo.flags)
+    
+    def process_command(self, command):
+        if command is None:
+            return
+        undo = command.perform(self)
+        self.layer_manager.undo_stack.add_command(command)
+        self.process_flags(undo.flags)
+    
+    def process_flags(self, f):
+        if f.select_layer:
+            self.layer_tree_control.select_layer(f.select_layer)
+        if f.layer_items_moved:
+            f.layer_items_moved.update_bounds()
+            self.control.rebuild_renderer_for_layer(f.layer_items_moved, in_place=True)
+        if f.layer_contents_added or f.layer_contents_deleted:
+            layer = f.layer_contents_added or f.layer_contents_deleted
+            self.control.rebuild_renderer_for_layer(layer)
+            f.refresh_needed = True
+        
+        if f.refresh_needed:
+            self.refresh()
+        if f.hidden_layer_check:
+            vis = self.layer_visibility[self.layer]['layer']
+            if not vis:
+                self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
+            
+        self.undo_history.update_history()
+
     #### old Editor ########################################################
 
 #    editing rules:
@@ -433,10 +464,8 @@ class ProjectEditor(FrameworkEditor):
     def delete_selection(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
-            sel_layer.delete_all_selected_objects()
-            self.layer_manager.end_operation_batch()
-            self.update_layer_contents_ui()
-            self.refresh()
+            cmd = sel_layer.delete_all_selected_objects()
+            self.process_command(cmd)
 
     def clear_all_flagged(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
@@ -498,187 +527,42 @@ class ProjectEditor(FrameworkEditor):
     def line_tool_deselected(self):
         pass
 
-    def esc_key_pressed(self):
+    def clear_all_selections(self, refresh=True):
         for layer in self.layer_manager.flatten():
             layer.clear_all_selections()
-        self.refresh()
-
-    def delete_key_pressed(self):
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
-            layer = self.layer_tree_control.get_selected_layer()
-            if (layer != None):
-                layer.delete_all_selected_objects()
-                self.layer_manager.end_operation_batch()
-                self.refresh()
-
-    def clicked_on_point(self, event, layer, point_index):
-        act_like_point_tool = False
-        vis = self.layer_visibility[layer]['layer']
-        message = ""
-
-        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
-            if (event.ControlDown() or event.ShiftDown()):
-                act_like_point_tool = True
-                pass
-            else:
-                point_indexes = layer.get_selected_point_indexes()
-                if len(point_indexes == 1):
-                    if not layer.are_points_connected(point_index, point_indexes[0]):
-                        layer.insert_line_segment(point_index, point_indexes[0])
-                        self.layer_manager.end_operation_batch()
-                        if not vis:
-                            message = "Added line to hidden layer %s" % layer.name
-                    layer.clear_all_point_selections()
-                    if point_indexes[0] != point_index:
-                        # allow for deselecting points by clicking them again.
-                        # Only if the old selected point is not the same
-                        # as the clicked point will the clicked point be
-                        # highlighted.
-                        layer.select_point(point_index)
-                elif len(point_indexes) == 0:  # no currently selected point
-                    # select this point
-                    layer.select_point(point_index)
-
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or act_like_point_tool):
-            if (event.ControlDown()):
-                if (layer.is_point_selected(point_index)):
-                    layer.deselect_point(point_index)
-                else:
-                    layer.select_point(point_index)
-            elif (layer.is_point_selected(point_index)):
-                layer.clear_all_selections()
-            elif (event.ShiftDown()):
-                path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
-                if (path != []):
-                    for p_index in path:
-                        layer.select_point(p_index)
-                else:
-                    layer.select_point(point_index)
-            else:
-                layer.clear_all_selections()
-                layer.select_point(point_index)
-
-        self.refresh()
-        if message:
-            self.task.status_bar.message = message
-
-    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
-        vis = self.layer_visibility[layer]['layer']
-
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
-            if (not event.ControlDown() and not event.ShiftDown()):
-                self.esc_key_pressed()
-                point_index = layer.insert_point_in_line(world_point, line_segment_index)
-                self.layer_manager.end_operation_batch()
-                self.control.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
-                if not vis:
-                    self.task.status_bar.message = "Split line in hidden layer %s" % layer.name
-                else:
-                    layer.select_point(point_index)
-
-        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
-            if (event.ControlDown()):
-                if (layer.is_line_segment_selected(line_segment_index)):
-                    layer.deselect_line_segment(line_segment_index)
-                else:
-                    layer.select_line_segment(line_segment_index)
-            elif (layer.is_line_segment_selected(line_segment_index)):
-                pass
-            elif (event.ShiftDown()):
-                path = layer.find_lines_on_shortest_path_from_line_to_selected_line(line_segment_index)
-                if (path != []):
-                    for l_s_i in path:
-                        layer.select_line_segment(l_s_i)
-                else:
-                    layer.select_line_segment(line_segment_index)
-            else:
-                layer.clear_all_selections()
-                layer.select_line_segment(line_segment_index)
-
-        self.refresh()
-
-    def clicked_on_polygon(self, layer, polygon_index):
-        pass
-
-    def clicked_on_empty_space(self, event, layer, world_point):
-        # log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS or self.mouse_mode == self.control.MODE_EDIT_LINES):
-            if (layer.type == "root" or layer.type == "folder"):
-                self.window.error("You cannot add points or lines to folder layers.",
-                                  "Cannot Edit")
-
-                return
-        vis = self.layer_visibility[layer]['layer']
-
-        # log.debug("1: self.mouse_mode=%d" % self.mouse_mode)
-        if (self.mouse_mode == self.control.MODE_EDIT_POINTS):
-            if (not event.ControlDown() and not event.ShiftDown()):
-                # log.debug("1.1")
-                self.esc_key_pressed()
-                # we release the focus because we don't want to immediately drag the new object (if any)
-                # self.control.release_mouse() # shouldn't be captured now anyway
-                point_index = layer.insert_point(world_point)
-                layer.select_point(point_index)
-                layer.update_bounds()
-                self.layer_manager.end_operation_batch(refresh=False)
-                self.refresh()
-                if not vis:
-                    self.task.status_bar.message = "Added point to hidden layer %s" % layer.name
-        # log.debug("2")
-        if (self.mouse_mode == self.control.MODE_EDIT_LINES):
-            if (not event.ControlDown() and not event.ShiftDown()):
-                point_indexes = layer.get_selected_point_indexes()
-                if (len(point_indexes == 1)):
-                    self.esc_key_pressed()
-                    # we release the focus because we don't want to immediately drag the new object (if any)
-                    # self.control.release_mouse()
-                    point_index = layer.insert_point(world_point)
-                    layer.update_bounds()
-                    layer.insert_line_segment(point_index, point_indexes[0])
-                    self.layer_manager.end_operation_batch()
-                    layer.clear_all_point_selections()
-                    layer.select_point(point_index)
-                    if not vis:
-                        self.task.status_bar.message = "Added line to hidden layer %s" % layer.name
-                self.refresh()
+        if refresh:
+            self.refresh()
 
     def dragged(self, world_d_x, world_d_y):
         if (self.clickable_object_mouse_is_over == None):
             return
 
-        (layer_pick_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
-        layer = self.layer_manager.get_layer_by_pick_index(layer_pick_index)
+        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
+        layer = self.layer_manager.get_layer_by_pick_index(layer_index)
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
+        self.process_command(cmd)
 
-        layer.offset_selected_objects(world_d_x, world_d_y)
-        # self.layer_manager.end_operation_batch()
-        self.refresh()
-
-    def finished_drag(self, mouse_down_position, mouse_move_position):
+    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y):
         if (self.clickable_object_mouse_is_over == None):
             return
 
-        d_x = mouse_move_position[0] - mouse_down_position[0]
-        d_y = mouse_down_position[1] - mouse_move_position[1]
-
-        if (d_x == 0 and d_y == 0):
+        # Can't compare mouse positions in screen coordinates, because the
+        # screen may have been scrolled or zoomed.  Have to look at world
+        # coords to see if there has been a change.
+        
+        if (world_d_x == 0 and world_d_y == 0):
             return
 
-        w_p0 = self.control.get_world_point_from_screen_point(mouse_down_position)
-        w_p1 = self.control.get_world_point_from_screen_point(mouse_move_position)
-        world_d_x = w_p1[0] - w_p0[0]
-        world_d_y = w_p1[1] - w_p0[1]
+#        w_p0 = self.control.get_world_point_from_screen_point(mouse_down_position)
+#        w_p1 = self.control.get_world_point_from_screen_point(mouse_move_position)
+#        world_d_x = w_p1[0] - w_p0[0]
+#        world_d_y = w_p1[1] - w_p0[1]
 
         (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_pick_index(layer_index)
 
-        s_p_i_s = layer.get_selected_and_dependent_point_indexes()
-        for point_index in s_p_i_s:
-            state = layer.get_state(point_index)
-            params = (world_d_x, world_d_y, state)
-            layer.deselect_point(point_index, STATE_FLAGGED)
-            self.layer_manager.add_undo_operation_to_operation_batch(OP_MOVE_POINT, layer, point_index, params)
-
-        self.layer_manager.end_operation_batch()
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
+        self.process_command(cmd)
 
     def clickable_object_is_ugrid_point(self):
         return renderer.is_ugrid_point(self.clickable_object_mouse_is_over)

@@ -13,7 +13,7 @@ from ..library import rect
 from ..library.projection import Projection
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
-from ..layer_undo import *
+from ..command import UndoInfo
 
 from point import PointLayer
 from constants import *
@@ -29,7 +29,7 @@ class PolygonLayer(PointLayer):
     """
     type = Str("polygon")
     
-    mouse_selection_mode = Str("PolygonLayer")
+    mouse_mode_toolbar = Str("PolygonLayerToolBar")
     
     polygons = Any
     
@@ -190,13 +190,6 @@ class PolygonLayer(PointLayer):
         #
         return np.where((self.polygons.state & mark_type) != 0)[0]
 
-    def offset_selected_objects(self, world_d_x, world_d_y):
-        self.offset_selected_points(world_d_x, world_d_y)
-        self.offset_selected_polygons(world_d_x, world_d_y)
-
-    def offset_selected_polygons(self, world_d_x, world_d_y):
-        self.increment_change_count()
-    
     def insert_line_segment(self, point_index_1, point_index_2):
         raise RuntimeError("Not implemented yet for polygon layer!")
     
@@ -228,7 +221,7 @@ class PolygonLayer(PointLayer):
             print "shapely polygon:", poly.bounds
         return poly
     
-    def crop_rectangle(self, w_r, add_undo_info=True):
+    def crop_rectangle(self, w_r):
         print "Cropping to %s" % str(w_r)
         
         crop_rect = box(w_r[0][0], w_r[1][1], w_r[1][0], w_r[0][1])
@@ -291,22 +284,25 @@ class PolygonLayer(PointLayer):
                       np.asarray(new_polys.p_counts, dtype=np.uint32),
                       new_polys.p_identifiers)
         
-        if add_undo_info:
-            new_state = self.get_restore_state()
-            self.manager.add_undo_operation_to_operation_batch(OP_CLIP, self, -1, (old_state, new_state))
-
-        # NOTE: Renderers need to be updated after setting new data, but this
-        # can't be done here because 1) we don't know the layer control that
-        # contains the renderer data, and 2) it may affect multiple views of
-        # this layer.  Need to rely on the caller to rebuild renderers.
+        undo = UndoInfo()
+        undo.data = old_state
+        undo.flags.refresh_needed = True
+        undo.flags.items_moved = True
+        undo.flags.layer_contents_deleted = self
+        return undo
     
     def get_restore_state(self):
         return self.points.copy(), self.polygons.copy(), self.polygon_adjacency_array.copy(), list(self.polygon_identifiers)
     
     def set_state(self, params):
         self.points, self.polygons, self.polygon_adjacency_array, self.polygon_identifiers = params
-        self.update_bounds()
-        self.manager.renderer_rebuild_event = True
+        undo = UndoInfo()
+        undo.flags.refresh_needed = True
+        undo.flags.items_moved = True
+        # Don't know if items were added or deleted, so mark both
+        undo.flags.layer_contents_added = self
+        undo.flags.layer_contents_deleted = self
+        return undo
 
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.
@@ -319,6 +315,12 @@ class PolygonLayer(PointLayer):
         """
         if self.polygons != None and renderer.polygon_set_renderer == None:
             renderer.rebuild_polygon_set_renderer(self)
+    
+    def rebuild_renderer(self, renderer, in_place=False):
+        if in_place == True:
+            # FIXME: noop if items have just moved around.
+            return
+        renderer.rebuild_polygon_set_renderer(self)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         log.log(5, "Rendering polygon layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))

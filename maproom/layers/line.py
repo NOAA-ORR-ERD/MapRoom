@@ -11,6 +11,8 @@ from ..library import rect
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
 from ..layer_undo import *
+from ..command import UndoInfo
+from ..mouse_commands import DeleteLinesCommand
 
 from point import PointLayer
 from constants import *
@@ -264,82 +266,39 @@ class LineLayer(PointLayer):
 
         return list(s)
 
-    def offset_selected_points(self, world_d_x, world_d_y):
-        if (self.points != None):
-            # offset our own copy of the points (which automatically updates our own line segments)
-            s_p_i_s = self.get_selected_and_dependent_point_indexes()
-            for point_index in s_p_i_s:
-                self.offset_point(point_index, world_d_x, world_d_y, True)
-            # self.offset_points( s_p_i_s, world_d_x, world_d_y, True )
-            self.manager.dispatch_event('layer_contents_changed', self)
-            self.increment_change_count()
-
     def delete_all_selected_objects(self):
         point_indexes = self.get_selected_point_indexes()
         l_s_i_s = None
         if (self.get_selected_line_segment_indexes != None):
             l_s_i_s = self.get_selected_line_segment_indexes()
         if ((point_indexes != None and len(point_indexes)) > 0 or (l_s_i_s != None and len(l_s_i_s) > 0)):
-            self.delete_points_and_lines(point_indexes, l_s_i_s, True)
-        self.increment_change_count()
+            cmd = DeleteLinesCommand(self, point_indexes, l_s_i_s)
+            return cmd
 
-    def delete_points_and_lines(self, point_indexes, l_s_i_s, add_undo_info):
-        line_segment_indexes_to_be_deleted = None
-        if (self.line_segment_indexes != None):
-            # (1) delete any lines whose points are going away
-            line_segment_indexes_to_be_deleted = np.where(np.in1d(self.line_segment_indexes.point1, point_indexes))
-            line_segment_indexes_to_be_deleted = np.append(line_segment_indexes_to_be_deleted, np.where(np.in1d(self.line_segment_indexes.point2, point_indexes)))
-            line_segment_indexes_to_be_deleted = np.unique(line_segment_indexes_to_be_deleted)
-            # (2) add in the line segments that are being deleted explicitly
-            if (l_s_i_s != None):
-                line_segment_indexes_to_be_deleted = np.unique(np.append(line_segment_indexes_to_be_deleted, l_s_i_s))
+    def get_lines_connected_to_points(self, point_indexes):
+        if point_indexes is None:
+            return []
+        attached = np.where(np.in1d(self.line_segment_indexes.point1, point_indexes))
+        attached = np.append(attached, np.where(np.in1d(self.line_segment_indexes.point2, point_indexes)))
+        attached = np.unique(attached)
+        return attached
 
-            if (add_undo_info):
-                # add everything to the undo stack in an order such that if it was undone from last to first it would all work
-                l = list(line_segment_indexes_to_be_deleted)
-                l.reverse()
-                for i in l:
-                    params = (self.line_segment_indexes.point1[i], self.line_segment_indexes.point2[i], self.line_segment_indexes.color[i], self.line_segment_indexes.state[i])
-                    self.manager.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, i, params)
-
-            # adjust the point indexes of the remaining line segments
-            offsets = np.zeros(np.alen(self.line_segment_indexes))
-            for index in point_indexes:
-                offsets += np.where(self.line_segment_indexes.point1 > index, 1, 0)
-            self.line_segment_indexes.point1 -= offsets
-            offsets[: np.alen(offsets)] = 0
-            for index in point_indexes:
-                offsets += np.where(self.line_segment_indexes.point2 > index, 1, 0)
-            self.line_segment_indexes.point2 -= offsets
-
-        if (add_undo_info):
-            # add everything to the undo stack in an order such that if it was undone from last to first it would all work
-            l = list(point_indexes)
-            l.reverse()
-            for i in l:
-                params = ((self.points.x[i], self.points.y[i]), self.points.z[i], self.points.color[i], self.points.state[i])
-                self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, i, params)
+    def remove_points_and_lines(self, point_indexes, line_segment_indexes_to_be_deleted):
+        # adjust the point indexes of the remaining line segments
+        offsets = np.zeros(np.alen(self.line_segment_indexes))
+        for index in point_indexes:
+            offsets += np.where(self.line_segment_indexes.point1 > index, 1, 0)
+        self.line_segment_indexes.point1 -= offsets
+        offsets[: np.alen(offsets)] = 0
+        for index in point_indexes:
+            offsets += np.where(self.line_segment_indexes.point2 > index, 1, 0)
+        self.line_segment_indexes.point2 -= offsets
 
         # delete them from the layer
         self.points = np.delete(self.points, point_indexes, 0)
         if (line_segment_indexes_to_be_deleted != None):
             # then delete the line segments
             self.line_segment_indexes = np.delete(self.line_segment_indexes, line_segment_indexes_to_be_deleted, 0)
-
-        # delete them from the point_and_line_set_renderer (by simply rebuilding it)
-
-        """
-        # delete them from the label_set_renderer
-        if ( self.label_set_renderer != None ):
-            self.label_set_renderer.delete_points( point_indexes )
-            self.label_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                                               self.manager.project.control.projection,
-                                               self.manager.project.control.projection_is_identity )
-        """
-
-        # when points are deleted from a layer the indexes of the points in the existing merge dialog box
-        # become invalid; so force the user to re-find duplicates in order to create a valid list again
-        self.manager.dispatch_event('layer_contents_deleted', self)
 
     def update_after_insert_point_at_index(self, point_index):
         # update point indexes in the line segements to account for the inserted point
@@ -380,23 +339,19 @@ class LineLayer(PointLayer):
     """
 
     def insert_line_segment(self, point_index_1, point_index_2):
-        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.color, STATE_NONE, True)
+        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.color, STATE_NONE)
 
-    def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state, add_undo_info):
+    def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state):
         l_s = np.array([(point_index_1, point_index_2, color, state)],
                        dtype=data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
         self.line_segment_indexes = np.insert(self.line_segment_indexes, l_s_i, l_s).view(np.recarray)
 
-        if (add_undo_info):
-            params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            self.manager.add_undo_operation_to_operation_batch(OP_ADD_LINE, self, l_s_i, params)
+        undo = UndoInfo()
+        undo.index = l_s_i
+        undo.data = np.copy(l_s)
+        undo.flags.layer_contents_added = self
 
-        # we don't update the point_and_line_set_renderer if not adding undo info, because that means we are undoing or redoing
-        # and the point_and_line_set_renderer for all affected layers will get rebuilt at the end of the process
-        if (add_undo_info):
-            self.manager.dispatch_event('layer_contents_changed', self)
-
-        return l_s_i
+        return undo
 
     def update_after_delete_point(self, point_index):
         if (self.line_segment_indexes != None):
@@ -407,10 +362,15 @@ class LineLayer(PointLayer):
             offsets += np.where(self.line_segment_indexes.point2 > point_index, 1, 0)
             self.line_segment_indexes.point2 -= offsets
 
-    def delete_line_segment(self, l_s_i, add_undo_info):
-        if (add_undo_info):
-            params = (self.line_segment_indexes.point1[l_s_i], self.line_segment_indexes.point2[l_s_i], self.line_segment_indexes.color[l_s_i], self.line_segment_indexes.state[l_s_i])
-            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_LINE, self, l_s_i, params)
+    def delete_line_segment(self, l_s_i):
+        undo = UndoInfo()
+        p = self.line_segment_indexes[l_s_i]
+        print "LABEL: deleting line: %s" % str(p)
+        undo.index = l_s_i
+        undo.data = np.copy(p)
+        undo.flags.refresh_needed = True
+        undo.flags.layer_contents_deleted = self
+
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
 
     def merge_from_source_layers(self, layer_a, layer_b):
