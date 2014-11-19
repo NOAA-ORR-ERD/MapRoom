@@ -73,23 +73,17 @@ class ImageData(object):
         self.images = True
     
     def calc_projection(self, dataset):
-        if not (dataset.GetProjection() or dataset.GetGCPProjection()):
+        projection = dataset.GetProjection() or dataset.GetGCPProjection()
+        log.debug("DATASET projection: %s" % projection)
+        if not projection:
             # no projection, assume latlong:
             self.projection = pyproj.Proj("+proj=latlong")
         else:
             native_projection = osr.SpatialReference()
-            native_projection.ImportFromWkt(
-                dataset.GetProjection() or dataset.GetGCPProjection())
+            native_projection.ImportFromWkt(projection)
             self.projection = pyproj.Proj(native_projection.ExportToProj4())
 
         self.pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
-    
-    def is_north_up(self):
-        if (len(self.pixel_to_projected_transform) < 6 or
-            math.fabs(self.pixel_to_projected_transform[2]) > self.NORTH_UP_TOLERANCE or
-                math.fabs(self.pixel_to_projected_transform[4]) > self.NORTH_UP_TOLERANCE):
-            return False
-        return True
     
     def get_bounds(self):
         bounds = rect.NONE_RECT
@@ -231,8 +225,6 @@ def load_image_file(file_path):
 
     t0 = time.clock()
     image_data = ImageDataBlocks(dataset)
-    if (not image_data.is_north_up()):
-        return ("The raster is not north-up for file " + file_path, None)
     image_data.load_dataset(dataset, TEXTURE_SIZE)
     log.debug("GDAL load time: ", (time.clock() - t0))
     
@@ -318,8 +310,6 @@ def load_image_file_subprocess(file_path):
 
     t0 = time.clock()
     image_data = ImageDataDeferred(dataset, file_path)
-    if (not image_data.is_north_up()):
-        return ("The raster is not north-up for file " + file_path, None)
     image_data.load_dataset(dataset, TEXTURE_SIZE)
     log.debug("GDAL load time: %f", (time.clock() - t0))
     
@@ -505,8 +495,6 @@ class GDALLoadJob(LargeMemoryJob):
             return
         
         image_data = ImageDataSubprocess(dataset, self.file_path)
-        if (not image_data.is_north_up()):
-            dispatcher._progress_update(GDALLoadProgressReport(self.file_path, "The raster is not north-up for file " + self.file_path))
         dispatcher._progress_update(GDALLoadProgressReport(self.file_path, "Starting load of " + self.file_path))
         image_data.load_dataset(dispatcher, dataset, self.texture_size)
 

@@ -3,17 +3,13 @@ import os.path
 import time
 import sys
 import numpy as np
-import wx
-from pytriangle import triangulate_simple
 
 # Enthought library imports.
 from traits.api import Unicode, Str, Any, Float
 from pyface.api import YES
 
 from ..library import rect
-from ..library.scipy_ckdtree import cKDTree
-from ..library.accumulator import flatten
-from ..library.projection import Projection
+
 from ..renderer import color_to_int, data_types
 
 from base import Layer, ProjectedLayer

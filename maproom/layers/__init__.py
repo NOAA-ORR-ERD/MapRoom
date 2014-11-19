@@ -1,5 +1,7 @@
 from base import Layer, RootLayer, Folder
 from grid import Grid
-from vector import PointLayer, LineLayer, TriangleLayer, PolygonLayer
+from line import LineLayer
+from triangle import TriangleLayer
+from polygon import PolygonLayer
 from raster import RasterLayer
 import constants
