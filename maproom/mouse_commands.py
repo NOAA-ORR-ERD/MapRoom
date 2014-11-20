@@ -14,7 +14,7 @@ class InsertPointCommand(Command):
     def perform(self, editor):
         self.undo_info = self.layer.insert_point(self.world_point)
         self.layer.select_point(self.undo_info.index)
-        self.undo_info.flags.hidden_layer_check = True
+        self.undo_info.flags.hidden_layer_check = self.layer
         return self.undo_info
 
     def undo(self, editor):
@@ -113,7 +113,7 @@ class InsertLineCommand(Command):
         self.undo_point = self.layer.insert_point(self.world_point)
         self.undo_line = self.layer.insert_line_segment(self.undo_point.index, self.index)
         self.layer.select_point(self.undo_point.index)
-        self.undo_point.flags.hidden_layer_check = True
+        self.undo_point.flags.hidden_layer_check = self.layer
         # FIXME: merge undo status
         return self.undo_point
 

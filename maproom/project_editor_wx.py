@@ -374,7 +374,7 @@ class ProjectEditor(FrameworkEditor):
         if f.refresh_needed:
             self.refresh()
         if f.hidden_layer_check:
-            vis = self.layer_visibility[self.layer]['layer']
+            vis = self.layer_visibility[f.hidden_layer_check]['layer']
             if not vis:
                 self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
             
