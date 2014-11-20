@@ -14,7 +14,6 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
 from ..renderer import color_to_int, data_types
-from ..layer_undo import *
 
 from base import Layer, ProjectedLayer
 from constants import *
