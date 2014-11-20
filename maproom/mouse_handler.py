@@ -79,7 +79,7 @@ class MouseHandler(object):
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
-        print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        #print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
 
     def process_mouse_up(self, event):
         c = self.layer_control
@@ -205,7 +205,7 @@ class PanMode(MouseHandler):
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
-        print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
         if (d_x != 0 or d_y != 0):
             # the user has panned the map
             d_x_p = d_x * c.projected_units_per_pixel
@@ -268,7 +268,7 @@ class ObjectSelectionMode(MouseHandler):
         effective_mode = c.get_effective_tool_mode(event)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
-        print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
         if (d_x != 0 or d_y != 0):
             w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
             w_p1 = c.get_world_point_from_screen_point(p)
@@ -276,8 +276,8 @@ class ObjectSelectionMode(MouseHandler):
                 c.CaptureMouse()
             c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
             c.mouse_down_position = p
-            print "move: %s" % str(c.mouse_move_position)
-            print "down: %s" % str(c.mouse_down_position)
+            #print "move: %s" % str(c.mouse_move_position)
+            #print "down: %s" % str(c.mouse_down_position)
             c.render(event)
 
     def process_mouse_up(self, event):
@@ -305,8 +305,8 @@ class ObjectSelectionMode(MouseHandler):
             p = event.GetPosition()
             w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
             w_p1 = c.get_world_point_from_screen_point(p)
-            print "move: %s" % str(c.mouse_move_position)
-            print "down: %s" % str(c.mouse_down_position)
+            #print "move: %s" % str(c.mouse_move_position)
+            #print "down: %s" % str(c.mouse_down_position)
             c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
         c.selection_box_is_being_defined = False
     
@@ -574,7 +574,7 @@ class CropRectMode(RectSelectMode):
                                                            c.mouse_move_position)
         p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
         w_r = c.get_world_rect_from_projected_rect(p_r)
-        print "CROPPING!!!!  ", w_r
+        #print "CROPPING!!!!  ", w_r
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer != None and layer.can_crop()):
             cmd = CropRectCommand(layer, w_r)
