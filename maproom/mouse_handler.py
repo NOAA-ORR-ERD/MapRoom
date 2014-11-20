@@ -443,6 +443,7 @@ class LineSelectionMode(PointSelectionMode):
                 # highlighted.
                 layer.select_point(point_index)
         elif len(point_indexes) == 0:  # no currently selected point
+            layer.clear_all_selections()
             # select this point
             layer.select_point(point_index)
 
