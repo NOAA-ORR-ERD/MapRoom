@@ -37,6 +37,8 @@ class PolygonLayer(PointLayer):
     
     polygon_identifiers = Any
 
+    visibility_items = ["points", "polygons"]
+
     def __str__(self):
         try:
             points = len(self.points)
@@ -57,16 +59,11 @@ class PolygonLayer(PointLayer):
         no_polygons = (self.polygons is None or len(self.polygons) == 0)
 
         return no_points and no_polygons
-    
-    def get_visibility_items(self):
-        """Return allowable keys for visibility dict lookups for this layer
-        """
-        return ["points", "polygons"]
-    
+        
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
-        if label in ["points"]:
+        if label == "points":
             return self.points is not None
         if label == "polygons":
             return self.polygons is not None

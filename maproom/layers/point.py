@@ -14,7 +14,8 @@ from ..layer_undo import *
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
 
-from base import Layer, ProjectedLayer
+from point_base import PointBaseLayer
+# from base import Layer, ProjectedLayer
 from constants import *
 
 import logging
@@ -22,18 +23,19 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
-class PointLayer(ProjectedLayer):
-    """Layer for points/lines/polygons.
-    
+class PointLayer(PointBaseLayer):
+    """
+    Layer for points with depth and labels..
+
+    Points are selectable, and all that
+
     """
     name = Unicode("Point Layer")
     
     type = Str("point")
     
     mouse_mode_toolbar = Str("VectorLayerToolBar")
-    
-    points = Any
-    
+      
     merged_points_index = Int(0)
     
     default_depth = Float(1.0)
@@ -43,6 +45,8 @@ class PointLayer(ProjectedLayer):
     _depth_unit = Enum("unknown", "meters", "feet", "fathoms")
     
     pickable = True # is this a layer that support picking?
+
+    visibility_items = ["points", "labels"]
 
     # Trait setters/getters
     def _get_depth_unit(self):
@@ -61,33 +65,8 @@ class PointLayer(ProjectedLayer):
             unit = 'unknown'
         self._depth_unit = unit
 
-
-    def __str__(self):
-        try:
-            points = len(self.points)
-        except:
-            points = 0
-        return "%s layer '%s': %d points" % (self.type, self.name, points)
-
-    def new(self):
-        Layer.new(self)
-        self.new_points()
-    
-    def new_points(self, num=0):
-        self.determine_layer_color()
-        self.points = self.make_points(num)
-
-    def empty(self):
-        """
-        We shouldn't allow saving of a layer with no content, so we use this method
-        to determine if we can save this layer.
-        """
-        no_points = (self.points is None or len(self.points) == 0)
-
-        return no_points
-    
     def highlight_exception(self, e):
-        if hasattr(e, "points") and e.points != None:
+        if hasattr(e, "points") and e.points is not None:
             self.clear_all_selections(STATE_FLAGGED)
             for p in e.points:
                 self.select_point(p, STATE_FLAGGED)
@@ -98,29 +77,13 @@ class PointLayer(ProjectedLayer):
         if refresh:
             self.manager.dispatch_event('refresh_needed')
     
-    def get_visibility_items(self):
-        """Return allowable keys for visibility dict lookups for this layer
-        """
-        return ["points", "lines", "labels"]
-    
-    def visibility_item_exists(self, label):
-        """Return keys for visibility dict lookups that currently exist in this layer
-        """
-        if label in ["points", "labels"]:
-            return self.points is not None
-        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
-
     def set_data(self, f_points, f_depths, f_line_segment_indexes):
         n = np.alen(f_points)
         self.determine_layer_color()
         self.points = self.make_points(n)
         if (n > 0):
-            self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
-                0: n
-            ] = f_points
-            self.points.z[
-                0: n
-            ] = f_depths
+            self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points
+            self.points.z[0:n] = f_depths
             self.points.color = self.color
             self.points.state = 0
 
@@ -156,40 +119,27 @@ class PointLayer(ProjectedLayer):
         self.depth_unit = json_data['depth_unit']
         self.update_bounds()
     
-    def update_bounds(self):
-        self.bounds = self.compute_bounding_rect()
-
     def make_points(self, count):
         return np.repeat(
             np.array([(np.nan, np.nan, np.nan, 0, 0)], dtype=data_types.POINT_DTYPE),
             count,
         ).view(np.recarray)
 
-    def determine_layer_color(self):
-        if not self.color:
-            self.color = DEFAULT_COLORS[
-                Layer.next_default_color_index
-            ]
+    # def compute_bounding_rect(self, mark_type=STATE_NONE):
+    #     bounds = rect.NONE_RECT
 
-            Layer.next_default_color_index = (
-                Layer.next_default_color_index + 1
-            ) % len(DEFAULT_COLORS)
+    #     if (self.points is not None and len(self.points) > 0):
+    #         if (mark_type == STATE_NONE):
+    #             points = self.points
+    #         else:
+    #             points = self.points[self.get_selected_point_indexes(mark_type)]
+    #         l = points.x.min()
+    #         r = points.x.max()
+    #         b = points.y.min()
+    #         t = points.y.max()
+    #         bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
-        bounds = rect.NONE_RECT
-
-        if (self.points != None and len(self.points) > 0):
-            if (mark_type == STATE_NONE):
-                points = self.points
-            else:
-                points = self.points[self.get_selected_point_indexes(mark_type)]
-            l = points.x.min()
-            r = points.x.max()
-            b = points.y.min()
-            t = points.y.max()
-            bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
-
-        return bounds
+    #     return bounds
     
     def compute_selected_bounding_rect(self):
         bounds = self.compute_bounding_rect(STATE_SELECTED)
@@ -200,12 +150,9 @@ class PointLayer(ProjectedLayer):
         self.increment_change_count()
 
     def clear_all_point_selections(self, mark_type=STATE_SELECTED):
-        if (self.points != None):
+        if (self.points is not None):
             self.points.state = self.points.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
-
-    def has_points(self):
-        return True
 
     def select_point(self, point_index, mark_type=STATE_SELECTED):
         self.points.state[point_index] = self.points.state[point_index] | mark_type
@@ -216,7 +163,7 @@ class PointLayer(ProjectedLayer):
         self.increment_change_count()
 
     def is_point_selected(self, point_index, mark_type=STATE_SELECTED):
-        return self.points != None and (self.points.state[point_index] & mark_type) != 0
+        return self.points is not None and (self.points.state[point_index] & mark_type) != 0
 
     def select_points(self, indexes, mark_type=STATE_SELECTED):
         self.points.state[indexes] |= mark_type
@@ -246,9 +193,8 @@ class PointLayer(ProjectedLayer):
         self.increment_change_count()
 
     def get_selected_point_indexes(self, mark_type=STATE_SELECTED):
-        if (self.points == None):
+        if (self.points is None):
             return []
-        #
         return np.where((self.points.state & mark_type) != 0)[0]
 
     def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
@@ -265,9 +211,6 @@ class PointLayer(ProjectedLayer):
     def get_num_points_flagged(self):
         return len(self.get_selected_point_indexes(STATE_FLAGGED))
     
-    def get_state(self, index):
-        return self.points.state[index]
-
     def dragging_selected_objects(self, world_dx, world_dy):
         indexes = self.get_selected_and_dependent_point_indexes()
         cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
@@ -286,7 +229,7 @@ class PointLayer(ProjectedLayer):
         p = np.array([(world_point[0], world_point[1], z, color, state)],
                      dtype=data_types.POINT_DTYPE)
         undo = UndoInfo()
-        if (self.points == None):
+        if (self.points is None):
             self.new_points(1)
             self.points[0] = p
             point_index = 0
@@ -328,8 +271,10 @@ class PointLayer(ProjectedLayer):
 
         return undo
 
-    def find_points_connected_to_point(self, point_index):
-        return []
+    # def find_points_connected_to_point(self, point_index):
+    #     ## fixme -- are an points connected to a pint without a lines layer? i.e. this belongs in LineLayer]
+    #     ##          ormore tot the point , not needed
+    #     return []
     
     def update_after_delete_point(self, point_index):
         """Hook for subclasses to update dependent items when a point is deleted.
@@ -345,8 +290,11 @@ class PointLayer(ProjectedLayer):
         other views of this layer.
         
         """
-        if self.points != None and renderer.point_and_line_set_renderer == None:
-            if (self.line_segment_indexes == None):
+        ## fixme: in theory, this is points only, so why the point_and_line_set_renderer ?
+        ##        could probably be refactored to use just the point and labels renderer\
+        ##        but we don't have a points with depth layer to test..
+        if self.points is not None and renderer.point_and_line_set_renderer is None:
+            if (self.line_segment_indexes is None):
                 self.line_segment_indexes = self.make_line_segment_indexes(0)
 
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
@@ -362,7 +310,7 @@ class PointLayer(ProjectedLayer):
             return
 
         # the points and line segments
-        if (renderer.point_and_line_set_renderer != None):
+        if (renderer.point_and_line_set_renderer is not None):
             renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
                                                     pick_mode,
                                                     self.point_size,
@@ -377,14 +325,14 @@ class PointLayer(ProjectedLayer):
                                                     self.get_selected_line_segment_indexes(STATE_FLAGGED))
 
             # the labels
-            if (renderer.label_set_renderer != None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys != None):
+            if (renderer.label_set_renderer is not None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys is not None):
                 renderer.label_set_renderer.render(-1, pick_mode, s_r,
                                                renderer.MAX_LABEL_CHARACTERS, self.points.z,
                                                renderer.point_and_line_set_renderer.vbo_point_xys.data,
                                                p_r, renderer.canvas.projected_units_per_pixel)
 
         # render selections after everything else
-        if (renderer.point_and_line_set_renderer != None and not pick_mode):
+        if (renderer.point_and_line_set_renderer is not None and not pick_mode):
             if layer_visibility["lines"]:
                 renderer.point_and_line_set_renderer.render_selected_line_segments(self.line_width, self.get_selected_line_segment_indexes())
 

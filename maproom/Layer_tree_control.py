@@ -146,7 +146,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
         self.CheckItem2(item, vis["layer"])
 
         # add sub-items depending on what the layer has
-        for label in layer.get_visibility_items():
+        for label in layer.visibility_items:
             if layer.visibility_item_exists(label):
                 data = wx.TreeItemData()
                 data.SetData((label, layer))

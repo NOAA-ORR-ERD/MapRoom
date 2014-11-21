@@ -33,6 +33,8 @@ class TriangleLayer(PointLayer):
     
     triangles = Any
 
+    visibility_items = ["points", "triangles", "labels"]
+
     def __str__(self):
         try:
             triangles = len(self.triangles)
@@ -49,12 +51,7 @@ class TriangleLayer(PointLayer):
         no_triangles = (self.triangles is None or len(self.triangles) == 0)
 
         return no_points and no_triangles
-    
-    def get_visibility_items(self):
-        """Return allowable keys for visibility dict lookups for this layer
-        """
-        return ["points", "triangles", "labels"]
-    
+        
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
