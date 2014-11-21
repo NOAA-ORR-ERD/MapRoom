@@ -9,7 +9,6 @@ import numpy as np
 import library.rect as rect
 from library.accumulator import flatten
 
-from layer_undo import LayerUndo
 from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, constants, loaders
 from command import UndoStack
 
@@ -22,7 +21,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class LayerManager(LayerUndo):
+class LayerManager(HasTraits):
 
     """
     Manages the layers (a tree of Layer).
@@ -147,6 +146,13 @@ class LayerManager(LayerUndo):
         for layer in self.flatten():
             layer.destroy()
         self.layers = []
+    
+    def dispatch_event(self, event, value=True):
+        log.debug("batch=%s: dispatching event %s = %s" % (self.batch, event, value))
+        if self.batch:
+            self.events.append((event, value))
+        else:
+            setattr(self, event, value)
     
     def post_event(self, event_name, *args):
         log.debug("event: %s.  args=%s" % (event_name, str(args)))

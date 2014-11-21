@@ -7,23 +7,13 @@ import os
 import os.path
 import time
 import sys
-import tempfile
-import shutil
-from StringIO import StringIO
 import numpy as np
-import wx
-from pytriangle import triangulate_simple
-from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
 
 # Enthought library imports.
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
-from ..library.scipy_ckdtree import cKDTree
-from ..library.accumulator import flatten
-from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
-from ..layer_undo import *
 
 from base import Layer, ProjectedLayer
 from constants import *
@@ -33,6 +23,8 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
+## FIXME: Needs to be subclassed from PointsLayer or create a new common base
+## class for all this duplicated stuff.
 class ParticleLayer(ProjectedLayer):
     """Layer for points/lines/polygons.
     
@@ -40,9 +32,6 @@ class ParticleLayer(ProjectedLayer):
     name = Unicode("Particle Layer")
     
     type = Str("particle")
-    
-    ##fixme: does this diaable th zoom to selection mode?
-    mouse_selection_mode = ''
     
     points = Any
     

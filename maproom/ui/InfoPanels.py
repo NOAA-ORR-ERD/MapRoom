@@ -4,7 +4,6 @@ import wx
 from ..layers import constants
 from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
-from ..layer_undo import *
 from ..mouse_commands import *
 from ..ui import sliders
 

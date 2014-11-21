@@ -17,7 +17,6 @@ from peppy2.framework.errors import ProgressCancelError
 from i_project_editor import IProjectEditor
 from layer_control_wx import LayerControl
 from layer_manager import LayerManager
-from layer_undo import *
 import Layer_tree_control
 import renderer
 from layers.constants import *
