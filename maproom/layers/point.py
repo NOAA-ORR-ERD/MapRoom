@@ -206,6 +206,12 @@ class PointLayer(ProjectedLayer):
     def has_points(self):
         return True
 
+    def has_selection(self):
+        return self.get_num_points_selected() > 0
+
+    def has_flagged(self):
+        return self.get_num_points_flagged() > 0
+
     def select_point(self, point_index, mark_type=STATE_SELECTED):
         self.points.state[point_index] = self.points.state[point_index] | mark_type
         self.increment_change_count()

@@ -253,13 +253,8 @@ class ProjectEditor(FrameworkEditor):
             sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             self.layer_has_points = sel_layer.has_points()
-            if self.layer_has_points:
-                # log.debug("selected points: %s"  % sel_layer.get_num_points_selected())
-                self.layer_has_selection = sel_layer.get_num_points_selected() > 0
-                self.layer_has_flagged = sel_layer.get_num_points_flagged() > 0
-            else:
-                self.layer_has_selection = False
-                self.layer_has_flagged = False
+            self.layer_has_selection = sel_layer.has_selection()
+            self.layer_has_flagged = sel_layer.has_flagged()
         else:
             self.layer_has_points = False
             self.layer_has_selection = False

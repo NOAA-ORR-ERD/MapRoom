@@ -275,6 +275,12 @@ class Layer(HasTraits):
 
     def has_points(self):
         return False
+
+    def has_selection(self):
+        return False
+
+    def has_flagged(self):
+        return False
     
     def has_alpha(self):
         return False
