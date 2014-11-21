@@ -360,16 +360,23 @@ class ProjectEditor(FrameworkEditor):
         self.process_flags(undo.flags)
     
     def process_flags(self, f):
+        # rebuild flags for each layer; value is whether or not it needs full
+        # refresh (False) or in-place, fast refresh (True)
+        need_rebuild = {}
+        
         if f.select_layer:
             self.layer_tree_control.select_layer(f.select_layer)
         if f.layer_items_moved:
             f.layer_items_moved.update_bounds()
-            self.control.rebuild_renderer_for_layer(f.layer_items_moved, in_place=True)
+            need_rebuild[f.layer_items_moved] = True
         if f.layer_contents_added or f.layer_contents_deleted:
             layer = f.layer_contents_added or f.layer_contents_deleted
-            self.control.rebuild_renderer_for_layer(layer)
+            need_rebuild[layer] = False
             f.refresh_needed = True
         
+        for layer, in_place in need_rebuild.iteritems():
+            self.control.rebuild_renderer_for_layer(layer, in_place=in_place)
+            
         if f.refresh_needed:
             self.refresh()
         if f.hidden_layer_check:
