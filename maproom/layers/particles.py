@@ -8,7 +8,6 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from point_base import PointBaseLayer
 
-
 # import logging
 # log = logging.getLogger(__name__)
 # progress_log = logging.getLogger("progress")
@@ -22,8 +21,6 @@ class ParticleLayer(PointBaseLayer):
     name = Unicode("Particle Layer")
     
     type = Str("particle")
-        
-
     # def determine_layer_color(self):
     #     ## this should do something different for particles
     

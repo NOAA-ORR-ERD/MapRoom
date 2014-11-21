@@ -15,7 +15,6 @@ from ..library.accumulator import flatten
 from ..library.projection import Projection
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
-from ..layer_undo import *
 
 from point import PointLayer
 from constants import *
@@ -111,29 +110,19 @@ class TriangleLayer(PointLayer):
             self.triangles.point3 += offsets
 
     def insert_triangle(self, point_index_1, point_index_2, point_index_3):
-        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.color, STATE_NONE), True)
+        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.color, STATE_NONE))
 
-    def insert_triangle_at_index(self, index, params, add_undo_info):
+    def insert_triangle_at_index(self, index, params):
         entry = np.array([params],
                        dtype=data_types.TRIANGLE_DTYPE).view(np.recarray)
         self.triangles = np.insert(self.triangles, index, entry).view(np.recarray)
 
-        if (add_undo_info):
-            self.manager.add_undo_operation_to_operation_batch(OP_ADD_LINE, self, index, params)
-
-            # we don't update the point_and_line_set_renderer if not adding
-            # undo info, because that means we are undoing or redoing and the
-            # point_and_line_set_renderer for all affected layers will get
-            # rebuilt at the end of the process
-            self.manager.dispatch_event('layer_contents_changed', self)
-
         return index
 
-    def delete_triangle(self, index, add_undo_info):
-        if (add_undo_info):
-            t = self.triangles[index]
-            params = (t.point1, t.point2, t.color, t.state)
-            self.manager.add_undo_operation_to_operation_batch(OP_DELETE_TRIANGLE, self, index, params)
+    def delete_triangle(self, index):
+        t = self.triangles[index]
+        params = (t.point1, t.point2, t.color, t.state)
+        # FIXME: add undo info
         self.triangles = np.delete(self.triangles, index, 0)
 
     def delete_all_selected_objects(self):
@@ -155,7 +144,7 @@ class TriangleLayer(PointLayer):
             offsets += np.where(self.triangles.point3 >= point_index, 1, 0)
             self.triangles.point3 -= offsets
 
-    def delete_points_and_triangles(self, point_indexes, add_undo_info):
+    def delete_points_and_triangles(self, point_indexes):
         triangle_indexes_to_be_deleted = None
         if (self.triangles != None):
             # (1) delete any triangles whose points are going away
@@ -164,13 +153,13 @@ class TriangleLayer(PointLayer):
             triangle_indexes_to_be_deleted = np.append(triangle_indexes_to_be_deleted, np.where(np.in1d(self.triangles.point3, point_indexes)))
             triangle_indexes_to_be_deleted = np.unique(triangle_indexes_to_be_deleted)
 
-            if (add_undo_info):
-                # add everything to the undo stack in an order such that if it was undone from last to first it would all work
-                l = list(triangle_indexes_to_be_deleted)
-                l.reverse()
-                for i in l:
-                    params = (self.triangles.point1[i], self.triangles.point2[i], self.triangles.point3[i], self.triangles.color[i], self.triangles.state[i])
-                    self.manager.add_undo_operation_to_operation_batch(OP_DELETE_TRIANGLE, self, i, params)
+            # FIXME: change to Command class for undo
+#                # add everything to the undo stack in an order such that if it was undone from last to first it would all work
+#                l = list(triangle_indexes_to_be_deleted)
+#                l.reverse()
+#                for i in l:
+#                    params = (self.triangles.point1[i], self.triangles.point2[i], self.triangles.point3[i], self.triangles.color[i], self.triangles.state[i])
+#                    self.manager.add_undo_operation_to_operation_batch(OP_DELETE_TRIANGLE, self, i, params)
 
             # adjust the point indexes of the remaining triangles
             offsets = np.zeros(np.alen(self.triangles))
@@ -186,13 +175,13 @@ class TriangleLayer(PointLayer):
                 offsets += np.where(self.triangles.point3 > index, 1, 0)
             self.triangles.point3 -= offsets
 
-        if (add_undo_info):
-            # add everything to the undo stack in an order such that if it was undone from last to first it would all work
-            l = list(point_indexes)
-            l.reverse()
-            for i in l:
-                params = ((self.points.x[i], self.points.y[i]), self.points.z[i], self.points.color[i], self.points.state[i])
-                self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, i, params)
+        # FIXME: change to Command class for undo
+#            # add everything to the undo stack in an order such that if it was undone from last to first it would all work
+#            l = list(point_indexes)
+#            l.reverse()
+#            for i in l:
+#                params = ((self.points.x[i], self.points.y[i]), self.points.z[i], self.points.color[i], self.points.state[i])
+#                self.manager.add_undo_operation_to_operation_batch(OP_DELETE_POINT, self, i, params)
 
         # delete them from the layer
         self.points = np.delete(self.points, point_indexes, 0)
@@ -254,12 +243,8 @@ class TriangleLayer(PointLayer):
 
         # we need to use projected points for the triangulation
         projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float64).copy()
-        if (self.manager.project.control.projection_is_identity):
-            projected_points[:, 0] = layer.points.x[:]
-            projected_points[:, 1] = layer.points.y[:]
-        else:
-            projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(layer.points.x, layer.points.y)
-            hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
+        projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(layer.points.x, layer.points.y)
+        hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
 #        print "params: " + params
 #        print "hole points:"
 #        print hole_points_xy
@@ -277,9 +262,7 @@ class TriangleLayer(PointLayer):
          triangles)
 
     def unproject_triangle_points(self, points):
-        if (not self.manager.project.control.projection_is_identity):
-            # import code; code.interact( local = locals() )
-            points.x, points.y = self.manager.project.control.projection(points.x, points.y, inverse=True)
+        points.x, points.y = self.manager.project.control.projection(points.x, points.y, inverse=True)
     
     def triangulate_from_data(self, points, depths, triangles):
         self.set_data(points, depths, triangles)

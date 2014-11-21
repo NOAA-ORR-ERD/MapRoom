@@ -10,7 +10,6 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
-from ..layer_undo import *
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand
 
