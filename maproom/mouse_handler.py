@@ -376,13 +376,13 @@ class PointSelectionMode(ObjectSelectionMode):
 
         if (not event.ControlDown() and not event.ShiftDown()):
             e.clear_all_selections(False)
-            point_index = layer.insert_point_in_line(world_point, line_segment_index)
-            lm.end_operation_batch()
+            cmd = SplitLineCommand(layer, line_segment_index, world_point)
+            e.process_command(cmd)
             c.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
-            if not vis:
-                e.task.status_bar.message = "Split line in hidden layer %s" % layer.name
-            else:
-                layer.select_point(point_index)
+#            if not vis:
+#                e.task.status_bar.message = "Split line in hidden layer %s" % layer.name
+#            else:
+#                layer.select_point(point_index)
 
     def clicked_on_empty_space(self, event, layer, world_point):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )

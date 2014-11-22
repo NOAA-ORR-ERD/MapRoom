@@ -371,6 +371,7 @@ class LineLayer(PointLayer):
         undo.flags.layer_contents_deleted = self
 
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
+        return undo
 
     def merge_from_source_layers(self, layer_a, layer_b):
         # for now we only handle merging of points and lines

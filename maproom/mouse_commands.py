@@ -123,6 +123,45 @@ class InsertLineCommand(Command):
         undo_info = self.layer.delete_point(self.undo_point.index)
         return undo_info
 
+class SplitLineCommand(Command):
+    def __init__(self, layer, index, world_point):
+        self.layer = layer
+        self.index = index
+        self.world_point = world_point
+        self.undo_point = None
+        self.undo_delete = None
+        self.undo_line1 = None
+        self.undo_line2 = None
+    
+    def __str__(self):
+        return "Split Line #%d" % self.index
+    
+    def perform(self, editor):
+        self.undo_point = self.layer.insert_point(self.world_point)
+        
+        layer = self.layer
+        layer.select_point(self.undo_point.index)
+        point_index_1 = layer.line_segment_indexes.point1[self.index]
+        point_index_2 = layer.line_segment_indexes.point2[self.index]
+        color = layer.line_segment_indexes.color[self.index]
+        state = layer.line_segment_indexes.state[self.index]
+        depth = (layer.points.z[point_index_1] + layer.points.z[point_index_2])/2
+        layer.points.z[self.undo_point.index] = depth
+        self.undo_delete = layer.delete_line_segment(self.index)
+        self.undo_line1 = layer.insert_line_segment_at_index(len(layer.line_segment_indexes), point_index_1, self.undo_point.index, color, state)
+        self.undo_line2 = layer.insert_line_segment_at_index(len(layer.line_segment_indexes), self.undo_point.index, point_index_2, color, state)
+
+        self.undo_point.flags.hidden_layer_check = layer
+        return self.undo_point
+
+    def undo(self, editor):
+        # FIXME: merge undo status
+        undo_info = self.layer.delete_line_segment(self.undo_line2.index)
+        undo_info = self.layer.delete_line_segment(self.undo_line1.index)
+        self.layer.line_segment_indexes = np.insert(self.layer.line_segment_indexes, self.index, self.undo_delete.data).view(np.recarray)
+        undo_info = self.layer.delete_point(self.undo_point.index)
+        return undo_info
+
 class DeleteLinesCommand(Command):
     def __init__(self, layer, point_indexes, line_indexes):
         self.layer = layer
