@@ -69,10 +69,14 @@ class Layer(HasTraits):
 
     pickable = False # is this a layer that support picking?
 
+    visibility_items = []
+
     def __repr__(self):
         return self.name
 
     def new(self):
+        ## fixme -- shouldn't layer indexes, etc be controled by the layer_manager?
+        ## and maybe this should be using the python copy() mechanism anyway
         self.name = "New %s" % self.name
         Layer.new_layer_index += 1
         if Layer.new_layer_index > 1:
@@ -215,6 +219,8 @@ class Layer(HasTraits):
 
     def get_visibility_dict(self):
         ##fixme: you'be GOT to be kidding me!
+        ## shouldn't visibility be governed by the layer manager?
+        ## or each layer has its own sub-layer visibility
         d = dict()
         d["layer"] = True
         d["images"] = True
@@ -223,20 +229,18 @@ class Layer(HasTraits):
         d["lines"] = True
         d["triangles"] = True
         d["labels"] = True
+        ## why is this not handled in the subclass????
         if self.type == "polygon":
             d["labels"] = False
             d["points"] = False
         return d
-    
-    def get_visibility_items(self):
-        """Return allowable keys for visibility dict lookups for this layer
-        """
-        return []
-    
+        
     def visibility_item_exists(self, label):
-        """Returns True if the visibility item should be shown in the UI
+        """Return keys for visibility dict lookups that currently exist in this layer
         """
-        return False
+        if label in self.visibility_items:
+            return self.points is not None
+        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def update_bounds(self):
         self.bounds = self.compute_bounding_rect()

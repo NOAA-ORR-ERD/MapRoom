@@ -31,7 +31,9 @@ class LineLayer(PointLayer):
     
     line_segment_indexes = Any
 
-    pickable = True # is this a layer that support picking?
+    pickable = True # this is a layer that supports picking
+
+    visibility_items = ["points", "lines", "labels"]
 
     def __str__(self):
         try:
@@ -39,20 +41,17 @@ class LineLayer(PointLayer):
         except:
             lines = 0
         return PointLayer.__str__(self) + ", %d lines" % lines
-    
-    def get_visibility_items(self):
-        """Return allowable keys for visibility dict lookups for this layer
-        """
-        return ["points", "lines", "labels"]
-    
+        
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
+        ## fixme == does this need to be hard-coded?
         if label in ["points", "labels"]:
             return self.points is not None
-        if label == "lines":
+        elif label == "lines":
             return self.line_segment_indexes is not None
-        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
+        else:
+            raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def set_data(self, f_points, f_depths, f_line_segment_indexes):
         n = np.alen(f_points)
