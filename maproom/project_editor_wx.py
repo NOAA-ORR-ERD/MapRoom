@@ -369,11 +369,18 @@ class ProjectEditor(FrameworkEditor):
             need_rebuild[layer] = False
             f.refresh_needed = True
         
+        # Use LayerManager events to trigger updates in all windows that are
+        # displaying this project
         for layer, in_place in need_rebuild.iteritems():
-            self.control.rebuild_renderer_for_layer(layer, in_place=in_place)
-            
+            if in_place:
+                self.layer_manager.layer_contents_changed_in_place = layer
+            else:
+                self.layer_manager.layer_contents_changed = layer
         if f.refresh_needed:
-            self.refresh()
+            self.layer_manager.refresh_needed = True
+        
+        # Hidden layer check only displayed in current window, not any others
+        # that are displaying this project
         if f.hidden_layer_check:
             vis = self.layer_visibility[f.hidden_layer_check]['layer']
             if not vis:
