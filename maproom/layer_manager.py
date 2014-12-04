@@ -459,10 +459,6 @@ class LayerManager(HasTraits):
         #
         return n
 
-    def reproject_all( self, projection ):
-        for layer in self.flatten():
-            layer.reproject( projection )
-
     def accumulate_layer_rects(self, layer_visibility, only_visible_layers=True):
         result = rect.NONE_RECT
 

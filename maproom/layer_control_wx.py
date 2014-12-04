@@ -477,32 +477,6 @@ class LayerControl(glcanvas.GLCanvas):
                 # otherwise we have to zoom (i.e., zoom out because panning didn't work)
                 self.zoom_to_world_rect(w_r)
 
-    # not used???
-    # def reproject_all(self, srs):
-    #     self.update_renderers()
-    #     s_r = self.get_screen_rect()
-    #     s_c = rect.center(s_r)
-    #     w_c = self.get_world_point_from_screen_point(s_c)
-
-    #     self.projection = Projection(srs)
-
-    #     for layer in self.layer_manager.flatten():
-    #         self.layer_renderers[layer].reproject(self.projection)
-
-    #     ratio = 1.0
-    #     if (was_identity and not self.projection_is_identity):
-    #         ratio = 40075016.6855801 / 360.0
-    #     if (not was_identity and self.projection_is_identity):
-    #         ratio = 360.0 / 40075016.6855801
-    #     self.projected_units_per_pixel *= ratio
-    #     self.constrain_zoom()
-    #     # log.debug("self.projected_units_per_pixel = " + str(self.projected_units_per_pixel))
-    #     # import code; code.interact( local = locals() )
-
-    #     self.projected_point_center = self.get_projected_point_from_world_point(w_c)
-
-    #     self.render()
-
     def get_canvas_as_image(self):
         window_size = self.GetClientSize()
 

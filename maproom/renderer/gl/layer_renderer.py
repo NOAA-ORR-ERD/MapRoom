@@ -144,25 +144,6 @@ class LayerRenderer(object):
                                         layer.polygons,
                                         self.canvas.projection )
 
-    def reproject(self, projection ):
-        ## fixme: can we put the re-projection code in the renderers (layers?)
-        ##        then this can be a loop that calls each reproject method.
-        if (self.point_renderer is not None):
-            self.point_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_SIMPLE_DTYPE).xy,
-                                                                 projection )
-        if (self.point_and_line_set_renderer is not None):
-            self.point_and_line_set_renderer.reproject(self.layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy,
-                                                       projection )
-        if (self.polygon_set_renderer is not None):
-            self.polygon_set_renderer.reproject(projection )
-        """
-        if ( self.label_set_renderer is not None ):
-            self.label_set_renderer.reproject( self.layer.points.view( self.POINT_XY_VIEW_DTYPE ).xy,
-                                               projection )
-        """
-        if (self.image_set_renderer is not None):
-            self.image_set_renderer.reproject(projection )
-
     def __del__(self):
         ## fixme:  why does destroy() need to be called?
         ## and if it does, why not something like:
