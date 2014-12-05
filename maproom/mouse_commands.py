@@ -221,6 +221,13 @@ class DeleteLinesCommand(Command):
         undo.flags.layer_contents_added = self.layer
         return undo
 
+class MergePointsCommand(DeleteLinesCommand):
+    def __init__(self, layer, point_indexes):
+        DeleteLinesCommand.__init__(self, layer, point_indexes, None)
+    
+    def __str__(self):
+        return "Merge Points"
+    
 class CropRectCommand(Command):
     def __init__(self, layer, world_rect):
         self.layer = layer

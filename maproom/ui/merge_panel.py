@@ -354,7 +354,9 @@ class MergePointsPanel(wx.Panel):
             return
 
         points_in_lines = self.layer.get_all_line_point_indexes()
-        self.layer.merge_duplicates(self.duplicates, points_in_lines)
+        cmd = self.layer.merge_duplicates(self.duplicates, points_in_lines)
+        project = self.task.active_editor
+        project.process_command(cmd)
 
         event.Skip()
         self.clear_results()

@@ -8,10 +8,11 @@ import numpy as np
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
+from ..library.scipy_ckdtree import cKDTree
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
 from ..command import UndoInfo
-from ..mouse_commands import DeleteLinesCommand
+from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 
 from point import PointLayer
 from constants import *
@@ -494,9 +495,7 @@ class LineLayer(PointLayer):
                 points_to_delete.add(point_1)
 
         if (len(points_to_delete) > 0):
-            self.delete_points_and_lines(list(points_to_delete), None, True)
-
-        self.manager.dispatch_event('refresh_needed')
+            return MergePointsCommand(self, list(points_to_delete))
     
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.

@@ -10,7 +10,6 @@ from pytriangle import triangulate_simple
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
-from ..library.scipy_ckdtree import cKDTree
 from ..library.accumulator import flatten
 from ..library.projection import Projection
 from ..library.Boundary import Boundaries, PointsError

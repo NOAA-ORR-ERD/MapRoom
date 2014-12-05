@@ -18,7 +18,6 @@ from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineSt
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
-from ..library.scipy_ckdtree import cKDTree
 from ..library.accumulator import flatten
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
