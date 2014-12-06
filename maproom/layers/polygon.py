@@ -38,6 +38,10 @@ class PolygonLayer(PointLayer):
     polygon_identifiers = Any
 
     visibility_items = ["points", "polygons"]
+    
+    layer_info_panel = ["Layer name", "Polygon count"]
+    
+    selection_info_panel = []
 
     def __str__(self):
         try:

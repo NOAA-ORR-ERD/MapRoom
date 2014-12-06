@@ -294,17 +294,16 @@ class ProjectEditor(FrameworkEditor):
         if self.control is None:
             return
         
-        self.window._aui_manager.Update()
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
             self.control.Update()
-        self.control.Refresh()
         
         sel_layer = self.layer_tree_control.get_selected_layer()
         self.update_layer_contents_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer)
         self.selection_info.display_panel_for_layer(self, sel_layer)
         self.last_refresh = time.clock()
+        self.control.Refresh()
     
     @on_trait_change('layer_manager:background_refresh_needed')
     def background_refresh(self):

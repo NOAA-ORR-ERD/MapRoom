@@ -9,6 +9,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
 from ..library.Boundary import Boundaries, PointsError
+from ..library.textparse import parse_int_string, int_list_to_string
 from ..renderer import color_to_int, data_types
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
@@ -45,6 +46,10 @@ class PointLayer(PointBaseLayer):
     pickable = True # is this a layer that support picking?
 
     visibility_items = ["points", "labels"]
+    
+    layer_info_panel = ["Layer name", "Point count", "Flagged points", "Default depth", "Depth unit"]
+    
+    selection_info_panel = ["Selected points", "Point index", "Point depth", "Point coordinates"]
 
     # Trait setters/getters
     def _get_depth_unit(self):
@@ -62,6 +67,12 @@ class PointLayer(PointBaseLayer):
             log.warning("Depth unit '%s' in %s; set to 'unknown'" % (unit, self.file_path))
             unit = 'unknown'
         self._depth_unit = unit
+    
+    def get_info_panel_text(self, prop):
+        if prop == "Point count":
+            return str(len(self.points))
+        elif prop == "Selected points":
+            return str(self.get_num_points_selected())
 
     def highlight_exception(self, e):
         if hasattr(e, "points") and e.points is not None:

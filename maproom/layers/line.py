@@ -35,6 +35,8 @@ class LineLayer(PointLayer):
     pickable = True # this is a layer that supports picking
 
     visibility_items = ["points", "lines", "labels"]
+    
+    layer_info_panel = ["Layer name", "Point count", "Line segment count", "Flagged points", "Default depth", "Depth unit"]
 
     def __str__(self):
         try:
@@ -42,6 +44,13 @@ class LineLayer(PointLayer):
         except:
             lines = 0
         return PointLayer.__str__(self) + ", %d lines" % lines
+    
+    def get_info_panel_text(self, prop):
+        if prop == "Line segment count":
+            if self.line_segment_indexes is not None:
+                return str(len(self.line_segment_indexes))
+            return "0"
+        return PointLayer.get_info_panel_text(self, prop)
         
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
@@ -206,7 +215,7 @@ class LineLayer(PointLayer):
             list_of_paths = new_paths
 
     def find_points_connected_to_point(self, point_index):
-        if (self.line_segment_indexes == None):
+        if (self.line_segment_indexes is None):
             return []
 
         result = []

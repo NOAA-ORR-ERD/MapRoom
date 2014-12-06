@@ -70,6 +70,10 @@ class Layer(HasTraits):
     pickable = False # is this a layer that support picking?
 
     visibility_items = []
+    
+    layer_info_panel = ["Layer name"]
+    
+    selection_info_panel = []
 
     def __repr__(self):
         return self.name

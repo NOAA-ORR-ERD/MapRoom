@@ -43,6 +43,10 @@ class PointBaseLayer(ProjectedLayer):
     points = Any
     
     visibility_items = ["points"]
+    
+    layer_info_panel = ["Layer name", "Point count"]
+    
+    selection_info_panel = []
 
     def __str__(self):
         try:

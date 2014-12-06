@@ -30,6 +30,10 @@ class RasterLayer(ProjectedLayer):
     
     alpha = Float(1.0)
     
+    layer_info_panel = ["Layer name", "Transparency", "Raster Size", "Memory Used"]
+    
+    selection_info_panel = []
+    
     def needs_background_loading(self):
         return self.image_data and self.image_data.is_threaded()
     
@@ -49,10 +53,7 @@ class RasterLayer(ProjectedLayer):
     def has_alpha(self):
         return True
     
-    def display_properties(self):
-        return ["Raster Size", "Memory Used"]
-    
-    def get_display_property(self, prop):
+    def get_info_panel_text(self, prop):
         if prop == "Raster Size":
             return "%dx%d" % (self.image_data.x, self.image_data.y)
         elif prop == "Memory Used":
