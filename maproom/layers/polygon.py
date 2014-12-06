@@ -53,6 +53,13 @@ class PolygonLayer(PointLayer):
         except:
             polygons = 0
         return "PolygonLayer %s: %d points, %d polygons" % (self.name, points, polygons)
+    
+    def get_info_panel_text(self, prop):
+        if prop == "Polygon count":
+            if self.polygons is not None:
+                return str(len(self.polygons))
+            return "0"
+        return PointLayer.get_info_panel_text(self, prop)
 
     def empty(self):
         """

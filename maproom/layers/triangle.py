@@ -32,6 +32,8 @@ class TriangleLayer(PointLayer):
     triangles = Any
 
     visibility_items = ["points", "triangles", "labels"]
+    
+    layer_info_panel = ["Layer name", "Triangle count"]
 
     def __str__(self):
         try:
@@ -39,6 +41,13 @@ class TriangleLayer(PointLayer):
         except:
             triangles = 0
         return PointLayer.__str__(self) + ", %d triangles" % triangles
+    
+    def get_info_panel_text(self, prop):
+        if prop == "Triangle count":
+            if self.triangles is not None:
+                return str(len(self.triangles))
+            return "0"
+        return PointLayer.get_info_panel_text(self, prop)
 
     def empty(self):
         """
