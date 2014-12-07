@@ -120,6 +120,9 @@ class DefaultDepthField(TextEditField):
 class PointDepthField(TextEditField):
     same_line = True
 
+    def is_displayed(self, layer):
+        return layer.get_selected_point_indexes() > 0
+    
     def get_value(self, layer):
         if (layer is None):
             return ""
@@ -156,6 +159,9 @@ class PointDepthField(TextEditField):
         c.Refresh()
         
 class PointCoordinatesField(TextEditField):
+    def is_displayed(self, layer):
+        return layer.get_selected_point_indexes() > 0
+    
     def get_value(self, layer):
         if (layer is None):
             return ""
@@ -189,6 +195,9 @@ class PointCoordinatesField(TextEditField):
             c.SetBackgroundColour("#FF8080")
 
 class PointIndexesField(TextEditField):
+    def is_displayed(self, layer):
+        return layer.get_selected_point_indexes() > 0
+    
     def get_value(self, layer):
         if (layer is None):
             return ""
