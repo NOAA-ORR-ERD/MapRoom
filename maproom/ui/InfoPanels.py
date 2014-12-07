@@ -48,6 +48,12 @@ class InfoField(object):
     def add_to_parent(self):
         self.panel.sizer.Add(self.parent, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, 0)
         self.show(True)
+    
+    def fill_data(self):
+        raise NotImplementedError
+    
+    def set_focus(self):
+        pass
 
 class LabelField(InfoField):
     same_line = True
@@ -122,6 +128,10 @@ class PointDepthField(TextEditField):
 
     def is_displayed(self, layer):
         return layer.get_selected_point_indexes() > 0
+    
+    def set_focus(self):
+        self.ctrl.SetSelection(-1, -1)
+        self.ctrl.SetFocus()
     
     def get_value(self, layer):
         if (layer is None):
@@ -432,6 +442,7 @@ class InfoPanel(wx.Panel):
                 field.fill_data(layer)
                 if field_name in undisplayed:
                     undisplayed.remove(field_name)
+                field.set_focus()
             else:
                 field.hide()
         
@@ -460,6 +471,7 @@ class InfoPanel(wx.Panel):
                 field = self.field_map[field_name]
                 if field.is_displayed(layer):
                     field.fill_data(layer)
+                    field.set_focus()
                     field.show()
                 else:
                     field.hide()
