@@ -127,7 +127,7 @@ class PointDepthField(TextEditField):
     same_line = True
 
     def is_displayed(self, layer):
-        return layer.get_selected_point_indexes() > 0
+        return layer.get_num_points_selected() > 0
     
     def set_focus(self):
         self.ctrl.SetSelection(-1, -1)
@@ -170,7 +170,7 @@ class PointDepthField(TextEditField):
         
 class PointCoordinatesField(TextEditField):
     def is_displayed(self, layer):
-        return layer.get_selected_point_indexes() > 0
+        return layer.get_num_points_selected() > 0
     
     def get_value(self, layer):
         if (layer is None):
@@ -206,7 +206,7 @@ class PointCoordinatesField(TextEditField):
 
 class PointIndexesField(TextEditField):
     def is_displayed(self, layer):
-        return layer.get_selected_point_indexes() > 0
+        return layer.get_num_points_selected() > 0
     
     def get_value(self, layer):
         if (layer is None):
