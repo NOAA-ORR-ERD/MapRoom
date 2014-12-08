@@ -363,6 +363,9 @@ class ProjectEditor(FrameworkEditor):
         if f.layer_items_moved:
             f.layer_items_moved.update_bounds()
             need_rebuild[f.layer_items_moved] = True
+        if f.layer_display_properties_changed:
+            need_rebuild[f.layer_display_properties_changed] = False
+            f.refresh_needed = True
         if f.layer_contents_added or f.layer_contents_deleted:
             layer = f.layer_contents_added or f.layer_contents_deleted
             need_rebuild[layer] = False

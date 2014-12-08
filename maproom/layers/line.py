@@ -36,7 +36,7 @@ class LineLayer(PointLayer):
 
     visibility_items = ["points", "lines", "labels"]
     
-    layer_info_panel = ["Layer name", "Point count", "Line segment count", "Flagged points", "Default depth", "Depth unit"]
+    layer_info_panel = ["Layer name", "Point count", "Line segment count", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     def __str__(self):
         try:
@@ -86,6 +86,11 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.state = 0
         
         self.update_bounds()
+    
+    def set_color(self, color):
+        self.color = color
+        self.points.color = color
+        self.line_segment_indexes.color = color
 
     def can_save_as(self):
         return True

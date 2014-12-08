@@ -261,6 +261,10 @@ class Layer(HasTraits):
             Layer.next_default_color_index = (
                 Layer.next_default_color_index + 1
             ) % len(DEFAULT_COLORS)
+    
+    def set_color(self, color):
+        # Hook for subclasses to change color
+        pass
 
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT

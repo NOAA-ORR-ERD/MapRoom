@@ -71,6 +71,7 @@ class CommandStatus(object):
         self.layer_items_moved = None
         self.layer_contents_added = None
         self.layer_contents_deleted = None
+        self.layer_display_properties_changed = None
         self.layer_metadata_changed = None
         self.hidden_layer_check = None
         

@@ -6,6 +6,7 @@ from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
 from ..ui import sliders
+from ..renderer import color_to_int, int_to_color
 
 class InfoField(object):
     same_line = False
@@ -333,6 +334,40 @@ class AlphaField(FloatSliderField):
         if refresh:
             self.panel.project.refresh()
 
+class ColorPickerField(InfoField):
+    same_line = True
+
+    def get_value(self, layer):
+        return ""
+        
+    def fill_data(self, layer):
+        color = tuple(int(255 * c) for c in int_to_color(self.get_value(layer))[0:3])
+        print "color", color
+        self.ctrl.SetColour(color)
+    
+    def create_control(self):
+        import wx.lib.colourselect as csel
+        color = (0, 0, 0)
+        c = csel.ColourSelect(self.parent, -1, "", color, size=(100,-1))
+        c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
+        return c
+        
+    def color_changed(self, event):
+        color = [float(c/255.0) for c in event.GetValue()]
+        color.append(1.0)
+        int_color = color_to_int(*color)
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        print color, int_color
+        cmd = LayerColorCommand(layer, int_color)
+        self.panel.project.process_command(cmd)
+
+class ColorField(ColorPickerField):
+    def get_value(self, layer):
+        return layer.color
+    
+
 class InfoPanel(wx.Panel):
 
     """
@@ -406,6 +441,7 @@ class InfoPanel(wx.Panel):
         "Point index": PointIndexesField,
         "Flagged points": FlaggedPointsField,
         "Transparency": AlphaField,
+        "Color": ColorField,
         }
     
     def create_fields(self, layer, fields):

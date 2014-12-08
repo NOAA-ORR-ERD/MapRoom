@@ -245,3 +245,24 @@ class CropRectCommand(Command):
         old_state = self.undo_info.data
         undo_info = self.layer.set_state(old_state)
         return undo_info
+    
+class LayerColorCommand(Command):
+    def __init__(self, layer, color):
+        self.layer = layer
+        self.color = color
+        self.undo_info = None
+    
+    def __str__(self):
+        return "Layer Color"
+    
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        undo.data = (self.layer.color, self.color)
+        undo.flags.layer_display_properties_changed = self.layer
+        self.layer.set_color(self.color)
+        return self.undo_info
+
+    def undo(self, editor):
+        old_color, color = self.undo_info.data
+        self.layer.set_color(old_color)
+        return self.undo_info

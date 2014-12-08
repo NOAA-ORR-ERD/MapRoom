@@ -95,6 +95,10 @@ class PointBaseLayer(ProjectedLayer):
             self.points.state = 0
 
         self.update_bounds()
+    
+    def set_color(self, color):
+        self.color = color
+        self.points.color = color
 
     def make_points(self, count):
         return np.repeat(
