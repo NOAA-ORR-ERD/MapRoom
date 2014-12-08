@@ -252,6 +252,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
         self.project.update_layer_selection_ui(self.get_selected_layer())
+        self.project.refresh()
         
         prefs = self.project.task.get_preferences()
         selected = self.GetSelection()
