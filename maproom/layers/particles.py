@@ -3,8 +3,11 @@ Layer type for particles
 
 not much here now -- but there will be...
 """
+import numpy as np
 
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+
+from ..renderer import color_to_int
 
 from point_base import PointBaseLayer
 
@@ -21,6 +24,21 @@ class ParticleLayer(PointBaseLayer):
     name = Unicode("Particle Layer")
     
     type = Str("particle")
+    
+    # FIXME: Arbitrary colors for now till we decide on values
+    status_code_to_color = np.array([color_to_int(0, 0, 0, 1.0),
+                                     color_to_int(1.0, 0, 0, 1.0),
+                                     color_to_int(0, 1.0, 0, 1.0),
+                                     color_to_int(0, 0, 1.0, 1.0),
+                                     color_to_int(0, 1.0, 1.0, 1.0),
+                                     ], dtype=np.uint32)
+    
     # def determine_layer_color(self):
     #     ## this should do something different for particles
     
+    def set_data(self, f_points, status_codes):
+        PointBaseLayer.set_data(self, f_points)
+        s = np.clip(status_codes, 0, np.alen(self.status_code_to_color))
+        print "status codes for layer", self.name, s
+        colors = self.status_code_to_color[s]
+        self.points.color = colors

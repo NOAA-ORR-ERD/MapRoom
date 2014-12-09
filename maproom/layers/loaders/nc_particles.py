@@ -33,13 +33,18 @@ class nc_particles_file_loader():
     def next(self):
         if self.current_timestep >= len(self.reader.times):
             raise StopIteration
-        data = self.reader.get_timestep( self.current_timestep )
+        data = self.reader.get_timestep(self.current_timestep, variables=['latitude', 'longitude'])
         time = self.reader.times[self.current_timestep]
         points = np.c_[data['longitude'], data['latitude']]
+        if 'status_codes' in self.reader.variables:
+            data = self.reader.get_timestep(self.current_timestep, variables=['status_codes'])
+            status_codes = np.array(data['status_codes'], dtype=np.uint32)
+        else:
+            status_codes = np.zeros(np.alen(data['longitude']), dtype=np.uint32)
 
         self.current_timestep += 1
 
-        return (points, time) # error_string, points, time
+        return (points, status_codes, time) # error_string, points, time
 
 class ParticleLoader(BaseLoader):
     """
@@ -64,13 +69,13 @@ class ParticleLoader(BaseLoader):
         """
         layers = []
         ## loop through all the time steps in the file.
-        for (points, time) in nc_particles_file_loader(metadata.uri):
+        for (points, status_codes, time) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
             layer.mime = self.mime ## fixme: tricky here, as one file has multiple layers
             layer.name = os.path.split(layer.file_path)[1] + time.isoformat().rsplit(':',1)[0]
             progress_log.info("Finished loading %s" % layer.name)
-            layer.set_data(points)
+            layer.set_data(points, status_codes)
             layers.append(layer)
         progress_log.info("Finished loading %s" % metadata.uri)
         return layers
