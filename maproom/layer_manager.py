@@ -192,10 +192,11 @@ class LayerManager(HasTraits):
         for layer in layers:
             layer.check_projection(editor.window)
             if not layer.load_error_string:
-                self.insert_loaded_layer(layer, editor)
+                self.insert_loaded_layer(layer, editor, batch=True)
                 if layer.needs_background_loading():
                     layer.start_background_loading()
         GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
+        self.dispatch_event('layers_changed')
         return layers
     
     def check_layer(self, layer, window):
@@ -246,10 +247,10 @@ class LayerManager(HasTraits):
             return error
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, batch=False):
         self.dispatch_event('layer_loaded', layer)
         mi = self.get_insertion_multi_index(before, after)
-        self.insert_layer(mi, layer)
+        self.insert_layer(mi, layer, batch)
     
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
@@ -274,7 +275,7 @@ class LayerManager(HasTraits):
             mi = None
         return mi
 
-    def insert_layer(self, at_multi_index, layer):
+    def insert_layer(self, at_multi_index, layer, batch=False):
         if (at_multi_index == None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
@@ -284,7 +285,8 @@ class LayerManager(HasTraits):
             if (layer.type == "folder"):
                 layer = [layer]
         self.insert_layer_recursive(at_multi_index, layer, self.layers)
-        self.dispatch_event('layers_changed')
+        if not batch:
+            self.dispatch_event('layers_changed')
 
     def insert_layer_recursive(self, at_multi_index, layer, tree):
         if (len(at_multi_index) == 1):
@@ -498,7 +500,7 @@ class LayerManager(HasTraits):
         else:
             layer = LineLayer(manager=self)
         layer.new()
-        self.insert_loaded_layer(layer, editor, before, after)
+        self.insert_loaded_layer(layer, editor, before, after, batch=False)
         if editor is not None:
             GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
         return layer
