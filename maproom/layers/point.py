@@ -69,10 +69,9 @@ class PointLayer(PointBaseLayer):
         self._depth_unit = unit
     
     def get_info_panel_text(self, prop):
-        if prop == "Point count":
-            return str(len(self.points))
-        elif prop == "Selected points":
+        if prop == "Selected points":
             return str(self.get_num_points_selected())
+        return PointBaseLayer.get_info_panel_text(self, prop)
 
     def highlight_exception(self, e):
         if hasattr(e, "points") and e.points is not None:

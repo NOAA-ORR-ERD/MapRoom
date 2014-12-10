@@ -53,6 +53,11 @@ class PointBaseLayer(ProjectedLayer):
         except TypeError:
             points = 0
         return "%s layer '%s': %d points" % (self.type, self.name, points)
+    
+    def get_info_panel_text(self, prop):
+        if prop == "Point count":
+            return str(len(self.points))
+        return ProjectedLayer.get_info_panel_text(self, prop)
 
     def new(self):
         super(PointBaseLayer, self).new()
