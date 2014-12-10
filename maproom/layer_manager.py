@@ -194,6 +194,7 @@ class LayerManager(HasTraits):
                 self.insert_loaded_layer(layer, editor)
                 if layer.needs_background_loading():
                     layer.start_background_loading()
+        GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
         return layers
     
     def check_layer(self, layer, window):
@@ -248,8 +249,6 @@ class LayerManager(HasTraits):
         self.dispatch_event('layer_loaded', layer)
         mi = self.get_insertion_multi_index(before, after)
         self.insert_layer(mi, layer)
-        if editor is not None:
-            GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
     
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
@@ -499,6 +498,8 @@ class LayerManager(HasTraits):
             layer = LineLayer(manager=self)
         layer.new()
         self.insert_loaded_layer(layer, editor, before, after)
+        if editor is not None:
+            GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
         return layer
 
     def add_folder(self, name="New Folder"):
