@@ -320,7 +320,6 @@ class ProjectEditor(FrameworkEditor):
     
     def update_undo_redo(self):
         command = self.layer_manager.undo_stack.get_undo_command()
-        print "LABEL: undo command: %s" % command
         if command is None:
             self.undo_label = "Undo"
             self.can_undo = False

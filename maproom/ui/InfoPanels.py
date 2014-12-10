@@ -8,6 +8,7 @@ from ..mouse_commands import *
 from ..ui import sliders
 from ..renderer import color_to_int, int_to_color
 
+
 class InfoField(object):
     same_line = False
     
@@ -188,9 +189,7 @@ class PointCoordinatesField(TextEditField):
         c = self.ctrl
         c.SetBackgroundColour("#FFFFFF")
         try:
-            # layer.default_depth = float( c.GetValue() )
             new_point = coordinates.lat_lon_from_format_string(c.GetValue())
-            print "New point = %r" % (new_point,)
             if new_point == (-1, -1):
                 c.SetBackgroundColour("#FF8080")
                 return
@@ -290,7 +289,6 @@ class FlaggedPointsField(DropDownField):
         item_num = c.GetSelection()
         if item_num > 0:
             point_index = int(c.GetString(item_num)) - 1
-            print point_index
             self.panel.project.control.do_select_points(layer, [point_index])
 
 class FloatSliderField(InfoField):
@@ -342,7 +340,6 @@ class ColorPickerField(InfoField):
         
     def fill_data(self, layer):
         color = tuple(int(255 * c) for c in int_to_color(self.get_value(layer))[0:3])
-        print "color", color
         self.ctrl.SetColour(color)
     
     def create_control(self):
@@ -359,7 +356,6 @@ class ColorPickerField(InfoField):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
-        print color, int_color
         cmd = LayerColorCommand(layer, int_color)
         self.panel.project.process_command(cmd)
 
@@ -425,11 +421,8 @@ class InfoPanel(wx.Panel):
 
     def display_fields(self, layer, fields):
         if self.current_fields == fields:
-            print "SAME FIELDS!!!!!!!!!!!!!!!!!!!" + str(fields)
             self.set_fields(layer, fields)
-            #self.create_fields(layer, fields)
         else:
-            print "DIFFERENT FIELDS!!!!!!!!!!!!!!!!!!!!!" + str(fields)
             self.create_fields(layer, fields)
     
     known_fields = {
@@ -456,7 +449,6 @@ class InfoPanel(wx.Panel):
         self.sizer.Clear(False) # don't delete controls because we reuse them
 
         undisplayed = set(self.field_map.keys())
-        print "create_fields: BEFORE", undisplayed
         for field_name in fields:
             if field_name not in self.field_map:
                 if field_name not in self.known_fields:
@@ -464,7 +456,7 @@ class InfoPanel(wx.Panel):
                     if value is not None:
                         fieldcls = SimplePropertyField
                     else:
-                        print "field %s not added yet" % field_name
+                        # field not needed for this layer, so skip to next field
                         continue
                 else:
                     fieldcls = self.known_fields[field_name]
@@ -482,18 +474,12 @@ class InfoPanel(wx.Panel):
             else:
                 field.hide()
         
+        # Hide fields that exist for some layer but not needed for this layer
         for field_name in undisplayed:
-            print "hiding", field_name
             field = self.field_map[field_name]
             field.hide()
 
-        undisplayed = set(self.field_map.keys())
-        print "create_fields: AFTER", undisplayed
-
         self.sizer.Layout()
-
-        # self.layer_name_control.SetSelection( -1, -1 )
-        # self.layer_name_control.SetFocus()
 
         self.Thaw()
         self.Update()
@@ -503,7 +489,6 @@ class InfoPanel(wx.Panel):
     def set_fields(self, layer, fields):
         for field_name in fields:
             if field_name in self.field_map:
-                print "FOUND FIELD %s" % field_name
                 field = self.field_map[field_name]
                 if field.is_displayed(layer):
                     field.fill_data(layer)

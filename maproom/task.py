@@ -117,8 +117,6 @@ class SaveLayerGroup(Group):
         if layer is not None:
             from layers.loaders import valid_save_formats
             valid = valid_save_formats(layer)
-            
-            log.debug("Save Layer As: layer=%s, formats=%s" % (layer, valid))
             if valid:
                 for item in valid:
                     action = SaveLayerAsFormatAction(loader=item[0])

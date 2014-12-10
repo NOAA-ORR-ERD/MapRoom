@@ -38,7 +38,7 @@ class ParticleLayer(PointBaseLayer):
     
     def set_data(self, f_points, status_codes):
         PointBaseLayer.set_data(self, f_points)
-        s = np.clip(status_codes, 0, np.alen(self.status_code_to_color))
-        print "status codes for layer", self.name, s
-        colors = self.status_code_to_color[s]
+        # force status codes to fall into range of valid colors
+        status_codes = np.clip(status_codes, 0, np.alen(self.status_code_to_color))
+        colors = self.status_code_to_color[status_codes]
         self.points.color = colors

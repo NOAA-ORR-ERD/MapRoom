@@ -19,6 +19,7 @@ from pyface.api import YES, NO, GUI
 
 import logging
 log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class LayerManager(HasTraits):
