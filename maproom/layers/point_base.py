@@ -21,7 +21,6 @@ from ..library import rect
 from ..library.accumulator import flatten
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_to_int, data_types
-from ..layer_undo import *
 
 from base import ProjectedLayer
 from constants import *
