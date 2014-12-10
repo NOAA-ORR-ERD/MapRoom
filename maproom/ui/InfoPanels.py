@@ -507,8 +507,8 @@ class InfoPanel(wx.Panel):
                 field = self.field_map[field_name]
                 if field.is_displayed(layer):
                     field.fill_data(layer)
-                    field.set_focus()
                     field.show()
+                    field.set_focus()
                 else:
                     field.hide()
         self.sizer.Layout()
