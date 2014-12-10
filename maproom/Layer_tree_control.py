@@ -50,7 +50,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     def get_selected_layer(self):
         item = self.GetSelection()
-        if (item == None):
+        if (item is None):
             return None
         (category, layer) = self.GetItemPyData(item).Data
 
@@ -58,7 +58,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     def is_selected_layer(self, layer):
         item = self.GetSelection()
-        if (item == None):
+        if (item is None):
             return False
         (category, selected) = self.GetItemPyData(item).Data
         return layer == selected
@@ -68,7 +68,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
             return
         self.project.clear_all_selections(False)
 
-        if (layer == None):
+        if (layer is None):
             self.UnselectAll()
         else:
             self.select_layer_recursive(layer, self.GetRootItem())
@@ -131,7 +131,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     def add_layer(self, layer, parent):
         log.debug("LAYER_TREE: adding layer = " + str(layer.name))
-        if (parent == None):
+        if (parent is None):
             data = wx.TreeItemData()
             data.SetData(("root", layer))
             return self.AddRoot(layer.name, data=data)
@@ -185,7 +185,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     def handle_item_collapsed(self, event):
         pd = self.GetItemPyData(event.GetItem())
-        if (pd == None):
+        if (pd is None):
             return
 
         (category, layer) = pd.Data
@@ -193,7 +193,7 @@ class Layer_tree_control(treectrl.CustomTreeCtrl):
 
     def handle_item_expanded(self, event):
         pd = self.GetItemPyData(event.GetItem())
-        if (pd == None):
+        if (pd is None):
             return
 
         (category, layer) = pd.Data

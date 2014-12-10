@@ -177,7 +177,7 @@ class PolygonLayer(PointLayer):
         ).view(np.recarray)
 
     def clear_all_polygon_selections(self, mark_type=STATE_SELECTED):
-        if (self.polygons != None):
+        if (self.polygons is not None):
             self.polygons.state = self.polygons.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
@@ -190,10 +190,10 @@ class PolygonLayer(PointLayer):
         self.increment_change_count()
 
     def is_polygon_selected(self, polygon_index, mark_type=STATE_SELECTED):
-        return self.polygons != None and (self.polygons.state[polygon_index] & mark_type) != 0
+        return self.polygons is not None and (self.polygons.state[polygon_index] & mark_type) != 0
 
     def get_selected_polygon_indexes(self, mark_type=STATE_SELECTED):
-        if (self.polygons == None):
+        if (self.polygons is None):
             return []
         #
         return np.where((self.polygons.state & mark_type) != 0)[0]
@@ -321,7 +321,7 @@ class PolygonLayer(PointLayer):
         other views of this layer.
         
         """
-        if self.polygons != None and renderer.polygon_set_renderer == None:
+        if self.polygons is not None and renderer.polygon_set_renderer is None:
             renderer.rebuild_polygon_set_renderer(self)
     
     def rebuild_renderer(self, renderer, in_place=False):
@@ -336,7 +336,7 @@ class PolygonLayer(PointLayer):
             return
 
         # the polygons
-        if (renderer.polygon_set_renderer != None and layer_visibility["polygons"]):
+        if (renderer.polygon_set_renderer is not None and layer_visibility["polygons"]):
             renderer.polygon_set_renderer.render(layer_index_base + renderer.POLYGONS_SUB_LAYER_PICKER_OFFSET,
                                              pick_mode,
                                              self.polygons.color,

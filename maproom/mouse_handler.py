@@ -57,7 +57,7 @@ class MouseHandler(object):
         o = None
         if c.opengl_renderer is not None:
             o = c.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
-        if (o != None):
+        if (o is not None):
             (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
             layer = c.layer_manager.get_layer_by_pick_index(layer_index)
             if (c.project.layer_tree_control.is_selected_layer(layer)):
@@ -240,7 +240,7 @@ class ObjectSelectionMode(MouseHandler):
         e = c.project
         lm = c.layer_manager
 
-        if (e.clickable_object_mouse_is_over != None):  # the mouse is on a clickable object
+        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
             layer = lm.get_layer_by_pick_index(layer_index)
             if (e.layer_tree_control.is_selected_layer(layer)):
@@ -253,7 +253,7 @@ class ObjectSelectionMode(MouseHandler):
             # fixme: there should be a reference to the layer manager in the RenderWindow
             # and we could get the selected layer from there -- or is selected purely a UI concept?
             layer = e.layer_tree_control.get_selected_layer()
-            if (layer != None):
+            if (layer is not None):
                 if (event.ControlDown() or event.ShiftDown()):
                     c.selection_box_is_being_defined = True
                     c.CaptureMouse()
@@ -297,7 +297,7 @@ class ObjectSelectionMode(MouseHandler):
             p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
             w_r = c.get_world_rect_from_projected_rect(p_r)
             layer = c.layer_tree_control.get_selected_layer()
-            if (layer != None):
+            if (layer is not None):
                 self.select_objects_in_rect(event, w_r, layer)
             c.selection_box_is_being_defined = False
             c.render()
@@ -336,7 +336,7 @@ class PointSelectionMode(ObjectSelectionMode):
 
     def get_cursor(self):
         e = self.layer_control.editor
-        if e.clickable_object_mouse_is_over != None:
+        if e.clickable_object_mouse_is_over is not None:
             if e.clickable_object_is_ugrid_line():
                 return wx.StockCursor(wx.CURSOR_BULLSEYE)
             else:
@@ -414,7 +414,7 @@ class LineSelectionMode(PointSelectionMode):
 
     def get_cursor(self):
         e = self.layer_control.editor
-        if e.clickable_object_mouse_is_over != None:
+        if e.clickable_object_mouse_is_over is not None:
             return wx.StockCursor(wx.CURSOR_HAND)
         return wx.StockCursor(wx.CURSOR_PENCIL)
 
@@ -577,6 +577,6 @@ class CropRectMode(RectSelectMode):
         w_r = c.get_world_rect_from_projected_rect(p_r)
         #print "CROPPING!!!!  ", w_r
         layer = c.project.layer_tree_control.get_selected_layer()
-        if (layer != None and layer.can_crop()):
+        if (layer is not None and layer.can_crop()):
             cmd = CropRectCommand(layer, w_r)
             e.process_command(cmd)

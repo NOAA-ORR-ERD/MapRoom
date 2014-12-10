@@ -276,7 +276,7 @@ class LayerManager(HasTraits):
         return mi
 
     def insert_layer(self, at_multi_index, layer, batch=False):
-        if (at_multi_index == None or at_multi_index == []):
+        if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
         log.debug("layers are " + str(self.layers))
@@ -348,7 +348,7 @@ class LayerManager(HasTraits):
                         return [i]
             else:
                 result = self.get_multi_index_of_layer_recursive(layer, item)
-                if (result != None):
+                if (result is not None):
                     r = [i]
                     r.extend(result)
 
@@ -447,7 +447,7 @@ class LayerManager(HasTraits):
         ## count_layer_of_type(self, layer_type="")
         n = 0
         for layer in self.flatten():
-            if (hasattr(layer, "images") and layer.images != None):
+            if (hasattr(layer, "images") and layer.images is not None):
                 n += 1
         #
         return n
@@ -455,8 +455,8 @@ class LayerManager(HasTraits):
     def count_vector_layers(self):
         n = 0
         for layer in self.flatten():
-            if (hasattr(layer, "points") and (layer.points != None or
-                    layer.polygons != None)):
+            if (hasattr(layer, "points") and (layer.points is not None or
+                    layer.polygons is not None)):
                 n += 1
         #
         return n
@@ -513,10 +513,10 @@ class LayerManager(HasTraits):
         self.insert_layer(None, folder)
 
     def delete_selected_layer(self, layer=None):
-        if (layer == None):
+        if (layer is None):
             layer = self.project.layer_tree_control.get_selected_layer()
         window = self.project.window
-        if (layer == None):
+        if (layer is None):
             window.status_bar.message = "Selected layer to delete!."
             return
 

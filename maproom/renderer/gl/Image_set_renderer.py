@@ -174,7 +174,7 @@ class Image_set_renderer:
             self.image_textures.vbo_vertexes[i][: np.alen(vertex_data)] = raw
 
     def render(self, layer_index_base, pick_mode, alpha=1.0):
-        if (self.image_textures.vbo_vertexes == None):
+        if (self.image_textures.vbo_vertexes is None):
             return
 
         # images can't be selected with mouse click

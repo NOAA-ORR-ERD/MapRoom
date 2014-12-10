@@ -138,5 +138,5 @@ class RasterLayer(ProjectedLayer):
         if (not layer_visibility["layer"]):
             return
 
-        if (renderer.image_set_renderer != None):
+        if (renderer.image_set_renderer is not None):
             renderer.image_set_renderer.render(-1, pick_mode, self.alpha)

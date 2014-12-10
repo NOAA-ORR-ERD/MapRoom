@@ -6,7 +6,7 @@ EMPTY_RECT = ((0, 0), (0, 0))
 
 
 def is_rect_empty(r):
-    return r[ 0 ][ 0 ] == None or r[ 0 ][ 1 ] == None or r[ 1 ][ 0 ] == None or r[ 1 ][ 1 ] == None or \
+    return r[ 0 ][ 0 ] is None or r[ 0 ][ 1 ] is None or r[ 1 ][ 0 ] is None or r[ 1 ][ 1 ] is None or \
         width(r) <= 0 or height(r) <= 0
 
 
@@ -54,30 +54,30 @@ def zoom_out_2(r):
 
 def accumulate_rect(r1, r2):
     # print "in accumulate_rect() r1 = " + str( r1 ) + ", r2 = " + str( r2 )
-    if (r1[0][0] == None):
+    if (r1[0][0] is None):
         l = r2[0][0]
-    elif (r2[0][0] == None):
+    elif (r2[0][0] is None):
         l = r1[0][0]
     else:
         l = min(r1[0][0], r2[0][0])
 
-    if (r1[1][0] == None):
+    if (r1[1][0] is None):
         r = r2[1][0]
-    elif (r2[1][0] == None):
+    elif (r2[1][0] is None):
         r = r1[1][0]
     else:
         r = max(r1[1][0], r2[1][0])
 
-    if (r1[0][1] == None):
+    if (r1[0][1] is None):
         b = r2[0][1]
-    elif (r2[0][1] == None):
+    elif (r2[0][1] is None):
         b = r1[0][1]
     else:
         b = min(r1[0][1], r2[0][1])
 
-    if (r1[1][1] == None):
+    if (r1[1][1] is None):
         t = r2[1][1]
-    elif (r2[1][1] == None):
+    elif (r2[1][1] is None):
         t = r1[1][1]
     else:
         t = max(r1[1][1], r2[1][1])
@@ -86,30 +86,30 @@ def accumulate_rect(r1, r2):
 
 
 def accumulate_point(r, p):
-    if (r[0][0] == None):
+    if (r[0][0] is None):
         l = p[0]
-    elif (p[0] == None):
+    elif (p[0] is None):
         l = r[0][0]
     else:
         l = min(r[0][0], p[0])
 
-    if (r[1][0] == None):
+    if (r[1][0] is None):
         rt = p[0]
-    elif (p[0] == None):
+    elif (p[0] is None):
         rt = r[1][0]
     else:
         rt = max(r[1][0], p[0])
 
-    if (r[0][1] == None):
+    if (r[0][1] is None):
         b = p[1]
-    elif (p[1] == None):
+    elif (p[1] is None):
         b = r[0][1]
     else:
         b = min(r[0][1], p[1])
 
-    if (r[1][1] == None):
+    if (r[1][1] is None):
         t = p[1]
-    elif (p[1] == None):
+    elif (p[1] is None):
         t = r[1][1]
     else:
         t = max(r[1][1], p[1])

@@ -231,7 +231,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.set_cursor()
 
     def set_cursor(self):
-        if (self.forced_cursor != None):
+        if (self.forced_cursor is not None):
             self.SetCursor(self.forced_cursor)
             #
             return
@@ -241,7 +241,7 @@ class LayerControl(glcanvas.GLCanvas):
 
     def get_effective_tool_mode(self, event):
         middle_down = False
-        if (event != None):
+        if (event is not None):
             try:
                 self.is_alt_key_down = event.AltDown()
                 # print self.is_alt_key_down
@@ -269,7 +269,7 @@ class LayerControl(glcanvas.GLCanvas):
         t0 = time.clock()
         self.SetCurrent(self.context)
         # this has to be here because the window has to exist before making the renderer
-        if (self.opengl_renderer == None):
+        if (self.opengl_renderer is None):
             self.opengl_renderer = renderer.RendererDriver(True)
         self.update_renderers()
 
@@ -337,7 +337,7 @@ class LayerControl(glcanvas.GLCanvas):
             self.project.task.status_bar.debug = message
         wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
 
-        if (event != None):
+        if (event is not None):
             event.Skip()
 
     def draw_bounding_boxes(self):
@@ -581,7 +581,7 @@ class LayerControl(glcanvas.GLCanvas):
         
     """
     def get_degrees_lon_per_pixel( self, reference_latitude = None ):
-        if ( reference_latitude == None ):
+        if ( reference_latitude is None ):
             reference_latitude = self.world_point_center[ 1 ]
         factor = math.cos( math.radians( reference_latitude ) )
         ###

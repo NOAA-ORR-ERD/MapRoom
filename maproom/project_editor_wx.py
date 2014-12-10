@@ -543,7 +543,7 @@ class ProjectEditor(FrameworkEditor):
             self.refresh()
 
     def dragged(self, world_d_x, world_d_y):
-        if (self.clickable_object_mouse_is_over == None):
+        if (self.clickable_object_mouse_is_over is None):
             return
 
         (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
@@ -552,7 +552,7 @@ class ProjectEditor(FrameworkEditor):
         self.process_command(cmd)
 
     def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y):
-        if (self.clickable_object_mouse_is_over == None):
+        if (self.clickable_object_mouse_is_over is None):
             return
 
         # Can't compare mouse positions in screen coordinates, because the

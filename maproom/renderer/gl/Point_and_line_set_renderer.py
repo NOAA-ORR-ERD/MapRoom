@@ -45,7 +45,7 @@ class Point_and_line_set_renderer:
         self.vbo_triangle_point_indexes = None
         self.vbo_triangle_point_colors = None
 
-        if (points == None or len(points) == 0):
+        if (points is None or len(points) == 0):
             return
 
         projected_point_data = np.zeros(
@@ -69,7 +69,7 @@ class Point_and_line_set_renderer:
         self.reproject(points, projection )
 
     def build_line_segment_buffers(self, points, line_segment_indexes, line_segment_colors):
-        if (line_segment_indexes == None or np.alen(line_segment_indexes) == 0):
+        if (line_segment_indexes is None or np.alen(line_segment_indexes) == 0):
             self.world_line_segment_points = None
             self.vbo_line_segment_point_xys = None
             self.vbo_line_segment_colors = None
@@ -89,7 +89,7 @@ class Point_and_line_set_renderer:
         self.vbo_line_segment_point_xys = gl_vbo.VBO(
             projected_line_segment_point_data
         )
-        if (line_segment_colors != None):
+        if (line_segment_colors is not None):
             # double the colors since each segment has two vertexes
             segment_colors = np.c_[line_segment_colors, line_segment_colors].reshape(-1)
             self.vbo_line_segment_colors = gl_vbo.VBO(
@@ -111,11 +111,11 @@ class Point_and_line_set_renderer:
             usage="GL_STATIC_DRAW",
             target="GL_ELEMENT_ARRAY_BUFFER"
         )
-        if (triangle_point_colors != None):
+        if (triangle_point_colors is not None):
             self.vbo_triangle_point_colors = gl_vbo.VBO(triangle_point_colors)
 
     def reproject(self, points, projection ):
-        if (points == None or len(points) == 0):
+        if (points is None or len(points) == 0):
             self.vbo_point_xys = None
             self.vbo_point_colors = None
             self.world_line_segment_points = None
@@ -129,7 +129,7 @@ class Point_and_line_set_renderer:
         projected_point_data[:, 0], projected_point_data[:, 1] = projection(points[:, 0].astype(np.float32), points[:, 1].astype(np.float32))
         self.vbo_point_xys[: np.alen(projected_point_data)] = projected_point_data
 
-        if (self.vbo_line_segment_point_xys != None and len(self.vbo_line_segment_point_xys.data) > 0):
+        if (self.vbo_line_segment_point_xys is not None and len(self.vbo_line_segment_point_xys.data) > 0):
             projected_line_segment_point_data = self.vbo_line_segment_point_xys.data
             if (projection.srs.find("+proj=longlat") != -1):
                 projected_line_segment_point_data[:, 0] = self.world_line_segment_points[:, 0]
@@ -168,7 +168,7 @@ class Point_and_line_set_renderer:
             self.render_triangles(pick_mode, triangle_line_width)
 
     def render_selected_line_segments(self, line_width, selected_line_segment_indexes=[]):
-        if (self.vbo_line_segment_point_xys != None and len(self.vbo_line_segment_point_xys.data) > 0):
+        if (self.vbo_line_segment_point_xys is not None and len(self.vbo_line_segment_point_xys.data) > 0):
             if (len(selected_line_segment_indexes) != 0):
                 gl.glLineWidth(line_width + 10)
                 gl.glColor(1, 0.6, 0, 0.75)
@@ -180,7 +180,7 @@ class Point_and_line_set_renderer:
                 gl.glColor(1, 1, 1, 1)
 
     def render_selected_points(self, point_size, selected_point_indexes=[]):
-        if (self.vbo_point_xys != None and len(self.vbo_point_xys) > 0):
+        if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
             if (len(selected_point_indexes) != 0):
                 gl.glPointSize(point_size + 10)
                 gl.glColor(1, 0.6, 0, 0.75)
@@ -198,7 +198,7 @@ class Point_and_line_set_renderer:
                       flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
         #log.debug("in Point_and_line_set_renderer.render_points, layer_index_base:%s, pick_mode:%s"%(layer_index_base, pick_mode) )
 
-        if (self.vbo_point_xys != None and len(self.vbo_point_xys) > 0):
+        if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
             if (not pick_mode and len(flagged_point_indexes) != 0):
                 gl.glPointSize(point_size + 15)
                 gl.glColor(0.2, 0, 1, 0.75)
@@ -251,7 +251,7 @@ class Point_and_line_set_renderer:
         # the line segments
         # log.debug("in Point_and_line_set_renderer.render_lines, layer_index_base:%s, pick_mode:%s"%(layer_index_base, pick_mode) )
 
-        if (self.vbo_line_segment_point_xys != None and len(self.vbo_line_segment_point_xys.data) > 0):
+        if (self.vbo_line_segment_point_xys is not None and len(self.vbo_line_segment_point_xys.data) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             self.vbo_line_segment_point_xys.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
@@ -288,7 +288,7 @@ class Point_and_line_set_renderer:
             return
 
         # the line segments
-        if (self.vbo_triangle_point_indexes != None and len(self.vbo_triangle_point_indexes.data) > 0):
+        if (self.vbo_triangle_point_indexes is not None and len(self.vbo_triangle_point_indexes.data) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             self.vbo_point_xys.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated

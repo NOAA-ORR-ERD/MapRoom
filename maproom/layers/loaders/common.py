@@ -73,7 +73,7 @@ class BaseLoader(object):
             import traceback
             
             print traceback.format_exc(e)
-            if hasattr(e, "points") and e.points != None:
+            if hasattr(e, "points") and e.points is not None:
                 layer.clear_all_selections(constants.STATE_FLAGGED)
                 for p in e.points:
                     layer.select_point(p, constants.STATE_FLAGGED)

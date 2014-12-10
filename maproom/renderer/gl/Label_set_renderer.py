@@ -50,7 +50,7 @@ class Label_set_renderer:
         self.vbo_texture_coordinates = gl_vbo.VBO(self.texture_coordinates_raw)
 
     def render(self, layer_index_base, pick_mode, screen_rect, max_label_characters, depths, projected_points, projected_rect, projected_units_per_pixel):
-        if (self.vbo_screen_vertexes == None or len(self.vbo_screen_vertexes.data) == 0):
+        if (self.vbo_screen_vertexes is None or len(self.vbo_screen_vertexes.data) == 0):
             return
 
         # labels can't be selected with mouse click

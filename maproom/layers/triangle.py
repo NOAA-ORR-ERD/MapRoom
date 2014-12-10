@@ -106,7 +106,7 @@ class TriangleLayer(PointLayer):
 
     def update_after_insert_point_at_index(self, point_index):
         # update point indexes in the triangles to account for the inserted point
-        if (self.triangles != None):
+        if (self.triangles is not None):
             offsets = np.zeros(np.alen(self.triangles))
             offsets += np.where(self.triangles.point1 >= point_index, 1, 0)
             self.triangles.point1 += offsets
@@ -135,13 +135,13 @@ class TriangleLayer(PointLayer):
 
     def delete_all_selected_objects(self):
         point_indexes = self.get_selected_point_indexes()
-        if point_indexes != None and len(point_indexes) > 0:
+        if point_indexes is not None and len(point_indexes) > 0:
             self.delete_points_and_triangles(point_indexes, True)
         self.increment_change_count()
 
     def update_after_delete_point(self, point_index):
         # update point indexes in the triangles to account for the inserted point
-        if (self.triangles != None):
+        if (self.triangles is not None):
             offsets = np.zeros(np.alen(self.triangles))
             offsets += np.where(self.triangles.point1 >= point_index, 1, 0)
             self.triangles.point1 -= offsets
@@ -154,7 +154,7 @@ class TriangleLayer(PointLayer):
 
     def delete_points_and_triangles(self, point_indexes):
         triangle_indexes_to_be_deleted = None
-        if (self.triangles != None):
+        if (self.triangles is not None):
             # (1) delete any triangles whose points are going away
             triangle_indexes_to_be_deleted = np.where(np.in1d(self.triangles.point1, point_indexes))
             triangle_indexes_to_be_deleted = np.append(triangle_indexes_to_be_deleted, np.where(np.in1d(self.triangles.point2, point_indexes)))
@@ -193,7 +193,7 @@ class TriangleLayer(PointLayer):
 
         # delete them from the layer
         self.points = np.delete(self.points, point_indexes, 0)
-        if (triangle_indexes_to_be_deleted != None):
+        if (triangle_indexes_to_be_deleted is not None):
             # then delete the line segments
             self.triangles = np.delete(self.triangles, triangle_indexes_to_be_deleted, 0)
 
@@ -201,7 +201,7 @@ class TriangleLayer(PointLayer):
 
         """
         # delete them from the label_set_renderer
-        if ( self.label_set_renderer != None ):
+        if ( self.label_set_renderer is not None ):
             self.label_set_renderer.delete_points( point_indexes )
             self.label_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
                                                self.manager.project.control.projection,
@@ -298,7 +298,7 @@ class TriangleLayer(PointLayer):
     
     def get_triangle_point_colors(self, alpha=.9):
         colors = np.zeros(len(self.points), dtype=np.uint32)
-        if self.points != None:
+        if self.points is not None:
             
             # Lots of points in the colormap doesn't help because the shading
             # is only applied linearly based on the depth of the endpoints.
@@ -333,7 +333,7 @@ class TriangleLayer(PointLayer):
         other views of this layer.
         
         """
-        if self.points != None and renderer.point_and_line_set_renderer == None:
+        if self.points is not None and renderer.point_and_line_set_renderer is None:
 
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
 
@@ -345,7 +345,7 @@ class TriangleLayer(PointLayer):
             return
 
         # the points and line segments
-        if (renderer.point_and_line_set_renderer != None):
+        if (renderer.point_and_line_set_renderer is not None):
             renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
                                                     pick_mode,
                                                     self.point_size,
@@ -359,14 +359,14 @@ class TriangleLayer(PointLayer):
                                                     [], [])
 
             # the labels
-            if (renderer.label_set_renderer != None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys != None):
+            if (renderer.label_set_renderer is not None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys is not None):
                 renderer.label_set_renderer.render(-1, pick_mode, s_r,
                                                renderer.MAX_LABEL_CHARACTERS, self.points.z,
                                                renderer.point_and_line_set_renderer.vbo_point_xys.data,
                                                p_r, renderer.canvas.projected_units_per_pixel)
 
         # render selections after everything else
-        if (renderer.point_and_line_set_renderer != None and not pick_mode):
+        if (renderer.point_and_line_set_renderer is not None and not pick_mode):
             if layer_visibility["points"]:
                 renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
                                                                         self.get_selected_point_indexes())

@@ -149,7 +149,7 @@ def write_layer_as_verdat(f, layer):
     lines = layer.line_segment_indexes
 
     f.write("DOGS")
-    if layer.depth_unit != None and layer.depth_unit != "unknown":
+    if layer.depth_unit is not None and layer.depth_unit != "unknown":
         f.write("\t{0}\n".format(layer.depth_unit.upper()))
     else:
         f.write("\n")

@@ -404,7 +404,7 @@ class InfoPanel(wx.Panel):
 
             return
 
-        if (layer == None or self.current_layer_displayed == None):
+        if (layer is None or self.current_layer_displayed is None):
             if (layer == self.current_layer_displayed):
                 return
         else:
@@ -413,7 +413,7 @@ class InfoPanel(wx.Panel):
 
         self.current_layer_displayed = layer
         self.current_layer_change_count = -1
-        if (layer != None):
+        if (layer is not None):
             self.current_layer_change_count = layer.change_count
 
         fields = self.get_visible_fields(layer)

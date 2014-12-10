@@ -368,7 +368,7 @@ def get_image(raster_bands, raster_count, palette, selection_origin, selection_s
     image = None
 
     # Fetch the data from GDAL and convert it to RGBA.
-    if (palette != None):
+    if (palette is not None):
         # paletted files have a single band
         image = gdal_array.BandReadAsArray(
             raster_bands[0],

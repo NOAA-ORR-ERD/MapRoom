@@ -140,7 +140,7 @@ class PointBaseLayer(ProjectedLayer):
         other views of this layer.
         
         """
-        if self.points != None and renderer.point_renderer is None:
+        if self.points is not None and renderer.point_renderer is None:
             renderer.rebuild_point_renderer(self, create=True)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
@@ -149,7 +149,7 @@ class PointBaseLayer(ProjectedLayer):
             return
 
         # the points
-        if (renderer.point_renderer != None):
+        if (renderer.point_renderer is not None):
             renderer.point_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
                                            pick_mode,
                                            self.point_size,

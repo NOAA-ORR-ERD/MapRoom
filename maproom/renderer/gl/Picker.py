@@ -43,7 +43,7 @@ class Picker:
             self.frame_buffer = None
             self.render_buffer = None
 
-        if (self.frame_buffer == None):
+        if (self.frame_buffer is None):
             self.frame_buffer = int(gl_fbo.glGenFramebuffersEXT(1))
             self.bind_frame_buffer()
 

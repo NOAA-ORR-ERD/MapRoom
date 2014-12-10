@@ -133,7 +133,7 @@ class LineLayer(PointLayer):
         self.increment_change_count()
 
     def clear_all_line_segment_selections(self, mark_type=STATE_SELECTED):
-        if (self.line_segment_indexes != None):
+        if (self.line_segment_indexes is not None):
             self.line_segment_indexes.state = self.line_segment_indexes.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
@@ -146,7 +146,7 @@ class LineLayer(PointLayer):
         self.increment_change_count()
 
     def is_line_segment_selected(self, line_segment_index, mark_type=STATE_SELECTED):
-        return self.line_segment_indexes != None and (self.line_segment_indexes.state[line_segment_index] & mark_type) != 0
+        return self.line_segment_indexes is not None and (self.line_segment_indexes.state[line_segment_index] & mark_type) != 0
 
     def select_line_segments_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
         if (not is_toggle_mode and not is_add_mode):
@@ -165,9 +165,9 @@ class LineLayer(PointLayer):
 
     def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
         indexes = np.arange(0)
-        if (self.points != None):
+        if (self.points is not None):
             indexes = np.append(indexes, self.get_selected_point_indexes(mark_type))
-        if (self.line_segment_indexes != None):
+        if (self.line_segment_indexes is not None):
             l_s_i_s = self.get_selected_line_segment_indexes(mark_type)
             indexes = np.append(indexes, self.line_segment_indexes[l_s_i_s].point1)
             indexes = np.append(indexes, self.line_segment_indexes[l_s_i_s].point2)
@@ -178,14 +178,14 @@ class LineLayer(PointLayer):
         return len(self.get_selected_and_dependent_point_indexes(mark_type))
 
     def get_selected_line_segment_indexes(self, mark_type=STATE_SELECTED):
-        if (self.line_segment_indexes == None):
+        if (self.line_segment_indexes is None):
             return []
         #
         return np.where((self.line_segment_indexes.state & mark_type) != 0)[0]
 
     def get_all_line_point_indexes(self):
         indexes = np.arange(0)
-        if (self.line_segment_indexes != None):
+        if (self.line_segment_indexes is not None):
             indexes = np.append(indexes, self.line_segment_indexes.point1)
             indexes = np.append(indexes, self.line_segment_indexes.point2)
         #
@@ -263,7 +263,7 @@ class LineLayer(PointLayer):
             list_of_paths = new_paths
 
     def find_lines_connected_to_line(self, line_segment_index):
-        if (self.line_segment_indexes == None):
+        if (self.line_segment_indexes is None):
             return []
 
         p1 = self.line_segment_indexes.point1[line_segment_index]
@@ -282,9 +282,9 @@ class LineLayer(PointLayer):
     def delete_all_selected_objects(self):
         point_indexes = self.get_selected_point_indexes()
         l_s_i_s = None
-        if (self.get_selected_line_segment_indexes != None):
+        if (self.get_selected_line_segment_indexes is not None):
             l_s_i_s = self.get_selected_line_segment_indexes()
-        if ((point_indexes != None and len(point_indexes)) > 0 or (l_s_i_s != None and len(l_s_i_s) > 0)):
+        if ((point_indexes is not None and len(point_indexes)) > 0 or (l_s_i_s is not None and len(l_s_i_s) > 0)):
             cmd = DeleteLinesCommand(self, point_indexes, l_s_i_s)
             return cmd
 
@@ -309,13 +309,13 @@ class LineLayer(PointLayer):
 
         # delete them from the layer
         self.points = np.delete(self.points, point_indexes, 0)
-        if (line_segment_indexes_to_be_deleted != None):
+        if (line_segment_indexes_to_be_deleted is not None):
             # then delete the line segments
             self.line_segment_indexes = np.delete(self.line_segment_indexes, line_segment_indexes_to_be_deleted, 0)
 
     def update_after_insert_point_at_index(self, point_index):
         # update point indexes in the line segements to account for the inserted point
-        if (self.line_segment_indexes != None):
+        if (self.line_segment_indexes is not None):
             offsets = np.zeros(np.alen(self.line_segment_indexes))
             offsets += np.where(self.line_segment_indexes.point1 >= point_index, 1, 0)
             self.line_segment_indexes.point1 += offsets
@@ -367,7 +367,7 @@ class LineLayer(PointLayer):
         return undo
 
     def update_after_delete_point(self, point_index):
-        if (self.line_segment_indexes != None):
+        if (self.line_segment_indexes is not None):
             offsets = np.zeros(np.alen(self.line_segment_indexes))
             offsets += np.where(self.line_segment_indexes.point1 > point_index, 1, 0)
             self.line_segment_indexes.point1 -= offsets
@@ -419,7 +419,7 @@ class LineLayer(PointLayer):
 
     # returns a list of pairs of point indexes
     def find_duplicates(self, distance_tolerance_degrees, depth_tolerance_percentage=-1):
-        if (self.points == None or len(self.points) < 2):
+        if (self.points is None or len(self.points) < 2):
             return []
 
         points = self.points.view(
@@ -520,8 +520,8 @@ class LineLayer(PointLayer):
         other views of this layer.
         
         """
-        if self.points != None and renderer.point_and_line_set_renderer == None:
-            if (self.line_segment_indexes == None):
+        if self.points is not None and renderer.point_and_line_set_renderer is None:
+            if (self.line_segment_indexes is None):
                 self.line_segment_indexes = self.make_line_segment_indexes(0)
 
             renderer.rebuild_point_and_line_set_renderer(self, create=True)
@@ -534,7 +534,7 @@ class LineLayer(PointLayer):
             return
 
         # the points and line segments
-        if (renderer.point_and_line_set_renderer != None):
+        if (renderer.point_and_line_set_renderer is not None):
             renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
                                                     pick_mode,
                                                     self.point_size,
@@ -549,14 +549,14 @@ class LineLayer(PointLayer):
                                                     self.get_selected_line_segment_indexes(STATE_FLAGGED))
 
             # the labels
-            if (renderer.label_set_renderer != None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys != None):
+            if (renderer.label_set_renderer is not None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys is not None):
                 renderer.label_set_renderer.render(-1, pick_mode, s_r,
                                                renderer.MAX_LABEL_CHARACTERS, self.points.z,
                                                renderer.point_and_line_set_renderer.vbo_point_xys.data,
                                                p_r, renderer.canvas.projected_units_per_pixel)
 
         # render selections after everything else
-        if (renderer.point_and_line_set_renderer != None and not pick_mode):
+        if (renderer.point_and_line_set_renderer is not None and not pick_mode):
             if layer_visibility["lines"]:
                 renderer.point_and_line_set_renderer.render_selected_line_segments(self.line_width, self.get_selected_line_segment_indexes())
 

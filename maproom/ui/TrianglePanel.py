@@ -116,7 +116,7 @@ class TrianglePanel(wx.Panel):
                 return
 
         layer = project.layer_tree_control.get_selected_layer()
-        if (layer == None or not layer.has_points()):
+        if (layer is None or not layer.has_points()):
                 project.window.error("To triangulate, use the Layers tree to select a layer that contains points.", "Triangulate")
 
                 return

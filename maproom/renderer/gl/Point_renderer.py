@@ -95,7 +95,7 @@ class Point_renderer(object):
                       point_size,
                       ):
 
-        if (self.vbo_point_xys != None and len(self.vbo_point_xys) > 0):
+        if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             self.vbo_point_xys.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
