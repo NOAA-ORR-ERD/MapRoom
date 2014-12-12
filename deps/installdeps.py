@@ -3,6 +3,11 @@ import subprocess
 import os
 
 deps = [
+    # py2exe on Win 64 doesn't handle configobj when
+    # installed by pip, so install it here.  See
+    # http://www.py2exe.org/index.cgi/WorkingWithVariousPackagesAndModules
+    ['https://github.com/DiffSK/configobj.git'],
+    
     ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
     ['https://github.com/pyugrid/pyugrid.git',],
     ['https://github.com/enthought/traits.git',],
