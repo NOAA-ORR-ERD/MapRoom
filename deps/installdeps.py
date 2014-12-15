@@ -10,7 +10,7 @@ deps = [
     
     ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
     ['https://github.com/pyugrid/pyugrid.git',],
-    ['https://github.com/enthought/traits.git',],
+    ['https://github.com/robmcmullen/traits.git',],
     ['https://github.com/robmcmullen/pyface.git',],
     ['https://github.com/robmcmullen/traitsui.git',],
     ['https://github.com/enthought/apptools.git',],
