@@ -1,3 +1,81 @@
+12/15/2014
+---------------------------
+Released 3.0b19
+- RM Reference my version of traits to pick up resource path handling of frozen apps
+- RM Added manual install of configobj to work around py2exe bug
+- RM Added simple installer for python dependencies checked out by git
+- RM Changed all [==|!=] None to [is|is not] None
+- RM Added batch inserting for add_layers
+- RM Removed some debug prints
+- RM Only force ui selection of last layer inserted, not every layer
+- RM Fixed point count property in particle layer base class
+- RM Removed old import of layer_undo
+- RM Fixed bug where initial focus not set to default depth field
+- RM Added colors for particle layers based on status codes in the NC file
+- RM Added missing baseclass method get_info_panel_text
+- RM Fixed #582: added color selector to layer info panel
+- RM Refresh to show selections have been cleared after selecting new layer
+- RM Fixed point selection function
+- RM Added text focus to Point depth field
+- RM Added is_displayed to selection pane classes
+- RM Mostly complete refactoring of InfoPanels
+- RM refs #568: Work-in-progress checkin of InfoPanels rewrite
+- RM Fixed Merge Points pane to use command processor
+- RM Removed unused reproject_all code left over from old version
+- RM Changed process_flags to use events to update all windows viewing the project
+- RM Added SplitLineCommand
+- RM Added has_selection, has_flagged to base Layer class
+- RM Fixed point delete bug
+- CB refactored layers to provide a point_base for point layers to derive from
+- RM Fixed bug where clicking on point in line mode wouldn't deselect line
+- RM Removed check for projection_is_identity
+- RM Removed old undo framework
+- RM Minor cleanups in particles.py
+- CB added some test BNAs for North America and Teh Gulf coast -- helps for seeing if projecitons are working...
+- R Fixed hidden layer check; now specify layer instead of bool
+- RM Added unit tests for InsertPointCommand and MovePointsCommand
+- RM Added hidden_layer_check to undo flags instead of using layer visibility check in mouse_commands
+- CB added a list of files in TestData that work and don't work. Needs completion!
+- RM Added DeleteLinesCommand
+- RM Removed old & unused offset_ methods
+- RM Changed to MovePointsCommand in InfoPanels.py
+- CB removed projection_is_identity
+- RM Added ChangeDepthCommand
+- RM Added CropRectCommand
+- CB removed a few log messages
+- RM Added simple undo history display pane
+- RM Removed vestigial file load/save ui routines
+- RM Added first cut at InsertLineCommand
+- CB re-factored picking to only use the pickable layers.
+- CB refactored picking to support "pickable" layers and non-pickable ones -- so space in teh color map only gets used for pickable layers
+- RM Moved object selection logic into mouse handlers
+- RM Added set_mouse_handler to change mouse mode in update_layer_selection_ui
+- RM Changed esc_key_pressed to clear_all_selections
+- RM small doc updates
+- RM WIP checkin: mouse mode objectification, only PanMode works right now
+- CB got particles layer pretty much working. Still a bug if you load too many
+- RM Added MovePointsCommand
+- CB got particles files working with a points-only renderer.
+- RM Added first cut at a roadmap document for new developers
+- RM Changed particles to use point layer
+- CB added some extra stuff in anticiatpion..
+- CB loading multiple tiemsteps as multiple layers, but crashed if too many,
+- RM First code for new undo & command processor and refreshing via status flags rather than trait events
+- CB first working version of nc_particles loader.
+- RM Refactored vector.py into multiple files
+- RM Added libgeos shared lib to py2app bundle
+- RM Prevent triangulation errors from creating error popups under progress dialog
+- RM Removed non-north-up check since we can handle those images now
+- RM Added debug print for projected transform in GDAL load: win & others differ
+- RM Fixed error reporting bug in load()
+- CB added start of loader code -- still need editor, etc, and to tie it all together -- all for nc_paticles
+- CB replaced "application/x-hdf" with "application/x-nc_ugrid"
+- CB added a HDF-based nc_particles file
+- CB added a bunch of tests to test_file_type.
+- CB added new file recognizer for UGRID nc files -- and updated sample data.
+- CB added identifier for nc_particles, and tests for Ugrid and nc_particles.
+- CB added file type identifyer for nc_particles files.
+
 10/26/2014
 ---------------------------
 Released 3.0b18
