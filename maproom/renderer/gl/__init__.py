@@ -6,6 +6,9 @@ import OpenGL
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
+
+from peppy2 import get_image_path
+
 import maproom.library.rect as rect
 import Picker
 import Font_extents
@@ -99,12 +102,7 @@ class Opengl_renderer():
         gl.glLoadIdentity()
 
     def load_font_texture(self):
-        frozen = getattr(sys, 'frozen', False)
-        font_path = os.path.join(os.path.dirname(__file__), "font.png")
-        if frozen and frozen in ('macosx_app'):
-            root = os.environ['RESOURCEPATH']
-            zippath, modpath = font_path.split(".zip/")
-            font_path = os.path.join(root, modpath)
+        font_path = get_image_path("font.png", __name__)
         image = wx.Image(font_path, wx.BITMAP_TYPE_PNG)
         width = image.GetWidth()
         height = image.GetHeight()
