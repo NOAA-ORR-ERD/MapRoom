@@ -11,7 +11,6 @@ import OpenGL.GL as gl
 import library.coordinates as coordinates
 import renderer
 import library.rect as rect
-import app_globals
 from mouse_commands import *
 
 

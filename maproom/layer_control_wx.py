@@ -5,10 +5,11 @@ import wx
 import wx.glcanvas as glcanvas
 import pyproj
 
+from peppy2 import get_image_path
+
 import library.coordinates as coordinates
 import renderer
 import library.rect as rect
-import app_globals
 from mouse_handler import *
 
 import OpenGL
@@ -88,9 +89,9 @@ class LayerControl(glcanvas.GLCanvas):
 
         self.init_context(self)
 
-        p = os.path.join(app_globals.image_path, "cursors", "hand.ico")
+        p = get_image_path("icons/hand.ico", file=__name__)
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
-        p = os.path.join(app_globals.image_path, "cursors", "hand_closed.ico")
+        p = get_image_path("icons/hand_closed.ico", file=__name__)
         self.hand_closed_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
         self.forced_cursor = None
         
