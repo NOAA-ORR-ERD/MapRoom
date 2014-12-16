@@ -118,11 +118,13 @@ def getGitChangeLogSuggestions(tag, options):
     first = True
     for line in lines:
         if first:
-            email, text = line.split("--")
-            initials = getInitialsFromEmail(email)
-            if isImportantChangeLogLine(text):
-                suggestions.append("- %s %s" % (initials, text))
-            first = False
+            if "--" in line and "@" in line:
+                print line
+                email, text = line.split("--", 1)
+                initials = getInitialsFromEmail(email)
+                if isImportantChangeLogLine(text):
+                    suggestions.append("- %s %s" % (initials, text))
+                first = False
         elif not line:
             first = True
     return suggestions
