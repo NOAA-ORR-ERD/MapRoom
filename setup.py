@@ -22,6 +22,8 @@ import shutil
 import subprocess
 import sys
 
+is_64bit = sys.maxsize > 2**32
+
 import maproom.Version as Version
 
 # find the various headers, libs, etc.
@@ -79,10 +81,12 @@ ext_modules = [bitmap, shape, tree, tessellator, render]
 
 if sys.platform.startswith("win") and "py2exe" in sys.argv:
     import py2exe
-
-    # Help py2exe find MSVCP90.DLL
-    sys.path.append("c:/Program Files (x86)/Microsoft Visual Studio 9.0/VC/redist/x86/Microsoft.VC90.CRT")
-
+    if is_64bit:
+        # Help py2exe find MSVCP90.DLL
+        sys.path.append("c:/Program Files (x86)/Microsoft Visual Studio 9.0/VC/redist/amd64/Microsoft.VC90.CRT")
+    else:
+        # Help py2exe find MSVCP90.DLL
+        sys.path.append("c:/Program Files (x86)/Microsoft Visual Studio 9.0/VC/redist/x86/Microsoft.VC90.CRT")
 
 # Make pyproj's data into a resource instead of including it in the zip file
 # so pyproj can actually find it. (Note: It's actually still included in the zip
@@ -303,6 +307,17 @@ try:
 
         print "*** create installer ***"
 
+        if is_64bit:
+            nsis_arch = """ArchitecturesAllowed=x64
+    ArchitecturesInstallIn64BitMode=x64"""
+            
+            # copy manifest and app config files to work around side-by-side
+            # errors
+            for f in glob(r'pyinstaller/Microsoft.VC90.CRT-9.0.30729.6161/*'):
+                print f
+                shutil.copy(f, win_dist_dir)
+        else:
+            nsis_arch = ""
         iss_filename = "%s\\maproom.iss" % win_dist_dir
         iss_file = open(iss_filename, "w")
         iss_file.write( """
@@ -320,6 +335,7 @@ OutputBaseFilename=Maproom_%s
 SetupIconFile=..\..\maproom\icons\maproom.ico
 Compression=lzma
 SolidCompression=yes
+%s
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -340,7 +356,7 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\Maproom"; Filename
 
 [Run]
 Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags: nowait postinstall skipifsilent
-""" % ( full_version, spaceless_version ) )
+""" % ( full_version, spaceless_version, nsis_arch ) )
         iss_file.close()
 
         os.system(
