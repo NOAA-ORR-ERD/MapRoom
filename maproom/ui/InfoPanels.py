@@ -30,17 +30,17 @@ class InfoField(object):
         self.parent = wx.Window(self.panel)
         self.box =  wx.BoxSizer(wx.VERTICAL)
         self.parent.SetSizer(self.box)
-        self.label = wx.StaticText(self.parent, label=self.field_name)
+        self.label = wx.StaticText(self.parent, label=self.field_name, style=wx.ST_ELLIPSIZE_END)
         bold_font = self.parent.GetFont()
         bold_font.SetWeight(weight=wx.FONTWEIGHT_BOLD)
         self.label.SetFont(bold_font)
         self.ctrl = self.create_control()
         if self.same_line:
             hbox = wx.BoxSizer(wx.HORIZONTAL)
-            hbox.Add(self.label, 1, wx.ALIGN_LEFT | wx.ALIGN_CENTER)
-            hbox.AddStretchSpacer(100)
-            hbox.Add(self.ctrl, 1, wx.ALIGN_RIGHT | wx.ALIGN_CENTER)
-            self.box.Add(hbox, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.panel.SIDE_SPACING)
+            hbox.Add(self.label, 99, wx.EXPAND | wx.ALIGN_LEFT)
+            hbox.AddStretchSpacer(1)
+            hbox.Add(self.ctrl, 0, wx.EXPAND | wx.ALIGN_RIGHT)
+            self.box.Add(hbox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.panel.SIDE_SPACING)
         else:
             self.box.Add(self.label, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.panel.SIDE_SPACING)
             self.box.AddSpacer(self.panel.LABEL_SPACING)
@@ -61,7 +61,7 @@ class LabelField(InfoField):
     same_line = True
     
     def create_control(self):
-        c = wx.StaticText(self.parent)
+        c = wx.StaticText(self.parent, style=wx.ALIGN_RIGHT)
         return c
         
 class SimplePropertyField(LabelField):
@@ -364,7 +364,8 @@ class ColorField(ColorPickerField):
         return layer.color
     
 
-class InfoPanel(wx.Panel):
+PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
+class InfoPanel(PANELTYPE):
 
     """
     A panel for displaying and manipulating the properties of a layer.
@@ -387,7 +388,7 @@ class InfoPanel(wx.Panel):
         self.current_fields = []
         self.field_map = {}
 
-        wx.Panel.__init__(self, parent)
+        PANELTYPE.__init__(self, parent)
         
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
@@ -479,7 +480,7 @@ class InfoPanel(wx.Panel):
             field = self.field_map[field_name]
             field.hide()
 
-        self.sizer.Layout()
+        self.constrain_size()
 
         self.Thaw()
         self.Update()
@@ -496,7 +497,11 @@ class InfoPanel(wx.Panel):
                     field.set_focus()
                 else:
                     field.hide()
+        self.constrain_size()
+    
+    def constrain_size(self):
         self.sizer.Layout()
+        self.SetupScrolling(scroll_x=False)
 
 
 class LayerInfoPanel(InfoPanel):
