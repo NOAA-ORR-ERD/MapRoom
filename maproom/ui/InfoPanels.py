@@ -54,6 +54,9 @@ class InfoField(object):
     def fill_data(self):
         raise NotImplementedError
     
+    def wants_focus(self):
+        return False
+    
     def set_focus(self):
         pass
 
@@ -130,6 +133,9 @@ class PointDepthField(TextEditField):
 
     def is_displayed(self, layer):
         return layer.get_num_points_selected() > 0
+    
+    def wants_focus(self):
+        return True
     
     def set_focus(self):
         self.ctrl.SetSelection(-1, -1)
@@ -450,6 +456,7 @@ class InfoPanel(PANELTYPE):
         self.sizer.Clear(False) # don't delete controls because we reuse them
 
         undisplayed = set(self.field_map.keys())
+        focus = None
         for field_name in fields:
             if field_name not in self.field_map:
                 if field_name not in self.known_fields:
@@ -471,7 +478,8 @@ class InfoPanel(PANELTYPE):
                 field.fill_data(layer)
                 if field_name in undisplayed:
                     undisplayed.remove(field_name)
-                field.set_focus()
+                if field.wants_focus():
+                    focus = field
             else:
                 field.hide()
         
@@ -480,7 +488,7 @@ class InfoPanel(PANELTYPE):
             field = self.field_map[field_name]
             field.hide()
 
-        self.constrain_size()
+        self.constrain_size(focus)
 
         self.Thaw()
         self.Update()
@@ -488,20 +496,25 @@ class InfoPanel(PANELTYPE):
         self.current_fields = list(fields)
     
     def set_fields(self, layer, fields):
+        focus = None
         for field_name in fields:
             if field_name in self.field_map:
                 field = self.field_map[field_name]
                 if field.is_displayed(layer):
                     field.fill_data(layer)
                     field.show()
-                    field.set_focus()
+                    if field.wants_focus():
+                        focus = field
                 else:
                     field.hide()
-        self.constrain_size()
+        self.constrain_size(focus)
     
-    def constrain_size(self):
+    def constrain_size(self, focus=None):
         self.sizer.Layout()
-        self.SetupScrolling(scroll_x=False)
+        if focus is not None:
+            focus.set_focus()
+            self.ScrollChildIntoView(focus.ctrl)
+        self.SetupScrolling(scroll_x=False, scrollToTop=False, scrollIntoView=True)
 
 
 class LayerInfoPanel(InfoPanel):
