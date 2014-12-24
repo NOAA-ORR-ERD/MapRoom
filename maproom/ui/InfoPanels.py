@@ -37,14 +37,14 @@ class InfoField(object):
         self.ctrl = self.create_control()
         if self.same_line:
             hbox = wx.BoxSizer(wx.HORIZONTAL)
-            hbox.Add(self.label, 99, wx.EXPAND | wx.ALIGN_LEFT)
+            hbox.Add(self.label, 99, wx.ALIGN_CENTER)
             hbox.AddStretchSpacer(1)
-            hbox.Add(self.ctrl, 0, wx.EXPAND | wx.ALIGN_RIGHT)
-            self.box.Add(hbox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.panel.SIDE_SPACING)
+            hbox.Add(self.ctrl, 0, wx.ALIGN_CENTER)
+            self.box.Add(hbox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
         else:
-            self.box.Add(self.label, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.panel.SIDE_SPACING)
+            self.box.Add(self.label, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
             self.box.AddSpacer(self.panel.LABEL_SPACING)
-            self.box.Add(self.ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, self.panel.SIDE_SPACING)
+            self.box.Add(self.ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
         self.box.AddSpacer(self.panel.VALUE_SPACING)
 
     def add_to_parent(self):
