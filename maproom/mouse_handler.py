@@ -430,8 +430,8 @@ class LineSelectionMode(PointSelectionMode):
         point_indexes = layer.get_selected_point_indexes()
         if len(point_indexes == 1):
             if not layer.are_points_connected(point_index, point_indexes[0]):
-                layer.insert_line_segment(point_index, point_indexes[0])
-                lm.end_operation_batch()
+                cmd = ConnectPointsCommand(layer, point_index, point_indexes[0])
+                e.process_command(cmd)
                 if not vis:
                     message = "Added line to hidden layer %s" % layer.name
             layer.clear_all_point_selections()

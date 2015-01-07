@@ -107,7 +107,7 @@ class InsertLineCommand(Command):
         self.undo_line = None
     
     def __str__(self):
-        return "Line From Point #%d" % self.index
+        return "Line From Point %d" % self.index
     
     def perform(self, editor):
         self.undo_point = self.layer.insert_point(self.world_point)
@@ -121,6 +121,26 @@ class InsertLineCommand(Command):
         # FIXME: merge undo status
         undo_info = self.layer.delete_line_segment(self.undo_line.index)
         undo_info = self.layer.delete_point(self.undo_point.index)
+        return undo_info
+
+class ConnectPointsCommand(Command):
+    def __init__(self, layer, index1, index2):
+        self.layer = layer
+        self.index1 = index1
+        self.index2 = index2
+        self.undo_line = None
+    
+    def __str__(self):
+        return "Line Connecting Points %d & %d" % (self.index1, self.index2)
+    
+    def perform(self, editor):
+        self.undo_line = self.layer.insert_line_segment(self.index1, self.index2)
+        self.layer.select_point(self.index2)
+        self.undo_line.flags.hidden_layer_check = self.layer
+        return self.undo_line
+
+    def undo(self, editor):
+        undo_info = self.layer.delete_line_segment(self.undo_line.index)
         return undo_info
 
 class SplitLineCommand(Command):
