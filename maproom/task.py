@@ -238,7 +238,7 @@ class DeleteLayerAction(EditorAction):
     image = ImageResource('delete_layer')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_manager.delete_selected_layer)
+        GUI.invoke_later(self.active_editor.delete_selected_layer)
 
 class RaiseLayerAction(EditorAction):
     name = 'Raise Layer'

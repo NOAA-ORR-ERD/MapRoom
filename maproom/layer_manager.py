@@ -192,11 +192,9 @@ class LayerManager(HasTraits):
         for layer in layers:
             layer.check_projection(editor.window)
             if not layer.load_error_string:
-                self.insert_loaded_layer(layer, editor, batch=True)
+                self.insert_loaded_layer(layer, editor)
                 if layer.needs_background_loading():
                     layer.start_background_loading()
-        GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
-        self.dispatch_event('layers_changed')
         return layers
     
     def check_layer(self, layer, window):
@@ -247,10 +245,10 @@ class LayerManager(HasTraits):
             return error
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, batch=False):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None):
         self.dispatch_event('layer_loaded', layer)
         mi = self.get_insertion_multi_index(before, after)
-        self.insert_layer(mi, layer, batch)
+        self.insert_layer(mi, layer)
     
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
@@ -275,7 +273,7 @@ class LayerManager(HasTraits):
             mi = None
         return mi
 
-    def insert_layer(self, at_multi_index, layer, batch=False):
+    def insert_layer(self, at_multi_index, layer):
         if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
@@ -285,8 +283,6 @@ class LayerManager(HasTraits):
             if (layer.type == "folder"):
                 layer = [layer]
         self.insert_layer_recursive(at_multi_index, layer, self.layers)
-        if not batch:
-            self.dispatch_event('layers_changed')
 
     def insert_layer_recursive(self, at_multi_index, layer, tree):
         if (len(at_multi_index) == 1):
@@ -295,6 +291,8 @@ class LayerManager(HasTraits):
             item = tree[at_multi_index[0]]
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
 
+    # FIXME: layer removal commands should return the hierarchy of layers
+    # removed so that the operation can be undone correctly.
     def remove_layer(self, layer):
         mi = self.get_multi_index_of_layer(layer)
         self.remove_layer_at_multi_index(mi)
@@ -302,7 +300,6 @@ class LayerManager(HasTraits):
     def remove_layer_at_multi_index(self, at_multi_index):
         layer = self.remove_layer_recursive(at_multi_index, self.layers)
         self.remove_layer_from_dependents(layer)
-        self.dispatch_event('layers_changed')
 
     def remove_layer_recursive(self, at_multi_index, tree):
         index = at_multi_index[0]
@@ -500,7 +497,8 @@ class LayerManager(HasTraits):
         else:
             layer = LineLayer(manager=self)
         layer.new()
-        self.insert_loaded_layer(layer, editor, before, after, batch=False)
+        self.insert_loaded_layer(layer, editor, before, after)
+        self.dispatch_event('layers_changed')
         if editor is not None:
             GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
         return layer
@@ -512,32 +510,6 @@ class LayerManager(HasTraits):
         folder.name = name
         self.insert_layer(None, folder)
 
-    def delete_selected_layer(self, layer=None):
-        if (layer is None):
-            layer = self.project.layer_tree_control.get_selected_layer()
-        window = self.project.window
-        if (layer is None):
-            window.status_bar.message = "Selected layer to delete!."
-            return
-
-        if (layer.type == "root"):
-            m = "The root node of the layer tree is selected. This will delete all layers in the tree."
-        elif (layer.type == "folder"):
-            m = "A folder in the layer tree is selected. This will delete the entire sub-tree of layers."
-        else:
-            m = "Are you sure you want to delete " + layer.name + "?"
-
-        if window.confirm(m, default=YES) != YES:
-            return
-
-        self.destroy_recursive(layer)
-
-        self.remove_layer(layer)
-        
-        self.project.control.remove_renderer_for_layer(layer)
-
-        self.dispatch_event('layers_changed')
-    
     def get_mergeable_layers(self):
         layers = [layer for layer in self.flatten() if layer.has_points()]
         layers.reverse()

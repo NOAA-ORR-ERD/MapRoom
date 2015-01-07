@@ -66,6 +66,7 @@ class CommandStatus(object):
         self.message = None
         self.refresh_needed = False
         self.projection_changed = False
+        self.layers_changed = False
         
         # Set the following to the layer object if affected
         self.layer_items_moved = None

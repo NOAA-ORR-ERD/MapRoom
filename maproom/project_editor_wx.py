@@ -21,6 +21,7 @@ import Layer_tree_control
 import renderer
 from layers.constants import *
 from mouse_handler import *
+from menu_commands import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -106,6 +107,8 @@ class ProjectEditor(FrameworkEditor):
                 return
 
             self.layer_manager.add_layers(layers, is_project, self)
+            self.layer_tree_control.select_layer(layer)
+            self.layers_changed()
             if is_project:
                 self.path = metadata.uri
             if layers:
@@ -386,6 +389,9 @@ class ProjectEditor(FrameworkEditor):
             vis = self.layer_visibility[f.hidden_layer_check]['layer']
             if not vis:
                 self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
+        
+        if f.layers_changed:
+            self.layers_changed()
             
         self.undo_history.update_history()
 
@@ -584,6 +590,26 @@ class ProjectEditor(FrameworkEditor):
 
     def clickable_object_is_polygon_point(self):
         return renderer.is_polygon_point(self.clickable_object_mouse_is_over)
+
+    def delete_selected_layer(self, layer=None):
+        if layer is None:
+            layer = self.layer_tree_control.get_selected_layer()
+        if layer is None:
+            self.window.status_bar.message = "Selected layer to delete!."
+            return
+
+        if (layer.type == "root"):
+            m = "The root node of the layer tree is selected. This will delete all layers in the tree."
+        elif (layer.type == "folder"):
+            m = "A folder in the layer tree is selected. This will delete the entire sub-tree of layers."
+        else:
+            m = "Are you sure you want to delete " + layer.name + "?"
+
+        if self.window.confirm(m, default=YES) != YES:
+            return
+
+        cmd = DeleteLayerCommand(layer)
+        self.process_command(cmd)
 
     #### wx event handlers ####################################################
 
