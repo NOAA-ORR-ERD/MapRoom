@@ -191,9 +191,10 @@ class DeleteLinesCommand(Command):
         self.undo_line = None
     
     def __str__(self):
-        if len(self.line_indexes) == 1:
+        old_points, old_line_segments, old_line_indexes = self.undo_info.data
+        if len(old_line_indexes) == 1:
             return "Delete Line #%d" % self.line_indexes[0]
-        return "Delete %d Lines" % len(self.line_indexes)
+        return "Delete %d Lines" % len(old_line_indexes)
     
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
@@ -203,7 +204,7 @@ class DeleteLinesCommand(Command):
         old_line_segments = np.copy(self.layer.line_segment_indexes[old_line_indexes])
         old_points = np.copy(self.layer.points[self.point_indexes])
         undo.data = (old_points, old_line_segments, old_line_indexes)
-        print "DeleteLinesCommand: %s" % str(undo.data)
+        print "DeleteLinesCommand: (point indexes, points, line segments, line indexes) %s %s" % (self.point_indexes, str(undo.data))
         undo.flags.refresh_needed = True
         undo.flags.layer_items_moved = self.layer
         undo.flags.layer_contents_deleted = self.layer
@@ -232,6 +233,17 @@ class DeleteLinesCommand(Command):
         offset = np.arange(len(self.point_indexes))
         indexes = self.point_indexes - offset
         self.layer.points = np.insert(self.layer.points, indexes, old_points).view(np.recarray)
+
+        # adjust existing indexes to allow for inserted points
+        offsets1 = np.zeros(np.alen(self.layer.line_segment_indexes))
+        offsets2 = np.zeros(np.alen(self.layer.line_segment_indexes))
+        insertion_space = 0
+        for index in indexes:
+            offsets1 += np.where(self.layer.line_segment_indexes.point1 >= index, 1, 0)
+            offsets2 += np.where(self.layer.line_segment_indexes.point2 >= index, 1, 0)
+        self.layer.line_segment_indexes.point1 += offsets1
+        self.layer.line_segment_indexes.point2 += offsets2
+
         offset = np.arange(len(old_line_indexes))
         indexes = old_line_indexes - offset
         self.layer.line_segment_indexes = np.insert(self.layer.line_segment_indexes, indexes, old_line_segments).view(np.recarray)

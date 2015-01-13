@@ -66,12 +66,31 @@ class TestVerdatUndo(object):
         eq_(689, np.alen(self.layer.points))
         assert np.array_equal(orig_points, self.layer.points)
 
+class TestVerdatDelete(object):
+    def setup(self):
+        self.manager = MockManager()
+        self.layer = self.manager.load_first_layer("../TestData/Verdat/duplicate-points.verdat", "application/x-maproom-verdat")
+
+    def test_delete(self):
+        orig_lsi = np.copy(self.layer.line_segment_indexes)
+
+        points = [9, 10]
+        cmd = DeleteLinesCommand(self.layer, points, None)
+        self.manager.project.process_command(cmd)
+        print self.layer.line_segment_indexes
+        
+        self.manager.project.undo()
+        eq_(orig_lsi[-1], self.layer.line_segment_indexes[-1])
+
 if __name__ == "__main__":
     #unittest.main()
     import time
     
-    t = TestVerdatUndo()
+#    t = TestVerdatUndo()
+#    t.setup()
+#    t.test_add_points()
+#    t.test_move_points()
+#    t.test_move_points_coelesce()
+    t = TestVerdatDelete()
     t.setup()
-    t.test_add_points()
-    t.test_move_points()
-    t.test_move_points_coelesce()
+    t.test_delete()
