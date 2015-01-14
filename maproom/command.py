@@ -64,18 +64,38 @@ class UndoStack(list):
 class CommandStatus(object):
     def __init__(self):
         self.message = None
+        
+        # True if screen redraw needed
         self.refresh_needed = False
+        
+        # True if projection changed on any layer
         self.projection_changed = False
+        
+        # True if layers have been added, removed, renamed or reordered in the
+        # layer manager
         self.layers_changed = False
         
-        # Set the following to the layer object if affected
+        ##### Set the following to the layer object if ...
+        
+        # ...any items within the layer have changed position only
         self.layer_items_moved = None
+        
+        # ...any items have been added to the layer
         self.layer_contents_added = None
+        
+        # ...any items have been removed from the layer
         self.layer_contents_deleted = None
+        
+        # ...any drawing properties changed (color, line width, etc.)
         self.layer_display_properties_changed = None
+        
+        # ...any layer properties changed (layer name, etc.)
         self.layer_metadata_changed = None
+        
+        # ...a message should be displayed if it isn't the top layer and it was edited
         self.hidden_layer_check = None
         
+        # ...needs to be selected after the command finishes
         self.select_layer = None
 
 
