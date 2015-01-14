@@ -515,15 +515,6 @@ class LayerManager(HasTraits):
         layers.reverse()
         return layers
 
-    def merge_layers(self, layer_a, layer_b):
-        layer = LineLayer(manager=self)
-        layer.type = "line"
-        layer.name = "Merged"
-        layer.merge_from_source_layers(layer_a, layer_b)
-        self.dispatch_event('layer_loaded', layer)
-        self.insert_layer(None, layer)
-        self.project.layer_tree_control.select_layer(layer)
-
     def destroy_recursive(self, layer):
         if (self.layer_is_folder(layer)):
             for item in self.get_layer_children(layer):

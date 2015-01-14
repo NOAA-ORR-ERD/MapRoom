@@ -130,6 +130,28 @@ class PointBaseLayer(ProjectedLayer):
     def get_state(self, index):
         ##fixme -- is this needed -- should all points have a state?
         return self.points.state[index]
+
+    def is_mergeable_with(self, other_layer):
+        return hasattr(other_layer, "points")
+    
+    def find_merge_layer_class(self, other_layer):
+        return type(self)
+
+    def merge_from_source_layers(self, layer_a, layer_b):
+        # for now we only handle merging of points and lines
+        self.new()
+        
+        self.merged_points_index = len(layer_a.points)
+
+        n = len(layer_a.points) + len(layer_b.points)
+        self.points = self.make_points(n)
+        self.points[
+            0: len(layer_a.points)
+        ] = layer_a.points.copy()
+        self.points[
+            len(layer_a.points): n
+        ] = layer_b.points.copy()
+        # self.points.state = 0
     
     def create_renderer(self, renderer):
         """Create the graphic renderer for this layer.

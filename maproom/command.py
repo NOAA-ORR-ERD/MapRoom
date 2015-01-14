@@ -92,6 +92,9 @@ class CommandStatus(object):
         # ...any layer properties changed (layer name, etc.)
         self.layer_metadata_changed = None
         
+        # ...this layer was loaded and needs to be broadcast to all views
+        self.layer_loaded = None
+        
         # ...a message should be displayed if it isn't the top layer and it was edited
         self.hidden_layer_check = None
         

@@ -388,20 +388,8 @@ class LineLayer(PointLayer):
         return undo
 
     def merge_from_source_layers(self, layer_a, layer_b):
-        # for now we only handle merging of points and lines
-        self.new()
-        
-        self.merged_points_index = len(layer_a.points)
-
-        n = len(layer_a.points) + len(layer_b.points)
-        self.points = self.make_points(n)
-        self.points[
-            0: len(layer_a.points)
-        ] = layer_a.points.copy()
-        self.points[
-            len(layer_a.points): n
-        ] = layer_b.points.copy()
-        # self.points.state = 0
+        # Use superclass for points
+        super(LineLayer, self).merge_from_source_layers(layer_a, layer_b)
 
         n = len(layer_a.line_segment_indexes) + len(layer_b.line_segment_indexes)
         self.line_segment_indexes = self.make_line_segment_indexes(n)

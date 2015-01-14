@@ -20,6 +20,7 @@ from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
 from mouse_handler import *
+from menu_commands import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -306,7 +307,8 @@ class MergeLayersAction(EditorAction):
             if len(selections) != 2:
                 project.window.error("You must select exactly two layers to merge.")
             else:
-                project.layer_manager.merge_layers(layers[selections[0]], layers[selections[1]])
+                cmd = MergeLayersCommand(layers[selections[0]], layers[selections[1]])
+                project.process_command(cmd)
         dialog.Destroy()
 
 class MergePointsAction(EditorAction):

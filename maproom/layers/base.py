@@ -308,6 +308,36 @@ class Layer(HasTraits):
     def get_display_property(self, prop):
         return ""
 
+    def merge_layer_into_new(self, other_layer):
+        targets = []
+        if self.is_mergeable_with(other_layer):
+            targets.append(self.find_merge_layer_class(other_layer))
+        if other_layer.is_mergeable_with(other_layer):
+            targets.append(other_layer.find_merge_layer_class(self))
+        if not targets:
+            return
+        
+        # Use the most specific layer as the merge layer target
+        if len(targets) > 1:
+            a, b = targets[0], targets[1]
+            if issubclass(a, b):
+                new_layer_cls = a
+            else:
+                new_layer_cls = b
+        else:
+            new_layer_cls = targets[0]
+        
+        layer = new_layer_cls(manager=self.manager)
+        layer.name = "Merged"
+        layer.merge_from_source_layers(self, other_layer)
+        return layer
+    
+    def is_mergeable_with(self, other_layer):
+        return False
+    
+    def find_merge_layer_class(self, other_layer):
+        return None
+
     def merge_from_source_layers(self, layer_a, layer_b):
         raise NotImplementedError
 

@@ -221,7 +221,6 @@ class ProjectEditor(FrameworkEditor):
     def layers_changed(self):
         # log.debug("layers_changed called!!!")
         self.layer_tree_control.rebuild()
-        self.refresh()
     
     def update_layer_selection_ui(self, sel_layer=None):
         if sel_layer is None:
@@ -360,8 +359,6 @@ class ProjectEditor(FrameworkEditor):
         # refresh (False) or in-place, fast refresh (True)
         need_rebuild = {}
         
-        if f.select_layer:
-            self.layer_tree_control.select_layer(f.select_layer)
         if f.layer_items_moved:
             f.layer_items_moved.update_bounds()
             need_rebuild[f.layer_items_moved] = True
@@ -380,8 +377,6 @@ class ProjectEditor(FrameworkEditor):
                 self.layer_manager.layer_contents_changed_in_place = layer
             else:
                 self.layer_manager.layer_contents_changed = layer
-        if f.refresh_needed:
-            self.layer_manager.refresh_needed = True
         
         # Hidden layer check only displayed in current window, not any others
         # that are displaying this project
@@ -390,8 +385,14 @@ class ProjectEditor(FrameworkEditor):
             if not vis:
                 self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
         
-        if f.layers_changed:
+        if f.select_layer:
+            self.layer_tree_control.select_layer(f.select_layer)
+        if f.layer_loaded:
+            self.layer_manager.layer_loaded = f.layer_loaded
+        if f.layers_changed or f.layer_loaded:
             self.layers_changed()
+        if f.refresh_needed:
+            self.layer_manager.refresh_needed = True
             
         self.undo_history.update_history()
 
