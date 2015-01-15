@@ -9,9 +9,10 @@ class UndoStack(list):
     
     def perform(self, cmd, editor):
         if cmd is None:
-            return CommandStatus()
+            return UndoInfo()
         undo_info = cmd.perform(editor)
-        self.add_command(cmd)
+        if undo_info.flags.success:
+            self.add_command(cmd)
         cmd.last_flags = undo_info.flags
         return undo_info
 
@@ -25,10 +26,11 @@ class UndoStack(list):
     def undo(self, editor):
         cmd = self.get_undo_command()
         if cmd is None:
-            return CommandStatus()
+            return UndoInfo()
         undo_info = cmd.undo(editor)
+        if undo_info.flags.success:
+            self.insert_index -= 1
         cmd.last_flags = undo_info.flags
-        self.insert_index -= 1
         return undo_info
     
     def can_redo(self):
@@ -41,10 +43,11 @@ class UndoStack(list):
     def redo(self, editor):
         cmd = self.get_redo_command()
         if cmd is None:
-            return CommandStatus()
+            return UndoInfo()
         undo_info = cmd.perform(editor)
+        if undo_info.flags.success:
+            self.insert_index += 1
         cmd.last_flags = undo_info.flags
-        self.insert_index += 1
         return undo_info
     
     def start_batch(self):
