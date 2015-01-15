@@ -7,6 +7,8 @@ import wx
 
 from peppy2.framework.errors import ProgressCancelError
 
+from ..menu_commands import TriangulateLayerCommand
+
 import logging
 progress_log = logging.getLogger("progress")
 
@@ -121,32 +123,8 @@ class TrianglePanel(wx.Panel):
 
                 return
 
-        t_layer = project.layer_manager.find_dependent_layer(layer, "triangles")
-        if t_layer is None:
-            t_layer = project.layer_manager.add_layer("triangle", after=layer)
-            project.layer_manager.set_dependent_layer(layer, "triangles", t_layer)
-            t_layer.name = "Triangulated %s" % layer.name
-            remove_on_failure = True
-        else:
-            remove_on_failure = False
-        try:
-            progress_log.info("START=Triangulating layer %s" % layer.name)
-            t_layer.triangulate_from_layer(layer, q, a)
-        except ProgressCancelError, e:
-            if remove_on_failure:
-                project.layer_manager.remove_layer(t_layer)
-        except Exception as e:
-            progress_log.info("END")
-            print traceback.format_exc(e)
-            if remove_on_failure:
-                project.layer_manager.remove_layer(t_layer)
-            layer.highlight_exception(e)
-            project.window.error(e.message, "Triangulate Error")
-        finally:
-            progress_log.info("END")
-
-        project.refresh()
-        project.layer_tree_control.select_layer(layer)
+        cmd = TriangulateLayerCommand(layer, q, a)
+        project.process_command(cmd)
 
 
 if __name__ == "__main__":

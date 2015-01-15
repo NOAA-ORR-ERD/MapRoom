@@ -1,7 +1,12 @@
 import numpy as np
 
+from peppy2.framework.errors import ProgressCancelError
+
 from command import Command, UndoInfo
 from layers import Grid, LineLayer, TriangleLayer
+
+import logging
+progress_log = logging.getLogger("progress")
 
 
 class AddLayerCommand(Command):
@@ -112,4 +117,63 @@ class MergeLayersCommand(Command):
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
+        return undo
+
+class TriangulateLayerCommand(Command):
+    def __init__(self, layer, q, a):
+        Command.__init__(self)
+        self.layer = layer
+        self.q = q
+        self.a = a
+    
+    def __str__(self):
+        return "Triangulate Layer %s" % self.layer.name
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        self.undo_info = undo = UndoInfo()
+        t_layer = TriangleLayer(manager=lm)
+        try:
+            progress_log.info("START=Triangulating layer %s" % self.layer.name)
+            t_layer.triangulate_from_layer(self.layer, self.q, self.a)
+        except ProgressCancelError, e:
+            self.undo_info.flags.success = False
+        except Exception as e:
+            progress_log.info("END")
+            print traceback.format_exc(e)
+            self.layer.highlight_exception(e)
+            editor.window.error(e.message, "Triangulate Error")
+        finally:
+            progress_log.info("END")
+
+        if self.undo_info.flags.success:
+            t_layer.name = "Triangulated %s" % self.layer.name
+            old_t_layer = lm.find_dependent_layer(self.layer, "triangles")
+            if old_t_layer is not None:
+                lm.remove_layer(old_t_layer)
+            lm.insert_loaded_layer(t_layer, editor, after=self.layer)
+            lm.set_dependent_layer(self.layer, "triangles", t_layer)
+                
+            undo.flags.layers_changed = True
+            undo.flags.refresh_needed = True
+            undo.flags.select_layer = t_layer
+            undo.flags.layer_loaded = t_layer
+
+            undo.data = (t_layer, old_t_layer)
+        
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        t_layer, old_t_layer = self.undo_info.data
+        
+        insertion_index = lm.get_multi_index_of_layer(t_layer)
+        lm.remove_layer_at_multi_index(insertion_index)
+        if old_t_layer is not None:
+            lm.insert_layer(insertion_index, old_t_layer)
+        
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        undo.flags.select_layer = old_t_layer
         return undo
