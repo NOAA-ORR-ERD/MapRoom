@@ -390,7 +390,7 @@ class ProjectEditor(FrameworkEditor):
         if f.layer_loaded:
             self.layer_manager.layer_loaded = f.layer_loaded
         if f.layers_changed or f.layer_loaded:
-            self.layers_changed()
+            self.layer_manager.layers_changed = True
         if f.refresh_needed:
             self.layer_manager.refresh_needed = True
             
