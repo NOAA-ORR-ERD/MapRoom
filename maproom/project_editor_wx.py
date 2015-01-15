@@ -326,7 +326,8 @@ class ProjectEditor(FrameworkEditor):
             self.undo_label = "Undo"
             self.can_undo = False
         else:
-            self.undo_label = "Undo: {0}".format(command)
+            text = str(command).replace("&", "&&")
+            self.undo_label = "Undo: %s" % text
             self.can_undo = True
             
         command = self.layer_manager.undo_stack.get_redo_command()
@@ -334,7 +335,8 @@ class ProjectEditor(FrameworkEditor):
             self.redo_label = "Redo"
             self.can_redo = False
         else:
-            self.redo_label = "Redo: {0}".format(command)
+            text = str(command).replace("&", "&&")
+            self.redo_label = "Redo: %s" % text
             self.can_redo = True
             
         self.dirty = self.can_undo
