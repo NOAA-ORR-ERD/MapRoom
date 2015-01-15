@@ -348,10 +348,7 @@ class ProjectEditor(FrameworkEditor):
         self.process_flags(undo.flags)
     
     def process_command(self, command):
-        if command is None:
-            return
-        undo = command.perform(self)
-        self.layer_manager.undo_stack.add_command(command)
+        undo = self.layer_manager.undo_stack.perform(command, self)
         self.process_flags(undo.flags)
     
     def process_flags(self, f):

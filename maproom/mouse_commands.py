@@ -4,9 +4,9 @@ from command import Command, UndoInfo
 
 class InsertPointCommand(Command):
     def __init__(self, layer, world_point):
+        Command.__init__(self)
         self.layer = layer
         self.world_point = world_point
-        self.undo_info = None
     
     def __str__(self):
         return "Add Point #%d" % self.undo_info.index
@@ -23,11 +23,11 @@ class InsertPointCommand(Command):
 
 class MovePointsCommand(Command):
     def __init__(self, layer, indexes, dx, dy):
+        Command.__init__(self)
         self.layer = layer
         self.indexes = indexes
         self.dx = dx
         self.dy = dy
-        self.undo_info = None
     
     def __str__(self):
         if len(self.indexes) == 1:
@@ -67,10 +67,10 @@ class MovePointsCommand(Command):
 
 class ChangeDepthCommand(Command):
     def __init__(self, layer, indexes, depth):
+        Command.__init__(self)
         self.layer = layer
         self.indexes = indexes
         self.depth = depth
-        self.undo_info = None
     
     def __str__(self):
         return "Set Depth to %s" % str(self.depth)
@@ -100,6 +100,7 @@ class ChangeDepthCommand(Command):
 
 class InsertLineCommand(Command):
     def __init__(self, layer, index, world_point):
+        Command.__init__(self)
         self.layer = layer
         self.index = index
         self.world_point = world_point
@@ -125,6 +126,7 @@ class InsertLineCommand(Command):
 
 class ConnectPointsCommand(Command):
     def __init__(self, layer, index1, index2):
+        Command.__init__(self)
         self.layer = layer
         self.index1 = index1
         self.index2 = index2
@@ -145,6 +147,7 @@ class ConnectPointsCommand(Command):
 
 class SplitLineCommand(Command):
     def __init__(self, layer, index, world_point):
+        Command.__init__(self)
         self.layer = layer
         self.index = index
         self.world_point = world_point
@@ -184,6 +187,7 @@ class SplitLineCommand(Command):
 
 class DeleteLinesCommand(Command):
     def __init__(self, layer, point_indexes, line_indexes):
+        Command.__init__(self)
         self.layer = layer
         self.point_indexes = point_indexes
         self.line_indexes = line_indexes
@@ -262,9 +266,9 @@ class MergePointsCommand(DeleteLinesCommand):
     
 class CropRectCommand(Command):
     def __init__(self, layer, world_rect):
+        Command.__init__(self)
         self.layer = layer
         self.world_rect = world_rect
-        self.undo_info = None
     
     def __str__(self):
         return "Crop"
@@ -280,9 +284,9 @@ class CropRectCommand(Command):
     
 class LayerColorCommand(Command):
     def __init__(self, layer, color):
+        Command.__init__(self)
         self.layer = layer
         self.color = color
-        self.undo_info = None
     
     def __str__(self):
         return "Layer Color"

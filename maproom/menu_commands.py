@@ -6,10 +6,10 @@ from layers import Grid, LineLayer, TriangleLayer
 
 class AddLayerCommand(Command):
     def __init__(self, type, before=None, after=None):
+        Command.__init__(self)
         self.type = type
         self.before = before
         self.after = after
-        self.undo_info = None
     
     def __str__(self):
         return "Add %s Layer" % self.type.title()
@@ -51,8 +51,8 @@ class AddLayerCommand(Command):
 
 class DeleteLayerCommand(Command):
     def __init__(self, layer):
+        Command.__init__(self)
         self.layer = layer
-        self.undo_info = None
     
     def __str__(self):
         return "Delete Layer %s" % self.layer.name
@@ -78,9 +78,9 @@ class DeleteLayerCommand(Command):
 
 class MergeLayersCommand(Command):
     def __init__(self, layer_a, layer_b):
+        Command.__init__(self)
         self.layer_a = layer_a
         self.layer_b = layer_b
-        self.undo_info = None
     
     def __str__(self):
         return "Merge Layers %s & %s" % (self.layer_a.name, self.layer_b.name)

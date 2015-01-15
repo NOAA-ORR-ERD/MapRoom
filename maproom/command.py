@@ -7,6 +7,14 @@ class UndoStack(list):
         self.insert_index = 0
         self.batch = self
     
+    def perform(self, cmd, editor):
+        if cmd is None:
+            return CommandStatus()
+        undo_info = cmd.perform(editor)
+        self.add_command(cmd)
+        cmd.last_flags = undo_info.flags
+        return undo_info
+
     def can_undo(self):
         return self.insert_index > 0
     
@@ -16,11 +24,12 @@ class UndoStack(list):
     
     def undo(self, editor):
         cmd = self.get_undo_command()
-        if cmd is not None:
-            undo_info = cmd.undo(editor)
-            self.insert_index -= 1
-            return undo_info
-        return None
+        if cmd is None:
+            return CommandStatus()
+        undo_info = cmd.undo(editor)
+        cmd.last_flags = undo_info.flags
+        self.insert_index -= 1
+        return undo_info
     
     def can_redo(self):
         return self.insert_index < len(self)
@@ -31,11 +40,12 @@ class UndoStack(list):
     
     def redo(self, editor):
         cmd = self.get_redo_command()
-        if cmd is not None:
-            undo_info = cmd.perform(editor)
-            self.insert_index += 1
-            return undo_info
-        return None
+        if cmd is None:
+            return CommandStatus()
+        undo_info = cmd.perform(editor)
+        cmd.last_flags = undo_info.flags
+        self.insert_index += 1
+        return undo_info
     
     def start_batch(self):
         if self.batch == self:
@@ -63,6 +73,10 @@ class UndoStack(list):
 
 class CommandStatus(object):
     def __init__(self):
+        # True if command successfully completes, must set to False on failure
+        self.success = True
+        
+        # Message displayed to the user
         self.message = None
         
         # True if screen redraw needed
@@ -112,6 +126,10 @@ class UndoInfo(object):
         return "index=%d, flags=%s" % (self.index, str(dir(self.flags)))
 
 class Command(object):
+    def __init__(self):
+        self.undo_info = None
+        self.last_flags = None
+
     def __str__(self):
         return "<unnamed command>"
     
