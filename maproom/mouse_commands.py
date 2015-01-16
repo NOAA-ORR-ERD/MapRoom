@@ -3,9 +3,13 @@ import numpy as np
 from command import Command, UndoInfo
 
 class InsertPointCommand(Command):
+    serialize_order = [
+        ('layer', 'layer'),
+        ('world_point', 'point'),
+        ]
+    
     def __init__(self, layer, world_point):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.world_point = world_point
     
     def __str__(self):
@@ -22,9 +26,15 @@ class InsertPointCommand(Command):
         return undo_info
 
 class MovePointsCommand(Command):
+    serialize_order =  [
+        ('layer', 'layer'),
+        ('indexes', 'list_int'),
+        ('dx', 'float'),
+        ('dy', 'float'),
+        ]
+    
     def __init__(self, layer, indexes, dx, dy):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.indexes = indexes
         self.dx = dx
         self.dy = dy
@@ -66,9 +76,14 @@ class MovePointsCommand(Command):
         return self.undo_info
 
 class ChangeDepthCommand(Command):
+    serialize_order =  [
+        ('layer', 'layer'),
+        ('indexes', 'list_int'),
+        ('depth', 'float'),
+        ]
+    
     def __init__(self, layer, indexes, depth):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.indexes = indexes
         self.depth = depth
     
@@ -99,9 +114,14 @@ class ChangeDepthCommand(Command):
         return self.undo_info
 
 class InsertLineCommand(Command):
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('index', 'int'),
+            ('world_point', 'point'),
+            ]
+    
     def __init__(self, layer, index, world_point):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.index = index
         self.world_point = world_point
         self.undo_point = None
@@ -125,9 +145,14 @@ class InsertLineCommand(Command):
         return undo_info
 
 class ConnectPointsCommand(Command):
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('index1', 'int'),
+            ('index2', 'int'),
+            ]
+    
     def __init__(self, layer, index1, index2):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.index1 = index1
         self.index2 = index2
         self.undo_line = None
@@ -146,9 +171,14 @@ class ConnectPointsCommand(Command):
         return undo_info
 
 class SplitLineCommand(Command):
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('index', 'int'),
+            ('world_point', 'point'),
+            ]
+    
     def __init__(self, layer, index, world_point):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.index = index
         self.world_point = world_point
         self.undo_point = None
@@ -186,9 +216,14 @@ class SplitLineCommand(Command):
         return undo_info
 
 class DeleteLinesCommand(Command):
-    def __init__(self, layer, point_indexes, line_indexes):
-        Command.__init__(self)
-        self.layer = layer
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('point_indexes', 'list_int'),
+            ('line_indexes', 'list_int'),
+            ]
+    
+    def __init__(self, layer, point_indexes, line_indexes=None):
+        Command.__init__(self, layer)
         self.point_indexes = point_indexes
         self.line_indexes = line_indexes
         self.undo_point = None
@@ -258,6 +293,11 @@ class DeleteLinesCommand(Command):
         return undo
 
 class MergePointsCommand(DeleteLinesCommand):
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('point_indexes', 'list_int'),
+            ]
+    
     def __init__(self, layer, point_indexes):
         DeleteLinesCommand.__init__(self, layer, point_indexes, None)
     
@@ -265,9 +305,13 @@ class MergePointsCommand(DeleteLinesCommand):
         return "Merge Points"
     
 class CropRectCommand(Command):
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('world_rect', 'rect'),
+            ]
+    
     def __init__(self, layer, world_rect):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.world_rect = world_rect
     
     def __str__(self):
@@ -283,9 +327,13 @@ class CropRectCommand(Command):
         return undo_info
     
 class LayerColorCommand(Command):
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('color', 'color'),
+            ]
+    
     def __init__(self, layer, color):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.color = color
     
     def __str__(self):

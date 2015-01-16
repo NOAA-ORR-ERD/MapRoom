@@ -10,6 +10,10 @@ progress_log = logging.getLogger("progress")
 
 
 class AddLayerCommand(Command):
+    serialize_params =  [
+            ('type', 'string'),
+            ]
+    
     def __init__(self, type, before=None, after=None):
         Command.__init__(self)
         self.type = type
@@ -55,9 +59,9 @@ class AddLayerCommand(Command):
         return undo
 
 class DeleteLayerCommand(Command):
-    def __init__(self, layer):
-        Command.__init__(self)
-        self.layer = layer
+    serialize_order =  [
+            ('layer', 'layer'),
+            ]
     
     def __str__(self):
         return "Delete Layer %s" % self.layer.name
@@ -82,6 +86,11 @@ class DeleteLayerCommand(Command):
         return self.undo_info
 
 class MergeLayersCommand(Command):
+    serialize_order =  [
+            ('layer_a', 'layer'),
+            ('layer_b', 'layer'),
+            ]
+    
     def __init__(self, layer_a, layer_b):
         Command.__init__(self)
         self.layer_a = layer_a
@@ -120,15 +129,20 @@ class MergeLayersCommand(Command):
         return undo
 
 class TriangulateLayerCommand(Command):
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('q', 'float'),
+            ('a', 'float'),
+            ]
+
     def __init__(self, layer, q, a):
-        Command.__init__(self)
-        self.layer = layer
+        Command.__init__(self, layer)
         self.q = q
         self.a = a
     
     def __str__(self):
         return "Triangulate Layer %s" % self.layer.name
-
+    
     def perform(self, editor):
         lm = editor.layer_manager
         self.undo_info = undo = UndoInfo()

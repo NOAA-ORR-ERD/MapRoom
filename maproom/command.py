@@ -60,6 +60,8 @@ class UndoStack(list):
     def add_command(self, command):
         self.batch.insert_at_index(command)
         print self.batch.history_list()
+        s = self.serialize()
+        print s
     
     def insert_at_index(self, command):
         last = self.get_undo_command()
@@ -72,6 +74,12 @@ class UndoStack(list):
     def history_list(self):
         h = [str(c) for c in self]
         return h
+    
+    def serialize(self):
+        s = Serializer()
+        for c in self:
+            s.add(c)
+        return s
 
 
 class CommandStatus(object):
@@ -129,7 +137,12 @@ class UndoInfo(object):
         return "index=%d, flags=%s" % (self.index, str(dir(self.flags)))
 
 class Command(object):
-    def __init__(self):
+    serialize_order = [
+        ('layer', 'layer'),
+        ]
+    
+    def __init__(self, layer=None):
+        self.layer = layer
         self.undo_info = None
         self.last_flags = None
 
@@ -147,6 +160,50 @@ class Command(object):
     
     def undo(self, editor):
         pass
+
+
+class Serializer(object):
+    def __init__(self):
+        self.serialized_commands = []
+        self.layers = []
+    
+    def __str__(self):
+        lines = []
+        lines.append("Layers:")
+        for layer in self.layers:
+            lines.append(str(layer))
+        lines.append("Commands:")
+        for cmd in self.serialized_commands:
+            lines.append(str(cmd))
+        return "\n".join(lines)
+    
+    def add(self, cmd):
+        sc = SerializedCommand(cmd)
+        self.serialized_commands.append(sc)
+    
+    def get_layer_from_ref(self, layer_ref):
+        return self.layers[layer_ref]
+    
+    def get_ref_from_layer(self, layer):
+        if layer is None:
+            return None
+        try:
+            return self.layers.index(layer)
+        except ValueError:
+            self.layers.append(layer)
+            return len(self.layers) - 1
+        
+
+class SerializedCommand(object):
+    def __init__(self, cmd):
+        self.cmd_cls = cmd.__class__.__name__
+        p = []
+        for name, type in [(n[0], n[1]) for n in cmd.serialize_order]:
+            p.append(getattr(cmd, name))
+        self.params = p
+
+    def __str__(self):
+        return "%s %s" % (self.cmd_cls, str(self.params))
 
 
 class Batch(UndoStack):
