@@ -222,8 +222,10 @@ class TriangulateLayerCommand(Command):
         except ProgressCancelError, e:
             self.undo_info.flags.success = False
         except Exception as e:
-            progress_log.info("END")
+            import traceback
             print traceback.format_exc(e)
+            progress_log.info("END")
+            self.undo_info.flags.success = False
             self.layer.highlight_exception(e)
             editor.window.error(e.message, "Triangulate Error")
         finally:
