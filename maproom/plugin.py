@@ -46,6 +46,4 @@ class MaproomPlugin(FrameworkPlugin):
             ])
 
     def start(self):
-        from maproom.task import MaproomProjectTask
-        dummy = MaproomProjectTask()
-        self.application.name = dummy.about_title
+        pass
