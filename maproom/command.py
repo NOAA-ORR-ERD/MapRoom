@@ -82,10 +82,46 @@ class UndoStack(list):
         return s
 
 
+class LayerStatus(object):
+    def __init__(self, layer):
+        self.layer = layer
+        
+        # True if items within the layer have changed position only
+        self.layer_items_moved = False
+        
+        # True if items have been added to the layer
+        self.layer_contents_added = False
+        
+        # True if items have been removed from the layer
+        self.layer_contents_deleted = False
+        
+        # True if drawing properties changed (color, line width, etc.)
+        self.layer_display_properties_changed = False
+        
+        # True if layer properties changed (layer name, etc.)
+        self.layer_metadata_changed = False
+        
+        # True if this layer was loaded and needs to be broadcast to all views
+        self.layer_loaded = False
+        
+        # True if a message should be displayed if it isn't the top layer and
+        # it was edited
+        self.hidden_layer_check = False
+        
+        # ...needs to be selected after the command finishes
+        self.select_layer = False
+        
+        # True if layer should be zoomed
+        self.zoom_to_layer = False
+    
+
 class CommandStatus(object):
     def __init__(self):
         # True if command successfully completes, must set to False on failure
         self.success = True
+        
+        # List of errors encountered
+        self.errors = []
         
         # Message displayed to the user
         self.message = None
@@ -125,6 +161,13 @@ class CommandStatus(object):
         
         # ...needs to be selected after the command finishes
         self.select_layer = None
+        
+        self.layer_flags = []
+    
+    def add_layer_flags(self, layer):
+        lf = LayerStatus(layer)
+        self.layer_flags.append(lf)
+        return lf
 
 
 class UndoInfo(object):

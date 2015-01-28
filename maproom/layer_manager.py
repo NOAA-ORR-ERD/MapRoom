@@ -163,19 +163,6 @@ class LayerManager(HasTraits):
         callback = functools.partial(self.post_event, event)
         return callback
     
-    def load_layers_from_metadata(self, metadata):
-        loader, layers = loaders.load_layers(metadata, manager=self)
-        if layers is None:
-            log.warning("LAYER LOAD ERROR: %s" % "Unknown file type %s for %s" % (metadata.mime, metadata.uri))
-            return None
-        
-        errors = []
-        for layer in layers:
-            if layer.load_error_string != "":
-                errors.append("LAYER LOAD ERROR: %s" % layer.load_error_string)
-        
-        return layers, errors, loader.project
-    
     def add_layers(self, layers, is_project, editor):
         if is_project:
             # remove all other layers so the project can be inserted in the

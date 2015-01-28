@@ -19,6 +19,7 @@ from layer_control_wx import LayerControl
 from layer_manager import LayerManager
 import Layer_tree_control
 import renderer
+from layers import loaders
 from layers.constants import *
 from mouse_handler import *
 from menu_commands import *
@@ -92,27 +93,14 @@ class ProjectEditor(FrameworkEditor):
         if guess is None:
             path = self.path
         else:
-            try:
-                metadata = guess.get_metadata()
-                progress_log.info("START=Loading %s" % metadata.uri)
-                layers, errors, is_project = self.layer_manager.load_layers_from_metadata(metadata)
-            except ProgressCancelError, e:
-                errors = [e.message]
-            finally:
-                progress_log.info("END")
-            
-            if errors:
-                text = "\n\n".join(errors)
-                self.window.error(text)
-                return
-
-            self.layer_manager.add_layers(layers, is_project, self)
-            self.layer_tree_control.select_layer(layer)
-            self.layers_changed()
-            if is_project:
+            metadata = guess.get_metadata()
+            loader = loaders.get_loader(metadata)
+            if loader.project:
+                print "FIXME: Add load project command that clears all layers"
                 self.path = metadata.uri
-            if layers:
-                self.zoom_to_layers(layers)
+            else:
+                cmd = LoadLayersCommand(metadata)
+                self.process_command(cmd)
 
         self.dirty = False
 
@@ -357,6 +345,35 @@ class ProjectEditor(FrameworkEditor):
         # rebuild flags for each layer; value is whether or not it needs full
         # refresh (False) or in-place, fast refresh (True)
         need_rebuild = {}
+        select_layer = None
+        layers_changed = False
+        zoom_layers = []
+        
+        for lf in f.layer_flags:
+            layer = lf.layer
+            if lf.layer_items_moved:
+                layer.update_bounds()
+                need_rebuild[layer] = True
+            if lf.layer_display_properties_changed:
+                need_rebuild[layer] = False
+                f.refresh_needed = True
+            if lf.layer_contents_added or lf.layer_contents_deleted:
+                need_rebuild[layer] = False
+                f.refresh_needed = True
+            # Hidden layer check only displayed in current window, not any others
+            # that are displaying this project
+            if lf.hidden_layer_check:
+                vis = self.layer_visibility[layer]['layer']
+                if not vis:
+                    self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
+            if lf.select_layer:
+                # only the last layer in the list will be selected
+                select_layer = layer
+            if lf.layer_loaded:
+                self.layer_manager.layer_loaded = layer
+                layers_changed = True
+            if lf.zoom_to_layer:
+                zoom_layers.append(layer)
         
         if f.layer_items_moved:
             f.layer_items_moved.update_bounds()
@@ -384,12 +401,16 @@ class ProjectEditor(FrameworkEditor):
             if not vis:
                 self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
         
+        if select_layer:
+            self.layer_tree_control.select_layer(select_layer)
         if f.select_layer:
             self.layer_tree_control.select_layer(f.select_layer)
         if f.layer_loaded:
             self.layer_manager.layer_loaded = f.layer_loaded
-        if f.layers_changed or f.layer_loaded:
+        if layers_changed or f.layers_changed or f.layer_loaded:
             self.layer_manager.layers_changed = True
+        if zoom_layers:
+            self.zoom_to_layers(zoom_layers)
         if f.refresh_needed:
             self.layer_manager.refresh_needed = True
             

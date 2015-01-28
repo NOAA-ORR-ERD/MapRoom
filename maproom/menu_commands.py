@@ -1,13 +1,80 @@
 import numpy as np
 
 from peppy2.framework.errors import ProgressCancelError
+from peppy2.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import Grid, LineLayer, TriangleLayer
+from layers import loaders, Grid, LineLayer, TriangleLayer
 
 import logging
 progress_log = logging.getLogger("progress")
 
+
+class LoadLayersCommand(Command):
+    serialize_params =  [
+            ('metadata', 'file_metadata'),
+            ]
+    
+    def __init__(self, metadata):
+        Command.__init__(self)
+        self.metadata = metadata
+    
+    def __str__(self):
+        return "Load Layers From %s" % self.metadata.uri
+    
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        lm = editor.layer_manager
+        loader = loaders.get_loader(self.metadata)
+        try:
+            progress_log.info("START=Loading %s" % self.metadata.uri)
+            layers = loader.load(self.metadata, manager=lm)
+        except ProgressCancelError, e:
+            undo.flags.success = False
+            undo.errors = [e.message]
+        finally:
+            progress_log.info("END")
+        
+        if not undo.flags.success:
+            return undo
+        
+        if layers is None:
+            undo.flags.success = False
+            undo.errors = ["Unknown file type %s for %s" % (metadata.mime, metadata.uri)]
+        else:
+            errors = []
+            for layer in layers:
+                if layer.load_error_string != "":
+                    errors.append(layer.load_error_string)
+            if errors:
+                undo.flags.success = False
+                undo.errors = errors
+
+        if undo.flags.success:
+            lm.add_layers(layers, False, editor)
+            for layer in layers:
+                lf = undo.flags.add_layer_flags(layer)
+                lf.select_layer = True
+                lf.layer_loaded = True
+                lf.zoom_to_layer = True
+                
+            undo.flags.layers_changed = True
+            undo.flags.refresh_needed = True
+            undo.data = (layers,)
+        
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layers, = self.undo_info.data
+        
+        for layer in layers:
+            lm.remove_layer(layer)
+        
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        return undo
 
 class AddLayerCommand(Command):
     serialize_params =  [
