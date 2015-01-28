@@ -337,7 +337,7 @@ class CropRectCommand(Command):
 class LayerColorCommand(Command):
     serialize_order =  [
             ('layer', 'layer'),
-            ('color', 'color'),
+            ('color', 'int'),
             ]
     
     def __init__(self, layer, color):
