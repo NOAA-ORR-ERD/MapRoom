@@ -3,6 +3,7 @@ import numpy as np
 from command import Command, UndoInfo
 
 class InsertPointCommand(Command):
+    short_name = "pt"
     serialize_order = [
         ('layer', 'layer'),
         ('world_point', 'point'),
@@ -27,6 +28,7 @@ class InsertPointCommand(Command):
         return undo_info
 
 class MovePointsCommand(Command):
+    short_name = "move_pt"
     serialize_order =  [
         ('layer', 'layer'),
         ('indexes', 'list_int'),
@@ -78,6 +80,7 @@ class MovePointsCommand(Command):
         return self.undo_info
 
 class ChangeDepthCommand(Command):
+    short_name = "depth"
     serialize_order =  [
         ('layer', 'layer'),
         ('indexes', 'list_int'),
@@ -117,6 +120,7 @@ class ChangeDepthCommand(Command):
         return self.undo_info
 
 class InsertLineCommand(Command):
+    short_name = "line_to"
     serialize_order =  [
             ('layer', 'layer'),
             ('index', 'int'),
@@ -149,6 +153,7 @@ class InsertLineCommand(Command):
         return undo_info
 
 class ConnectPointsCommand(Command):
+    short_name = "line"
     serialize_order =  [
             ('layer', 'layer'),
             ('index1', 'int'),
@@ -176,6 +181,7 @@ class ConnectPointsCommand(Command):
         return undo_info
 
 class SplitLineCommand(Command):
+    short_name = "split"
     serialize_order =  [
             ('layer', 'layer'),
             ('index', 'int'),
@@ -222,6 +228,7 @@ class SplitLineCommand(Command):
         return undo_info
 
 class DeleteLinesCommand(Command):
+    short_name = "del"
     serialize_order =  [
             ('layer', 'layer'),
             ('point_indexes', 'list_int'),
@@ -301,6 +308,7 @@ class DeleteLinesCommand(Command):
         return undo
 
 class MergePointsCommand(DeleteLinesCommand):
+    short_name = "merge_pt"
     serialize_order =  [
             ('layer', 'layer'),
             ('point_indexes', 'list_int'),
@@ -313,6 +321,7 @@ class MergePointsCommand(DeleteLinesCommand):
         return "Merge Points"
     
 class CropRectCommand(Command):
+    short_name = "crop"
     serialize_order =  [
             ('layer', 'layer'),
             ('world_rect', 'rect'),
@@ -335,6 +344,7 @@ class CropRectCommand(Command):
         return undo_info
     
 class LayerColorCommand(Command):
+    short_name = "color"
     serialize_order =  [
             ('layer', 'layer'),
             ('color', 'int'),

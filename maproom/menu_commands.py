@@ -11,6 +11,7 @@ progress_log = logging.getLogger("progress")
 
 
 class LoadLayersCommand(Command):
+    short_name = "load"
     serialize_order =  [
             ('metadata', 'file_metadata'),
             ]
@@ -77,6 +78,7 @@ class LoadLayersCommand(Command):
         return undo
 
 class AddLayerCommand(Command):
+    short_name = "add_layer"
     serialize_order =  [
             ('type', 'string'),
             ]
@@ -127,6 +129,7 @@ class AddLayerCommand(Command):
         return undo
 
 class DeleteLayerCommand(Command):
+    short_name = "del_layer"
     serialize_order =  [
             ('layer', 'layer'),
             ]
@@ -154,6 +157,7 @@ class DeleteLayerCommand(Command):
         return self.undo_info
 
 class MergeLayersCommand(Command):
+    short_name = "merge_layers"
     serialize_order =  [
             ('layer_a', 'layer'),
             ('layer_b', 'layer'),
@@ -198,6 +202,7 @@ class MergeLayersCommand(Command):
         return undo
 
 class TriangulateLayerCommand(Command):
+    short_name = "triangulate"
     serialize_order =  [
             ('layer', 'layer'),
             ('q', 'float'),

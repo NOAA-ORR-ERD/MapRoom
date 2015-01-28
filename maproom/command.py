@@ -155,6 +155,7 @@ class UndoInfo(object):
         return "index=%d, flags=%s" % (self.index, str(dir(self.flags)))
 
 class Command(object):
+    short_name = None
     serialize_order = [
         ('layer', 'layer'),
         ]
@@ -174,6 +175,11 @@ class Command(object):
 
     def __str__(self):
         return "<unnamed command>"
+    
+    def get_serialized_name(self):
+        if self.short_name is None:
+            return self.__class__.__name__
+        return self.short_name
     
     def coalesce(self, next_command):
         return False

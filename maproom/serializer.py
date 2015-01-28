@@ -123,7 +123,7 @@ class SerializedCommand(object):
     converters = get_converters()
     
     def __init__(self, cmd):
-        self.cmd_cls = cmd.__class__.__name__
+        self.cmd_name = cmd.get_serialized_name()
         p = []
         for name, stype in [(n[0], n[1]) for n in cmd.serialize_order]:
             p.append((stype, getattr(cmd, name)))
@@ -142,4 +142,4 @@ class SerializedCommand(object):
             output.append(" ".join(string_values))
         
         text = " ".join(output)
-        return "%s %s" % (self.cmd_cls, text)
+        return "%s %s" % (self.cmd_name, text)
