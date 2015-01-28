@@ -296,7 +296,8 @@ class PolygonLayer(PointLayer):
         undo.data = old_state
         undo.flags.refresh_needed = True
         undo.flags.items_moved = True
-        undo.flags.layer_contents_deleted = self
+        lf = undo.flags.add_layer_flags(self)
+        lf.layer_contents_deleted = True
         return undo
     
     def get_restore_state(self):
@@ -308,8 +309,9 @@ class PolygonLayer(PointLayer):
         undo.flags.refresh_needed = True
         undo.flags.items_moved = True
         # Don't know if items were added or deleted, so mark both
-        undo.flags.layer_contents_added = self
-        undo.flags.layer_contents_deleted = self
+        lf = undo.flags.add_layer_flags(self)
+        lf.layer_contents_added = True
+        lf.layer_contents_deleted = True
         return undo
 
     def create_renderer(self, renderer):

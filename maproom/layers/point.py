@@ -227,18 +227,19 @@ class PointLayer(PointBaseLayer):
         p = np.array([(world_point[0], world_point[1], z, color, state)],
                      dtype=data_types.POINT_DTYPE)
         undo = UndoInfo()
+        lf = undo.flags.add_layer_flags(self)
         if (self.points is None):
             self.new_points(1)
             self.points[0] = p
             point_index = 0
             undo.flags.refresh_needed = True
-            undo.flags.select_layer = self
+            lf.select_layer = True
         else:
             self.points = np.insert(self.points, point_index, p).view(np.recarray)
         undo.index = point_index
         undo.data = np.copy(p)
-        undo.flags.items_moved = True
-        undo.flags.layer_contents_added = self
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
 
         # update point indexes in the line segements to account for the inserted point
         self.update_after_insert_point_at_index(point_index)
@@ -260,8 +261,9 @@ class PointLayer(PointBaseLayer):
         undo.index = point_index
         undo.data = np.copy(p)
         undo.flags.refresh_needed = True
-        undo.flags.items_moved = True
-        undo.flags.layer_contents_deleted = self
+        lf = undo.flags.add_layer_flags(self)
+        lf.layer_items_moved = True
+        lf.layer_contents_deleted = True
         self.points = np.delete(self.points, point_index, 0)
 
         # update point indexes in the line segements to account for the deleted point

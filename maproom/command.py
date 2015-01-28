@@ -84,7 +84,7 @@ class UndoStack(list):
 
 class LayerStatus(object):
     def __init__(self, layer):
-        self.layer = layer
+        self.layer = layer  # FIXME: should be a weakref (or maybe token)
         
         # True if items within the layer have changed position only
         self.layer_items_moved = False
@@ -136,32 +136,6 @@ class CommandStatus(object):
         # layer manager
         self.layers_changed = False
         
-        ##### Set the following to the layer object if ...
-        
-        # ...any items within the layer have changed position only
-        self.layer_items_moved = None
-        
-        # ...any items have been added to the layer
-        self.layer_contents_added = None
-        
-        # ...any items have been removed from the layer
-        self.layer_contents_deleted = None
-        
-        # ...any drawing properties changed (color, line width, etc.)
-        self.layer_display_properties_changed = None
-        
-        # ...any layer properties changed (layer name, etc.)
-        self.layer_metadata_changed = None
-        
-        # ...this layer was loaded and needs to be broadcast to all views
-        self.layer_loaded = None
-        
-        # ...a message should be displayed if it isn't the top layer and it was edited
-        self.hidden_layer_check = None
-        
-        # ...needs to be selected after the command finishes
-        self.select_layer = None
-        
         self.layer_flags = []
     
     def add_layer_flags(self, layer):
@@ -185,7 +159,15 @@ class Command(object):
         ]
     
     def __init__(self, layer=None):
+        # FIXME: should be some invariant that uniquely identifies the layer
+        # without being a reference to the layer itself.  When a layer gets
+        # removed and then re-added (by an undo then redo) a new layer is
+        # created for that command.  The layers saved in redos beyond that
+        # command are pointing to the old layer, not the newly created layer,
+        # so stepping into the future operates on the old layer that isn't
+        # displayed.
         self.layer = layer
+        
         self.undo_info = None
         self.last_flags = None
 

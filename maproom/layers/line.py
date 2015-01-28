@@ -362,7 +362,8 @@ class LineLayer(PointLayer):
         undo = UndoInfo()
         undo.index = l_s_i
         undo.data = np.copy(l_s)
-        undo.flags.layer_contents_added = self
+        lf = undo.flags.add_layer_flags(self)
+        lf.layer_contents_added = True
 
         return undo
 
@@ -382,7 +383,8 @@ class LineLayer(PointLayer):
         undo.index = l_s_i
         undo.data = np.copy(p)
         undo.flags.refresh_needed = True
-        undo.flags.layer_contents_deleted = self
+        lf = undo.flags.add_layer_flags(self)
+        lf.layer_contents_added = True
 
         self.line_segment_indexes = np.delete(self.line_segment_indexes, l_s_i, 0)
         return undo

@@ -105,8 +105,9 @@ class AddLayerCommand(Command):
         
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
-        undo.flags.select_layer = layer
-        undo.flags.layer_loaded = layer
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+        lf.layer_loaded = True
         undo.data = (layer,)
         
         return self.undo_info
@@ -174,8 +175,9 @@ class MergeLayersCommand(Command):
         
         layer = self.layer_a.merge_layer_into_new(self.layer_b)
         lm.insert_layer(None, layer)
-        undo.flags.select_layer = layer
-        undo.flags.layer_loaded = layer
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+        lf.layer_loaded = True
 
         undo.data = (layer,)
         
@@ -237,8 +239,9 @@ class TriangulateLayerCommand(Command):
                 
             undo.flags.layers_changed = True
             undo.flags.refresh_needed = True
-            undo.flags.select_layer = t_layer
-            undo.flags.layer_loaded = t_layer
+            lf = undo.flags.add_layer_flags(t_layer)
+            lf.select_layer = True
+            lf.layer_loaded = True
 
             undo.data = (t_layer, old_t_layer)
         
@@ -256,5 +259,6 @@ class TriangulateLayerCommand(Command):
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
-        undo.flags.select_layer = old_t_layer
+        lf = undo.flags.add_layer_flags(old_t_layer)
+        lf.select_layer = True
         return undo

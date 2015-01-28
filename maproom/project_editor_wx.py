@@ -375,17 +375,6 @@ class ProjectEditor(FrameworkEditor):
             if lf.zoom_to_layer:
                 zoom_layers.append(layer)
         
-        if f.layer_items_moved:
-            f.layer_items_moved.update_bounds()
-            need_rebuild[f.layer_items_moved] = True
-        if f.layer_display_properties_changed:
-            need_rebuild[f.layer_display_properties_changed] = False
-            f.refresh_needed = True
-        if f.layer_contents_added or f.layer_contents_deleted:
-            layer = f.layer_contents_added or f.layer_contents_deleted
-            need_rebuild[layer] = False
-            f.refresh_needed = True
-        
         # Use LayerManager events to trigger updates in all windows that are
         # displaying this project
         for layer, in_place in need_rebuild.iteritems():
@@ -394,20 +383,9 @@ class ProjectEditor(FrameworkEditor):
             else:
                 self.layer_manager.layer_contents_changed = layer
         
-        # Hidden layer check only displayed in current window, not any others
-        # that are displaying this project
-        if f.hidden_layer_check:
-            vis = self.layer_visibility[f.hidden_layer_check]['layer']
-            if not vis:
-                self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
-        
         if select_layer:
             self.layer_tree_control.select_layer(select_layer)
-        if f.select_layer:
-            self.layer_tree_control.select_layer(f.select_layer)
-        if f.layer_loaded:
-            self.layer_manager.layer_loaded = f.layer_loaded
-        if layers_changed or f.layers_changed or f.layer_loaded:
+        if layers_changed:
             self.layer_manager.layers_changed = True
         if zoom_layers:
             self.zoom_to_layers(zoom_layers)
