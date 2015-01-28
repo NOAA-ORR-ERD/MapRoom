@@ -11,7 +11,7 @@ progress_log = logging.getLogger("progress")
 
 
 class LoadLayersCommand(Command):
-    serialize_params =  [
+    serialize_order =  [
             ('metadata', 'file_metadata'),
             ]
     
@@ -77,7 +77,7 @@ class LoadLayersCommand(Command):
         return undo
 
 class AddLayerCommand(Command):
-    serialize_params =  [
+    serialize_order =  [
             ('type', 'string'),
             ]
     
