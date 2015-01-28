@@ -340,6 +340,8 @@ class ProjectEditor(FrameworkEditor):
     def process_command(self, command):
         undo = self.layer_manager.undo_stack.perform(command, self)
         self.process_flags(undo.flags)
+        history = self.layer_manager.undo_stack.serialize()
+        self.window.application.save_log(str(history), "command_log", ".mrc")
     
     def process_flags(self, f):
         # rebuild flags for each layer; value is whether or not it needs full

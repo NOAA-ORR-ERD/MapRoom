@@ -3,6 +3,9 @@ import re
 
 from peppy2.utils.runtime import get_all_subclasses
 
+magic_version = 1
+magic_template = "# NOAA MapRoom Command File, v"
+magic_header = "%s%d" % (magic_template, magic_version)
 
 # shlex quote routine modified from python 3 to allow [ and ] unquoted for lists
 _find_unsafe = re.compile(r'[^\w@%+=:,./[\]-]').search
@@ -23,7 +26,7 @@ class Serializer(object):
         self.serialized_commands = []
     
     def __str__(self):
-        lines = []
+        lines = [magic_header]
         for cmd in self.serialized_commands:
             lines.append(str(cmd))
         return "\n".join(lines)

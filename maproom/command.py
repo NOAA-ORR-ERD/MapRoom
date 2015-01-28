@@ -61,8 +61,6 @@ class UndoStack(list):
     def add_command(self, command):
         self.batch.insert_at_index(command)
         print self.batch.history_list()
-        s = self.serialize()
-        print s
     
     def insert_at_index(self, command):
         last = self.get_undo_command()
