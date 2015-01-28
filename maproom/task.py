@@ -452,6 +452,15 @@ class CheckLayerErrorAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.check_for_errors)
 
+class OpenLogAction(Action):
+    name = 'Project Command Log'
+    tooltip = 'View the project command log'
+
+    def perform(self, event):
+        app = event.task.window.application
+        filename = app.get_log_file_name("command_log", ".mrc")
+        app.load_file(filename, None)
+
 
 @provides(IAbout)
 class MaproomProjectTask(FrameworkTask):
@@ -695,6 +704,11 @@ class MaproomProjectTask(FrameworkTask):
                 elif group_name == "FindGroup":
                     return [
                         FindPointsAction(),
+                        ]
+            if menu_name == "Help":
+                if group_name == "BugReportGroup":
+                    return [
+                        OpenLogAction(),
                         ]
 
         if location.startswith("Tool"):
