@@ -459,7 +459,7 @@ class OpenLogAction(Action):
     def perform(self, event):
         app = event.task.window.application
         filename = app.get_log_file_name("command_log", ".mrc")
-        app.load_file(filename, None)
+        app.load_file(filename, task_id="peppy.framework.text_edit_task")
 
 
 @provides(IAbout)
