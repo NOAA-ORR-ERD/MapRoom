@@ -178,8 +178,10 @@ class ListIntConverter(ArgumentConverter):
             text = text[1:]
         if text.endswith("]"):
             text = text[:-1]
-        vals = text.split(",")
-        return [int(i) for i in vals]
+        if text:
+            vals = text.split(",")
+            return [int(i) for i in vals]
+        return []
 
 
 def get_converters():

@@ -252,7 +252,9 @@ class DeleteLinesCommand(Command):
         self.undo_info = undo = UndoInfo()
         old_line_indexes = self.layer.get_lines_connected_to_points(self.point_indexes)
         if self.line_indexes is not None:
-            old_line_indexes = np.unique(np.append(old_line_indexes, self.line_indexes))
+            # handle degenerate list as well as zero-length numpy array using length test
+            if len(list(self.line_indexes)) > 0:
+                old_line_indexes = np.unique(np.append(old_line_indexes, self.line_indexes))
         old_line_segments = np.copy(self.layer.line_segment_indexes[old_line_indexes])
         old_points = np.copy(self.layer.points[self.point_indexes])
         undo.data = (old_points, old_line_segments, old_line_indexes)
