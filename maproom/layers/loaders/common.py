@@ -7,8 +7,6 @@ from maproom.layers import constants
 class BaseLoader(object):
     mime = None
     
-    layer_types = []
-    
     # List of supported filename extensions, including the leading ".".  If
     # multiple extensions are supported, put the most common one first so that
     # the file dialog will display that as the default.
@@ -16,16 +14,14 @@ class BaseLoader(object):
     
     name = "Abstract loader"
     
-    project = False
-    
     def can_load(self, metadata):
         return metadata.mime == self.mime
     
-    def load(self, metadata, manager):
-        raise NotImplementedError
+    def can_save_layer(self, layer):
+        return False
     
-    def can_save(self, layer):
-        return layer.type in self.layer_types
+    def can_save_project(self):
+        return False
     
     def is_valid_extension(self, extension):
         return extension.lower() in self.extensions
@@ -40,8 +36,17 @@ class BaseLoader(object):
             ext = self.extensions[0]
             wildcards.append("%s (*%s)|*%s" % (self.name, ext, ext))
         return "|".join(wildcards)
+
+class BaseLayerLoader(BaseLoader):
+    layer_types = []
     
-    def save(self, uri, layer):
+    def can_save_layer(self, layer):
+        return layer.type in self.layer_types
+    
+    def load_layers(self, metadata, manager):
+        raise NotImplementedError
+    
+    def save_layers(self, uri, layer):
         if uri is None:
             uri = layer.file_path
         temp_dir = tempfile.mkdtemp()

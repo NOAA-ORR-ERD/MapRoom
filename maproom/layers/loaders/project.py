@@ -18,9 +18,9 @@ class ProjectLoader(BaseLoader):
     
     name = "MapRoom Project"
     
-    project = True
+    load_type = "project"
     
-    def load(self, metadata, manager):
+    def load_project(self, metadata, manager):
         project = []
         with open(metadata.uri, "r") as fh:
             line = fh.readline()

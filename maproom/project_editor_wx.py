@@ -23,6 +23,7 @@ from layers import loaders
 from layers.constants import *
 from mouse_handler import *
 from menu_commands import *
+from serializer import UnknownCommandError
 
 import logging
 log = logging.getLogger(__name__)
@@ -95,9 +96,13 @@ class ProjectEditor(FrameworkEditor):
         else:
             metadata = guess.get_metadata()
             loader = loaders.get_loader(metadata)
-            if loader.project:
+            if hasattr(loader, "load_project"):
                 print "FIXME: Add load project command that clears all layers"
                 self.path = metadata.uri
+            elif hasattr(loader, "iter_log"):
+                for cmd in loader.iter_log(metadata, self.layer_manager):
+                    print "cmd: %s" % repr(cmd)
+                    self.process_command(cmd)
             else:
                 cmd = LoadLayersCommand(metadata)
                 self.process_command(cmd)

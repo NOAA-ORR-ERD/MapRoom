@@ -8,7 +8,7 @@ import os
 import numpy as np
 #import re
 
-from common import BaseLoader
+from common import BaseLayerLoader
 from maproom.layers.particles import ParticleLayer
 
 import logging
@@ -46,7 +46,7 @@ class nc_particles_file_loader():
 
         return (points, status_codes, time) # error_string, points, time
 
-class ParticleLoader(BaseLoader):
+class ParticleLoader(BaseLayerLoader):
     """
     loader for nc_particles file
 
@@ -58,7 +58,7 @@ class ParticleLoader(BaseLoader):
     extensions = [".nc"]
     name = "nc_particles"
     
-    def load(self, metadata, manager):
+    def load_layers(self, metadata, manager):
         """
         load the nc_particles file
 

@@ -2,6 +2,9 @@ import os
 import re
 
 from peppy2.utils.runtime import get_all_subclasses
+from peppy2.utils.file_guess import FileMetadata
+
+import command
 
 magic_version = 1
 magic_template = "# NOAA MapRoom Command File, v"
@@ -21,7 +24,13 @@ def quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
+class UnknownCommandError(RuntimeError):
+    pass
+
+
 class Serializer(object):
+    known_commands = None
+    
     def __init__(self):
         self.serialized_commands = []
     
@@ -34,18 +43,56 @@ class Serializer(object):
     def add(self, cmd):
         sc = SerializedCommand(cmd)
         self.serialized_commands.append(sc)
+    
+    @classmethod
+    def get_command(cls, short_name):
+        if cls.known_commands is None:
+            cls.known_commands = command.get_known_commands()
+        try:
+            return cls.known_commands[short_name]
+        except KeyError:
+            return UnknownCommandError(short_name)
+
+
+class TextDeserializer(object):
+    def __init__(self, text):
+        lines = text.splitlines()
+        self.header = lines.pop(0)
+        self.lines = lines
+        if not self.header.startswith(magic_template):
+            raise RuntimeError("Not a MapRoom log file!")
+    
+    def iter_cmds(self, manager):
+        for line in self.lines:
+            cmd = self.unserialize_line(line, manager)
+            yield cmd
+    
+    def unserialize_line(self, line, manager):
+        text_args = line.split()
+        short_name = text_args.pop(0)
+        cmd_cls = Serializer.get_command(short_name)
+        cmd_args = []
+        for name, stype in cmd_cls.serialize_order:
+            converter = SerializedCommand.get_converter(stype)
+            arg = converter.instance_from_args(text_args, manager)
+            cmd_args.append(arg)
+        cmd = "COMMAND: %s(%s)" % (cmd_cls.__name__, ",".join([str(a) for a in cmd_args]))
+        cmd = cmd_cls(*cmd_args)
+        return cmd
 
 
 class ArgumentConverter(object):
-    stype = None
+    stype = None  # Default converter just uses strings
     
     def get_args(self, instance):
         """Return list of strings that can be used to reconstruct the instance
         """
         return str(instance),
     
-    def instance_from_args(self, args):
-        pass
+    def instance_from_args(self, args, manager):
+        arg = args.pop(0)
+        return arg
+
 
 class FileMetadataConverter(ArgumentConverter):
     stype = "file_metadata"
@@ -53,8 +100,10 @@ class FileMetadataConverter(ArgumentConverter):
     def get_args(self, instance):
         return instance.uri, instance.mime
     
-    def instance_from_args(self, args):
-        pass
+    def instance_from_args(self, args, manager):
+        uri = args.pop(0)
+        mime = args.pop(0)
+        return FileMetadata(uri=uri, mime=mime)
 
 
 class LayerConverter(ArgumentConverter):
@@ -63,23 +112,30 @@ class LayerConverter(ArgumentConverter):
     def get_args(self, instance):
         return instance.name,
     
-    def instance_from_args(self, args):
-        pass
+    def instance_from_args(self, args, manager):
+        name = args.pop(0)
+        layer = manager.get_layer_by_name(name)
+        return layer
 
 
 class IntConverter(ArgumentConverter):
     stype = "int"
     
-    def instance_from_args(self, args):
-        pass
+    def instance_from_args(self, args, manager):
+        text = args.pop(0)
+        if text == "None":
+            return None
+        return int(text)
 
 
 class FloatConverter(ArgumentConverter):
     stype = "float"
     
-    def instance_from_args(self, args):
-        # Note: handle None for e.g. triangle params q and a
-        pass
+    def instance_from_args(self, args, manager):
+        text = args.pop(0)
+        if text == "None":
+            return None
+        return float(text)
 
 
 class PointConverter(ArgumentConverter):
@@ -88,8 +144,10 @@ class PointConverter(ArgumentConverter):
     def get_args(self, instance):
         return instance  # already a tuple
     
-    def instance_from_args(self, args):
-        pass
+    def instance_from_args(self, args, manager):
+        lon = args.pop(0)
+        lat = args.pop(0)
+        return (float(lon), float(lat))
 
 
 class RectConverter(ArgumentConverter):
@@ -99,27 +157,36 @@ class RectConverter(ArgumentConverter):
         (x1, y1), (x2, y2) = instance
         return x1, y1, x2, y2
     
-    def instance_from_args(self, args):
-        pass
+    def instance_from_args(self, args, manager):
+        x1 = args.pop(0)
+        y1 = args.pop(0)
+        x2 = args.pop(0)
+        y2 = args.pop(0)
+        return ((x1, y1), (x2, y2))
 
 
 class ListIntConverter(ArgumentConverter):
-    stype = "rect"
+    stype = "list_int"
     
     def get_args(self, instance):
         text = ",".join([str(i) for i in instance])
         return "[%s]" % text,
     
-    def instance_from_args(self, args):
-        pass
+    def instance_from_args(self, args, manager):
+        text = args.pop(0)
+        if text.startswith("["):
+            text = text[1:]
+        if text.endswith("]"):
+            text = text[:-1]
+        vals = text.split(",")
+        return [int(i) for i in vals]
 
 
 def get_converters():
     s = get_all_subclasses(ArgumentConverter)
     c = {}
     for cls in s:
-        if cls.stype is not None:
-            c[cls.stype] = cls()
+        c[cls.stype] = cls()
     return c
 
 class SerializedCommand(object):
@@ -146,3 +213,10 @@ class SerializedCommand(object):
         
         text = " ".join(output)
         return "%s %s" % (self.cmd_name, text)
+    
+    @classmethod
+    def get_converter(cls, stype):
+        try:
+            return cls.converters[stype]
+        except KeyError:
+            return cls.converters[None]

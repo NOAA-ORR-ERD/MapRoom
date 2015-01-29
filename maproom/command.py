@@ -1,6 +1,7 @@
 import os
 
-from serializer import Serializer
+from peppy2.utils.runtime import get_all_subclasses
+
 
 class UndoStack(list):
     def __init__(self, *args, **kwargs):
@@ -75,6 +76,7 @@ class UndoStack(list):
         return h
     
     def serialize(self):
+        from serializer import Serializer
         s = Serializer()
         for c in self:
             s.add(c)
@@ -206,3 +208,12 @@ class Batch(UndoStack):
     def undo(self, editor):
         for c in reversed(self):
             c.undo(editor)
+
+
+def get_known_commands():
+    s = get_all_subclasses(Command)
+    c = {}
+    for cls in s:
+        if cls.short_name is not None:
+            c[cls.short_name] = cls
+    return c

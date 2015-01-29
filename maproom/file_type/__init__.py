@@ -26,7 +26,7 @@
 #cog.msg("working dir : %s" % cwd)
 #path = os.path.dirname(os.path.join(cwd, cog.inFile))
 #cog.msg("scanning dir: %s" % path)
-#top = os.path.abspath(os.path.join(path, "../../..")) # so absolute imports of peppy2 will work
+#top = os.path.abspath(os.path.join(path, "../..")) # so absolute imports of maproom will work
 #sys.path.append(top)
 #cog.msg("top dir     : %s" % top)
 #import glob
@@ -56,8 +56,9 @@ recognizers.append(NC_ParticleRecognizer())
 recognizers.append(UGRID_Recognizer())
 from image import GDALRecognizer
 recognizers.append(GDALRecognizer())
-from text import BNARecognizer, MapRoomProjectRecognizer, VerdatRecognizer
+from text import BNARecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, VerdatRecognizer
 recognizers.append(BNARecognizer())
+recognizers.append(MapRoomCommandRecognizer())
 recognizers.append(MapRoomProjectRecognizer())
 recognizers.append(VerdatRecognizer())
 # [[[end]]]

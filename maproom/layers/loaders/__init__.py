@@ -41,7 +41,7 @@
 #    members = inspect.getmembers(module, inspect.isclass)
 #    names = []
 #    for name, cls in members:
-#        if hasattr(cls, 'can_load') and name != "BaseLoader":
+#        if hasattr(cls, 'can_load') and not name.startswith("Base"):
 #            # make sure class is from this module and not an imported dependency
 #            if cls.__module__.startswith(modname):
 #                names.append(name)
@@ -55,6 +55,8 @@ from bna import BNALoader
 loaders.append(BNALoader())
 from gdal import GDALLoader
 loaders.append(GDALLoader())
+from logfile import CommandLogLoader
+loaders.append(CommandLogLoader())
 from nc_particles import ParticleLoader
 loaders.append(ParticleLoader())
 from project import ProjectLoader
@@ -92,7 +94,7 @@ def load_layers(metadata, manager=None):
         log.debug("trying loader %s" % loader.name)
         if loader.can_load(metadata):
             log.debug(" loading using loader %s!" % loader.name)
-            layers = loader.load(metadata, manager=manager)
+            layers = loader.load_layers(metadata, manager=manager)
             log.debug(" loaded layers: \n  %s" % "\n  ".join([str(a) for a in layers]))
             return loader, layers
     return None, None
@@ -100,7 +102,7 @@ def load_layers(metadata, manager=None):
 def valid_save_formats(layer):
     valid = []
     for loader in loaders:
-        if loader.can_save(layer):
+        if loader.can_save_layer(layer):
             valid.append((loader, "%s: %s" % (loader.name, loader.get_pretty_extension_list())))
     return valid
 
@@ -123,7 +125,7 @@ def save_layer(layer, uri, saver=None):
     if not saver:
         savers = []
         for loader in loaders:
-            if loader.can_save(layer):
+            if loader.can_save_layer(layer):
                 savers.append(loader)
         saver = find_best_saver(savers, ext)
     
@@ -133,5 +135,5 @@ def save_layer(layer, uri, saver=None):
             return "The extension '%s' doesn't correspond to any format\nthat can save the '%s' layer type.\n\n%s" % (ext, layer.type, get_valid_string(valid))
     
     progress_log.info("TITLE=Saving %s" % uri)
-    error = saver.save(uri, layer)
+    error = saver.save_layer(uri, layer)
     return error

@@ -11,13 +11,13 @@ from maproom.library.accumulator import accumulator, flatten
 import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
 
-from common import BaseLoader
+from common import BaseLayerLoader
 from maproom.layers import RasterLayer
 
 import logging
 log = logging.getLogger(__name__)
 
-class GDALLoader(BaseLoader):
+class GDALLoader(BaseLayerLoader):
     mime = "image/*"
     
     name = "GDAL"
@@ -25,7 +25,7 @@ class GDALLoader(BaseLoader):
     def can_load(self, metadata):
         return metadata.mime.startswith("image/")
     
-    def load(self, metadata, manager):
+    def load_layers(self, metadata, manager):
         layer = RasterLayer(manager=manager)
         
         (layer.load_error_string, layer.image_data) = load_image_file_subprocess(metadata.uri)
@@ -36,11 +36,11 @@ class GDALLoader(BaseLoader):
             layer.update_bounds()
         return [layer]
     
-    def can_save(self, layer):
+    def can_save_layers(self, layer):
         return False
     
     def save_to_file(self, f, layer):
-        return "Can't save to BNA yet."
+        return "Can't save to GDAL yet."
 
 
 class ImageData(object):

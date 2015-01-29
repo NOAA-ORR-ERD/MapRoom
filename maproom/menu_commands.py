@@ -29,7 +29,7 @@ class LoadLayersCommand(Command):
         loader = loaders.get_loader(self.metadata)
         try:
             progress_log.info("START=Loading %s" % self.metadata.uri)
-            layers = loader.load(self.metadata, manager=lm)
+            layers = loader.load_layers(self.metadata, manager=lm)
         except ProgressCancelError, e:
             undo.flags.success = False
             undo.errors = [e.message]

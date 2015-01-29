@@ -4,13 +4,13 @@ import re
 
 from pyugrid.ugrid import UGrid, DataSet
 
-from common import BaseLoader
+from common import BaseLayerLoader
 from maproom.layers import LineLayer, TriangleLayer
 from maproom.renderer import data_types
 
 WHITESPACE_PATTERN = re.compile("\s+")
 
-class UGridLoader(BaseLoader):
+class UGridLoader(BaseLayerLoader):
     mime = "application/x-nc_ugrid"
     
     layer_types = ["point", "line", "triangle"]
@@ -25,7 +25,7 @@ class UGridLoader(BaseLoader):
             return found.pop()
         return None
     
-    def load(self, metadata, manager):
+    def load_layers(self, metadata, manager):
         layers = []
         
         ug = UGrid.from_ncfile(metadata.uri, load_data=True)

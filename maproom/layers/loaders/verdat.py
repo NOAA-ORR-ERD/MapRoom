@@ -4,7 +4,7 @@ import re
 from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import Boundaries, PointsError
 
-from common import BaseLoader
+from common import BaseLayerLoader
 from maproom.layers import LineLayer
 
 import logging
@@ -13,7 +13,7 @@ progress_log = logging.getLogger("progress")
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-class VerdatLoader(BaseLoader):
+class VerdatLoader(BaseLayerLoader):
     mime = "application/x-maproom-verdat"
     
     layer_types = ["line"]
@@ -24,7 +24,7 @@ class VerdatLoader(BaseLoader):
     
     points_per_tick = 5000
     
-    def load(self, metadata, manager):
+    def load_layers(self, metadata, manager):
         layer = LineLayer(manager=manager)
         
         progress_log.info("Loading from %s" % metadata.uri)

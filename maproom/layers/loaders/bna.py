@@ -8,13 +8,13 @@ from maproom.library.accumulator import accumulator
 
 from maproom.layers import PolygonLayer
 
-from common import BaseLoader
+from common import BaseLayerLoader
 
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
-class BNALoader(BaseLoader):
+class BNALoader(BaseLayerLoader):
     mime = "application/x-maproom-bna"
     
     layer_types = ["polygon"]
@@ -23,7 +23,7 @@ class BNALoader(BaseLoader):
     
     name = "BNA"
     
-    def load(self, metadata, manager):
+    def load_layers(self, metadata, manager):
         layer = PolygonLayer(manager=manager)
         
         (layer.load_error_string,
