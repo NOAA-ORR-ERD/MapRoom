@@ -320,6 +320,13 @@ class LayerManager(HasTraits):
         # log.debug("layer: %s"%layer)
         return layer
 
+    def get_layer_by_name(self, name):
+        layers = self.flatten()
+        for layer in layers:
+            if layer.name == name:
+                return layer
+        return None
+
     def get_multi_index_of_layer_recursive(self, layer, tree):
         for i, item in enumerate(tree):
             if (isinstance(item, Layer)):
