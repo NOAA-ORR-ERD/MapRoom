@@ -69,3 +69,18 @@ python setup.py develop
 and then run the peppy2 framework by
 
 peppy2 TestData/Verdat/000011.verdat
+
+
+Building redistributable versions
+=================================
+
+The setup.py script has the ability to build py2exe and py2app bundles.
+
+py2app
+------
+
+Debugging py2app:
+
+* ./dist-3.X/mac/Maproom.app/Contents/MacOS/Maproom
+
+will display stdout to the terminal
