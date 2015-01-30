@@ -474,11 +474,12 @@ class OpenLogDirectoryAction(Action):
         dirname = os.path.dirname(filename)
         import subprocess
         if sys.platform.startswith("win"):
-            subprocess.Popen('explorer "%s"' % dirname)
+            file_manager = 'explorer'
         elif sys.platform == "darwin":
-            subprocess.call(['/usr/bin/open', dirname])
+            file_manager = '/usr/bin/open'
         else:
-            subprocess.call(['xdg-open', dirname])
+            file_manager = 'xdg-open'
+        subprocess.call([file_manager, dirname])
 
 
 @provides(IAbout)
