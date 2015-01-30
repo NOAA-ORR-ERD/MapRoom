@@ -1,6 +1,9 @@
 """ Skeleton sample task
 
 """
+import os
+import sys
+
 # Enthought library imports.
 from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
 from pyface.tasks.api import Task, TaskWindow, IEditor, \
@@ -453,13 +456,29 @@ class CheckLayerErrorAction(EditorAction):
         GUI.invoke_later(self.active_editor.check_for_errors)
 
 class OpenLogAction(Action):
-    name = 'Project Command Log'
-    tooltip = 'View the project command log'
+    name = 'View Command History Log'
+    tooltip = 'View the log containing a list of all user commands'
 
     def perform(self, event):
         app = event.task.window.application
         filename = app.get_log_file_name("command_log", ".mrc")
         app.load_file(filename, task_id="peppy.framework.text_edit_task")
+
+class OpenLogDirectoryAction(Action):
+    name = 'Open Log Directory in File Manager'
+    tooltip = 'Open the log directory in the desktop file manager program'
+
+    def perform(self, event):
+        app = event.task.window.application
+        filename = app.get_log_file_name("dummy")
+        dirname = os.path.dirname(filename)
+        import subprocess
+        if sys.platform.startswith("win"):
+            subprocess.Popen('explorer "%s"' % dirname)
+        elif sys.platform == "darwin":
+            subprocess.call(['/usr/bin/open', dirname])
+        else:
+            subprocess.call(['xdg-open', dirname])
 
 
 @provides(IAbout)
@@ -708,6 +727,7 @@ class MaproomProjectTask(FrameworkTask):
             if menu_name == "Help":
                 if group_name == "BugReportGroup":
                     return [
+                        OpenLogDirectoryAction(),
                         OpenLogAction(),
                         ]
 
