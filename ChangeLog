@@ -1,3 +1,40 @@
+01/29/2015
+---------------------------
+Released 3.0b20
+- RM Updated README to show how to debug py2app build
+- RM Fix for OpenLogAction to show log file as text rather that trying to replay it
+- RM Fixes for deserialization of degenerate lists
+- RM Added CommandLogLoader and ability to replay log files
+- RM Added get_layer_by_name convenience function
+- RM Added help command to show command file
+- RM Command log now automatically saved in the user's log dir
+- RM Changed application name to MapRoom
+- RM Added short names for serialized commands
+- RM Added ArgumentConverters for converting to string for output
+- RM Separated serializer into new file
+- RM Fixed exception handling bug in TriangulateLayerCommand
+- RM Finished conversion to LayerStatus flags
+- RM Added LoadLayersCommand
+- RM Added simple serializer framework to command processor
+- RM Triangulation now undoable
+- RM Check for command success before updating undo stack
+- RM Fix to allow & character to appear as undo/redo label in menu
+- RM Added last_flags to Command to allow status checking after command runs
+- RM Changed to layers_changed trait to propagate to other views
+- RM Added new menu command AddLayerCommand
+- RM Added MergeLayersCommand
+- RM Added documentation of command status flags
+- RM Fixed offset bug when undoing DeleteLinesCommand
+- RM Fixed bug when creating a line segment between existing points
+- RM Fixed layer deletion
+- RM Attempt to scroll focused control into view
+- RM Fixed box sizer alignment
+- RM Fixed bug in ColourSelect widget by changing to scrolled panel
+- RM Fixes for building 64bit installer using py2exe
+- RM Added initial pyinstaller support & windows 64 bit support
+- RM Finally removed app_globals
+- RM Call peppy2's get_image_path for font path rather than checking for frozen status here
+
 12/15/2014
 ---------------------------
 Released 3.0b19
