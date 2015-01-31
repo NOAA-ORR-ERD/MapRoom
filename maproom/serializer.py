@@ -1,5 +1,6 @@
 import os
 import re
+import shlex
 
 from peppy2.utils.runtime import get_all_subclasses
 from peppy2.utils.file_guess import FileMetadata
@@ -68,7 +69,7 @@ class TextDeserializer(object):
             yield cmd
     
     def unserialize_line(self, line, manager):
-        text_args = line.split()
+        text_args = shlex.split(line)
         short_name = text_args.pop(0)
         cmd_cls = Serializer.get_command(short_name)
         cmd_args = []
@@ -98,7 +99,8 @@ class FileMetadataConverter(ArgumentConverter):
     stype = "file_metadata"
     
     def get_args(self, instance):
-        return instance.uri, instance.mime
+        # Force forward slashes on windows so to prevent backslash escape chars
+        return os.path.normpath(instance.uri).replace('\\', '/'), instance.mime
     
     def instance_from_args(self, args, manager):
         uri = args.pop(0)
