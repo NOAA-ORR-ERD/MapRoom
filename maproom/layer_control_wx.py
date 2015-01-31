@@ -112,7 +112,6 @@ class LayerControl(glcanvas.GLCanvas):
         #self.frame.Bind( wx.EVT_IDLE, self.on_idle )
         # self.frame.Bind( wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll )
 
-        self.Bind(wx.EVT_IDLE, self.on_idle)  # not sure about this -- but it's where the cursors are set.
         self.Bind(wx.EVT_PAINT, self.render)
         # Prevent flashing on Windows by doing nothing on an erase background event.
         ## fixme -- I think you can pass a flag to the Window instead...
@@ -126,6 +125,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
+        self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_mouse_leave)
         self.Bind(wx.EVT_CHAR, self.on_key_char)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
@@ -178,6 +178,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.mouse_move_position = self.mouse_down_position
 
         self.mouse_handler.process_mouse_down(event)
+        self.set_cursor()
 
     def release_mouse(self):
         self.mouse_is_down = False
@@ -191,17 +192,23 @@ class LayerControl(glcanvas.GLCanvas):
             self.mouse_handler.process_mouse_motion_down(event)
         else:
             self.mouse_handler.process_mouse_motion_up(event)
+        self.set_cursor()
 
     def on_mouse_up(self, event):
         self.get_effective_tool_mode(event)  # update alt key state
         self.forced_cursor = None
         
         self.mouse_handler.process_mouse_up(event)
+        self.set_cursor()
 
     def on_mouse_wheel_scroll(self, event):
         self.get_effective_tool_mode(event)  # update alt key state
         
         self.mouse_handler.process_mouse_wheel_scroll(event)
+        self.set_cursor()
+
+    def on_mouse_enter(self, event):
+        self.set_cursor()
 
     def on_mouse_leave(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
@@ -212,6 +219,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.get_effective_tool_mode(event)
         
         self.mouse_handler.process_key_down(event)
+        self.set_cursor()
         
         event.Skip()
 
@@ -219,6 +227,7 @@ class LayerControl(glcanvas.GLCanvas):
         self.get_effective_tool_mode(event)
         
         self.mouse_handler.process_key_up(event)
+        self.set_cursor()
         
         event.Skip()
 
@@ -227,9 +236,6 @@ class LayerControl(glcanvas.GLCanvas):
         self.set_cursor()
         
         self.mouse_handler.process_key_char(event)
-
-    def on_idle(self, event):
-        self.set_cursor()
 
     def set_cursor(self):
         if (self.forced_cursor is not None):
