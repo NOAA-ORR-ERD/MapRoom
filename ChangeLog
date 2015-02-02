@@ -1,3 +1,12 @@
+02/02/2015
+---------------------------
+Released 3.0b21
+- RM Added some basic error handling to command log loading
+- RM Use shlex when deserializing log files
+- RM Cursor set in event handlers rather than idle event
+- RM Improved code of OpenLogDirectoryAction
+- RM Added menu command to open log directory in platform file manager
+
 01/29/2015
 ---------------------------
 Released 3.0b20
