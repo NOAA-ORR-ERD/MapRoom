@@ -33,6 +33,9 @@ class LoadLayersCommand(Command):
         except ProgressCancelError, e:
             undo.flags.success = False
             undo.errors = [e.message]
+        except IOError, e:
+            undo.flags.success = False
+            undo.errors = [str(e)]
         finally:
             progress_log.info("END")
         

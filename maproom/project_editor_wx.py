@@ -100,9 +100,29 @@ class ProjectEditor(FrameworkEditor):
                 print "FIXME: Add load project command that clears all layers"
                 self.path = metadata.uri
             elif hasattr(loader, "iter_log"):
+                line = 0
                 for cmd in loader.iter_log(metadata, self.layer_manager):
-                    print "cmd: %s" % repr(cmd)
-                    self.process_command(cmd)
+                    line += 1
+                    errors = None
+                    try:
+                        undo = self.process_command(cmd)
+                        if not undo.flags.success:
+                            errors = undo.errors
+                            break
+                    except Exception, e:
+                        errors = [str(e)]
+                        break
+                if errors is not None:
+                    header = [
+                        "While restoring from the command log file:\n\n%s\n" % metadata.uri,
+                        "an error occurred on line %d while processing" % line,
+                        "the command '%s':" % cmd.short_name,
+                        ""
+                        ]
+                    header.extend(errors)
+                    text = "\n".join(header)
+                    self.window.error(text, "Error restoring from command log")
+                    
             else:
                 cmd = LoadLayersCommand(metadata)
                 self.process_command(cmd)
@@ -347,6 +367,7 @@ class ProjectEditor(FrameworkEditor):
         self.process_flags(undo.flags)
         history = self.layer_manager.undo_stack.serialize()
         self.window.application.save_log(str(history), "command_log", ".mrc")
+        return undo
     
     def process_flags(self, f):
         # rebuild flags for each layer; value is whether or not it needs full
