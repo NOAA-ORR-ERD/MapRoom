@@ -131,6 +131,41 @@ class AddLayerCommand(Command):
         undo.flags.refresh_needed = True
         return undo
 
+class RenameLayerCommand(Command):
+    short_name = "rename_layer"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('name', 'string'),
+            ]
+
+    def __init__(self, layer, name):
+        Command.__init__(self, layer)
+        self.name = name
+    
+    def __str__(self):
+        return "Rename Layer to %s" % self.name
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer:
+                self.name = next_command.name
+                return True
+    
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        undo.data = (self.layer.name,)
+        
+        self.layer.name = self.name
+        lf = undo.flags.add_layer_flags(self.layer)
+        lf.layer_metadata_changed = True
+        
+        return self.undo_info
+
+    def undo(self, editor):
+        name, = self.undo_info.data
+        self.layer.name = name
+        return self.undo_info
+
 class DeleteLayerCommand(Command):
     short_name = "del_layer"
     serialize_order =  [

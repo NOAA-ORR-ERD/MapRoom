@@ -5,6 +5,7 @@ from ..layers import constants
 from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
+from ..menu_commands import *
 from ..ui import sliders
 from ..renderer import color_to_int, int_to_color
 
@@ -104,10 +105,9 @@ class LayerNameField(TextEditField):
         return text
     
     def process_text_change(self, layer):
-        layer.name = self.ctrl.GetValue()
-        self.panel.ignore_next_update = True
-        # a side effect of select_layer() is to make sure the layer name is up-to-date
-        self.panel.project.layer_tree_control.select_layer(layer)
+        name = self.ctrl.GetValue()
+        cmd = RenameLayerCommand(layer, name)
+        self.panel.project.process_command(cmd)
         
 class DefaultDepthField(TextEditField):
     same_line = True

@@ -375,6 +375,7 @@ class ProjectEditor(FrameworkEditor):
         need_rebuild = {}
         select_layer = None
         layers_changed = False
+        metadata_changed = False
         zoom_layers = []
         
         for lf in f.layer_flags:
@@ -402,6 +403,8 @@ class ProjectEditor(FrameworkEditor):
                 layers_changed = True
             if lf.zoom_to_layer:
                 zoom_layers.append(layer)
+            if lf.layer_metadata_changed:
+                metadata_changed = True
         
         # Use LayerManager events to trigger updates in all windows that are
         # displaying this project
@@ -417,6 +420,8 @@ class ProjectEditor(FrameworkEditor):
             self.layer_manager.layers_changed = True
         if zoom_layers:
             self.zoom_to_layers(zoom_layers)
+        if metadata_changed:
+            self.layer_manager.layer_metadata_changed = True
         if f.refresh_needed:
             self.layer_manager.refresh_needed = True
             
