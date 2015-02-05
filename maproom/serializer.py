@@ -65,6 +65,9 @@ class TextDeserializer(object):
     
     def iter_cmds(self, manager):
         for line in self.lines:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
             cmd = self.unserialize_line(line, manager)
             yield cmd
     
