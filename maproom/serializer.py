@@ -194,6 +194,7 @@ def get_converters():
     c = {}
     for cls in s:
         c[cls.stype] = cls()
+    c[None] = ArgumentConverter()  # Include default converter
     return c
 
 class SerializedCommand(object):
