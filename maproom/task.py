@@ -59,6 +59,15 @@ class SaveProjectAsAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save(dialog.path)
 
+class SaveCommandLogAction(EditorAction):
+    name = 'Save Command Log...'
+    tooltip = 'Save a copy of the command log'
+
+    def perform(self, event):
+        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="MapRoom Command Log Files (*.mrc)|*.mrc")
+        if dialog.open() == OK:
+            self.active_editor.save_log(dialog.path)
+
 class SaveLayerAction(EditorAction):
     name = 'Save Layer'
     tooltip = 'Save the currently selected layer'
@@ -705,6 +714,7 @@ class MaproomProjectTask(FrameworkTask):
                     return [
                         SaveProjectAction(),
                         SaveProjectAsAction(),
+                        SaveCommandLogAction(),
                         SaveLayerAction(),
                         SMenu(SaveLayerGroup(),
                             id='SaveLayerAsSubmenu', name="Save Layer As"),

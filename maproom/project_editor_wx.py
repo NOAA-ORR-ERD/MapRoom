@@ -162,6 +162,17 @@ class ProjectEditor(FrameworkEditor):
             self.path = path
         self.dirty = False
 
+    def save_log(self, path):
+        """ Saves the command log to a text file
+        """
+        serializer = self.layer_manager.undo_stack.serialize()
+        try:
+            fh = open(path, "wb")
+            fh.write(str(serializer))
+            fh.close()
+        except IOError, e:
+            self.window.error(str(e))
+
     def save_layer(self, path, loader=None):
         """ Saves the contents of the current layer in an appropriate file
         """
