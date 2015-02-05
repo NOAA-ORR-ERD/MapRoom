@@ -27,6 +27,41 @@ class MockProject(object):
     def __init__(self):
         self.control = MockControl()
         self.layer_manager = None
+        self.window = None
+    
+    def load_file(self, path, mime):
+        guess = FileGuess(os.path.realpath(path))
+        guess.metadata.mime = mime
+        metadata = guess.get_metadata()
+        print metadata
+        loader = loaders.get_loader(metadata)
+        print loader
+        if hasattr(loader, "load_project"):
+            print "FIXME: Add load project command that clears all layers"
+        elif hasattr(loader, "iter_log"):
+            line = 0
+            for cmd in loader.iter_log(metadata, self.layer_manager):
+                line += 1
+                errors = None
+                if cmd.short_name == "load":
+                    print cmd.metadata
+                    if cmd.metadata.uri.startswith("TestData"):
+                        cmd.metadata.uri = "../" + cmd.metadata.uri
+                try:
+                    undo = self.process_command(cmd)
+                    if not undo.flags.success:
+                        errors = undo.errors
+                        break
+                except Exception, e:
+                    #errors = [str(e)]
+                    #break
+                    raise
+            if errors is not None:
+                text = "\n".join(errors)
+                raise RuntimeError(text)
+        else:
+            cmd = LoadLayersCommand(metadata)
+            self.process_command(cmd)
     
     def undo(self):
         undo = self.layer_manager.undo_stack.undo(self)
@@ -37,11 +72,10 @@ class MockProject(object):
         self.process_flags(undo.flags)
     
     def process_command(self, command):
-        if command is None:
-            return
-        undo = command.perform(self)
-        self.layer_manager.undo_stack.add_command(command)
+        print "processing command %s" % command.short_name
+        undo = self.layer_manager.undo_stack.perform(command, self)
         self.process_flags(undo.flags)
+        return undo
     
     def process_flags(self, f):
         pass
