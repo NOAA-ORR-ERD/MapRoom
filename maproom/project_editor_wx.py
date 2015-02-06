@@ -385,7 +385,7 @@ class ProjectEditor(FrameworkEditor):
         # refresh (False) or in-place, fast refresh (True)
         need_rebuild = {}
         select_layer = None
-        layers_changed = False
+        layers_changed = f.layers_changed
         metadata_changed = False
         zoom_layers = []
         
