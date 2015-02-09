@@ -46,7 +46,7 @@ class BaseLayerLoader(BaseLoader):
     def load_layers(self, metadata, manager):
         raise NotImplementedError
     
-    def save_layers(self, uri, layer):
+    def save_layer(self, uri, layer):
         if uri is None:
             uri = layer.file_path
         temp_dir = tempfile.mkdtemp()

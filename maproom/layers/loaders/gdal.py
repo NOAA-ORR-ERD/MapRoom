@@ -36,7 +36,7 @@ class GDALLoader(BaseLayerLoader):
             layer.update_bounds()
         return [layer]
     
-    def can_save_layers(self, layer):
+    def can_save_layer(self, layer):
         return False
     
     def save_to_file(self, f, layer):

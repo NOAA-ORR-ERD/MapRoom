@@ -34,16 +34,16 @@ class MockProject(object):
         self.layer_manager = LayerManager.create(self)
         self.window = MockWindow()
 
-#    def load_all_layers(self, uri, mime):
-#        guess = FileGuess(uri)
-#        guess.metadata.mime = mime
-#        print guess
-#        print guess.metadata
-#        loader, layers = loaders.load_layers(guess.metadata, manager=self.layer_manager)
-#        return layers
-#
-#    def load_first_layer(self, uri, mime):
-#        return self.load_all_layers(uri, mime)[0]
+    def raw_load_all_layers(self, uri, mime):
+        guess = FileGuess(uri)
+        guess.metadata.mime = mime
+        print guess
+        print guess.metadata
+        loader, layers = loaders.load_layers(guess.metadata, manager=self.layer_manager)
+        return layers
+
+    def raw_load_first_layer(self, uri, mime):
+        return self.raw_load_all_layers(uri, mime)[0]
     
     def load_file(self, path, mime):
         guess = FileGuess(os.path.realpath(path))
