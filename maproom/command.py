@@ -161,14 +161,20 @@ class Command(object):
         ]
     
     def __init__(self, layer=None):
-        # FIXME: should be some invariant that uniquely identifies the layer
-        # without being a reference to the layer itself.  When a layer gets
-        # removed and then re-added (by an undo then redo) a new layer is
-        # created for that command.  The layers saved in redos beyond that
-        # command are pointing to the old layer, not the newly created layer,
-        # so stepping into the future operates on the old layer that isn't
-        # displayed.
-        self.layer = layer
+        # Instead of storing a reference to the layer itself, an invariant
+        # is stored instead.  This invariant is basically a counter in the
+        # layer manager that uniquely identifies the layer in the order it
+        # was loaded.  Referencing by name doesn't work because layers can be
+        # renamed and therefore not unique.  Storing the layer itself results
+        # in problems when a layer gets removed and then re-added (by an undo
+        # then redo) because a new layer is created for that command.  The
+        # layers saved in redos beyond that command are pointing to the old
+        # layer, not the newly created layer, so stepping into the future
+        # operates on the old layer that isn't displayed.
+        if layer is not None:
+            self.layer = layer.invariant
+        else:
+            self.layer = None
         
         self.undo_info = None
         self.last_flags = None

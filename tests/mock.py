@@ -13,21 +13,37 @@ import numpy as np
 from pyugrid.ugrid import UGrid
 
 from peppy2.utils.file_guess import FileGuess
+from maproom.layer_manager import LayerManager
 from maproom.layers import loaders, TriangleLayer
 from maproom.library.Boundary import Boundaries
+from maproom.library.projection import NullProjection
 from maproom.command import UndoStack
+from maproom.menu_commands import *
 
 class MockControl(object):
     def __init__(self):
+        self.projection = NullProjection()
+
+class MockWindow(object):
+    def error(self, *args, **kwargs):
         pass
-        ## projection_is_identity is no more.
-        #self.projection_is_identity = True
 
 class MockProject(object):
     def __init__(self):
         self.control = MockControl()
-        self.layer_manager = None
-        self.window = None
+        self.layer_manager = LayerManager.create(self)
+        self.window = MockWindow()
+
+#    def load_all_layers(self, uri, mime):
+#        guess = FileGuess(uri)
+#        guess.metadata.mime = mime
+#        print guess
+#        print guess.metadata
+#        loader, layers = loaders.load_layers(guess.metadata, manager=self.layer_manager)
+#        return layers
+#
+#    def load_first_layer(self, uri, mime):
+#        return self.load_all_layers(uri, mime)[0]
     
     def load_file(self, path, mime):
         guess = FileGuess(os.path.realpath(path))
@@ -63,13 +79,17 @@ class MockProject(object):
             cmd = LoadLayersCommand(metadata)
             self.process_command(cmd)
     
-    def undo(self):
-        undo = self.layer_manager.undo_stack.undo(self)
-        self.process_flags(undo.flags)
+    def undo(self, count=1):
+        while count > 0:
+            undo = self.layer_manager.undo_stack.undo(self)
+            self.process_flags(undo.flags)
+            count -= 1
     
-    def redo(self):
-        undo = self.layer_manager.undo_stack.redo(self)
-        self.process_flags(undo.flags)
+    def redo(self, count=1):
+        while count > 0:
+            undo = self.layer_manager.undo_stack.redo(self)
+            self.process_flags(undo.flags)
+            count -= 1
     
     def process_command(self, command):
         print "processing command %s" % command.short_name
@@ -79,6 +99,10 @@ class MockProject(object):
     
     def process_flags(self, f):
         pass
+    
+    def get_outer_boundary(self, layer):
+        boundaries = Boundaries(layer)
+        return boundaries.get_outer_boundary()
 
 class MockManager(object):
     def __init__(self):

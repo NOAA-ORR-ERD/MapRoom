@@ -115,11 +115,16 @@ class LayerConverter(ArgumentConverter):
     stype = "layer"
     
     def get_args(self, instance):
-        return instance.name,
+        return instance,
     
     def instance_from_args(self, args, manager):
-        name = args.pop(0)
-        layer = manager.get_layer_by_name(name)
+        val = args.pop(0)
+        try:
+            id = int(val)
+            layer = manager.get_layer_by_invariant(id)
+        except:
+            # Old way: save layer references by name
+            layer = manager.get_layer_by_name(val)
         return layer
 
 

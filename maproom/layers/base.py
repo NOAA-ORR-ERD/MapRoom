@@ -28,6 +28,12 @@ class Layer(HasTraits):
     
     name = Unicode("Empty Layer")
     
+    # invariant is sort of a serial number of the layer in a LayerManager: an
+    # id that doesn't change when the layer is renamed or reordered.  It is
+    # unique within a particular instance of a LayerManager, and gets created
+    # when the layer is added to a LayerManager
+    invariant = Int(0)
+    
     # type is a string identifier that uniquely refers to a layer class.
     # Base classes should use an empty string to show that they won't be
     # serializable.

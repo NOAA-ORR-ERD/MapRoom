@@ -17,14 +17,16 @@ class InsertPointCommand(Command):
         return "Add Point #%d" % self.undo_info.index
     
     def perform(self, editor):
-        self.undo_info = undo = self.layer.insert_point(self.world_point)
-        self.layer.select_point(self.undo_info.index)
-        lf = undo.flags.add_layer_flags(self.layer)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = layer.insert_point(self.world_point)
+        layer.select_point(self.undo_info.index)
+        lf = undo.flags.add_layer_flags(layer)
         lf.hidden_layer_check = True
         return undo
 
     def undo(self, editor):
-        undo_info = self.layer.delete_point(self.undo_info.index)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        undo_info = layer.delete_point(self.undo_info.index)
         return undo_info
 
 class MovePointsCommand(Command):
@@ -58,25 +60,27 @@ class MovePointsCommand(Command):
         return len(self.indexes) > 0
     
     def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        old_x = np.copy(self.layer.points.x[self.indexes])
-        old_y = np.copy(self.layer.points.y[self.indexes])
+        old_x = np.copy(layer.points.x[self.indexes])
+        old_y = np.copy(layer.points.y[self.indexes])
         undo.data = (old_x, old_y)
         undo.flags.refresh_needed = True
-        lf = undo.flags.add_layer_flags(self.layer)
+        lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
         lf.layer_contents_added = True
-        self.layer.points.x[self.indexes] += self.dx
-        self.layer.points.y[self.indexes] += self.dy
+        layer.points.x[self.indexes] += self.dx
+        layer.points.y[self.indexes] += self.dy
         print "dx=%f, dy=%f" % (self.dx, self.dy)
         print self.indexes
         print undo.data
         return undo
 
     def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         (old_x, old_y) = self.undo_info.data
-        self.layer.points.x[self.indexes] = old_x
-        self.layer.points.y[self.indexes] = old_y
+        layer.points.x[self.indexes] = old_x
+        layer.points.y[self.indexes] = old_y
         return self.undo_info
 
 class ChangeDepthCommand(Command):
@@ -105,18 +109,20 @@ class ChangeDepthCommand(Command):
         return len(self.indexes) > 0
     
     def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        old_depths = np.copy(self.layer.points.z[self.indexes])
+        old_depths = np.copy(layer.points.z[self.indexes])
         undo.data = old_depths
         undo.flags.refresh_needed = True
-        lf = undo.flags.add_layer_flags(self.layer)
+        lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
-        self.layer.points.z[self.indexes] = self.depth
+        layer.points.z[self.indexes] = self.depth
         return undo
 
     def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         (old_depths) = self.undo_info.data
-        self.layer.points.z[self.indexes] = old_depths
+        layer.points.z[self.indexes] = old_depths
         return self.undo_info
 
 class InsertLineCommand(Command):
@@ -138,18 +144,20 @@ class InsertLineCommand(Command):
         return "Line From Point %d" % self.index
     
     def perform(self, editor):
-        self.undo_point = self.layer.insert_point(self.world_point)
-        self.undo_line = self.layer.insert_line_segment(self.undo_point.index, self.index)
-        self.layer.select_point(self.undo_point.index)
-        lf = self.undo_point.flags.add_layer_flags(self.layer)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_point = layer.insert_point(self.world_point)
+        self.undo_line = layer.insert_line_segment(self.undo_point.index, self.index)
+        layer.select_point(self.undo_point.index)
+        lf = self.undo_point.flags.add_layer_flags(layer)
         lf.hidden_layer_check = True
         # FIXME: merge undo status
         return self.undo_point
 
     def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         # FIXME: merge undo status
-        undo_info = self.layer.delete_line_segment(self.undo_line.index)
-        undo_info = self.layer.delete_point(self.undo_point.index)
+        undo_info = layer.delete_line_segment(self.undo_line.index)
+        undo_info = layer.delete_point(self.undo_point.index)
         return undo_info
 
 class ConnectPointsCommand(Command):
@@ -170,14 +178,16 @@ class ConnectPointsCommand(Command):
         return "Line Connecting Points %d & %d" % (self.index1, self.index2)
     
     def perform(self, editor):
-        self.undo_line = self.layer.insert_line_segment(self.index1, self.index2)
-        self.layer.select_point(self.index2)
-        lf = self.undo_line.flags.add_layer_flags(self.layer)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_line = layer.insert_line_segment(self.index1, self.index2)
+        layer.select_point(self.index2)
+        lf = self.undo_line.flags.add_layer_flags(layer)
         lf.hidden_layer_check = True
         return self.undo_line
 
     def undo(self, editor):
-        undo_info = self.layer.delete_line_segment(self.undo_line.index)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        undo_info = layer.delete_line_segment(self.undo_line.index)
         return undo_info
 
 class SplitLineCommand(Command):
@@ -201,9 +211,9 @@ class SplitLineCommand(Command):
         return "Split Line #%d" % self.index
     
     def perform(self, editor):
-        self.undo_point = self.layer.insert_point(self.world_point)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_point = layer.insert_point(self.world_point)
         
-        layer = self.layer
         layer.select_point(self.undo_point.index)
         point_index_1 = layer.line_segment_indexes.point1[self.index]
         point_index_2 = layer.line_segment_indexes.point2[self.index]
@@ -220,11 +230,12 @@ class SplitLineCommand(Command):
         return self.undo_point
 
     def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         # FIXME: merge undo status
-        undo_info = self.layer.delete_line_segment(self.undo_line2.index)
-        undo_info = self.layer.delete_line_segment(self.undo_line1.index)
-        self.layer.line_segment_indexes = np.insert(self.layer.line_segment_indexes, self.index, self.undo_delete.data).view(np.recarray)
-        undo_info = self.layer.delete_point(self.undo_point.index)
+        undo_info = layer.delete_line_segment(self.undo_line2.index)
+        undo_info = layer.delete_line_segment(self.undo_line1.index)
+        layer.line_segment_indexes = np.insert(layer.line_segment_indexes, self.index, self.undo_delete.data).view(np.recarray)
+        undo_info = layer.delete_point(self.undo_point.index)
         return undo_info
 
 class DeleteLinesCommand(Command):
@@ -257,21 +268,22 @@ class DeleteLinesCommand(Command):
         return "Delete %d Lines" % len(old_line_indexes)
     
     def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        old_line_indexes = self.layer.get_lines_connected_to_points(self.point_indexes)
+        old_line_indexes = layer.get_lines_connected_to_points(self.point_indexes)
         if self.line_indexes is not None:
             # handle degenerate list as well as zero-length numpy array using length test
             if len(list(self.line_indexes)) > 0:
                 old_line_indexes = np.unique(np.append(old_line_indexes, self.line_indexes))
-        old_line_segments = np.copy(self.layer.line_segment_indexes[old_line_indexes])
-        old_points = np.copy(self.layer.points[self.point_indexes])
+        old_line_segments = np.copy(layer.line_segment_indexes[old_line_indexes])
+        old_points = np.copy(layer.points[self.point_indexes])
         undo.data = (old_points, old_line_segments, old_line_indexes)
         print "DeleteLinesCommand: (point indexes, points, line segments, line indexes) %s %s" % (self.point_indexes, str(undo.data))
         undo.flags.refresh_needed = True
-        lf = undo.flags.add_layer_flags(self.layer)
+        lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
         lf.layer_contents_deleted = True
-        self.layer.remove_points_and_lines(self.point_indexes, old_line_indexes)
+        layer.remove_points_and_lines(self.point_indexes, old_line_indexes)
         return undo
 
     def undo(self, editor):
@@ -292,27 +304,28 @@ class DeleteLinesCommand(Command):
         >>> np.insert(b, fixed, indexes)
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         """
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         old_points, old_line_segments, old_line_indexes = self.undo_info.data
         offset = np.arange(len(self.point_indexes))
         indexes = self.point_indexes - offset
-        self.layer.points = np.insert(self.layer.points, indexes, old_points).view(np.recarray)
+        layer.points = np.insert(layer.points, indexes, old_points).view(np.recarray)
 
         # adjust existing indexes to allow for inserted points
-        offsets1 = np.zeros(np.alen(self.layer.line_segment_indexes))
-        offsets2 = np.zeros(np.alen(self.layer.line_segment_indexes))
+        offsets1 = np.zeros(np.alen(layer.line_segment_indexes))
+        offsets2 = np.zeros(np.alen(layer.line_segment_indexes))
         insertion_space = 0
         for index in indexes:
-            offsets1 += np.where(self.layer.line_segment_indexes.point1 >= index, 1, 0)
-            offsets2 += np.where(self.layer.line_segment_indexes.point2 >= index, 1, 0)
-        self.layer.line_segment_indexes.point1 += offsets1
-        self.layer.line_segment_indexes.point2 += offsets2
+            offsets1 += np.where(layer.line_segment_indexes.point1 >= index, 1, 0)
+            offsets2 += np.where(layer.line_segment_indexes.point2 >= index, 1, 0)
+        layer.line_segment_indexes.point1 += offsets1
+        layer.line_segment_indexes.point2 += offsets2
 
         offset = np.arange(len(old_line_indexes))
         indexes = old_line_indexes - offset
-        self.layer.line_segment_indexes = np.insert(self.layer.line_segment_indexes, indexes, old_line_segments).view(np.recarray)
+        layer.line_segment_indexes = np.insert(layer.line_segment_indexes, indexes, old_line_segments).view(np.recarray)
         undo = UndoInfo()
         undo.flags.refresh_needed = True
-        lf = undo.flags.add_layer_flags(self.layer)
+        lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
         lf.layer_contents_deleted = True
         return undo
@@ -345,12 +358,14 @@ class CropRectCommand(Command):
         return "Crop"
     
     def perform(self, editor):
-        self.undo_info = self.layer.crop_rectangle(self.world_rect)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_info = layer.crop_rectangle(self.world_rect)
         return self.undo_info
 
     def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         old_state = self.undo_info.data
-        undo_info = self.layer.set_state(old_state)
+        undo_info = layer.set_state(old_state)
         return undo_info
     
 class LayerColorCommand(Command):
@@ -368,14 +383,16 @@ class LayerColorCommand(Command):
         return "Layer Color"
     
     def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        undo.data = (self.layer.color, self.color)
-        lf = undo.flags.add_layer_flags(self.layer)
+        undo.data = (layer.color, self.color)
+        lf = undo.flags.add_layer_flags(layer)
         lf.layer_display_properties_changed = True
-        self.layer.set_color(self.color)
+        layer.set_color(self.color)
         return undo
 
     def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         old_color, color = self.undo_info.data
-        self.layer.set_color(old_color)
+        layer.set_color(old_color)
         return self.undo_info

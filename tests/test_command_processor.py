@@ -12,8 +12,9 @@ from maproom.mouse_commands import *
 
 class TestVerdatUndo(object):
     def setup(self):
-        self.manager = MockManager()
-        self.layer = self.manager.load_first_layer("../TestData/Verdat/000689pts.verdat", "application/x-maproom-verdat")
+        self.project = MockProject()
+        self.project.load_file("../TestData/Verdat/000689pts.verdat", "application/x-maproom-verdat")
+        self.layer = self.project.layer_manager.get_layer_by_invariant(1)
 
     def test_add_points(self):
         world_point = (-118.0, 33.0)
@@ -21,10 +22,10 @@ class TestVerdatUndo(object):
         eq_(689, np.alen(self.layer.points))
         
         cmd = InsertPointCommand(self.layer, world_point)
-        self.manager.project.process_command(cmd)
+        self.project.process_command(cmd)
         eq_(690, np.alen(self.layer.points))
         
-        self.manager.project.undo()
+        self.project.undo()
         eq_(689, np.alen(self.layer.points))
         assert np.array_equal(orig_points, self.layer.points)
 
@@ -35,11 +36,11 @@ class TestVerdatUndo(object):
         orig_points = np.copy(self.layer.points).view(np.recarray)
         
         cmd = MovePointsCommand(self.layer, indexes, dx, dy)
-        self.manager.project.process_command(cmd)
+        self.project.process_command(cmd)
         assert np.allclose(self.layer.points.x[indexes], orig_points.x[indexes] + dx)
         assert np.allclose(self.layer.points.y[indexes], orig_points.y[indexes] + dy)
 
-        self.manager.project.undo()
+        self.project.undo()
         eq_(689, np.alen(self.layer.points))
         assert np.array_equal(orig_points, self.layer.points)
 
@@ -51,35 +52,36 @@ class TestVerdatUndo(object):
         
         # move once
         cmd = MovePointsCommand(self.layer, indexes, dx, dy)
-        self.manager.project.process_command(cmd)
+        self.project.process_command(cmd)
         assert np.allclose(self.layer.points.x[indexes], orig_points.x[indexes] + dx)
         assert np.allclose(self.layer.points.y[indexes], orig_points.y[indexes] + dy)
         
         # move same points again
         cmd = MovePointsCommand(self.layer, indexes, dx, dy)
-        self.manager.project.process_command(cmd)
+        self.project.process_command(cmd)
         assert np.allclose(self.layer.points.x[indexes], orig_points.x[indexes] + dx + dx)
         assert np.allclose(self.layer.points.y[indexes], orig_points.y[indexes] + dy + dy)
 
         # single undo should return to original state
-        self.manager.project.undo()
+        self.project.undo()
         eq_(689, np.alen(self.layer.points))
         assert np.array_equal(orig_points, self.layer.points)
 
 class TestVerdatDelete(object):
     def setup(self):
-        self.manager = MockManager()
-        self.layer = self.manager.load_first_layer("../TestData/Verdat/duplicate-points.verdat", "application/x-maproom-verdat")
+        self.project = MockProject()
+        self.project.load_file("../TestData/Verdat/duplicate-points.verdat", "application/x-maproom-verdat")
+        self.layer = self.project.layer_manager.get_layer_by_invariant(1)
 
     def test_delete(self):
         orig_lsi = np.copy(self.layer.line_segment_indexes)
 
         points = [9, 10]
         cmd = DeleteLinesCommand(self.layer, points, None)
-        self.manager.project.process_command(cmd)
+        self.project.process_command(cmd)
         print self.layer.line_segment_indexes
         
-        self.manager.project.undo()
+        self.project.undo()
         eq_(orig_lsi[-1], self.layer.line_segment_indexes[-1])
 
 if __name__ == "__main__":

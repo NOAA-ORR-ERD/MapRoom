@@ -41,6 +41,8 @@ class LayerManager(HasTraits):
     
     layers = List(Any)
     
+    next_invariant = Int(0)
+    
     # A mapping of a layer to all layers that are built from the layer,
     # as if it were a parent/child relationship.  dependents[layer]
     # yields another mapping of dependent layer type to actual layer,
@@ -88,6 +90,7 @@ class LayerManager(HasTraits):
         self = cls()
         self.project = project
         self.undo_stack = UndoStack()
+        self.next_invariant = -1  # preset so first user added layer will use 1
         layer = RootLayer(manager=self)
         self.insert_layer([0], layer)
         grid = Grid(manager=self)
@@ -232,10 +235,10 @@ class LayerManager(HasTraits):
             return error
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None):
         self.dispatch_event('layer_loaded', layer)
         mi = self.get_insertion_multi_index(before, after)
-        self.insert_layer(mi, layer)
+        self.insert_layer(mi, layer, invariant=invariant)
     
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
@@ -260,7 +263,7 @@ class LayerManager(HasTraits):
             mi = None
         return mi
 
-    def insert_layer(self, at_multi_index, layer):
+    def insert_layer(self, at_multi_index, layer, invariant=None):
         if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
@@ -269,14 +272,35 @@ class LayerManager(HasTraits):
         if (not isinstance(layer, list)):
             if (layer.type == "folder"):
                 layer = [layer]
-        self.insert_layer_recursive(at_multi_index, layer, self.layers)
+        self.insert_layer_recursive(at_multi_index, layer, self.layers, invariant)
 
-    def insert_layer_recursive(self, at_multi_index, layer, tree):
+    def insert_layer_recursive(self, at_multi_index, layer, tree, invariant=None):
         if (len(at_multi_index) == 1):
+            layer.invariant = self.get_next_invariant(invariant)
             tree.insert(at_multi_index[0], layer)
         else:
             item = tree[at_multi_index[0]]
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
+    
+    def get_next_invariant(self, invariant=None):
+        if invariant is None:
+            invariant = self.next_invariant
+        if invariant == self.next_invariant:
+            self.next_invariant += 1
+        return invariant
+    
+    def roll_back_invariant(self, invariant):
+        """ Roll back the next_invariant if the supplied invariant is the 
+        last invariant used.
+        
+        This method is used to correctly restore the invariant when the last
+        layer is deleted.  If the passed-in invariant doesn't represent the
+        last layer added, leave things alone because the invariant of the
+        undo/redo will be set to the invariant stored in the undo data.
+        """
+        if invariant + 1 == self.next_invariant:
+            self.next_invariant = invariant
+        return self.next_invariant
 
     # FIXME: layer removal commands should return the hierarchy of layers
     # removed so that the operation can be undone correctly.
@@ -324,6 +348,13 @@ class LayerManager(HasTraits):
         layers = self.flatten()
         for layer in layers:
             if layer.name == name:
+                return layer
+        return None
+
+    def get_layer_by_invariant(self, invariant):
+        layers = self.flatten()
+        for layer in layers:
+            if layer.invariant == invariant:
                 return layer
         return None
 
