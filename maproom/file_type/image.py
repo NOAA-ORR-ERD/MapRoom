@@ -10,10 +10,10 @@ log = logging.getLogger(__name__)
 
 @provides(IFileRecognizer)
 class GDALRecognizer(HasTraits):
-    """Check to see if GDAL can open this -- if so, it returns OK
+    """Check to see if GDAL can open this as a raster file.
 
-       fixme -- ideally, this would check not ony GDAL, but whether
-       it is a dataset we know how to deal with.    
+    Some vector files can be opened by GDAL but these are not recognized by
+    this class.
     """
     id = "image/x-gdal"
     
@@ -25,4 +25,6 @@ class GDALRecognizer(HasTraits):
         except RuntimeError:
             log.debug("GDAL can't open %s; not an image")
             return None
-        return "image/x-gdal"
+        if dataset.RasterCount > 0:
+            return "image/x-gdal"
+        return None

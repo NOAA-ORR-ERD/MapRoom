@@ -53,24 +53,25 @@ def test_identify():
 
 def check_filetype(filename, identifier):
     recognizer = identifier()
-    guess = FileGuess( filename)
+    guess = FileGuess(filename)
     assert recognizer.identify(guess) == identifier.id
 
 
 def test_not_identity():
     """test generator for negative check"""
-    for recognizer in  RECOGNIZERS:
+    for recognizer in RECOGNIZERS:
         for filename, identifier in FILES:
             if recognizer is not identifier:
                 yield check_not_filetype, filename, recognizer
 
 def check_not_filetype(filename, Recognizer):
     recognizer = Recognizer()
-    guess = FileGuess( filename)
+    guess = FileGuess(filename)
+    print filename, guess, Recognizer.id, recognizer.identify(guess)
     assert not recognizer.identify(guess) == Recognizer.id
 
 def test_identify_nc_particles_ugrid():
     """ make sure it rejects a ugrid netcdf file """
     recognizer = binary.NC_ParticleRecognizer()
-    guess = FileGuess( os.path.join(test_data_dir, "UGrid", "21_triangles.nc") )
+    guess = FileGuess(os.path.join(test_data_dir, "UGrid", "21_triangles.nc"))
     assert recognizer.identify(guess) is None
