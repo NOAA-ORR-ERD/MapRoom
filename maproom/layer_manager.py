@@ -129,6 +129,42 @@ class LayerManager(HasTraits):
 
         return result
     
+    # Invariant handling: invariants are unique identifiers for each layer that
+    # don't change when the layer is renamed or reordered
+    
+    def get_next_invariant(self, invariant=None):
+        if invariant is None:
+            invariant = self.next_invariant
+        if invariant == self.next_invariant:
+            self.next_invariant += 1
+        return invariant
+    
+    def roll_back_invariant(self, invariant):
+        """ Roll back the next_invariant if the supplied invariant is the 
+        last invariant used.
+        
+        This method is used to correctly restore the invariant when the last
+        layer is deleted.  If the passed-in invariant doesn't represent the
+        last layer added, leave things alone because the invariant of the
+        undo/redo will be set to the invariant stored in the undo data.
+        """
+        if invariant + 1 == self.next_invariant:
+            self.next_invariant = invariant
+        return self.next_invariant
+
+    def get_layer_by_invariant(self, invariant):
+        layers = self.flatten()
+        for layer in layers:
+            print layer.invariant, layer
+            if layer.invariant == invariant:
+                return layer
+        return None
+    
+    def get_invariant_offset(self):
+        return self.next_invariant - 1
+    
+    #
+    
     def has_user_created_layers(self):
         """Returns true if all the layers can be recreated automatically
         
@@ -281,26 +317,6 @@ class LayerManager(HasTraits):
         else:
             item = tree[at_multi_index[0]]
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
-    
-    def get_next_invariant(self, invariant=None):
-        if invariant is None:
-            invariant = self.next_invariant
-        if invariant == self.next_invariant:
-            self.next_invariant += 1
-        return invariant
-    
-    def roll_back_invariant(self, invariant):
-        """ Roll back the next_invariant if the supplied invariant is the 
-        last invariant used.
-        
-        This method is used to correctly restore the invariant when the last
-        layer is deleted.  If the passed-in invariant doesn't represent the
-        last layer added, leave things alone because the invariant of the
-        undo/redo will be set to the invariant stored in the undo data.
-        """
-        if invariant + 1 == self.next_invariant:
-            self.next_invariant = invariant
-        return self.next_invariant
 
     # FIXME: layer removal commands should return the hierarchy of layers
     # removed so that the operation can be undone correctly.
@@ -348,13 +364,6 @@ class LayerManager(HasTraits):
         layers = self.flatten()
         for layer in layers:
             if layer.name == name:
-                return layer
-        return None
-
-    def get_layer_by_invariant(self, invariant):
-        layers = self.flatten()
-        for layer in layers:
-            if layer.invariant == invariant:
                 return layer
         return None
 

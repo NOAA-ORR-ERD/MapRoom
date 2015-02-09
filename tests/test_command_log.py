@@ -98,14 +98,46 @@ class TestTwoLayers(TestLogBase):
         self.project.redo()
         eq_(4, lm.next_invariant)
 
+class TestInvariantOffset(object):
+    def setup(self):
+        self.project = MockProject()
+        self.manager = self.project.layer_manager
+        self.project.load_file("../TestData/Verdat/000011pts.verdat", "application/x-maproom-verdat")
+
+    def test_offset1(self):
+        self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
+        lm = self.manager
+        layer = lm.get_layer_by_invariant(1)
+        eq_(11, np.alen(layer.points))
+        layer = lm.get_layer_by_invariant(2)
+        eq_(693, np.alen(layer.points))
+        layer = lm.get_layer_by_invariant(3)
+        eq_(26, np.alen(layer.points))
+
+    def test_offset2(self):
+        self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
+        self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
+        lm = self.manager
+        layer = lm.get_layer_by_invariant(1)
+        eq_(11, np.alen(layer.points))
+        layer = lm.get_layer_by_invariant(2)
+        eq_(693, np.alen(layer.points))
+        layer = lm.get_layer_by_invariant(3)
+        eq_(26, np.alen(layer.points))
+        cmd = DeleteLayerCommand(layer)
+        undo = self.project.process_command(cmd)
+        assert undo.flags.success
+        layer = lm.get_layer_by_invariant(4)
+        eq_(693, np.alen(layer.points))
+        layer = lm.get_layer_by_invariant(5)
+        eq_(26, np.alen(layer.points))
+
 if __name__ == "__main__":
     #unittest.main()
     import time
     
-    t = TestTwoLayers()
+    t = TestInvariantOffset()
     t.setup()
-#    t.test_points()
-#    t.test_rename()
-#    t.test_merge()
-#    t.test_triangulate1()
-    t.test_triangulate2()
+    t.test_offset1()
+    t.setup()
+    t.test_offset2()

@@ -56,7 +56,8 @@ class Serializer(object):
 
 
 class TextDeserializer(object):
-    def __init__(self, text):
+    def __init__(self, text, layer_offset=0):
+        self.layer_offset = layer_offset
         lines = text.splitlines()
         self.header = lines.pop(0)
         self.lines = lines
@@ -78,7 +79,7 @@ class TextDeserializer(object):
         cmd_args = []
         for name, stype in cmd_cls.serialize_order:
             converter = SerializedCommand.get_converter(stype)
-            arg = converter.instance_from_args(text_args, manager)
+            arg = converter.instance_from_args(text_args, manager, self)
             cmd_args.append(arg)
         cmd = "COMMAND: %s(%s)" % (cmd_cls.__name__, ",".join([str(a) for a in cmd_args]))
         cmd = cmd_cls(*cmd_args)
@@ -93,7 +94,7 @@ class ArgumentConverter(object):
         """
         return str(instance),
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         arg = args.pop(0)
         return arg
 
@@ -105,7 +106,7 @@ class FileMetadataConverter(ArgumentConverter):
         # Force forward slashes on windows so to prevent backslash escape chars
         return os.path.normpath(instance.uri).replace('\\', '/'), instance.mime
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         uri = args.pop(0)
         mime = args.pop(0)
         return FileMetadata(uri=uri, mime=mime)
@@ -117,11 +118,11 @@ class LayerConverter(ArgumentConverter):
     def get_args(self, instance):
         return instance,
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         val = args.pop(0)
         try:
             id = int(val)
-            layer = manager.get_layer_by_invariant(id)
+            layer = manager.get_layer_by_invariant(id + deserializer.layer_offset)
         except:
             # Old way: save layer references by name
             layer = manager.get_layer_by_name(val)
@@ -131,7 +132,7 @@ class LayerConverter(ArgumentConverter):
 class IntConverter(ArgumentConverter):
     stype = "int"
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text == "None":
             return None
@@ -141,7 +142,7 @@ class IntConverter(ArgumentConverter):
 class FloatConverter(ArgumentConverter):
     stype = "float"
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text == "None":
             return None
@@ -154,7 +155,7 @@ class PointConverter(ArgumentConverter):
     def get_args(self, instance):
         return instance  # already a tuple
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         lon = args.pop(0)
         lat = args.pop(0)
         return (float(lon), float(lat))
@@ -167,7 +168,7 @@ class RectConverter(ArgumentConverter):
         (x1, y1), (x2, y2) = instance
         return x1, y1, x2, y2
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         x1 = args.pop(0)
         y1 = args.pop(0)
         x2 = args.pop(0)
@@ -182,7 +183,7 @@ class ListIntConverter(ArgumentConverter):
         text = ",".join([str(i) for i in instance])
         return "[%s]" % text,
     
-    def instance_from_args(self, args, manager):
+    def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text.startswith("["):
             text = text[1:]
