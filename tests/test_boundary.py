@@ -2,6 +2,7 @@ import os
 
 import unittest
 from nose.tools import *
+from nose.plugins.attrib import attr
 
 import numpy as np
 
@@ -21,6 +22,7 @@ class TestVerdatPolygonCrossing(object):
         print error_points
         assert len(error_points) == 4
 
+    @attr('slow')
     def test_large_verdat_is_self_intersecting(self):
         layer = self.project.raw_load_first_layer("../TestData/Verdat/large-self-intersecting.verdat", "application/x-maproom-verdat")
         boundary = self.project.get_outer_boundary(layer)
