@@ -10,6 +10,8 @@ import os
 
 from nose.tools import *
 
+from mock import *
+
 from maproom.file_type import binary, text, image
 
 from peppy2.utils.file_guess import FileGuess
@@ -36,7 +38,7 @@ FILES = [
           ( (os.path.join(test_data_dir, "BNA", "Haiti.bna") ), text.BNARecognizer ),
           # GDAL images
           ( (os.path.join(test_data_dir, "ChartsAndImages", "11361_1.KAP") ), image.GDALRecognizer),
-          ( (os.path.join(test_data_dir, "ChartsAndImages", "13260_1.png") ), image.GDALRecognizer),
+          ( (os.path.join(test_data_dir, "ChartsAndImages", "NOAA18649_small.png") ), image.GDALRecognizer),
           ( (os.path.join(test_data_dir, "ChartsAndImages", "Admiralty-0463-2.tif") ), image.GDALRecognizer),
          ]
 
