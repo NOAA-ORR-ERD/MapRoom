@@ -1,3 +1,23 @@
+02/09/2015
+---------------------------
+Released 3.0b22
+- RM Now able to restore command logs in non-empty projects
+- RM Moved select_layer flag processing below refresh so it isn't cleared
+- RM Added slow attribute to tests that take a long time
+- RM Fixed boundary unit tests
+- RM Fixed nc_particles unit tests
+- RM Fixed GDAL loader to only recognize raster files
+- RM Fixed file type unit tests
+- RM Fixed ugrid unit tests
+- RM Commands now store reference to layer (an invariant) rather that the layer object itself
+- RM Fixed text conversion of DeleteLinesCommand when only deleting a point
+- RM Fixed process_flags that was ignoring the passed-in layers_changed flag
+- RM Include default string converter for deserialization
+- RM Allow comment and blank lines in command log files
+- RM Added menu item to save the command log
+- RM Added unit test framework for reading command logs
+- RM Initial code for RenameLayerCommand
+
 02/02/2015
 ---------------------------
 Released 3.0b21
