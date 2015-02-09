@@ -425,8 +425,6 @@ class ProjectEditor(FrameworkEditor):
             else:
                 self.layer_manager.layer_contents_changed = layer
         
-        if select_layer:
-            self.layer_tree_control.select_layer(select_layer)
         if layers_changed:
             self.layer_manager.layers_changed = True
         if zoom_layers:
@@ -435,6 +433,8 @@ class ProjectEditor(FrameworkEditor):
             self.layer_manager.layer_metadata_changed = True
         if f.refresh_needed:
             self.layer_manager.refresh_needed = True
+        if select_layer:
+            self.layer_tree_control.select_layer(select_layer)
             
         self.undo_history.update_history()
 
