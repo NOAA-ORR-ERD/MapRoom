@@ -244,8 +244,16 @@ class DeleteLinesCommand(Command):
     
     def __str__(self):
         old_points, old_line_segments, old_line_indexes = self.undo_info.data
-        if len(old_line_indexes) == 1:
-            return "Delete Line #%d" % self.line_indexes[0]
+        if len(old_line_indexes) == 0:
+            if len(self.point_indexes) == 1:
+                return "Delete Point #%d" % self.point_indexes[0]
+            return "Delete %d Points" % len(self.point_indexes)
+        elif len(old_line_indexes) == 1:
+            if len(self.line_indexes) > 0:
+                line = self.line_indexes[0]
+            else:
+                line = old_line_indexes[0]
+            return "Delete Line #%d" % line
         return "Delete %d Lines" % len(old_line_indexes)
     
     def perform(self, editor):
