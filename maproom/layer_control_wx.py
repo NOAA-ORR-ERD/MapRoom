@@ -34,12 +34,6 @@ class LayerControl(glcanvas.GLCanvas):
     The core rendering class for MapRoom app.
     """
 
-    MODE_PAN = 0
-    MODE_ZOOM_RECT = 1
-    MODE_EDIT_POINTS = 2
-    MODE_EDIT_LINES = 3
-    MODE_CROP = 4
-    
     valid_mouse_modes = {
         'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
         'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],

@@ -157,7 +157,7 @@ class MouseHandler(object):
         c = self.layer_control
         if c.mouse_is_down:
             effective_mode = c.get_effective_tool_mode(event)
-            if effective_mode == c.MODE_ZOOM_RECT or effective_mode == c.MODE_CROP:
+            if effective_mode == ZoomRectMode or effective_mode == CropRectMode:
                 if (event.GetKeyCode() == wx.WXK_ESCAPE):
                     c.mouse_is_down = False
                     c.ReleaseMouse()
