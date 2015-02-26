@@ -2,7 +2,6 @@ import os
 import time
 
 import wx
-import wx.glcanvas as glcanvas
 import pyproj
 
 from peppy2 import get_image_path
@@ -11,9 +10,6 @@ import library.coordinates as coordinates
 import renderer
 import library.rect as rect
 from mouse_handler import *
-
-import OpenGL
-import OpenGL.GL as gl
 
 from library.projection import Projection, NullProjection
 
@@ -25,10 +21,8 @@ The RenderWindow class -- where the opengl rendering really takes place.
 
 import logging
 log = logging.getLogger(__name__)
-mouselog = logging.getLogger("mouse")
-mouselog.setLevel(logging.INFO)
 
-class LayerControl(glcanvas.GLCanvas):
+class LayerControl(renderer.BaseCanvas):
 
     """
     The core rendering class for MapRoom app.
@@ -39,8 +33,6 @@ class LayerControl(glcanvas.GLCanvas):
         'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
         'default': [PanMode, ZoomRectMode],
         }
-
-    opengl_renderer = None
 
     mouse_is_down = False
     is_alt_key_down = False
@@ -60,28 +52,14 @@ class LayerControl(glcanvas.GLCanvas):
             return valid[0]
         return mouse_mode
     
-    context = None
-    
-    @classmethod
-    def init_context(cls, canvas):
-        # Only one GLContext is needed for the entire application -- this way,
-        # textures can be shared among views.
-        if cls.context is None:
-            cls.context = glcanvas.GLContext(canvas)
-
     def __init__(self, *args, **kwargs):
         self.project = kwargs.pop('project')
         self.layer_manager = kwargs.pop('layer_manager')
         self.editor = self.project
+        
+        renderer.BaseCanvas.__init__(self, *args, **kwargs)
+        
         self.layer_renderers = {}
-
-        kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
-                                glcanvas.WX_GL_DOUBLEBUFFER,
-                                glcanvas.WX_GL_MIN_ALPHA, 8, )
-
-        glcanvas.GLCanvas.__init__(self, *args, **kwargs)
-
-        self.init_context(self)
 
         p = get_image_path("icons/hand.ico", file=__name__)
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
@@ -102,29 +80,6 @@ class LayerControl(glcanvas.GLCanvas):
 
         self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
 
-        #self.frame.Bind( wx.EVT_MOVE, self.refresh )
-        #self.frame.Bind( wx.EVT_IDLE, self.on_idle )
-        # self.frame.Bind( wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll )
-
-        self.Bind(wx.EVT_PAINT, self.render)
-        # Prevent flashing on Windows by doing nothing on an erase background event.
-        ## fixme -- I think you can pass a flag to the Window instead...
-        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
-        self.Bind(wx.EVT_SIZE, self.resize_render_pane)
-        
-        # mouse handler events
-        self.mouse_handler = PanMode(self)
-        
-        self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
-        self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
-        self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
-        self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
-        self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
-        self.Bind(wx.EVT_LEAVE_WINDOW, self.on_mouse_leave)
-        self.Bind(wx.EVT_CHAR, self.on_key_char)
-        self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
-        self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
-    
     def change_view(self, layer_manager):
         self.layer_manager = layer_manager
 
@@ -161,75 +116,11 @@ class LayerControl(glcanvas.GLCanvas):
         self.release_mouse()
         self.mouse_handler = mode(self)
 
-    def on_mouse_down(self, event):
-        # self.SetFocus() # why would it not be focused?
-        mouselog.debug("in on_mouse_down: event=%s" % event)
-        self.get_effective_tool_mode(event)  # update alt key state
-        self.forced_cursor = None
-        self.mouse_is_down = True
-        self.selection_box_is_being_defined = False
-        self.mouse_down_position = event.GetPosition()
-        self.mouse_move_position = self.mouse_down_position
-
-        self.mouse_handler.process_mouse_down(event)
-        self.set_cursor()
-
     def release_mouse(self):
         self.mouse_is_down = False
         self.selection_box_is_being_defined = False
         while self.HasCapture():
             self.ReleaseMouse()
-
-    def on_mouse_motion(self, event):
-        self.get_effective_tool_mode(event)  # update alt key state
-        if self.mouse_is_down:
-            self.mouse_handler.process_mouse_motion_down(event)
-        else:
-            self.mouse_handler.process_mouse_motion_up(event)
-        self.set_cursor()
-
-    def on_mouse_up(self, event):
-        self.get_effective_tool_mode(event)  # update alt key state
-        self.forced_cursor = None
-        
-        self.mouse_handler.process_mouse_up(event)
-        self.set_cursor()
-
-    def on_mouse_wheel_scroll(self, event):
-        self.get_effective_tool_mode(event)  # update alt key state
-        
-        self.mouse_handler.process_mouse_wheel_scroll(event)
-        self.set_cursor()
-
-    def on_mouse_enter(self, event):
-        self.set_cursor()
-
-    def on_mouse_leave(self, event):
-        self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-        
-        self.mouse_handler.process_mouse_leave(event)
-
-    def on_key_down(self, event):
-        self.get_effective_tool_mode(event)
-        
-        self.mouse_handler.process_key_down(event)
-        self.set_cursor()
-        
-        event.Skip()
-
-    def on_key_up(self, event):
-        self.get_effective_tool_mode(event)
-        
-        self.mouse_handler.process_key_up(event)
-        self.set_cursor()
-        
-        event.Skip()
-
-    def on_key_char(self, event):
-        self.get_effective_tool_mode(event)
-        self.set_cursor()
-        
-        self.mouse_handler.process_key_char(event)
 
     def set_cursor(self):
         if (self.forced_cursor is not None):
@@ -258,89 +149,6 @@ class LayerControl(glcanvas.GLCanvas):
             mode = self.project.mouse_mode
         return mode
 
-    def render(self, event=None):
-        # Get interactive console here:
-#        import traceback
-#        traceback.print_stack();
-#        import code; code.interact( local = locals() )
-        if not self.IsShownOnScreen():
-            # log.debug("layer_control_wx.render: not shown yet, so skipping render")
-            return
-
-        t0 = time.clock()
-        self.SetCurrent(self.context)
-        # this has to be here because the window has to exist before making the renderer
-        if (self.opengl_renderer is None):
-            self.opengl_renderer = renderer.RendererDriver(True)
-        self.update_renderers()
-
-        s_r = self.get_screen_rect()
-        p_r = self.get_projected_rect_from_screen_rect(s_r)
-        w_r = self.get_world_rect_from_projected_rect(p_r)
-
-        if not self.opengl_renderer.prepare_to_render(p_r, s_r):
-            return
-
-        """
-        self.root_renderer.render()
-        self.set_screen_projection_matrix()
-        self.box_overlay.render()
-        self.set_render_projection_matrix()
-        """
-
-        ## fixme -- why is this a function defined in here??
-        ##   so that it can be called with and without pick-mode turned on
-        ##   but it seems to be in the wrong place -- make it a regular  method?
-        def render_layers(pick_mode=False):
-            list = self.layer_manager.flatten()
-            length = len(list)
-            self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
-            pick_layer_index = -1
-            for i, layer in enumerate(reversed(list)):
-                if pick_mode:
-                    if layer.pickable:
-                        pick_layer_index += 1
-                        self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
-                        renderer = self.layer_renderers[layer]
-                        layer.render(self.opengl_renderer,
-                                     renderer,
-                                     w_r, p_r, s_r,
-                                     self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                                     pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
-                                     pick_mode)
-                else: # not in pick-mode
-                    renderer = self.layer_renderers[layer]
-                    layer.render(self.opengl_renderer,
-                                 renderer,
-                                 w_r, p_r, s_r,
-                                 self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                                 pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
-                                 pick_mode)
-
-        render_layers()
-
-        self.opengl_renderer.prepare_to_render_screen_objects()
-        if (self.bounding_boxes_shown):
-            self.draw_bounding_boxes()
-        
-        self.mouse_handler.render_overlay()
-
-        self.SwapBuffers()
-
-        self.opengl_renderer.prepare_to_render_projected_objects()
-        self.opengl_renderer.prepare_to_render_picker(s_r)
-        render_layers(pick_mode=True)
-        self.opengl_renderer.done_rendering_picker()
-
-        elapsed = time.clock() - t0
-
-        def update_status(message):
-            self.project.task.status_bar.debug = message
-        wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
-
-        if (event is not None):
-            event.Skip()
-
     def draw_bounding_boxes(self):
         layers = self.layer_manager.flatten()
         for layer in layers:
@@ -350,17 +158,7 @@ class LayerControl(glcanvas.GLCanvas):
                 r, g, b, a = renderer.int_to_color(layer.color)
                 self.opengl_renderer.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
-    def resize_render_pane(self, event):
-        if not self.GetContext():
-            return
-
-        event.Skip()
-        self.render(event)
-
     # functions related to world coordinates, projected coordinates, and screen coordinates
-
-    def get_screen_size(self):
-        return self.GetClientSize()
 
     def get_screen_rect(self):
         size = self.get_screen_size()
@@ -477,34 +275,6 @@ class LayerControl(glcanvas.GLCanvas):
             if (not rect.contains_rect(view_w_r, w_r)):
                 # otherwise we have to zoom (i.e., zoom out because panning didn't work)
                 self.zoom_to_world_rect(w_r)
-
-    def get_canvas_as_image(self):
-        window_size = self.GetClientSize()
-
-        gl.glReadBuffer(gl.GL_FRONT)
-
-        raw_data = gl.glReadPixels(
-            x=0,
-            y=0,
-            width=window_size[0],
-            height=window_size[1],
-            format=gl.GL_RGB,
-            type=gl.GL_UNSIGNED_BYTE,
-            outputType=str,
-        )
-
-        bitmap = wx.BitmapFromBuffer(
-            width=window_size[0],
-            height=window_size[1],
-            dataBuffer=raw_data,
-        )
-
-        image = wx.ImageFromBitmap(bitmap)
-
-        # Flip the image vertically, because glReadPixel()'s y origin is at
-        # the bottom and wxPython's y origin is at the top.
-        screenshot = image.Mirror(horizontally=False)
-        return screenshot
 
     def constrain_zoom(self):
         ## fixme: this  should not be hard coded -- could scale to projection(90,90, inverse=True or ??)
