@@ -15,7 +15,7 @@ from peppy2.framework.errors import ProgressCancelError
 
 # Local imports.
 from i_project_editor import IProjectEditor
-from layer_control_wx import LayerControl
+from layer_control_wx import LayerCanvas
 from layer_manager import LayerManager
 import Layer_tree_control
 import renderer
@@ -134,8 +134,8 @@ class ProjectEditor(FrameworkEditor):
         """
         self.layer_manager = editor.layer_manager
         self.layer_visibility = self.layer_manager.get_default_visibility()
-        self.control.change_view(self.layer_manager)
-        self.control.zoom_to_fit()
+        self.layer_canvas.change_view(self.layer_manager)
+        self.layer_canvas.zoom_to_fit()
         self.dirty = editor.dirty
 
     def save(self, path=None):
@@ -204,7 +204,7 @@ class ProjectEditor(FrameworkEditor):
         _, ext = os.path.splitext(path)
         t = valid.get(ext.lower(), None)
         if t is not None:
-            image = self.control.get_canvas_as_image()
+            image = self.layer_canvas.get_canvas_as_image()
             # "save as" dialog contains confirmation for overwriting existing
             # file, so just write the file here
             image.SaveFile(path, t)
@@ -222,7 +222,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_visibility = self.layer_manager.get_default_visibility()
 
         # Base-class constructor.
-        self.control = LayerControl(parent, layer_manager=self.layer_manager, project=self)
+        self.layer_canvas = LayerCanvas(parent, layer_manager=self.layer_manager, project=self)
         
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
@@ -232,7 +232,7 @@ class ProjectEditor(FrameworkEditor):
         
         # log.debug("LayerEditor: task=%s" % self.task)
 
-        return self.control
+        return self.layer_canvas.get_native_control()
     
     #### Traits event handlers
     
@@ -258,7 +258,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
             # leave mouse_mode set to current setting
             self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
-            self.mouse_mode = LayerControl.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
+            self.mouse_mode = LayerCanvas.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
         else:
             self.layer_can_save = False
             self.layer_can_save_as = False
@@ -267,7 +267,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_above = False
             self.layer_below = False
             self.mouse_mode = PanMode
-        self.control.set_mouse_handler(self.mouse_mode)
+        self.layer_canvas.set_mouse_handler(self.mouse_mode)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_layer_contents_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer)
@@ -297,17 +297,17 @@ class ProjectEditor(FrameworkEditor):
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
-        self.control.rebuild_renderer_for_layer(layer)
+        self.layer_canvas.rebuild_renderer_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_contents_changed_in_place')
     def layer_contents_changed_in_place(self, layer):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
-        self.control.rebuild_renderer_for_layer(layer, in_place=True)
+        self.layer_canvas.rebuild_renderer_for_layer(layer, in_place=True)
     
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
-        self.control.rebuild_renderer_for_layer(layer)
+        self.layer_canvas.rebuild_renderer_for_layer(layer)
     
     @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, layer):
@@ -611,8 +611,8 @@ class ProjectEditor(FrameworkEditor):
         if (world_d_x == 0 and world_d_y == 0):
             return
 
-#        w_p0 = self.control.get_world_point_from_screen_point(mouse_down_position)
-#        w_p1 = self.control.get_world_point_from_screen_point(mouse_move_position)
+#        w_p0 = self.layer_canvas.get_world_point_from_screen_point(mouse_down_position)
+#        w_p1 = self.layer_canvas.get_world_point_from_screen_point(mouse_move_position)
 #        world_d_x = w_p1[0] - w_p0[0]
 #        world_d_y = w_p1[1] - w_p0[1]
 
@@ -664,11 +664,11 @@ class ProjectEditor(FrameworkEditor):
             self.zoom_to_layer(sel_layer)
 
     def zoom_to_layer(self, layer):
-        self.control.zoom_to_world_rect(layer.bounds)
+        self.layer_canvas.zoom_to_world_rect(layer.bounds)
 
     def zoom_to_layers(self, layers):
         rect = self.layer_manager.accumulate_layer_bounds_from_list(layers)
-        self.control.zoom_to_world_rect(rect)
+        self.layer_canvas.zoom_to_world_rect(rect)
     
     def check_for_errors(self):
         error = None

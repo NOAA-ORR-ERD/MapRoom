@@ -231,7 +231,7 @@ class PointIndexesField(TextEditField):
         try:
             one_based_values, error = parse_int_string(c.GetValue())
             values = [x - 1 for x in one_based_values]
-            self.panel.project.control.do_select_points(layer, values)
+            self.panel.project.layer_canvas.do_select_points(layer, values)
         except Exception as e:
             import traceback
             print traceback.format_exc(e)
@@ -295,7 +295,7 @@ class FlaggedPointsField(DropDownField):
         item_num = c.GetSelection()
         if item_num > 0:
             point_index = int(c.GetString(item_num)) - 1
-            self.panel.project.control.do_select_points(layer, [point_index])
+            self.panel.project.layer_canvas.do_select_points(layer, [point_index])
 
 class FloatSliderField(InfoField):
     def get_value(self, layer):

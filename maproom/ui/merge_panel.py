@@ -308,7 +308,7 @@ class MergePointsPanel(wx.Panel):
 
         self.layer.select_points(points, constants.STATE_FLAGGED)
         bounds = self.layer.compute_bounding_rect(constants.STATE_FLAGGED)
-        project.control.zoom_to_include_world_rect(bounds)
+        project.layer_canvas.zoom_to_include_world_rect(bounds)
         project.refresh()
 
     def key_pressed(self, event):

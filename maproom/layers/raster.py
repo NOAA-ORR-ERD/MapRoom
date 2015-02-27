@@ -87,8 +87,8 @@ class RasterLayer(ProjectedLayer):
         
         if raster_layers == 0 and vector_layers == 0:
             self.manager.dispatch_event('projection_changed', self)
-        currently_merc = self.manager.project.control.projection.srs.find("+proj=merc") != -1
-        currently_longlat = self.manager.project.control.projection.srs.find("+proj=longlat") != -1
+        currently_merc = self.manager.project.layer_canvas.projection.srs.find("+proj=merc") != -1
+        currently_longlat = self.manager.project.layer_canvas.projection.srs.find("+proj=longlat") != -1
         incoming_merc = self.image_data.projection.srs.find("+proj=merc") != -1
         incoming_longlat = self.image_data.projection.srs.find("+proj=longlat") != -1
 

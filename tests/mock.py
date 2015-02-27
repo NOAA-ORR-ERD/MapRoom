@@ -20,7 +20,7 @@ from maproom.library.projection import NullProjection
 from maproom.command import UndoStack
 from maproom.menu_commands import *
 
-class MockControl(object):
+class MockCanvas(object):
     def __init__(self):
         self.projection = NullProjection()
 
@@ -30,7 +30,7 @@ class MockWindow(object):
 
 class MockProject(object):
     def __init__(self):
-        self.control = MockControl()
+        self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager.create(self)
         self.window = MockWindow()
 

@@ -22,7 +22,7 @@ The RenderWindow class -- where the opengl rendering really takes place.
 import logging
 log = logging.getLogger(__name__)
 
-class LayerControl(renderer.BaseCanvas):
+class LayerCanvas(renderer.BaseCanvas):
 
     """
     The core rendering class for MapRoom app.
@@ -119,7 +119,7 @@ class LayerControl(renderer.BaseCanvas):
     def release_mouse(self):
         self.mouse_is_down = False
         self.selection_box_is_being_defined = False
-        while self.HasCapture():
+        while self.native.HasCapture():
             self.ReleaseMouse()
 
     def set_cursor(self):

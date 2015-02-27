@@ -19,7 +19,6 @@ from peppy2.utils.jobs import create_global_job_manager
 
 from project_editor import ProjectEditor
 import pane_layout
-from layer_control_wx import LayerControl
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
 from mouse_handler import *
@@ -187,14 +186,14 @@ class BoundingBoxAction(EditorAction):
     style = 'toggle'
 
     def perform(self, event):
-        value = not self.active_editor.control.bounding_boxes_shown
-        self.active_editor.control.bounding_boxes_shown = value
-        GUI.invoke_later(self.active_editor.control.render)
+        value = not self.active_editor.layer_canvas.bounding_boxes_shown
+        self.active_editor.layer_canvas.bounding_boxes_shown = value
+        GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
     def _update_checked(self):
         if self.active_editor:
-            self.checked = self.active_editor.control.bounding_boxes_shown
+            self.checked = self.active_editor.layer_canvas.bounding_boxes_shown
 
 class ZoomInAction(EditorAction):
     name = 'Zoom In'
@@ -202,7 +201,7 @@ class ZoomInAction(EditorAction):
     image = ImageResource('zoom_in')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.control.zoom_in)
+        GUI.invoke_later(self.active_editor.layer_canvas.zoom_in)
 
 class ZoomOutAction(EditorAction):
     name = 'Zoom Out'
@@ -210,7 +209,7 @@ class ZoomOutAction(EditorAction):
     image = ImageResource('zoom_out')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.control.zoom_out)
+        GUI.invoke_later(self.active_editor.layer_canvas.zoom_out)
 
 class ZoomToFit(EditorAction):
     name = 'Zoom to Fit'
@@ -218,7 +217,7 @@ class ZoomToFit(EditorAction):
     image = ImageResource('zoom_fit')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.control.zoom_to_fit)
+        GUI.invoke_later(self.active_editor.layer_canvas.zoom_to_fit)
 
 class ZoomToLayer(EditorAction):
     name = 'Zoom to Layer'
@@ -343,7 +342,7 @@ class JumpToCoordsAction(EditorAction):
     image = ImageResource('jump.png')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.control.do_jump_coords)
+        GUI.invoke_later(self.active_editor.layer_canvas.do_jump_coords)
 
 class ClearSelectionAction(EditorAction):
     name = 'Clear Selection'
@@ -454,7 +453,7 @@ class FindPointsAction(EditorAction):
     tooltip = 'Find and highlight points or ranges of points'
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.control.do_find_points)
+        GUI.invoke_later(self.active_editor.layer_canvas.do_find_points)
 
 class CheckLayerErrorAction(EditorAction):
     name = 'Check For Errors'
@@ -807,7 +806,7 @@ class MaproomProjectTask(FrameworkTask):
     
     def _wx_on_mousewheel_from_window(self, event):
         if self.active_editor:
-            self.active_editor.control.on_mouse_wheel_scroll(event)
+            self.active_editor.layer_canvas.on_mouse_wheel_scroll(event)
     
     @on_trait_change('window.application.preferences_changed_event')
     def preferences_changed(self, evt):

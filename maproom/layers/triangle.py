@@ -204,8 +204,8 @@ class TriangleLayer(PointLayer):
         if ( self.label_set_renderer is not None ):
             self.label_set_renderer.delete_points( point_indexes )
             self.label_set_renderer.reproject( self.points.view( data_types.POINT_XY_VIEW_DTYPE ).xy,
-                                               self.manager.project.control.projection,
-                                               self.manager.project.control.projection_is_identity )
+                                               self.manager.project.layer_canvas.projection,
+                                               self.manager.project.layer_canvas.projection_is_identity )
         """
 
         # when points are deleted from a layer the indexes of the points in the existing merge dialog box
@@ -251,8 +251,8 @@ class TriangleLayer(PointLayer):
 
         # we need to use projected points for the triangulation
         projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float64).copy()
-        projected_points[:, 0], projected_points[:, 1] = self.manager.project.control.projection(layer.points.x, layer.points.y)
-        hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.control.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
+        projected_points[:, 0], projected_points[:, 1] = self.manager.project.layer_canvas.projection(layer.points.x, layer.points.y)
+        hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.layer_canvas.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
 #        print "params: " + params
 #        print "hole points:"
 #        print hole_points_xy
@@ -270,7 +270,7 @@ class TriangleLayer(PointLayer):
          triangles)
 
     def unproject_triangle_points(self, points):
-        points.x, points.y = self.manager.project.control.projection(points.x, points.y, inverse=True)
+        points.x, points.y = self.manager.project.layer_canvas.projection(points.x, points.y, inverse=True)
     
     def triangulate_from_data(self, points, depths, triangles):
         self.set_data(points, depths, triangles)
