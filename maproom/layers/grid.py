@@ -39,6 +39,7 @@ class Grid(ScreenLayer):
         """
         self.degree_minute_grid = DegreeMinuteGridLines()
         self.decimal_degree_grid = DecimalDegreeGridLines()
+        return ScreenLayer.create_renderer(self, storage)
     
     def resize(self, storage, world_rect, screen_rect):
         prefs = storage.canvas.editor.task.get_preferences()
@@ -67,12 +68,14 @@ class Grid(ScreenLayer):
             dtype=np.float64)
 
     # fixme == this should be able to get the various rects from the render_window object...
-    def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
         if (not layer_visibility["layer"] or pick_mode):
             return
+        if True:
+            print "FIXME: skipping render_screen for grid!"
+            return
         log.log(5, "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
-        render_window = storage.canvas
-        opengl_renderer = render_window.opengl_renderer
+        render_window = self.renderer.canvas
 #        print "projected_rect = %r" % (projected_rect,)
 #        print "screen_rect = %r" % (screen_rect,)
         self.resize(storage, world_rect, screen_rect)
@@ -88,14 +91,14 @@ class Grid(ScreenLayer):
             w_p = (longitude, world_rect[0][1])
             s_p = render_window.get_screen_point_from_world_point(w_p)
             s = self.grid.format_lon_line_label(longitude)
-            size = opengl_renderer.get_drawn_string_dimensions(s)
-            opengl_renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5),
+            size = self.renderer.get_drawn_string_dimensions(s)
+            self.renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5),
                                              (s_p[0], screen_rect[1][1]))
             """
             for offset in xrange( 200 ):
-                opengl_renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] + offset * 2 ), s )
+                self.renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] + offset * 2 ), s )
             """
-            opengl_renderer.draw_screen_string((s_p[0] - size[0] / 2, screen_rect[0][1]), s)
+            self.renderer.draw_screen_string((s_p[0] - size[0] / 2, screen_rect[0][1]), s)
 
         for latitude in self.lat_steps:
 
@@ -105,10 +108,10 @@ class Grid(ScreenLayer):
             w_p = (world_rect[0][0], latitude)
             s_p = render_window.get_screen_point_from_world_point(w_p)
             s = self.grid.format_lat_line_label(latitude)
-            size = opengl_renderer.get_drawn_string_dimensions(s)
-            opengl_renderer.draw_screen_line((screen_rect[0][0], s_p[1]),
+            size = self.renderer.get_drawn_string_dimensions(s)
+            self.renderer.draw_screen_line((screen_rect[0][0], s_p[1]),
                                              (screen_rect[1][0] - size[0] - 5, s_p[1]))
-            opengl_renderer.draw_screen_string(
+            self.renderer.draw_screen_string(
                 (screen_rect[1][0] - size[0] - 3, s_p[1] - size[1] / 2 - 1), s)
 
 

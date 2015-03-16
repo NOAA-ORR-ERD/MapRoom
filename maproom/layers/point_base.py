@@ -153,26 +153,14 @@ class PointBaseLayer(ProjectedLayer):
         ] = layer_b.points.copy()
         # self.points.state = 0
     
-    def create_renderer(self, renderer):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
-        
-        """
-        if self.points is not None and renderer.point_renderer is None:
-            renderer.rebuild_point_renderer(self, create=True)
-
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         log.log(5, "Rendering ParticleLayer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 
         # the points
-        if (renderer.point_renderer is not None):
-            renderer.point_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
+        if (self.renderer.point_renderer is not None):
+            self.renderer.point_renderer.render(layer_index_base + self.renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
                                            pick_mode,
                                            self.point_size,
                                            layer_visibility["points"],

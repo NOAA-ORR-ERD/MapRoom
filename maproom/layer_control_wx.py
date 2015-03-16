@@ -86,13 +86,14 @@ class LayerCanvas(renderer.BaseCanvas):
     def update_renderers(self):
         for layer in self.layer_manager.layers:
             if not layer in self.layer_renderers:
-                r = renderer.LayerRenderer(self)
+                r = layer.create_renderer(self)
                 self.layer_renderers[layer] = r
-                layer.create_renderer(r)
+        pass
     
     def remove_renderer_for_layer(self, layer):
         if layer in self.layer_renderers:
             del self.layer_renderers[layer]
+        pass
 
     def rebuild_renderers(self):
         for layer in self.layer_manager.layers:
@@ -156,7 +157,7 @@ class LayerCanvas(renderer.BaseCanvas):
             if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
                 s_r = self.get_screen_rect_from_world_rect(w_r)
                 r, g, b, a = renderer.int_to_color(layer.color)
-                self.opengl_renderer.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
+                self.overlay.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
     # functions related to world coordinates, projected coordinates, and screen coordinates
 

@@ -72,6 +72,8 @@ class Layer(HasTraits):
     load_error_string = Str
     
     manager = Any
+    
+    renderer = Any
 
     pickable = False # is this a layer that support picking?
 
@@ -358,7 +360,7 @@ class Layer(HasTraits):
     def crop_rectangle(self, world_rect):
         raise NotImplementedError
     
-    def create_renderer(self, storage):
+    def create_renderer(self, canvas):
         """Create the graphic renderer for this layer.
         
         There may be multiple views of this layer (e.g.  in different windows),
@@ -367,16 +369,16 @@ class Layer(HasTraits):
         other views of this layer.
         
         """
-        pass
+        self.renderer = canvas.get_renderer(self)
+        return self.renderer
     
-    def rebuild_renderer(self, layer_renderer, in_place=False):
+    def rebuild_renderer(self, in_place=False):
         """Update renderer
         
         """
-        pass
+        raise NotImplementedError
 
-    def render(self, opengl_renderer,
-               renderer,
+    def render(self, renderer,
                world_rect,
                projected_rect,
                screen_rect,
@@ -384,11 +386,11 @@ class Layer(HasTraits):
                layer_index_base,
                pick_mode=False):
         if hasattr(self, "render_projected"):
-            opengl_renderer.prepare_to_render_projected_objects()
-            self.render_projected(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
+            self.renderer.prepare_to_render_projected_objects()
+            self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
         if hasattr(self, "render_screen"):
-            opengl_renderer.prepare_to_render_screen_objects()
-            self.render_screen(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
+            self.renderer.prepare_to_render_screen_objects()
+            self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
 
 
 class Folder(Layer):
@@ -418,10 +420,10 @@ class RootLayer(Folder):
 
 
 class ProjectedLayer(Layer):
-    def render_projected(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+    def render_projected(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
         print "Layer %s doesn't have projected objects to render" % self.name
 
 
 class ScreenLayer(Layer):
-    def render_screen(self, storage, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
         print "Layer %s doesn't have screen objects to render" % self.name

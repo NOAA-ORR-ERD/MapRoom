@@ -508,7 +508,7 @@ class RectSelectMode(MouseHandler):
         c.mouse_move_position = event.GetPosition()
         c.render(event)
 
-    def render_overlay(self):
+    def render_overlay(self, renderer):
         c = self.layer_control
         if c.mouse_is_down:
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
@@ -521,10 +521,10 @@ class RectSelectMode(MouseHandler):
             # small adjustments to make stipple overlap gray rects perfectly
             y1 -= 1
             x2 += 1
-            c.opengl_renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            c.opengl_renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            c.opengl_renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            c.opengl_renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
 
 
 class ZoomRectMode(RectSelectMode):

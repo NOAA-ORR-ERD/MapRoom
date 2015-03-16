@@ -281,28 +281,8 @@ class PointLayer(PointBaseLayer):
         """
         pass
     
-    def create_renderer(self, renderer):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
-        
-        """
-        ## fixme: in theory, this is points only, so why the point_and_line_set_renderer ?
-        ##        could probably be refactored to use just the point and labels renderer\
-        ##        but we don't have a points with depth layer to test..
-        if self.points is not None and renderer.point_and_line_set_renderer is None:
-            if (self.line_segment_indexes is None):
-                self.line_segment_indexes = self.make_line_segment_indexes(0)
-
-            renderer.rebuild_point_and_line_set_renderer(self, create=True)
-
-        renderer.set_up_labels(self)
-    
-    def rebuild_renderer(self, renderer, in_place=False):
-        renderer.rebuild_point_and_line_set_renderer(self, in_place=in_place)
+    def rebuild_renderer(self, in_place=False):
+        self.renderer.rebuild_point_and_line_set_renderer(self, in_place=in_place)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         log.log(5, "Rendering point layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))

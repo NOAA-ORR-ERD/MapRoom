@@ -501,55 +501,49 @@ class LineLayer(PointLayer):
         if (len(points_to_delete) > 0):
             return MergePointsCommand(self, list(points_to_delete))
     
-    def create_renderer(self, renderer):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
+    def rebuild_renderer(self, in_place=False):
+        """Update renderer
         
         """
-        if self.points is not None and renderer.point_and_line_set_renderer is None:
-            if (self.line_segment_indexes is None):
-                self.line_segment_indexes = self.make_line_segment_indexes(0)
+        self.renderer.set_points(self.points)
+        self.renderer.set_lines(self.line_segment_indexes, data_types.LINE_SEGMENT_DTYPE)
 
-            renderer.rebuild_point_and_line_set_renderer(self, create=True)
-
-        renderer.set_up_labels(self)
-
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 
         # the points and line segments
-        if (renderer.point_and_line_set_renderer is not None):
-            renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
-                                                    pick_mode,
-                                                    self.point_size,
-                                                    self.line_width,
-                                                    layer_visibility["points"],
-                                                    layer_visibility["lines"],
-                                                    False,
-                                                    self.triangle_line_width,
-                                                    self.get_selected_point_indexes(),
-                                                    self.get_selected_point_indexes(STATE_FLAGGED),
-                                                    self.get_selected_line_segment_indexes(),
-                                                    self.get_selected_line_segment_indexes(STATE_FLAGGED))
+        self.renderer.draw_points_and_lines(
+            layer_index_base, # + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
+            pick_mode,
+            self.point_size,
+            self.line_width,
+            layer_visibility["points"],
+            layer_visibility["lines"],
+            False,
+            self.triangle_line_width,
+            self.get_selected_point_indexes(),
+            self.get_selected_point_indexes(STATE_FLAGGED),
+            self.get_selected_line_segment_indexes(),
+            self.get_selected_line_segment_indexes(STATE_FLAGGED))
 
-            # the labels
-            if (renderer.label_set_renderer is not None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys is not None):
-                renderer.label_set_renderer.render(-1, pick_mode, s_r,
-                                               renderer.MAX_LABEL_CHARACTERS, self.points.z,
-                                               renderer.point_and_line_set_renderer.vbo_point_xys.data,
-                                               p_r, renderer.canvas.projected_units_per_pixel)
-
+        # the labels
+        if (layer_visibility["labels"]):
+            renderer.draw_labels(
+                -1, pick_mode, s_r,
+                renderer.MAX_LABEL_CHARACTERS, self.points.z,
+                renderer.point_and_line_set_renderer.vbo_point_xys.data,
+                p_r, renderer.canvas.projected_units_per_pixel)
+                
         # render selections after everything else
-        if (renderer.point_and_line_set_renderer is not None and not pick_mode):
+        if (not pick_mode):
             if layer_visibility["lines"]:
-                renderer.point_and_line_set_renderer.render_selected_line_segments(self.line_width, self.get_selected_line_segment_indexes())
+                self.renderer.draw_selected_lines(
+                    self.line_width,
+                    self.get_selected_line_segment_indexes())
 
             if layer_visibility["points"]:
-                renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
-                                                                        self.get_selected_point_indexes())
+                self.renderer.draw_selected_points(
+                    self.point_size,
+                    self.get_selected_point_indexes())
