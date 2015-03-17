@@ -8,8 +8,6 @@ if driver == "gl":
     import gl.data_types as data_types
     from .gl.base_canvas import BaseCanvas
 else:
-    from .vispy.renderer_driver import RendererDriver
-    from .vispy.layer_renderer import LayerRenderer
     from .vispy.parser import *
     from .vispy.color import color_to_int, int_to_color
     import gl.data_types as data_types

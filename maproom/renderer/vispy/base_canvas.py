@@ -18,6 +18,16 @@ import logging
 mouselog = logging.getLogger("mouse")
 mouselog.setLevel(logging.INFO)
 
+# FIXME: replace this old, hardcoded method of picker labeling
+POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET = 0
+POINTS_SUB_LAYER_PICKER_OFFSET = 0
+LINES_SUB_LAYER_PICKER_OFFSET = 1
+POLYGONS_SUB_LAYER_PICKER_OFFSET = 5
+FILL_SUB_LAYER_PICKER_OFFSET = 0
+POINTS_SUB_LAYER_PICKER_OFFSET = 1
+LINES_SUB_LAYER_PICKER_OFFSET = 2
+
+
 class BaseCanvas(app.Canvas):
 
     """
