@@ -31,11 +31,21 @@ void main()
 }
 """
 
+vertex_type = [
+    ('position', np.float32, 3),
+    ('color', np.float32, 4)]
+
+xy_depth_type = [
+    ('xy', np.float32, 2),
+    ('depth', np.float32, 1),
+    ('color', np.float32, 4)]
+
 fragment = """
 varying vec4 v_color;
 void main()
 {
     gl_FragColor = v_color;
+    //gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
 }
 """
 
@@ -60,37 +70,45 @@ class VispyRenderer():
         self.canvas = canvas
         self.layer = layer
         
-        # Build cube data
-        V, I, O = create_cube()
-        # Each item in the vertex data V is a tuple of lists, e.g.:
-        #
-        # ([1.0, 1.0, 1.0], [0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 1.0])
-        #
-        # where each list corresponds to one of the attributes in the vertex
-        # shader.  (See vispy.geometry.create_cube).  To experiment with this,
-        # I've removed the 2nd tuple (the texcoord) and changed the vertex
-        # shader from vispy5.  We'll see if this works. UPDATE: yes, it does!
-        v2type = [('position', np.float32, 3),
-                  ('color',    np.float32, 4)]
-        v2 = np.zeros(V.shape[0], v2type)
-        v2['position'] = V['position']
-        v2['color'] = V['color']
-        print V[0]
-        print v2[0]
-        vertices = VertexBuffer(v2)
-        self.faces = IndexBuffer(I)
-        self.outline = IndexBuffer(O)
+#        # Build cube data
+#        V, I, O = create_cube()
+#        # Each item in the vertex data V is a tuple of lists, e.g.:
+#        #
+#        # ([1.0, 1.0, 1.0], [0.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 1.0])
+#        #
+#        # where each list corresponds to one of the attributes in the vertex
+#        # shader.  (See vispy.geometry.create_cube).  To experiment with this,
+#        # I've removed the 2nd tuple (the texcoord) and changed the vertex
+#        # shader from vispy5.  We'll see if this works. UPDATE: yes, it does!
+#        v2 = np.zeros(V.shape[0], vertex_type)
+#        v2['position'] = V['position']
+#        v2['color'] = V['color']
+#        print V[0]
+#        print v2[0]
+#        self.vertices = VertexBuffer(v2)
+#        self.faces = IndexBuffer(I)
+#        self.outline = IndexBuffer(O)
+        v = np.zeros(0, vertex_type)
+        faces = []
+        outline = []
+        self.vertices = VertexBuffer(v)
+        self.faces = IndexBuffer(faces)
+        self.outline = IndexBuffer(outline)
 
         # Build program
         # --------------------------------------
         self.program = Program(vertex, fragment)
-        self.program.bind(vertices)
+        self.program.bind(self.vertices)
 
     def prepare_to_render_projected_objects(self):
-        gloo.set_state(texture_2d=False)
+        print "prepare_to_render_projected_objects"
+#        gloo.set_state(texture_2d=False)
         self.program['u_model'] = self.canvas.model_matrix
+        print self.canvas.model_matrix
         self.program['u_view'] = self.canvas.view_matrix
+        print self.canvas.view_matrix
         self.program['u_projection'] = self.canvas.projection_matrix
+        print self.canvas.projection_matrix
 
     def prepare_to_render_screen_objects(self):
 #        gl.glEnable(gl.GL_TEXTURE_2D)
@@ -104,7 +122,20 @@ class VispyRenderer():
 #        gl.glLoadIdentity()
         pass
     
-    def draw_points_and_lines(self,
+    def set_points(self, xy, depths):
+        v = np.zeros(xy.shape[0], dtype=xy_depth_type)
+        print v
+        v['xy'] = xy
+        v['depth'] = depths
+        print v
+        self.vertices.set_data(v)
+    
+    def set_lines(self, indexes, dtype):
+        print indexes
+        self.outline.set_data(indexes[['point1', 'point2']].view(np.uint32))
+#        self.outline.set_data([0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6])
+    
+    def draw_points_and_lines(self, layer,
                               layer_index_base,
                               pick_mode,
                               point_size,
@@ -139,13 +170,14 @@ class VispyRenderer():
                    selected_line_segment_indexes=[],
                    flagged_line_segment_indexes=[]):  # flagged_line_segment_indexes not yet used
         # Filled cube
-        gloo.set_state(blend=False, depth_test=True, polygon_offset_fill=True)
-        self.program['u_color'] = 1, 1, 1, 1
-        self.program.draw('triangles', self.faces)
-
-        # Outlined cube
-        gloo.set_state(blend=True, depth_mask=False, polygon_offset_fill=False)
-        self.program['u_color'] = 0, 0, 0, 1
+        print "draw lines"
+        gloo.set_state(blend=False, depth_test=True, polygon_offset_fill=True,
+                       line_width=line_width)
+#        self.program['u_color'] = 1, 1, 1, 1
+#        self.program.draw('triangles', self.faces)
+#
+#        gloo.set_state(blend=False, depth_test=True, polygon_offset_fill=False)
+        self.program['u_color'] = 1, 1, 0, 1
         self.program.draw('lines', self.outline)
         gloo.set_state(depth_mask=True)
 

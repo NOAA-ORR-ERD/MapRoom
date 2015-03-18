@@ -73,7 +73,7 @@ class BaseCanvas(app.Canvas):
             clear_color=(1.0, 1.0, 1.0, 1.00),
             depth_test=True,
             polygon_offset=(1, 1),
-            lighting=False,
+#            lighting=False,
             line_width=0.75,
             cull_face=False, # Don't cull polygons that are wound the wrong way.
             blend_func=('src_alpha', 'one_minus_src_alpha'))
@@ -87,7 +87,6 @@ class BaseCanvas(app.Canvas):
         self.s_w = event.size[0]
         self.s_h = event.size[1]
         gloo.set_viewport(0, 0, self.s_w, self.s_h)
-        self.prepare_to_render_projected_objects()
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
@@ -171,11 +170,10 @@ class BaseCanvas(app.Canvas):
         gloo.set_viewport(0, 0, self.s_w, self.s_h)
         gloo.clear(color=True, depth=True)
         
-        aspect = float(self.s_w) / self.s_h
-        if aspect > 1:
-            self.projection_matrix = ortho(-2 * aspect, 2 * aspect, -2, 2, 2.0, 10.0)
-        else:
-            self.projection_matrix = ortho(-2, 2, -2 / aspect, 2 / aspect, 2.0, 10.0)
+        self.projection_matrix = ortho(
+            self.projected_rect[0][0], self.projected_rect[1][0],
+            self.projected_rect[0][1], self.projected_rect[1][1],
+            -100.0, 10000.0)
         
         return True
 
@@ -189,7 +187,7 @@ class BaseCanvas(app.Canvas):
         self.set_up_for_regular_rendering()
 
     def set_up_for_regular_rendering(self):
-        gloo.set_state(blend=True, line_smooth=True, point_smooth=True,
+        gloo.set_state(blend=False, line_smooth=True, point_smooth=True,
                        blend_func=('src_alpha', 'one_minus_src_alpha'))
 
     def set_up_for_picker_rendering(self):
@@ -250,11 +248,11 @@ class BaseCanvas(app.Canvas):
 
         render_layers()
 
-        self.overlay.prepare_to_render_screen_objects()
-        if (self.bounding_boxes_shown):
-            self.draw_bounding_boxes()
-        
-        self.mouse_handler.render_overlay()
+#        self.overlay.prepare_to_render_screen_objects()
+#        if (self.bounding_boxes_shown):
+#            self.draw_bounding_boxes()
+#        
+#        self.mouse_handler.render_overlay()
 
         #self.SwapBuffers()
 

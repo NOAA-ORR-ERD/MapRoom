@@ -370,13 +370,14 @@ class Layer(HasTraits):
         
         """
         self.renderer = canvas.get_renderer(self)
+        self.rebuild_renderer()
         return self.renderer
     
     def rebuild_renderer(self, in_place=False):
         """Update renderer
         
         """
-        raise NotImplementedError
+        pass
 
     def render(self, renderer,
                world_rect,

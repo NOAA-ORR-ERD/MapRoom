@@ -505,7 +505,19 @@ class LineLayer(PointLayer):
         """Update renderer
         
         """
-        self.renderer.set_points(self.points)
+        print("REBUILD!!!!")
+        projection = self.manager.project.layer_canvas.projection
+        view = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy.astype(np.float32)
+        print("BEFORE:")
+        print view
+        projected_point_data = np.zeros(
+            (len(self.points), 2),
+            dtype=np.float32
+        )
+        projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
+        print("AFTER:")
+        print projected_point_data
+        self.renderer.set_points(projected_point_data, self.points.z)
         self.renderer.set_lines(self.line_segment_indexes, data_types.LINE_SEGMENT_DTYPE)
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
@@ -513,8 +525,9 @@ class LineLayer(PointLayer):
         if (not layer_visibility["layer"]):
             return
 
+        print "render_projected"
         # the points and line segments
-        self.renderer.draw_points_and_lines(
+        self.renderer.draw_points_and_lines(self,
             layer_index_base, # + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
             pick_mode,
             self.point_size,

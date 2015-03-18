@@ -66,6 +66,7 @@ class LayerCanvas(renderer.BaseCanvas):
         p = get_image_path("icons/hand_closed.ico", file=__name__)
         self.hand_closed_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
         self.forced_cursor = None
+        self.set_mouse_handler(MouseHandler)  # dummy initial mouse handler
         
         self.bounding_boxes_shown = False
 
