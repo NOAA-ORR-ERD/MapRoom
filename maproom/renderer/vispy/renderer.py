@@ -4,7 +4,7 @@ import wx
 import numpy as np
 
 from vispy import app, gloo
-from vispy.gloo import Program, VertexBuffer, IndexBuffer
+from vispy.gloo import gl, Program, VertexBuffer, IndexBuffer
 from vispy.util.transforms import ortho, translate, rotate
 from vispy.geometry import create_cube
 
@@ -44,8 +44,8 @@ fragment = """
 varying vec4 v_color;
 void main()
 {
-    gl_FragColor = v_color;
-    //gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
+    //gl_FragColor = v_color;
+    gl_FragColor = vec4(0.5, 0.5, 1.0, 1.0);
 }
 """
 
@@ -171,8 +171,9 @@ class VispyRenderer():
                    flagged_line_segment_indexes=[]):  # flagged_line_segment_indexes not yet used
         # Filled cube
         print "draw lines"
-        gloo.set_state(blend=False, depth_test=True, polygon_offset_fill=True,
-                       line_width=line_width)
+#        gloo.set_state(blend=False, depth_test=True, polygon_offset_fill=True,
+#                       line_width=line_width)
+        gl.glLineWidth(line_width)
 #        self.program['u_color'] = 1, 1, 1, 1
 #        self.program.draw('triangles', self.faces)
 #

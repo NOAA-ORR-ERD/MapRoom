@@ -6,6 +6,7 @@ import math
 import numpy as np
 
 from vispy import app, gloo
+import OpenGL.GL as gl
 from vispy.gloo import Program, VertexBuffer, IndexBuffer
 from vispy.util.transforms import ortho, translate, rotate
 from vispy.geometry import create_cube
@@ -69,24 +70,20 @@ class BaseCanvas(app.Canvas):
  
         # OpenGL initalization
         # --------------------------------------
-        gloo.set_state(
-            clear_color=(1.0, 1.0, 1.0, 1.00),
-            depth_test=True,
-            polygon_offset=(1, 1),
-#            lighting=False,
-            line_width=0.75,
-            cull_face=False, # Don't cull polygons that are wound the wrong way.
-            blend_func=('src_alpha', 'one_minus_src_alpha'))
-        gloo.clear(color=True, depth=True)
+        gl.glDisable(gl.GL_LIGHTING)
+        # Don't cull polygons that are wound the wrong way.
+        gl.glDisable(gl.GL_CULL_FACE)
+        gl.glClearColor(1.0, 1.0, 1.0, 0)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
     def on_draw(self, event):
-        gloo.clear(color=True, depth=True)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         self.render()
 
     def on_resize(self, event):
         self.s_w = event.size[0]
         self.s_h = event.size[1]
-        gloo.set_viewport(0, 0, self.s_w, self.s_h)
+        gl.glViewport(0, 0, self.s_w, self.s_h)
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
@@ -167,8 +164,10 @@ class BaseCanvas(app.Canvas):
         if (self.s_w <= 0 or self.s_h <= 0 or p_w <= 0 or p_h <= 0):
             return False
         
-        gloo.set_viewport(0, 0, self.s_w, self.s_h)
-        gloo.clear(color=True, depth=True)
+        gl.glViewport(0, 0, self.s_w, self.s_h)
+        self.set_up_for_regular_rendering()
+        gl.glClearColor(1.0, 1.0, 1.0, 0)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
         
         self.projection_matrix = ortho(
             self.projected_rect[0][0], self.projected_rect[1][0],
@@ -180,23 +179,23 @@ class BaseCanvas(app.Canvas):
     def prepare_to_render_picker(self, screen_rect):
         self.picker.prepare_to_render(screen_rect)
         self.set_up_for_picker_rendering()
-        gloo.set_state(clear_color=(1.0, 1.0, 1.0, 1.00), depth_test=True)
 
     def done_rendering_picker(self):
         self.picker.done_rendering()
         self.set_up_for_regular_rendering()
 
     def set_up_for_regular_rendering(self):
-        gloo.set_state(blend=False, line_smooth=True, point_smooth=True,
-                       blend_func=('src_alpha', 'one_minus_src_alpha'))
+        gl.glEnable(gl.GL_POINT_SMOOTH)
+        gl.glEnable(gl.GL_LINE_SMOOTH)
+        gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
+        gl.glEnable(gl.GL_BLEND)
+        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
+        pass
 
     def set_up_for_picker_rendering(self):
-        gloo.set_state(blend=False, line_smooth=False, point_smooth=False)
-#        gl.glDisable(gl.GL_POINT_SMOOTH)
-#        gl.glDisable(gl.GL_LINE_SMOOTH)
-#        # gl.glHint( gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE )
-#        gl.glDisable(gl.GL_BLEND)
-#        # gl.glBlendFunc( gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA )
+        gl.glDisable(gl.GL_POINT_SMOOTH)
+        gl.glDisable(gl.GL_LINE_SMOOTH)
+        gl.glDisable(gl.GL_BLEND)
 
     #
     # the methods below are used to render simple objects one at a time, in screen coordinates
