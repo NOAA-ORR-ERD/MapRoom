@@ -9,7 +9,6 @@ import OpenGL
 import OpenGL.GL as gl
 
 import library.coordinates as coordinates
-import renderer
 import library.rect as rect
 from mouse_commands import *
 
@@ -53,17 +52,15 @@ class MouseHandler(object):
 
         c.release_mouse()
         # print "mouse is not down"
-        o = None
-        if c.opengl_renderer is not None:
-            o = c.opengl_renderer.picker.get_object_at_mouse_position(event.GetPosition())
+        o = c.get_object_at_mouse_position(event.GetPosition())
         if (o is not None):
-            (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(o)
+            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
             layer = c.layer_manager.get_layer_by_pick_index(layer_index)
             if (c.project.layer_tree_control.is_selected_layer(layer)):
                 c.editor.clickable_object_mouse_is_over = o
             else:
                 c.editor.clickable_object_mouse_is_over = None
-            if renderer.is_ugrid_point(o):
+            if c.picker.is_ugrid_point(o):
                 status_text += "  Point %s on %s" % (object_index + 1, str(layer))
 
         else:
@@ -174,7 +171,7 @@ class MouseHandler(object):
     def delete_key_pressed(self):
         pass
 
-    def render_overlay(self):
+    def render_overlay(self, renderer):
         """Render additional graphics on canvas
         
         
@@ -240,7 +237,7 @@ class ObjectSelectionMode(MouseHandler):
         lm = c.layer_manager
 
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(e.clickable_object_mouse_is_over)
+            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
             layer = lm.get_layer_by_pick_index(layer_index)
             if (e.layer_tree_control.is_selected_layer(layer)):
                 if (e.clickable_object_is_ugrid_point()):
@@ -517,7 +514,7 @@ class RectSelectMode(MouseHandler):
             rects = c.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
             for r in rects:
                 if (r != rect.EMPTY_RECT):
-                    c.opengl_renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
+                    renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
             # small adjustments to make stipple overlap gray rects perfectly
             y1 -= 1
             x2 += 1

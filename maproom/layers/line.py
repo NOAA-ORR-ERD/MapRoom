@@ -517,8 +517,8 @@ class LineLayer(PointLayer):
         projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
         print("AFTER:")
         print projected_point_data
-        self.renderer.set_points(projected_point_data, self.points.z)
-        self.renderer.set_lines(self.line_segment_indexes, data_types.LINE_SEGMENT_DTYPE)
+        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
         log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
