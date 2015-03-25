@@ -51,9 +51,11 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.picker = Picker.Picker()
 
         self.screen_rect = rect.EMPTY_RECT
+        
+        # Texture creation must be deferred until after the call to SetCurrent
+        # so that the GLContext is attached to the actual window
+        self.font_texture = None
 
-        (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
-    
         #self.frame.Bind( wx.EVT_MOVE, self.refresh )
         #self.frame.Bind( wx.EVT_IDLE, self.on_idle )
         # self.frame.Bind( wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll )
@@ -251,7 +253,11 @@ class BaseCanvas(glcanvas.GLCanvas):
 
         t0 = time.clock()
         self.SetCurrent(self.shared_context)
-        # this has to be here because the window has to exist before making the renderer
+        
+        # this has to be here because the window has to exist before creating
+        # textures and making the renderer
+        if self.font_texture is None:
+            (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
         self.update_renderers()
 
         s_r = self.get_screen_rect()
