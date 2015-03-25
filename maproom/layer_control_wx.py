@@ -107,7 +107,7 @@ class LayerCanvas(renderer.BaseCanvas):
 
     def rebuild_renderer_for_layer(self, layer, in_place=False):
         if layer in self.layer_renderers:
-            layer.rebuild_renderer(self.layer_renderers[layer], in_place)
+            layer.rebuild_renderer(in_place)
             log.debug("renderer rebuilt")
         else:
             log.warning("layer %s isn't in layer_renderers!" % layer)

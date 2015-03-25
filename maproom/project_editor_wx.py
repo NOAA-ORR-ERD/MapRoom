@@ -595,7 +595,7 @@ class ProjectEditor(FrameworkEditor):
         if (self.clickable_object_mouse_is_over is None):
             return
 
-        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
+        (layer_index, type, subtype, object_index) = self.layer_canvas.picker.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_pick_index(layer_index)
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
         self.process_command(cmd)
@@ -616,23 +616,23 @@ class ProjectEditor(FrameworkEditor):
 #        world_d_x = w_p1[0] - w_p0[0]
 #        world_d_y = w_p1[1] - w_p0[1]
 
-        (layer_index, type, subtype, object_index) = renderer.parse_clickable_object(self.clickable_object_mouse_is_over)
+        (layer_index, type, subtype, object_index) = self.layer_canvas.picker.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_pick_index(layer_index)
 
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
         self.process_command(cmd)
 
     def clickable_object_is_ugrid_point(self):
-        return renderer.is_ugrid_point(self.clickable_object_mouse_is_over)
+        return self.layer_canvas.picker.is_ugrid_point(self.clickable_object_mouse_is_over)
 
     def clickable_object_is_ugrid_line(self):
-        return renderer.is_ugrid_line(self.clickable_object_mouse_is_over)
+        return self.layer_canvas.picker.is_ugrid_line(self.clickable_object_mouse_is_over)
 
     def clickable_object_is_polygon_fill(self):
-        return renderer.is_polygon_fill(self.clickable_object_mouse_is_over)
+        return self.layer_canvas.picker.is_polygon_fill(self.clickable_object_mouse_is_over)
 
     def clickable_object_is_polygon_point(self):
-        return renderer.is_polygon_point(self.clickable_object_mouse_is_over)
+        return self.layer_canvas.picker.is_polygon_point(self.clickable_object_mouse_is_over)
 
     def delete_selected_layer(self, layer=None):
         if layer is None:
