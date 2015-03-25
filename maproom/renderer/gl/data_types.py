@@ -63,3 +63,16 @@ POLYGON_DTYPE = np.dtype([
     ("color", np.uint32),  # Color of this polygon.
     ("state", np.uint32)   # standard maproom object states, plus polygon type
 ])
+QUAD_VERTEX_DTYPE = np.dtype(
+    [("x_lb", np.float32), ("y_lb", np.float32),
+     ("x_lt", np.float32), ("y_lt", np.float32),
+     ("x_rt", np.float32), ("y_rt", np.float32),
+     ("x_rb", np.float32), ("y_rb", np.float32)]
+)
+TEXTURE_COORDINATE_DTYPE = np.dtype(
+    [("u_lb", np.float32), ("v_lb", np.float32),
+     ("u_lt", np.float32), ("v_lt", np.float32),
+     ("u_rt", np.float32), ("v_rt", np.float32),
+     ("u_rb", np.float32), ("v_rb", np.float32)]
+)
+

@@ -12,23 +12,10 @@ from peppy2 import get_image_path
 
 import maproom.library.rect as rect
 import Picker
+from ..gl import data_types
 
 
 class ImmediateModeRenderer():
-
-    QUAD_VERTEX_DTYPE = np.dtype(
-        [("x_lb", np.float32), ("y_lb", np.float32),
-         ("x_lt", np.float32), ("y_lt", np.float32),
-         ("x_rt", np.float32), ("y_rt", np.float32),
-         ("x_rb", np.float32), ("y_rb", np.float32)]
-    )
-    TEXTURE_COORDINATE_DTYPE = np.dtype(
-        [("u_lb", np.float32), ("v_lb", np.float32),
-         ("u_lt", np.float32), ("v_lt", np.float32),
-         ("u_rt", np.float32), ("v_rt", np.float32),
-         ("u_rb", np.float32), ("v_rb", np.float32)]
-    )
-
     NUM_COLOR_CHANNELS = 4 #i.e. RGBA
 
     def __init__(self, canvas, layer):
@@ -308,103 +295,27 @@ class ImmediateModeRenderer():
         # flip y to treat point as normal screen coordinates
         point = (point[0], rect.height(c.screen_rect) - point[1])
 
-        screen_vertex_data = np.zeros(
-            (len(text), ),
-            dtype=self.QUAD_VERTEX_DTYPE,
-        ).view(np.recarray)
-
-        texcoord_data = np.zeros(
-            (len(text), ),
-            dtype=self.TEXTURE_COORDINATE_DTYPE,
-        ).view(np.recarray)
-        
-        # Create views into recarray data.  PyOpenGL 3.1 with PyOpenGL-
-        # accelerate doesn't allow VBO data in recarray form
-        screen_vertex_raw = screen_vertex_data.view(dtype=np.float32).reshape(-1,8)
-        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
-
-        # these are used just because it seems to be the fastest way to full numpy arrays
-        # fixme: -- yes, but if you know how big the arrays are going to be
-        #           better to build the array once. 
-        screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
-        tex_coord_accumulators = [[], [], [], [], [], [], [], []]
-
-        texture_width = float(c.font_texture_size[0])
-        texture_height = float(c.font_texture_size[1])
-        x_offset = 0
-
-        for char in text:
-            if char not in c.font_extents:
-                char = "?"
-
-            x = c.font_extents[char][0]
-            y = c.font_extents[char][1]
-            w = c.font_extents[char][2]
-            h = c.font_extents[char][3]
-
-            # again, flip y to treat point as normal screen coordinates
-            screen_vertex_accumulators[0].append(point[0] + x_offset)
-            screen_vertex_accumulators[1].append(point[1] - h)
-            screen_vertex_accumulators[2].append(point[0] + x_offset)
-            screen_vertex_accumulators[3].append(point[1])
-            screen_vertex_accumulators[4].append(point[0] + w + x_offset)
-            screen_vertex_accumulators[5].append(point[1])
-            screen_vertex_accumulators[6].append(point[0] + w + x_offset)
-            screen_vertex_accumulators[7].append(point[1] - h)
-            x_offset += w
-
-            tex_coord_accumulators[0].append(x / texture_width)
-            tex_coord_accumulators[1].append((y + h) / texture_height)
-            tex_coord_accumulators[2].append(x / texture_width)
-            tex_coord_accumulators[3].append(y / texture_height)
-            tex_coord_accumulators[4].append((x + w) / texture_width)
-            tex_coord_accumulators[5].append(y / texture_height)
-            tex_coord_accumulators[6].append((x + w) / texture_width)
-            tex_coord_accumulators[7].append((y + h) / texture_height)
-
-        screen_vertex_data.x_lb = screen_vertex_accumulators[0]
-        screen_vertex_data.y_lb = screen_vertex_accumulators[1]
-        screen_vertex_data.x_lt = screen_vertex_accumulators[2]
-        screen_vertex_data.y_lt = screen_vertex_accumulators[3]
-        screen_vertex_data.x_rt = screen_vertex_accumulators[4]
-        screen_vertex_data.y_rt = screen_vertex_accumulators[5]
-        screen_vertex_data.x_rb = screen_vertex_accumulators[6]
-        screen_vertex_data.y_rb = screen_vertex_accumulators[7]
-
-        texcoord_data.u_lb = tex_coord_accumulators[0]
-        texcoord_data.v_lb = tex_coord_accumulators[1]
-        texcoord_data.u_lt = tex_coord_accumulators[2]
-        texcoord_data.v_lt = tex_coord_accumulators[3]
-        texcoord_data.u_rt = tex_coord_accumulators[4]
-        texcoord_data.v_rt = tex_coord_accumulators[5]
-        texcoord_data.u_rb = tex_coord_accumulators[6]
-        texcoord_data.v_rb = tex_coord_accumulators[7]
-
-        vbo_screen_vertexes = gl_vbo.VBO(screen_vertex_raw)
-        vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
+        str_len, tex_id = c.prepare_string_texture(point[0], point[1], text)
 
         gl.glEnable(gl.GL_TEXTURE_2D)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, c.font_texture)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, tex_id)
         gl.glColor(1.0, 1.0, 1.0, 1.0)
 
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
-        vbo_screen_vertexes.bind()
+        c.vbo_screen_vertexes.bind()
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
         gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        vbo_texture_coordinates.bind()
+        c.vbo_texture_coordinates.bind()
         gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-        vertex_count = len(text) * 4
+        vertex_count = str_len * 4
         gl.glDrawArrays(gl.GL_QUADS, 0, vertex_count)
 
-        vbo_screen_vertexes.unbind()
+        c.vbo_screen_vertexes.unbind()
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        vbo_texture_coordinates.unbind()
+        c.vbo_texture_coordinates.unbind()
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
         gl.glDisable(gl.GL_TEXTURE_2D)
-
-        vbo_screen_vertexes = None
-        vbo_texture_coordinates = None

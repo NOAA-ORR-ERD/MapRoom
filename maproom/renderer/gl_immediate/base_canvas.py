@@ -17,6 +17,7 @@ import maproom.library.rect as rect
 import Picker
 
 from ..gl.font import load_font_texture_with_alpha
+from ..gl import data_types
 
 import logging
 mouselog = logging.getLogger("mouse")
@@ -189,6 +190,95 @@ class BaseCanvas(glcanvas.GLCanvas):
         # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
 
         return (texture, (width, height), extents)
+    
+    def init_font(self, max_label_characters=1000):
+        (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
+        
+        self.screen_vertex_data = np.zeros(
+            (max_label_characters, ),
+            dtype=data_types.QUAD_VERTEX_DTYPE,
+        ).view(np.recarray)
+        self.screen_vertex_raw = self.screen_vertex_data.view(dtype=np.float32).reshape(-1,8)
+        
+        self.texcoord_data = np.zeros(
+            (max_label_characters, ),
+            dtype=data_types.TEXTURE_COORDINATE_DTYPE,
+        ).view(np.recarray)
+        self.texcoord_raw = self.texcoord_data.view(dtype=np.float32).reshape(-1,8)
+
+        # note that the data for these vbo arrays is not yet set; it is set on
+        # each render and depends on the number of points being labeled
+        #
+        # Also note that PyOpenGL 3.1 doesn't allow VBO data to be updated
+        # later when using a recarray, so force the VBO to use the raw view
+        # into the recarray
+        self.vbo_screen_vertexes = gl_vbo.VBO(self.screen_vertex_raw)
+        self.vbo_texture_coordinates = gl_vbo.VBO(self.texcoord_raw)
+
+    def prepare_string_texture(self, sx, sy, text): 
+        # these are used just because it seems to be the fastest way to full numpy arrays
+        # fixme: -- yes, but if you know how big the arrays are going to be
+        #           better to build the array once. 
+        screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
+        tex_coord_accumulators = [[], [], [], [], [], [], [], []]
+
+        texture_width = float(self.font_texture_size[0])
+        texture_height = float(self.font_texture_size[1])
+        x_offset = 0
+        n = 0
+
+        for char in text:
+            if char not in self.font_extents:
+                char = "?"
+
+            x = self.font_extents[char][0]
+            y = self.font_extents[char][1]
+            w = self.font_extents[char][2]
+            h = self.font_extents[char][3]
+
+            # again, flip y to treat point as normal screen coordinates
+            screen_vertex_accumulators[0].append(sx + x_offset)
+            screen_vertex_accumulators[1].append(sy - h)
+            screen_vertex_accumulators[2].append(sx + x_offset)
+            screen_vertex_accumulators[3].append(sy)
+            screen_vertex_accumulators[4].append(sx + w + x_offset)
+            screen_vertex_accumulators[5].append(sy)
+            screen_vertex_accumulators[6].append(sx + w + x_offset)
+            screen_vertex_accumulators[7].append(sy - h)
+            x_offset += w
+
+            tex_coord_accumulators[0].append(x / texture_width)
+            tex_coord_accumulators[1].append((y + h) / texture_height)
+            tex_coord_accumulators[2].append(x / texture_width)
+            tex_coord_accumulators[3].append(y / texture_height)
+            tex_coord_accumulators[4].append((x + w) / texture_width)
+            tex_coord_accumulators[5].append(y / texture_height)
+            tex_coord_accumulators[6].append((x + w) / texture_width)
+            tex_coord_accumulators[7].append((y + h) / texture_height)
+            n += 1
+
+        self.screen_vertex_data.x_lb[0: n] = screen_vertex_accumulators[0]
+        self.screen_vertex_data.y_lb[0: n] = screen_vertex_accumulators[1]
+        self.screen_vertex_data.x_lt[0: n] = screen_vertex_accumulators[2]
+        self.screen_vertex_data.y_lt[0: n] = screen_vertex_accumulators[3]
+        self.screen_vertex_data.x_rt[0: n] = screen_vertex_accumulators[4]
+        self.screen_vertex_data.y_rt[0: n] = screen_vertex_accumulators[5]
+        self.screen_vertex_data.x_rb[0: n] = screen_vertex_accumulators[6]
+        self.screen_vertex_data.y_rb[0: n] = screen_vertex_accumulators[7]
+
+        self.texcoord_data.u_lb[0: n] = tex_coord_accumulators[0]
+        self.texcoord_data.v_lb[0: n] = tex_coord_accumulators[1]
+        self.texcoord_data.u_lt[0: n] = tex_coord_accumulators[2]
+        self.texcoord_data.v_lt[0: n] = tex_coord_accumulators[3]
+        self.texcoord_data.u_rt[0: n] = tex_coord_accumulators[4]
+        self.texcoord_data.v_rt[0: n] = tex_coord_accumulators[5]
+        self.texcoord_data.u_rb[0: n] = tex_coord_accumulators[6]
+        self.texcoord_data.v_rb[0: n] = tex_coord_accumulators[7]
+
+        self.vbo_screen_vertexes[0: n] = self.screen_vertex_raw[0: n]
+        self.vbo_texture_coordinates[0: n] = self.texcoord_raw[0: n]
+        
+        return n, self.font_texture
 
     def prepare_to_render(self, projected_rect, screen_rect):
         self.screen_rect = screen_rect
@@ -257,7 +347,7 @@ class BaseCanvas(glcanvas.GLCanvas):
         # this has to be here because the window has to exist before creating
         # textures and making the renderer
         if self.font_texture is None:
-            (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
+            self.init_font()
         self.update_renderers()
 
         s_r = self.get_screen_rect()
