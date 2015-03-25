@@ -79,11 +79,11 @@ class ImmediateModeRenderer():
         # OpenGL doesn't allow a given vertex to have multiple colors
         # simultaneously. So vbo_line_segment_point_xys is needed to color each
         # line segment individually.
-        self.line_segment_points = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
+        self.world_line_segment_points = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
         if self.vbo_line_segment_point_xys is None:
-            storage = np.zeros((len(self.line_segment_points), 2), dtype=np.float32)
+            storage = np.zeros((len(self.world_line_segment_points), 2), dtype=np.float32)
             self.vbo_line_segment_point_xys = gl_vbo.VBO(storage)
-        self.vbo_line_segment_point_xys[: np.alen(self.line_segment_points)] = self.line_segment_points
+        self.vbo_line_segment_point_xys[: np.alen(self.world_line_segment_points)] = self.world_line_segment_points
         if (color is not None):
             # double the colors since each segment has two vertexes
             segment_colors = np.c_[color, color].reshape(-1)
@@ -134,9 +134,8 @@ class ImmediateModeRenderer():
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glLineWidth(line_width)
             else:
-                picker.bind_picker_colors(layer_index_base + LINES_SUB_LAYER_PICKER_OFFSET,
-                                          len(self.world_line_segment_points),
-                                          True)
+                picker.bind_picker_colors_for_lines(layer_index_base,
+                                          len(self.world_line_segment_points))
                 gl.glLineWidth(6)
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
@@ -202,8 +201,8 @@ class ImmediateModeRenderer():
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glPointSize(point_size)
             else:
-                self.vispy.picker.bind_picker_colors(layer_index_base + POINTS_SUB_LAYER_PICKER_OFFSET,
-                                                    len(self.vbo_point_xys.data))
+                picker.bind_picker_colors_for_points(layer_index_base,
+                                                     len(self.vbo_point_xys.data))
                 gl.glPointSize(point_size + 8)
 
             gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
@@ -213,7 +212,7 @@ class ImmediateModeRenderer():
                 self.vbo_point_colors.unbind()
                 gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
             else:
-                self.vispy.picker.unbind_picker_colors()
+                picker.unbind_picker_colors()
 
             self.vbo_point_xys.unbind()
 

@@ -294,9 +294,9 @@ class BaseCanvas(glcanvas.GLCanvas):
 
         self.SwapBuffers()
 
-#        self.prepare_to_render_picker(s_r)
-#        render_layers(picker=self.picker)
-#        self.done_rendering_picker()
+        self.prepare_to_render_picker(s_r)
+        render_layers(picker=self.picker)
+        self.done_rendering_picker()
 
         elapsed = time.clock() - t0
 

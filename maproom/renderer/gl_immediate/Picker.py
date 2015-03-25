@@ -87,6 +87,14 @@ class Picker:
         gl_fbo.glBindFramebufferEXT(gl_fbo.GL_FRAMEBUFFER_EXT, 0)
         gl.glDrawBuffer(gl.GL_BACK)
 
+    def bind_picker_colors_for_lines(self, layer_index, object_count):
+        self.bind_picker_colors(layer_index + LINES_SUB_LAYER_PICKER_OFFSET,
+                                object_count, True)
+
+    def bind_picker_colors_for_points(self, layer_index, object_count):
+        self.bind_picker_colors(layer_index + POINTS_SUB_LAYER_PICKER_OFFSET,
+                                object_count, False)
+
     def bind_picker_colors(self, layer_index, object_count, doubled=False):
         """
         bind the colors in the OpenGL context (right word?)
@@ -179,25 +187,25 @@ class Picker:
     
     @staticmethod
     def is_ugrid_point(obj):
-        (layer_index, type, subtype, object_index) = parse_clickable_object(obj)
+        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
         return type == POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET and subtype == POINTS_SUB_LAYER_PICKER_OFFSET
 
     @staticmethod
     def is_ugrid_line(obj):
-        (layer_index, type, subtype, object_index) = parse_clickable_object(obj)
+        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
         return type == POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET and subtype == LINES_SUB_LAYER_PICKER_OFFSET
 
     @staticmethod
     def is_polygon_fill(self):
-        (layer_index, type, subtype, object_index) = parse_clickable_object(obj)
+        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
         return type == POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == FILL_SUB_LAYER_PICKER_OFFSET
 
     @staticmethod
     def is_polygon_point(self):
-        (layer_index, type, subtype, object_index) = parse_clickable_object(obj)
+        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
         return type == POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == POINTS_SUB_LAYER_PICKER_OFFSET
 
