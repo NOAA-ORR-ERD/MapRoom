@@ -28,7 +28,7 @@ class Grid(ScreenLayer):
     # a nice amount of spacing between lines
     REFERENCE_PIXEL_SIZE = (100, 100)
 
-    def create_renderer(self, storage):
+    def create_renderer(self, canvas):
         """Create the graphic renderer for this layer.
         
         There may be multiple views of this layer (e.g.  in different windows),
@@ -39,10 +39,10 @@ class Grid(ScreenLayer):
         """
         self.degree_minute_grid = DegreeMinuteGridLines()
         self.decimal_degree_grid = DecimalDegreeGridLines()
-        return ScreenLayer.create_renderer(self, storage)
+        return ScreenLayer.create_renderer(self, canvas)
     
-    def resize(self, storage, world_rect, screen_rect):
-        prefs = storage.canvas.editor.task.get_preferences()
+    def resize(self, world_rect, screen_rect):
+        prefs = self.renderer.canvas.editor.task.get_preferences()
         if prefs.coordinate_display_format == "decimal degrees":
             self.grid = self.decimal_degree_grid
         else:
@@ -71,14 +71,11 @@ class Grid(ScreenLayer):
     def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
         if (not layer_visibility["layer"] or pick_mode):
             return
-        if True:
-            print "FIXME: skipping render_screen for grid!"
-            return
         log.log(5, "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         render_window = self.renderer.canvas
 #        print "projected_rect = %r" % (projected_rect,)
 #        print "screen_rect = %r" % (screen_rect,)
-        self.resize(storage, world_rect, screen_rect)
+        self.resize(world_rect, screen_rect)
 #        print "lon_step = " + str(self.lon_step)
 #        print "lat_step = " + str(self.lat_step)
 #        print "world_rect = " + str(world_rect)

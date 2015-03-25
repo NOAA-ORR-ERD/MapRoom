@@ -213,6 +213,8 @@ class BaseCanvas(glcanvas.GLCanvas):
     def prepare_to_render_picker(self, screen_rect):
         self.picker.prepare_to_render(screen_rect)
         self.set_up_for_picker_rendering()
+        gl.glClearColor(1.0, 1.0, 1.0, 1.0)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
 
     def done_rendering_picker(self):
         self.picker.done_rendering()
@@ -306,13 +308,6 @@ class BaseCanvas(glcanvas.GLCanvas):
 
         if (event is not None):
             event.Skip()
-
-    def resize_render_pane(self, event):
-        if not self.GetContext():
-            return
-
-        event.Skip()
-        self.render(event)
 
     # functions related to world coordinates, projected coordinates, and screen coordinates
 

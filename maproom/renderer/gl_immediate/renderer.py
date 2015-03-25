@@ -108,7 +108,6 @@ class ImmediateModeRenderer():
         """
         #log.debug("in Point_and_line_set_renderer, layer_index_base:%s"%layer_index_base)
         if draw_line_segments:
-            print "GL_IMMEDIATE: calling render_lines"
             self.draw_lines(layer_index_base, picker, point_size, line_width,
                             selected_line_segment_indexes, flagged_line_segment_indexes)
 
@@ -172,7 +171,6 @@ class ImmediateModeRenderer():
                     flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
         #log.debug("in Point_and_line_set_renderer.render_points, layer_index_base:%s, picker:%s"%(layer_index_base, picker) )
 
-        print "GL_IMMEDIATE: draw points"
         if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
             if (picker is None and len(flagged_point_indexes) != 0):
                 gl.glPointSize(point_size + 15)
@@ -288,7 +286,20 @@ class ImmediateModeRenderer():
         gl.glColor(1.0, 1.0, 1.0, 1.0)
         gl.glEnable(gl.GL_TEXTURE_2D)
 
-    def draw_screen_string(self, point, s):
+    def get_drawn_string_dimensions(self, text):
+        c = self.canvas
+        width = 0
+        height = 0
+        for char in text:
+            if char not in c.font_extents:
+                char = "?"
+
+            width += c.font_extents[char][2]
+            height = max(height, c.font_extents[char][3])
+
+        return (width, height)
+
+    def draw_screen_string(self, point, text):
         ##fixme: Is this is the right place?
         ##fixme: This should be done with shaders anyway.
         ##fixme:  if not shaders, Cython could help a lot, too
@@ -298,12 +309,12 @@ class ImmediateModeRenderer():
         point = (point[0], rect.height(c.screen_rect) - point[1])
 
         screen_vertex_data = np.zeros(
-            (len(s), ),
+            (len(text), ),
             dtype=self.QUAD_VERTEX_DTYPE,
         ).view(np.recarray)
 
         texcoord_data = np.zeros(
-            (len(s), ),
+            (len(text), ),
             dtype=self.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
         
@@ -322,14 +333,14 @@ class ImmediateModeRenderer():
         texture_height = float(c.font_texture_size[1])
         x_offset = 0
 
-        for c in s:
-            if c not in c.font_extents:
-                c = "?"
+        for char in text:
+            if char not in c.font_extents:
+                char = "?"
 
-            x = c.font_extents[c][0]
-            y = c.font_extents[c][1]
-            w = c.font_extents[c][2]
-            h = c.font_extents[c][3]
+            x = c.font_extents[char][0]
+            y = c.font_extents[char][1]
+            w = c.font_extents[char][2]
+            h = c.font_extents[char][3]
 
             # again, flip y to treat point as normal screen coordinates
             screen_vertex_accumulators[0].append(point[0] + x_offset)
@@ -373,6 +384,7 @@ class ImmediateModeRenderer():
         vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
 
         gl.glEnable(gl.GL_TEXTURE_2D)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, c.font_texture)
         gl.glColor(1.0, 1.0, 1.0, 1.0)
 
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
@@ -383,7 +395,7 @@ class ImmediateModeRenderer():
         vbo_texture_coordinates.bind()
         gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-        vertex_count = len(s) * 4
+        vertex_count = len(text) * 4
         gl.glDrawArrays(gl.GL_QUADS, 0, vertex_count)
 
         vbo_screen_vertexes.unbind()
@@ -391,6 +403,7 @@ class ImmediateModeRenderer():
         vbo_texture_coordinates.unbind()
         gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
 
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
         gl.glDisable(gl.GL_TEXTURE_2D)
 
         vbo_screen_vertexes = None

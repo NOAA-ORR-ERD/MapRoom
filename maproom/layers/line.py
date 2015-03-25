@@ -525,7 +525,6 @@ class LineLayer(PointLayer):
         if (not layer_visibility["layer"]):
             return
 
-        print "render_projected"
         # the points and line segments
         self.renderer.draw_points_and_lines(self,
             layer_index_base, # + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
