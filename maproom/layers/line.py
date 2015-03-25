@@ -542,11 +542,7 @@ class LineLayer(PointLayer):
 
         # the labels
         if (layer_visibility["labels"]):
-            renderer.draw_labels(
-                -1, pick_mode, s_r,
-                renderer.MAX_LABEL_CHARACTERS, self.points.z,
-                renderer.point_and_line_set_renderer.vbo_point_xys.data,
-                p_r, renderer.canvas.projected_units_per_pixel)
+            self.renderer.draw_labels_at_points(self.points.z, s_r, p_r)
                 
         # render selections after everything else
         if (not pick_mode):

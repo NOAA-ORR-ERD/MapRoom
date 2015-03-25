@@ -52,10 +52,18 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.picker = Picker.Picker()
 
         self.screen_rect = rect.EMPTY_RECT
+
+        # two variables keep track of what's visible on the screen:
+        # (1) the projected point at the center of the screen
+        self.projected_point_center = (0, 0)
+        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)        
+        ## does this get re-set anyway? pretty arbitrary.
+        self.projected_units_per_pixel = 10000
         
         # Texture creation must be deferred until after the call to SetCurrent
         # so that the GLContext is attached to the actual window
         self.font_texture = None
+        self.max_label_characters = 1000
 
         #self.frame.Bind( wx.EVT_MOVE, self.refresh )
         #self.frame.Bind( wx.EVT_IDLE, self.on_idle )
@@ -193,6 +201,7 @@ class BaseCanvas(glcanvas.GLCanvas):
     
     def init_font(self, max_label_characters=1000):
         (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
+        self.max_label_characters = max_label_characters
         
         self.screen_vertex_data = np.zeros(
             (max_label_characters, ),
@@ -256,6 +265,102 @@ class BaseCanvas(glcanvas.GLCanvas):
             tex_coord_accumulators[6].append((x + w) / texture_width)
             tex_coord_accumulators[7].append((y + h) / texture_height)
             n += 1
+
+        self.screen_vertex_data.x_lb[0: n] = screen_vertex_accumulators[0]
+        self.screen_vertex_data.y_lb[0: n] = screen_vertex_accumulators[1]
+        self.screen_vertex_data.x_lt[0: n] = screen_vertex_accumulators[2]
+        self.screen_vertex_data.y_lt[0: n] = screen_vertex_accumulators[3]
+        self.screen_vertex_data.x_rt[0: n] = screen_vertex_accumulators[4]
+        self.screen_vertex_data.y_rt[0: n] = screen_vertex_accumulators[5]
+        self.screen_vertex_data.x_rb[0: n] = screen_vertex_accumulators[6]
+        self.screen_vertex_data.y_rb[0: n] = screen_vertex_accumulators[7]
+
+        self.texcoord_data.u_lb[0: n] = tex_coord_accumulators[0]
+        self.texcoord_data.v_lb[0: n] = tex_coord_accumulators[1]
+        self.texcoord_data.u_lt[0: n] = tex_coord_accumulators[2]
+        self.texcoord_data.v_lt[0: n] = tex_coord_accumulators[3]
+        self.texcoord_data.u_rt[0: n] = tex_coord_accumulators[4]
+        self.texcoord_data.v_rt[0: n] = tex_coord_accumulators[5]
+        self.texcoord_data.u_rb[0: n] = tex_coord_accumulators[6]
+        self.texcoord_data.v_rb[0: n] = tex_coord_accumulators[7]
+
+        self.vbo_screen_vertexes[0: n] = self.screen_vertex_raw[0: n]
+        self.vbo_texture_coordinates[0: n] = self.texcoord_raw[0: n]
+        
+        return n, self.font_texture
+
+    def prepare_string_texture_for_labels(self, values, projected_points, projected_rect): 
+        r1 = projected_points[:, 0] >= projected_rect[0][0]
+        r2 = projected_points[:, 0] <= projected_rect[1][0]
+        r3 = projected_points[:, 1] >= projected_rect[0][1]
+        r4 = projected_points[:, 1] <= projected_rect[1][1]
+        mask = np.logical_and(np.logical_and(r1, r2), np.logical_and(r3, r4))
+        relevant_indexes = np.where(mask)[0]
+        relevant_points = projected_points[relevant_indexes]
+
+        relevant_values = values[relevant_indexes]
+        labels = map(str, relevant_values)
+        n = sum(map(len, labels))
+
+        if (n == 0 or n > self.max_label_characters):
+            return 0
+
+        screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
+        tex_coord_accumulators = [[], [], [], [], [], [], [], []]
+
+        texture_width = float(self.font_texture_size[0])
+        texture_height = float(self.font_texture_size[1])
+
+        for index, s in enumerate(labels):
+            # determine the width of the label
+            width = 0
+            for c in s:
+                if c not in self.font_extents:
+                    c = "?"
+                width += self.font_extents[c][2]
+            x_offset = -width / 2
+
+            projected_point = relevant_points[index]
+            base_screen_x = (projected_point[0] - projected_rect[0][0]) / self.projected_units_per_pixel
+            base_screen_y = (projected_point[1] - projected_rect[0][1]) / self.projected_units_per_pixel
+            # print str( base_screen_x ) + "," + str( base_screen_y ) + "," + str( x_offset )
+
+            for c in s:
+                if c not in self.font_extents:
+                    c = "?"
+
+                x = self.font_extents[c][0]
+                y = self.font_extents[c][1]
+                w = self.font_extents[c][2]
+                h = self.font_extents[c][3]
+
+                # lb
+                screen_vertex_accumulators[0].append(base_screen_x + x_offset)
+                screen_vertex_accumulators[1].append(base_screen_y - 2 - h)
+                # lt
+                screen_vertex_accumulators[2].append(base_screen_x + x_offset)
+                screen_vertex_accumulators[3].append(base_screen_y - 2)
+                # rb
+                screen_vertex_accumulators[4].append(base_screen_x + x_offset + w)
+                screen_vertex_accumulators[5].append(base_screen_y - 2)
+                # rt
+                screen_vertex_accumulators[6].append(base_screen_x + x_offset + w)
+                screen_vertex_accumulators[7].append(base_screen_y - 2 - h)
+
+                # lb
+                tex_coord_accumulators[0].append(x / texture_width)
+                tex_coord_accumulators[1].append((y + h) / texture_height)
+                # lt
+                tex_coord_accumulators[2].append(x / texture_width)
+                tex_coord_accumulators[3].append(y / texture_height)
+                # rt
+                tex_coord_accumulators[4].append((x + w) / texture_width)
+                tex_coord_accumulators[5].append(y / texture_height)
+                # rb
+                tex_coord_accumulators[6].append((x + w) / texture_width)
+                tex_coord_accumulators[7].append((y + h) / texture_height)
+
+                x_offset += w
 
         self.screen_vertex_data.x_lb[0: n] = screen_vertex_accumulators[0]
         self.screen_vertex_data.y_lb[0: n] = screen_vertex_accumulators[1]

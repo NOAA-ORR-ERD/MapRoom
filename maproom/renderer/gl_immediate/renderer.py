@@ -211,6 +211,53 @@ class ImmediateModeRenderer():
             gl.glEnd()
             gl.glColor(1, 1, 1, 1)
 
+    def draw_labels_at_points(self, values, screen_rect, projected_rect):
+        c = self.canvas
+
+        projected_points = self.vbo_point_xys.data
+        n, tex_id = c.prepare_string_texture_for_labels(values, projected_points, projected_rect)
+        if (n == 0):
+            return
+
+        gl.glEnable(gl.GL_TEXTURE_2D)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, tex_id)
+
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+        c.vbo_screen_vertexes.bind()
+        gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+        gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        c.vbo_texture_coordinates.bind()
+        gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+        # set up an orthogonal projection
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+        gl.glOrtho(0, rect.width(screen_rect), 0, rect.height(screen_rect), -1, 1)
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glPushMatrix()
+        gl.glLoadIdentity()
+
+        # vertex_count = np.alen( self.character_coordinates_data ) * 4
+        vertex_count = n * 4
+        gl.glDrawArrays(gl.GL_QUADS, 0, vertex_count)
+
+        # undo the orthogonal projection
+        gl.glMatrixMode(gl.GL_MODELVIEW)
+        gl.glPopMatrix()
+        gl.glMatrixMode(gl.GL_PROJECTION)
+        gl.glPopMatrix()
+
+        c.vbo_texture_coordinates.unbind()
+        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+
+        c.vbo_screen_vertexes.unbind()
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+        gl.glDisable(gl.GL_TEXTURE_2D)
+
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
         c = self.canvas
         # flip y to treat point as normal screen coordinates

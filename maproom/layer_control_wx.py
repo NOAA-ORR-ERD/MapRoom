@@ -70,13 +70,6 @@ class LayerCanvas(renderer.BaseCanvas):
         
         self.bounding_boxes_shown = False
 
-        # two variables keep track of what's visible on the screen:
-        # (1) the projected point at the center of the screen
-        self.projected_point_center = (0, 0)
-        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)        
-        ## does this get re-set anyway? pretty arbitrary.
-        self.projected_units_per_pixel = 10000
-
         self.projection = Projection(preferences.DEFAULT_PROJECTION_STRING)
 
         self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
