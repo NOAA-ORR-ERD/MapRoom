@@ -16,6 +16,7 @@ from maproom.layers import RasterLayer
 
 import logging
 log = logging.getLogger(__name__)
+progress_log = logging.getLogger("progress")
 
 class GDALLoader(BaseLayerLoader):
     mime = "image/*"
@@ -28,8 +29,10 @@ class GDALLoader(BaseLayerLoader):
     def load_layers(self, metadata, manager):
         layer = RasterLayer(manager=manager)
         
-        (layer.load_error_string, layer.image_data) = load_image_file_subprocess(metadata.uri)
+        progress_log.info("Loading from %s" % metadata.uri)
+        (layer.load_error_string, layer.image_data) = load_image_file(metadata.uri)
         if (layer.load_error_string == ""):
+            progress_log.info("Finished loading %s" % metadata.uri)
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
@@ -175,6 +178,8 @@ class ImageDataBlocks(ImageData):
     """
     def load_dataset(self, dataset, texture_size):
         num_cols, num_rows, raster_bands, palette = self.calc_textures(dataset, texture_size)
+
+        progress_log.info("TICKS=%d" % (num_cols * num_rows))
         for r in xrange(num_rows):
             images_row = []
             image_sizes_row = []
@@ -187,6 +192,7 @@ class ImageDataBlocks(ImageData):
                 selection_width = texture_size
                 if (((c + 1) * texture_size) > self.x):
                     selection_width -= (c + 1) * texture_size - self.x
+                progress_log.info("Loading image data...")
                 image = get_image(raster_bands,
                                   self.nbands,
                                   palette,
