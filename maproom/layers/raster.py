@@ -43,7 +43,7 @@ class RasterLayer(ProjectedLayer):
     
     def background_loading_callback(self, progress_report):
         log.debug("RECEIVED IMAGE FROM BACKGROUND LOAD!!! %s" % repr(progress_report))
-        self.image_data.image_textures.update_texture(progress_report)
+        self.renderer.image_textures.update_texture(progress_report)
         if progress_report.is_finished():
             log.debug("FINISHED RECEIVING IMAGES FROM BACKGROUND LOAD!!! %s" % progress_report.job_id)
             self.manager.dispatch_event('refresh_needed', self)
@@ -121,22 +121,22 @@ class RasterLayer(ProjectedLayer):
 
         return bounds
     
-    def create_renderer(self, renderer):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
+    def rebuild_renderer(self, in_place=False):
+        """Update renderer
         
         """
-        if self.image_data and not renderer.image_set_renderer:
-            renderer.rebuild_image_set_renderer(self)
+        if not self.image_data:
+            return
+        print self.image_data
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        # log.debug("Rendering raster!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
+        projection = self.manager.project.layer_canvas.projection
+        self.renderer.set_image_projection(self.image_data, projection)
+
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
+        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
         if (not layer_visibility["layer"]):
             return
 
-        if (renderer.image_set_renderer is not None):
-            renderer.image_set_renderer.render(-1, pick_mode, self.alpha)
+        # the labels
+        if (layer_visibility["images"]):
+            self.renderer.draw_image(self.alpha)

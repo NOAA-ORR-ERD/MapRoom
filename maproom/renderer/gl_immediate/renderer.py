@@ -13,6 +13,7 @@ from peppy2 import get_image_path
 import maproom.library.rect as rect
 import Picker
 from ..gl import data_types
+from ..gl.textures import ImageTextures
 
 
 class ImmediateModeRenderer():
@@ -29,6 +30,8 @@ class ImmediateModeRenderer():
         self.vbo_line_segment_colors = None
         self.vbo_triangle_point_indexes = None
         self.vbo_triangle_point_colors = None
+        self.image_textures = None
+        self.image_projected_rects = []
 
     def prepare_to_render_projected_objects(self):
         c = self.canvas
@@ -257,6 +260,41 @@ class ImmediateModeRenderer():
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
         gl.glDisable(gl.GL_TEXTURE_2D)
+
+    def set_image_projection(self, image_data, projection):
+        if self.image_textures is None:
+            self.image_textures = ImageTextures(image_data)
+            # Release the raw image data to free up memory.
+            image_data.release_images()
+            
+        self.image_textures.set_projection(projection)
+
+    def draw_image(self, alpha=1.0):
+        for i, vbo in enumerate(self.image_textures.vbo_vertexes):
+            gl.glEnable(gl.GL_TEXTURE_2D)
+            gl.glBindTexture(gl.GL_TEXTURE_2D, self.image_textures.textures[i])
+
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+            vbo.bind()
+            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            self.image_textures.vbo_texture_coordinates.bind()
+            gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            gl.glColor(1.0, 1.0, 1.0, alpha)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            gl.glDrawArrays(gl.GL_QUADS, 0, 4)
+
+            self.image_textures.vbo_texture_coordinates.unbind()
+            gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+
+            vbo.unbind()
+            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+
+            gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+
+
 
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
         c = self.canvas

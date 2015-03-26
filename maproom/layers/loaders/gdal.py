@@ -44,6 +44,24 @@ class GDALLoader(BaseLayerLoader):
 
 
 class ImageData(object):
+    """ Temporary storage object to hold raw image data before converted to GL
+    textures.
+    
+    images = list of lists, where each sublist is a row of images
+                and each image is a numpy array [ 0 : max_y, 0 : max_x, 0 : num_bands ]
+                where:
+                    num_bands = 4
+                    max_x and max_y = 1024,
+                        except for the last image in each row (may be narrower) and
+                        the images in the last row (may be shorter)
+    image_sizes = list of lists, the same shape as images,
+                  but where each item gives the ( width, height ) pixel size
+                  of the corresponding image
+    image_world_rects = list of lists, the same shape as images,
+                        but where each item gives the world rect
+                        of the corresponding image
+    """
+
     NORTH_UP_TOLERANCE = 0.002
     
     def __init__(self, dataset):
@@ -55,7 +73,6 @@ class ImageData(object):
         self.images = []
         self.image_sizes = []
         self.image_world_rects = []
-        self.image_textures = []
         
         self.calc_projection(dataset)
         
@@ -67,9 +84,13 @@ class ImageData(object):
     def release_images(self):
         """Free image data after renderer is done converting to textures.
         
+        This has no effect when using the background loader because each image
+        chunk is sent to the main thread through a callback.  When using the
+        normal non-threaded loader, the entire image is loaded into memory and
+        can be freed after GL converts it to textures.
         """
         # release images by allowing garbage collector to collect the now
-        # unrefcounted images
+        # unrefcounted images.
         self.images = True
     
     def calc_projection(self, dataset):
@@ -226,7 +247,7 @@ def load_image_file(file_path):
     t0 = time.clock()
     image_data = ImageDataBlocks(dataset)
     image_data.load_dataset(dataset, TEXTURE_SIZE)
-    log.debug("GDAL load time: ", (time.clock() - t0))
+    log.debug("GDAL load time: %f" % (time.clock() - t0))
     
     return ("", image_data)
 
