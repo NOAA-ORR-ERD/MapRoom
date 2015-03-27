@@ -303,7 +303,7 @@ class BaseCanvas(glcanvas.GLCanvas):
         n = sum(map(len, labels))
 
         if (n == 0 or n > self.max_label_characters):
-            return 0
+            return 0, 0
 
         screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
         tex_coord_accumulators = [[], [], [], [], [], [], [], []]
