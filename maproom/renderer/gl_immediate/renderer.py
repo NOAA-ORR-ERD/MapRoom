@@ -70,7 +70,7 @@ class ImmediateModeRenderer():
         # simultaneously. So vbo_line_segment_point_xys is needed to color each
         # line segment individually.
         self.world_line_segment_points = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
-        if self.vbo_line_segment_point_xys is None:
+        if self.vbo_line_segment_point_xys is None or np.alen(self.vbo_line_segment_point_xys.data) != np.alen(self.world_line_segment_points):
             storage = np.zeros((len(self.world_line_segment_points), 2), dtype=np.float32)
             self.vbo_line_segment_point_xys = gl_vbo.VBO(storage)
         self.vbo_line_segment_point_xys[: np.alen(self.world_line_segment_points)] = self.world_line_segment_points
