@@ -13,8 +13,8 @@ import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
 from renderer import ImmediateModeRenderer
+from picker import Picker, NullPicker
 import maproom.library.rect as rect
-import Picker
 
 from ..gl.font import load_font_texture_with_alpha
 from ..gl import data_types
@@ -49,7 +49,7 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.init_context(self)
 
         self.overlay = ImmediateModeRenderer(self, None)
-        self.picker = Picker.Picker()
+        self.picker = Picker()
 
         self.screen_rect = rect.EMPTY_RECT
 
@@ -465,7 +465,7 @@ class BaseCanvas(glcanvas.GLCanvas):
         ## fixme -- why is this a function defined in here??
         ##   so that it can be called with and without pick-mode turned on
         ##   but it seems to be in the wrong place -- make it a regular  method?
-        null_picker = Picker.NullPicker()
+        null_picker = NullPicker()
         def render_layers(picker=null_picker):
             list = self.layer_manager.flatten()
             length = len(list)

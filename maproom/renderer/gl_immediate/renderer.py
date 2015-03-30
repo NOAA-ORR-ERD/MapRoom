@@ -11,7 +11,6 @@ import OpenGL.GLU as glu
 from peppy2 import get_image_path
 
 import maproom.library.rect as rect
-import Picker
 from ..gl import data_types
 from ..gl.textures import ImageTextures
 
