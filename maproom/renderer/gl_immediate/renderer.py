@@ -59,7 +59,7 @@ class ImmediateModeRenderer():
         gl.glLoadIdentity()
     
     def set_points(self, xy, depths, color):
-        if self.vbo_point_xys is None:
+        if self.vbo_point_xys is None or np.alen(self.vbo_point_xys.data) != np.alen(xy):
             storage = np.zeros((len(xy), 2), dtype=np.float32)
             self.vbo_point_xys = gl_vbo.VBO(storage)
         self.vbo_point_colors = gl_vbo.VBO(color)
