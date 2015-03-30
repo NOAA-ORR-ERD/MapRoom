@@ -68,10 +68,10 @@ class Grid(ScreenLayer):
             dtype=np.float64)
 
     # fixme == this should be able to get the various rects from the render_window object...
-    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
-        if (not layer_visibility["layer"] or pick_mode):
+    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+        if (not layer_visibility["layer"] or picker.is_active):
             return
-        log.log(5, "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
+        log.log(5, "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         render_window = self.renderer.canvas
 #        print "projected_rect = %r" % (projected_rect,)
 #        print "screen_rect = %r" % (screen_rect,)

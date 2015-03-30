@@ -79,36 +79,9 @@ class ImmediateModeRenderer():
             segment_colors = np.c_[color, color].reshape(-1)
             self.vbo_line_segment_colors = gl_vbo.VBO(segment_colors.view(dtype=np.uint8))
     
-    def draw_points_and_lines(self, layer,
-                              layer_index_base,
-                              picker,
-                              point_size,
-                              line_width,
-                              draw_points=True,
-                              draw_line_segments=True,
-                              draw_triangles=True,
-                              triangle_line_width=1,
-                              selected_point_indexes=[],
-                              flagged_point_indexes=[],
-                              selected_line_segment_indexes=[],
-                              flagged_line_segment_indexes=[]):  # flagged_line_segment_indexes not yet used
-        """
-        layer_index_base = the base number of this layer renderer for pick buffer purposes
-        picker = True if we are drawing to the off-screen pick buffer
-        """
-        #log.debug("in Point_and_line_set_renderer, layer_index_base:%s"%layer_index_base)
-        if draw_line_segments:
-            self.draw_lines(layer_index_base, picker, point_size, line_width,
-                            selected_line_segment_indexes, flagged_line_segment_indexes)
-
-        if draw_points:
-            self.draw_points(layer_index_base, picker, point_size,
-                               selected_point_indexes, flagged_point_indexes)
-
     def draw_lines(self,
                    layer_index_base,
                    picker,
-                   point_size,
                    line_width,
                    selected_line_segment_indexes=[],
                    flagged_line_segment_indexes=[]):  # flagged_line_segment_indexes not yet used
@@ -117,15 +90,15 @@ class ImmediateModeRenderer():
             self.vbo_line_segment_point_xys.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-            if (picker is None):
+            if (picker.is_active):
+                picker.bind_picker_colors_for_lines(layer_index_base,
+                                          len(self.world_line_segment_points))
+                gl.glLineWidth(6)
+            else:
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
                 self.vbo_line_segment_colors.bind()
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glLineWidth(line_width)
-            else:
-                picker.bind_picker_colors_for_lines(layer_index_base,
-                                          len(self.world_line_segment_points))
-                gl.glLineWidth(6)
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
@@ -133,11 +106,11 @@ class ImmediateModeRenderer():
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-            if (picker is None):
+            if (picker.is_active):
+                picker.unbind_picker_colors()
+            else:
                 self.vbo_line_segment_colors.unbind()
                 gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
-            else:
-                picker.unbind_picker_colors()
             self.vbo_line_segment_point_xys.unbind()
 
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
@@ -162,7 +135,7 @@ class ImmediateModeRenderer():
         #log.debug("in Point_and_line_set_renderer.render_points, layer_index_base:%s, picker:%s"%(layer_index_base, picker) )
 
         if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
-            if (picker is None and len(flagged_point_indexes) != 0):
+            if (not picker.is_active and len(flagged_point_indexes) != 0):
                 gl.glPointSize(point_size + 15)
                 gl.glColor(0.2, 0, 1, 0.75)
                 gl.glBegin(gl.GL_POINTS)
@@ -175,7 +148,11 @@ class ImmediateModeRenderer():
             self.vbo_point_xys.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-            if (picker is None):
+            if (picker.is_active):
+                picker.bind_picker_colors_for_points(layer_index_base,
+                                                     len(self.vbo_point_xys.data))
+                gl.glPointSize(point_size + 8)
+            else:
                 # To make the points stand out better, especially when rendered on top
                 # of line segments, draw translucent white rings under them.
                 gl.glPointSize(point_size + 4)
@@ -188,19 +165,15 @@ class ImmediateModeRenderer():
                 self.vbo_point_colors.bind()
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glPointSize(point_size)
-            else:
-                picker.bind_picker_colors_for_points(layer_index_base,
-                                                     len(self.vbo_point_xys.data))
-                gl.glPointSize(point_size + 8)
 
             gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
-            if (picker is None):
+            if (picker.is_active):
+                picker.unbind_picker_colors()
+            else:
                 self.vbo_point_colors.unbind()
                 gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
-            else:
-                picker.unbind_picker_colors()
 
             self.vbo_point_xys.unbind()
 
@@ -260,6 +233,48 @@ class ImmediateModeRenderer():
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
         gl.glDisable(gl.GL_TEXTURE_2D)
+
+    def set_triangles(self, triangle_point_indexes, triangle_point_colors):
+        self.vbo_triangle_point_indexes = gl_vbo.VBO(
+            triangle_point_indexes.view(np.uint32),
+            usage="GL_STATIC_DRAW",
+            target="GL_ELEMENT_ARRAY_BUFFER"
+        )
+        self.vbo_triangle_point_colors = gl_vbo.VBO(triangle_point_colors)
+
+    def draw_triangles(self, line_width):
+        # the line segments
+        if (self.vbo_triangle_point_indexes is not None and len(self.vbo_triangle_point_indexes.data) > 0):
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+            self.vbo_point_xys.bind()
+            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            gl.glEnableClientState(gl.GL_INDEX_ARRAY)  # FIXME: deprecated
+            self.vbo_triangle_point_indexes.bind()
+
+            gl.glColor(0.5, 0.5, 0.5, 0.75)
+            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+            self.vbo_triangle_point_colors.bind()
+            gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+            gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
+            gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+
+            gl.glColor(0.5, 0.5, 0.5, 0.75)
+            gl.glLineWidth(line_width)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+            gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
+
+            gl.glColor(1, 1, 1, 1)
+            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+            gl.glDisableClientState(gl.GL_INDEX_ARRAY)  # FIXME: deprecated
+            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+#            self.vbo_triangle_point_colors.unbind()
+            self.vbo_triangle_point_indexes.unbind()
+            self.vbo_point_xys.unbind()
 
     def set_image_projection(self, image_data, projection):
         if self.image_textures is None:

@@ -18,8 +18,10 @@ FILL_SUB_LAYER_PICKER_OFFSET = 0
 POINTS_SUB_LAYER_PICKER_OFFSET = 1
 LINES_SUB_LAYER_PICKER_OFFSET = 2
 
-class Picker:
+class NullPicker(object):
+    is_active = False
 
+class Picker(object):
     """
     An off-screen buffer for detecting what object the mouse is over.
     """
@@ -31,6 +33,8 @@ class Picker:
     render_buffer = None  # the render buffer within the frame buffer for offscreen drawing
     screen_rect = rect.EMPTY_RECT
     vbo_colors = None
+    
+    is_active = True
 
     def __init__(self):
         # self.colored_objects = {} # renderer -> ( index, original color )

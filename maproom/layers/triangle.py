@@ -323,50 +323,24 @@ class TriangleLayer(PointLayer):
                 d = self.points.z[i]
                 colors[i] = self.color_interp(d, colormap, alpha)
         return colors
-
-    def create_renderer(self, renderer):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
+    
+    def rebuild_renderer(self, in_place=False):
+        """Update display canvas data with the data in this layer
         
         """
-        if self.points is not None and renderer.point_and_line_set_renderer is None:
-
-            renderer.rebuild_point_and_line_set_renderer(self, create=True)
-
-        renderer.set_up_labels(self)
-
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        log.log(5, "Rendering triangle layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
-        if (not layer_visibility["layer"]):
+        projected_point_data = self.compute_projected_point_data()
+        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        triangles = self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
+        tri_points_color = self.get_triangle_point_colors()
+        self.renderer.set_triangles(triangles, tri_points_color)
+    
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        if (not layer_visibility["layer"] or picker.is_active):
             return
 
-        # the points and line segments
-        if (renderer.point_and_line_set_renderer is not None):
-            renderer.point_and_line_set_renderer.render(layer_index_base + renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
-                                                    pick_mode,
-                                                    self.point_size,
-                                                    self.line_width,
-                                                    layer_visibility["points"],
-                                                    False,
-                                                    layer_visibility["triangles"],
-                                                    self.triangle_line_width,
-                                                    self.get_selected_point_indexes(),
-                                                    self.get_selected_point_indexes(STATE_FLAGGED),
-                                                    [], [])
+        if layer_visibility["triangles"]:
+            self.renderer.draw_triangles(self.triangle_line_width)
 
-            # the labels
-            if (renderer.label_set_renderer is not None and layer_visibility["labels"] and renderer.point_and_line_set_renderer.vbo_point_xys is not None):
-                renderer.label_set_renderer.render(-1, pick_mode, s_r,
-                                               renderer.MAX_LABEL_CHARACTERS, self.points.z,
-                                               renderer.point_and_line_set_renderer.vbo_point_xys.data,
-                                               p_r, renderer.canvas.projected_units_per_pixel)
-
-        # render selections after everything else
-        if (renderer.point_and_line_set_renderer is not None and not pick_mode):
-            if layer_visibility["points"]:
-                renderer.point_and_line_set_renderer.render_selected_points(self.point_size,
-                                                                        self.get_selected_point_indexes())
+        if layer_visibility["labels"]:
+            self.renderer.draw_labels_at_points(self.points.z, s_r, p_r)

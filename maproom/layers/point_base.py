@@ -153,16 +153,44 @@ class PointBaseLayer(ProjectedLayer):
         ] = layer_b.points.copy()
         # self.points.state = 0
     
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        log.log(5, "Rendering ParticleLayer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
+    def compute_projected_point_data(self):
+        projection = self.manager.project.layer_canvas.projection
+        view = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy.astype(np.float32)
+        print("BEFORE:")
+        print view
+        projected_point_data = np.zeros(
+            (len(self.points), 2),
+            dtype=np.float32
+        )
+        projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
+        print("AFTER:")
+        print projected_point_data
+        return projected_point_data
+    
+    def rebuild_renderer(self, in_place=False):
+        """Update renderer
+        
+        """
+        projected_point_data = self.compute_projected_point_data()
+        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
 
-        # the points
-        if (self.renderer.point_renderer is not None):
-            self.renderer.point_renderer.render(layer_index_base + self.renderer.POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET,
-                                           pick_mode,
-                                           self.point_size,
-                                           layer_visibility["points"],
-                                           )
+        if layer_visibility["points"]:
+            self.renderer.draw_points(layer_index_base, picker, self.point_size,
+                                      self.get_selected_point_indexes(),
+                                      self.get_selected_point_indexes(STATE_FLAGGED))
 
+        # the labels
+        if layer_visibility["labels"]:
+            self.renderer.draw_labels_at_points(self.points.z, s_r, p_r)
+                
+        # render selections after everything else
+        if (not picker.is_active):
+            if layer_visibility["points"]:
+                self.renderer.draw_selected_points(
+                    self.point_size,
+                    self.get_selected_point_indexes())

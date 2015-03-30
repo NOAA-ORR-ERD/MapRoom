@@ -132,9 +132,9 @@ class RasterLayer(ProjectedLayer):
         projection = self.manager.project.layer_canvas.projection
         self.renderer.set_image_projection(self.image_data, projection)
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
-        if (not layer_visibility["layer"]):
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        if (not layer_visibility["layer"] or picker.is_active):
             return
 
         # the labels

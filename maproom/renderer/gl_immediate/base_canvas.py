@@ -465,13 +465,14 @@ class BaseCanvas(glcanvas.GLCanvas):
         ## fixme -- why is this a function defined in here??
         ##   so that it can be called with and without pick-mode turned on
         ##   but it seems to be in the wrong place -- make it a regular  method?
-        def render_layers(picker=None):
+        null_picker = Picker.NullPicker()
+        def render_layers(picker=null_picker):
             list = self.layer_manager.flatten()
             length = len(list)
             self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
             pick_layer_index = -1
             for i, layer in enumerate(reversed(list)):
-                if picker is not None:
+                if picker.is_active:
                     if layer.pickable:
                         pick_layer_index += 1
                         self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...

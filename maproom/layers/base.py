@@ -385,13 +385,13 @@ class Layer(HasTraits):
                screen_rect,
                layer_visibility,
                layer_index_base,
-               pick_mode=False):
+               picker):
         if hasattr(self, "render_projected"):
             self.renderer.prepare_to_render_projected_objects()
-            self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
+            self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
         if hasattr(self, "render_screen"):
             self.renderer.prepare_to_render_screen_objects()
-            self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode)
+            self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
 
 
 class Folder(Layer):
@@ -421,10 +421,10 @@ class RootLayer(Folder):
 
 
 class ProjectedLayer(Layer):
-    def render_projected(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+    def render_projected(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
         print "Layer %s doesn't have projected objects to render" % self.name
 
 
 class ScreenLayer(Layer):
-    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, pick_mode=False):
+    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
         print "Layer %s doesn't have screen objects to render" % self.name
