@@ -129,9 +129,13 @@ class Picker(object):
         gl.glColorPointer(self.CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
 
     def unbind_picker_colors(self):
-
         self.vbo_colors.unbind()
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+
+    def get_polygon_picker_colors(self, layer_index, object_count):
+        start_color = (layer_index + FILL_SUB_LAYER_PICKER_OFFSET) << 24
+        active_colors = np.arange(start_color, start_color + object_count, dtype=np.uint32)
+        return active_colors
 
     def get_object_at_mouse_position(self, screen_point):
         """

@@ -13,6 +13,8 @@ from peppy2 import get_image_path
 import maproom.library.rect as rect
 from ..gl import data_types
 from ..gl.textures import ImageTextures
+from ..gl.Tessellator import init_vertex_buffers, tessellate
+from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color
 
 
 class ImmediateModeRenderer():
@@ -308,6 +310,131 @@ class ImmediateModeRenderer():
 
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
+    def set_invalid_polygons(self, polygons, polygon_count):
+        # Invalid polygons are those that couldn't be tessellated and thus
+        # have zero fill triangles. But don't consider hole polygons as
+        # invalid polygons.
+        invalid_indices_including_holes = np.where(
+            self.triangle_vertex_counts[: polygon_count] == 0
+        )[0]
+        invalid_indices = []
+
+        for index in invalid_indices_including_holes:
+            if index > 0 and \
+               polygons.group[index] != polygons.group[index - 1]:
+                invalid_indices.append(index)
+
+        # this is a mechanism to inform the calling program of invalid polygons
+        # TODO: make this a pull (call to a get_invalid_polygons() method) instead
+        # of a push (message)
+        """
+        self.layer.inbox.send(
+            request = "set_invalid_polygons",
+            polygon_indices = np.array( invalid_indices, np.uint32 ),
+        )
+        """
+
+    def set_polygons(self, polygons, point_adjacency_array):
+        self.point_adjacency_array = point_adjacency_array.copy()
+        self.polygons = polygons.copy()
+        self.polygon_count = np.alen(polygons)
+        self.line_vertex_counts = polygons.count.copy()
+        self.triangle_vertex_buffers = np.ndarray(
+            self.polygon_count,
+            dtype=np.uint32
+        )
+        self.triangle_vertex_counts = np.ndarray(
+            self.polygon_count,
+            dtype=np.uint32
+        )
+        self.line_vertex_buffers = np.ndarray(
+            self.polygon_count,
+            dtype=np.uint32
+        )
+        self.line_nan_counts = np.zeros(
+            self.polygon_count,
+            dtype=np.uint32
+        )
+
+        init_vertex_buffers(
+            self.triangle_vertex_buffers,  # out parameter -- init_vertex_buffers() builds a vbo buffer for each polygon and stores them in this handle
+            self.line_vertex_buffers,  # out parameter -- init_vertex_buffers() builds a vbo buffer for each polygon and stores them in this handle
+            start_index=0,
+            count=self.polygon_count,
+            pygl=gl
+        )
+
+        projected_points = self.vbo_point_xys.data
+        tessellate(
+            projected_points,  # used to be: self.points
+            self.point_adjacency_array.next,
+            self.point_adjacency_array.polygon,
+            self.polygons.start,
+            self.polygons.count,  # per-polygon point count
+            self.line_nan_counts,  # out parameter -- how many nan/deleted points in each polygon
+            self.polygons.group,
+            self.triangle_vertex_buffers,  # out parameter -- fills in the triangle vertex points
+            self.triangle_vertex_counts,  # out parameter -- how many triangle points for each polygon?
+            self.line_vertex_buffers,  # out parameter -- fills in the line vertex points
+            gl
+        )
+
+        # print "total line_nan_counts = " + str( self.line_nan_counts.sum() )
+        self.set_invalid_polygons(self.polygons, self.polygon_count)
+
+    def draw_polygons(self, layer_index_base, picker,
+                      polygon_colors, line_color, line_width,
+                      broken_polygon_index=None):
+        if self.triangle_vertex_buffers is None or self.polygon_count == 0:
+            return
+
+        # the fill triangles
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+        if (picker.is_active):
+            active_colors = picker.get_polygon_picker_colors(layer_index_base, self.polygon_count)
+        else:
+            active_colors = polygon_colors
+
+        render_buffers_with_colors(
+            self.triangle_vertex_buffers[: self.polygon_count],
+            active_colors,
+            self.triangle_vertex_counts[: self.polygon_count],
+            gl.GL_TRIANGLES,
+            gl
+        )
+
+        # the lines
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+
+        if (picker.is_active):
+            gl.glLineWidth(6)
+            # note that all of the lines of each polygon get the color of the polygon as a whole
+            render_buffers_with_colors(
+                self.line_vertex_buffers[: self.polygon_count],
+                active_colors,
+                self.line_vertex_counts[: self.polygon_count],
+                gl.GL_LINE_LOOP,
+                gl
+            )
+        else:
+            gl.glLineWidth(line_width)
+            render_buffers_with_one_color(
+                self.line_vertex_buffers[: self.polygon_count],
+                line_color,
+                self.line_vertex_counts[: self.polygon_count],
+                gl.GL_LINE_LOOP,
+                gl,
+                0 if broken_polygon_index is None else broken_polygon_index,
+                # If needed, render with one polygon border popped open.
+                gl.GL_LINE_LOOP if broken_polygon_index is None else gl.GL_LINE_STRIP
+            )
+
+        # TODO: drawt the points if the polygon is selected for editing
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
 
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):

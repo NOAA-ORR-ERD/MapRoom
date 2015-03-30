@@ -314,33 +314,19 @@ class PolygonLayer(PointLayer):
         lf.layer_contents_deleted = True
         return undo
 
-    def create_renderer(self, renderer):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
-        
-        """
-        if self.polygons is not None and renderer.polygon_set_renderer is None:
-            renderer.rebuild_polygon_set_renderer(self)
+    def rebuild_renderer(self, in_place=False):
+        projected_point_data = self.compute_projected_point_data()
+        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        self.renderer.set_polygons(self.polygons, self.polygon_adjacency_array)
     
-    def rebuild_renderer(self, renderer, in_place=False):
-        if in_place == True:
-            # FIXME: noop if items have just moved around.
-            return
-        renderer.rebuild_polygon_set_renderer(self)
-
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, pick_mode=False):
-        log.log(5, "Rendering polygon layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], pick_mode))
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering polygon layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
 
         # the polygons
-        if (renderer.polygon_set_renderer is not None and layer_visibility["polygons"]):
-            renderer.polygon_set_renderer.render(layer_index_base + renderer.POLYGONS_SUB_LAYER_PICKER_OFFSET,
-                                             pick_mode,
-                                             self.polygons.color,
-                                             color_to_int(0, 0, 0, 1.0),
-                                             1)  # , self.get_selected_polygon_indexes()
+        if layer_visibility["polygons"]:
+            self.renderer.draw_polygons(layer_index_base, picker,
+                                        self.polygons.color,
+                                        color_to_int(0, 0, 0, 1.0),
+                                        1)
