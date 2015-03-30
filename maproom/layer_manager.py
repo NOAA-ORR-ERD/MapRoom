@@ -355,9 +355,11 @@ class LayerManager(HasTraits):
         return self.get_multi_index_of_layer_recursive(layer, self.layers)
 
     def get_layer_by_pick_index(self, pick_index):
-        layer = self.get_layer_by_flattened_index(self.pick_layer_index_map[pick_index])
-        # log.debug("pick_index: %s"%pick_index)
-        # log.debug("layer: %s"%layer)
+        try:
+            layer = self.get_layer_by_flattened_index(self.pick_layer_index_map[pick_index])
+        except:
+            log.error("Invalid pick_index: %s" % pick_index)
+            layer = None
         return layer
 
     def get_layer_by_name(self, name):
