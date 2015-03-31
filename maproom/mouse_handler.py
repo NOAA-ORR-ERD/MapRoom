@@ -154,7 +154,7 @@ class MouseHandler(object):
         c = self.layer_control
         if c.mouse_is_down:
             effective_mode = c.get_effective_tool_mode(event)
-            if effective_mode == ZoomRectMode or effective_mode == CropRectMode:
+            if isinstance(effective_mode, RectSelectMode):
                 if (event.GetKeyCode() == wx.WXK_ESCAPE):
                     c.mouse_is_down = False
                     c.ReleaseMouse()
@@ -261,7 +261,6 @@ class ObjectSelectionMode(MouseHandler):
         c = self.layer_control
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
-        effective_mode = c.get_effective_tool_mode(event)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
         #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
@@ -284,7 +283,6 @@ class ObjectSelectionMode(MouseHandler):
 
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        effective_mode = c.get_effective_tool_mode(event)
 
         if (c.selection_box_is_being_defined):
             c.mouse_move_position = event.GetPosition()
@@ -505,6 +503,22 @@ class RectSelectMode(MouseHandler):
         c.mouse_move_position = event.GetPosition()
         c.render(event)
 
+    def process_mouse_up(self, event):
+        c = self.layer_control
+        if (not c.mouse_is_down):
+            c.selection_box_is_being_defined = False
+            return
+
+        c.mouse_is_down = False
+        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        c.mouse_move_position = event.GetPosition()
+        (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                           c.mouse_move_position)
+        self.process_rect_select(x1, y1, x2, y2)
+    
+    def process_rect_select(self, x1, y1, x2, y2):
+        raise RuntimeError("Abstract method")
+
     def render_overlay(self, renderer):
         c = self.layer_control
         if c.mouse_is_down:
@@ -540,6 +554,8 @@ class ZoomRectMode(RectSelectMode):
         c.mouse_move_position = event.GetPosition()
         (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
                                                            c.mouse_move_position)
+    def process_rect_select(self, x1, y1, x2, y2):
+        c = self.layer_control
         d_x = x2 - x1
         d_y = y2 - y1
         if (d_x >= 5 and d_y >= 5):
@@ -557,18 +573,9 @@ class CropRectMode(RectSelectMode):
     menu_item_name = "Crop Mode"
     menu_item_tooltip = "Crop the current layer"
 
-    def process_mouse_up(self, event):
+    def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_control
         e = c.project
-        if (not c.mouse_is_down):
-            c.selection_box_is_being_defined = False
-            return
-
-        c.mouse_is_down = False
-        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        c.mouse_move_position = event.GetPosition()
-        (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                           c.mouse_move_position)
         p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
         w_r = c.get_world_rect_from_projected_rect(p_r)
         #print "CROPPING!!!!  ", w_r

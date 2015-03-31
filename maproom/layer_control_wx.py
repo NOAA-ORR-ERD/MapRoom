@@ -67,6 +67,7 @@ class LayerCanvas(renderer.BaseCanvas):
         self.hand_closed_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
         self.forced_cursor = None
         self.set_mouse_handler(MouseHandler)  # dummy initial mouse handler
+        self.default_pan_mode = PanMode(self)
         
         self.bounding_boxes_shown = False
 
@@ -117,13 +118,15 @@ class LayerCanvas(renderer.BaseCanvas):
         while self.native.HasCapture():
             self.ReleaseMouse()
 
-    def set_cursor(self):
+    def set_cursor(self, mode=None):
         if (self.forced_cursor is not None):
             self.SetCursor(self.forced_cursor)
             #
             return
 
-        c = self.mouse_handler.get_cursor()
+        if mode is None:
+            mode = self.mouse_handler
+        c = mode.get_cursor()
         self.SetCursor(c)
 
     def get_effective_tool_mode(self, event):
@@ -139,9 +142,9 @@ class LayerCanvas(renderer.BaseCanvas):
             except:
                 pass
         if self.is_alt_key_down or middle_down:
-            mode = PanMode
+            mode = self.default_pan_mode
         else:
-            mode = self.project.mouse_mode
+            mode = self.mouse_handler
         return mode
 
     def draw_bounding_boxes(self):

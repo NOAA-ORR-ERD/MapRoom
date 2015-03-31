@@ -107,66 +107,61 @@ class BaseCanvas(glcanvas.GLCanvas):
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
         mouselog.debug("in on_mouse_down: event=%s" % event)
-        self.get_effective_tool_mode(event)  # update alt key state
+        mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         self.mouse_is_down = True
         self.selection_box_is_being_defined = False
         self.mouse_down_position = event.GetPosition()
         self.mouse_move_position = self.mouse_down_position
 
-        self.mouse_handler.process_mouse_down(event)
-        self.set_cursor()
+        mode.process_mouse_down(event)
+        self.set_cursor(mode)
 
     def on_mouse_motion(self, event):
-        self.get_effective_tool_mode(event)  # update alt key state
+        mode = self.get_effective_tool_mode(event)
         if self.mouse_is_down:
-            self.mouse_handler.process_mouse_motion_down(event)
+            mode.process_mouse_motion_down(event)
         else:
-            self.mouse_handler.process_mouse_motion_up(event)
-        self.set_cursor()
+            mode.process_mouse_motion_up(event)
+        self.set_cursor(mode)
 
     def on_mouse_up(self, event):
-        self.get_effective_tool_mode(event)  # update alt key state
+        mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
-        
-        self.mouse_handler.process_mouse_up(event)
-        self.set_cursor()
+        mode.process_mouse_up(event)
+        self.set_cursor(mode)
 
     def on_mouse_wheel_scroll(self, event):
-        self.get_effective_tool_mode(event)  # update alt key state
-        
-        self.mouse_handler.process_mouse_wheel_scroll(event)
-        self.set_cursor()
+        mode = self.get_effective_tool_mode(event)
+        mode.process_mouse_wheel_scroll(event)
+        self.set_cursor(mode)
 
     def on_mouse_enter(self, event):
         self.set_cursor()
 
     def on_mouse_leave(self, event):
         self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-        
         self.mouse_handler.process_mouse_leave(event)
 
     def on_key_down(self, event):
-        self.get_effective_tool_mode(event)
-        
-        self.mouse_handler.process_key_down(event)
-        self.set_cursor()
+        mode = self.get_effective_tool_mode(event)
+        mode.process_key_down(event)
+        self.set_cursor(mode)
         
         event.Skip()
 
     def on_key_up(self, event):
-        self.get_effective_tool_mode(event)
-        
-        self.mouse_handler.process_key_up(event)
-        self.set_cursor()
+        mode = self.get_effective_tool_mode(event)
+        mode.process_key_up(event)
+        self.set_cursor(mode)
         
         event.Skip()
 
     def on_key_char(self, event):
-        self.get_effective_tool_mode(event)
-        self.set_cursor()
+        mode = self.get_effective_tool_mode(event)
+        self.set_cursor(mode)
         
-        self.mouse_handler.process_key_char(event)
+        mode.process_key_char(event)
     
     def get_renderer(self, layer):
         r = ImmediateModeRenderer(self, layer)
