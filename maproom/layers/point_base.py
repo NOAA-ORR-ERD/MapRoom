@@ -156,15 +156,11 @@ class PointBaseLayer(ProjectedLayer):
     def compute_projected_point_data(self):
         projection = self.manager.project.layer_canvas.projection
         view = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy.astype(np.float32)
-        print("BEFORE:")
-        print view
         projected_point_data = np.zeros(
             (len(self.points), 2),
             dtype=np.float32
         )
         projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
-        print("AFTER:")
-        print projected_point_data
         return projected_point_data
     
     def rebuild_renderer(self, in_place=False):

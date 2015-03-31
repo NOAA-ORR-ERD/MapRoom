@@ -8,7 +8,6 @@ from font_extents import FONT_EXTENTS
 
 def load_font_texture_with_alpha():
     font_path = get_image_path("font.png", __name__, up_one_level=True)
-    print font_path
     image = wx.Image(font_path, wx.BITMAP_TYPE_PNG)
     width = image.GetWidth()
     height = image.GetHeight()
