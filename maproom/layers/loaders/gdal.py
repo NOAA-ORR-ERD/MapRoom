@@ -10,6 +10,7 @@ from peppy2.utils.jobs import JobManager, LargeMemoryJob, ProgressReport, Finish
 from maproom.library.accumulator import accumulator, flatten
 import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
+from maproom.renderer import ImageData
 
 from common import BaseLayerLoader
 from maproom.layers import RasterLayer
@@ -46,7 +47,7 @@ class GDALLoader(BaseLayerLoader):
         return "Can't save to GDAL yet."
 
 
-class ImageData(object):
+class GDALImageData(ImageData):
     """ Temporary storage object to hold raw image data before converted to GL
     textures.
     
@@ -68,116 +69,43 @@ class ImageData(object):
     NORTH_UP_TOLERANCE = 0.002
     
     def __init__(self, dataset):
+        ImageData.__init__(self, dataset.RasterXSize, dataset.RasterYSize)
         self.nbands = dataset.RasterCount
-        self.x = dataset.RasterXSize
-        self.y = dataset.RasterYSize
-        self.projection = None
-        
-        self.images = []
-        self.image_sizes = []
-        self.image_world_rects = []
         
         self.calc_projection(dataset)
         
         log.debug("Image: %sx%s, %d band, %s" % (self.x, self.y, self.nbands, self.projection.srs))
     
-    def is_threaded(self):
-        return False
-    
-    def release_images(self):
-        """Free image data after renderer is done converting to textures.
-        
-        This has no effect when using the background loader because each image
-        chunk is sent to the main thread through a callback.  When using the
-        normal non-threaded loader, the entire image is loaded into memory and
-        can be freed after GL converts it to textures.
-        """
-        # release images by allowing garbage collector to collect the now
-        # unrefcounted images.
-        self.images = True
-    
     def calc_projection(self, dataset):
         projection = dataset.GetProjection() or dataset.GetGCPProjection()
         log.debug("DATASET projection: %s" % projection)
-        if not projection:
-            # no projection, assume latlong:
-            self.projection = pyproj.Proj("+proj=latlong")
-        else:
+        if projection:
             native_projection = osr.SpatialReference()
             native_projection.ImportFromWkt(projection)
-            self.projection = pyproj.Proj(native_projection.ExportToProj4())
+            projection = pyproj.Proj(native_projection.ExportToProj4())
+        else:
+            projection = None
+        self.set_projection(projection)
 
         self.pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
     
-    def get_bounds(self):
-        bounds = rect.NONE_RECT
-
-        if (self.image_world_rects):
-            world_rect_flat_list = flatten(self.image_world_rects)
-            b = world_rect_flat_list[0]
-            for r in world_rect_flat_list[1:]:
-                b = rect.accumulate_rect(b, r)
-            bounds = rect.accumulate_rect(bounds, b)
-        
-        return bounds
-    
-    def calc_textures(self, dataset, texture_size):
+    def calc_palette(self, dataset):
         raster_bands = []
 
         for band_index in range(1, dataset.RasterCount + 1):
             raster_bands.append(dataset.GetRasterBand(band_index))
 
         palette = get_palette(raster_bands[0])
-
-        num_cols = self.x / texture_size
-        if ((self.x % texture_size) != 0):
-            num_cols += 1
-        num_rows = self.y / texture_size
-        if ((self.y % texture_size) != 0):
-            num_rows += 1
         
-        return num_cols, num_rows, raster_bands, palette
-    
-    def calc_world_rect(self, selection_origin, selection_width, selection_height):
-        # we invert the y in going to projected coordinates
-        left_bottom_projected = apply_transform(
-            (selection_origin[0],
-             selection_origin[1] + selection_height),
-            self.pixel_to_projected_transform)
-        left_top_projected = apply_transform(
-            (selection_origin[0],
-             selection_origin[1]),
-            self.pixel_to_projected_transform)
-        right_top_projected = apply_transform(
-            (selection_origin[0] + selection_width,
-             selection_origin[1]),
-            self.pixel_to_projected_transform)
-        right_bottom_projected = apply_transform(
-            (selection_origin[0] + selection_width,
-             selection_origin[1] + selection_height),
-            self.pixel_to_projected_transform)
-        if (self.projection.srs.find("+proj=longlat") != -1):
-            # for longlat projection, apparently someone decided that since the projection
-            # is the identity, it might as well do something and so it returns the coordinates as
-            # radians instead of degrees; so here we avoid using the projection altogether
-            left_bottom_world = left_bottom_projected
-            left_top_world = left_top_projected
-            right_top_world = right_top_projected
-            right_bottom_world = right_bottom_projected
-        else:
-            left_bottom_world = self.projection(left_bottom_projected[0], left_bottom_projected[1], inverse=True)
-            left_top_world = self.projection(left_top_projected[0], left_top_projected[1], inverse=True)
-            right_top_world = self.projection(right_top_projected[0], right_top_projected[1], inverse=True)
-            right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
-        
-        return left_bottom_world, left_top_world, right_top_world, right_bottom_world
+        return raster_bands, palette
 
-class ImageDataBlocks(ImageData):
+class ImageDataBlocks(GDALImageData):
     """Version of ImageData to load using GDAL blocks.
     
     """
     def load_dataset(self, dataset, texture_size):
-        num_cols, num_rows, raster_bands, palette = self.calc_textures(dataset, texture_size)
+        num_cols, num_rows = self.calc_textures(texture_size)
+        raster_bands, palette = self.calc_palette(dataset)
 
         progress_log.info("TICKS=%d" % (num_cols * num_rows))
         for r in xrange(num_rows):
@@ -259,7 +187,7 @@ def load_image_file(file_path):
 
 
 
-class ImageDataDeferred(ImageData):
+class ImageDataDeferred(GDALImageData):
     """Deferred load of image data
     
     Image blocks are deferred for threaded loading but the sizes are created
@@ -269,7 +197,7 @@ class ImageDataDeferred(ImageData):
     """
     def __init__(self, dataset, file_path):
         self.file_path = file_path
-        ImageData.__init__(self, dataset)
+        GDALImageData.__init__(self, dataset)
     
     def is_threaded(self):
         return True
@@ -278,7 +206,8 @@ class ImageDataDeferred(ImageData):
         return GDALLoadJob(self.file_path)
 
     def load_dataset(self, dataset, texture_size):
-        num_cols, num_rows, raster_bands, palette = self.calc_textures(dataset, texture_size)
+        num_cols, num_rows = self.calc_textures(texture_size)
+        raster_bands, palette = self.calc_palette(dataset)
         for r in xrange(num_rows):
             image_sizes_row = []
             image_world_rects_row = []
@@ -354,17 +283,6 @@ def calculate_pixel_to_projected_transform(dataset):
         transform = gdal.GCPsToGeoTransform(dataset.GetGCPs())
 
     return np.array(transform)
-
-
-def apply_transform(point, transform):
-    return (
-        transform[0] +
-        point[0] * transform[1] +
-        point[1] * transform[2],
-        transform[3] +
-        point[0] * transform[4] +
-        point[1] * transform[5],
-    )
 
 
 def get_palette(raster_band):
@@ -445,13 +363,14 @@ class ImageDataProgressReport(ProgressReport):
         return "%s object at 0x%x image (%dx%d)" % (self.__class__.__name__, id(self), self.size[0], self.size[1])
 
 
-class ImageDataSubprocess(ImageData):
+class ImageDataSubprocess(GDALImageData):
     def __init__(self, dataset, file_path):
         self.file_path = file_path
-        ImageData.__init__(self, dataset)
+        GDALImageData.__init__(self, dataset)
 
     def load_dataset(self, dispatcher, dataset, texture_size):
-        num_cols, num_rows, raster_bands, palette = self.calc_textures(dataset, texture_size)
+        num_cols, num_rows = self.calc_textures(texture_size)
+        raster_bands, palette = self.calc_palette(dataset)
         order = 0
         for r in xrange(num_rows):
             images_row = []

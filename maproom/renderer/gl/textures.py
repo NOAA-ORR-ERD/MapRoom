@@ -5,8 +5,130 @@ import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 
 from maproom.library.accumulator import flatten
+import maproom.library.rect as rect
 
 import data_types
+
+
+
+def apply_transform(point, transform):
+    return (
+        transform[0] +
+        point[0] * transform[1] +
+        point[1] * transform[2],
+        transform[3] +
+        point[0] * transform[4] +
+        point[1] * transform[5],
+    )
+
+
+class ImageData(object):
+    """ Temporary storage object to hold raw image data before converted to GL
+    textures.
+    
+    images = list of lists, where each sublist is a row of images
+                and each image is a numpy array [ 0 : max_y, 0 : max_x, 0 : num_bands ]
+                where:
+                    num_bands = 4
+                    max_x and max_y = 1024,
+                        except for the last image in each row (may be narrower) and
+                        the images in the last row (may be shorter)
+    image_sizes = list of lists, the same shape as images,
+                  but where each item gives the ( width, height ) pixel size
+                  of the corresponding image
+    image_world_rects = list of lists, the same shape as images,
+                        but where each item gives the world rect
+                        of the corresponding image
+    """
+
+    NORTH_UP_TOLERANCE = 0.002
+    
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.projection = None
+        
+        self.images = []
+        self.image_sizes = []
+        self.image_world_rects = []
+    
+    def is_threaded(self):
+        return False
+    
+    def release_images(self):
+        """Free image data after renderer is done converting to textures.
+        
+        This has no effect when using the background loader because each image
+        chunk is sent to the main thread through a callback.  When using the
+        normal non-threaded loader, the entire image is loaded into memory and
+        can be freed after GL converts it to textures.
+        """
+        # release images by allowing garbage collector to collect the now
+        # unrefcounted images.
+        self.images = True
+    
+    def set_projection(self, projection=None):
+        if projection is None:
+            # no projection, assume latlong:
+            projection = pyproj.Proj("+proj=latlong")
+        self.projection = projection
+    
+    def get_bounds(self):
+        bounds = rect.NONE_RECT
+
+        if (self.image_world_rects):
+            world_rect_flat_list = flatten(self.image_world_rects)
+            b = world_rect_flat_list[0]
+            for r in world_rect_flat_list[1:]:
+                b = rect.accumulate_rect(b, r)
+            bounds = rect.accumulate_rect(bounds, b)
+        
+        return bounds
+    
+    def calc_textures(self, texture_size):
+        num_cols = self.x / texture_size
+        if ((self.x % texture_size) != 0):
+            num_cols += 1
+        num_rows = self.y / texture_size
+        if ((self.y % texture_size) != 0):
+            num_rows += 1
+        
+        return num_cols, num_rows
+    
+    def calc_world_rect(self, selection_origin, selection_width, selection_height):
+        # we invert the y in going to projected coordinates
+        left_bottom_projected = apply_transform(
+            (selection_origin[0],
+             selection_origin[1] + selection_height),
+            self.pixel_to_projected_transform)
+        left_top_projected = apply_transform(
+            (selection_origin[0],
+             selection_origin[1]),
+            self.pixel_to_projected_transform)
+        right_top_projected = apply_transform(
+            (selection_origin[0] + selection_width,
+             selection_origin[1]),
+            self.pixel_to_projected_transform)
+        right_bottom_projected = apply_transform(
+            (selection_origin[0] + selection_width,
+             selection_origin[1] + selection_height),
+            self.pixel_to_projected_transform)
+        if (self.projection.srs.find("+proj=longlat") != -1):
+            # for longlat projection, apparently someone decided that since the projection
+            # is the identity, it might as well do something and so it returns the coordinates as
+            # radians instead of degrees; so here we avoid using the projection altogether
+            left_bottom_world = left_bottom_projected
+            left_top_world = left_top_projected
+            right_top_world = right_top_projected
+            right_bottom_world = right_bottom_projected
+        else:
+            left_bottom_world = self.projection(left_bottom_projected[0], left_bottom_projected[1], inverse=True)
+            left_top_world = self.projection(left_top_projected[0], left_top_projected[1], inverse=True)
+            right_top_world = self.projection(right_top_projected[0], right_top_projected[1], inverse=True)
+            right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
+        
+        return left_bottom_world, left_top_world, right_top_world, right_bottom_world
+
 
 class ImageTextures(object):
     """Class to allow sharing of textures between views
@@ -95,22 +217,19 @@ class ImageTextures(object):
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
     
-    def update_texture(self, progress_report):
-        # ImageDataProgressReport
-        if not hasattr(progress_report, "texture_index"):
-            return
-#        print "ImageData: loading texture index %d" % progress_report.texture_index
-        gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[progress_report.texture_index])
+    def update_texture(self, texture_index, w, h, image):
+#        print "ImageData: loading texture index %d" % texture_index
+        gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[texture_index])
         gl.glTexImage2D(
             gl.GL_TEXTURE_2D,
             0,  # level
             gl.GL_RGBA8,
-            progress_report.size[0],  # width
-            progress_report.size[1],  # height
+            w,
+            h,
             0,  # border
             gl.GL_RGBA,
             gl.GL_UNSIGNED_BYTE,
-            progress_report.image
+            image
         )
     
     def set_projection(self, projection):

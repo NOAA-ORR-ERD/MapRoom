@@ -43,7 +43,8 @@ class RasterLayer(ProjectedLayer):
     
     def background_loading_callback(self, progress_report):
         log.debug("RECEIVED IMAGE FROM BACKGROUND LOAD!!! %s" % repr(progress_report))
-        self.renderer.image_textures.update_texture(progress_report)
+        if hasattr(progress_report, "texture_index"):
+            self.renderer.image_textures.update_texture(progress_report.texture_index, progress_report.size[0], progress_report.size[1], progress_report.image)
         if progress_report.is_finished():
             log.debug("FINISHED RECEIVING IMAGES FROM BACKGROUND LOAD!!! %s" % progress_report.job_id)
             self.manager.dispatch_event('refresh_needed', self)
