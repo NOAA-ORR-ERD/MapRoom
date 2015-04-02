@@ -4,4 +4,5 @@ from line import LineLayer
 from triangle import TriangleLayer
 from polygon import PolygonLayer
 from raster import RasterLayer
+from annotation import AnnotationLayer
 import constants

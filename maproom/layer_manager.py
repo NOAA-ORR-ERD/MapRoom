@@ -9,7 +9,7 @@ import numpy as np
 import library.rect as rect
 from library.accumulator import flatten
 
-from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, constants, loaders
+from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders
 from command import UndoStack
 
 # Enthought library imports.
@@ -95,6 +95,8 @@ class LayerManager(HasTraits):
         self.insert_layer([0], layer)
         grid = Grid(manager=self)
         self.insert_layer([1], grid)
+        annotation = AnnotationLayer(manager=self)
+        self.insert_layer([2], annotation)
         return self
     
     def flatten(self):
