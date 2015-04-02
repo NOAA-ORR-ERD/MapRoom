@@ -10,7 +10,6 @@ import maproom.library.rect as rect
 import data_types
 
 
-
 def apply_transform(point, transform):
     return (
         transform[0] +
@@ -128,6 +127,56 @@ class ImageData(object):
             right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
         
         return left_bottom_world, left_top_world, right_top_world, right_bottom_world
+
+    def load_texture_data(self, texture_size, subimage_loader):
+        num_cols, num_rows = self.calc_textures(texture_size)
+
+        subimage_loader.prepare(num_cols, num_rows)
+        for r in xrange(num_rows):
+            images_row = []
+            image_sizes_row = []
+            image_world_rects_row = []
+            selection_height = texture_size
+            if (((r + 1) * texture_size) > self.y):
+                selection_height -= (r + 1) * texture_size - self.y
+            for c in xrange(num_cols):
+                selection_origin = (c * texture_size, r * texture_size)
+                selection_width = texture_size
+                if (((c + 1) * texture_size) > self.x):
+                    selection_width -= (c + 1) * texture_size - self.x
+                world_rect = self.calc_world_rect(selection_origin, selection_width, selection_height)
+                image = subimage_loader.load(selection_origin,
+                                             (selection_width, selection_height),
+                                             world_rect)
+                images_row.append(image)
+                image_sizes_row.append((selection_width, selection_height))
+                image_world_rects_row.append(world_rect)
+            self.images.append(images_row)
+            self.image_sizes.append(image_sizes_row)
+            self.image_world_rects.append(image_world_rects_row)
+
+
+class SubImageLoader(object):
+    def prepare(self, num_cols, num_rows):
+        pass
+    
+    def load(self, origin, size, w_r):
+        pass
+
+
+class ImageScreenData(ImageData):
+    def calc_world_rect(self, selection_origin, selection_width, selection_height):
+        # "world" coordinates in screen mode are just the screen coordinates
+        # we invert the y in going to projected coordinates
+        left_bottom = (selection_origin[0],
+                       selection_origin[1] + selection_height)
+        left_top = (selection_origin[0],
+                    selection_origin[1])
+        right_top = (selection_origin[0] + selection_width,
+                     selection_origin[1])
+        right_bottom = (selection_origin[0] + selection_width,
+                        selection_origin[1] + selection_height)
+        return left_bottom, left_top, right_top, right_bottom
 
 
 class ImageTextures(object):

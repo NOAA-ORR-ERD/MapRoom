@@ -8,7 +8,7 @@ import pyproj
 from maproom.library.accumulator import accumulator, flatten
 import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
-from maproom.renderer import ImageData
+from maproom.renderer import ImageData, SubImageLoader
 
 from common import BaseLayerLoader
 from maproom.layers import RasterLayer
@@ -86,51 +86,14 @@ class GDALImageData(ImageData):
         self.set_projection(projection)
 
         self.pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
-    
-    def calc_palette(self, dataset):
-        raster_bands = []
-
-        for band_index in range(1, dataset.RasterCount + 1):
-            raster_bands.append(dataset.GetRasterBand(band_index))
-
-        palette = get_palette(raster_bands[0])
-        
-        return raster_bands, palette
 
 class ImageDataBlocks(GDALImageData):
     """Version of ImageData to load using GDAL blocks.
     
     """
     def load_dataset(self, dataset, texture_size):
-        num_cols, num_rows = self.calc_textures(texture_size)
-        raster_bands, palette = self.calc_palette(dataset)
-
-        progress_log.info("TICKS=%d" % (num_cols * num_rows))
-        for r in xrange(num_rows):
-            images_row = []
-            image_sizes_row = []
-            image_world_rects_row = []
-            selection_height = texture_size
-            if (((r + 1) * texture_size) > self.y):
-                selection_height -= (r + 1) * texture_size - self.y
-            for c in xrange(num_cols):
-                selection_origin = (c * texture_size, r * texture_size)
-                selection_width = texture_size
-                if (((c + 1) * texture_size) > self.x):
-                    selection_width -= (c + 1) * texture_size - self.x
-                progress_log.info("Loading image data...")
-                image = get_image(raster_bands,
-                                  self.nbands,
-                                  palette,
-                                  selection_origin,
-                                  (selection_width, selection_height))
-                images_row.append(image)
-                image_sizes_row.append((selection_width, selection_height))
-                world_rect = self.calc_world_rect(selection_origin, selection_width, selection_height)
-                image_world_rects_row.append(world_rect)
-            self.images.append(images_row)
-            self.image_sizes.append(image_sizes_row)
-            self.image_world_rects.append(image_world_rects_row)
+        loader = GDALSubImageLoader(dataset)
+        self.load_texture_data(texture_size, loader)
 
 
 def load_image_file(file_path):
@@ -220,33 +183,27 @@ def get_palette(raster_band):
     return palette
 
 
-def get_image(raster_bands, raster_count, palette, selection_origin, selection_size):
-    DEFAULT_ALPHA = 255
-    image = None
+class GDALSubImageLoader(object):
+    def __init__(self, dataset):
+        self.nbands = dataset.RasterCount
+        self.raster_bands = []
+        for band_index in range(1, self.nbands + 1):
+            self.raster_bands.append(dataset.GetRasterBand(band_index))
+        self.palette = get_palette(self.raster_bands[0])
+    
+    def prepare(self, num_cols, num_rows):
+        progress_log.info("TICKS=%d" % (num_cols * num_rows))
 
-    # Fetch the data from GDAL and convert it to RGBA.
-    if (palette is not None):
-        # paletted files have a single band
-        image = gdal_array.BandReadAsArray(
-            raster_bands[0],
-            selection_origin[0],
-            selection_origin[1],
-            selection_size[0],
-            selection_size[1],
-            selection_size[0],
-            selection_size[1])
+    def load(self, selection_origin, selection_size, world_rect):
+        progress_log.info("Loading image data...")
+        DEFAULT_ALPHA = 255
+        image = None
 
-        image = Bitmap.paletted_to_rgba(image, palette, DEFAULT_ALPHA)
-    else:
-        image = np.zeros(
-            (selection_size[1], selection_size[0], 4),
-            np.uint8,
-        )
-        image[:, :, 3] = DEFAULT_ALPHA
-
-        for band_index in range(0, raster_count):
-            band_data = gdal_array.BandReadAsArray(
-                raster_bands[band_index],
+        # Fetch the data from GDAL and convert it to RGBA.
+        if (self.palette is not None):
+            # paletted files have a single band
+            image = gdal_array.BandReadAsArray(
+                self.raster_bands[0],
                 selection_origin[0],
                 selection_origin[1],
                 selection_size[0],
@@ -254,6 +211,24 @@ def get_image(raster_bands, raster_count, palette, selection_origin, selection_s
                 selection_size[0],
                 selection_size[1])
 
-            image[:, :, band_index] = band_data
+            image = Bitmap.paletted_to_rgba(image, self.palette, DEFAULT_ALPHA)
+        else:
+            image = np.zeros(
+                (selection_size[1], selection_size[0], 4),
+                np.uint8,
+            )
+            image[:, :, 3] = DEFAULT_ALPHA
 
-    return image
+            for band_index in range(0, raster_count):
+                band_data = gdal_array.BandReadAsArray(
+                    self.raster_bands[band_index],
+                    selection_origin[0],
+                    selection_origin[1],
+                    selection_size[0],
+                    selection_size[1],
+                    selection_size[0],
+                    selection_size[1])
+
+                image[:, :, band_index] = band_data
+
+        return image
