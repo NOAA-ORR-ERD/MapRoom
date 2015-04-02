@@ -219,8 +219,6 @@ class LayerManager(HasTraits):
             layer.check_projection(editor.window)
             if not layer.load_error_string:
                 self.insert_loaded_layer(layer, editor)
-                if layer.needs_background_loading():
-                    layer.start_background_loading()
         return layers
     
     def check_layer(self, layer, window):

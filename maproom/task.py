@@ -15,7 +15,6 @@ from traits.api import provides, on_trait_change, Property, Instance, Str, Unico
 
 from peppy2.framework.task import FrameworkTask
 from peppy2.framework.i_about import IAbout
-from peppy2.utils.jobs import create_global_job_manager
 
 from project_editor import ProjectEditor
 import pane_layout
@@ -697,8 +696,6 @@ class MaproomProjectTask(FrameworkTask):
         for pane in self.window.dock_panes:
             if pane.id in visible:
                 pane.visible = visible[pane.id]
-        
-        self.init_background_processing()
     
     def get_actions(self, location, menu_name, group_name):
         if location == "Menu":
@@ -821,21 +818,3 @@ class MaproomProjectTask(FrameworkTask):
                  mime == "application/x-nc_ugrid" or
                  mime == "application/x-nc_particles"
                  )
-    
-    
-    # Not traits, just normal class instances
-    
-    job_manager = None
-    
-    def init_background_processing(self):
-        if self.job_manager is None:
-            self.__class__.job_manager = create_global_job_manager(self.receive_job_event)
-    
-    def receive_job_event(self, event):
-        log.debug("receive_job_event: received %s" % repr(event))
-        GUI.invoke_later(self.process_job_event, event)
-    
-    def process_job_event(self, event):
-        log.debug("process_job_event: handling %s" % repr(event))
-        self.job_manager.get_finished()
-        self.job_manager.handle_job_id_callback(event)
