@@ -4,19 +4,33 @@ import time
 import sys
 import numpy as np
 
+import wx
+
 # Enthought library imports.
 from traits.api import Unicode, Str, Any, Float
 from pyface.api import YES
 
 from ..library import rect
+from ..library.floatcanvas import FloatCanvas as FC
 
 from ..renderer import color_to_int, data_types
+from ..renderer import ImageScreenData, SubImageLoader
 
 from base import Layer, ScreenLayer
 from constants import *
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class CanvasSubImageLoader(SubImageLoader):
+    def __init__(self, canvas):
+        self.image = canvas.GetNumpyArray(wx.WHITE)
+    
+    def load(self, origin, size, w_r):
+        return self.image[origin[1]:origin[1] + size[1],
+                          origin[0]:origin[0] + size[0]]
+
 
 class AnnotationLayer(ScreenLayer):
     """Layer for raster annotation image
@@ -26,6 +40,8 @@ class AnnotationLayer(ScreenLayer):
 
     type = Str("annotation")
 
+    canvas = Any
+
     image_data = Any
     
     alpha = Float(1.0)
@@ -33,6 +49,8 @@ class AnnotationLayer(ScreenLayer):
     layer_info_panel = ["Layer name", "Transparency"]
     
     selection_info_panel = []
+    
+    texture_size = 256
 
     def has_alpha(self):
         return True
@@ -79,7 +97,25 @@ class AnnotationLayer(ScreenLayer):
         """Update renderer
         
         """
-        pass
+        if not self.canvas:
+            self.canvas = FC.OffScreenFloatCanvas((1,1),
+                                          ProjectionFun = None,
+                                          Debug = 0,
+                                          BackgroundColor = wx.WHITE,
+                                          )
+        
+        size = self.manager.project.layer_canvas.get_screen_size()
+        self.canvas.InitializePanelSize(size)
+        self.canvas.MakeNewBuffers()
+        line = FC.Line([(0,0), (4,0), (4,4), (0,4), (0,0)], LineWidth=3, LineColor="Yellow")
+        self.canvas.AddObject(line)
+        self.canvas.ZoomToBB()
+#        self.canvas.SaveAsImage("annotation1.png", transparent_color=wx.WHITE)
+        
+        self.image_data = ImageScreenData(size[0], size[1])
+        loader = CanvasSubImageLoader(self.canvas)
+        self.image_data.load_texture_data(self.texture_size, loader)
+        self.renderer.use_world_rects_as_screen_rects(self.image_data)
 
     def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering annotation layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
@@ -89,3 +125,5 @@ class AnnotationLayer(ScreenLayer):
 
         self.renderer.draw_screen_line((s_r[0][0], s_r[0][1]), (s_r[1][0], s_r[1][1]))
         self.renderer.draw_screen_line((s_r[0][0], s_r[1][1]), (s_r[1][0], s_r[0][1]))
+        self.renderer.draw_image(self.alpha)
+        

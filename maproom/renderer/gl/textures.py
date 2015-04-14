@@ -306,6 +306,21 @@ class ImageTextures(object):
             vertex_data.y_rb = projected_rect[3][1]
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
+    
+    def use_world_rects_as_screen_rects(self):
+        for i, projected_rect in enumerate(self.image_world_rects):
+            raw = self.vbo_vertexes[i].data
+            vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
+            vertex_data.x_lb = projected_rect[0][0]
+            vertex_data.y_lb = projected_rect[0][1]
+            vertex_data.x_lt = projected_rect[1][0]
+            vertex_data.y_lt = projected_rect[1][1]
+            vertex_data.x_rt = projected_rect[2][0]
+            vertex_data.y_rt = projected_rect[2][1]
+            vertex_data.x_rb = projected_rect[3][0]
+            vertex_data.y_rb = projected_rect[3][1]
+
+            self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
 
     def destroy(self):
         for texture in self.textures:

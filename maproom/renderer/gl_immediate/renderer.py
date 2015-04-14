@@ -285,6 +285,14 @@ class ImmediateModeRenderer():
             
         self.image_textures.set_projection(projection)
 
+    def use_world_rects_as_screen_rects(self, image_data):
+        if self.image_textures is None:
+            self.image_textures = ImageTextures(image_data)
+            # Release the raw image data to free up memory.
+            image_data.release_images()
+            
+        self.image_textures.use_world_rects_as_screen_rects()
+
     def draw_image(self, alpha=1.0):
         for i, vbo in enumerate(self.image_textures.vbo_vertexes):
             gl.glEnable(gl.GL_TEXTURE_2D)
