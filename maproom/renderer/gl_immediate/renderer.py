@@ -286,6 +286,11 @@ class ImmediateModeRenderer():
         self.image_textures.set_projection(projection)
 
     def use_world_rects_as_screen_rects(self, image_data):
+        # FIXME: not optimized at all! Currently renegerates everything at
+        # every update!
+        if self.image_textures is not None:
+            self.image_textures.destroy()
+            self.image_textures = None
         if self.image_textures is None:
             self.image_textures = ImageTextures(image_data)
             # Release the raw image data to free up memory.
