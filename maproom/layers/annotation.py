@@ -17,7 +17,7 @@ from ..library.floatcanvas.Utilities import BBox
 from ..renderer import color_to_int, data_types
 from ..renderer import ImageScreenData, SubImageLoader
 
-from base import Layer, ScreenLayer
+from base import Layer, ScreenLayer, ProjectedLayer
 from constants import *
 
 import logging
@@ -36,13 +36,13 @@ class CanvasSubImageLoader(SubImageLoader):
                           origin[0]:origin[0] + size[0]]
 
 
-class AnnotationLayer(ScreenLayer):
+class ImageAnnotationLayer(ScreenLayer):
     """Layer for raster annotation image
     
     """
-    name = Unicode("Annotation Layer")
+    name = Unicode("Image Annotation Layer")
 
-    type = Str("annotation")
+    type = Str("image_annotation")
 
     canvas = Any
 
@@ -83,20 +83,6 @@ class AnnotationLayer(ScreenLayer):
 
         return bounds
     
-    def get_image(self, w, h):
-        self.image = wx.EmptyBitmap(w, h)
-        bg = (255, 255, 255, 0)
-        fg = (255, 0, 0, 255)
-        DC = wx.MemoryDC()
-        DC.SelectObject(self.image)
-        DC = wx.GCDC(DC)
-        DC.SetBackground(wx.Brush(bg))
-        DC.SetBrush(wx.Brush(fg))
-        DC.Clear()
-        
-        DC.DrawLine(0, 0, w, h)
-        DC.DrawLine(0, h, w, 0) 
-
     def rebuild_renderer(self, in_place=False):
         """Update renderer
         
@@ -119,6 +105,7 @@ class AnnotationLayer(ScreenLayer):
             self.canvas.AddObject(line)
         projection = self.manager.project.layer_canvas.projection
         self.canvas.SetProjectionFun('FlatEarth')
+#        self.canvas.SetProjectionFun(projection)
         self.canvas.ZoomToBB()
 #        self.canvas.SaveAsImage("annotation1.png", transparent_color=wx.WHITE)
         
@@ -143,4 +130,67 @@ class AnnotationLayer(ScreenLayer):
         print "  center", self.canvas.ViewPortCenter, "world center:", (w_r[0][0] + w_r[1][0])/2, (w_r[0][1] + w_r[1][1])/2
         self.renderer.draw_screen_line((s_r[0][0], s_r[0][1]), (s_r[1][0], s_r[1][1]))
         self.renderer.draw_image(self.alpha)
+
+
+class AnnotationLayer(ProjectedLayer):
+    """Layer for vector annotation image
+    
+    """
+    name = Unicode("Annotation Layer")
+
+    type = Str("annotation")
+
+    canvas = Any
+    
+    layer_info_panel = ["Layer name"]
+    
+    selection_info_panel = []
+
+    def empty(self):
+        """
+        We shouldn't allow saving of a layer with no content, so we use this method
+        to determine if we can save this layer.
+        """
+        return self.canvas is not None
+
+    def compute_bounding_rect(self, mark_type=STATE_NONE):
+        bounds = rect.NONE_RECT
+
+        if self.canvas is not None:
+            b = self.canvas.BoundingBox
+            if not b.IsNull():
+                bounds = b
+
+        return bounds
+    
+    def rebuild_renderer(self, in_place=False):
+        """Update renderer
         
+        """
+        if not self.canvas:
+            self.canvas = FC.PyProjFloatCanvas((1,1),
+                                               ProjectionFun = None,
+                                               Debug = 0,
+                                               BackgroundColor = wx.WHITE,
+                                               )
+        
+        size = self.manager.project.layer_canvas.get_screen_size()
+        self.canvas.InitializePanelSize(size)
+        self.canvas.MakeNewBuffers()
+        for lat in range(-80, 90, 10):
+            line = FC.Line([(lat, 0), (lat, 80)], LineWidth=3, LineColor="Yellow")
+            self.canvas.AddObject(line)
+        for lon in range(0, 90, 10):
+            line = FC.Line([(-80, lon), (80, lon)], LineWidth=3, LineColor="Green")
+            self.canvas.AddObject(line)
+        projection = self.manager.project.layer_canvas.projection
+        self.canvas.SetProjectionFun(projection)
+
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering annotation layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        if (not layer_visibility["layer"] or picker.is_active):
+            return
+        print "Rendering annotation for screen size: ", s_r
+
+        dc =  self.renderer.get_emulated_dc()
+        self.canvas.DrawToDC(w_r, dc)
