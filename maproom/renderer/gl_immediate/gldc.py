@@ -117,25 +117,23 @@ class GLDC(object):
     
     def DrawRectangle(self, x, y, width, height):
         print "DRAWRECTANGLE!", x, y, width, height
-        # GL y axis is reversed
         gl.glBegin(gl.GL_LINE_LOOP)
         gl.glVertex(x, y, 0)
         gl.glVertex(x + width, y, 0)
-        gl.glVertex(x + width, y - height, 0)
-        gl.glVertex(x, y - height, 0)
+        gl.glVertex(x + width, y + height, 0)
+        gl.glVertex(x, y + height, 0)
         gl.glEnd()
     
     def DrawRectangleList(self, rectangles, pens=None, brushes=None):
         pass
     
     def DrawRectanglePointSize(self, pt, sz):
-        # GL y axis is reversed
         print "DRAWRECTANGLEPOINTSIZE!", pt, sz
         gl.glBegin(gl.GL_LINE_LOOP)
         gl.glVertex(pt[0], pt[1], 0)
         gl.glVertex(pt[0] + sz[0], pt[1], 0)
-        gl.glVertex(pt[0] + sz[0], pt[1] - sz[1], 0)
-        gl.glVertex(pt[0], pt[1] - sz[1], 0)
+        gl.glVertex(pt[0] + sz[0], pt[1] + sz[1], 0)
+        gl.glVertex(pt[0], pt[1] + sz[1], 0)
         gl.glEnd()
         pass
     

@@ -177,14 +177,30 @@ class AnnotationLayer(ProjectedLayer):
         size = self.manager.project.layer_canvas.get_screen_size()
         self.canvas.InitializePanelSize(size)
         self.canvas.MakeNewBuffers()
-        for lat in range(-80, 90, 10):
-            line = FC.Line([(lat, 0), (lat, 80)], LineWidth=3, LineColor="Yellow")
-            self.canvas.AddObject(line)
-        for lon in range(0, 90, 10):
-            line = FC.Line([(-80, lon), (80, lon)], LineWidth=3, LineColor="Green")
-            self.canvas.AddObject(line)
-        r = FC.Rectangle((-77, 17), (5,5), LineWidth=2, LineColor="Red")
+#        for lat in range(-80, 90, 10):
+#            line = FC.Line([(lat, 0), (lat, 80)], LineWidth=3, LineColor="Yellow")
+#            self.canvas.AddObject(line)
+#        for lon in range(0, 90, 10):
+#            line = FC.Line([(-80, lon), (80, lon)], LineWidth=3, LineColor="Green")
+#            self.canvas.AddObject(line)
+        x = -77
+        y = 12
+        line = FC.Line([(x, y+8), (0, y+8)], LineWidth=3, LineColor="Green")
+        self.canvas.AddObject(line)
+        line = FC.Line([(x, y-2), (0, y-2)], LineWidth=3, LineColor="Green")
+        self.canvas.AddObject(line)
+        
+        r = FC.Rectangle((x, y), (5,5), LineWidth=2, LineColor="Red")
         self.canvas.AddObject(r)
+        x += 10
+        r = FC.Circle((x, y), 5, LineWidth=2, LineColor="Red")
+        self.canvas.AddObject(r)
+        x += 10
+        r = FC.Polygon(((x, y), (x+2,y+5), (x-2,y+5)), LineWidth=2, LineColor="Red")
+        self.canvas.AddObject(r)
+
+
+
         projection = self.manager.project.layer_canvas.projection
         self.canvas.SetProjectionFun(projection)
 
