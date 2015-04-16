@@ -183,6 +183,8 @@ class AnnotationLayer(ProjectedLayer):
         for lon in range(0, 90, 10):
             line = FC.Line([(-80, lon), (80, lon)], LineWidth=3, LineColor="Green")
             self.canvas.AddObject(line)
+        r = FC.Rectangle((-77, 17), (5,5), LineWidth=2, LineColor="Red")
+        self.canvas.AddObject(r)
         projection = self.manager.project.layer_canvas.projection
         self.canvas.SetProjectionFun(projection)
 
