@@ -193,11 +193,24 @@ class AnnotationLayer(ProjectedLayer):
         r = FC.Rectangle((x, y), (5,5), LineWidth=2, LineColor="Red")
         self.canvas.AddObject(r)
         x += 10
+        r = FC.Rectangle((x, y), (5,5), LineWidth=2, LineColor="Red", FillColor="Yellow")
+        self.canvas.AddObject(r)
+        x += 10
         r = FC.Circle((x, y), 5, LineWidth=2, LineColor="Red")
+        self.canvas.AddObject(r)
+        x += 10
+        r = FC.Circle((x, y), 5, LineWidth=2, LineColor="Red", FillColor="Green")
         self.canvas.AddObject(r)
         x += 10
         r = FC.Polygon(((x, y), (x+2,y+5), (x-2,y+5)), LineWidth=2, LineColor="Red")
         self.canvas.AddObject(r)
+        x += 2
+        r = FC.ArrowLine(((x, y), (x+2,y+8)), LineWidth=2, LineColor="Red")
+        self.canvas.AddObject(r)
+        x += 2
+        r = FC.ArrowLine(((x, y+8), (x+2,y-2)), LineWidth=2, LineColor="Red")
+        self.canvas.AddObject(r)
+        x += 6
 
 
 

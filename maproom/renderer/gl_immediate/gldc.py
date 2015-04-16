@@ -9,6 +9,8 @@ import OpenGL.GL as gl
 class GLDC(object):
     def __init__(self, renderer):
         self.renderer = renderer
+        self.line_color = None
+        self.fill_color = None
     
     def BeginDrawing(self):
         gl.glDisable(gl.GL_TEXTURE_2D) # don't let texture colors override line color
@@ -45,17 +47,30 @@ class GLDC(object):
         c = math.cos(theta) # precalculate the sine and cosine
         s = math.sin(theta)
         
-        x = r # we start at angle = 0 
-        y = 0
+        def draw(mode):
+            gl.glBegin(mode)
+            if mode == gl.GL_TRIANGLE_FAN:
+                gl.glVertex2f(cx, cy)
+            x = r # we start at angle = 0 
+            y = 0
+            i = num_segments
+            while i > 0:
+                gl.glVertex2f(x + cx, y + cy)
+                t = x
+                x = c * x - s * y
+                y = s * t + c * y
+                i -= 1
+            if mode == gl.GL_TRIANGLE_FAN:
+                gl.glVertex2f(r + cx, cy)
+            gl.glEnd()
         
-        gl.glBegin(gl.GL_LINE_LOOP);
-        while num_segments > 0:
-            gl.glVertex2f(x + cx, y + cy)
-            t = x
-            x = c * x - s * y
-            y = s * t + c * y
-            num_segments -= 1
-        gl.glEnd()
+        if self.fill_color is not None:
+            gl.glColor(*self.fill_color)
+            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+            draw(gl.GL_TRIANGLE_FAN)
+            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glColor(*self.line_color)
+        draw(gl.GL_LINE_LOOP)
     
     def DrawCirclePoint(self, pt, radius):
         self.DrawCircle(pt[0], pt[1], radius)
@@ -137,25 +152,29 @@ class GLDC(object):
     
     def DrawRectangle(self, x, y, width, height):
         print "DRAWRECTANGLE!", x, y, width, height
-        gl.glBegin(gl.GL_LINE_LOOP)
-        gl.glVertex(x, y, 0)
-        gl.glVertex(x + width, y, 0)
-        gl.glVertex(x + width, y + height, 0)
-        gl.glVertex(x, y + height, 0)
-        gl.glEnd()
+        
+        def draw(mode):
+            gl.glBegin(mode)
+            gl.glVertex(x, y, 0)
+            gl.glVertex(x + width, y, 0)
+            gl.glVertex(x + width, y + height, 0)
+            gl.glVertex(x, y + height, 0)
+            gl.glEnd()
+        
+        if self.fill_color is not None:
+            gl.glColor(*self.fill_color)
+            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+            draw(gl.GL_QUADS)
+            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glColor(*self.line_color)
+        draw(gl.GL_LINE_LOOP)
     
     def DrawRectangleList(self, rectangles, pens=None, brushes=None):
         pass
     
     def DrawRectanglePointSize(self, pt, sz):
         print "DRAWRECTANGLEPOINTSIZE!", pt, sz
-        gl.glBegin(gl.GL_LINE_LOOP)
-        gl.glVertex(pt[0], pt[1], 0)
-        gl.glVertex(pt[0] + sz[0], pt[1], 0)
-        gl.glVertex(pt[0] + sz[0], pt[1] + sz[1], 0)
-        gl.glVertex(pt[0], pt[1] + sz[1], 0)
-        gl.glEnd()
-        pass
+        self.DrawRectangle(pt[0], pt[1], sz[0], sz[1])
     
     def DrawRectangleRect(self, rect):
         pass
@@ -194,7 +213,13 @@ class GLDC(object):
         pass
     
     def SetBrush(self, brush):
-        pass
+        color = brush.GetColour()
+        style = brush.GetStyle()
+        if style == wx.TRANSPARENT:
+            self.fill_color = None
+        else:
+            r, g, b, a = color.Get(True)
+            self.fill_color = r/255., g/255., b/255., a/255.
     
     def SetClippingRect(self, rect):
         pass
@@ -205,7 +230,8 @@ class GLDC(object):
     def SetPen(self, pen):
         color = pen.GetColour()
         r, g, b, a = color.Get(True)
-        gl.glColor(r/255., g/255., b/255., a/255.)
+        self.line_color = r/255., g/255., b/255., a/255.
+        gl.glColor(*self.line_color)
         gl.glLineWidth(pen.GetWidth())
         gl.glPointSize(pen.GetWidth())
         #gl.glLineStipple(stipple_factor, stipple_pattern)
