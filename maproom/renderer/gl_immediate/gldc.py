@@ -1,3 +1,5 @@
+import math
+
 import wx
 import numpy as np
 
@@ -34,11 +36,29 @@ class GLDC(object):
     def DrawBitmapPoint(self, bmp, pt, useMask=False):
         pass
     
-    def DrawCircle(self, x, y, radius):
-        pass
+    def DrawCircle(self, cx, cy, r):
+        print "DRAWCIRCLE!", cx, cy, r
+        # Simple rasterization from public domain algorithm
+        # http://slabode.exofire.net/circle_draw.shtml
+        num_segments = 128
+        theta = 2 * 3.1415926 / num_segments
+        c = math.cos(theta) # precalculate the sine and cosine
+        s = math.sin(theta)
+        
+        x = r # we start at angle = 0 
+        y = 0
+        
+        gl.glBegin(gl.GL_LINE_LOOP);
+        while num_segments > 0:
+            gl.glVertex2f(x + cx, y + cy)
+            t = x
+            x = c * x - s * y
+            y = s * t + c * y
+            num_segments -= 1
+        gl.glEnd()
     
     def DrawCirclePoint(self, pt, radius):
-        pass
+        self.DrawCircle(pt[0], pt[1], radius)
     
     def DrawEllipse(self, x, y, width, height):
         pass
