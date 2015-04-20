@@ -56,8 +56,9 @@ recognizers.append(NC_ParticleRecognizer())
 recognizers.append(UGRID_Recognizer())
 from image import GDALRecognizer
 recognizers.append(GDALRecognizer())
-from text import BNARecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, VerdatRecognizer
+from text import BNARecognizer, FloatCanvasJSONRecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, VerdatRecognizer
 recognizers.append(BNARecognizer())
+recognizers.append(FloatCanvasJSONRecognizer())
 recognizers.append(MapRoomCommandRecognizer())
 recognizers.append(MapRoomProjectRecognizer())
 recognizers.append(VerdatRecognizer())

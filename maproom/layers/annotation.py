@@ -153,13 +153,26 @@ class AnnotationLayer(ProjectedLayer):
         """
         return self.canvas is not None
 
+    def load_fc_json(self, text):
+        if not self.canvas:
+            self.canvas = FC.PyProjFloatCanvas((1,1),
+                                               ProjectionFun = None,
+                                               Debug = 0,
+                                               BackgroundColor = wx.WHITE,
+                                               )
+        self.canvas.ClearAll()
+        self.canvas.Unserialize(text)
+        self.update_bounds()
+
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
 
         if self.canvas is not None:
+            self.canvas._ResetBoundingBox()
             b = self.canvas.BoundingBox
             if not b.IsNull():
-                bounds = b
+                # convert from FloatCanvas BBox object to MapRoom tuple
+                bounds = tuple((tuple(b[0]), tuple(b[1])))
 
         return bounds
     
@@ -177,42 +190,6 @@ class AnnotationLayer(ProjectedLayer):
         size = self.manager.project.layer_canvas.get_screen_size()
         self.canvas.InitializePanelSize(size)
         self.canvas.MakeNewBuffers()
-#        for lat in range(-80, 90, 10):
-#            line = FC.Line([(lat, 0), (lat, 80)], LineWidth=3, LineColor="Yellow")
-#            self.canvas.AddObject(line)
-#        for lon in range(0, 90, 10):
-#            line = FC.Line([(-80, lon), (80, lon)], LineWidth=3, LineColor="Green")
-#            self.canvas.AddObject(line)
-        x = -77
-        y = 12
-        line = FC.Line([(x, y+8), (0, y+8)], LineWidth=3, LineColor="Green")
-        self.canvas.AddObject(line)
-        line = FC.Line([(x, y-2), (0, y-2)], LineWidth=3, LineColor="Green")
-        self.canvas.AddObject(line)
-        
-        r = FC.Rectangle((x, y), (5,5), LineWidth=2, LineColor="Red")
-        self.canvas.AddObject(r)
-        x += 10
-        r = FC.Rectangle((x, y), (5,5), LineWidth=2, LineColor="Red", FillColor="Yellow")
-        self.canvas.AddObject(r)
-        x += 10
-        r = FC.Circle((x, y), 5, LineWidth=2, LineColor="Red")
-        self.canvas.AddObject(r)
-        x += 10
-        r = FC.Circle((x, y), 5, LineWidth=2, LineColor="Red", FillColor="Green")
-        self.canvas.AddObject(r)
-        x += 10
-        r = FC.Polygon(((x, y), (x+2,y+5), (x-2,y+5)), LineWidth=2, LineColor="Red")
-        self.canvas.AddObject(r)
-        x += 2
-        r = FC.ArrowLine(((x, y), (x+2,y+8)), LineWidth=2, LineColor="Red")
-        self.canvas.AddObject(r)
-        x += 2
-        r = FC.ArrowLine(((x, y+8), (x+2,y-2)), LineWidth=2, LineColor="Red")
-        self.canvas.AddObject(r)
-        x += 6
-
-
 
         projection = self.manager.project.layer_canvas.projection
         self.canvas.SetProjectionFun(projection)

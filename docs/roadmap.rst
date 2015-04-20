@@ -101,7 +101,46 @@ Raster Layer
 ------------
 
 Adding a New Layer
-------------------
+==================
+
+The code for layers resides in the :mod:`maproom.layers` module, and unless some special case is needed should subclass from :class:`maproom.layers.ScreenLayer` or :class:`maproom.layers.ProjectedLayer`.
+
+Most layers will need methods to save to disk and load from disk, so the file
+format recoginition must be added.  This process is documented in :ref:`Adding
+a New MIME Type`.  Once the file type is recognized by MapRoom, a loader can
+be defined in the module :mod:`maproom.layers.loaders`.
+
+For your new layer, create a new class that extends from
+:class:`BaseLayerLoader` and change the class attributes to match the file
+type information as defined in your new MIME type handler.  E.g.  for the
+FloatCanvas annotation layer, the new class attributes are::
+
+    class FloatCanvasJSONLoader(BaseLayerLoader):
+        mime = "application/x-float_canvas"
+        layer_types = ["annotation"]
+        extensions = [".fc"]
+        name = "FloatCanvas JSON Layer"
+
+The `load_layers` method expects a list of layers to be returned, so your
+loader can return multiple layers if that's supported by the file format.
+The metadata object passed to it in the arguments list contains a pointer
+to the uri (filename) and the other argument passed to it is the manager
+object needed as a parameter for all `Layer` constructors.  Again, using the
+FloatCanvas annotation layer as a simple example, the `load_layer` method is::
+
+    def load_layers(self, metadata, manager):
+        layers = []
+        with open(metadata.uri, "r") as fh:
+            text = fh.read()
+            layer = AnnotationLayer(manager=manager)
+            layer.load_fc_json(text)
+            layers.append(layer)
+        return layers
+
+The :meth:`maproom.layers.AnnotationLayer.load_fc_json` method takes the
+MapRoom formatted text string loaded above in the load_layers method, and
+calls the :meth:`FloatCanvas.Unserialize` method to restore the graphic
+objects to the annotation layer.
 
 
 MapRoom File Types
@@ -115,11 +154,36 @@ to recognize the new file type.  Three actions are needed:
 
 First: add a new :class:`peppy2.file_type.i_file_recognizer.IFileRecognizer`
 that can return a MIME type based on either a scan of the beginning of the
-file, or as a last resort based on the filename itself.
+file, or as a last resort based on the filename itself.  These classes reside
+in the :mod:`maproom.file_type` module.  E.g., for the FloatCanvas annotation
+layer, the class :class:`maproom.file_type.FloatCanvasJSONRecognizer` was
+added::
+
+    @provides(IFileRecognizer)
+    class FloatCanvasJSONRecognizer(HasTraits):
+        """Finds FloatCanvas JSON files using the text header
+        
+        """
+        id = "application/x-float_canvas_json"
+        
+        before = "text/plain"
+        
+        def identify(self, guess):
+            byte_stream = guess.get_utf8()
+            if byte_stream.startswith("FloatCanvas JSON Format"):
+                return self.id
+
+The `@provides` decorator is a Traits feature that marks this class as a plugin.
 
 Adding a new recognizer in the :mod:`maproom.file_type` module and rerunning
 the cog script contained in :file:`maproom.file_type.__init__.py` will add the
-new recognizer class into the automatically scanned list of recognizers.
+new recognizer class into the automatically scanned list of recognizers.  This
+must be run once and the new version of __init__.py checked in to the source
+code repository so that it doesn't have to be run again and cog doesn't have
+to be a dependency of the project at runtime. It is run by::
+
+    cd maproom/file_type
+    cog.py -r __init__.py
 
 Second: the :meth:`maproom.task.MaproomProjectTask.can_edit` class method must be modified to accept the new MIME type.
 

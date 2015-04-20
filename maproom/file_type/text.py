@@ -58,3 +58,17 @@ class BNARecognizer(HasTraits):
     def identify(self, guess):
         if guess.metadata.uri.lower().endswith(".bna"):
             return "application/x-maproom-bna"
+
+@provides(IFileRecognizer)
+class FloatCanvasJSONRecognizer(HasTraits):
+    """Finds FloatCanvas JSON files using the text header
+    
+    """
+    id = "application/x-float_canvas_json"
+    
+    before = "text/plain"
+    
+    def identify(self, guess):
+        byte_stream = guess.get_utf8()
+        if byte_stream.startswith("FloatCanvas JSON Format"):
+            return self.id
