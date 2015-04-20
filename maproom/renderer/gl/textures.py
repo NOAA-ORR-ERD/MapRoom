@@ -164,21 +164,6 @@ class SubImageLoader(object):
         pass
 
 
-class ImageScreenData(ImageData):
-    def calc_world_rect(self, selection_origin, selection_width, selection_height):
-        # "world" coordinates in screen mode are just the screen coordinates
-        # we invert the y in going to projected coordinates
-        left_bottom = (selection_origin[0],
-                       selection_origin[1] + selection_height)
-        left_top = (selection_origin[0],
-                    selection_origin[1])
-        right_top = (selection_origin[0] + selection_width,
-                     selection_origin[1])
-        right_bottom = (selection_origin[0] + selection_width,
-                        selection_origin[1] + selection_height)
-        return left_bottom, left_top, right_top, right_bottom
-
-
 class ImageTextures(object):
     """Class to allow sharing of textures between views
     
@@ -307,21 +292,6 @@ class ImageTextures(object):
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
     
-    def use_world_rects_as_screen_rects(self):
-        for i, projected_rect in enumerate(self.image_world_rects):
-            raw = self.vbo_vertexes[i].data
-            vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
-            vertex_data.x_lb = projected_rect[0][0]
-            vertex_data.y_lb = projected_rect[0][1]
-            vertex_data.x_lt = projected_rect[1][0]
-            vertex_data.y_lt = projected_rect[1][1]
-            vertex_data.x_rt = projected_rect[2][0]
-            vertex_data.y_rt = projected_rect[2][1]
-            vertex_data.x_rb = projected_rect[3][0]
-            vertex_data.y_rb = projected_rect[3][1]
-
-            self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
-
     def destroy(self):
         for texture in self.textures:
             gl.glDeleteTextures(np.array([texture], np.uint32))
