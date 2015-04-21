@@ -226,7 +226,7 @@ class GLDC(object):
         pass
     
     def DrawSpline(self, points):
-        pass
+        self.DrawLines(points)
     
     def DrawText(self, text, x, y):
         pass
