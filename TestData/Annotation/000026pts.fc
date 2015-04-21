@@ -1,1 +1,14 @@
-FloatCanvas JSON Format 1|[{"params": [[[-77.0, 10.0], [0.0, 10.0]], "Green", "Solid", 3, false], "class": "Line"}, {"params": [[[-77.0, 20.0], [0.0, 20.0]], "Green", "Solid", 3, false], "class": "Line"}, {"params": [[-77.0, 12.0], [5.0, 5.0], "Red", "Solid", 2, null, "Transparent", false], "class": "Rectangle"}, {"params": [[-67.0, 12.0], [5.0, 5.0], "Red", "Solid", 2, "Yellow", "Solid", false], "class": "Rectangle"}, {"params": [[-57.0, 12.0], 5, "Red", "Solid", 2, null, "Transparent", false], "class": "Circle"}, {"params": [[-47.0, 12.0], 5, "Red", "Solid", 2, "Green", "Solid", false], "class": "Circle"}, {"params": [[[-37.0, 12.0], [-35.0, 17.0], [-39.0, 17.0]], "Red", "Solid", 2, null, "Transparent", false], "class": "Polygon"}, {"params": [[[-35.0, 12.0], [-33.0, 20.0]], "Red", "Solid", 2, 8, 30.0, false], "class": "ArrowLine"}, {"params": [[[-33.0, 20.0], [-31.0, 10.0]], "Red", "Solid", 2, 8, 30.0, false], "class": "ArrowLine"}, {"params": [[-27.0, 12.0], [5.0, 2.0], "Red", "Solid", 2, null, "Transparent", false], "class": "Ellipse"}, {"params": [[[-77.0, 30.0], [0.0, 30.0]], "Green", "Solid", 3, false], "class": "Line"}, {"params": ["Testing", [-77, 22], 14, "Orange", null, 75, 90, 90, false, "tl", false], "class": "Text"}]
+FloatCanvas JSON Format 1|[
+["Line", [[[-77.0, 10.0], [0.0, 10.0]], "Green", "Solid", 3, false]],
+["Line", [[[-77.0, 20.0], [0.0, 20.0]], "Green", "Solid", 3, false]],
+["Rectangle", [[-77.0, 12.0], [5.0, 5.0], "Red", "Solid", 2, null, "Transparent", false]],
+["Rectangle", [[-67.0, 12.0], [5.0, 5.0], "Red", "Solid", 2, "Yellow", "Solid", false]],
+["Circle", [[-57.0, 12.0], 5, "Red", "Solid", 2, null, "Transparent", false]],
+["Circle", [[-47.0, 12.0], 5, "Red", "Solid", 2, "Green", "Solid", false]],
+["Polygon", [[[-37.0, 12.0], [-35.0, 17.0], [-39.0, 17.0]], "Red", "Solid", 2, null, "Transparent", false]],
+["ArrowLine", [[[-35.0, 12.0], [-33.0, 20.0]], "Red", "Solid", 2, 8, 30.0, false]],
+["ArrowLine", [[[-33.0, 20.0], [-31.0, 10.0]], "Red", "Solid", 2, 8, 30.0, false]],
+["Ellipse", [[-27.0, 12.0], [5.0, 2.0], "Red", "Solid", 2, null, "Transparent", false]],
+["Line", [[[-77.0, 30.0], [0.0, 30.0]], "Green", "Solid", 3, false]],
+["Text", ["Testing", [-77, 22], 14, "Orange", null, 75, 90, 90, false, "tl", false]]
+]
