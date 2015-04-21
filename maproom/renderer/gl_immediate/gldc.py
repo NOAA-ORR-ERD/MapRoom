@@ -76,16 +76,47 @@ class GLDC(object):
         self.DrawCircle(pt[0], pt[1], radius)
     
     def DrawEllipse(self, x, y, width, height):
-        pass
+        print "DRAWELLIPSE!", x, y, width, height
+        sx = width / 2
+        sy = height / 2
+        cx = x + sx
+        cy = y + sy
+        num_segments = 128
+        dtheta = 2 * 3.1415926 / num_segments
+        
+        def draw(mode):
+            gl.glBegin(mode)
+            if mode == gl.GL_TRIANGLE_FAN:
+                gl.glVertex2f(cx, cy)
+            theta = 0.0
+            x = sx # we start at angle = 0 
+            y = 0
+            i = num_segments
+            while i > 0:
+                gl.glVertex2f(cx + sx*math.cos(theta), cy + sy*math.sin(theta))
+                theta += dtheta
+                i -= 1
+            if mode == gl.GL_TRIANGLE_FAN:
+                gl.glVertex2f(cx + sx, cy)
+            gl.glEnd()
+        
+        if self.fill_color is not None:
+            gl.glColor(*self.fill_color)
+            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+            draw(gl.GL_TRIANGLE_FAN)
+            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glColor(*self.line_color)
+        draw(gl.GL_LINE_LOOP)
     
     def DrawEllipseList(self, ellipses, pens=None, brushes=None):
         pass
     
     def DrawEllipsePointSize(self, pt, sz):
-        pass
+        self.DrawEllipse(pt[0], pt[1], sz[0], sz[1])
     
     def DrawEllipseRect(self, rect):
-        pass
+        x, y, w, h = rect.Get()
+        self.DrawEllipse(x, y, w, h)
     
     def DrawEllipticArc(self, x, y, w, h, start, end):
         pass
@@ -206,6 +237,9 @@ class GLDC(object):
     def DrawTextPoint(self, text, pt):
         pass
     
+    def GetTextExtent(self, string):
+        return (0, 0)
+    
     def SetBackground(self, brush):
         pass
     
@@ -227,6 +261,9 @@ class GLDC(object):
     def SetClippingRegion(self, x, y, width, height):
         pass
     
+    def SetFont(self, font):
+        pass
+    
     def SetPen(self, pen):
         color = pen.GetColour()
         r, g, b, a = color.Get(True)
@@ -235,3 +272,9 @@ class GLDC(object):
         gl.glLineWidth(pen.GetWidth())
         gl.glPointSize(pen.GetWidth())
         #gl.glLineStipple(stipple_factor, stipple_pattern)
+    
+    def SetTextBackground(self, colour):
+        pass
+    
+    def SetTextForeground(self, colour):
+        pass
