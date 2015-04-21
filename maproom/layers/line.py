@@ -45,6 +45,10 @@ class LineLayer(PointLayer):
             lines = 0
         return PointLayer.__str__(self) + ", %d lines" % lines
     
+    def new(self):
+        super(LineLayer, self).new()
+        self.line_segment_indexes = self.make_line_segment_indexes(0)
+
     def get_info_panel_text(self, prop):
         if prop == "Line segment count":
             if self.line_segment_indexes is not None:
@@ -77,8 +81,9 @@ class LineLayer(PointLayer):
             self.points.color = self.color
             self.points.state = 0
 
-            n = np.alen(f_line_segment_indexes)
-            self.line_segment_indexes = self.make_line_segment_indexes(n)
+        n = np.alen(f_line_segment_indexes)
+        self.line_segment_indexes = self.make_line_segment_indexes(n)
+        if (n > 0):
             self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
                 0: n
             ] = f_line_segment_indexes
