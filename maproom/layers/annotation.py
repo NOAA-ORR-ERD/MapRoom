@@ -40,7 +40,9 @@ class AnnotationLayer(ProjectedLayer):
         We shouldn't allow saving of a layer with no content, so we use this method
         to determine if we can save this layer.
         """
-        return self.canvas is not None
+        if self.canvas is not None:
+            return self.canvas.IsEmpty()
+        return True
 
     def load_fc_json(self, text):
         if not self.canvas:
