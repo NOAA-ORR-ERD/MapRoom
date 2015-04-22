@@ -244,6 +244,14 @@ class NewLonLatLayerAction(EditorAction):
         cmd = AddLayerCommand("grid")
         self.active_editor.process_command(cmd)
 
+class NewAnnotationLayerAction(EditorAction):
+    name = 'New Annotation Layer'
+    tooltip = 'Create new annotation layer'
+
+    def perform(self, event):
+        cmd = AddLayerCommand("annotation")
+        self.active_editor.process_command(cmd)
+
 class DeleteLayerAction(EditorAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
@@ -704,6 +712,7 @@ class MaproomProjectTask(FrameworkTask):
                     return [
                         NewProjectAction(),
                         NewVectorLayerAction(),
+                        NewAnnotationLayerAction(),
                         NewLonLatLayerAction(),
                         ]
                 elif group_name == "SaveGroup":
