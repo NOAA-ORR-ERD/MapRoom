@@ -563,3 +563,39 @@ class ImmediateModeRenderer():
 
     def get_emulated_dc(self):
         return GLDC(self)
+
+
+    # Vector object drawing routines
+
+    def draw_object(self, layer_index_base, picker, line_width):
+        if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
+            return
+        
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+        self.vbo_line_segment_point_xys.bind()
+        gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+        if (picker.is_active):
+            picker.bind_picker_colors_for_lines(layer_index_base,
+                                      len(self.world_line_segment_points))
+            gl.glLineWidth(6)
+        else:
+            gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+            self.vbo_line_segment_colors.bind()
+            gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
+            gl.glLineWidth(line_width)
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
+
+        gl.glDrawArrays(gl.GL_LINES, 0, np.alen(self.vbo_line_segment_point_xys.data))
+
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+
+        if (picker.is_active):
+            picker.unbind_picker_colors()
+        else:
+            self.vbo_line_segment_colors.unbind()
+            gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+        self.vbo_line_segment_point_xys.unbind()
+
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
