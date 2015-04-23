@@ -83,6 +83,55 @@ class MovePointsCommand(Command):
         layer.points.y[self.indexes] = old_y
         return self.undo_info
 
+class MoveControlPointCommand(Command):
+    short_name = "move_cpt"
+    serialize_order =  [
+        ('layer', 'layer'),
+        ('drag', 'int'),
+        ('anchor', 'int'),
+        ('dx', 'float'),
+        ('dy', 'float'),
+        ]
+    
+    def __init__(self, layer, drag, anchor, dx, dy):
+        Command.__init__(self, layer)
+        self.drag = drag
+        self.anchor = anchor
+        self.dx = dx
+        self.dy = dy
+    
+    def __str__(self):
+        return "Move Control Point #%d" % self.drag
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer and next_command.drag == self.drag and next_command.anchor == self.anchor:
+                self.dx += next_command.dx
+                self.dy += next_command.dy
+                return True
+    
+    def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        old_x = np.copy(layer.points.x)
+        old_y = np.copy(layer.points.y)
+        undo.data = (old_x, old_y)
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
+        layer.move_control_point(self.drag, self.anchor, self.dx, self.dy)
+        print "dx=%f, dy=%f" % (self.dx, self.dy)
+        print undo.data
+        return undo
+
+    def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        (old_x, old_y) = self.undo_info.data
+        layer.points.x = old_x
+        layer.points.y = old_y
+        return self.undo_info
+
 class ChangeDepthCommand(Command):
     short_name = "depth"
     serialize_order =  [

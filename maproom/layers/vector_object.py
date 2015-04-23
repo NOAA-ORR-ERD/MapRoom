@@ -13,6 +13,7 @@ from traits.api import Unicode, Str, Any, Float
 from pyface.api import YES
 
 from ..library import rect
+from ..mouse_commands import MoveControlPointCommand
 
 from line import LineLayer
 from constants import *
@@ -74,6 +75,19 @@ class RectangleLayer(VectorObjectLayer):
     
     corners = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
+    
+    # return the anchor point of the index point. E.g. anchors_of[0] = 2
+    anchors_of = np.asarray((2, 3, 0, 1, 4), dtype=np.uint8)
+    
+    # anchor modification array: apply dx,dy values to each control point based
+    # on the anchor point.  Used when moving/resizing
+    anchor_dxdy = np.asarray((
+        ((0,0), (1,0), (1,1), (0,1), (0.5,0.5)), # anchor point is 0 (drag point is 2)
+        ((1,0), (0,0), (0,1), (1,1), (0.5,0.5)), # anchor point is 1 (drag is 3)
+        ((1,1), (0,1), (0,0), (1,0), (0.5,0.5)), # anchor point is 2, etc.
+        ((0,1), (1,1), (1,0), (0,0), (0.5,0.5)),
+        ((1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
+        ), dtype=np.float32)
 
     def set_opposite_corners(self, p1, p2):
         p = np.concatenate((p1, p2), 0)  # flatten to 1D
@@ -87,6 +101,36 @@ class RectangleLayer(VectorObjectLayer):
         cp[4] = c.mean(0)
         self.cp = cp
 
+    def find_anchor_of(self, point_index):
+        self.anchor_point = self.anchors_of[point_index]
+
+    def set_anchor_point(self, point_index, maintain_aspect=False):
+        self.clear_all_selections()
+        self.select_point(point_index)
+        self.drag_point = point_index
+        self.find_anchor_of(point_index)
+        
+    def dragging_selected_objects(self, world_dx, world_dy):
+        cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy)
+        return cmd
+    
+    def move_control_point(self, drag, anchor, dx, dy):
+        """Moving the control point changes the size of the bounding rectangle.
+        
+        Assuming the drag point is one of the corners and the anchor is the
+        opposite corner, the points are constrained as follows: the drag point
+        moves by both dx & dy.  The anchor point doesn't move at all, and of
+        the other points: one only uses dx and the other dy.
+        """
+        scale = self.anchor_dxdy[anchor]
+        xoffset = scale.T[0] * dx
+        yoffset = scale.T[1] * dy
+        
+        # FIXME: Why does specifying .x work for a range, but not for a single
+        # element? Have to use the dict notation for a single element.
+        self.points.x += xoffset
+        self.points.y += yoffset
+    
     def rasterize(self, projected_point_data, z, color):
         self.renderer.set_points(projected_point_data, z, color)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
