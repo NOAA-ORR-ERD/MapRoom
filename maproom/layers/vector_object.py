@@ -58,6 +58,16 @@ class RectangleLayer(VectorObjectLayer):
     """Rectangle uses 4 control points in the self.points array, and nothing in
     the polygon points array.  All corner points can be used as control points.
     
+    The center is an additional control point, which is constrained and not
+    independent of the corners.
+    
+     3           2
+      o---------o
+      |         |
+      |    o 4  |
+      |         |
+      o---------o
+     0           1
     """
     name = Unicode("Rectangle")
     
@@ -67,7 +77,14 @@ class RectangleLayer(VectorObjectLayer):
     def set_opposite_corners(self, p1, p2):
         p = np.concatenate((p1, p2), 0)  # flatten to 1D
         c = p[self.corners].reshape(-1,2)
-        self.set_data(c, 0.0, self.lines)
+        self.set_control_points_from_corners(c)
+        self.set_data(self.cp, 0.0, self.lines)
+    
+    def set_control_points_from_corners(self, c):
+        cp = np.empty((5,2), dtype=np.float32)
+        cp[0:4] = c
+        cp[4] = c.mean(0)
+        self.cp = cp
 
     def rasterize(self, projected_point_data, z, color):
         self.renderer.set_points(projected_point_data, z, color)
@@ -92,8 +109,8 @@ class EllipseLayer(RectangleLayer):
         height = p[2][1] - p[1][1]
         sx = width / 2
         sy = height / 2
-        cx = p[0][0] + sx
-        cy = p[0][1] + sy
+        cx = p[4][0]
+        cy = p[4][1]
          
         num_segments = 128
         xy = np.zeros((num_segments, 2), dtype=np.float32)
