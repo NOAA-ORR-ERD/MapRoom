@@ -452,6 +452,12 @@ class CropAction(MouseHandlerBaseAction):
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
+class ControlPointAction(MouseHandlerBaseAction):
+    handler = ControlPointSelectionMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
@@ -604,6 +610,11 @@ class MaproomProjectTask(FrameworkTask):
                            CropAction()),
                      show_tool_names=False,
                      id="PolygonLayerToolBar",),
+            SToolBar(Group(ZoomModeAction(),
+                           PanModeAction(),
+                           ControlPointAction()),
+                     show_tool_names=False,
+                     id="AnnotationLayerToolBar",),
             ]
         toolbars.extend(FrameworkTask._tool_bars_default(self))
         return toolbars

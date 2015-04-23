@@ -36,6 +36,8 @@ class VectorObjectLayer(LineLayer):
     name = Unicode("Vector Object Layer")
 
     type = Str("vector_object")
+    
+    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
     def rebuild_renderer(self, in_place=False):
         """Update renderer

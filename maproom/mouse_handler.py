@@ -583,3 +583,81 @@ class CropRectMode(RectSelectMode):
         if (layer is not None and layer.can_crop()):
             cmd = CropRectCommand(layer, w_r)
             e.process_command(cmd)
+
+class ControlPointSelectionMode(ObjectSelectionMode):
+    icon = "select.png"
+    menu_item_name = "Control Point Edit Mode"
+    menu_item_tooltip = "Select objects and move control points in the current layer"
+
+    def get_cursor(self):
+        e = self.layer_control.editor
+        if e.clickable_object_mouse_is_over is not None:
+            if e.clickable_object_is_ugrid_line():
+                return wx.StockCursor(wx.CURSOR_BULLSEYE)
+            else:
+                return wx.StockCursor(wx.CURSOR_HAND)
+        return wx.StockCursor(wx.CURSOR_PENCIL)
+
+    def clicked_on_point(self, event, layer, point_index):
+        c = self.layer_control
+        e = c.project
+        vis = e.layer_visibility[layer]['layer']
+
+        if (event.ControlDown()):
+            if (layer.is_point_selected(point_index)):
+                layer.deselect_point(point_index)
+            else:
+                layer.select_point(point_index)
+        elif (layer.is_point_selected(point_index)):
+            layer.clear_all_selections()
+        elif (event.ShiftDown()):
+            path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
+            if (path != []):
+                for p_index in path:
+                    layer.select_point(p_index)
+            else:
+                layer.select_point(point_index)
+        else:
+            layer.clear_all_selections()
+            layer.select_point(point_index)
+
+        e.refresh()
+
+    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        c = self.layer_control
+        e = c.project
+        lm = c.layer_manager
+        vis = e.layer_visibility[layer]['layer']
+
+        if (not event.ControlDown() and not event.ShiftDown()):
+            e.clear_all_selections(False)
+            cmd = SplitLineCommand(layer, line_segment_index, world_point)
+            e.process_command(cmd)
+            c.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
+#            if not vis:
+#                e.task.status_bar.message = "Split line in hidden layer %s" % layer.name
+#            else:
+#                layer.select_point(point_index)
+
+    def clicked_on_empty_space(self, event, layer, world_point):
+        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
+        c = self.layer_control
+        e = c.project
+        vis = e.layer_visibility[layer]['layer']
+        if (layer.type == "root" or layer.type == "folder"):
+            e.window.error("You cannot add points to folder layers.", "Cannot Edit")
+            return
+
+        if (not event.ControlDown() and not event.ShiftDown()):
+            e.clear_all_selections(False)
+            
+            # FIXME: this comment is from pre maproom3. Is it still applicable?
+            # we release the focus because we don't want to immediately drag the new object (if any)
+            # self.control.release_mouse() # shouldn't be captured now anyway
+            
+            cmd = InsertPointCommand(layer, world_point)
+            e.process_command(cmd)
+
+    def select_objects_in_rect(self, event, rect, layer):
+        layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+
