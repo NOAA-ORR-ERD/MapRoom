@@ -49,10 +49,9 @@ class VectorObjectLayer(LineLayer):
         if (not layer_visibility["layer"]):
             return
 
-        self.draw_object(p_r, s_r, layer_index_base, picker)
-    
-    def draw_object(self, p_r, s_r, layer_index_base, picker):
-        pass
+        self.renderer.draw_object(layer_index_base, picker,
+                                  self.point_size, self.line_width)
+
 
 class RectangleLayer(VectorObjectLayer):
     """Rectangle uses 4 control points in the self.points array, and nothing in
@@ -90,8 +89,6 @@ class RectangleLayer(VectorObjectLayer):
         self.renderer.set_points(projected_point_data, z, color)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
 
-    def draw_object(self, p_r, s_r, layer_index_base, picker):
-        self.renderer.draw_object(layer_index_base, picker, 4)
 
 class EllipseLayer(RectangleLayer):
     """Rectangle uses 4 control points in the self.points array, and nothing in
@@ -135,6 +132,3 @@ class EllipseLayer(RectangleLayer):
         colors = np.empty(num_segments, dtype=np.uint32)
         colors.fill(self.color)
         self.renderer.set_lines(xy, lsi, colors)
-
-    def draw_object(self, p_r, s_r, layer_index_base, picker):
-        self.renderer.draw_object(layer_index_base, picker, 4)

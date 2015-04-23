@@ -567,7 +567,7 @@ class ImmediateModeRenderer():
 
     # Vector object drawing routines
 
-    def draw_object(self, layer_index_base, picker, line_width):
+    def draw_object(self, layer_index_base, picker, point_size, line_width):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
         
@@ -598,4 +598,35 @@ class ImmediateModeRenderer():
             gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
         self.vbo_line_segment_point_xys.unbind()
 
+        # Draw handles for control points
+        self.vbo_point_xys.bind()
+        gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+        if (picker.is_active):
+            picker.bind_picker_colors_for_points(layer_index_base,
+                                                 len(self.vbo_point_xys.data))
+            gl.glPointSize(point_size + 8)
+        else:
+            # To make the points stand out better, especially when rendered on top
+            # of line segments, draw translucent white rings under them.
+            gl.glPointSize(point_size + 4)
+            gl.glColor(1, 1, 1, 0.75)
+            gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
+            gl.glColor(1, 1, 1, 1)
+            
+            # Now set actual color
+            gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+            self.vbo_point_colors.bind()
+            gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
+            gl.glPointSize(point_size)
+
+        gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
+
+        if (picker.is_active):
+            picker.unbind_picker_colors()
+        else:
+            self.vbo_point_colors.unbind()
+            gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+
+        self.vbo_point_xys.unbind()
+        
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
