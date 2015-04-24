@@ -9,11 +9,12 @@ import numpy as np
 import wx
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Any, Float
+from traits.api import on_trait_change, Unicode, Str, Any, Float, Bool
 from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
+from ..renderer import color_to_int, int_to_color
 
 from line import LineLayer
 from constants import *
@@ -40,18 +41,35 @@ class VectorObjectLayer(LineLayer):
     
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
+    alpha = Float(1.0)
+    
+    rebuild_needed = Bool(False)
+    
+    def has_alpha(self):
+        return True
+    
+    @on_trait_change('alpha')
+    def mark_rebuild(self):
+        self.rebuild_needed = True
+    
     def rebuild_renderer(self, in_place=False):
         """Update renderer
         
         """
         projected_point_data = self.compute_projected_point_data()
-        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        r, g, b, a = int_to_color(self.color)
+        color = color_to_int(r, g, b, self.alpha)
+        print self.alpha, color
+#        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        self.rasterize(projected_point_data, self.points.z, self.color, color)
+        self.rebuild_needed = False
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
-
+        if self.rebuild_needed:
+            self.rebuild_renderer()
         self.renderer.draw_object(layer_index_base, picker,
                                   self.point_size, self.line_width)
 
@@ -73,6 +91,10 @@ class RectangleLayer(VectorObjectLayer):
     """
     name = Unicode("Rectangle")
     
+    layer_info_panel = ["Layer name", "Color", "Transparency"]
+    
+    selection_info_panel = ["Point coordinates"]
+
     corners = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
     
@@ -131,9 +153,13 @@ class RectangleLayer(VectorObjectLayer):
         self.points.x += xoffset
         self.points.y += yoffset
     
-    def rasterize(self, projected_point_data, z, color):
-        self.renderer.set_points(projected_point_data, z, color)
-        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
+    def rasterize(self, projected_point_data, z, cp_color, line_color):
+        colors = np.empty(np.alen(self.points), dtype=np.uint32)
+        colors.fill(cp_color)
+        self.renderer.set_points(projected_point_data, z, colors)
+        colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
+        colors.fill(line_color)
+        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
 
 class EllipseLayer(RectangleLayer):
@@ -143,8 +169,10 @@ class EllipseLayer(RectangleLayer):
     """
     name = Unicode("Ellipse")
     
-    def rasterize(self, projected_point_data, z, color):
-        self.renderer.set_points(projected_point_data, z, color)
+    def rasterize(self, projected_point_data, z, cp_color, line_color):
+        colors = np.empty(np.alen(self.points), dtype=np.uint32)
+        colors.fill(cp_color)
+        self.renderer.set_points(projected_point_data, z, colors)
         p = projected_point_data
         
         # FIXME: this only supports axis aligned ellipses
@@ -176,5 +204,5 @@ class EllipseLayer(RectangleLayer):
         
         # set_lines expects a color list for each point, not a single color
         colors = np.empty(num_segments, dtype=np.uint32)
-        colors.fill(self.color)
+        colors.fill(line_color)
         self.renderer.set_lines(xy, lsi, colors)
