@@ -49,6 +49,8 @@ class VectorObjectLayer(LineLayer):
     
     line_width = Float(2.0)
     
+    line_style = Int(0xffff)
+    
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
     alpha = Float(1.0)
@@ -88,7 +90,7 @@ class VectorObjectLayer(LineLayer):
         if not picker.is_active:
             self.renderer.fill_object(self.fill_color)
         self.renderer.outline_object(layer_index_base, picker,
-                                     self.point_size, self.line_width)
+                                     self.point_size, self.line_width, self.line_style)
 
 
 class RectangleLayer(VectorObjectLayer):

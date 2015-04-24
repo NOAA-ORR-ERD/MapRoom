@@ -587,7 +587,7 @@ class ImmediateModeRenderer():
 
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
-    def outline_object(self, layer_index_base, picker, point_size, line_width):
+    def outline_object(self, layer_index_base, picker, point_size, line_width, stipple_pattern):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
         
@@ -606,9 +606,10 @@ class ImmediateModeRenderer():
             gl.glLineWidth(line_width)
 
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-
+        gl.glLineStipple(16, stipple_pattern)
+        gl.glEnable(gl.GL_LINE_STIPPLE)
         gl.glDrawArrays(gl.GL_LINES, 0, np.alen(self.vbo_line_segment_point_xys.data))
-
+        gl.glDisable(gl.GL_LINE_STIPPLE)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         if (picker.is_active):
