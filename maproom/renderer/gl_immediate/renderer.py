@@ -11,7 +11,7 @@ import OpenGL.GLU as glu
 from peppy2 import get_image_path
 
 import maproom.library.rect as rect
-from ..gl import data_types
+from .. import data_types, int_to_color
 from ..gl.textures import ImageTextures
 from ..gl.Tessellator import init_vertex_buffers, tessellate
 from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color
@@ -567,7 +567,27 @@ class ImmediateModeRenderer():
 
     # Vector object drawing routines
 
-    def draw_object(self, layer_index_base, picker, point_size, line_width):
+    def fill_object(self, fill_color):
+        if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
+            return
+        
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+        self.vbo_line_segment_point_xys.bind()
+        gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+        r, g, b, a = int_to_color(fill_color)
+        print "fillcolor!", fill_color, int(r*255), int(g*255), int(b*255), int(a*255)
+        gl.glColor(r, g, b, a)
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+        gl.glDrawArrays(gl.GL_TRIANGLE_FAN, 0, np.alen(self.vbo_line_segment_point_xys.data))
+        gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+
+        self.vbo_line_segment_point_xys.unbind()
+
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+
+    def outline_object(self, layer_index_base, picker, point_size, line_width):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
         

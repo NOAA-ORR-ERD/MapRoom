@@ -9,7 +9,7 @@ import numpy as np
 import wx
 
 # Enthought library imports.
-from traits.api import on_trait_change, Unicode, Str, Any, Float, Bool
+from traits.api import on_trait_change, Unicode, Str, Any, Float, Bool, Int
 from pyface.api import YES
 
 from ..library import rect
@@ -39,6 +39,16 @@ class VectorObjectLayer(LineLayer):
 
     type = Str("vector_object")
     
+    color = Int(0)
+    
+    fill_style = Int(0)
+    
+    fill_color = Int(color_to_int(0,.8,.7,1.0))
+    
+    point_size = Int(8)
+    
+    line_width = Float(2.0)
+    
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
     alpha = Float(1.0)
@@ -50,7 +60,12 @@ class VectorObjectLayer(LineLayer):
     
     @on_trait_change('alpha')
     def mark_rebuild(self):
+        r, g, b, a = int_to_color(self.fill_color)
+        self.fill_color = color_to_int(r, g, b, self.alpha)
         self.rebuild_needed = True
+    
+    def set_fill_color(self, color):
+        self.fill_color = color
     
     def rebuild_renderer(self, in_place=False):
         """Update renderer
@@ -70,8 +85,10 @@ class VectorObjectLayer(LineLayer):
             return
         if self.rebuild_needed:
             self.rebuild_renderer()
-        self.renderer.draw_object(layer_index_base, picker,
-                                  self.point_size, self.line_width)
+        if not picker.is_active:
+            self.renderer.fill_object(self.fill_color)
+        self.renderer.outline_object(layer_index_base, picker,
+                                     self.point_size, self.line_width)
 
 
 class RectangleLayer(VectorObjectLayer):
@@ -91,7 +108,7 @@ class RectangleLayer(VectorObjectLayer):
     """
     name = Unicode("Rectangle")
     
-    layer_info_panel = ["Layer name", "Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Color", "Fill Color", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 

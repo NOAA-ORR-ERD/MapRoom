@@ -437,11 +437,20 @@ class LayerColorCommand(Command):
         undo.data = (layer.color, self.color)
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_display_properties_changed = True
-        layer.set_color(self.color)
+        self.call_set_color(layer, self.color)
         return undo
 
     def undo(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         old_color, color = self.undo_info.data
-        layer.set_color(old_color)
+        self.call_set_color(layer, old_color)
         return self.undo_info
+    
+    def call_set_color(self, layer, color):
+        layer.set_color(color)
+    
+class FillColorCommand(LayerColorCommand):
+    short_name = "fillcolor"
+    
+    def call_set_color(self, layer, color):
+        layer.set_fill_color(color)

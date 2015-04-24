@@ -340,6 +340,7 @@ class AlphaField(FloatSliderField):
 
 class ColorPickerField(InfoField):
     same_line = True
+    command = LayerColorCommand
 
     def get_value(self, layer):
         return ""
@@ -362,12 +363,20 @@ class ColorPickerField(InfoField):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
-        cmd = LayerColorCommand(layer, int_color)
+        cmd = self.command(layer, int_color)
         self.panel.project.process_command(cmd)
 
 class ColorField(ColorPickerField):
+    command = FillColorCommand
+    
     def get_value(self, layer):
         return layer.color
+    
+class FillColorField(ColorPickerField):
+    command = FillColorCommand
+    
+    def get_value(self, layer):
+        return layer.fill_color
     
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
@@ -442,6 +451,8 @@ class InfoPanel(PANELTYPE):
         "Flagged points": FlaggedPointsField,
         "Transparency": AlphaField,
         "Color": ColorField,
+        "Line Color": ColorField,
+        "Fill Color": FillColorField,
         }
     
     def create_fields(self, layer, fields):
