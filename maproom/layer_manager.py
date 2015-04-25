@@ -99,12 +99,15 @@ class LayerManager(HasTraits):
         from layers.vector_object import *
 #        annotation = AnnotationLayer(manager=self)
 #        self.insert_layer([2], annotation)
-        r = RectangleLayer(manager=self)
+        r = RectangleVectorObject(manager=self)
         r.set_opposite_corners((-77.0, 12.0), (-72.0, 17.0))
         self.insert_layer([2], r)
-        r = EllipseLayer(manager=self)
+        r = EllipseVectorObject(manager=self)
         r.set_opposite_corners((-67.0, 12.0), (-62.0, 17.0))
         self.insert_layer([3], r)
+        r = LineVectorObject(manager=self)
+        r.set_opposite_corners((-57.0, 12.0), (-52.0, 17.0))
+        self.insert_layer([4], r)
         return self
     
     def flatten(self):

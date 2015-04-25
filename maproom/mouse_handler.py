@@ -612,7 +612,7 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         lm = c.layer_manager
         vis = e.layer_visibility[layer]['layer']
 
-        layer.set_anchor_point(4, maintain_aspect=True)  # 4 is center point
+        layer.set_anchor_point(layer.center_point_index, maintain_aspect=True)
 
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)

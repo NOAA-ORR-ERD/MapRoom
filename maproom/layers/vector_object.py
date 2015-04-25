@@ -41,10 +41,6 @@ class VectorObjectLayer(LineLayer):
     
     color = Int(0)
     
-    fill_style = Int(0)
-    
-    fill_color = Int(color_to_int(0,.8,.7,1.0))
-    
     point_size = Int(8)
     
     line_width = Float(2.0)
@@ -62,12 +58,7 @@ class VectorObjectLayer(LineLayer):
     
     @on_trait_change('alpha')
     def mark_rebuild(self):
-        r, g, b, a = int_to_color(self.fill_color)
-        self.fill_color = color_to_int(r, g, b, self.alpha)
         self.rebuild_needed = True
-    
-    def set_fill_color(self, color):
-        self.fill_color = color
     
     def rebuild_renderer(self, in_place=False):
         """Update renderer
@@ -82,52 +73,46 @@ class VectorObjectLayer(LineLayer):
         self.rebuild_needed = False
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        """Renders the outline of the vector object.
+        
+        If the vector object subclass is fillable, subclass from
+        FillableVectorObject instead of this base class.
+        """
         log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
         if self.rebuild_needed:
             self.rebuild_renderer()
-        if not picker.is_active:
-            self.renderer.fill_object(self.fill_color)
         self.renderer.outline_object(layer_index_base, picker,
                                      self.point_size, self.line_width, self.line_style)
 
 
-class RectangleLayer(VectorObjectLayer):
-    """Rectangle uses 4 control points in the self.points array, and nothing in
-    the polygon points array.  All corner points can be used as control points.
+class LineVectorObject(VectorObjectLayer):
+    """Line uses 3 control points in the self.points array.  The midpoint is an
+    additional control point, which is constrained and not independent of the
+    ends.  This is used as the control point when translating.
     
-    The center is an additional control point, which is constrained and not
-    independent of the corners.
-    
-     3           2
-      o---------o
-      |         |
-      |    o 4  |
-      |         |
-      o---------o
-     0           1
     """
-    name = Unicode("Rectangle")
+    name = Unicode("Line")
     
-    layer_info_panel = ["Layer name", "Line Color", "Fill Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Color", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 
-    corners = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
-    lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
+    corners = np.asarray((0, 1, 2, 3), dtype=np.uint8)
+    lines = np.asarray(((0, 1),), dtype=np.uint8)
+    center_point_index = 2
+    display_center_control_point = False
     
-    # return the anchor point of the index point. E.g. anchors_of[0] = 2
-    anchors_of = np.asarray((2, 3, 0, 1, 4), dtype=np.uint8)
+    # return the anchor point of the index point. E.g. anchors_of[0] = 1
+    anchors_of = np.asarray((1, 0, 2), dtype=np.uint8)
     
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
-        ((0,0), (1,0), (1,1), (0,1), (0.5,0.5)), # anchor point is 0 (drag point is 2)
-        ((1,0), (0,0), (0,1), (1,1), (0.5,0.5)), # anchor point is 1 (drag is 3)
-        ((1,1), (0,1), (0,0), (1,0), (0.5,0.5)), # anchor point is 2, etc.
-        ((0,1), (1,1), (1,0), (0,0), (0.5,0.5)),
-        ((1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
+        ((0,0), (1,1), (0.5,0.5)), # anchor point is 0 (drag point is 1)
+        ((1,1), (0,0), (0.5,0.5)), # anchor point is 1, etc.
+        ((1,1), (1,1), (1,1)), # center point acts as rigid move
         ), dtype=np.float32)
 
     def set_opposite_corners(self, p1, p2):
@@ -137,10 +122,12 @@ class RectangleLayer(VectorObjectLayer):
         self.set_data(self.cp, 0.0, self.lines)
     
     def set_control_points_from_corners(self, c):
-        cp = np.empty((5,2), dtype=np.float32)
-        cp[0:4] = c
-        cp[4] = c.mean(0)
+        num_cp = self.center_point_index + 1
+        cp = np.empty((num_cp,2), dtype=np.float32)
+        cp[0:self.center_point_index] = c
+        cp[self.center_point_index] = c.mean(0)
         self.cp = cp
+        print "cp", self.cp
 
     def find_anchor_of(self, point_index):
         self.anchor_point = self.anchors_of[point_index]
@@ -173,15 +160,86 @@ class RectangleLayer(VectorObjectLayer):
         self.points.y += yoffset
     
     def rasterize(self, projected_point_data, z, cp_color, line_color):
-        colors = np.empty(np.alen(self.points), dtype=np.uint32)
+        n = np.alen(self.points)
+        if not self.display_center_control_point:
+            n -= 1
+        colors = np.empty(n, dtype=np.uint32)
         colors.fill(cp_color)
-        self.renderer.set_points(projected_point_data, z, colors)
+        self.renderer.set_points(projected_point_data, z, colors, num_points=n)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
 
-class EllipseLayer(RectangleLayer):
+class FillableVectorObject(LineVectorObject):
+    
+    fill_style = Int(0)
+    
+    fill_color = Int(color_to_int(0,.8,.7,1.0))
+    
+    # Fillable objects should (in general) display their center control point
+    display_center_control_point = True
+
+    @on_trait_change('alpha')
+    def mark_rebuild(self):
+        r, g, b, a = int_to_color(self.fill_color)
+        self.fill_color = color_to_int(r, g, b, self.alpha)
+        self.rebuild_needed = True
+    
+    def set_fill_color(self, color):
+        self.fill_color = color
+
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
+        if (not layer_visibility["layer"]):
+            return
+        if self.rebuild_needed:
+            self.rebuild_renderer()
+        if not picker.is_active:
+            self.renderer.fill_object(self.fill_color)
+        self.renderer.outline_object(layer_index_base, picker,
+                                     self.point_size, self.line_width, self.line_style)
+
+class RectangleVectorObject(FillableVectorObject):
+    """Rectangle uses 4 control points in the self.points array, and nothing in
+    the polygon points array.  All corner points can be used as control points.
+    
+    The center is an additional control point, which is constrained and not
+    independent of the corners.
+    
+     3           2
+      o---------o
+      |         |
+      |    o 4  |
+      |         |
+      o---------o
+     0           1
+    """
+    name = Unicode("Rectangle")
+    
+    layer_info_panel = ["Layer name", "Line Color", "Fill Color", "Transparency"]
+    
+    selection_info_panel = ["Point coordinates"]
+
+    corners = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
+    lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
+    center_point_index = 4
+    
+    # return the anchor point of the index point. E.g. anchors_of[0] = 2
+    anchors_of = np.asarray((2, 3, 0, 1, 4), dtype=np.uint8)
+    
+    # anchor modification array: apply dx,dy values to each control point based
+    # on the anchor point.  Used when moving/resizing
+    anchor_dxdy = np.asarray((
+        ((0,0), (1,0), (1,1), (0,1), (0.5,0.5)), # anchor point is 0 (drag point is 2)
+        ((1,0), (0,0), (0,1), (1,1), (0.5,0.5)), # anchor point is 1 (drag is 3)
+        ((1,1), (0,1), (0,0), (1,0), (0.5,0.5)), # anchor point is 2, etc.
+        ((0,1), (1,1), (1,0), (0,0), (0.5,0.5)),
+        ((1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
+        ), dtype=np.float32)
+
+
+class EllipseVectorObject(RectangleVectorObject):
     """Rectangle uses 4 control points in the self.points array, and nothing in
     the polygon points array.  All corner points can be used as control points.
     
