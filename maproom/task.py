@@ -22,6 +22,7 @@ from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
 from mouse_handler import *
 from menu_commands import *
+from vector_object_commands import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -458,6 +459,12 @@ class ControlPointAction(MouseHandlerBaseAction):
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
+class AddRectangleAction(MouseHandlerBaseAction):
+    handler = AddRectangleMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
@@ -612,7 +619,9 @@ class MaproomProjectTask(FrameworkTask):
                      id="PolygonLayerToolBar",),
             SToolBar(Group(ZoomModeAction(),
                            PanModeAction(),
-                           ControlPointAction()),
+                           ControlPointAction(),
+                           AddRectangleAction(),
+                           ),
                      show_tool_names=False,
                      id="AnnotationLayerToolBar",),
             ]

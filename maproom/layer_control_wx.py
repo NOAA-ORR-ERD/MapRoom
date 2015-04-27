@@ -31,7 +31,7 @@ class LayerCanvas(renderer.BaseCanvas):
     valid_mouse_modes = {
         'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
         'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
-        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode],
+        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode, AddRectangleMode],
         'default': [PanMode, ZoomRectMode],
         }
 

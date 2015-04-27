@@ -11,6 +11,7 @@ import OpenGL.GL as gl
 import library.coordinates as coordinates
 import library.rect as rect
 from mouse_commands import *
+from vector_object_commands import *
 
 
 """
@@ -494,6 +495,8 @@ class LineSelectionMode(PointSelectionMode):
         layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
 class RectSelectMode(MouseHandler):
+    dim_background_outside_selection = True
+    
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
     
@@ -527,7 +530,7 @@ class RectSelectMode(MouseHandler):
             # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )
             rects = c.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
             for r in rects:
-                if (r != rect.EMPTY_RECT):
+                if (self.dim_background_outside_selection and r != rect.EMPTY_RECT):
                     renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
             # small adjustments to make stipple overlap gray rects perfectly
             y1 -= 1
@@ -606,3 +609,21 @@ class ControlPointSelectionMode(ObjectSelectionMode):
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
+
+class AddRectangleMode(RectSelectMode):
+    icon = "shape_square.png"
+    menu_item_name = "Add Rectangle"
+    menu_item_tooltip = "Add a new rectangle"
+    dim_background_outside_selection = False
+
+    def process_rect_select(self, x1, y1, x2, y2):
+        c = self.layer_control
+        e = c.project
+        p1 = c.get_projected_point_from_screen_point((x1, y1))
+        p2 = c.get_projected_point_from_screen_point((x2, y2))
+        cp1 = c.get_world_point_from_projected_point(p1)
+        cp2 = c.get_world_point_from_projected_point(p2)
+        layer = c.project.layer_tree_control.get_selected_layer()
+        if (layer is not None):
+            cmd = RectangleCommand(layer, cp1, cp2)
+            e.process_command(cmd)

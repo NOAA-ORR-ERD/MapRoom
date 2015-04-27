@@ -28,6 +28,8 @@ class AnnotationLayer(ProjectedLayer):
     name = Unicode("Annotation Layer")
 
     type = Str("annotation")
+    
+    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
     canvas = Any
     
