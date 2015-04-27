@@ -114,7 +114,29 @@ class LayerStatus(object):
         
         # True if layer should be zoomed
         self.zoom_to_layer = False
-    
+
+
+class BatchStatus(object):
+    def __init__(self):
+        # rebuild flags for each layer; value is whether or not it needs full
+        # refresh (False) or in-place, fast refresh (True)
+        self.need_rebuild = {}
+        
+        # The last layer marked as selected will show up here
+        self.select_layer = None
+        
+        self.layers_changed = False
+        
+        self.metadata_changed = False
+        
+        self.refresh_needed = False
+        
+        # all layers that have been zoomed will appear in the list
+        self.zoom_layers = []
+        
+        # Any (error) messages will be added to this list
+        self.messages = []
+
 
 class CommandStatus(object):
     def __init__(self):

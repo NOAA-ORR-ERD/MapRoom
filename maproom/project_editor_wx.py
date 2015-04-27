@@ -21,6 +21,7 @@ import Layer_tree_control
 import renderer
 from layers import loaders
 from layers.constants import *
+from command import BatchStatus
 from mouse_handler import *
 from menu_commands import *
 from serializer import UnknownCommandError
@@ -101,11 +102,12 @@ class ProjectEditor(FrameworkEditor):
                 self.path = metadata.uri
             elif hasattr(loader, "iter_log"):
                 line = 0
+                batch_flags = BatchStatus()
                 for cmd in loader.iter_log(metadata, self.layer_manager):
                     line += 1
                     errors = None
                     try:
-                        undo = self.process_command(cmd)
+                        undo = self.process_batch_command(cmd, batch_flags)
                         if not undo.flags.success:
                             errors = undo.errors
                             break
@@ -122,7 +124,7 @@ class ProjectEditor(FrameworkEditor):
                     header.extend(errors)
                     text = "\n".join(header)
                     self.window.error(text, "Error restoring from command log")
-                    
+                self.perform_batch_flags(batch_flags)
             else:
                 cmd = LoadLayersCommand(metadata)
                 self.process_command(cmd)
@@ -374,68 +376,84 @@ class ProjectEditor(FrameworkEditor):
         self.process_flags(undo.flags)
     
     def process_command(self, command):
-        undo = self.layer_manager.undo_stack.perform(command, self)
-        self.process_flags(undo.flags)
+        """Process a single command and immediately update the UI to reflect
+        the results of the command.
+        """
+        b = BatchStatus()
+        undo = self.process_batch_command(command, b)
+        self.perform_batch_flags(b)
         history = self.layer_manager.undo_stack.serialize()
         self.window.application.save_log(str(history), "command_log", ".mrc")
         return undo
     
-    def process_flags(self, f):
-        # rebuild flags for each layer; value is whether or not it needs full
-        # refresh (False) or in-place, fast refresh (True)
-        need_rebuild = {}
-        select_layer = None
-        layers_changed = f.layers_changed
-        metadata_changed = False
-        zoom_layers = []
+    def process_batch_command(self, command, b):
+        """Process a single command but don't update the UI immediately.
+        Instead, update the batch flags to reflect the changes needed to
+        the UI.
         
+        """
+        undo = self.layer_manager.undo_stack.perform(command, self)
+        self.add_batch_flags(undo.flags, b)
+        return undo
+    
+    def add_batch_flags(self, f, b):
+        """Make additions to the batch flags as a result of the passed-in flags
+        
+        """
+        if f.layers_changed:
+            # Only set this to True, never back to False once True
+            b.layers_changed = True
         for lf in f.layer_flags:
             layer = lf.layer
             if lf.layer_items_moved:
                 layer.update_bounds()
-                need_rebuild[layer] = True
+                b.need_rebuild[layer] = True
             if lf.layer_display_properties_changed:
-                need_rebuild[layer] = False
-                f.refresh_needed = True
+                b.need_rebuild[layer] = False
+                b.refresh_needed = True
             if lf.layer_contents_added or lf.layer_contents_deleted:
-                need_rebuild[layer] = False
-                f.refresh_needed = True
+                b.need_rebuild[layer] = False
+                b.refresh_needed = True
             # Hidden layer check only displayed in current window, not any others
             # that are displaying this project
             if lf.hidden_layer_check:
                 vis = self.layer_visibility[layer]['layer']
                 if not vis:
-                    self.task.status_bar.message = "Warning: operating on hidden layer %s" % layer.name
+                    b.messages.append("Warning: operating on hidden layer %s" % layer.name)
             if lf.select_layer:
                 # only the last layer in the list will be selected
-                select_layer = layer
+                b.select_layer = layer
             if lf.layer_loaded:
                 self.layer_manager.layer_loaded = layer
-                layers_changed = True
+                b.layers_changed = True
             if lf.zoom_to_layer:
-                zoom_layers.append(layer)
+                b.zoom_layers.append(layer)
             if lf.layer_metadata_changed:
-                metadata_changed = True
+                b.metadata_changed = True
+    
+    def perform_batch_flags(self, b):
+        """Perform the UI updates given the BatchStatus flags
         
+        """
         # Use LayerManager events to trigger updates in all windows that are
         # displaying this project
-        for layer, in_place in need_rebuild.iteritems():
+        for layer, in_place in b.need_rebuild.iteritems():
             if in_place:
                 self.layer_manager.layer_contents_changed_in_place = layer
             else:
                 self.layer_manager.layer_contents_changed = layer
         
-        if layers_changed:
+        if b.layers_changed:
             self.layer_manager.layers_changed = True
-        if zoom_layers:
-            self.zoom_to_layers(zoom_layers)
-        if metadata_changed:
+        if b.zoom_layers:
+            self.zoom_to_layers(b.zoom_layers)
+        if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True
-        if f.refresh_needed:
+        if b.refresh_needed:
             self.layer_manager.refresh_needed = True
-        if select_layer:
-            self.layer_tree_control.select_layer(select_layer)
-            
+        if b.select_layer:
+            self.layer_tree_control.select_layer(b.select_layer)
+        
         self.undo_history.update_history()
 
     #### old Editor ########################################################
