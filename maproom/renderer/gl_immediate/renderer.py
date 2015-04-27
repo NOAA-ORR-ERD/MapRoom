@@ -578,7 +578,6 @@ class ImmediateModeRenderer():
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
         r, g, b, a = int_to_color(fill_color)
-        print "fillcolor!", fill_color, int(r*255), int(g*255), int(b*255), int(a*255)
         gl.glColor(r, g, b, a)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )

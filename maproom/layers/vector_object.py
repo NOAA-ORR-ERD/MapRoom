@@ -67,7 +67,6 @@ class VectorObjectLayer(LineLayer):
         projected_point_data = self.compute_projected_point_data()
         r, g, b, a = int_to_color(self.color)
         color = color_to_int(r, g, b, self.alpha)
-        print self.alpha, color
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         self.rasterize(projected_point_data, self.points.z, self.color, color)
         self.rebuild_needed = False
@@ -127,7 +126,6 @@ class LineVectorObject(VectorObjectLayer):
         cp[0:self.center_point_index] = c
         cp[self.center_point_index] = c.mean(0)
         self.cp = cp
-        print "cp", self.cp
 
     def find_anchor_of(self, point_index):
         self.anchor_point = self.anchors_of[point_index]
