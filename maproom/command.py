@@ -118,6 +118,9 @@ class LayerStatus(object):
 
 class BatchStatus(object):
     def __init__(self):
+        # list of all layers processed
+        self.layers = []
+        
         # rebuild flags for each layer; value is whether or not it needs full
         # refresh (False) or in-place, fast refresh (True)
         self.need_rebuild = {}
@@ -136,6 +139,9 @@ class BatchStatus(object):
         
         # Any (error) messages will be added to this list
         self.messages = []
+    
+    def zoom_to_all(self):
+        self.zoom_layers = self.layers
 
 
 class CommandStatus(object):

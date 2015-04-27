@@ -124,6 +124,7 @@ class ProjectEditor(FrameworkEditor):
                     header.extend(errors)
                     text = "\n".join(header)
                     self.window.error(text, "Error restoring from command log")
+                batch_flags.zoom_to_all()
                 self.perform_batch_flags(batch_flags)
             else:
                 cmd = LoadLayersCommand(metadata)
@@ -405,6 +406,7 @@ class ProjectEditor(FrameworkEditor):
             b.layers_changed = True
         for lf in f.layer_flags:
             layer = lf.layer
+            b.layers.append(layer)
             if lf.layer_items_moved:
                 layer.update_bounds()
                 b.need_rebuild[layer] = True
