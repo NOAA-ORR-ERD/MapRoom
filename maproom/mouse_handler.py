@@ -543,17 +543,6 @@ class ZoomRectMode(RectSelectMode):
     menu_item_name = "Zoom Mode"
     menu_item_tooltip = "Zoom in to increase magnification of the current layer"
 
-    def process_mouse_up(self, event):
-        c = self.layer_control
-        if (not c.mouse_is_down):
-            c.selection_box_is_being_defined = False
-            return
-
-        c.mouse_is_down = False
-        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        c.mouse_move_position = event.GetPosition()
-        (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                           c.mouse_move_position)
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_control
         d_x = x2 - x1
