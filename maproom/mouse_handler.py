@@ -496,6 +496,7 @@ class LineSelectionMode(PointSelectionMode):
 
 class RectSelectMode(MouseHandler):
     dim_background_outside_selection = True
+    normalize_mouse_coordinates = True
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
@@ -515,8 +516,12 @@ class RectSelectMode(MouseHandler):
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
         c.mouse_move_position = event.GetPosition()
-        (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                           c.mouse_move_position)
+        if self.normalize_mouse_coordinates:
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                               c.mouse_move_position)
+        else:
+            x1, y1 = c.mouse_down_position
+            x2, y2 = c.mouse_move_position
         self.process_rect_select(x1, y1, x2, y2)
     
     def process_rect_select(self, x1, y1, x2, y2):
@@ -527,14 +532,14 @@ class RectSelectMode(MouseHandler):
         if c.mouse_is_down:
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
                                                                c.mouse_move_position)
-            # self.opengl_renderer.draw_screen_rect( ( ( 20, 50 ), ( 300, 200 ) ), 1.0, 1.0, 0.0, alpha = 0.25 )
-            rects = c.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
-            for r in rects:
-                if (self.dim_background_outside_selection and r != rect.EMPTY_RECT):
-                    renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
-            # small adjustments to make stipple overlap gray rects perfectly
-            y1 -= 1
-            x2 += 1
+            if self.dim_background_outside_selection:
+                rects = c.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
+                for r in rects:
+                    if (r != rect.EMPTY_RECT):
+                        renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
+                # small adjustments to make stipple overlap gray rects perfectly
+                y1 -= 1
+                x2 += 1
             renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
             renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
             renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
@@ -610,11 +615,10 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
 
-class AddRectangleMode(RectSelectMode):
-    icon = "shape_square.png"
-    menu_item_name = "Add Rectangle"
-    menu_item_tooltip = "Add a new rectangle"
+class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     dim_background_outside_selection = False
+    normalize_mouse_coordinates = False
+    vector_object_command = None
 
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_control
@@ -625,5 +629,33 @@ class AddRectangleMode(RectSelectMode):
         cp2 = c.get_world_point_from_projected_point(p2)
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
-            cmd = RectangleCommand(layer, cp1, cp2)
+            cmd = self.vector_object_command(layer, cp1, cp2)
             e.process_command(cmd)
+
+
+class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
+    icon = "shape_square.png"
+    menu_item_name = "Add Rectangle"
+    menu_item_tooltip = "Add a new rectangles or squares"
+    vector_object_command = DrawRectangleCommand
+
+
+class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
+    icon = "shape_circle.png"
+    menu_item_name = "Add Ellipse"
+    menu_item_tooltip = "Add a new ellipses or circles"
+    vector_object_command = DrawEllipseCommand
+
+
+class AddLineMode(AddVectorObjectByBoundingBoxMode):
+    icon = "shape_line.png"
+    menu_item_name = "Add Line"
+    menu_item_tooltip = "Add a new lines"
+    vector_object_command = DrawLineCommand
+
+    def render_overlay(self, renderer):
+        c = self.layer_control
+        if c.mouse_is_down:
+            x1, y1 = c.mouse_down_position
+            x2, y2 = c.mouse_move_position
+            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)

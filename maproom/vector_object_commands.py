@@ -4,13 +4,15 @@ from command import Command, UndoInfo
 from layers.vector_object import *
 
 
-class RectangleCommand(Command):
-    short_name = "rect"
+class DrawVectorObjectCommand(Command):
+    short_name = "vector_object"
     serialize_order = [
         ('layer', 'layer'),
         ('cp1', 'point'),
         ('cp2', 'point'),
         ]
+    ui_name = None
+    vector_object_class = None
     
     def __init__(self, parent_layer, cp1, cp2):
         Command.__init__(self, parent_layer)
@@ -18,13 +20,13 @@ class RectangleCommand(Command):
         self.cp2 = cp2
     
     def __str__(self):
-        return "Rectangle"
+        return self.ui_name
     
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
-        layer = RectangleVectorObject(manager=lm)
+        layer = self.vector_object_class(manager=lm)
         layer.set_opposite_corners(self.cp1, self.cp2)
         parent_layer = lm.get_layer_by_invariant(self.layer)
         lm.insert_loaded_layer(layer, editor, after=parent_layer)
@@ -53,3 +55,21 @@ class RectangleCommand(Command):
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         return undo
+
+
+class DrawRectangleCommand(DrawVectorObjectCommand):
+    short_name = "rect_obj"
+    ui_name = "Rectangle"
+    vector_object_class = RectangleVectorObject
+
+
+class DrawEllipseCommand(DrawVectorObjectCommand):
+    short_name = "ellipse_obj"
+    ui_name = "Ellipse"
+    vector_object_class = EllipseVectorObject
+
+
+class DrawLineCommand(DrawVectorObjectCommand):
+    short_name = "line_obj"
+    ui_name = "Line"
+    vector_object_class = LineVectorObject

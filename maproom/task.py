@@ -459,12 +459,24 @@ class ControlPointAction(MouseHandlerBaseAction):
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
-class AddRectangleAction(MouseHandlerBaseAction):
+class AddRectangleObjectAction(MouseHandlerBaseAction):
+    handler = AddEllipseMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
+class AddEllipseObjectAction(MouseHandlerBaseAction):
     handler = AddRectangleMode
     name = handler.menu_item_name
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
+class AddLineObjectAction(MouseHandlerBaseAction):
+    handler = AddLineMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+    
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
@@ -620,7 +632,9 @@ class MaproomProjectTask(FrameworkTask):
             SToolBar(Group(ZoomModeAction(),
                            PanModeAction(),
                            ControlPointAction(),
-                           AddRectangleAction(),
+                           AddLineObjectAction(),
+                           AddRectangleObjectAction(),
+                           AddEllipseObjectAction(),
                            ),
                      show_tool_names=False,
                      id="AnnotationLayerToolBar",),
