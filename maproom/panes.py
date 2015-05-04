@@ -5,9 +5,9 @@
 from pyface.tasks.api import DockPane, TraitsDockPane
 from traits.api import on_trait_change
 
-from Layer_tree_control import Layer_tree_control
-from ui.InfoPanels import LayerInfoPanel, SelectionInfoPanel
-from ui.TrianglePanel import TrianglePanel
+from layer_tree_control import LayerTreeControl
+from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
+from ui.triangle_panel import TrianglePanel
 from ui.merge_panel import MergePointsPanel
 from ui.undo_panel import UndoHistoryPanel
 
@@ -21,7 +21,7 @@ class LayerSelectionPane(DockPane):
     name = 'Layers'
     
     def create_contents(self, parent):
-        control = Layer_tree_control(parent, self.task.active_editor, size=(200,-1))
+        control = LayerTreeControl(parent, self.task.active_editor, size=(200,-1))
         return control
     
     #### trait change handlers

@@ -13,7 +13,7 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.INFO)
 
-class Layer_tree_control(treectrl.CustomTreeCtrl):
+class LayerTreeControl(treectrl.CustomTreeCtrl):
 
     dragged_item = None
 

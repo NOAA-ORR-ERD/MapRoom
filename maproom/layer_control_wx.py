@@ -311,7 +311,7 @@ class LayerCanvas(renderer.BaseCanvas):
 
     def do_jump_coords(self):
         prefs = self.project.task.get_preferences()
-        from ui.Jump_coords_dialog import JumpCoordsDialog
+        from ui.dialogs import JumpCoordsDialog
         dialog = JumpCoordsDialog(self, prefs.coordinate_display_format)
         if dialog.ShowModalWithFocus() == wx.ID_OK:
             lat_lon = coordinates.lat_lon_from_format_string(dialog.coords_text.Value)
@@ -329,7 +329,7 @@ class LayerCanvas(renderer.BaseCanvas):
             self.project.refresh()
 
     def do_find_points(self):
-        from ui.Find_point_dialog import FindPointDialog
+        from ui.dialogs import FindPointDialog
         dialog = FindPointDialog(self.project)
         if dialog.ShowModalWithFocus() == wx.ID_OK:
             try:
