@@ -1,5 +1,8 @@
 import sys
 import wx
+import wx.lib.buttons as buttons
+
+from pyface.api import ImageResource
 
 from ..layers import constants
 from ..library import coordinates
@@ -35,18 +38,29 @@ class InfoField(object):
         bold_font = self.parent.GetFont()
         bold_font.SetWeight(weight=wx.FONTWEIGHT_BOLD)
         self.label.SetFont(bold_font)
-        self.ctrl = self.create_control()
+        self.create_all_controls()
         if self.same_line:
             hbox = wx.BoxSizer(wx.HORIZONTAL)
             hbox.Add(self.label, 99, wx.ALIGN_CENTER)
             hbox.AddStretchSpacer(1)
             hbox.Add(self.ctrl, 0, wx.ALIGN_CENTER)
+            for extra in self.extra_ctrls:
+                hbox.Add(extra, 0, wx.ALIGN_CENTER)
             self.box.Add(hbox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
         else:
             self.box.Add(self.label, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
             self.box.AddSpacer(self.panel.LABEL_SPACING)
             self.box.Add(self.ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
+            for extra in self.extra_ctrls:
+                hbox.Add(extra, 0, wx.ALIGN_CENTER)
         self.box.AddSpacer(self.panel.VALUE_SPACING)
+    
+    def create_all_controls(self):
+        self.ctrl = self.create_control()
+        self.extra_ctrls = self.create_extra_controls()
+    
+    def create_extra_controls(self):
+        return []
 
     def add_to_parent(self):
         self.panel.sizer.Add(self.parent, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, 0)
@@ -72,6 +86,46 @@ class SimplePropertyField(LabelField):
     def fill_data(self, layer):
         text = layer.get_info_panel_text(self.field_name)
         self.ctrl.SetLabel(text)
+        
+class BooleanLabelField(SimplePropertyField):
+    def create_extra_controls(self):
+        b = buttons.GenBitmapToggleButton(self.parent, -1, None, style=wx.BORDER_NONE|wx.BU_EXACTFIT)  # BU_EXACTFIT removes padding
+        b.Bind(wx.EVT_BUTTON, self.on_toggled)
+        image = ImageResource('eye-closed.png')
+        bitmap = image.create_bitmap()
+        b.SetBitmapLabel(bitmap)
+        image = ImageResource('eye-open.png')
+        b.SetBitmapSelected(image.create_bitmap())
+        b.SetInitialSize()
+        self.toggle = b
+        return [self.toggle]
+        
+    def fill_data(self, layer):
+        SimplePropertyField.fill_data(self, layer)
+        vis = self.get_visibility(layer)
+        self.toggle.SetToggle(vis)
+    
+    def on_toggled(self, evt):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        self.set_visibility(layer, evt.GetIsDown())
+
+class VisibilityField(BooleanLabelField):
+    visibility_name = 'DEFINE IN SUBCLASS!'
+    
+    def get_visibility(self, layer):
+        return self.panel.project.layer_visibility[layer][self.visibility_name]
+    
+    def set_visibility(self, layer, state):
+        self.panel.project.layer_visibility[layer][self.visibility_name] = state
+        self.panel.project.refresh()
+
+class PointVisibilityField(VisibilityField):
+    visibility_name = 'points'
+
+class LineVisibilityField(VisibilityField):
+    visibility_name = 'lines'
         
 class TextEditField(InfoField):
     def create_control(self):
@@ -448,6 +502,8 @@ class InfoPanel(PANELTYPE):
         "Point coordinates": PointCoordinatesField,
         "Point depth": PointDepthField,
         "Point index": PointIndexesField,
+        "Point count": PointVisibilityField,
+        "Line segment count": LineVisibilityField,
         "Flagged points": FlaggedPointsField,
         "Transparency": AlphaField,
         "Color": ColorField,

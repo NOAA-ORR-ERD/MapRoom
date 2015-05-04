@@ -35,9 +35,6 @@ class MaproomPreferences(PreferencesHelper):
         "Medium",
         "Fast",
         )
-    
-    # show sublayers only in selected layer
-    tree_selected_sublayers_only = Bool(True)
 
 
 class MaproomPreferencesPane(PreferencesPane):
@@ -59,9 +56,6 @@ class MaproomPreferencesPane(PreferencesPane):
                       show_labels = False),
                HGroup(Item('zoom_speed'),
                       Label('Scroll Zoom Speed'),
-                      show_labels = False),
-               HGroup(Item('tree_selected_sublayers_only'),
-                      Label('Show sublayers of selected layer only'),
                       show_labels = False),
                label='MapRoom'),
         resizable=True)
