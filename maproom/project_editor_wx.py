@@ -15,7 +15,7 @@ from peppy2.framework.errors import ProgressCancelError
 
 # Local imports.
 from i_project_editor import IProjectEditor
-from layer_control_wx import LayerCanvas
+from layer_canvas import LayerCanvas
 from layer_manager import LayerManager
 import renderer
 from layers import loaders
