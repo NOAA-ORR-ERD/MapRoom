@@ -607,6 +607,7 @@ class ProjectEditor(FrameworkEditor):
     def clear_all_selections(self, refresh=True):
         for layer in self.layer_manager.flatten():
             layer.clear_all_selections()
+            layer.clear_visibility_when_deselected(self.layer_visibility[layer])
         if refresh:
             self.refresh()
 

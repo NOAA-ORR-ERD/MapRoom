@@ -59,6 +59,14 @@ class VectorObjectLayer(LineLayer):
     @on_trait_change('alpha')
     def mark_rebuild(self):
         self.rebuild_needed = True
+
+    def set_visibility_when_selected(self, layer_visibility):
+        layer_visibility['points'] = True
+        print "set", self, layer_visibility
+
+    def clear_visibility_when_deselected(self, layer_visibility):
+        layer_visibility['points'] = False
+        print "clear", self, layer_visibility
     
     def rebuild_renderer(self, in_place=False):
         """Update renderer
@@ -84,6 +92,8 @@ class VectorObjectLayer(LineLayer):
             self.rebuild_renderer()
         self.renderer.outline_object(layer_index_base, picker,
                                      self.point_size, self.line_width, self.line_style)
+        if layer_visibility["points"]:
+            self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
 
 class LineVectorObject(VectorObjectLayer):
@@ -197,6 +207,9 @@ class FillableVectorObject(LineVectorObject):
             self.renderer.fill_object(self.fill_color)
         self.renderer.outline_object(layer_index_base, picker,
                                      self.point_size, self.line_width, self.line_style)
+        if layer_visibility["points"]:
+            self.renderer.draw_points(layer_index_base, picker, self.point_size)
+            
 
 class RectangleVectorObject(FillableVectorObject):
     """Rectangle uses 4 control points in the self.points array, and nothing in

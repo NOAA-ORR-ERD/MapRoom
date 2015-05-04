@@ -80,6 +80,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
             self.SelectItem(item, True)
             # also make sure the layer's name is up-to-date
             self.SetItemText(item, layer.name)
+            layer.set_visibility_when_selected(self.project.layer_visibility[layer])
 
             return True
 
@@ -244,7 +245,9 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
-        self.project.update_layer_selection_ui(self.get_selected_layer())
+        layer = self.get_selected_layer()
+        self.project.update_layer_selection_ui(layer)
+        layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         self.project.refresh()
 
     def raise_selected_layer(self):

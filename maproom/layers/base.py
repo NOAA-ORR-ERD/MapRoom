@@ -280,6 +280,20 @@ class Layer(HasTraits):
 
     def clear_all_polygon_selections(self, mark_type=STATE_SELECTED):
         pass
+    
+    def set_visibility_when_selected(self, layer_visibility):
+        """Called when layer is selected to provide a hook if the layer has
+        elements that should be visibile only when it it selected.
+        
+        """
+        pass
+
+    def clear_visibility_when_deselected(self, layer_visibility):
+        """Called when layer is deselected to provide a hook if the layer has
+        elements that should be visibile only when it it selected.
+        
+        """
+        pass
 
     def has_points(self):
         return False
