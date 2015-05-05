@@ -242,6 +242,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
             mi_target.append(1)
         lm.insert_layer(mi_target, source_layer)
         self.select_layer(source_layer)
+        self.rebuild()
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
@@ -271,6 +272,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         lm.insert_layer(mi_target, source_layer)
         self.project.clear_all_selections(False)
         self.select_layer(layer)
+        self.rebuild()
 
     def mouse_pressed(self, event):
         # If a selected item is clicked, unselect it so that it will be
