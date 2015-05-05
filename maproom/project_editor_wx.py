@@ -388,6 +388,11 @@ class ProjectEditor(FrameworkEditor):
         self.window.application.save_log(str(history), "command_log", ".mrc")
         return undo
     
+    def process_flags(self, flags):
+        b = BatchStatus()
+        self.add_batch_flags(flags, b)
+        self.perform_batch_flags(b)
+        
     def process_batch_command(self, command, b):
         """Process a single command but don't update the UI immediately.
         Instead, update the batch flags to reflect the changes needed to
