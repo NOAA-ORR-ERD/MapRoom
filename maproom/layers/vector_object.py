@@ -62,11 +62,9 @@ class VectorObjectLayer(LineLayer):
 
     def set_visibility_when_selected(self, layer_visibility):
         layer_visibility['points'] = True
-        print "set", self, layer_visibility
 
     def clear_visibility_when_deselected(self, layer_visibility):
         layer_visibility['points'] = False
-        print "clear", self, layer_visibility
     
     def rebuild_renderer(self, in_place=False):
         """Update renderer
@@ -203,8 +201,7 @@ class FillableVectorObject(LineVectorObject):
             return
         if self.rebuild_needed:
             self.rebuild_renderer()
-        if not picker.is_active:
-            self.renderer.fill_object(self.fill_color)
+        self.renderer.fill_object(layer_index_base, picker, self.fill_color)
         self.renderer.outline_object(layer_index_base, picker,
                                      self.point_size, self.line_width, self.line_style)
         if layer_visibility["points"]:

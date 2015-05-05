@@ -569,7 +569,7 @@ class ImmediateModeRenderer():
 
     # Vector object drawing routines
 
-    def fill_object(self, fill_color):
+    def fill_object(self, layer_index_base, picker, fill_color):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
         
@@ -577,6 +577,8 @@ class ImmediateModeRenderer():
         self.vbo_line_segment_point_xys.bind()
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
+        if (picker.is_active):
+            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
         r, g, b, a = int_to_color(fill_color)
         gl.glColor(r, g, b, a)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
