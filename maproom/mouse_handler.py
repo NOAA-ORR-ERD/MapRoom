@@ -57,6 +57,7 @@ class MouseHandler(object):
         if (o is not None):
             (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
             layer = c.layer_manager.get_layer_by_pick_index(layer_index)
+            c.editor.clickable_object_in_layer = layer
             if (c.project.layer_tree_control.is_selected_layer(layer)):
                 c.editor.clickable_object_mouse_is_over = o
             else:
@@ -66,6 +67,7 @@ class MouseHandler(object):
 
         else:
             c.editor.clickable_object_mouse_is_over = None
+            c.editor.clickable_object_in_layer = None
         mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.editor.clickable_object_mouse_is_over is not None))
 
         c.project.task.status_bar.message = status_text
@@ -240,12 +242,17 @@ class ObjectSelectionMode(MouseHandler):
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
             layer = lm.get_layer_by_pick_index(layer_index)
-            if (e.layer_tree_control.is_selected_layer(layer)):
-                if (e.clickable_object_is_ugrid_point()):
-                    self.clicked_on_point(event, layer, object_index)
-                if (e.clickable_object_is_ugrid_line()):
-                    world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                    self.clicked_on_line_segment(event, layer, object_index, world_point)
+            if (e.clickable_object_is_ugrid_point()):
+                self.clicked_on_point(event, layer, object_index)
+            elif (e.clickable_object_is_ugrid_line()):
+                world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                self.clicked_on_line_segment(event, layer, object_index, world_point)
+            elif (e.clickable_object_is_polygon_fill()):
+                world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                self.clicked_on_polygon_fill(event, layer, object_index, world_point)
+        elif (e.clickable_object_in_layer is not None):
+            # clicked on something in different layer.
+            self.clicked_on_different_layer(event, e.clickable_object_in_layer)
         else:  # the mouse is not on a clickable object
             # fixme: there should be a reference to the layer manager in the RenderWindow
             # and we could get the selected layer from there -- or is selected purely a UI concept?
@@ -314,11 +321,16 @@ class ObjectSelectionMode(MouseHandler):
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         pass
 
-    def clicked_on_polygon(self, layer, polygon_index):
+    def clicked_on_polygon_fill(self, event, layer, polygon_index, world_point):
         pass
 
     def clicked_on_empty_space(self, event, layer, world_point):
         pass
+
+    def clicked_on_different_layer(self, event, layer):
+        c = self.layer_control
+        e = c.project
+        e.layer_tree_control.select_layer(layer)
 
     def select_objects_in_rect(self, event, rect, layer):
         raise RuntimeError("Abstract method")
@@ -602,6 +614,12 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         else:
             maintain_aspect = False
         layer.set_anchor_point(point_index, maintain_aspect=maintain_aspect)
+
+    def clicked_on_polygon_fill(self, event, layer, ignored_index, world_point):
+        # Clicking on filled portion of polygon corresponds to clicking on the
+        # center point: rigid body translation
+        print "center point", layer.center_point_index
+        self.clicked_on_point(event, layer, layer.center_point_index)
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_control

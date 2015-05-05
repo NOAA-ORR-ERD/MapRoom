@@ -59,6 +59,8 @@ class ProjectEditor(FrameworkEditor):
     
     clickable_object_mouse_is_over = Any
     
+    clickable_object_in_layer = Any
+    
     last_refresh = Float(0.0)
     
     # Force mouse mode toolbar to be blank so that the initial trait change
