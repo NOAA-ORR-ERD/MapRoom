@@ -10,13 +10,14 @@ import maproom.library.rect as rect
 from ..gl.color import *
 # import Image, ImageDraw
 
-POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET = 0
-POINTS_SUB_LAYER_PICKER_OFFSET = 0
-LINES_SUB_LAYER_PICKER_OFFSET = 1
-POLYGONS_SUB_LAYER_PICKER_OFFSET = 5
-FILL_SUB_LAYER_PICKER_OFFSET = 0
-POINTS_SUB_LAYER_PICKER_OFFSET = 1
-LINES_SUB_LAYER_PICKER_OFFSET = 2
+MAX_PICKER_OFFSET = 4
+
+POINTS_PICKER_OFFSET = 0
+LINES_PICKER_OFFSET = 1
+FILL_PICKER_OFFSET = 2
+
+def get_picker_index_base(layer_index):
+    return layer_index * MAX_PICKER_OFFSET
 
 class NullPicker(object):
     is_active = False
@@ -92,11 +93,11 @@ class Picker(object):
         gl.glDrawBuffer(gl.GL_BACK)
 
     def bind_picker_colors_for_lines(self, layer_index, object_count):
-        self.bind_picker_colors(layer_index + LINES_SUB_LAYER_PICKER_OFFSET,
+        self.bind_picker_colors(layer_index + LINES_PICKER_OFFSET,
                                 object_count, True)
 
     def bind_picker_colors_for_points(self, layer_index, object_count):
-        self.bind_picker_colors(layer_index + POINTS_SUB_LAYER_PICKER_OFFSET,
+        self.bind_picker_colors(layer_index + POINTS_PICKER_OFFSET,
                                 object_count, False)
 
     def bind_picker_colors(self, layer_index, object_count, doubled=False):
@@ -133,7 +134,7 @@ class Picker(object):
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
 
     def get_polygon_picker_colors(self, layer_index, object_count):
-        start_color = (layer_index + FILL_SUB_LAYER_PICKER_OFFSET) << 24
+        start_color = (layer_index + FILL_PICKER_OFFSET) << 24
         active_colors = np.arange(start_color, start_color + object_count, dtype=np.uint32)
         return active_colors
 
@@ -197,25 +198,19 @@ class Picker(object):
     def is_ugrid_point(obj):
         (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
-        return type == POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET and subtype == POINTS_SUB_LAYER_PICKER_OFFSET
+        return type == POINTS_PICKER_OFFSET
 
     @staticmethod
     def is_ugrid_line(obj):
         (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
-        return type == POINTS_AND_LINES_SUB_LAYER_PICKER_OFFSET and subtype == LINES_SUB_LAYER_PICKER_OFFSET
+        return type == LINES_PICKER_OFFSET
 
     @staticmethod
-    def is_polygon_fill(self):
+    def is_polygon_fill(obj):
         (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
-        return type == POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == FILL_SUB_LAYER_PICKER_OFFSET
-
-    @staticmethod
-    def is_polygon_point(self):
-        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
-        #
-        return type == POLYGONS_SUB_LAYER_PICKER_OFFSET and subtype == POINTS_SUB_LAYER_PICKER_OFFSET
+        return type == FILL_PICKER_OFFSET
 
     @staticmethod
     def parse_clickable_object(o):
@@ -226,10 +221,9 @@ class Picker(object):
         # see Point_and_line_set_renderer.py and Polygon_set_renderer.py for subtypes
         ## fixme: OMG! I can't believe how hard-coded this is!!!
         (layer_pick_index, object_index) = o
-        type_and_subtype = layer_pick_index % 10
-        type = (type_and_subtype // 5) * 5
-        subtype = type_and_subtype % 5
-        layer_pick_index = layer_pick_index // 10
+        type = layer_pick_index % MAX_PICKER_OFFSET
+        subtype = None
+        layer_pick_index = layer_pick_index // MAX_PICKER_OFFSET
         # print str( obj ) + "," + str( ( layer_index, type, subtype ) )
         #
         return (layer_pick_index, type, subtype, object_index)

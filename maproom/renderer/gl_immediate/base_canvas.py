@@ -13,7 +13,7 @@ import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
 from renderer import ImmediateModeRenderer
-from picker import Picker, NullPicker
+from picker import Picker, NullPicker, get_picker_index_base
 import maproom.library.rect as rect
 
 from ..gl.font import load_font_texture_with_alpha
@@ -471,16 +471,17 @@ class BaseCanvas(glcanvas.GLCanvas):
                     if layer.pickable:
                         pick_layer_index += 1
                         self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
+                        layer_index_base = get_picker_index_base(pick_layer_index)
                         layer.render(self,
                                      w_r, p_r, s_r,
                                      self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                                     pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
+                                     layer_index_base,
                                      picker)
                 else: # not in pick-mode
                     layer.render(self,
                                  w_r, p_r, s_r,
                                  self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                                 pick_layer_index * 10, ##fixme -- this 10 should not be hard-coded here!
+                                 -1,
                                  picker)
 
         render_layers()
