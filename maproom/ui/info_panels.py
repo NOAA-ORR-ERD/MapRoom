@@ -421,7 +421,7 @@ class ColorPickerField(InfoField):
         self.panel.project.process_command(cmd)
 
 class ColorField(ColorPickerField):
-    command = FillColorCommand
+    command = LayerColorCommand
     
     def get_value(self, layer):
         return layer.color
