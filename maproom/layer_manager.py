@@ -517,12 +517,6 @@ class LayerManager(HasTraits):
 
         return result
 
-    def render(self, render_window, pick_mode=False):
-        list = self.flatten()
-        length = len(list)
-        for i, layer in enumerate(reversed(list)):
-            layer.render(render_window, (length - 1 - i) * 10, pick_mode)
-
     def add_layer(self, type=None, editor=None, before=None, after=None):
         if type == "grid":
             layer = Grid(manager=self)
