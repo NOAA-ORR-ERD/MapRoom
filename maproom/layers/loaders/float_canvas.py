@@ -7,7 +7,7 @@ import numpy as np
 #import re
 
 from common import BaseLayerLoader
-from maproom.layers.annotation import AnnotationLayer
+from maproom.layers.float_canvas import FloatCanvasLayer
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -33,7 +33,7 @@ class FloatCanvasJSONLoader(BaseLayerLoader):
         layers = []
         with open(metadata.uri, "r") as fh:
             text = fh.read()
-            layer = AnnotationLayer(manager=manager)
+            layer = FloatCanvasLayer(manager=manager)
             layer.load_fc_json(text)
             layers.append(layer)
         return layers

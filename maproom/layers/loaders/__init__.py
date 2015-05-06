@@ -51,7 +51,7 @@
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
 loaders = []
-from annotation import FloatCanvasJSONLoader
+from float_canvas import FloatCanvasJSONLoader
 loaders.append(FloatCanvasJSONLoader())
 from bna import BNALoader
 loaders.append(BNALoader())

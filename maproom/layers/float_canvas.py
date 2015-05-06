@@ -21,13 +21,13 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class AnnotationLayer(ProjectedLayer):
-    """Layer for vector annotation image
+class FloatCanvasLayer(ProjectedLayer):
+    """Layer for vector float canvas representation
     
     """
-    name = Unicode("Annotation Layer")
+    name = Unicode("FloatCanvas Layer")
 
-    type = Str("annotation")
+    type = Str("floatcanvas")
     
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
