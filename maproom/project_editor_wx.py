@@ -114,6 +114,8 @@ class ProjectEditor(FrameworkEditor):
                             break
                     except Exception, e:
                         errors = [str(e)]
+                        import traceback
+                        print traceback.format_exc(e)
                         break
                 if errors is not None:
                     header = [
