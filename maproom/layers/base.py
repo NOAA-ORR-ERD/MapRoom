@@ -417,6 +417,17 @@ class RootLayer(Folder):
         pass
 
 
+class AnnotationLayer(Folder):
+    """Layer for vector annotation image
+    
+    """
+    name = Unicode("Annotation Layer")
+
+    type = Str("annotation")
+    
+    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
+
+
 class ProjectedLayer(Layer):
     def render_projected(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
         print "Layer %s doesn't have projected objects to render" % self.name
