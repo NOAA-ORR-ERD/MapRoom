@@ -254,16 +254,31 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
     def raise_selected_layer(self):
         self.move_selected_layer(-1)
 
+    def raise_to_top(self):
+        self.move_selected_layer(-1, True)
+
+    def lower_to_bottom(self):
+        self.move_selected_layer(1, True)
+
     def lower_selected_layer(self):
         self.move_selected_layer(1)
 
-    def move_selected_layer(self, delta):
+    def move_selected_layer(self, delta, to_extreme=False):
         item = self.GetSelection()
         (category, layer) = self.GetItemPyData(item).Data
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(layer)
         mi_target = mi_source[: len(mi_source) - 1]
-        mi_target.append(mi_source[len(mi_source) - 1] + delta)
+        if to_extreme:
+            if delta < 0:
+                mi_target.append(1)  # zeroth index is folder
+            else:
+                mi2 = mi_source[: len(mi_source) - 1]
+                parent_list = lm.get_layer_by_multi_index(mi2)
+                total = len(parent_list)
+                mi_target.append(total)
+        else:
+            mi_target.append(mi_source[len(mi_source) - 1] + delta)
 
         # here we "re-get" the source layer so that if it's a folder layer what we'll get is the
         # folder's list, not just the folder pseudo-layer

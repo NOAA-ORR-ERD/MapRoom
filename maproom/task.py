@@ -271,6 +271,24 @@ class RaiseLayerAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.raise_selected_layer)
 
+class RaiseToTopAction(EditorAction):
+    name = 'Raise Layer To Top'
+    tooltip = 'Move layer to the top'
+    enabled_name = 'layer_above'
+    image = ImageResource('raise_to_top.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.raise_to_top)
+
+class LowerToBottomAction(EditorAction):
+    name = 'Lower Layer To Bottom'
+    tooltip = 'Move layer to the bottom'
+    enabled_name = 'layer_below'
+    image = ImageResource('lower_to_bottom.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.lower_to_bottom)
+
 class LowerLayerAction(EditorAction):
     name = 'Lower Layer'
     tooltip = 'Move layer down in the stacking order'
@@ -655,15 +673,19 @@ class MaproomProjectTask(FrameworkTask):
         )
         layertools = lambda : Group(
             NewVectorLayerAction(),
+            RaiseToTopAction(),
             RaiseLayerAction(),
             LowerLayerAction(),
+            LowerToBottomAction(),
             TriangulateLayerAction(),
             DeleteLayerAction(),
             id="layertools")
         layermenu = lambda : Group(
             Separator(id="LayerMainMenuStart", separator=False),
-            Group(RaiseLayerAction(),
+            Group(RaiseToTopAction(),
+                  RaiseLayerAction(),
                   LowerLayerAction(),
+                  LowerToBottomAction(),
                   id="raisegroup", separator=False),
             Group(TriangulateLayerAction(),
                   MergeLayersAction(),
