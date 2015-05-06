@@ -80,7 +80,7 @@ class LayerCanvas(renderer.BaseCanvas):
         self.layer_manager = layer_manager
 
     def update_renderers(self):
-        for layer in self.layer_manager.layers:
+        for layer in self.layer_manager.flatten():
             if not layer in self.layer_renderers:
                 r = layer.create_renderer(self)
                 self.layer_renderers[layer] = r
@@ -92,7 +92,7 @@ class LayerCanvas(renderer.BaseCanvas):
         pass
 
     def rebuild_renderers(self):
-        for layer in self.layer_manager.layers:
+        for layer in self.layer_manager.flatten():
             # Don't rebuild image layers because their numpy data has been
             # thrown away.  If editing of image data is allowed at some future
             # point, we'll have to rethink this.

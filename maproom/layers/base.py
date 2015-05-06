@@ -113,6 +113,9 @@ class Layer(HasTraits):
         """Clear any items previously flagged with highlight_exception"""
         pass
     
+    def is_folder(self):
+        return False
+    
     def is_root(self):
         return False
     
@@ -397,6 +400,9 @@ class Folder(Layer):
     name = Unicode("Folder")
     
     type = Str("folder")
+    
+    def is_folder(self):
+        return True
 
 
 class RootLayer(Folder):

@@ -138,7 +138,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
             return self.AddRoot(layer.name, data=data)
 
         data = wx.TreeItemData()
-        if (layer.type == "folder"):
+        if layer.is_folder():
             data.SetData(("folder", layer))
         else:
             data.SetData(("layer", layer))

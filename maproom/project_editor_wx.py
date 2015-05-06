@@ -668,9 +668,9 @@ class ProjectEditor(FrameworkEditor):
             self.window.status_bar.message = "Selected layer to delete!."
             return
 
-        if (layer.type == "root"):
+        if layer.is_root():
             m = "The root node of the layer tree is selected. This will delete all layers in the tree."
-        elif (layer.type == "folder"):
+        elif layer.is_folder():
             m = "A folder in the layer tree is selected. This will delete the entire sub-tree of layers."
         else:
             m = "Are you sure you want to delete " + layer.name + "?"

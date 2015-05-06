@@ -396,7 +396,7 @@ class PointSelectionMode(ObjectSelectionMode):
         c = self.layer_control
         e = c.project
         vis = e.layer_visibility[layer]['layer']
-        if (layer.type == "root" or layer.type == "folder"):
+        if layer.is_folder():
             e.window.error("You cannot add points to folder layers.", "Cannot Edit")
             return
 
@@ -490,7 +490,7 @@ class LineSelectionMode(PointSelectionMode):
         e = c.project
         lm = c.layer_manager
         vis = e.layer_visibility[layer]['layer']
-        if (layer.type == "root" or layer.type == "folder"):
+        if layer.is_folder():
             e.window.error("You cannot add lines to folder layers.", "Cannot Edit")
             return
         

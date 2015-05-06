@@ -303,14 +303,14 @@ class LayerManager(HasTraits):
 
         log.debug("layers are " + str(self.layers))
         log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
+        layer.invariant = self.get_next_invariant(invariant)
         if (not isinstance(layer, list)):
-            if (layer.type == "folder"):
+            if layer.is_folder() and not layer.is_root():
                 layer = [layer]
         self.insert_layer_recursive(at_multi_index, layer, self.layers, invariant)
 
     def insert_layer_recursive(self, at_multi_index, layer, tree, invariant=None):
         if (len(at_multi_index) == 1):
-            layer.invariant = self.get_next_invariant(invariant)
             tree.insert(at_multi_index[0], layer)
         else:
             item = tree[at_multi_index[0]]
@@ -373,7 +373,7 @@ class LayerManager(HasTraits):
                 if (item == layer):
                     # in the case of folders, we return the multi-index to the parent,
                     # since the folder "layer" itself is just a pseudo-layer
-                    if (layer.type == "folder" or layer.type == "root"):
+                    if layer.is_folder():
                         return []
                     else:
                         return [i]
@@ -412,19 +412,16 @@ class LayerManager(HasTraits):
                     log.debug("Removing %s from dependencies: parent=%s type=%s" % (layer, parent, dep_type))
                     del self.dependents[parent][dep_type]
 
-    def layer_is_folder(self, layer):
-        return layer.type == "root" or layer.type == "folder"
-
     ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???    
     def is_raisable(self, layer):
-        if layer.type != "root":
+        if not layer.is_root():
             mi = self.get_multi_index_of_layer(layer)
             if mi is not None:
                 return mi[len(mi) - 1] >= 2
         return False
 
     def is_lowerable(self, layer):
-        if layer.type != "root":
+        if not layer.is_root():
             mi = self.get_multi_index_of_layer(layer)
             if mi is not None:
                 n = mi[len(mi) - 1]
@@ -531,20 +528,13 @@ class LayerManager(HasTraits):
             GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
         return layer
 
-    def add_folder(self, name="New Folder"):
-        # FIXME: doesn't work, so menu/toolbar items are disabled
-        folder = Layer()
-        folder.type = "folder"
-        folder.name = name
-        self.insert_layer(None, folder)
-
     def get_mergeable_layers(self):
         layers = [layer for layer in self.flatten() if layer.has_points()]
         layers.reverse()
         return layers
 
     def destroy_recursive(self, layer):
-        if (self.layer_is_folder(layer)):
+        if (layer.is_folder()):
             for item in self.get_layer_children(layer):
                 self.destroy_recursive(item)
         self.delete_undo_operations_for_layer(layer)
