@@ -269,9 +269,9 @@ class LayerManager(HasTraits):
             return error
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None):
         self.dispatch_event('layer_loaded', layer)
-        mi = self.get_insertion_multi_index(before, after)
+        mi = self.get_insertion_multi_index(before, after, first_child_of)
         self.insert_layer(mi, layer, invariant=invariant)
     
     def find_default_insert_layer(self):
@@ -286,10 +286,12 @@ class LayerManager(HasTraits):
                 break
         return [pos]
     
-    def get_insertion_multi_index(self, before=None, after=None):
-        if before is not None:
+    def get_insertion_multi_index(self, before=None, after=None, first_child_of=None):
+        if first_child_of is not None:
+            mi = self.get_multi_index_of_layer(first_child_of)
+            mi.append(1)
+        elif before is not None:
             mi = self.get_multi_index_of_layer(before)
-            mi[-1] -= 1
         elif after is not None:
             mi = self.get_multi_index_of_layer(after)
             mi[-1] += 1
@@ -335,6 +337,15 @@ class LayerManager(HasTraits):
         else:
             sublist = tree[index]
             return self.remove_layer_recursive(at_multi_index[1:], sublist)
+
+    def get_folder_of_layer(self, layer):
+        """Returns the containing folder of the specified layer
+        
+        """
+        mi = self.get_multi_index_of_layer(layer)
+        mi = mi[:-1]
+        mi.append(0)
+        return self.get_layer_by_multi_index(mi)
 
     def get_layer_by_multi_index(self, at_multi_index):
         if (at_multi_index == []):

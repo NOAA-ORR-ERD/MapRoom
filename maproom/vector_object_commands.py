@@ -14,8 +14,8 @@ class DrawVectorObjectCommand(Command):
     ui_name = None
     vector_object_class = None
     
-    def __init__(self, parent_layer, cp1, cp2):
-        Command.__init__(self, parent_layer)
+    def __init__(self, event_layer, cp1, cp2):
+        Command.__init__(self, event_layer)
         self.cp1 = cp1
         self.cp2 = cp2
     
@@ -28,8 +28,16 @@ class DrawVectorObjectCommand(Command):
         saved_invariant = lm.next_invariant
         layer = self.vector_object_class(manager=lm)
         layer.set_opposite_corners(self.cp1, self.cp2)
-        parent_layer = lm.get_layer_by_invariant(self.layer)
-        lm.insert_loaded_layer(layer, editor, after=parent_layer)
+        event_layer = lm.get_layer_by_invariant(self.layer)
+        if event_layer.type == "annotation":
+            kwargs = {'first_child_of': event_layer}
+        else:
+            parent_layer = lm.get_folder_of_layer(event_layer)
+            if parent_layer is not None:
+                kwargs = {'first_child_of': parent_layer}
+            else:
+                kwargs = {'first_child_of': event_layer}
+        lm.insert_loaded_layer(layer, editor, **kwargs)
         
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
