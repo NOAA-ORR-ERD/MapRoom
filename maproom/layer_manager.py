@@ -273,6 +273,8 @@ class LayerManager(HasTraits):
         # other layers will be inserted in the first position.
         pos = 0
         for layer in self.layers:
+            if isinstance(layer, list):
+                layer = layer[0]
             if layer.skip_on_insert:
                 pos += 1
             else:
