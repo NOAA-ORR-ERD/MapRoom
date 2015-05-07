@@ -33,6 +33,10 @@ class Layer(HasTraits):
     # when the layer is added to a LayerManager
     invariant = Int(0)
     
+    # the invariant of the parent layer (used in triangulation so that a
+    # retriangulation will replace the older triangulation.
+    dependent_of = Int(-1)
+    
     # type is a string identifier that uniquely refers to a layer class.
     # Base classes should use an empty string to show that they won't be
     # serializable.
@@ -213,6 +217,9 @@ class Layer(HasTraits):
             layers = [layer]
         log.debug("returning layers: %s" % str(layers))
         return layers
+    
+    def set_dependent_of(self, layer):
+        self.dependent_of = layer.invariant
     
     def check_for_problems(self, window):
         pass

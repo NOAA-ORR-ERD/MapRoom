@@ -302,15 +302,15 @@ class TriangulateLayerCommand(Command):
 
         if self.undo_info.flags.success:
             t_layer.name = "Triangulated %s" % layer.name
-            old_t_layer = lm.find_dependent_layer(layer, "triangles")
+            old_t_layer = lm.find_dependent_layer(layer, t_layer.type)
             if old_t_layer is not None:
                 invariant = old_t_layer.invariant
                 lm.remove_layer(old_t_layer)
             else:
                 invariant = None
             lm.insert_loaded_layer(t_layer, editor, after=layer, invariant=invariant)
-            lm.set_dependent_layer(layer, "triangles", t_layer)
-                
+            t_layer.set_dependent_of(layer)
+            
             undo.flags.layers_changed = True
             undo.flags.refresh_needed = True
             lf = undo.flags.add_layer_flags(t_layer)

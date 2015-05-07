@@ -43,13 +43,6 @@ class LayerManager(HasTraits):
     
     next_invariant = Int(0)
     
-    # A mapping of a layer to all layers that are built from the layer,
-    # as if it were a parent/child relationship.  dependents[layer]
-    # yields another mapping of dependent layer type to actual layer,
-    # so dependents[layer]["triangles"] is another layer that is the
-    # triangulation of layer
-    dependents = Dict(Any)
-    
     batch = Bool
     
     events = List(Any)
@@ -326,7 +319,6 @@ class LayerManager(HasTraits):
 
     def remove_layer_at_multi_index(self, at_multi_index):
         layer = self.remove_layer_recursive(at_multi_index, self.layers)
-        self.remove_layer_from_dependents(layer)
 
     def remove_layer_recursive(self, at_multi_index, tree):
         index = at_multi_index[0]
@@ -399,30 +391,11 @@ class LayerManager(HasTraits):
         return None
     
     def find_dependent_layer(self, layer, dependent_type):
-        if layer in self.dependents:
-            if dependent_type in self.dependents[layer]:
-                return self.dependents[layer][dependent_type]
+        for child in self.flatten():
+            if child.dependent_of == layer.invariant:
+                return child
         return None
     
-    def set_dependent_layer(self, layer, dependent_type, dependent_layer):
-        d = self.find_dependent_layer(layer, dependent_type)
-        if d is not None:
-            self.remove_layer(d)
-        if layer not in self.dependents:
-            self.dependents[layer] = {}
-        self.dependents[layer][dependent_type] = dependent_layer
-    
-    def remove_layer_from_dependents(self, layer):
-        if layer in self.dependents:
-            # remove the parent/child relationship of dependent layers
-            del self.dependents[layer]
-        for parent, dep_map in self.dependents.iteritems():
-            d = dep_map.copy()
-            for dep_type in d:
-                if d[dep_type] == layer:
-                    log.debug("Removing %s from dependencies: parent=%s type=%s" % (layer, parent, dep_type))
-                    del self.dependents[parent][dep_type]
-
     ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???    
     def is_raisable(self, layer):
         if not layer.is_root():

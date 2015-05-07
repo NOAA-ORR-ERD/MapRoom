@@ -238,7 +238,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         # (the first item in the folder is the folder pseudo-layer)
         if (target_category == "root"):
             mi_target = [1]
-        if (target_category == "folder"):
+        elif (target_category == "folder"):
             mi_target.append(1)
         lm.insert_layer(mi_target, source_layer)
         self.select_layer(source_layer)
