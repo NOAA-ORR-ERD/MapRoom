@@ -298,13 +298,14 @@ class LayerManager(HasTraits):
 
         log.debug("layers are " + str(self.layers))
         log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
-        layer.invariant = self.get_next_invariant(invariant)
         if (not isinstance(layer, list)):
+            if invariant is None:
+                layer.invariant = self.get_next_invariant(invariant)
             if layer.is_folder() and not layer.is_root():
                 layer = [layer]
-        self.insert_layer_recursive(at_multi_index, layer, self.layers, invariant)
+        self.insert_layer_recursive(at_multi_index, layer, self.layers)
 
-    def insert_layer_recursive(self, at_multi_index, layer, tree, invariant=None):
+    def insert_layer_recursive(self, at_multi_index, layer, tree):
         if (len(at_multi_index) == 1):
             tree.insert(at_multi_index[0], layer)
         else:
