@@ -229,7 +229,7 @@ class ZoomToLayer(EditorAction):
         GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
 
 class NewVectorLayerAction(EditorAction):
-    name = 'New Ugrid Layer'
+    name = 'New Verdat Layer'
     tooltip = 'Create new vector (grid) layer'
     image = ImageResource('add_layer')
 
@@ -672,7 +672,6 @@ class MaproomProjectTask(FrameworkTask):
             id= 'Layer', name="Layer"
         )
         layertools = lambda : Group(
-            NewVectorLayerAction(),
             RaiseToTopAction(),
             RaiseLayerAction(),
             LowerLayerAction(),
