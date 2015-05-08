@@ -56,6 +56,13 @@ class VectorObjectLayer(LineLayer):
     def has_alpha(self):
         return True
     
+    def set_color(self, color):
+        LineLayer.set_color(self, color)
+        self.manager.default_line_color = color
+    
+    def determine_layer_color(self):
+        self.color = self.manager.default_line_color
+    
     @on_trait_change('alpha')
     def mark_rebuild(self):
         self.rebuild_needed = True
@@ -181,7 +188,7 @@ class FillableVectorObject(LineVectorObject):
     
     fill_style = Int(0)
     
-    fill_color = Int(color_to_int(0,.8,.7,1.0))
+    fill_color = Int(0)
     
     # Fillable objects should (in general) display their center control point
     display_center_control_point = True
@@ -194,6 +201,11 @@ class FillableVectorObject(LineVectorObject):
     
     def set_fill_color(self, color):
         self.fill_color = color
+        self.manager.default_fill_color = color
+    
+    def determine_layer_color(self):
+        self.color = self.manager.default_line_color
+        self.fill_color = self.manager.default_fill_color
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))

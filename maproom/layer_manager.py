@@ -11,6 +11,7 @@ from library.accumulator import flatten
 
 from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders
 from command import UndoStack
+from renderer import color_to_int, int_to_color
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict
@@ -42,6 +43,10 @@ class LayerManager(HasTraits):
     layers = List(Any)
     
     next_invariant = Int(0)
+    
+    default_line_color = Int(color_to_int(0,.5,.3,1.0))
+    
+    default_fill_color = Int(color_to_int(0,.8,.7,1.0))
     
     batch = Bool
     
