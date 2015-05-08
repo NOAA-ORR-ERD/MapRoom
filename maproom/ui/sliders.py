@@ -199,14 +199,13 @@ class TextSlider(wx.PyPanel):
                  name="ValueSlider"):
         wx.Panel.__init__(self, parent, id)
 
-        self.Sizer = wx.BoxSizer(wx.VERTICAL)
+        self.Sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         BORDER = wx.lib.sized_controls.GetDefaultBorder(self)
-        self.textCtrl = wx.TextCtrl(self, -1, "%s" % value, validator=NumberValidator())
-        self.Sizer.Add(self.textCtrl, 0, wx.ALIGN_CENTRE | wx.TOP, BORDER)
-
         self.sliderCtrl = FloatSlider(self, -1, value, minValue, maxValue, steps, valueUnit, point, size, style, validator, name)
-        self.Sizer.Add(self.sliderCtrl, 0, wx.ALIGN_CENTRE | wx.LEFT | wx.RIGHT | wx.EXPAND, BORDER)
+        self.Sizer.Add(self.sliderCtrl, 2, border=BORDER)
+        self.textCtrl = wx.TextCtrl(self, -1, "%s" % value, validator=NumberValidator())
+        self.Sizer.Add(self.textCtrl, 0, border=BORDER)
 
         self.textCtrl.Bind(wx.EVT_TEXT, self.OnTextChanged)
         self.sliderCtrl.Bind(wx.EVT_SLIDER, self.OnSliderChanged)
