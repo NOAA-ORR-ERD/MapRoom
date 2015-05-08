@@ -3,45 +3,6 @@ import wx
 import wx.lib.sized_controls  # for control border calcs
 
 
-class NumberValidator(wx.PyValidator):
-
-    def __init__(self, pyVar=None):
-        wx.PyValidator.__init__(self)
-        self.Bind(wx.EVT_CHAR, self.OnChar)
-
-    def Clone(self):
-        return NumberValidator()
-
-    def Validate(self, win):
-        tc = self.GetWindow()
-        val = tc.GetValue()
-
-        try:
-            value = float(val)
-        except:
-            return False
-
-        return True
-
-    def OnChar(self, event):
-        key = event.GetKeyCode()
-
-        if key < wx.WXK_SPACE or key == wx.WXK_DELETE or key > 255:
-            event.Skip()
-            return
-
-        if chr(key) in string.digits + ",.":
-            event.Skip()
-            return
-
-        if not wx.Validator_IsSilent():
-            wx.Bell()
-
-        # Returning without calling event.Skip eats the event before it
-        # gets to the text control
-        return
-
-
 class SliderLabel(wx.Panel):
 
     def __init__(self, parent, id, value, minValue, maxValue, valueUnit):
@@ -142,7 +103,7 @@ class FloatSlider(wx.PyPanel):
         self.stepValue = self.float_to_slider_value(value)
         self.valueUnit = valueUnit
 
-        self.sliderCtrl = wx.Slider(self, -1, self.stepValue, 0, steps+1, point, size, style & ~wx.SL_LABELS, validator, name)
+        self.sliderCtrl = wx.Slider(self, -1, self.stepValue, 0, steps, point, size, style & ~wx.SL_LABELS, validator, name)
         self.Sizer.Add(self.sliderCtrl, 0, wx.EXPAND | wx.ALL, BORDER)
 
         if style & wx.SL_LABELS:
@@ -204,8 +165,10 @@ class TextSlider(wx.PyPanel):
         BORDER = wx.lib.sized_controls.GetDefaultBorder(self)
         self.sliderCtrl = FloatSlider(self, -1, value, minValue, maxValue, steps, valueUnit, point, size, style, validator, name)
         self.Sizer.Add(self.sliderCtrl, 2, border=BORDER)
-        self.textCtrl = wx.TextCtrl(self, -1, "%s" % value, validator=NumberValidator())
-        self.Sizer.Add(self.textCtrl, 0, border=BORDER)
+        self.textCtrl = wx.SpinCtrlDouble(self, value='0.00', size=(50,21),
+                                 min=minValue, max=maxValue, inc=(maxValue - minValue)/steps)
+        self.textCtrl.SetDigits(0)
+        self.Sizer.Add(self.textCtrl, 1, wx.EXPAND, border=BORDER)
 
         self.textCtrl.Bind(wx.EVT_TEXT, self.OnTextChanged)
         self.sliderCtrl.Bind(wx.EVT_SLIDER, self.OnSliderChanged)
@@ -219,10 +182,11 @@ class TextSlider(wx.PyPanel):
 
     def SetValue(self, value):
         self.sliderCtrl.SetValue(value)
-        self.textCtrl.Value = "%s" % value
+        self.textCtrl.Value = value
 
     def OnTextChanged(self, event):
         event.Skip()
+        print event.String
         if event.String.strip() != "":
             try:
                 value = origValue = float(event.String)
@@ -233,14 +197,15 @@ class TextSlider(wx.PyPanel):
             if value > self.sliderCtrl.maxValue:
                 value = self.sliderCtrl.maxValue
             if value != origValue:
-                self.textCtrl.Value = "%s" % value
+                self.textCtrl.Value = value
             self.sliderCtrl.Value = value
         else:
             self.Value = self.sliderCtrl.minValue
 
     def OnSliderChanged(self, event):
         event.Skip()
-        self.textCtrl.Value = "%s" % self.sliderCtrl.GetValue()
+        print "slider", self.sliderCtrl.GetValue()
+        self.textCtrl.Value = self.sliderCtrl.GetValue()
 
     Value = property(GetValue, SetValue)
 
