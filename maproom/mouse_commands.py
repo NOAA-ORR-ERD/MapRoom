@@ -416,41 +416,35 @@ class CropRectCommand(Command):
         old_state = self.undo_info.data
         undo_info = layer.set_state(old_state)
         return undo_info
-    
-class LayerColorCommand(Command):
-    short_name = "color"
+
+class StyleChangeCommand(Command):
+    short_name = "style"
     serialize_order =  [
             ('layer', 'layer'),
-            ('color', 'int'),
+            ('style', 'style'),
             ]
     
-    def __init__(self, layer, color):
+    def __init__(self, layer, style):
         Command.__init__(self, layer)
-        self.color = color
+        self.style = style
     
     def __str__(self):
-        return "Layer Color"
+        return "Layer Style"
     
     def perform(self, editor):
-        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        undo.data = (layer.color, self.color)
+        undo.data = (layer.style, self.style, lm.default_style)
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_display_properties_changed = True
-        self.call_set_color(layer, self.color)
+        layer.set_style(self.style)
+        lm.update_default_style(self.style)
         return undo
 
     def undo(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
-        old_color, color = self.undo_info.data
-        self.call_set_color(layer, old_color)
+        old_style, style, default_style = self.undo_info.data
+        layer.set_style(old_style)
+        lm.update_default_style(default_style)
         return self.undo_info
-    
-    def call_set_color(self, layer, color):
-        layer.set_color(color)
-    
-class FillColorCommand(LayerColorCommand):
-    short_name = "fillcolor"
-    
-    def call_set_color(self, layer, color):
-        layer.set_fill_color(color)

@@ -69,7 +69,7 @@ class LineLayer(PointLayer):
 
     def set_data(self, f_points, f_depths, f_line_segment_indexes):
         n = np.alen(f_points)
-        self.determine_layer_color()
+        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
@@ -78,7 +78,7 @@ class LineLayer(PointLayer):
             self.points.z[
                 0: n
             ] = f_depths
-            self.points.color = self.color
+            self.points.color = self.style.line_color
             self.points.state = 0
 
         n = np.alen(f_line_segment_indexes)
@@ -87,13 +87,13 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
                 0: n
             ] = f_line_segment_indexes
-            self.line_segment_indexes.color = self.color
+            self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0
         
         self.update_bounds()
     
     def set_color(self, color):
-        self.color = color
+        self.style.line_color = color
         self.points.color = color
         self.line_segment_indexes.color = color
 
@@ -357,7 +357,7 @@ class LineLayer(PointLayer):
     """
 
     def insert_line_segment(self, point_index_1, point_index_2):
-        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.color, STATE_NONE)
+        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.style.line_color, STATE_NONE)
 
     def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state):
         l_s = np.array([(point_index_1, point_index_2, color, state)],
@@ -524,7 +524,7 @@ class LineLayer(PointLayer):
 
         # the points and line segments
         if layer_visibility["lines"]:
-            self.renderer.draw_lines(layer_index_base, picker, self.line_width,
+            self.renderer.draw_lines(layer_index_base, picker, self.style,
                             self.get_selected_line_segment_indexes(),
                             self.get_selected_line_segment_indexes(STATE_FLAGGED))
 
@@ -541,7 +541,7 @@ class LineLayer(PointLayer):
         if (not picker.is_active):
             if layer_visibility["lines"]:
                 self.renderer.draw_selected_lines(
-                    self.line_width,
+                    self.style,
                     self.get_selected_line_segment_indexes())
 
             if layer_visibility["points"]:

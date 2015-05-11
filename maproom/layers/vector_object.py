@@ -39,14 +39,6 @@ class VectorObjectLayer(LineLayer):
 
     type = Str("vector_object")
     
-    color = Int(0)
-    
-    point_size = Int(8)
-    
-    line_width = Float(2.0)
-    
-    line_style = Int(0xffff)
-    
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
     alpha = Float(1.0)
@@ -56,12 +48,8 @@ class VectorObjectLayer(LineLayer):
     def has_alpha(self):
         return True
     
-    def set_color(self, color):
-        LineLayer.set_color(self, color)
-        self.manager.default_line_color = color
-    
-    def determine_layer_color(self):
-        self.color = self.manager.default_line_color
+    def set_layer_style_defaults(self):
+        self.style.line_color = self.manager.default_style.line_color
     
     @on_trait_change('alpha')
     def mark_rebuild(self):
@@ -78,10 +66,10 @@ class VectorObjectLayer(LineLayer):
         
         """
         projected_point_data = self.compute_projected_point_data()
-        r, g, b, a = int_to_color(self.color)
+        r, g, b, a = int_to_color(self.style.line_color)
         color = color_to_int(r, g, b, self.alpha)
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
-        self.rasterize(projected_point_data, self.points.z, self.color, color)
+        self.rasterize(projected_point_data, self.points.z, self.style.line_color, color)
         self.rebuild_needed = False
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
@@ -95,8 +83,7 @@ class VectorObjectLayer(LineLayer):
             return
         if self.rebuild_needed:
             self.rebuild_renderer()
-        self.renderer.outline_object(layer_index_base, picker,
-                                     self.point_size, self.line_width, self.line_style)
+        self.renderer.outline_object(layer_index_base, picker, self.style)
         if layer_visibility["points"]:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
@@ -185,27 +172,18 @@ class LineVectorObject(VectorObjectLayer):
 
 
 class FillableVectorObject(LineVectorObject):
-    
-    fill_style = Int(0)
-    
-    fill_color = Int(0)
-    
     # Fillable objects should (in general) display their center control point
     display_center_control_point = True
 
     @on_trait_change('alpha')
     def mark_rebuild(self):
-        r, g, b, a = int_to_color(self.fill_color)
-        self.fill_color = color_to_int(r, g, b, self.alpha)
+        r, g, b, a = int_to_color(self.style.fill_color)
+        self.style.fill_color = color_to_int(r, g, b, self.alpha)
         self.rebuild_needed = True
     
-    def set_fill_color(self, color):
-        self.fill_color = color
-        self.manager.default_fill_color = color
-    
-    def determine_layer_color(self):
-        self.color = self.manager.default_line_color
-        self.fill_color = self.manager.default_fill_color
+    def set_layer_style_defaults(self):
+        self.style.line_color = self.manager.default_style.line_color
+        self.style.fill_color = self.manager.default_style.fill_color
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
@@ -213,9 +191,8 @@ class FillableVectorObject(LineVectorObject):
             return
         if self.rebuild_needed:
             self.rebuild_renderer()
-        self.renderer.fill_object(layer_index_base, picker, self.fill_color)
-        self.renderer.outline_object(layer_index_base, picker,
-                                     self.point_size, self.line_width, self.line_style)
+        self.renderer.fill_object(layer_index_base, picker, self.style)
+        self.renderer.outline_object(layer_index_base, picker, self.style)
         if layer_visibility["points"]:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
             

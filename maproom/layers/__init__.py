@@ -5,4 +5,5 @@ from triangle import TriangleLayer
 from polygon import PolygonLayer
 from raster import RasterLayer
 from vector_object import *
+from style import LayerStyle
 import constants

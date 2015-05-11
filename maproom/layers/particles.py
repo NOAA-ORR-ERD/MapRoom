@@ -33,7 +33,7 @@ class ParticleLayer(PointBaseLayer):
                                      color_to_int(0, 1.0, 1.0, 1.0),
                                      ], dtype=np.uint32)
     
-    # def determine_layer_color(self):
+    # def set_layer_style_defaults(self):
     #     ## this should do something different for particles
     
     def set_data(self, f_points, status_codes):

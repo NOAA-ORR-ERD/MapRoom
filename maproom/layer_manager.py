@@ -9,7 +9,7 @@ import numpy as np
 import library.rect as rect
 from library.accumulator import flatten
 
-from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders
+from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
 from command import UndoStack
 from renderer import color_to_int, int_to_color
 
@@ -43,10 +43,6 @@ class LayerManager(HasTraits):
     layers = List(Any)
     
     next_invariant = Int(0)
-    
-    default_line_color = Int(color_to_int(0,.5,.3,1.0))
-    
-    default_fill_color = Int(color_to_int(0,.8,.7,1.0))
     
     batch = Bool
     
@@ -89,11 +85,15 @@ class LayerManager(HasTraits):
         self.project = project
         self.undo_stack = UndoStack()
         self.next_invariant = -1  # preset so first user added layer will use 1
+        self.default_style = LayerStyle()
         layer = RootLayer(manager=self)
         self.insert_layer([0], layer)
         grid = Grid(manager=self)
         self.insert_layer([1], grid)
         return self
+    
+    def update_default_style(self, style):
+        self.default_style.copy_from(style)
     
     def flatten(self):
         return self.flatten_recursive(self.layers)
@@ -160,8 +160,6 @@ class LayerManager(HasTraits):
     
     def get_invariant_offset(self):
         return self.next_invariant - 1
-    
-    #
     
     def has_user_created_layers(self):
         """Returns true if all the layers can be recreated automatically

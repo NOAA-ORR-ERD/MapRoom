@@ -154,7 +154,7 @@ class LayerCanvas(renderer.BaseCanvas):
             w_r = layer.bounds
             if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
                 s_r = self.get_screen_rect_from_world_rect(w_r)
-                r, g, b, a = renderer.int_to_color(layer.color)
+                r, g, b, a = renderer.int_to_color(layer.style.line_color)
                 self.overlay.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
     # functions related to world coordinates, projected coordinates, and screen coordinates

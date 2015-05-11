@@ -68,9 +68,13 @@ class TriangleLayer(PointLayer):
             return self.triangles is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
+    def set_layer_style_defaults(self):
+        self.style.use_next_default_color()
+        self.style.line_width = 1
+
     def set_data(self, f_points, f_depths, f_triangles):
         n = np.alen(f_points)
-        self.determine_layer_color()
+        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
@@ -79,7 +83,7 @@ class TriangleLayer(PointLayer):
             self.points.z[
                 0: n
             ] = f_depths
-            self.points.color = self.color
+            self.points.color = self.style.line_color
             self.points.state = 0
 
             n = len(f_triangles)
@@ -118,7 +122,7 @@ class TriangleLayer(PointLayer):
             self.triangles.point3 += offsets
 
     def insert_triangle(self, point_index_1, point_index_2, point_index_3):
-        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.color, STATE_NONE))
+        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.style.line_color, STATE_NONE))
 
     def insert_triangle_at_index(self, index, params):
         entry = np.array([params],
@@ -340,7 +344,7 @@ class TriangleLayer(PointLayer):
             return
 
         if layer_visibility["triangles"]:
-            self.renderer.draw_triangles(self.triangle_line_width)
+            self.renderer.draw_triangles(self.style.line_width)
 
         if layer_visibility["labels"]:
             self.renderer.draw_labels_at_points(self.points.z, s_r, p_r)

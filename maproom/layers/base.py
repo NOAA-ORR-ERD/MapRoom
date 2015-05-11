@@ -12,6 +12,7 @@ from ..library import rect
 
 # local package imports
 from constants import *
+from style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)
@@ -48,17 +49,13 @@ class Layer(HasTraits):
     
     file_path = Unicode
     
-    color = Int(0)
+    style = Any
     
     point_size = Float(4.0)
     
     selected_point_size = Float(15.0)
     
-    line_width = Float(2.0)
-    
     selected_line_width = Float(10.0)
-    
-    triangle_line_width = Float(1.0)
     
     bounds = Any(rect.NONE_RECT)
     
@@ -85,6 +82,9 @@ class Layer(HasTraits):
     layer_info_panel = ["Layer name"]
     
     selection_info_panel = []
+    
+    def _style_default(self):
+        return LayerStyle()
 
     def __repr__(self):
         return self.name
@@ -258,19 +258,12 @@ class Layer(HasTraits):
     def is_zoomable(self):
         return self.bounds != rect.NONE_RECT
 
-    def determine_layer_color(self):
-        if not self.color:
-            self.color = DEFAULT_COLORS[
-                Layer.next_default_color_index
-            ]
-
-            Layer.next_default_color_index = (
-                Layer.next_default_color_index + 1
-            ) % len(DEFAULT_COLORS)
+    def set_layer_style_defaults(self):
+        self.style.use_next_default_color()
     
-    def set_color(self, color):
-        # Hook for subclasses to change color
-        pass
+    def set_style(self, style):
+        # Hook for subclasses to change colors and styles
+        self.style.copy_from(style)
 
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT

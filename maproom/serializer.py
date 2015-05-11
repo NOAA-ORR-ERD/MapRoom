@@ -6,6 +6,7 @@ from peppy2.utils.runtime import get_all_subclasses
 from peppy2.utils.file_guess import FileMetadata
 
 import command
+from layers.style import LayerStyle
 
 magic_version = 1
 magic_template = "# NOAA MapRoom Command File, v"
@@ -193,6 +194,16 @@ class ListIntConverter(ArgumentConverter):
             vals = text.split(",")
             return [int(i) for i in vals]
         return []
+
+
+class StyleConverter(ArgumentConverter):
+    stype = "style"
+    
+    def instance_from_args(self, args, manager, deserializer):
+        text = args.pop(0)
+        style = LayerStyle()
+        style.parse(text)
+        return style
 
 
 def get_converters():

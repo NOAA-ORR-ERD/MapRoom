@@ -647,7 +647,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         cp2 = c.get_world_point_from_projected_point(p2)
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
-            cmd = self.vector_object_command(layer, cp1, cp2)
+            cmd = self.vector_object_command(layer, cp1, cp2, layer.manager.default_style)
             e.process_command(cmd)
 
 

@@ -4,7 +4,7 @@ import wx.lib.buttons as buttons
 
 from pyface.api import ImageResource
 
-from ..layers import constants
+from ..layers import constants, LayerStyle
 from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
@@ -395,8 +395,7 @@ class AlphaField(FloatSliderField):
 
 class ColorPickerField(InfoField):
     same_line = True
-    command = LayerColorCommand
-
+    
     def get_value(self, layer):
         return ""
         
@@ -418,20 +417,23 @@ class ColorPickerField(InfoField):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
-        cmd = self.command(layer, int_color)
+        style = self.get_style(int_color)
+        cmd = StyleChangeCommand(layer, style)
         self.panel.project.process_command(cmd)
 
 class ColorField(ColorPickerField):
-    command = LayerColorCommand
-    
+    def get_style(self, color):
+        return LayerStyle(line_color=color)
+        
     def get_value(self, layer):
-        return layer.color
+        return layer.style.line_color
     
 class FillColorField(ColorPickerField):
-    command = FillColorCommand
-    
+    def get_style(self, color):
+        return LayerStyle(fill_color=color)
+        
     def get_value(self, layer):
-        return layer.fill_color
+        return layer.style.fill_color
     
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel

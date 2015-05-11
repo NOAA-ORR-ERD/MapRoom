@@ -68,7 +68,7 @@ class PointBaseLayer(ProjectedLayer):
 
     def new_points(self, num=0):
         #fixme: this should be done differently...
-        self.determine_layer_color()
+        self.set_layer_style_defaults()
         self.points = self.make_points(num)
 
     def empty(self):##fixme: make a property?
@@ -91,18 +91,22 @@ class PointBaseLayer(ProjectedLayer):
     
     def set_data(self, f_points):
         n = np.alen(f_points)
-        self.determine_layer_color()
+        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_SIMPLE_DTYPE).xy[0:n] = f_points
-            self.points.color = self.color
+            self.points.color = self.style.line_color
             self.points.state = 0
 
         self.update_bounds()
     
     def set_color(self, color):
-        self.color = color
         self.points.color = color
+    
+    def set_style(self, style):
+        ProjectedLayer.set_style(self, style)
+        if style.line_color is not None:
+            self.set_color(style.line_color)
 
     def make_points(self, count):
         return np.repeat(

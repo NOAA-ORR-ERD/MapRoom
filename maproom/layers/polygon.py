@@ -82,7 +82,7 @@ class PolygonLayer(PointLayer):
     
     def set_data(self, f_polygon_points, f_polygon_starts, f_polygon_counts,
                  f_polygon_identifiers):
-        self.determine_layer_color()
+        self.set_layer_style_defaults()
         n_points = np.alen(f_polygon_points)
         self.points = self.make_points(n_points)
         if (n_points > 0):

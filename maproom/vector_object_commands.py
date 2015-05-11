@@ -10,14 +10,16 @@ class DrawVectorObjectCommand(Command):
         ('layer', 'layer'),
         ('cp1', 'point'),
         ('cp2', 'point'),
+        ('style', 'style'),
         ]
     ui_name = None
     vector_object_class = None
     
-    def __init__(self, event_layer, cp1, cp2):
+    def __init__(self, event_layer, cp1, cp2, style):
         Command.__init__(self, event_layer)
         self.cp1 = cp1
         self.cp2 = cp2
+        self.style = style.get_copy()  # Make sure not sharing objects
     
     def __str__(self):
         return self.ui_name
@@ -28,6 +30,7 @@ class DrawVectorObjectCommand(Command):
         saved_invariant = lm.next_invariant
         layer = self.vector_object_class(manager=lm)
         layer.set_opposite_corners(self.cp1, self.cp2)
+        layer.set_style(self.style)
         event_layer = lm.get_layer_by_invariant(self.layer)
         if event_layer.type == "annotation":
             kwargs = {'first_child_of': event_layer}
