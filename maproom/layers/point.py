@@ -92,7 +92,7 @@ class PointLayer(PointBaseLayer):
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points
             self.points.z[0:n] = f_depths
-            self.points.color = self.color
+            self.points.color = self.style.line_color
             self.points.state = 0
 
             n = np.alen(f_line_segment_indexes)
@@ -100,7 +100,7 @@ class PointLayer(PointBaseLayer):
             self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
                 0: n
             ] = f_line_segment_indexes
-            self.line_segment_indexes.color = self.color
+            self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0
         
         self.update_bounds()
@@ -219,7 +219,7 @@ class PointLayer(PointBaseLayer):
             index = -1
         else:
             index = len(self.points)
-        return self.insert_point_at_index(index, world_point, self.default_depth, self.color, STATE_SELECTED)
+        return self.insert_point_at_index(index, world_point, self.default_depth, self.style.line_color, STATE_SELECTED)
 
     def insert_point_at_index(self, point_index, world_point, z, color, state):
         t0 = time.clock()
