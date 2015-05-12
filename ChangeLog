@@ -1,3 +1,103 @@
+05/12/2015
+---------------------------
+Released 3.1b1
+- RM Fix for initial slider size on Mac
+- RM Forgot to update style color on points layer
+- RM Changed line/fill color to LayerStyle object
+- RM Setting colors of vector objects become default color for new objects
+- RM Changed TextSlider to use SpinCtrlDouble
+- RM Moved transparency slider and text entry ctrl on same line
+- RM UI toolbar/menu bar changes
+- RM Fixed default_insert_layer positioning when folders present
+- RM Fixed drag/drop reordering of folder layers
+- RM Removed dependent dictionary and now track parent in layer
+- RM Corrected bad layer invariants in test data
+- RM Fixed vector object insertion so new objects show up on top
+- RM Reenabled folder support
+- RM Added new annotation layer that's a subclass of Folder
+- RM Moved float canvas loading stuff to new file
+- RM Added raise to top/lower to bottom actions for layers
+- RM Fixed tree drag/drop and raise/lower layers
+- RM Fixed bug in ColorField where it was using the fill color instead of line color
+- RM Added process_flags back as convenience function for undo/redo processing
+- RM Added filled object click detection to change vector object layers
+- RM Fixed vector objects to be filled when picker is active
+- RM Fixed hard coding of picker index stuff
+- RM Removed unused method 'render'
+- RM Updated docs; added new references page
+- RM Vector object resize handles only displayed when that layer is selected
+- RM Renamed layer_control_wx.py to layer_canvas.py
+- RM normalized some filenames to use lower case
+- RM Moved layer component visibility out of layer selection tree
+- RM Added test data file of annotation objects saved as command log
+- RM Added BatchStatus.zoom_to_all
+- RM Removed debug print
+- RM Added process_batch_command to delay UI updates
+- RM Added line and ellipse vector object drawing
+- RM Added UI to create rectangles
+- RM Fixed ZoomRectMode bug introduced in refactoring checkin 288a3e87
+- RM Added LineVectorObject and refactored vector object subclasses
+- RM Added placeholder for line stippling (no UI yet)
+- RM Added fill color
+- RM Added transparency to vector object
+- RM Added MoveControlPointCommand to resize/reshape vector objects
+- RM Changed select.png to be 16x16 and better shading
+- RM Added AnnotationLayerToolBar mouse mode & stub classes for control point editing
+- RM Added test code to create a few vector objects
+- RM Added control point drawing to VectorObjectLayers
+- RM Added center point as an additional control point
+- RM Initial code for vector object layers
+- RM Added File -> New Annotation Layer command
+- RM Annotation layer with no objects will now report empty
+- RM Added placeholder implementation for spline drawing
+- RM Fixed bug in adding new empty ugrid layers
+- RM Updated to the more readable FloatCanvas json format
+- RM Added brute-force ellipse rasterizer in GLDC
+- RM Removed ImageAnnotationLayer, ImageScreenData and other methods used by the image overlay hack for the raster annotation layer concept
+- RM Added load support for FloatCanvas json data
+- RM Added filled circles and rectangles
+- RM Added circle rendering to GLDC
+- RM Fixed rectangles (not y-swapped)
+- RM Moved GLDC to new file
+- RM Added wx.DC API on top of OpenGL to have FloatCanvas draw right into the OpenGL layers
+- RM Initial rendering of georeferenced images from FloatCanvas
+- RM Initial FloatCanvas drawing in annotation layer
+- RM Added initial placeholder for annotation layer
+- RM Refactored image and texture loading to combine common code
+- RM Removed background processing and threaded job manager
+- RM Moved ImageData class into textures & refactored for generic image support
+- RM Fixed mouse handling of alt button for pan mode even in other modes
+- RM Removed some old debug prints
+- RM Moved demo files to tutorial directory
+- RM Added simple tests while learning the vispy/gloo OpenGL interface
+- RM Added some simple test programs for learning the OpenGL Shader Language
+- RM Added simple test grid to show negative depth
+- RM Added polygon rendering
+- RM cleaned up render importing
+- RM Renamed picker module to lowercase
+- RM Added triangle rendering
+- RM Added debugging for invalid pick index
+- RM Fixed set_lines to handle changes in number of lines
+- RM Fixed set_points to handle changes in number of points
+- RM Fixed return value error in prepare_string_texture_for_labels
+- RM Added some OpenGL shader links
+- RM Changed to non-threaded loading for images
+- RM Added image rendering
+- RM Added label rendering
+- RM Pulled out font texture generation into base_canvas
+- RM Fixed point picking
+- RM Fixed texture rendering
+- RM Reenabled grid rendering
+- RM Fixed picker calling and encapsulated picker constants within Picker itself
+- RM Changing from vispy to gl_immediate, first basic working rendering
+- RM Changed to use gl constants rather than gloo.set_state
+- RM Basic line drawing working
+- RM Moved the references to the PICKER_OFFSET nonsense
+- RM Test pattern for vispy renderer
+- RM First no-op vispy renderer
+- RM Refactored legacy OpenGL rendering in preparation for vispy rendering
+- RM Removed old MODE_ constants from layer_control_wx
+
 02/09/2015
 ---------------------------
 Released 3.0b22
