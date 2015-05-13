@@ -287,7 +287,7 @@ class ImmediateModeRenderer():
             # Release the raw image data to free up memory.
             image_data.release_images()
             
-        self.image_textures.set_projection(projection)
+        self.image_textures.set_projection(image_data, projection)
 
     def use_world_rects_as_screen_rects(self, image_data):
         # FIXME: not optimized at all! Currently renegerates everything at
@@ -301,38 +301,6 @@ class ImmediateModeRenderer():
             image_data.release_images()
             
         self.image_textures.use_world_rects_as_screen_rects()
-
-    def draw_image(self, layer_index_base, picker, alpha=1.0):
-        print "here"
-        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-        if (picker.is_active):
-            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
-            r, g, b, a = int_to_color(fill_color)
-            gl.glColor(r, g, b, a)
-        else:
-            gl.glEnable(gl.GL_TEXTURE_2D)
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
-            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-            gl.glColor(1.0, 1.0, 1.0, alpha)
-        for i, vbo in enumerate(self.image_textures.vbo_vertexes):
-            vbo.bind()
-            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
-
-            if picker.is_active:
-                gl.glBindTexture(gl.GL_TEXTURE_2D, self.image_textures.textures[i])
-                self.image_textures.vbo_texture_coordinates.bind()
-                gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
-
-            gl.glDrawArrays(gl.GL_QUADS, 0, 4)
-
-            if picker.is_active:
-                self.image_textures.vbo_texture_coordinates.unbind()
-
-            vbo.unbind()
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-        gl.glDisable(gl.GL_TEXTURE_2D)
 
     def draw_image(self, layer_index_base, picker, alpha=1.0):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)

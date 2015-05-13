@@ -42,14 +42,18 @@ class ImageData(object):
 
     NORTH_UP_TOLERANCE = 0.002
     
-    def __init__(self, x, y):
+    def __init__(self, x, y, texture_size=1024):
         self.x = x
         self.y = y
+        self.texture_size = texture_size
         self.projection = None
+        self.pixel_to_projected_transform = np.array((0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
         
         self.images = []
         self.image_sizes = []
         self.image_world_rects = []
+        
+        self.calc_textures(self.texture_size)
     
     def is_threaded(self):
         return False
@@ -71,48 +75,58 @@ class ImageData(object):
             # no projection, assume latlong:
             projection = pyproj.Proj("+proj=latlong")
         self.projection = projection
+        self.calc_image_world_rects()
     
     def get_bounds(self):
         bounds = rect.NONE_RECT
 
         if (self.image_world_rects):
-            world_rect_flat_list = flatten(self.image_world_rects)
-            b = world_rect_flat_list[0]
-            for r in world_rect_flat_list[1:]:
+            b = self.image_world_rects[0]
+            for r in self.image_world_rects[1:]:
                 b = rect.accumulate_rect(b, r)
             bounds = rect.accumulate_rect(bounds, b)
         
         return bounds
     
     def calc_textures(self, texture_size):
+        self.texture_size = texture_size
         num_cols = self.x / texture_size
         if ((self.x % texture_size) != 0):
             num_cols += 1
         num_rows = self.y / texture_size
         if ((self.y % texture_size) != 0):
             num_rows += 1
-        
-        return num_cols, num_rows
+        self.image_sizes = []
+        for r in xrange(num_rows):
+            selection_height = texture_size
+            if (((r + 1) * texture_size) > self.y):
+                selection_height -= (r + 1) * texture_size - self.y
+            for c in xrange(num_cols):
+                selection_origin = (c * texture_size, r * texture_size)
+                selection_width = texture_size
+                if (((c + 1) * texture_size) > self.x):
+                    selection_width -= (c + 1) * texture_size - self.x
+                self.image_sizes.append((selection_origin, (selection_width, selection_height)))
     
-    def calc_world_rect(self, selection_origin, selection_width, selection_height):
+    def calc_world_rect(self, selection_origin, selection_size):
         # we invert the y in going to projected coordinates
         left_bottom_projected = apply_transform(
             (selection_origin[0],
-             selection_origin[1] + selection_height),
+             selection_origin[1] + selection_size[1]),
             self.pixel_to_projected_transform)
         left_top_projected = apply_transform(
             (selection_origin[0],
              selection_origin[1]),
             self.pixel_to_projected_transform)
         right_top_projected = apply_transform(
-            (selection_origin[0] + selection_width,
+            (selection_origin[0] + selection_size[0],
              selection_origin[1]),
             self.pixel_to_projected_transform)
         right_bottom_projected = apply_transform(
-            (selection_origin[0] + selection_width,
-             selection_origin[1] + selection_height),
+            (selection_origin[0] + selection_size[0],
+             selection_origin[1] + selection_size[1]),
             self.pixel_to_projected_transform)
-        if (self.projection.srs.find("+proj=longlat") != -1):
+        if (True or self.projection.srs.find("+proj=longlat") != -1):
             # for longlat projection, apparently someone decided that since the projection
             # is the identity, it might as well do something and so it returns the coordinates as
             # radians instead of degrees; so here we avoid using the projection altogether
@@ -127,40 +141,29 @@ class ImageData(object):
             right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
         
         return left_bottom_world, left_top_world, right_top_world, right_bottom_world
+    
+    def calc_image_world_rects(self):
+        self.image_world_rects = []
+        for entry in self.image_sizes:
+            selection_origin, selection_size = entry
+            world_rect = self.calc_world_rect(selection_origin, selection_size)
+            self.image_world_rects.append(world_rect)
 
-    def load_texture_data(self, texture_size, subimage_loader):
-        num_cols, num_rows = self.calc_textures(texture_size)
-
-        subimage_loader.prepare(num_cols, num_rows)
-        for r in xrange(num_rows):
-            images_row = []
-            image_sizes_row = []
-            image_world_rects_row = []
-            selection_height = texture_size
-            if (((r + 1) * texture_size) > self.y):
-                selection_height -= (r + 1) * texture_size - self.y
-            for c in xrange(num_cols):
-                selection_origin = (c * texture_size, r * texture_size)
-                selection_width = texture_size
-                if (((c + 1) * texture_size) > self.x):
-                    selection_width -= (c + 1) * texture_size - self.x
-                world_rect = self.calc_world_rect(selection_origin, selection_width, selection_height)
-                image = subimage_loader.load(selection_origin,
-                                             (selection_width, selection_height),
-                                             world_rect)
-                images_row.append(image)
-                image_sizes_row.append((selection_width, selection_height))
-                image_world_rects_row.append(world_rect)
-            self.images.append(images_row)
-            self.image_sizes.append(image_sizes_row)
-            self.image_world_rects.append(image_world_rects_row)
+    def load_texture_data(self, subimage_loader):
+        subimage_loader.prepare(len(self.image_sizes))
+        images = []
+        for entry in self.image_sizes:
+            selection_origin, selection_size = entry
+            image = subimage_loader.load(selection_origin, selection_size)
+            images.append(image)
+        self.images = images
 
 
 class SubImageLoader(object):
-    def prepare(self, num_cols, num_rows):
+    def prepare(self, num_sub_images):
         pass
     
-    def load(self, origin, size, w_r):
+    def load(self, origin, size):
         pass
 
 
@@ -169,17 +172,13 @@ class ImageTextures(object):
     
     """
     def __init__(self, image_data):
-        image_list = flatten(image_data.images)
-        self.image_sizes = flatten(image_data.image_sizes)
-        self.image_world_rects = flatten(image_data.image_world_rects)
-
         self.blank = np.array([128, 128, 128, 128], 'B')
         self.textures = []
         self.vbo_vertexes = []
         self.vbo_texture_coordinates = None  # just one, same one for all images
-        self.load(image_list)
+        self.load(image_data)
 
-    def load(self, image_list):
+    def load(self, image_data):
         texcoord_data = np.zeros(
             (1, ),
             dtype=data_types.TEXTURE_COORDINATE_DTYPE,
@@ -187,7 +186,8 @@ class ImageTextures(object):
         texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
 
         n = 0
-        for i in xrange(len(self.image_sizes)):
+        image_list = image_data.images
+        for i in xrange(len(image_data.image_sizes)):
             if image_list:
                 image_data = image_list[i]
             else:
@@ -266,9 +266,9 @@ class ImageTextures(object):
             image
         )
     
-    def set_projection(self, projection):
+    def set_projection(self, image_data, projection):
         image_projected_rects = []
-        for lb, lt, rt, rb in self.image_world_rects:
+        for lb, lt, rt, rb in image_data.image_world_rects:
             left_bottom_projected = projection(lb[0], lb[1])
             left_top_projected = projection(lt[0], lt[1])
             right_top_projected = projection(rt[0], rt[1])

@@ -83,17 +83,17 @@ class GDALImageData(ImageData):
             projection = pyproj.Proj(native_projection.ExportToProj4())
         else:
             projection = None
+        self.pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
         self.set_projection(projection)
 
-        self.pixel_to_projected_transform = calculate_pixel_to_projected_transform(dataset)
 
 class ImageDataBlocks(GDALImageData):
     """Version of ImageData to load using GDAL blocks.
     
     """
-    def load_dataset(self, dataset, texture_size):
+    def load_dataset(self, dataset):
         loader = GDALSubImageLoader(dataset)
-        self.load_texture_data(texture_size, loader)
+        self.load_texture_data(loader)
 
 
 def load_image_file(file_path):
@@ -122,7 +122,6 @@ def load_image_file(file_path):
     """
 
     SCANLINE_DRIVER_NAMES = ("BSB")
-    TEXTURE_SIZE = 1024
 
     # disable the default error handler so errors don't end up on stderr
     gdal.PushErrorHandler("CPLQuietErrorHandler")
@@ -141,7 +140,7 @@ def load_image_file(file_path):
 
     t0 = time.clock()
     image_data = ImageDataBlocks(dataset)
-    image_data.load_dataset(dataset, TEXTURE_SIZE)
+    image_data.load_dataset(dataset)
     log.debug("GDAL load time: %f" % (time.clock() - t0))
     
     return ("", image_data)
@@ -191,10 +190,10 @@ class GDALSubImageLoader(object):
             self.raster_bands.append(dataset.GetRasterBand(band_index))
         self.palette = get_palette(self.raster_bands[0])
     
-    def prepare(self, num_cols, num_rows):
-        progress_log.info("TICKS=%d" % (num_cols * num_rows))
+    def prepare(self, num_sub_images):
+        progress_log.info("TICKS=%d" % (num_sub_images))
 
-    def load(self, selection_origin, selection_size, world_rect):
+    def load(self, selection_origin, selection_size):
         progress_log.info("Loading image data...")
         DEFAULT_ALPHA = 255
         image = None
