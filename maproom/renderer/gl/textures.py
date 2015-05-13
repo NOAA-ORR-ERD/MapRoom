@@ -157,6 +157,19 @@ class ImageData(object):
             image = subimage_loader.load(selection_origin, selection_size)
             images.append(image)
         self.images = images
+    
+    def set_control_points(self, cp, projection):
+        xoffset = cp[0][0]
+        yoffset = cp[0][1]
+        xscale = (cp[1][0] - cp[0][0])/self.x
+        yscale = (cp[3][1] - cp[0][1])/self.y
+        self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
+        self.set_projection(projection)
+    
+    def load_numpy_array(self, cp, array, projection):
+        self.set_control_points(cp, projection)
+        loader = RawSubImageLoader(array)
+        self.load_texture_data(loader)
 
 
 class SubImageLoader(object):
@@ -165,6 +178,15 @@ class SubImageLoader(object):
     
     def load(self, origin, size):
         pass
+
+
+class RawSubImageLoader(SubImageLoader):
+    def __init__(self, array):
+        self.array = array
+    
+    def load(self, origin, size):
+        return self.array[origin[0]:origin[0] + size[0],
+                          origin[1]:origin[1] + size[1],:]
 
 
 class ImageTextures(object):

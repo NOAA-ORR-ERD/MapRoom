@@ -14,7 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
-from ..renderer import color_to_int, int_to_color
+from ..renderer import color_to_int, int_to_color, ImageData
 
 from line import LineLayer
 from constants import *
@@ -280,3 +280,64 @@ class EllipseVectorObject(RectangleVectorObject):
         colors = np.empty(num_segments, dtype=np.uint32)
         colors.fill(line_color)
         self.renderer.set_lines(xy, lsi, colors)
+
+
+class ScaledImageObject(RectangleVectorObject):
+    """Texture mapped image object that scales to the lat/lon view
+    
+    Image uses 4 control points like the rectangle, but uses a texture
+    object as the foreground.  The background color will show through in
+    trasparent pixels.
+    
+    """
+    name = Unicode("Image")
+    
+    layer_info_panel = ["Layer name", "Transparency"]
+    
+    image_data = Any
+    
+    def get_image_array(self):
+        from maproom.library.numpy_images import OffScreenHTML
+        h = OffScreenHTML(200)
+        arr = h.get_numpy("NOAA/ORR MapRoom Fonts")
+        return arr
+    
+    def move_control_point(self, drag, anchor, dx, dy):
+        print "before", self.points
+        RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
+        print "after", self.points
+        projection = self.manager.project.layer_canvas.projection
+        self.image_data.set_control_points(self.points, projection)
+        self.renderer.set_image_projection(self.image_data, projection)
+
+    def rebuild_image(self):
+        """Update renderer
+        
+        """
+        projection = self.manager.project.layer_canvas.projection
+        if self.image_data is None:
+            raw = self.get_image_array()
+            self.image_data = ImageData(raw.shape[0], raw.shape[1])
+            self.image_data.load_numpy_array(self.points, raw, projection)
+        self.renderer.set_image_projection(self.image_data, projection)
+        print self.image_data
+    
+    def rebuild_renderer(self, in_place=False):
+        RectangleVectorObject.rebuild_renderer(self, in_place)
+        self.rebuild_image()
+
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        """Renders the outline of the vector object.
+        
+        If the vector object subclass is fillable, subclass from
+        FillableVectorObject instead of this base class.
+        """
+        log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
+        if (not layer_visibility["layer"]):
+            return
+        if self.rebuild_needed:
+            self.rebuild_renderer()
+        self.renderer.draw_image(layer_index_base, picker, self.alpha)
+        print "picker:", picker.is_active, "points", layer_visibility["points"]
+        if layer_visibility["points"]:
+            self.renderer.draw_points(layer_index_base, picker, self.point_size)
