@@ -13,11 +13,12 @@ import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
 from renderer import ImmediateModeRenderer
-from picker import Picker, NullPicker, get_picker_index_base
+from picker import Picker, get_picker_index_base
 import maproom.library.rect as rect
 
 from ..gl.font import load_font_texture_with_alpha
 from ..gl import data_types
+from .. import NullPicker
 
 import logging
 mouselog = logging.getLogger("mouse")

@@ -302,30 +302,71 @@ class ImmediateModeRenderer():
             
         self.image_textures.use_world_rects_as_screen_rects()
 
-    def draw_image(self, alpha=1.0):
-        for i, vbo in enumerate(self.image_textures.vbo_vertexes):
+    def draw_image(self, layer_index_base, picker, alpha=1.0):
+        print "here"
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        if (picker.is_active):
+            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
+            r, g, b, a = int_to_color(fill_color)
+            gl.glColor(r, g, b, a)
+        else:
             gl.glEnable(gl.GL_TEXTURE_2D)
-            gl.glBindTexture(gl.GL_TEXTURE_2D, self.image_textures.textures[i])
-
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            gl.glColor(1.0, 1.0, 1.0, alpha)
+        for i, vbo in enumerate(self.image_textures.vbo_vertexes):
             vbo.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
-            self.image_textures.vbo_texture_coordinates.bind()
-            gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+            if picker.is_active:
+                gl.glBindTexture(gl.GL_TEXTURE_2D, self.image_textures.textures[i])
+                self.image_textures.vbo_texture_coordinates.bind()
+                gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-            gl.glColor(1.0, 1.0, 1.0, alpha)
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
             gl.glDrawArrays(gl.GL_QUADS, 0, 4)
 
-            self.image_textures.vbo_texture_coordinates.unbind()
-            gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            if picker.is_active:
+                self.image_textures.vbo_texture_coordinates.unbind()
 
             vbo.unbind()
-            gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+        gl.glDisable(gl.GL_TEXTURE_2D)
 
-            gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+    def draw_image(self, layer_index_base, picker, alpha=1.0):
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        texture = not picker.is_active
+        if texture:
+            gl.glEnable(gl.GL_TEXTURE_2D)
+            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            gl.glColor(1.0, 1.0, 1.0, alpha)
+        else:
+            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
+            r, g, b, a = int_to_color(fill_color)
+            gl.glColor(r, g, b, a)
+        for i, vbo in enumerate(self.image_textures.vbo_vertexes):
+            # have to bind texture before VBO
+            if texture:
+                gl.glBindTexture(gl.GL_TEXTURE_2D, self.image_textures.textures[i])
+            vbo.bind()
+            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            if texture:
+                self.image_textures.vbo_texture_coordinates.bind()
+                gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            gl.glDrawArrays(gl.GL_QUADS, 0, 4)
+
+            if texture:
+                self.image_textures.vbo_texture_coordinates.unbind()
+
+            vbo.unbind()
+        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+        gl.glDisable(gl.GL_TEXTURE_2D)
 
     def set_invalid_polygons(self, polygons, polygon_count):
         # Invalid polygons are those that couldn't be tessellated and thus

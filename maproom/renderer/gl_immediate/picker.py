@@ -19,9 +19,6 @@ FILL_PICKER_OFFSET = 2
 def get_picker_index_base(layer_index):
     return layer_index * MAX_PICKER_OFFSET
 
-class NullPicker(object):
-    is_active = False
-
 class Picker(object):
     """
     An off-screen buffer for detecting what object the mouse is over.

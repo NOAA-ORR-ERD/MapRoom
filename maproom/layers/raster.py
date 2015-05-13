@@ -10,7 +10,7 @@ from pyface.api import YES
 
 from ..library import rect
 
-from ..renderer import color_to_int, data_types
+from ..renderer import color_to_int, data_types, NullPicker
 
 from base import Layer, ProjectedLayer
 from constants import *
@@ -121,6 +121,7 @@ class RasterLayer(ProjectedLayer):
         if (not layer_visibility["layer"] or picker.is_active):
             return
 
-        # the labels
+        # the image
+        null_picker = NullPicker()
         if (layer_visibility["images"]):
-            self.renderer.draw_image(self.alpha)
+            self.renderer.draw_image(layer_index_base, null_picker, self.alpha)
