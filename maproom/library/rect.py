@@ -140,3 +140,10 @@ def get_normalized_coordinates(point_a, point_b):
             min(point_a[1], point_b[1]),
             max(point_a[0], point_b[0]),
             max(point_a[1], point_b[1]))
+
+
+def get_rect_of_points(points):
+    r = NONE_RECT
+    for p in points:
+        r = accumulate_point(r, p)
+    return r
