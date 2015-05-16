@@ -105,8 +105,8 @@ class LineVectorObject(VectorObjectLayer):
     center_point_index = 2
     display_center_control_point = False
     
-    # return the anchor point of the index point. E.g. anchors_of[0] = 1
-    anchors_of = np.asarray((1, 0, 2), dtype=np.uint8)
+    # return the anchor point of the index point. E.g. anchor_of[0] = 1
+    anchor_of = np.asarray((1, 0, 2), dtype=np.uint8)
     
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
@@ -119,18 +119,21 @@ class LineVectorObject(VectorObjectLayer):
     def set_opposite_corners(self, p1, p2):
         p = np.concatenate((p1, p2), 0)  # flatten to 1D
         c = p[self.corners].reshape(-1,2)
-        self.set_control_points_from_corners(c)
-        self.set_data(self.cp, 0.0, self.lines)
+        cp = self.get_control_points_from_corners(c)
+        self.set_data(cp, 0.0, self.lines)
     
-    def set_control_points_from_corners(self, c):
+    def get_control_points_from_corners(self, c):
         num_cp = self.center_point_index + 1
         cp = np.empty((num_cp,2), dtype=np.float32)
         cp[0:self.center_point_index] = c
         cp[self.center_point_index] = c.mean(0)
-        self.cp = cp
+        return cp
 
     def find_anchor_of(self, point_index):
-        self.anchor_point = self.anchors_of[point_index]
+        if point_index > self.center_point_index:
+            self.anchor_point = point_index
+        else:
+            self.anchor_point = self.anchor_of[point_index]
 
     def set_anchor_point(self, point_index, maintain_aspect=False):
         self.clear_all_selections()
@@ -150,14 +153,40 @@ class LineVectorObject(VectorObjectLayer):
         moves by both dx & dy.  The anchor point doesn't move at all, and of
         the other points: one only uses dx and the other dy.
         """
+        if self.drag_point == self.anchor_point and self.drag_point != self.center_point_index:
+            self.move_polyline_point(anchor, dx, dy)
+        else:
+            self.move_bounding_box_point(drag, anchor, dx, dy)
+    
+    def move_polyline_point(self, anchor, dx, dy):
+        pass
+    
+    def move_bounding_box_point(self, drag, anchor, dx, dy):
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        old_origin = np.copy(p.xy[0])  # without copy it will be changed below
+        orig_wh = p.xy[self.anchor_of[0]] - old_origin
+
         scale = self.anchor_dxdy[anchor]
         xoffset = scale.T[0] * dx
         yoffset = scale.T[1] * dy
         
+        # Only scale the bounding box control points & center because
+        # subclasses may have additional points in the list
+        offset = self.center_point_index + 1
+        
         # FIXME: Why does specifying .x work for a range, but not for a single
         # element? Have to use the dict notation for a single element.
-        self.points.x += xoffset
-        self.points.y += yoffset
+        offset = self.center_point_index + 1
+        self.points[0:offset].x += xoffset
+        self.points[0:offset].y += yoffset
+        
+        new_origin = np.copy(p.xy[0])  # see above re use of copy
+        scaled_wh = p.xy[self.anchor_of[0]] - new_origin
+        scale = scaled_wh / orig_wh
+        self.rescale_after_bounding_box_change(old_origin, new_origin, scale)
+    
+    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
+        pass
     
     def rasterize(self, projected_point_data, z, cp_color, line_color):
         n = np.alen(self.points)
@@ -197,7 +226,7 @@ class FillableVectorObject(LineVectorObject):
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
             
 
-class RectangleVectorObject(FillableVectorObject):
+class RectangleMixin(object):
     """Rectangle uses 4 control points in the self.points array, and nothing in
     the polygon points array.  All corner points can be used as control points.
     
@@ -222,8 +251,8 @@ class RectangleVectorObject(FillableVectorObject):
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
     center_point_index = 4
     
-    # return the anchor point of the index point. E.g. anchors_of[0] = 2
-    anchors_of = np.asarray((2, 3, 0, 1, 4), dtype=np.uint8)
+    # return the anchor point of the index point. E.g. anchor_of[0] = 2
+    anchor_of = np.asarray((2, 3, 0, 1, 4), dtype=np.uint8)
     
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
@@ -235,6 +264,9 @@ class RectangleVectorObject(FillableVectorObject):
         ((1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
         ), dtype=np.float32)
 
+
+class RectangleVectorObject(RectangleMixin, FillableVectorObject):
+    pass
 
 class EllipseVectorObject(RectangleVectorObject):
     """Rectangle uses 4 control points in the self.points array, and nothing in
@@ -341,3 +373,74 @@ class ScaledImageObject(RectangleVectorObject):
         print "picker:", picker.is_active, "points", layer_visibility["points"]
         if layer_visibility["points"]:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
+
+
+class PolylineObject(RectangleMixin, FillableVectorObject):
+    """Polyline uses 4 control points in the self.points array as the control
+    points for the bounding box, one center point, and subsequent points as
+    the list of points that define the segmented line.
+    
+    Adjusting the corner control points will resize or move the entire
+    polyline.  The center is an additional control point, which is constrained
+    and not independent of the corners.  Note that the control points that
+    represent the line don't have to start or end at one of the corners; the
+    bounding box points are calculated every time a point is added or removed
+    from the polyline.
+    
+     3           2
+      o---------o
+      |         |
+      |    o 4  |
+      |         |
+      o---------o
+     0           1
+    """
+    name = Unicode("Polyline")
+    
+    def set_points(self, points):
+        points = np.asarray(points)
+        
+        # initialize boundary box control points (5 points: corners & center)
+        # with zeros; will be filled in with call to recalc_bounding_box below
+        cp = np.zeros((5,2), dtype=np.float32)
+        
+        p = np.concatenate((cp, points), 0)  # flatten to 1D
+        num_points = np.alen(points)
+        offset = self.center_point_index + 1
+        lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
+        self.set_data(p, 0.0, np.asarray(lines, dtype=np.uint32))
+        self.recalc_bounding_box()
+    
+    def move_polyline_point(self, anchor, dx, dy):
+        points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
+        points[anchor] += (dx, dy)
+        self.recalc_bounding_box()
+    
+    def recalc_bounding_box(self):
+        offset = self.center_point_index + 1
+        points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
+        r = rect.get_rect_of_points(points[offset:])
+        corners = np.empty((4,2), dtype=np.float32)
+        corners[0] = r[0]
+        corners[1] = (r[1][0], r[0][1])
+        corners[2] = r[1]
+        corners[3] = (r[0][0], r[1][1])
+        cp = self.get_control_points_from_corners(corners)
+        points[0:offset] = cp
+    
+    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
+        offset = self.center_point_index + 1
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        points = ((p.xy[offset:] - old_origin) * scale) + new_origin
+        p.xy[offset:] = points
+        
+    def rasterize(self, projected_point_data, z, cp_color, line_color):
+        n = np.alen(self.points)
+        if not self.display_center_control_point:
+            n -= 1
+        colors = np.empty(n, dtype=np.uint32)
+        colors.fill(cp_color)
+        self.renderer.set_points(projected_point_data, z, colors, num_points=n)
+        colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
+        colors.fill(line_color)
+        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
