@@ -27,17 +27,24 @@ class LayerStyle(object):
         color_to_int(0.5, 0.5, 0, 1),
     ]
     default_color_index = 0
-
-    valid = set([
-        'line_color', 'line_stipple', 'line_stipple_factor',
-        'line_width', 'line_start_symbol', 'line_end_symbol',
-        'fill_color', 'fill_style',
-        ])
     
+    fill_styles = {
+        0: "No Fill",
+        1: "Solid Color",
+        }
+
     v1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'fill_color',
         ]
+
+    v2_serialization_order = [
+        'line_color', 'line_stipple', 'line_stipple_factor',
+        'line_width', 'line_start_symbol', 'line_end_symbol',
+        'fill_color', 'fill_style',
+        ]
+    
+    valid = set(v2_serialization_order)
     
     def __init__(self, **kwargs):
         if len(kwargs):
@@ -59,12 +66,12 @@ class LayerStyle(object):
             self.line_start_symbol = 0
             self.line_end_symbol = 0
             self.fill_color = self.default_fill_color  # 4 byte including alpha
-            self.fill_style = 0
+            self.fill_style = 1
     
     def __str__(self):
-        args = [self.get_str(i) for i in self.v1_serialization_order]
+        args = [self.get_str(i) for i in self.v2_serialization_order]
         print args
-        return "stylev1:%s" % ",".join(args)
+        return "stylev2:%s" % ",".join(args)
     
     def get_str(self, k):
         v = getattr(self, k)
@@ -84,6 +91,17 @@ class LayerStyle(object):
         vals = txt.split(",")
         print vals
         for k in self.v1_serialization_order:
+            v = vals.pop(0)
+            if v == "-":
+                v = None
+            else:
+                v = int(v, 16)
+            setattr(self, k, v)
+    
+    def parse_stylev2(self, txt):
+        vals = txt.split(",")
+        print vals
+        for k in self.v2_serialization_order:
             v = vals.pop(0)
             if v == "-":
                 v = None
