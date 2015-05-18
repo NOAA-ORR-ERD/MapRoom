@@ -96,7 +96,7 @@ class LineVectorObject(VectorObjectLayer):
     """
     name = Unicode("Line")
     
-    layer_info_panel = ["Layer name", "Line Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Style", "Line Color", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 
@@ -243,7 +243,7 @@ class RectangleMixin(object):
     """
     name = Unicode("Rectangle")
     
-    layer_info_panel = ["Layer name", "Line Color", "Fill Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Style", "Line Color", "Fill Color", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 

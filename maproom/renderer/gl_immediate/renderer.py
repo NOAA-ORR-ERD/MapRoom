@@ -626,10 +626,10 @@ class ImmediateModeRenderer():
             self.vbo_line_segment_colors.bind()
             gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
             gl.glLineWidth(style.line_width)
+            gl.glLineStipple(style.line_stipple_factor, style.line_stipple)
+            gl.glEnable(gl.GL_LINE_STIPPLE)
 
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-        gl.glLineStipple(16, style.line_stipple)
-        gl.glEnable(gl.GL_LINE_STIPPLE)
         gl.glDrawArrays(gl.GL_LINES, 0, np.alen(self.vbo_line_segment_point_xys.data))
         gl.glDisable(gl.GL_LINE_STIPPLE)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)

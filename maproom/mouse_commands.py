@@ -443,7 +443,8 @@ class StyleChangeCommand(Command):
         return undo
 
     def undo(self, editor):
-        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
         old_style, style, default_style = self.undo_info.data
         layer.set_style(old_style)
         lm.update_default_style(default_style)

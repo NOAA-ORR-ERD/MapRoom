@@ -1,4 +1,5 @@
 import os
+import wx
 
 import numpy as np
 
@@ -28,10 +29,17 @@ class LayerStyle(object):
     ]
     default_color_index = 0
     
-    fill_styles = {
-        0: "No Fill",
-        1: "Solid Color",
-        }
+    line_styles = [
+        ("No Line", 0x0000, wx.TRANSPARENT),
+        ("Solid", 0xffff, wx.SOLID),
+        ("Dashed", 0xcccc, wx.LONG_DASH),
+        ("Dotted", 0xaaaa, wx.DOT),
+        ]
+    
+    fill_styles = [
+        ("No Fill", 0,),
+        ("Solid Color", 1,),
+        ]
 
     v1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
@@ -61,7 +69,7 @@ class LayerStyle(object):
         else:
             self.line_color = self.default_line_color  # 4 byte including alpha
             self.line_stipple = 0xffff  # 32 bit stipple pattern
-            self.line_stipple_factor = 1  # OpenGL scale factro
+            self.line_stipple_factor = 2  # OpenGL scale factro
             self.line_width = 2  # in pixels
             self.line_start_symbol = 0
             self.line_end_symbol = 0
@@ -133,3 +141,12 @@ class LayerStyle(object):
         style = self.__class__()
         style.copy_from(self)
         return style
+
+    def get_line_style_from_stipple(self, stipple):
+        for i, s in enumerate(self.line_styles):
+            if stipple == s[1]:
+                return i, s
+        return 1, self.line_styles[1] # default to solid
+
+    def get_current_line_style(self):
+        return self.get_line_style_from_stipple(self.line_stipple)

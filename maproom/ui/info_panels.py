@@ -434,7 +434,88 @@ class FillColorField(ColorPickerField):
         
     def get_value(self, layer):
         return layer.style.fill_color
+
+import wx.combo
+class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
+
+    # Overridden from OwnerDrawnComboBox, called to draw each
+    # item in the list
+    def OnDrawItem(self, dc, rect, item, flags):
+        if item == wx.NOT_FOUND:
+            # painting the control, but there is no valid item selected yet
+            return
+
+        r = wx.Rect(*rect)  # make a copy
+        r.Deflate(3, 5)
+
+        line_style = LayerStyle.line_styles[item]
+        penStyle = line_style[2]
+        pen = wx.Pen(dc.GetTextForeground(), 1, penStyle)
+        dc.SetPen(pen)
+
+        if flags & wx.combo.ODCB_PAINTING_CONTROL:
+            # for painting the control itself
+            dc.DrawLine( r.x+5, r.y+r.height/2, r.x+r.width - 5, r.y+r.height/2 )
+
+        else:
+            # for painting the items in the popup
+            dc.DrawText(self.GetString( item ),
+                        r.x + 3,
+                        (r.y + 0) + ( (r.height/2) - dc.GetCharHeight() )/2
+                        )
+            dc.DrawLine( r.x+5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1 )
+
+           
+    # Overridden from OwnerDrawnComboBox, called for drawing the
+    # background area of each item.
+    def OnDrawBackground(self, dc, rect, item, flags):
+        # If the item is selected, or its item # iseven, or we are painting the
+        # combo control itself, then use the default rendering.
+        if (item & 1 == 0 or flags & (wx.combo.ODCB_PAINTING_CONTROL |
+                                      wx.combo.ODCB_PAINTING_SELECTED)):
+            wx.combo.OwnerDrawnComboBox.OnDrawBackground(self, dc, rect, item, flags)
+            return
+
+        # Otherwise, draw every other background with different colour.
+        bgCol = wx.Colour(240,240,250)
+        dc.SetBrush(wx.Brush(bgCol))
+        dc.SetPen(wx.Pen(bgCol))
+        dc.DrawRectangleRect(rect);
+
+    # Overridden from OwnerDrawnComboBox, should return the height
+    # needed to display an item in the popup, or -1 for default
+    def OnMeasureItem(self, item):
+        return 24
+
+    # Overridden from OwnerDrawnComboBox.  Callback for item width, or
+    # -1 for default/undetermined
+    def OnMeasureItemWidth(self, item):
+        return -1; # default - will be measured from text width
+
+class LineStyleField(InfoField):
+    same_line = True
     
+    def fill_data(self, layer):
+        index, style = layer.style.get_current_line_style()
+        self.ctrl.SetSelection(index)
+    
+    def create_control(self):
+        names = [s[0] for s in LayerStyle.line_styles]
+        c = PenStyleComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                             style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        line_style = LayerStyle.line_styles[item]
+        style = LayerStyle(line_stipple=line_style[1])
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
@@ -511,6 +592,7 @@ class InfoPanel(PANELTYPE):
         "Transparency": AlphaField,
         "Color": ColorField,
         "Line Color": ColorField,
+        "Line Style": LineStyleField,
         "Fill Color": FillColorField,
         }
     
