@@ -78,7 +78,6 @@ class LayerStyle(object):
     
     def __str__(self):
         args = [self.get_str(i) for i in self.v2_serialization_order]
-        print args
         return "stylev2:%s" % ",".join(args)
     
     def get_str(self, k):

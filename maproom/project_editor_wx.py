@@ -307,7 +307,7 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:layer_contents_changed_in_place')
     def layer_contents_changed_in_place(self, layer):
-        log.debug("layer_contents_changed called!!! layer=%s" % layer)
+        log.debug("layer_contents_changed_in_place called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer, in_place=True)
     
     @on_trait_change('layer_manager:layer_contents_deleted')
