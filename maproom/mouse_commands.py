@@ -435,7 +435,7 @@ class StyleChangeCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        undo.data = (layer.style, self.style, lm.default_style)
+        undo.data = (layer.style.get_copy(), self.style, lm.default_style)
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_display_properties_changed = True
         layer.set_style(self.style)
