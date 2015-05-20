@@ -177,9 +177,13 @@ Adding New Toolbar Items
 
 To add a new toolbar item to an existing mouse mode, create the new subclass
 of :class:`maproom.MouseHandler` and add that to the appropriate list in
-the :attribute:`maproom.LayerCanvas.valid_mouse_modes` dictionary.  In this
-case, we'll create `ControlPointSelectionMode` and it will be added to the
-`AnnotationLayerToolBar`::
+the :attribute:`maproom.LayerCanvas.valid_mouse_modes` dictionary.
+
+If you are creating a new mouse handler, see the :ref:`Mouse Handler` section
+that describes the process of extending a :class:`maproom.MouseHandler` class
+to perform additional functions.  The new mouse handler must be added to the
+toolbar definition, so for this example, `ControlPointSelectionMode` is added
+to the `AnnotationLayerToolBar`::
 
     valid_mouse_modes = {
         'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
@@ -216,10 +220,22 @@ Note that the order in which the actions are defined is the order that they will
 Mouse Handler
 -------------
 
-Mouse handlers are objects that process mouse and keyboard handling to provide
-customization based on the layer.
+Mouse handlers are objects that process mouse and keyboard handling to
+provide customization based on the layer.  The :class:`maproom.MouseHandler`
+provides an abstraction into the mouse processing with overridable
+methods like :meth:`maproom.MouseHandler.process_mouse_down` and
+:meth:`maproom.MouseHandler.process_mouse_motion_up`.
 
-Icons should be located in the `maprooms/icons` subdirectory.
+Several UI features, like the icon and menu name, are class attributes (note
+that icons should be located in the `maprooms/icons` subdirectory), so when
+defining the subclass, be sure to change those to describe the new handler.
+
+Mouse handlers have limited lifetime: an instance is created every time the
+user clicks on a different mouse mode in the UI.  So, the mouse mode should
+not be used to store any state information because it will be lost when
+switching to a new mode.
+
+
 
 MapRoom Layers
 ==============

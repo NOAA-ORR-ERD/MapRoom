@@ -82,6 +82,8 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.on_right_mouse_down)
+        self.Bind(wx.EVT_RIGHT_UP, self.on_right_mouse_up)
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
         self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_mouse_leave)
@@ -130,6 +132,18 @@ class BaseCanvas(glcanvas.GLCanvas):
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         mode.process_mouse_up(event)
+        self.set_cursor(mode)
+
+    def on_right_mouse_down(self, event):
+        mode = self.get_effective_tool_mode(event)
+        self.forced_cursor = None
+        mode.process_right_mouse_down(event)
+        self.set_cursor(mode)
+
+    def on_right_mouse_up(self, event):
+        mode = self.get_effective_tool_mode(event)
+        self.forced_cursor = None
+        mode.process_right_mouse_up(event)
         self.set_cursor(mode)
 
     def on_mouse_wheel_scroll(self, event):

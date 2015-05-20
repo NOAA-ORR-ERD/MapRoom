@@ -494,6 +494,12 @@ class AddLineObjectAction(MouseHandlerBaseAction):
     name = handler.menu_item_name
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
+
+class AddPolylineObjectAction(MouseHandlerBaseAction):
+    handler = AddPolylineMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
     
 
 class FindPointsAction(EditorAction):
@@ -651,6 +657,7 @@ class MaproomProjectTask(FrameworkTask):
                            PanModeAction(),
                            ControlPointAction(),
                            AddLineObjectAction(),
+                           AddPolylineObjectAction(),
                            AddRectangleObjectAction(),
                            AddEllipseObjectAction(),
                            ),

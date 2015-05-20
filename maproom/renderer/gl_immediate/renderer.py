@@ -484,6 +484,25 @@ class ImmediateModeRenderer():
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
+    def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
+        c = self.canvas
+        h = rect.height(c.screen_rect)
+        gl.glDisable(gl.GL_TEXTURE_2D)
+        gl.glDisable(gl.GL_LINE_SMOOTH)
+        gl.glLineWidth(width)
+        # don't let texture colors override the line color
+        gl.glColor(red, green, blue, alpha)
+        gl.glLineStipple(stipple_factor, stipple_pattern)
+        gl.glEnable(gl.GL_LINE_STIPPLE)
+        gl.glBegin(gl.GL_LINE_STRIP)
+        for p in points:
+            # flip y to treat point as normal screen coordinates
+            gl.glVertex(p[0], h - p[1], 0)
+        gl.glEnd()
+        gl.glDisable(gl.GL_LINE_STIPPLE)
+        gl.glEnable(gl.GL_LINE_SMOOTH)
+        gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
+
     def draw_screen_box(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, width=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
         c = self.canvas
         # flip y to treat rect as normal screen coordinates

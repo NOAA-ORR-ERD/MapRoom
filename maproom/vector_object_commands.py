@@ -6,14 +6,14 @@ from layers.vector_object import *
 
 class DrawVectorObjectCommand(Command):
     short_name = "vector_object"
+    ui_name = None
+    vector_object_class = None
     serialize_order = [
         ('layer', 'layer'),
         ('cp1', 'point'),
         ('cp2', 'point'),
         ('style', 'style'),
         ]
-    ui_name = None
-    vector_object_class = None
     
     def __init__(self, event_layer, cp1, cp2, style):
         Command.__init__(self, event_layer)
@@ -28,9 +28,7 @@ class DrawVectorObjectCommand(Command):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
-        layer = self.vector_object_class(manager=lm)
-        layer.set_opposite_corners(self.cp1, self.cp2)
-        layer.set_style(self.style)
+        layer = self.get_vector_object_layer(lm)
         event_layer = lm.get_layer_by_invariant(self.layer)
         if event_layer.type == "annotation":
             kwargs = {'first_child_of': event_layer}
@@ -50,6 +48,12 @@ class DrawVectorObjectCommand(Command):
         undo.data = (layer.invariant, saved_invariant)
         
         return self.undo_info
+    
+    def get_vector_object_layer(self, lm):
+        layer = self.vector_object_class(manager=lm)
+        layer.set_opposite_corners(self.cp1, self.cp2)
+        layer.set_style(self.style)
+        return layer
 
     def undo(self, editor):
         lm = editor.layer_manager
@@ -84,3 +88,26 @@ class DrawLineCommand(DrawVectorObjectCommand):
     short_name = "line_obj"
     ui_name = "Line"
     vector_object_class = LineVectorObject
+
+
+class DrawPolylineCommand(DrawVectorObjectCommand):
+    short_name = "polyline_obj"
+    ui_name = "Polyline"
+    vector_object_class = PolylineObject
+    serialize_order = [
+        ('layer', 'layer'),
+        ('points', 'points'),
+        ('style', 'style'),
+        ]
+    
+    def __init__(self, event_layer, points, style):
+        Command.__init__(self, event_layer)
+        self.points = points
+        self.style = style.get_copy()  # Make sure not sharing objects
+        self.style.fill_style = 0
+    
+    def get_vector_object_layer(self, lm):
+        layer = self.vector_object_class(manager=lm)
+        layer.set_points(self.points)
+        layer.set_style(self.style)
+        return layer

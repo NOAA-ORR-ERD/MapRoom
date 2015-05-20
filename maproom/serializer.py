@@ -8,6 +8,10 @@ from peppy2.utils.file_guess import FileMetadata
 import command
 from layers.style import LayerStyle
 
+import logging
+log = logging.getLogger(__name__)
+
+
 magic_version = 1
 magic_template = "# NOAA MapRoom Command File, v"
 magic_header = "%s%d" % (magic_template, magic_version)
@@ -76,11 +80,14 @@ class TextDeserializer(object):
     def unserialize_line(self, line, manager):
         text_args = shlex.split(line)
         short_name = text_args.pop(0)
+        log.debug("unserialize: short_name=%s, args=%s" % (short_name, text_args))
         cmd_cls = Serializer.get_command(short_name)
         cmd_args = []
         for name, stype in cmd_cls.serialize_order:
+            log.debug("  name=%s, type=%s" % (name, stype))
             converter = SerializedCommand.get_converter(stype)
             arg = converter.instance_from_args(text_args, manager, self)
+            log.debug("  converter=%s: %s" % (converter.__class__.__name__, str(arg)))
             cmd_args.append(arg)
         cmd = "COMMAND: %s(%s)" % (cmd_cls.__name__, ",".join([str(a) for a in cmd_args]))
         cmd = cmd_cls(*cmd_args)
@@ -160,6 +167,26 @@ class PointConverter(ArgumentConverter):
         lon = args.pop(0)
         lat = args.pop(0)
         return (float(lon), float(lat))
+
+
+class PointsConverter(ArgumentConverter):
+    stype = "points"
+    
+    def get_args(self, instance):
+        text = ",".join(["(%s,%s)" % (str(i[0]), str(i[1])) for i in instance])
+        return "[%s]" % text,
+    
+    def instance_from_args(self, args, manager, deserializer):
+        text = args.pop(0).lstrip("[").rstrip("]")
+        if text:
+            text = text.lstrip("(").rstrip(")")
+            tuples = text.split("),(")
+            points = []
+            for t in tuples:
+                lon, lat = t.split(",", 1)
+                points.append((float(lon), float(lat)))
+            return points
+        return []
 
 
 class RectConverter(ArgumentConverter):

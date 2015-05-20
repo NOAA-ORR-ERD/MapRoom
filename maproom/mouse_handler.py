@@ -86,6 +86,12 @@ class MouseHandler(object):
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
         c.selection_box_is_being_defined = False
 
+    def process_right_mouse_down(self, event):
+        event.Skip()
+
+    def process_right_mouse_up(self, event):
+        event.Skip()
+
     def process_mouse_wheel_scroll(self, event):
         c = self.layer_control
         rotation = event.GetWheelRotation()
@@ -677,3 +683,65 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+
+
+class AddPolylineMode(MouseHandler):
+    icon = "shape_polyline.png"
+    menu_item_name = "Add Polyline"
+    menu_item_tooltip = "Add a new polyline"
+
+    def __init__(self, *args, **kwargs):
+        MouseHandler.__init__(self, *args, **kwargs)
+        self.points = []
+        self.cursor_point = None
+    
+    def get_cursor(self):
+        return wx.StockCursor(wx.CURSOR_CROSS)
+    
+    def get_world_point(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        pp = c.get_projected_point_from_screen_point(p)
+        cp = c.get_world_point_from_projected_point(pp)
+        return cp
+    
+    def process_mouse_down(self, event):
+        # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_control
+        if len(self.points) == 0:
+            cp = self.get_world_point(event)
+            self.points.append(cp)
+            c.render(event)
+
+    def process_mouse_motion_up(self, event):
+        c = self.layer_control
+        self.cursor_point = self.get_world_point(event)
+        c.render(event)
+    
+    def process_mouse_motion_down(self, event):
+        self.process_mouse_motion_up(event)
+
+    def process_mouse_up(self, event):
+        # After the first point, mouse up events add points
+        c = self.layer_control
+        cp = self.get_world_point(event)
+        self.points.append(cp)
+        c.render(event)
+    
+    def process_right_mouse_down(self, event):
+        # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_control
+        e = c.project
+        if len(self.points) > 1:
+            layer = e.layer_tree_control.get_selected_layer()
+            if (layer is not None):
+                cmd = DrawPolylineCommand(layer, self.points, layer.manager.default_style)
+                e.process_command(cmd)
+
+    def render_overlay(self, renderer):
+        c = self.layer_control
+        sp = [c.get_screen_point_from_world_point(p) for p in self.points]
+        renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 0)
+        if self.cursor_point is not None and len(sp) > 0:
+            cp = c.get_screen_point_from_world_point(self.cursor_point)
+            renderer.draw_screen_line(sp[-1], cp, 1.0, 1.0, 0, 0)
