@@ -593,6 +593,12 @@ class ImmediateModeRenderer():
             fill_color = self.get_fill_properties(style)
         if fill_color is None:
             return
+        
+        if (not picker.is_active):
+            fill_stipple = style.get_fill_stipple()
+            if fill_stipple is not None:
+                gl.glEnable(gl.GL_POLYGON_STIPPLE)
+                gl.glPolygonStipple(fill_stipple)
 
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
         self.vbo_line_segment_point_xys.bind()
@@ -604,6 +610,7 @@ class ImmediateModeRenderer():
         gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
         gl.glDrawArrays(gl.GL_TRIANGLE_FAN, 0, np.alen(self.vbo_line_segment_point_xys.data))
         gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+        gl.glDisable(gl.GL_POLYGON_STIPPLE)
 
         self.vbo_line_segment_point_xys.unbind()
 

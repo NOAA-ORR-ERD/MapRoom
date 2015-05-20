@@ -1,5 +1,6 @@
 import os
 import wx
+from collections import OrderedDict
 
 import numpy as np
 
@@ -9,6 +10,15 @@ from ..renderer import color_to_int
 
 import logging
 log = logging.getLogger(__name__)
+
+
+fill_50 = np.empty((32, 4), dtype=np.uint8)
+fill_50[::2] = 0xaa
+fill_50[1::2] = 0x55
+
+hatched = np.empty((32, 4), dtype=np.uint8)
+hatched[:] = 0x80
+hatched[::8] = 0xff
 
 
 class LayerStyle(object):
@@ -36,10 +46,12 @@ class LayerStyle(object):
         ("Dotted", 0xaaaa, wx.DOT),
         ]
     
-    fill_styles = [
-        ("No Fill", 0,),
-        ("Solid Color", 1,),
-        ]
+    fill_styles = OrderedDict([
+        (0, ("No Fill", None,)),
+        (1, ("Solid Color", None,)),
+        (2, ("50%", fill_50)),
+        (3, ("Hatched", hatched)),
+        ])
 
     v1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
@@ -149,3 +161,9 @@ class LayerStyle(object):
 
     def get_current_line_style(self):
         return self.get_line_style_from_stipple(self.line_stipple)
+    
+    def get_fill_stipple(self):
+        return self.fill_styles[self.fill_style][1]
+
+    def get_current_fill_style(self):
+        return self.fill_style, self.fill_styles[self.fill_style]

@@ -517,6 +517,32 @@ class LineStyleField(InfoField):
         self.panel.project.process_command(cmd)
 
 
+class FillStyleField(InfoField):
+    same_line = True
+    
+    def fill_data(self, layer):
+        index, style = layer.style.get_current_fill_style()
+        self.ctrl.SetSelection(index)
+    
+    def create_control(self):
+        c = wx.combo.BitmapComboBox(self.parent, -1, "", size=(100, -1),
+                             style=wx.CB_READONLY)
+        for i, s in LayerStyle.fill_styles.iteritems():
+            c.Append(s[0])
+
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        style = LayerStyle(fill_style=item)
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
 
@@ -594,6 +620,7 @@ class InfoPanel(PANELTYPE):
         "Line Color": ColorField,
         "Line Style": LineStyleField,
         "Fill Color": FillColorField,
+        "Fill Style": FillStyleField,
         }
     
     def create_fields(self, layer, fields):
