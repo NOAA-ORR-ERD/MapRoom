@@ -153,7 +153,7 @@ class LineVectorObject(VectorObjectLayer):
         moves by both dx & dy.  The anchor point doesn't move at all, and of
         the other points: one only uses dx and the other dy.
         """
-        if self.drag_point == self.anchor_point and self.drag_point != self.center_point_index:
+        if drag == anchor and drag != self.center_point_index:
             self.move_polyline_point(anchor, dx, dy)
         else:
             self.move_bounding_box_point(drag, anchor, dx, dy)
