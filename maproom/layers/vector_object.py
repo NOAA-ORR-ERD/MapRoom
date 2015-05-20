@@ -427,6 +427,7 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
         corners[3] = (r[0][0], r[1][1])
         cp = self.get_control_points_from_corners(corners)
         points[0:offset] = cp
+        self.update_bounds()
     
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         offset = self.center_point_index + 1
