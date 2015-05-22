@@ -166,8 +166,9 @@ class ImageData(object):
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
     
-    def load_numpy_array(self, cp, array, projection):
-        self.set_control_points(cp, projection)
+    def load_numpy_array(self, cp, array, projection=None):
+        if projection is not None:
+            self.set_control_points(cp, projection)
         loader = RawSubImageLoader(array)
         self.load_texture_data(loader)
 
@@ -314,6 +315,36 @@ class ImageTextures(object):
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
     
+    def use_screen_rect(self, image_data, r):
+        for i, entry in enumerate(image_data.image_sizes):
+            selection_origin, selection_size = entry
+            x = selection_origin[1]
+            y = selection_origin[0]
+            w = selection_size[1]
+            h = selection_size[0]
+            raw = self.vbo_vertexes[i].data
+            vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
+            vertex_data.x_lb = x + r[0][0]
+            vertex_data.y_lb = y + r[0][1]
+            vertex_data.x_lt = x + r[0][0]
+            vertex_data.y_lt = y + r[0][1] + h
+            vertex_data.x_rt = x + r[0][0] + w
+            vertex_data.y_rt = y + r[0][1] + h
+            vertex_data.x_rb = x + r[0][0] + w
+            vertex_data.y_rb = y + r[0][1]
+
+            self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
+    
+    def center_at_screen_point(self, image_data, point, screen_height):
+        left = int(point[0] - image_data.y/2)
+        bottom = int(point[1] - image_data.x/2)
+        right = left + image_data.y
+        top = bottom + image_data.x
+        # flip y to treat rect as normal opengl coordinates
+        r = ((left, screen_height - bottom),
+             (right, screen_height - top))
+        self.use_screen_rect(image_data, r)
+
     def destroy(self):
         for texture in self.textures:
             gl.glDeleteTextures(np.array([texture], np.uint32))

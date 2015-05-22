@@ -402,6 +402,77 @@ class ScaledImageObject(RectangleVectorObject):
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
 
+class OverlayImageObject(RectangleVectorObject):
+    """Texture mapped image object that is fixed in size relative to the screen
+    
+    Image uses 4 control points like the rectangle, but uses a texture
+    object as the foreground.  The background color will show through in
+    trasparent pixels.
+    
+    """
+    name = Unicode("Image")
+    
+    layer_info_panel = ["Layer name", "Transparency"]
+    
+    image_data = Any
+    
+    def get_image_array(self):
+        from maproom.library.numpy_images import OffScreenHTML
+        h = OffScreenHTML(200)
+        arr = h.get_numpy("NOAA/ORR MapRoom Fonts")
+        return arr
+
+    def set_location(self, p1):
+        p = np.concatenate((p1, p1), 0)  # flatten to 1D
+        c = p[self.corners].reshape(-1,2)
+        cp = self.get_control_points_from_corners(c)
+        self.set_data(cp, 0.0, self.lines)
+    
+    def get_control_points_from_corners(self, c):
+        num_cp = self.center_point_index + 1
+        cp = np.empty((num_cp,2), dtype=np.float32)
+        cp[0:self.center_point_index] = c
+        cp[self.center_point_index] = c.mean(0)
+        return cp
+    
+    def move_control_point(self, drag, anchor, dx, dy):
+        print "before", self.points
+        RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
+        print "after", self.points
+        projection = self.manager.project.layer_canvas.projection
+        self.image_data.set_control_points(self.points, projection)
+        self.renderer.set_image_projection(self.image_data, projection)
+
+    def rebuild_image(self):
+        """Update renderer
+        
+        """
+        if self.image_data is None:
+            raw = self.get_image_array()
+            self.image_data = ImageData(raw.shape[0], raw.shape[1])
+            self.image_data.load_numpy_array(self.points, raw)
+        self.renderer.set_image_screen(self.image_data)
+        print self.image_data
+    
+    def rebuild_renderer(self, in_place=False):
+        RectangleVectorObject.rebuild_renderer(self, in_place)
+        self.rebuild_image()
+
+    def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        """Marker rendering occurs in screen coordinates
+        
+        It doesn't scale with the image, it scales with the line size on screen
+        """
+        if (not layer_visibility["layer"] or picker.is_active):
+            return
+        log.log(5, "Rendering overlay image!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        c = self.renderer.canvas
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
+        self.renderer.image_textures.center_at_screen_point(self.image_data, center, rect.height(c.screen_rect))
+        self.renderer.draw_image(layer_index_base, picker, self.alpha)
+
+
 class PolylineObject(RectangleMixin, FillableVectorObject):
     """Polyline uses 4 control points in the self.points array as the control
     points for the bounding box, one center point, and subsequent points as

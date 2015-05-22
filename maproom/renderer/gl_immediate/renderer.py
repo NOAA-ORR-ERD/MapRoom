@@ -289,18 +289,11 @@ class ImmediateModeRenderer():
             
         self.image_textures.set_projection(image_data, projection)
 
-    def use_world_rects_as_screen_rects(self, image_data):
-        # FIXME: not optimized at all! Currently renegerates everything at
-        # every update!
-        if self.image_textures is not None:
-            self.image_textures.destroy()
-            self.image_textures = None
+    def set_image_screen(self, image_data):
         if self.image_textures is None:
             self.image_textures = ImageTextures(image_data)
             # Release the raw image data to free up memory.
             image_data.release_images()
-            
-        self.image_textures.use_world_rects_as_screen_rects()
 
     def draw_image(self, layer_index_base, picker, alpha=1.0):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
