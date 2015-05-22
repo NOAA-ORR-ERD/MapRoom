@@ -503,38 +503,45 @@ class ImmediateModeRenderer():
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
-    def draw_screen_marker(self, xy, start_index, other_index, style, symbol):
+    def draw_screen_markers(self, markers, style):
+        """Draws a list of markers on screen.
+        
+        Each entry in markers is a 3-tuple; the point to center the marker, a
+        point on the other end of the line, and the marker type
+        """ 
         c = self.canvas
-        marker_points, filled = style.get_marker_data(symbol)
-        if marker_points is None:
-            return
-        # Compute the angles in screen coordinates, because using world
-        # coordinates for the angles results in the projection being applied,
-        # which shows distortion as it moves away from the equator
-        point = c.get_numpy_screen_point_from_world_point(xy[start_index]['xy'])
-        d = point - c.get_numpy_screen_point_from_world_point(xy[other_index]['xy'])
-        mag = np.linalg.norm(d)
-        if mag > 0.0:
-            d = d / np.linalg.norm(d)
-        else:
-            d[:] = (1, 0)
-        r = np.array(((d[0], d[1]), (d[1], -d[0])), dtype=np.float32)
-        points = (np.dot(marker_points, r) * style.line_width) + point
-        #self.renderer.draw_screen_lines(a, self.style.line_width, smooth=True, color4b=self.style.line_color)
-        h = rect.height(c.screen_rect)
         gl.glDisable(gl.GL_TEXTURE_2D)
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glLineWidth(style.line_width)
         gl.glColor4ubv(np.uint32(style.line_color).tostring())
-        if filled:
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-            gl.glBegin(gl.GL_TRIANGLE_FAN)
-        else:
-            gl.glBegin(gl.GL_LINE_LOOP)
-        for p in points:
-            # flip y to treat point as normal screen coordinates
-            gl.glVertex(p[0], h - p[1], 0)
-        gl.glEnd()
+        for p1, p2, symbol in markers:
+            marker_points, filled = style.get_marker_data(symbol)
+            # Compute the angles in screen coordinates, because using world
+            # coordinates for the angles results in the projection being applied,
+            # which shows distortion as it moves away from the equator
+            point = c.get_numpy_screen_point_from_world_point(p1)
+            d = point - c.get_numpy_screen_point_from_world_point(p2)
+            mag = np.linalg.norm(d)
+            if mag > 0.0:
+                d = d / np.linalg.norm(d)
+            else:
+                d[:] = (1, 0)
+            r = np.array(((d[0], d[1]), (d[1], -d[0])), dtype=np.float32)
+            points = (np.dot(marker_points, r) * style.line_width) + point
+            #self.renderer.draw_screen_lines(a, self.style.line_width, smooth=True, color4b=self.style.line_color)
+            h = rect.height(c.screen_rect)
+            if filled:
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+                gl.glEnable(gl.GL_POLYGON_SMOOTH)
+                gl.glHint(gl.GL_POLYGON_SMOOTH_HINT, gl.GL_DONT_CARE)
+                gl.glBegin(gl.GL_TRIANGLE_FAN)
+            else:
+                gl.glBegin(gl.GL_LINE_LOOP)
+            for p in points:
+                # flip y to treat point as normal screen coordinates
+                gl.glVertex(p[0], h - p[1], 0)
+            gl.glEnd()
+        gl.glDisable(gl.GL_POLYGON_SMOOTH)
 
     def draw_screen_box(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, width=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
         c = self.canvas

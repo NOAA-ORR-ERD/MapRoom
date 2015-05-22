@@ -219,8 +219,10 @@ class LineVectorObject(VectorObjectLayer):
         log.log(5, "Rendering markers!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        markers = []
         for start, end, symbol in self.get_marker_points():
-            self.renderer.draw_screen_marker(p, start, end, self.style, symbol)
+            markers.append((p[start]['xy'], p[end]['xy'], symbol))
+        self.renderer.draw_screen_markers(markers, self.style)
 
 
 class FillableVectorObject(LineVectorObject):

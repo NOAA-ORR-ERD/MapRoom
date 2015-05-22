@@ -20,7 +20,7 @@ hatched = np.empty((32, 4), dtype=np.uint8)
 hatched[:] = 0x80
 hatched[::8] = 0xff
 
-marker_arrow = np.array(((-8, 0), (-10, -6), (0, 0), (-10, 6)), dtype=np.float32)
+marker_arrow = np.array(((-8, 0), (-10, -4), (0, 0), (-10, 4)), dtype=np.float32)
 
 class LayerStyle(object):
     """Style data for drawing layer objects
