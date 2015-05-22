@@ -549,8 +549,8 @@ class InfoPanel(PANELTYPE):
     """
     A panel for displaying and manipulating the properties of a layer.
     """
-    LABEL_SPACING = 2
-    VALUE_SPACING = 10
+    LABEL_SPACING = 0
+    VALUE_SPACING = 3
     SIDE_SPACING = 5
 
     def __init__(self, parent, project):
