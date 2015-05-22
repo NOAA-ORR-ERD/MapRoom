@@ -220,6 +220,12 @@ class LayerCanvas(renderer.BaseCanvas):
         # screen points are pixels, which should be int values
         return (round(screen_point[0]), round(screen_point[1]))
 
+    def get_numpy_screen_point_from_world_point(self, world_point):
+        screen_point = self.get_screen_point_from_projected_point(self.get_projected_point_from_world_point(world_point))
+        s = np.empty_like(world_point)
+        s[:] = screen_point
+        return s
+
     def get_screen_rect_from_world_rect(self, world_rect):
         rect = self.get_screen_rect_from_projected_rect(self.get_projected_rect_from_world_rect(world_rect))
         return ((int(round(rect[0][0])), int(round(rect[0][1]))), (int(round(rect[1][0])), int(round(rect[1][1]))))

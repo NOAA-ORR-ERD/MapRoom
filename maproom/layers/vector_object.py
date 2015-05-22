@@ -199,6 +199,29 @@ class LineVectorObject(VectorObjectLayer):
         colors.fill(line_color)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
+    def get_marker_points(self):
+        """Return a tuple of point indexes for each marker.
+        
+        The first index is the point where the marker will be drawn.  The
+        second is the other end of the line which is used to align the marker
+        in the proper direction.
+        """
+        return ((0, 1, self.style.line_start_symbol),
+                (1, 0, self.style.line_end_symbol))
+
+    def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        """Marker rendering occurs in screen coordinates
+        
+        It doesn't scale with the image, it scales with the line size on screen
+        """
+        if (not layer_visibility["layer"] or picker.is_active):
+            return
+        log.log(5, "Rendering markers!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        c = self.renderer.canvas
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        for start, end, symbol in self.get_marker_points():
+            self.renderer.draw_screen_marker(p, start, end, self.style, symbol)
+
 
 class FillableVectorObject(LineVectorObject):
     # Fillable objects should (in general) display their center control point
@@ -266,7 +289,9 @@ class RectangleMixin(object):
 
 
 class RectangleVectorObject(RectangleMixin, FillableVectorObject):
-    pass
+    def get_marker_points(self):
+        return []
+
 
 class EllipseVectorObject(RectangleVectorObject):
     """Rectangle uses 4 control points in the self.points array, and nothing in
@@ -445,3 +470,11 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
+
+    def get_marker_points(self):
+        # Markers are only used on the first and last segments of the line
+        indexes = self.line_segment_indexes
+        if len(indexes) > 0:
+            return (
+                (indexes.point1[0], indexes.point2[0], self.style.line_start_symbol),
+                (indexes.point2[-1], indexes.point1[-1], self.style.line_end_symbol))

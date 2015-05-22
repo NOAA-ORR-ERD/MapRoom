@@ -20,6 +20,7 @@ hatched = np.empty((32, 4), dtype=np.uint8)
 hatched[:] = 0x80
 hatched[::8] = 0xff
 
+marker_arrow = np.array(((-8, 0), (-10, -6), (0, 0), (-10, 6)), dtype=np.float32)
 
 class LayerStyle(object):
     """Style data for drawing layer objects
@@ -44,6 +45,12 @@ class LayerStyle(object):
         ("Solid", 0xffff, wx.SOLID),
         ("Dashed", 0xcccc, wx.LONG_DASH),
         ("Dotted", 0xaaaa, wx.DOT),
+        ]
+    
+    marker_styles = [
+        ("No Line", None, False),
+        ("Arrow", marker_arrow, False),
+        ("Filled Arrow", marker_arrow, True),
         ]
     
     fill_styles = OrderedDict([
@@ -167,3 +174,7 @@ class LayerStyle(object):
 
     def get_current_fill_style(self):
         return self.fill_style, self.fill_styles[self.fill_style]
+
+    def get_marker_data(self, symbol):
+        m = self.marker_styles[symbol]
+        return m[1], m[2]
