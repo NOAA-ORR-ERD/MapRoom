@@ -516,6 +516,8 @@ class ImmediateModeRenderer():
         gl.glColor4ubv(np.uint32(style.line_color).tostring())
         for p1, p2, symbol in markers:
             marker_points, filled = style.get_marker_data(symbol)
+            if marker_points is None:
+                continue
             # Compute the angles in screen coordinates, because using world
             # coordinates for the angles results in the projection being applied,
             # which shows distortion as it moves away from the equator
