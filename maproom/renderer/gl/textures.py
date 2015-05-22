@@ -337,7 +337,7 @@ class ImageTextures(object):
     
     def center_at_screen_point(self, image_data, point, screen_height):
         left = int(point[0] - image_data.y/2)
-        bottom = int(point[1] - image_data.x/2)
+        bottom = int(point[1] + image_data.x/2)
         right = left + image_data.y
         top = bottom + image_data.x
         # flip y to treat rect as normal opengl coordinates

@@ -463,7 +463,7 @@ class OverlayImageObject(RectangleVectorObject):
         
         It doesn't scale with the image, it scales with the line size on screen
         """
-        if (not layer_visibility["layer"] or picker.is_active):
+        if (not layer_visibility["layer"]):
             return
         log.log(5, "Rendering overlay image!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         c = self.renderer.canvas

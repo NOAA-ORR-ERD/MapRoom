@@ -298,9 +298,9 @@ class ImmediateModeRenderer():
     def draw_image(self, layer_index_base, picker, alpha=1.0):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         texture = not picker.is_active
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
         if texture:
             gl.glEnable(gl.GL_TEXTURE_2D)
-            gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
             gl.glColor(1.0, 1.0, 1.0, alpha)
         else:
@@ -324,10 +324,11 @@ class ImmediateModeRenderer():
                 self.image_textures.vbo_texture_coordinates.unbind()
 
             vbo.unbind()
-        gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-        gl.glDisable(gl.GL_TEXTURE_2D)
+        if texture:
+            gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+            gl.glDisable(gl.GL_TEXTURE_2D)
 
     def set_invalid_polygons(self, polygons, polygon_count):
         # Invalid polygons are those that couldn't be tessellated and thus
