@@ -417,10 +417,8 @@ class OverlayImageObject(RectangleVectorObject):
     image_data = Any
     
     def get_image_array(self):
-        from maproom.library.numpy_images import OffScreenHTML
-        h = OffScreenHTML(200)
-        arr = h.get_numpy("NOAA/ORR MapRoom Fonts")
-        return arr
+        from maproom.library.numpy_images import get_numpy_from_marplot_icon
+        return get_numpy_from_marplot_icon('marplot_drum.png')
 
     def set_location(self, p1):
         p = np.concatenate((p1, p1), 0)  # flatten to 1D

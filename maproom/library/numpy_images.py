@@ -4,6 +4,22 @@ import wx.html
 
 import numpy as np
 
+from pyface.api import ImageResource
+
+def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
+    image = ImageResource(icon_path)
+    bitmap = image.create_bitmap()
+    arr = np.empty((bitmap.Height, bitmap.Width, 4), np.uint8)
+    bitmap.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
+    # Marplot icons have white foreground which is not ideal for
+    # us as we'll usually be printing on white backgrounds, so the
+    # optional color values passed in will replace white.  Thanks to
+    # http://stackoverflow.com/questions/6483489/
+    red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
+    mask = (red == 255) & (green == 255) & (blue == 255)
+    arr[:,:,:3][mask] = [r, g, b]
+    return arr
+
 
 def get_square(size):
     size = 100
