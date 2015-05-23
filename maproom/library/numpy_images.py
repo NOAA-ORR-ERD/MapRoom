@@ -60,7 +60,7 @@ class OffScreenHTML(object):
         
         self.hr = wx.html.HtmlDCRenderer()
         
-        # a bunch of defaults...
+        # White background will be transformed into transparent in get_numpy
         self.bg = (255, 255, 255)
         self.padding = 10
     
@@ -73,7 +73,7 @@ class OffScreenHTML(object):
         
         self.hr.SetDC(DC, 1.0)
         self.hr.SetSize(self.width-2*self.padding, self.height)
-        self.hr.SetFonts("Deja Vu Serif", "Deja Vu Sans Mono")
+        self.hr.SetFonts("Arial", "Deja Vu Sans Mono")
         
         self.hr.SetHtmlText(text)
         
@@ -102,6 +102,10 @@ class OffScreenHTML(object):
         sub = self.bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
         arr = np.empty((h, w, 4), np.uint8)
         sub.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
+        # Turn background transparent
+        red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
+        mask = (red == 255) & (green == 255) & (blue == 255)
+        arr[:,:,3][mask] = 0
         return arr
 
     def get_png(self, text, filename):
