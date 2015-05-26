@@ -500,7 +500,13 @@ class AddPolylineObjectAction(MouseHandlerBaseAction):
     name = handler.menu_item_name
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
-    
+
+class AddOverlayTextAction(MouseHandlerBaseAction):
+    handler = AddOverlayTextMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
@@ -660,6 +666,7 @@ class MaproomProjectTask(FrameworkTask):
                            AddPolylineObjectAction(),
                            AddRectangleObjectAction(),
                            AddEllipseObjectAction(),
+                           AddOverlayTextAction(),
                            ),
                      show_tool_names=False,
                      id="AnnotationLayerToolBar",),

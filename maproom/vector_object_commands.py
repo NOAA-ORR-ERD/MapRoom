@@ -111,3 +111,25 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
         layer.set_points(self.points)
         layer.set_style(self.style)
         return layer
+
+
+class AddTextCommand(DrawVectorObjectCommand):
+    short_name = "text_obj"
+    ui_name = "Text"
+    vector_object_class = OverlayTextObject
+    serialize_order = [
+        ('layer', 'layer'),
+        ('point', 'point'),
+        ('style', 'style'),
+        ]
+    
+    def __init__(self, event_layer, point, style):
+        Command.__init__(self, event_layer)
+        self.point = point
+        self.style = style.get_copy()  # Make sure not sharing objects
+    
+    def get_vector_object_layer(self, lm):
+        layer = self.vector_object_class(manager=lm)
+        layer.set_location(self.point)
+        layer.set_style(self.style)
+        return layer

@@ -486,7 +486,7 @@ class OverlayTextObject(OverlayImageObject):
     """
     name = Unicode("Text")
     
-    user_text = Unicode("First line<p>second <b>line</b>")
+    user_text = Unicode("<b>New Label</b><br>(simple HTML formatting supported)")
     
     layer_info_panel = ["Layer name", "Text Color", "Transparency"]
     

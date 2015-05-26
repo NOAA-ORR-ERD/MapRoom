@@ -43,6 +43,12 @@ class MouseHandler(object):
     def process_mouse_down(self, event):
         return
 
+    def get_world_point(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        cp = c.get_world_point_from_screen_point(p)
+        return cp
+
     def process_mouse_motion_up(self, event):
         c = self.layer_control
         p = event.GetPosition()
@@ -698,13 +704,6 @@ class AddPolylineMode(MouseHandler):
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
     
-    def get_world_point(self, event):
-        c = self.layer_control
-        p = event.GetPosition()
-        pp = c.get_projected_point_from_screen_point(p)
-        cp = c.get_world_point_from_projected_point(pp)
-        return cp
-    
     def process_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_control
@@ -745,3 +744,27 @@ class AddPolylineMode(MouseHandler):
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
             renderer.draw_screen_line(sp[-1], cp, 1.0, 1.0, 0, 0)
+
+
+class AddOverlayTextMode(MouseHandler):
+    icon = "shape_text.png"
+    menu_item_name = "Add Text"
+    menu_item_tooltip = "Add a new text overlay"
+
+    def __init__(self, *args, **kwargs):
+        MouseHandler.__init__(self, *args, **kwargs)
+        self.points = []
+        self.cursor_point = None
+    
+    def get_cursor(self):
+        return wx.StockCursor(wx.CURSOR_CROSS)
+
+    def process_mouse_up(self, event):
+        # After the first point, mouse up events add points
+        c = self.layer_control
+        e = c.project
+        layer = e.layer_tree_control.get_selected_layer()
+        if (layer is not None):
+            cp = self.get_world_point(event)
+            cmd = AddTextCommand(layer, cp, layer.manager.default_style)
+            e.process_command(cmd)
