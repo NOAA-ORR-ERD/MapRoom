@@ -574,6 +574,17 @@ class MultiLineTextField(InfoField):
 class OverlayTextField(MultiLineTextField):
     vertical_proportion = 1
     
+    def wants_focus(self):
+        return True
+    
+    def set_focus(self):
+        text = self.ctrl.GetValue()
+        if text == "<b>New Label</b>":
+            self.ctrl.SetSelection(-1, -1)
+        else:
+            self.ctrl.SetInsertionPointEnd()
+        self.ctrl.SetFocus()
+    
     def get_value(self, layer):
         if (layer is None):
             return ""
