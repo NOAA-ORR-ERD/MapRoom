@@ -492,7 +492,7 @@ class OverlayTextObject(OverlayImageObject):
     
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
-        h = OffScreenHTML(200)
+        h = OffScreenHTML()
         arr = h.get_numpy(self.user_text)
         return arr
 

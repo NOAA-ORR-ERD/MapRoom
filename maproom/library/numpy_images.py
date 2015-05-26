@@ -53,26 +53,25 @@ class OffScreenHTML(object):
     Works on OS-X, may need an explicite alpha bitmap on other platforms
     """
     
-    def __init__(self, width):
+    def __init__(self):
+        width, height = wx.GetDisplaySize()
         self.width = width
-        self.height = 1
-        self.bitmap = wx.EmptyBitmap(self.width, self.height)
+        self.height = 100
         
         self.hr = wx.html.HtmlDCRenderer()
         
         # White background will be transformed into transparent in get_numpy
         self.bg = (255, 255, 255)
-        self.padding = 10
     
-    def draw(self, text):
+    def draw(self, text, bitmap):
         DC = wx.MemoryDC()
-        DC.SelectObject(self.bitmap)
+        DC.SelectObject(bitmap)
         DC = wx.GCDC(DC)
         DC.SetBackground(wx.Brush(self.bg))
         DC.Clear()
         
         self.hr.SetDC(DC, 1.0)
-        self.hr.SetSize(self.width-2*self.padding, self.height)
+        self.hr.SetSize(self.width, self.height)
         self.hr.SetFonts("Arial", "Deja Vu Sans Mono")
         
         self.hr.SetHtmlText(text)
@@ -83,25 +82,26 @@ class OffScreenHTML(object):
         """
         Render the html source to the bitmap
         """
-        dc = self.draw(source)
-        needed = self.hr.GetTotalHeight() + 2*self.padding
+        bitmap = wx.EmptyBitmap(self.width, self.height)
+        dc = self.draw(source, bitmap)
+        needed = self.hr.GetTotalHeight()
         print "needed", needed
         if needed > self.height:
-            self.height = needed
-            self.bitmap = wx.EmptyBitmap(self.width, self.height)
-            dc = self.draw(source)
+            bitmap = wx.EmptyBitmap(self.width, needed)
+            dc = self.draw(source, bitmap)
             
-        self.hr.Render(self.padding, self.padding, [])
+        self.hr.Render(0, 0, [])
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
         # analogue to GetTotalHeight
-        self.rendered_size = (self.width, self.hr.GetTotalHeight()+2*self.padding)
+        self.rendered_size = (self.width, self.hr.GetTotalHeight())
         print self.rendered_size
-        print self.bitmap.GetSize()
+        print bitmap.GetSize()
+        return bitmap
 
     def get_numpy(self, text):
-        self.render(text)
+        bitmap = self.render(text)
         w, h = self.rendered_size
-        sub = self.bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
+        sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
         arr = np.empty((h, w, 4), np.uint8)
         sub.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
         # Turn background transparent
@@ -119,8 +119,8 @@ class OffScreenHTML(object):
         return bb
 
     def get_png(self, text, filename):
-        self.render(text)
-        sub = self.bitmap.GetSubBitmap(wx.Rect(0, 0, *self.rendered_size) )
+        bitmap = self.render(text)
+        sub = bitmap.GetSubBitmap(wx.Rect(0, 0, *self.rendered_size) )
         sub.SaveFile(filename, wx.BITMAP_TYPE_PNG)
 
 
