@@ -98,7 +98,10 @@ class OffScreenHTML(object):
         print bitmap.GetSize()
         return bitmap
 
-    def get_numpy(self, text):
+    def get_numpy(self, text, c=None):
+        if c is not None:
+            text = "<font color='%s'>%s</font>" % (c, text)
+        print text
         bitmap = self.render(text)
         w, h = self.rendered_size
         sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))

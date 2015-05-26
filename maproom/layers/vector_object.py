@@ -14,7 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
-from ..renderer import color_to_int, int_to_color, ImageData
+from ..renderer import color_to_int, int_to_color, int_to_html_color_string, ImageData
 
 from line import LineLayer
 from constants import *
@@ -488,12 +488,19 @@ class OverlayTextObject(OverlayImageObject):
     
     user_text = Unicode("First line<p>second <b>line</b>")
     
+    layer_info_panel = ["Layer name", "Text Color", "Transparency"]
+    
     selection_info_panel = ["Overlay Text"]
+    
+    def set_style(self, style):
+        OverlayImageObject.set_style(self, style)
+        self.rebuild_needed = True  # Force rebuild to change image color
     
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
         h = OffScreenHTML()
-        arr = h.get_numpy(self.user_text)
+        c = int_to_html_color_string(self.style.line_color)
+        arr = h.get_numpy(self.user_text, c)
         return arr
 
 

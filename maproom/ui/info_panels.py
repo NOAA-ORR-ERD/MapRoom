@@ -662,6 +662,7 @@ class InfoPanel(PANELTYPE):
         "Line Style": LineStyleField,
         "Fill Color": FillColorField,
         "Fill Style": FillStyleField,
+        "Text Color": ColorField,  # Same as Line Color except for the label
         "Overlay Text": OverlayTextField,
         }
     

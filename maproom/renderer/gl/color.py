@@ -35,6 +35,17 @@ def int_to_color(color):
     floats = tuple([i/255.0 for i in ints])
     return floats
 
+def int_to_wx_color_tuple(color):
+    c = np.uint32(color) # handle plain python integer being passed in
+    ints = np.frombuffer(c.tostring(), dtype=np.uint8)
+    return tuple(ints[0:3])
+
+def int_to_html_color_string(color):
+    c = np.uint32(color) # handle plain python integer being passed in
+    ints = np.frombuffer(c.tostring(), dtype=np.uint8)
+    cstr = "#%02x%02x%02x" % (ints[0], ints[1], ints[2])
+    return cstr
+
 if __name__ == "__main__":
     rgba = (.5, .5, .5, 1)
     i = color_to_int(*rgba)
