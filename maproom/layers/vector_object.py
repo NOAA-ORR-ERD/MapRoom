@@ -61,6 +61,12 @@ class VectorObjectLayer(LineLayer):
     def clear_visibility_when_deselected(self, layer_visibility):
         layer_visibility['points'] = False
     
+    def rebuild_image(self):
+        """Hook for image-based renderers to rebuild image data
+        
+        """
+        pass
+    
     def rebuild_renderer(self, in_place=False):
         """Update renderer
         
@@ -70,6 +76,7 @@ class VectorObjectLayer(LineLayer):
         color = color_to_int(r, g, b, self.alpha)
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         self.rasterize(projected_point_data, self.points.z, self.style.line_color, color)
+        self.rebuild_image()
         self.rebuild_needed = False
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
@@ -380,10 +387,6 @@ class ScaledImageObject(RectangleVectorObject):
             self.image_data.load_numpy_array(self.points, raw, projection)
         self.renderer.set_image_projection(self.image_data, projection)
         print self.image_data
-    
-    def rebuild_renderer(self, in_place=False):
-        RectangleVectorObject.rebuild_renderer(self, in_place)
-        self.rebuild_image()
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Renders the outline of the vector object.
@@ -410,7 +413,7 @@ class OverlayImageObject(RectangleVectorObject):
     trasparent pixels.
     
     """
-    name = Unicode("Image")
+    name = Unicode("Overlay Image")
     
     layer_info_panel = ["Layer name", "Transparency"]
     
@@ -445,16 +448,16 @@ class OverlayImageObject(RectangleVectorObject):
         """Update renderer
         
         """
+        if self.rebuild_needed:
+            print "rebuilding texture for", self
+            self.renderer.release_textures()
+            self.image_data = None
         if self.image_data is None:
             raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(self.points, raw)
         self.renderer.set_image_screen(self.image_data)
         print self.image_data
-    
-    def rebuild_renderer(self, in_place=False):
-        RectangleVectorObject.rebuild_renderer(self, in_place)
-        self.rebuild_image()
 
     def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Marker rendering occurs in screen coordinates
@@ -464,11 +467,34 @@ class OverlayImageObject(RectangleVectorObject):
         if (not layer_visibility["layer"]):
             return
         log.log(5, "Rendering overlay image!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        if self.rebuild_needed:
+            self.rebuild_renderer()
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
         self.renderer.image_textures.center_at_screen_point(self.image_data, center, rect.height(c.screen_rect))
         self.renderer.draw_image(layer_index_base, picker, self.alpha)
+
+
+class OverlayTextObject(OverlayImageObject):
+    """Texture mapped image object that is fixed in size relative to the screen
+    
+    Image uses 4 control points like the rectangle, but uses a texture
+    object as the foreground.  The background color will show through in
+    trasparent pixels.
+    
+    """
+    name = Unicode("Text")
+    
+    user_text = Unicode("First line<p>second <b>line</b>")
+    
+    selection_info_panel = ["Overlay Text"]
+    
+    def get_image_array(self):
+        from maproom.library.numpy_images import OffScreenHTML
+        h = OffScreenHTML(200)
+        arr = h.get_numpy(self.user_text)
+        return arr
 
 
 class PolylineObject(RectangleMixin, FillableVectorObject):

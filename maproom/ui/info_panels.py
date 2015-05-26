@@ -16,6 +16,11 @@ from ..renderer import color_to_int, int_to_color
 class InfoField(object):
     same_line = False
     
+    # wx.Sizer proportion of the main control (not the label).  See the
+    # wx.Sizer docs, but basically 0 will fix vertical size to initial size, >
+    # 0 will fill available space based on the total proportion in the sizer.
+    vertical_proportion = 0
+    
     def __init__(self, panel, field_name):
         self.field_name = field_name
         self.panel = panel
@@ -50,7 +55,7 @@ class InfoField(object):
         else:
             self.box.Add(self.label, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
             self.box.AddSpacer(self.panel.LABEL_SPACING)
-            self.box.Add(self.ctrl, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
+            self.box.Add(self.ctrl, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
             for extra in self.extra_ctrls:
                 hbox.Add(extra, 0, wx.ALIGN_CENTER)
         self.box.AddSpacer(self.panel.VALUE_SPACING)
@@ -63,7 +68,7 @@ class InfoField(object):
         return []
 
     def add_to_parent(self):
-        self.panel.sizer.Add(self.parent, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, 0)
+        self.panel.sizer.Add(self.parent, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, 0)
         self.show(True)
     
     def fill_data(self):
@@ -542,6 +547,42 @@ class FillStyleField(InfoField):
         cmd = StyleChangeCommand(layer, style)
         self.panel.project.process_command(cmd)
 
+        
+class MultiLineTextField(InfoField):
+    def create_control(self):
+        c = wx.TextCtrl(self.parent, style=wx.TE_MULTILINE)
+        c.Bind(wx.EVT_TEXT, self.on_text_changed)
+        c.SetEditable(True)
+        return c
+        
+    def fill_data(self, layer):
+        text = self.get_value(layer)
+        self.ctrl.ChangeValue(text)
+    
+    def on_text_changed(self, evt):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        self.process_text_change(layer)
+    
+    def process_text_change(self, layer):
+        layer.name = self.ctrl.GetValue()
+        self.panel.ignore_next_update = True
+        # a side effect of select_layer() is to make sure the layer name is up-to-date
+        self.panel.project.layer_tree_control.select_layer(layer)
+        
+class OverlayTextField(MultiLineTextField):
+    vertical_proportion = 1
+    
+    def get_value(self, layer):
+        if (layer is None):
+            return ""
+        return layer.user_text
+
+    def process_text_change(self, layer):
+        text = self.ctrl.GetValue()
+        cmd = TextCommand(layer, text)
+        self.panel.project.process_command(cmd)
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
@@ -621,6 +662,7 @@ class InfoPanel(PANELTYPE):
         "Line Style": LineStyleField,
         "Fill Color": FillColorField,
         "Fill Style": FillStyleField,
+        "Overlay Text": OverlayTextField,
         }
     
     def create_fields(self, layer, fields):

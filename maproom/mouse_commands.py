@@ -449,3 +449,42 @@ class StyleChangeCommand(Command):
         layer.set_style(old_style)
         lm.update_default_style(default_style)
         return self.undo_info
+
+class TextCommand(Command):
+    short_name = "text"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('text', 'text'),
+            ]
+    
+    def __init__(self, layer, text):
+        Command.__init__(self, layer)
+        self.text = text
+    
+    def __str__(self):
+        return "Text"
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer:
+                self.text = next_command.text
+                return True
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = (layer.user_text, self.text)
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_display_properties_changed = True
+        layer.user_text = self.text
+        layer.rebuild_needed = True
+        return undo
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        old_text, text = self.undo_info.data
+        layer.user_text = old_text
+        layer.rebuild_needed = True
+        return self.undo_info

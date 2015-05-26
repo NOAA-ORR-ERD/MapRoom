@@ -294,6 +294,11 @@ class ImmediateModeRenderer():
             self.image_textures = ImageTextures(image_data)
             # Release the raw image data to free up memory.
             image_data.release_images()
+    
+    def release_textures(self):
+        if self.image_textures is not None:
+            self.image_textures.destroy()
+            self.image_textures = None
 
     def draw_image(self, layer_index_base, picker, alpha=1.0):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
