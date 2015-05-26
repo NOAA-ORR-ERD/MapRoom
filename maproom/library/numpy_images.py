@@ -92,6 +92,8 @@ class OffScreenHTML(object):
             dc = self.draw(source)
             
         self.hr.Render(self.padding, self.padding, [])
+        # NOTE: no built-in way to get the bounding width from wx; i.e.  no
+        # analogue to GetTotalHeight
         self.rendered_size = (self.width, self.hr.GetTotalHeight()+2*self.padding)
         print self.rendered_size
         print self.bitmap.GetSize()
@@ -106,7 +108,15 @@ class OffScreenHTML(object):
         red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
         mask = (red == 255) & (green == 255) & (blue == 255)
         arr[:,:,3][mask] = 0
-        return arr
+        
+        # Compute bounding box of text by looking at the mask.  The mask
+        # contains all those pixels that are only background color,
+        # so the bounding box can be computed by using the idea from
+        # http://stackoverflow.com/questions/4808221
+        fg = np.argwhere(np.logical_not(mask))
+        (ystart, xstart), (ystop, xstop) = fg.min(0), fg.max(0) + 1
+        bb = arr[ystart:ystop, xstart:xstop]
+        return bb
 
     def get_png(self, text, filename):
         self.render(text)
