@@ -115,7 +115,7 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
 
 class AddTextCommand(DrawVectorObjectCommand):
     short_name = "text_obj"
-    ui_name = "Text"
+    ui_name = "Create Text"
     vector_object_class = OverlayTextObject
     serialize_order = [
         ('layer', 'layer'),

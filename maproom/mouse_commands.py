@@ -462,7 +462,7 @@ class TextCommand(Command):
         self.text = text
     
     def __str__(self):
-        return "Text"
+        return "Edit Text"
     
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
