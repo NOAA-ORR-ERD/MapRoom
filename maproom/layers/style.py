@@ -59,6 +59,12 @@ class LayerStyle(object):
         (2, ("50%", fill_50)),
         (3, ("Hatched", hatched)),
         ])
+    
+    fonts = wx.FontEnumerator()
+    fonts.EnumerateFacenames()
+    fonts = fonts.GetFacenames()
+    fonts.sort()
+    fonts[0:0] = ["default"]
 
     v1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
@@ -71,7 +77,13 @@ class LayerStyle(object):
         'fill_color', 'fill_style',
         ]
     
-    valid = set(v2_serialization_order)
+    v3_serialization_order = [
+        'line_color', 'line_stipple', 'line_stipple_factor',
+        'line_width', 'line_start_symbol', 'line_end_symbol',
+        'fill_color', 'fill_style', 'font', 'font_size'
+        ]
+    
+    valid = set(v3_serialization_order)
     
     def __init__(self, **kwargs):
         if len(kwargs):
@@ -94,15 +106,19 @@ class LayerStyle(object):
             self.line_end_symbol = 0
             self.fill_color = self.default_fill_color  # 4 byte including alpha
             self.fill_style = 1
+            self.font = ""
+            self.font_size = 12
     
     def __str__(self):
-        args = [self.get_str(i) for i in self.v2_serialization_order]
-        return "stylev2:%s" % ",".join(args)
+        args = [self.get_str(i) for i in self.v3_serialization_order]
+        return "stylev3:%s" % ",".join(args)
     
     def get_str(self, k):
         v = getattr(self, k)
         if v is None:
             return "-"
+        if k == 'font':
+            return v
         return "%x" % v
     
     def parse(self, txt):
@@ -132,6 +148,17 @@ class LayerStyle(object):
             if v == "-":
                 v = None
             else:
+                v = int(v, 16)
+            setattr(self, k, v)
+    
+    def parse_stylev3(self, txt):
+        vals = txt.split(",")
+        print vals
+        for k in self.v3_serialization_order:
+            v = vals.pop(0)
+            if v == "-":
+                v = None
+            elif k != 'font':
                 v = int(v, 16)
             setattr(self, k, v)
     
@@ -178,3 +205,9 @@ class LayerStyle(object):
     def get_marker_data(self, symbol):
         m = self.marker_styles[symbol]
         return m[1], m[2]
+
+    def get_current_font(self):
+        for i, f in enumerate(self.fonts):
+            if self.font == f:
+                return i, f
+        return 0, self.fonts[0] # default to system default

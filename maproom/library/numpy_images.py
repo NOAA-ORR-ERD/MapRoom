@@ -63,7 +63,7 @@ class OffScreenHTML(object):
         # White background will be transformed into transparent in get_numpy
         self.bg = (255, 255, 255)
     
-    def draw(self, text, bitmap):
+    def draw(self, text, bitmap, face):
         DC = wx.MemoryDC()
         DC.SelectObject(bitmap)
         DC = wx.GCDC(DC)
@@ -72,23 +72,24 @@ class OffScreenHTML(object):
         
         self.hr.SetDC(DC, 1.0)
         self.hr.SetSize(self.width, self.height)
-        self.hr.SetFonts("Arial", "Deja Vu Sans Mono")
+        print "HTMLDCFONT:::::: ", face
+        self.hr.SetFonts(face, "Deja Vu Sans Mono")
         
         self.hr.SetHtmlText(text)
         
         return DC
        
-    def render(self, source):
+    def render(self, source, face):
         """
         Render the html source to the bitmap
         """
         bitmap = wx.EmptyBitmap(self.width, self.height)
-        dc = self.draw(source, bitmap)
+        dc = self.draw(source, bitmap, face)
         needed = self.hr.GetTotalHeight()
         print "needed", needed
         if needed > self.height:
             bitmap = wx.EmptyBitmap(self.width, needed)
-            dc = self.draw(source, bitmap)
+            dc = self.draw(source, bitmap, face)
             
         self.hr.Render(0, 0, [])
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
@@ -98,11 +99,12 @@ class OffScreenHTML(object):
         print bitmap.GetSize()
         return bitmap
 
-    def get_numpy(self, text, c=None):
+    def get_numpy(self, text, c=None, face=""):
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
         print text
-        bitmap = self.render(text)
+        print face
+        bitmap = self.render(text, face)
         w, h = self.rendered_size
         if h > 0:
             sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))

@@ -595,6 +595,69 @@ class OverlayTextField(MultiLineTextField):
         cmd = TextCommand(layer, text)
         self.panel.project.process_command(cmd)
 
+
+class FontComboBox(wx.combo.OwnerDrawnComboBox):
+    # Overridden from OwnerDrawnComboBox, called to draw each
+    # item in the list
+    def OnDrawItem(self, dc, rect, item, flags):
+        if item == wx.NOT_FOUND:
+            # painting the control, but there is no valid item selected yet
+            return
+
+        r = wx.Rect(*rect)  # make a copy
+        r.Deflate(3, 5)
+
+        face = LayerStyle.fonts[item]
+        font = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, face)
+        dc.SetFont(font)
+        
+        if flags & wx.combo.ODCB_PAINTING_CONTROL:
+            # for painting the control itself
+            dc.DrawText(face, r.x+5, (r.y + 5) + ( (r.height/2) - dc.GetCharHeight() )/2)
+
+        else:
+            # for painting the items in the popup
+            dc.DrawText(face,
+                        r.x + 3,
+                        (r.y + 5) + ( (r.height/2) - dc.GetCharHeight() )/2
+                        )
+
+    # Overridden from OwnerDrawnComboBox, should return the height
+    # needed to display an item in the popup, or -1 for default
+    def OnMeasureItem(self, item):
+        return 24
+
+    # Overridden from OwnerDrawnComboBox.  Callback for item width, or
+    # -1 for default/undetermined
+    def OnMeasureItemWidth(self, item):
+        return -1; # default - will be measured from text width
+
+
+class FontStyleField(InfoField):
+    same_line = True
+    
+    def fill_data(self, layer):
+        index, style = layer.style.get_current_font()
+        self.ctrl.SetSelection(index)
+    
+    def create_control(self):
+        names = LayerStyle.fonts
+        c = FontComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                             style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        font = LayerStyle.fonts[item]
+        style = LayerStyle(font=font)
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
 
@@ -674,6 +737,7 @@ class InfoPanel(PANELTYPE):
         "Fill Color": FillColorField,
         "Fill Style": FillStyleField,
         "Text Color": ColorField,  # Same as Line Color except for the label
+        "Font": FontStyleField,
         "Overlay Text": OverlayTextField,
         }
     
