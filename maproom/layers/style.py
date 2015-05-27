@@ -65,6 +65,10 @@ class LayerStyle(object):
     fonts = fonts.GetFacenames()
     fonts.sort()
     fonts[0:0] = ["default"]
+    
+    standard_font_sizes = [4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72, 144]
+    default_font_size = 12
+    default_font_index = standard_font_sizes.index(default_font_size)
 
     v1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
@@ -107,7 +111,7 @@ class LayerStyle(object):
             self.fill_color = self.default_fill_color  # 4 byte including alpha
             self.fill_style = 1
             self.font = ""
-            self.font_size = 12
+            self.font_size = self.default_font_size
     
     def __str__(self):
         args = [self.get_str(i) for i in self.v3_serialization_order]
@@ -211,3 +215,9 @@ class LayerStyle(object):
             if self.font == f:
                 return i, f
         return 0, self.fonts[0] # default to system default
+
+    def get_current_font_size(self):
+        for i, f in enumerate(self.standard_font_sizes):
+            if self.font_size == f:
+                return i, f
+        return self.default_font_index, self.default_font_size

@@ -488,7 +488,7 @@ class OverlayTextObject(OverlayImageObject):
     
     user_text = Unicode("<b>New Label</b>")
     
-    layer_info_panel = ["Layer name", "Text Color", "Font", "Transparency"]
+    layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency"]
     
     selection_info_panel = ["Overlay Text"]
     
@@ -500,7 +500,7 @@ class OverlayTextObject(OverlayImageObject):
         from maproom.library.numpy_images import OffScreenHTML
         h = OffScreenHTML()
         c = int_to_html_color_string(self.style.line_color)
-        arr = h.get_numpy(self.user_text, c, self.style.font)
+        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size)
         return arr
 
 
