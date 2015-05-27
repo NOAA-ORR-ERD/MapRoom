@@ -63,22 +63,29 @@ class Serializer(object):
 class TextDeserializer(object):
     def __init__(self, text, layer_offset=0):
         self.layer_offset = layer_offset
-        lines = text.splitlines()
+        lines = text.splitlines(True)
         self.header = lines.pop(0)
         self.lines = lines
         if not self.header.startswith(magic_template):
             raise RuntimeError("Not a MapRoom log file!")
     
     def iter_cmds(self, manager):
+        build_multiline = ""
         for line in self.lines:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            cmd = self.unserialize_line(line, manager)
-            yield cmd
+            if build_multiline:
+                line = build_multiline + line
+                build_multiline = ""
+            else:
+                if not line.strip() or line.startswith("#"):
+                    continue
+            try:
+                cmd = self.unserialize_line(line, manager)
+                yield cmd
+            except ValueError, e:
+                build_multiline = line
     
     def unserialize_line(self, line, manager):
-        text_args = shlex.split(line)
+        text_args = shlex.split(line.strip())
         short_name = text_args.pop(0)
         log.debug("unserialize: short_name=%s, args=%s" % (short_name, text_args))
         cmd_cls = Serializer.get_command(short_name)
