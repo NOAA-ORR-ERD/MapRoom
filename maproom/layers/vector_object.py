@@ -103,7 +103,7 @@ class LineVectorObject(VectorObjectLayer):
     """
     name = Unicode("Line")
     
-    layer_info_panel = ["Layer name", "Line Style", "Line Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Style", "Line Color", "Start Marker", "End Marker", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 
@@ -213,8 +213,8 @@ class LineVectorObject(VectorObjectLayer):
         second is the other end of the line which is used to align the marker
         in the proper direction.
         """
-        return ((0, 1, self.style.line_start_symbol),
-                (1, 0, self.style.line_end_symbol))
+        return ((0, 1, self.style.line_start_marker),
+                (1, 0, self.style.line_end_marker))
 
     def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Marker rendering occurs in screen coordinates
@@ -227,8 +227,8 @@ class LineVectorObject(VectorObjectLayer):
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         markers = []
-        for start, end, symbol in self.get_marker_points():
-            markers.append((p[start]['xy'], p[end]['xy'], symbol))
+        for start, end, marker in self.get_marker_points():
+            markers.append((p[start]['xy'], p[end]['xy'], marker))
         self.renderer.draw_screen_markers(markers, self.style)
 
 
@@ -578,5 +578,5 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
         indexes = self.line_segment_indexes
         if len(indexes) > 0:
             return (
-                (indexes.point1[0], indexes.point2[0], self.style.line_start_symbol),
-                (indexes.point2[-1], indexes.point1[-1], self.style.line_end_symbol))
+                (indexes.point1[0], indexes.point2[0], self.style.line_start_marker),
+                (indexes.point2[-1], indexes.point1[-1], self.style.line_end_marker))

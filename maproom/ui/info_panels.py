@@ -683,6 +683,51 @@ class FontSizeField(InfoField):
         self.panel.project.process_command(cmd)
 
 
+class MarkerField(InfoField):
+    same_line = True
+    
+    def get_marker(self, layer):
+        raise NotImplementedError
+    
+    def get_style(self, marker):
+        raise NotImplementedError
+    
+    def fill_data(self, layer):
+        marker = self.get_marker(layer)
+        self.ctrl.SetSelection(marker)
+    
+    def create_control(self):
+        names = [m[0] for m in LayerStyle.marker_styles]
+        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                             style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        font = LayerStyle.fonts[item]
+        style = self.get_style(item)
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
+class StartMarkerField(MarkerField):
+    def get_marker(self, layer):
+        return layer.style.line_start_marker
+    
+    def get_style(self, marker):
+        return LayerStyle(line_start_marker=marker)
+
+class EndMarkerField(MarkerField):
+    def get_marker(self, layer):
+        return layer.style.line_end_marker
+    
+    def get_style(self, marker):
+        return LayerStyle(line_end_marker=marker)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
 
@@ -759,6 +804,8 @@ class InfoPanel(PANELTYPE):
         "Color": ColorField,
         "Line Color": ColorField,
         "Line Style": LineStyleField,
+        "Start Marker": StartMarkerField,
+        "End Marker": EndMarkerField,
         "Fill Color": FillColorField,
         "Fill Style": FillStyleField,
         "Text Color": ColorField,  # Same as Line Color except for the label

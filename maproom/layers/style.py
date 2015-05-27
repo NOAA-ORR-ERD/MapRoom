@@ -48,7 +48,7 @@ class LayerStyle(object):
         ]
     
     marker_styles = [
-        ("No Line", None, False),
+        ("None", None, False),
         ("Arrow", marker_arrow, False),
         ("Filled Arrow", marker_arrow, True),
         ]
@@ -78,13 +78,13 @@ class LayerStyle(object):
 
     v2_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
-        'line_width', 'line_start_symbol', 'line_end_symbol',
+        'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style',
         ]
     
     v3_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
-        'line_width', 'line_start_symbol', 'line_end_symbol',
+        'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size'
         ]
     
@@ -107,8 +107,8 @@ class LayerStyle(object):
             self.line_stipple = 0xffff  # 32 bit stipple pattern
             self.line_stipple_factor = 2  # OpenGL scale factro
             self.line_width = 2  # in pixels
-            self.line_start_symbol = 0
-            self.line_end_symbol = 0
+            self.line_start_marker = 0
+            self.line_end_marker = 0
             self.fill_color = self.default_fill_color  # 4 byte including alpha
             self.fill_style = 1
             self.font = ""
@@ -209,8 +209,8 @@ class LayerStyle(object):
     def get_current_fill_style(self):
         return self.fill_style, self.fill_styles[self.fill_style]
 
-    def get_marker_data(self, symbol):
-        m = self.marker_styles[symbol]
+    def get_marker_data(self, marker):
+        m = self.marker_styles[marker]
         return m[1], m[2]
 
     def get_current_font(self):
