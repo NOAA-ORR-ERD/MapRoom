@@ -445,6 +445,9 @@ class ProjectEditor(FrameworkEditor):
         """Perform the UI updates given the BatchStatus flags
         
         """
+        for layer in b.layers:
+            layer.increment_change_count()
+        
         # Use LayerManager events to trigger updates in all windows that are
         # displaying this project
         for layer, in_place in b.need_rebuild.iteritems():
