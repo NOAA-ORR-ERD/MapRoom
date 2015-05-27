@@ -62,7 +62,7 @@ class OffScreenHTML(object):
         # White background will be transformed into transparent in get_numpy
         self.bg = (255, 255, 255)
     
-    def draw(self, text, bitmap, face, size):
+    def setup(self, text, bitmap, face, size):
         DC = wx.MemoryDC()
         DC.SelectObject(bitmap)
         DC = wx.GCDC(DC)
@@ -82,23 +82,30 @@ class OffScreenHTML(object):
         Render the html source to the bitmap
         """
         bitmap = wx.EmptyBitmap(self.width, self.height)
-        dc = self.draw(source, bitmap, face, size)
-        needed = self.hr.GetTotalHeight()
-        if needed > self.height:
-            bitmap = wx.EmptyBitmap(self.width, needed)
-            dc = self.draw(source, bitmap, face, size)
+        dc = self.setup(source, bitmap, face, size)
+        
+        # Calculate the height of the final rendered text
+        y = ylast = 0
+        while True:
+            y = self.hr.Render(0, 0, [], y, True, y+self.height)
+            if y == ylast:
+                break
+            ylast = y
             
-        self.hr.Render(0, 0, [])
+        if ylast > self.height:
+            self.height = ylast
+            bitmap = wx.EmptyBitmap(self.width, self.height)
+            dc = self.setup(source, bitmap, face, size)
+        
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
         # analogue to GetTotalHeight
-        self.rendered_size = (self.width, self.hr.GetTotalHeight())
-        return bitmap
+        self.hr.Render(0, 0, [])
+        return self.width, self.hr.GetTotalHeight(), bitmap
 
     def get_numpy(self, text, c=None, face="", size=12):
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
-        bitmap = self.render(text, face, size)
-        w, h = self.rendered_size
+        w, h, bitmap = self.render(text, face, size)
         if h > 0:
             sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
             arr = np.empty((h, w, 4), np.uint8)
@@ -123,8 +130,8 @@ class OffScreenHTML(object):
         return bb
 
     def get_png(self, text, filename):
-        bitmap = self.render(text)
-        sub = bitmap.GetSubBitmap(wx.Rect(0, 0, *self.rendered_size) )
+        w, h, bitmap = self.render(text)
+        sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
         sub.SaveFile(filename, wx.BITMAP_TYPE_PNG)
 
 
