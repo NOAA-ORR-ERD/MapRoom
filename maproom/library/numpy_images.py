@@ -104,21 +104,27 @@ class OffScreenHTML(object):
         print text
         bitmap = self.render(text)
         w, h = self.rendered_size
-        sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
-        arr = np.empty((h, w, 4), np.uint8)
-        sub.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
-        # Turn background transparent
-        red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
-        mask = (red == 255) & (green == 255) & (blue == 255)
-        arr[:,:,3][mask] = 0
-        
-        # Compute bounding box of text by looking at the mask.  The mask
-        # contains all those pixels that are only background color,
-        # so the bounding box can be computed by using the idea from
-        # http://stackoverflow.com/questions/4808221
-        fg = np.argwhere(np.logical_not(mask))
-        (ystart, xstart), (ystop, xstop) = fg.min(0), fg.max(0) + 1
-        bb = arr[ystart:ystop, xstart:xstop]
+        if h > 0:
+            sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
+            arr = np.empty((h, w, 4), np.uint8)
+            sub.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
+            # Turn background transparent
+            red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
+            mask = (red == 255) & (green == 255) & (blue == 255)
+            arr[:,:,3][mask] = 0
+            
+            # Compute bounding box of text by looking at the mask.  The mask
+            # contains all those pixels that are only background color,
+            # so the bounding box can be computed by using the idea from
+            # http://stackoverflow.com/questions/4808221
+            fg = np.argwhere(np.logical_not(mask))
+            (ystart, xstart), (ystop, xstop) = fg.min(0), fg.max(0) + 1
+            bb = arr[ystart:ystop, xstart:xstop]
+        else:
+            # he HTML renderer doesn't render anything when the input is empty
+            # or only whitespace, so need to return a fake (blank) image
+            bb = np.asarray([255, 255, 255, 0], dtype=np.uint8).reshape((1, 1, 4))
+
         return bb
 
     def get_png(self, text, filename):
