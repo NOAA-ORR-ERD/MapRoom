@@ -60,11 +60,12 @@ class LayerStyle(object):
         (3, ("Hatched", hatched)),
         ])
     
+    # NOTE: The list of face names from wx are in unicode
     fonts = wx.FontEnumerator()
     fonts.EnumerateFacenames()
     fonts = fonts.GetFacenames()
     fonts.sort()
-    fonts[0:0] = ["default"]
+    fonts[0:0] = [u"default"]
     
     standard_font_sizes = [4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72, 144]
     default_font_size = 12
@@ -122,7 +123,7 @@ class LayerStyle(object):
         if v is None:
             return "-"
         if k == 'font':
-            return v
+            return v.encode('utf-8')
         return "%x" % v
     
     def parse(self, txt):
@@ -162,7 +163,9 @@ class LayerStyle(object):
             v = vals.pop(0)
             if v == "-":
                 v = None
-            elif k != 'font':
+            elif k == 'font':
+                v = v.decode('utf-8')
+            else:
                 v = int(v, 16)
             setattr(self, k, v)
     
