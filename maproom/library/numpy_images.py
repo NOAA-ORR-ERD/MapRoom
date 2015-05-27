@@ -72,7 +72,6 @@ class OffScreenHTML(object):
         
         self.hr.SetDC(DC, 1.0)
         self.hr.SetSize(self.width, self.height)
-        print "HTMLDCFONT:::::: ", face
         self.hr.SetFonts(face, "Deja Vu Sans Mono")
         
         self.hr.SetHtmlText(text)
@@ -86,7 +85,6 @@ class OffScreenHTML(object):
         bitmap = wx.EmptyBitmap(self.width, self.height)
         dc = self.draw(source, bitmap, face)
         needed = self.hr.GetTotalHeight()
-        print "needed", needed
         if needed > self.height:
             bitmap = wx.EmptyBitmap(self.width, needed)
             dc = self.draw(source, bitmap, face)
@@ -95,15 +93,11 @@ class OffScreenHTML(object):
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
         # analogue to GetTotalHeight
         self.rendered_size = (self.width, self.hr.GetTotalHeight())
-        print self.rendered_size
-        print bitmap.GetSize()
         return bitmap
 
     def get_numpy(self, text, c=None, face=""):
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
-        print text
-        print face
         bitmap = self.render(text, face)
         w, h = self.rendered_size
         if h > 0:
