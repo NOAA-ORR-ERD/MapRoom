@@ -22,7 +22,6 @@ def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
 
 
 def get_square(size):
-    size = 100
     arr = np.empty((size, size, 4), np.uint8)
 
     # just some indexes to keep track of which byte is which

@@ -363,10 +363,8 @@ class ScaledImageObject(RectangleVectorObject):
     image_data = Any
     
     def get_image_array(self):
-        from maproom.library.numpy_images import OffScreenHTML
-        h = OffScreenHTML(200)
-        arr = h.get_numpy("NOAA/ORR MapRoom Fonts")
-        return arr
+        from maproom.library.numpy_images import get_square
+        return get_square(100)
     
     def move_control_point(self, drag, anchor, dx, dy):
         print "before", self.points
