@@ -103,7 +103,7 @@ class LineVectorObject(VectorObjectLayer):
     """
     name = Unicode("Line")
     
-    layer_info_panel = ["Layer name", "Line Style", "Line Color", "Start Marker", "End Marker", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 
@@ -275,7 +275,7 @@ class RectangleMixin(object):
     """
     name = Unicode("Rectangle")
     
-    layer_info_panel = ["Layer name", "Line Style", "Line Color", "Fill Style", "Fill Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Fill Style", "Fill Color", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 

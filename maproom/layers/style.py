@@ -70,6 +70,10 @@ class LayerStyle(object):
     standard_font_sizes = [4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72, 144]
     default_font_size = 12
     default_font_index = standard_font_sizes.index(default_font_size)
+    
+    standard_line_widths = [1, 2, 3, 4, 5, 6, 7, 8]
+    default_line_width = 2
+    default_line_width_index = standard_line_widths.index(default_line_width)
 
     v1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
@@ -106,7 +110,7 @@ class LayerStyle(object):
             self.line_color = self.default_line_color  # 4 byte including alpha
             self.line_stipple = 0xffff  # 32 bit stipple pattern
             self.line_stipple_factor = 2  # OpenGL scale factro
-            self.line_width = 2  # in pixels
+            self.line_width = self.default_line_width  # in pixels
             self.line_start_marker = 0
             self.line_end_marker = 0
             self.fill_color = self.default_fill_color  # 4 byte including alpha
@@ -224,3 +228,9 @@ class LayerStyle(object):
             if self.font_size == f:
                 return i, f
         return self.default_font_index, self.default_font_size
+
+    def get_current_line_width(self):
+        for i, w in enumerate(self.standard_line_widths):
+            if self.line_width == w:
+                return i, w
+        return self.default_line_width_index, self.default_line_width

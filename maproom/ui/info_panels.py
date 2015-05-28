@@ -522,6 +522,31 @@ class LineStyleField(InfoField):
         self.panel.project.process_command(cmd)
 
 
+class LineWidthField(InfoField):
+    same_line = True
+    
+    def fill_data(self, layer):
+        index, width = layer.style.get_current_line_width()
+        self.ctrl.SetSelection(index)
+    
+    def create_control(self):
+        names = [str(s) for s in LayerStyle.standard_line_widths]
+        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                        style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        line_width = LayerStyle.standard_line_widths[item]
+        style = LayerStyle(line_width=line_width)
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
+
 class FillStyleField(InfoField):
     same_line = True
     
@@ -804,6 +829,7 @@ class InfoPanel(PANELTYPE):
         "Color": ColorField,
         "Line Color": ColorField,
         "Line Style": LineStyleField,
+        "Line Width": LineWidthField,
         "Start Marker": StartMarkerField,
         "End Marker": EndMarkerField,
         "Fill Color": FillColorField,
