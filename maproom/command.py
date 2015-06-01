@@ -7,7 +7,14 @@ class UndoStack(list):
     def __init__(self, *args, **kwargs):
         list.__init__(self, *args, **kwargs)
         self.insert_index = 0
+        self.save_point_index = 0
         self.batch = self
+    
+    def is_dirty(self):
+        return self.insert_index != self.save_point_index
+    
+    def set_save_point(self):
+        self.save_point_index = self.insert_index
     
     def perform(self, cmd, editor):
         if cmd is None:

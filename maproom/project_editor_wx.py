@@ -166,7 +166,8 @@ class ProjectEditor(FrameworkEditor):
             self.window.error(error)
         else:
             self.path = path
-        self.dirty = False
+            self.layer_manager.undo_stack.set_save_point()
+            self.dirty = self.layer_manager.undo_stack.is_dirty()
 
     def save_log(self, path):
         """ Saves the command log to a text file
@@ -369,7 +370,7 @@ class ProjectEditor(FrameworkEditor):
             self.redo_label = "Redo: %s" % text
             self.can_redo = True
             
-        self.dirty = self.can_undo
+        self.dirty = self.layer_manager.undo_stack.is_dirty()
     
     def undo(self):
         undo = self.layer_manager.undo_stack.undo(self)
