@@ -632,7 +632,7 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
         r = wx.Rect(*rect)  # make a copy
         r.Deflate(3, 5)
 
-        face = LayerStyle.fonts[item]
+        face = LayerStyle.get_font_name(item)
         font = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, face)
         dc.SetFont(font)
         
@@ -666,7 +666,7 @@ class FontStyleField(InfoField):
         self.ctrl.SetSelection(index)
     
     def create_control(self):
-        names = LayerStyle.fonts
+        names = LayerStyle.get_font_names()
         c = FontComboBox(self.parent, -1, "", size=(100, -1), choices=names,
                              style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
@@ -677,7 +677,7 @@ class FontStyleField(InfoField):
         if (layer is None):
             return
         item = event.GetSelection()
-        font = LayerStyle.fonts[item]
+        font = LayerStyle.get_font_name(item)
         style = LayerStyle(font=font)
         cmd = StyleChangeCommand(layer, style)
         self.panel.project.process_command(cmd)
@@ -733,7 +733,6 @@ class MarkerField(InfoField):
         if (layer is None):
             return
         item = event.GetSelection()
-        font = LayerStyle.fonts[item]
         style = self.get_style(item)
         cmd = StyleChangeCommand(layer, style)
         self.panel.project.process_command(cmd)

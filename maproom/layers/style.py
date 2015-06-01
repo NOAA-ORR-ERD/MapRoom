@@ -60,12 +60,7 @@ class LayerStyle(object):
         (3, ("Hatched", hatched)),
         ])
     
-    # NOTE: The list of face names from wx are in unicode
-    fonts = wx.FontEnumerator()
-    fonts.EnumerateFacenames()
-    fonts = fonts.GetFacenames()
-    fonts.sort()
-    fonts[0:0] = [u"default"]
+    fonts = None  # Will be initialized in call to get_font_names
     
     standard_font_sizes = [4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72, 144]
     default_font_size = 12
@@ -234,3 +229,20 @@ class LayerStyle(object):
             if self.line_width == w:
                 return i, w
         return self.default_line_width_index, self.default_line_width
+    
+    @classmethod
+    def get_font_name(cls, index):
+        fonts = cls.get_font_names()
+        return fonts[index]
+    
+    @classmethod
+    def get_font_names(cls):
+        if cls.fonts is None:
+            # NOTE: The list of face names from wx are in unicode
+            fonts = wx.FontEnumerator()
+            fonts.EnumerateFacenames()
+            fonts = fonts.GetFacenames()
+            fonts.sort()
+            fonts[0:0] = [u"default"]
+            cls.fonts = fonts
+        return cls.fonts
