@@ -109,7 +109,7 @@ class PointLayer(PointBaseLayer):
         return self.can_save_as() and bool(self.file_path)
     
     def serialize_json(self, index):
-        json = Layer.serialize_json(self, index)
+        json = PointBaseLayer.serialize_json(self, index)
         update = {
             'has encoded data': True,
             'points': self.points.tolist(),
