@@ -893,7 +893,6 @@ class MaproomProjectTask(FrameworkTask):
     def can_edit(cls, mime):
         return ( mime.startswith("image") or
                  mime.startswith("application/x-maproom-") or
-                 mime == "application/x-float_canvas_json" or
                  mime == "application/x-nc_ugrid" or
                  mime == "application/x-nc_particles"
                  )
