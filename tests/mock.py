@@ -20,19 +20,25 @@ from maproom.library.projection import NullProjection
 from maproom.command import UndoStack
 from maproom.menu_commands import *
 
+class MockApplication(object):
+    command_line_args = []
+
 class MockCanvas(object):
     def __init__(self):
         self.projection = NullProjection()
 
 class MockWindow(object):
+    def __init__(self):
+        self.application = MockApplication()
+        
     def error(self, *args, **kwargs):
         pass
 
 class MockProject(object):
     def __init__(self):
+        self.window = MockWindow()
         self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager.create(self)
-        self.window = MockWindow()
 
     def raw_load_all_layers(self, uri, mime):
         guess = FileGuess(uri)

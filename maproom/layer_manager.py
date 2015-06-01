@@ -90,6 +90,11 @@ class LayerManager(HasTraits):
         self.insert_layer([0], layer)
         grid = Grid(manager=self)
         self.insert_layer([1], grid)
+        
+        # Add hook to create layer instances for debugging purposes
+        if "--debug-objects" in self.project.window.application.command_line_args:
+            import debug
+            debug.debug_objects(self)
         return self
     
     def update_default_style(self, style):
