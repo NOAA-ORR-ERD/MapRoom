@@ -233,13 +233,23 @@ class LayerManager(HasTraits):
                     raise
         return None
     
-    def load_all(self, file_path):
-        with open(file_path, "w") as fh:
-            line = fh.readline()
-            if line != "# -*- MapRoom project file -*-\n":
-                return "Not a MapRoom project file!"
-            project = json.load(fh)
-            print project
+    def load_all_from_json(self, json):
+        layers = []
+        for serialized_data in json:
+            loaded = Layer.load_from_json(serialized_data, self)
+            layers.extend(loaded)
+            print "processed json from layer", loaded
+        return layers
+    
+    def add_all(self, layers, editor=None):
+        existing = self.flatten()
+        for layer in existing:
+            if not layer.is_root():
+                self.remove_layer(layer)
+        for layer in layers:
+            if editor is not None:
+                layer.check_projection(editor.window)
+            self.insert_loaded_layer(layer)
     
     def save_all(self, file_path):
         log.debug("saving layers in project file: " + file_path)

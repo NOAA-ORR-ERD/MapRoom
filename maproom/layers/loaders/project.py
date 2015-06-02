@@ -20,7 +20,7 @@ class ProjectLoader(BaseLoader):
     
     load_type = "project"
     
-    def load_project(self, metadata, manager):
+    def load_project(self, metadata, manager, batch_flags):
         project = []
         with open(metadata.uri, "r") as fh:
             line = fh.readline()
@@ -28,10 +28,6 @@ class ProjectLoader(BaseLoader):
                 return "Not a MapRoom project file!"
             
             project = json.load(fh)
-        
-        layers = []
-        for serialized_data in project:
-            loaded = Layer.load_from_json(serialized_data, manager)
-            layers.extend(loaded)
-
-        return layers
+            layers = manager.load_all_from_json(project)
+            batch_flags.layers.extend(layers)
+            manager.add_all(layers)

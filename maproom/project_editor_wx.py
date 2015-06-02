@@ -99,8 +99,12 @@ class ProjectEditor(FrameworkEditor):
             metadata = guess.get_metadata()
             loader = loaders.get_loader(metadata)
             if hasattr(loader, "load_project"):
+                batch_flags = BatchStatus()
                 print "FIXME: Add load project command that clears all layers"
                 self.path = metadata.uri
+                loader.load_project(metadata, self.layer_manager, batch_flags)
+                batch_flags.zoom_to_all()
+                self.perform_batch_flags(batch_flags)
             elif hasattr(loader, "iter_log"):
                 line = 0
                 batch_flags = BatchStatus()

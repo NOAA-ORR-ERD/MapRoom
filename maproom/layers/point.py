@@ -120,7 +120,7 @@ class PointLayer(PointBaseLayer):
         return json
     
     def unserialize_json_version1(self, json_data):
-        Layer.unserialize_json_version1(self, json_data)
+        PointBaseLayer.unserialize_json_version1(self, json_data)
         # numpy can't restore an array of arrays; must be array of tuples
         self.points = np.array([tuple(i) for i in json_data['points']], data_types.POINT_DTYPE).view(np.recarray)
         self.default_depth = json_data['default_depth']

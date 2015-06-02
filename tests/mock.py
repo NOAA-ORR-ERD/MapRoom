@@ -17,7 +17,7 @@ from maproom.layer_manager import LayerManager
 from maproom.layers import loaders, TriangleLayer
 from maproom.library.Boundary import Boundaries
 from maproom.library.projection import NullProjection
-from maproom.command import UndoStack
+from maproom.command import UndoStack, BatchStatus
 from maproom.menu_commands import *
 
 class MockApplication(object):
@@ -58,8 +58,10 @@ class MockProject(object):
         print metadata
         loader = loaders.get_loader(metadata)
         print loader
+        batch_flags = BatchStatus()
         if hasattr(loader, "load_project"):
             print "FIXME: Add load project command that clears all layers"
+            loader.load_project(metadata, self.layer_manager, batch_flags)
         elif hasattr(loader, "iter_log"):
             line = 0
             for cmd in loader.iter_log(metadata, self.layer_manager):

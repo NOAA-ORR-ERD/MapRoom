@@ -19,6 +19,16 @@ class TestBasic(TestLogBase):
         lm = self.manager
         lm.save_all("test.mrp")
 
+class TestBasicLoad(object):
+    logfile = "test.mrp"
+    
+    def setup(self):
+        self.project = MockProject()
+        self.manager = self.project.layer_manager
+    
+    def test_load(self):
+        self.project.load_file(self.logfile, "application/x-maproom-project-json")
+
 
 if __name__ == "__main__":
     #unittest.main()
@@ -27,3 +37,7 @@ if __name__ == "__main__":
     t = TestBasic()
     t.setup()
     t.test_save()
+    
+    t = TestBasicLoad()
+    t.setup()
+    t.test_load()
