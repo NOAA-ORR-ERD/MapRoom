@@ -96,16 +96,10 @@ class TriangleLayer(PointLayer):
     def can_save_as(self):
         return True
 
-    def serialize_json(self, index):
-        json = PointLayer.serialize_json(self, index)
-        update = {
-            'triangles': self.triangles.tolist(),
-        }
-        json.update(update)
-        return json
-    
-    def unserialize_json_version1(self, json_data):
-        PointLayer.unserialize_json_version1(self, json_data)
+    def triangles_to_json(self):
+        return self.triangles.tolist()
+
+    def triangles_from_json(self, json_data):
         self.triangles = np.array([tuple(i) for i in json_data['triangles']], data_types.TRIANGLE_DTYPE).view(np.recarray)
 
     def update_after_insert_point_at_index(self, point_index):

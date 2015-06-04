@@ -146,11 +146,22 @@ class Layer(HasTraits):
             'version': 1,
             'has encoded data': False,
             'name': self.name,
+            'style': str(self.style),
             }
         if self.file_path:
             json['url'] = os.path.abspath(self.file_path)
             json['mime'] = self.mime
+        
+        update = {}
+        for attr, to_json in self.get_attrs_with_json():
+            update[attr] = to_json()
+        if update:
+            json['has encoded data'] = True
+            json.update(update)
         return json
+    
+    def get_attrs_with_json(self):
+        return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
     
     def unserialize_json(self, json_data):
         """Restore layer from json representation.
@@ -170,6 +181,7 @@ class Layer(HasTraits):
             raise
         log.debug("Restoring JSON data using %s" % name)
         method(json_data)
+        self.update_bounds()
     
     def unserialize_json_version1(self, json_data):
         """Restore layer from json representation.
@@ -179,9 +191,14 @@ class Layer(HasTraits):
         anything other than what's necessary to restore itself.
         """
         self.name = json_data['name']
+        self.style = LayerStyle()
+        self.style.parse(json_data['style'])
         if 'url' in json_data:
             self.file_path = json_data['url']
             self.mime = json_data['mime']
+        for attr, to_json in self.get_attrs_with_json():
+            from_json = getattr(self, attr + "_from_json")
+            from_json(json_data)
     
     type_to_class_defs = {}
     
@@ -420,6 +437,7 @@ class RootLayer(Folder):
         return True
     
     def serialize_json(self, index):
+        # Root layer is never serialized
         pass
 
 

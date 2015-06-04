@@ -100,16 +100,11 @@ class LineLayer(PointLayer):
     def can_save_as(self):
         return True
     
-    def serialize_json(self, index):
-        json = PointLayer.serialize_json(self, index)
-        update = {
-            'lines': self.line_segment_indexes.tolist(),
-        }
-        json.update(update)
-        return json
-    
-    def unserialize_json_version1(self, json_data):
-        PointLayer.unserialize_json_version1(self, json_data)
+    def lines_to_json(self):
+        return self.line_segment_indexes.tolist()
+
+    def lines_from_json(self, json_data):
+        print json_data['lines']
         self.line_segment_indexes = np.array([tuple(i) for i in json_data['lines']], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
     
     def check_for_problems(self, window):

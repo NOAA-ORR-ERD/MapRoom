@@ -103,6 +103,8 @@ class LineVectorObject(VectorObjectLayer):
     """
     name = Unicode("Line")
     
+    type = Str("line_obj")
+    
     layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Transparency"]
     
     selection_info_panel = ["Point coordinates"]
@@ -298,6 +300,8 @@ class RectangleMixin(object):
 
 
 class RectangleVectorObject(RectangleMixin, FillableVectorObject):
+    type = Str("rectangle_obj")
+    
     def get_marker_points(self):
         return []
 
@@ -308,6 +312,8 @@ class EllipseVectorObject(RectangleVectorObject):
     
     """
     name = Unicode("Ellipse")
+    
+    type = Str("ellipse_obj")
     
     def rasterize(self, projected_point_data, z, cp_color, line_color):
         colors = np.empty(np.alen(self.points), dtype=np.uint32)
@@ -357,6 +363,8 @@ class ScaledImageObject(RectangleVectorObject):
     
     """
     name = Unicode("Image")
+    
+    type = Str("scaled_image_obj")
     
     layer_info_panel = ["Layer name", "Transparency"]
     
@@ -412,6 +420,8 @@ class OverlayImageObject(RectangleVectorObject):
     
     """
     name = Unicode("Overlay Image")
+    
+    type = Str("overlay_image_obj")
     
     layer_info_panel = ["Layer name", "Transparency"]
     
@@ -484,11 +494,19 @@ class OverlayTextObject(OverlayImageObject):
     """
     name = Unicode("Text")
     
+    type = Str("overlay_text_obj")
+    
     user_text = Unicode("<b>New Label</b>")
     
     layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency"]
     
     selection_info_panel = ["Overlay Text"]
+    
+    def user_text_to_json(self):
+        return self.user_text.encode("utf-8")
+
+    def user_text_from_json(self, json_data):
+        self.user_text = json_data['user_text'].decode('utf-8')
     
     def set_style(self, style):
         OverlayImageObject.set_style(self, style)
@@ -523,6 +541,8 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
      0           1
     """
     name = Unicode("Polyline")
+    
+    type = Str("polyline_obj")
     
     def set_points(self, points):
         points = np.asarray(points)

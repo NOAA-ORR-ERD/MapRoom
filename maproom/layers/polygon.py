@@ -124,21 +124,24 @@ class PolygonLayer(PointLayer):
     def can_save_as(self):
         return True
 
-    def serialize_json(self, index):
-        json = PointLayer.serialize_json(self, index)
-        update = {
-            'polygons': self.polygons.tolist(),
-            'adjacency': self.polygon_adjacency_array.tolist(),
-            'identifiers': self.polygon_identifiers,
-        }
-        json.update(update)
-        return json
-    
-    def unserialize_json_version1(self, json_data):
-        PointLayer.unserialize_json_version1(self, json_data)
+    def polygons_to_json(self):
+        return self.polygons.tolist()
+
+    def polygons_from_json(self, json_data):
         self.polygons = np.array([tuple(i) for i in json_data['polygons']], data_types.POLYGON_DTYPE).view(np.recarray)
+
+    def adjacency_to_json(self):
+        return self.polygon_adjacency_array.tolist()
+
+    def adjacency_from_json(self, json_data):
         self.polygon_adjacency_array = np.array([tuple(i) for i in json_data['adjacency']], data_types.POLYGON_ADJACENCY_DTYPE).view(np.recarray)
+
+    def identifiers_to_json(self):
+        return self.polygon_identifiers
+
+    def identifiers_from_json(self, json_data):
         self.polygon_identifiers = json_data['identifiers']
+
 
     def check_for_problems(self, window):
         problems = []

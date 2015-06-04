@@ -108,24 +108,26 @@ class PointLayer(PointBaseLayer):
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)
     
-    def serialize_json(self, index):
-        json = PointBaseLayer.serialize_json(self, index)
-        update = {
-            'has encoded data': True,
-            'points': self.points.tolist(),
-            'default_depth': self.default_depth,
-            'depth_unit': self.depth_unit,
-        }
-        json.update(update)
-        return json
+    ##### JSON Serialization
     
-    def unserialize_json_version1(self, json_data):
-        PointBaseLayer.unserialize_json_version1(self, json_data)
-        # numpy can't restore an array of arrays; must be array of tuples
+    def points_to_json(self):
+        return self.points.tolist()
+    
+    def points_from_json(self, json_data):
         self.points = np.array([tuple(i) for i in json_data['points']], data_types.POINT_DTYPE).view(np.recarray)
+    
+    def default_depth_to_json(self):
+        return self.default_depth
+    
+    def default_depth_from_json(self, json_data):
         self.default_depth = json_data['default_depth']
+    
+    def depth_unit_to_json(self):
+        return self.depth_unit
+    
+    def depth_unit_from_json(self, json_data):
         self.depth_unit = json_data['depth_unit']
-        self.update_bounds()
+    
     
     def make_points(self, count):
         return np.repeat(
