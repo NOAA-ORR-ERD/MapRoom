@@ -375,12 +375,11 @@ class ScaledImageObject(RectangleVectorObject):
         return get_square(100)
     
     def move_control_point(self, drag, anchor, dx, dy):
-        print "before", self.points
         RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
-        print "after", self.points
-        projection = self.manager.project.layer_canvas.projection
-        self.image_data.set_control_points(self.points, projection)
-        self.renderer.set_image_projection(self.image_data, projection)
+        if self.image_data is not None:
+            projection = self.manager.project.layer_canvas.projection
+            self.image_data.set_control_points(self.points, projection)
+            self.renderer.set_image_projection(self.image_data, projection)
 
     def rebuild_image(self):
         """Update renderer
@@ -392,7 +391,6 @@ class ScaledImageObject(RectangleVectorObject):
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(self.points, raw, projection)
         self.renderer.set_image_projection(self.image_data, projection)
-        print self.image_data
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Renders the outline of the vector object.
@@ -406,7 +404,6 @@ class ScaledImageObject(RectangleVectorObject):
         if self.rebuild_needed:
             self.rebuild_renderer()
         self.renderer.draw_image(layer_index_base, picker, self.alpha)
-        print "picker:", picker.is_active, "points", layer_visibility["points"]
         if layer_visibility["points"]:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
@@ -445,19 +442,17 @@ class OverlayImageObject(RectangleVectorObject):
         return cp
     
     def move_control_point(self, drag, anchor, dx, dy):
-        print "before", self.points
         RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
-        print "after", self.points
-        projection = self.manager.project.layer_canvas.projection
-        self.image_data.set_control_points(self.points, projection)
-        self.renderer.set_image_projection(self.image_data, projection)
+        if self.image_data is not None:
+            projection = self.manager.project.layer_canvas.projection
+            self.image_data.set_control_points(self.points, projection)
+            self.renderer.set_image_projection(self.image_data, projection)
 
     def rebuild_image(self):
         """Update renderer
         
         """
         if self.rebuild_needed:
-            print "rebuilding texture for", self
             self.renderer.release_textures()
             self.image_data = None
         if self.image_data is None:
@@ -465,7 +460,6 @@ class OverlayImageObject(RectangleVectorObject):
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(self.points, raw)
         self.renderer.set_image_screen(self.image_data)
-        print self.image_data
 
     def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Marker rendering occurs in screen coordinates

@@ -158,7 +158,6 @@ class LayerManager(HasTraits):
     def get_layer_by_invariant(self, invariant):
         layers = self.flatten()
         for layer in layers:
-            print layer.invariant, layer
             if layer.invariant == invariant:
                 return layer
         return None
