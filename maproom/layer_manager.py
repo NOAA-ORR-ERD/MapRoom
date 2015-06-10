@@ -121,6 +121,7 @@ class LayerManager(HasTraits):
         result = []
 
         index = 0
+        indexes = list(indexes)  # copy so recursive doesn't affect parent
         indexes.append(index)
         for item in tree:
             indexes[-1] = index
@@ -233,27 +234,43 @@ class LayerManager(HasTraits):
         return None
     
     def load_all_from_json(self, json):
-        layers = []
+        order = []
         for serialized_data in json:
             loaded = Layer.load_from_json(serialized_data, self)
-            layers.extend(loaded)
+            index = serialized_data['index']
+            order.append((index, loaded))
             print "processed json from layer", loaded
-        return layers
+        order.sort()
+        print "load_all_from_json: order", order
+        return order
     
-    def add_all(self, layers, editor=None):
+    def add_all(self, layer_order, editor=None):
         existing = self.flatten()
         for layer in existing:
             if not layer.is_root():
                 self.remove_layer(layer)
-        for layer in layers:
-            if editor is not None:
-                layer.check_projection(editor.window)
-            self.insert_loaded_layer(layer)
+        layers = []
+        print "layer order", layer_order
+        for mi, layer_list in layer_order:
+            for layer in layer_list:
+                print "adding ", layer, "at", mi
+                if editor is not None:
+                    layer.check_projection(editor.window)
+                if len(mi) > 1:
+                    # check to see if it's a folder layer, and if so it would
+                    # have been serialized with a 0 as the last multi index.
+                    # On insert, this barfs, so strip it off.
+                    if mi[-1] == 0:
+                        mi = mi[:-1]
+                self.insert_loaded_layer(layer, mi=mi)
+                layers.append(layer)
+        return layers
     
     def save_all(self, file_path):
         log.debug("saving layers in project file: " + file_path)
         layer_info = self.flatten_with_indexes()
-        log.debug("layers are:\n" + "\n".join([str(s) for s in layer_info]))
+        log.debug("layers are " + str(self.layers))
+        log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
         log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t,s  in Layer.get_subclasses().iteritems()]))
         project = []
         for index, layer in layer_info:
@@ -264,7 +281,6 @@ class LayerManager(HasTraits):
         
         try:
             with open(file_path, "w") as fh:
-                print project
                 fh.write("# -*- MapRoom project file -*-\n")
                 json.dump(project, fh)
         except Exception, e:
@@ -279,9 +295,10 @@ class LayerManager(HasTraits):
             return error
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, mi=None):
         self.dispatch_event('layer_loaded', layer)
-        mi = self.get_insertion_multi_index(before, after, first_child_of)
+        if mi is None:
+            mi = self.get_insertion_multi_index(before, after, first_child_of)
         self.insert_layer(mi, layer, invariant=invariant)
     
     def find_default_insert_layer(self):
@@ -315,7 +332,7 @@ class LayerManager(HasTraits):
         if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
-        log.debug("layers are " + str(self.layers))
+        log.debug("before: layers are " + str(self.layers))
         log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
         if (not isinstance(layer, list)):
             if invariant is None:
@@ -323,6 +340,7 @@ class LayerManager(HasTraits):
             if layer.is_folder() and not layer.is_root():
                 layer = [layer]
         self.insert_layer_recursive(at_multi_index, layer, self.layers)
+        log.debug("after: layers are " + str(self.layers))
 
     def insert_layer_recursive(self, at_multi_index, layer, tree):
         if (len(at_multi_index) == 1):

@@ -28,6 +28,7 @@ class ProjectLoader(BaseLoader):
                 return "Not a MapRoom project file!"
             
             project = json.load(fh)
-            layers = manager.load_all_from_json(project)
+            layer_data = manager.load_all_from_json(project)
+            layers = manager.add_all(layer_data)
+            print "loaded layers" , layers
             batch_flags.layers.extend(layers)
-            manager.add_all(layers)

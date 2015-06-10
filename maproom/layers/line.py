@@ -104,7 +104,6 @@ class LineLayer(PointLayer):
         return self.line_segment_indexes.tolist()
 
     def lines_from_json(self, json_data):
-        print json_data['lines']
         self.line_segment_indexes = np.array([tuple(i) for i in json_data['lines']], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
     
     def check_for_problems(self, window):
