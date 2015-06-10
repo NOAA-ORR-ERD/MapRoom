@@ -8,6 +8,12 @@ if maproom_dir not in sys.path:
 
 from nose.tools import *
 
+# Turn logging on by default at the DEBUG level for tests
+import logging
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 import numpy as np
 
 from pyugrid.ugrid import UGrid
