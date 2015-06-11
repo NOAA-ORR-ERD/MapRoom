@@ -48,6 +48,7 @@ class BaseCanvas(glcanvas.GLCanvas):
         glcanvas.GLCanvas.__init__(self, *args, **kwargs)
 
         self.init_context(self)
+        self.is_canvas_current = False
 
         self.overlay = ImmediateModeRenderer(self, None)
         self.picker = Picker()
@@ -66,19 +67,21 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.font_texture = None
         self.max_label_characters = 1000
 
-        #self.frame.Bind( wx.EVT_MOVE, self.refresh )
-        #self.frame.Bind( wx.EVT_IDLE, self.on_idle )
-        # self.frame.Bind( wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll )
-
+        # Only bind paint event; others depend on window being realized
         self.Bind(wx.EVT_PAINT, self.on_draw)
-        # Prevent flashing on Windows by doing nothing on an erase background event.
-        ## fixme -- I think you can pass a flag to the Window instead...
-        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
-        self.Bind(wx.EVT_SIZE, self.on_resize)
         
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
         
+        self.native = self.get_native_control()
+
+    def get_native_control(self):
+        return self
+    
+    def set_callbacks(self):
+        # Callbacks are not set immediately because they depend on the OpenGL
+        # context being set on the canvas, which can't happen until the window
+        # is realized.
         self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
         self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
@@ -91,14 +94,25 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
         
-        self.native = self.get_native_control()
-
-    def get_native_control(self):
-        return self
+        # Prevent flashing on Windows by doing nothing on an erase background event.
+        ## fixme -- I think you can pass a flag to the Window instead...
+        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
+        self.Bind(wx.EVT_SIZE, self.on_resize)
 
     def on_draw(self, event):
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        self.render()
+        if self.native.IsShownOnScreen():
+            if not self.is_canvas_current:
+                self.SetCurrent(self.shared_context)
+                
+                # this has to be here because the window has to exist before creating
+                # textures and making the renderer
+                if self.font_texture is None:
+                    self.init_font()
+                    
+                wx.CallAfter(self.set_callbacks)
+                self.is_canvas_current = True
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            self.render()
 
     def on_resize(self, event):
         if not self.GetContext():
@@ -440,8 +454,6 @@ class BaseCanvas(glcanvas.GLCanvas):
         gl.glDisable(gl.GL_BLEND)
 
     def get_object_at_mouse_position(self, screen_point):
-        if not self.native.IsShownOnScreen():
-            return None
         return self.picker.get_object_at_mouse_position(screen_point)
 
     #
@@ -452,17 +464,7 @@ class BaseCanvas(glcanvas.GLCanvas):
 #        import traceback
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
-        if not self.native.IsShownOnScreen():
-            # log.debug("layer_control_wx.render: not shown yet, so skipping render")
-            return
-
         t0 = time.clock()
-        self.SetCurrent(self.shared_context)
-        
-        # this has to be here because the window has to exist before creating
-        # textures and making the renderer
-        if self.font_texture is None:
-            self.init_font()
         self.update_renderers()
 
         s_r = self.get_screen_rect()
