@@ -1,3 +1,58 @@
+06/11/2015
+---------------------------
+Released 3.1b2
+- RM Turn on logging by default when using mock project in unit tests
+- RM Fixed layer order for project load
+- RM Fixed move_control_point before image data is created
+- RM Reworked JSON Serialization
+- RM Fixes for project save/load
+- RM Added first unit test for project save
+- RM Moved font enumeration to class method
+- RM Removed FloatCanvas support
+- RM Added debugging hook to create layers during layer manager creation
+- RM Added dirty check & save point to undo stack
+- RM Added line width UI
+- RM Updated layer change count flag to trigger info panel values update
+- RM Added UI for line start/end markers
+- RM Changed text names for undo list
+- RM Fixed text rendering height calculations
+- RM Fixed font name serialization (font names are unicode!)
+- RM Fixed default image object for ScaledImageObject
+- RM Added font size UI
+- RM Actually removed the debug prints
+- RM Initial support for fonts in layer styles
+- RM Handle multi-line quoted strings in deserializer
+- RM Added check for invalid bitmap produced by HTML renderer
+- RM Set text focus to OverlayTextField
+- RM Added toolbar button to add text overlay
+- RM Added font color for overlay text
+- RM Added automatic width selection on OffScreenHTML
+- RM Added bounding box calculation to OffScreenHTML
+- RM Added overlay text object
+- RM Used mask trick to change OffScreenHTML text background transparent
+- RM Changed OverlayImageObject to use sample marplot image
+- RM Fixed picking of OverlayImageObject
+- RM Initial support for overlay textures (those that stay stamped on the screen at the same time & don't zoom)
+- RM Restored the check for null marker removed in f8ac80822
+- RM Reduced spacing in info panels to get more stuff in vertically
+- RM Changed to draw list of markers rather than single marker
+- RM Initial marker drawing support (still some hardcoded stuff)
+- RM Slightly better polyline icon
+- RM Added polyline icon
+- RM Fixed move_control_point when called during redo
+- RM Fixed bounding box calculations when control points moved
+- RM Added UI to create polyline objects
+- RM Initial support for hatched pattern fill
+- RM Changed some debug prints
+- RM Fixed bug in StyleChangeCommand undo: must copy style before saving
+- RM First support for line styles
+- RM Initial support for drawing (not yet editing) polylines
+- RM Added convenience function to compute rect of set of points
+- RM Added fill styles
+- RM Initial image object (scaled, not fixed relative to screen)
+- RM Refactored ImageData and ImageTextures
+- RM Added picking to draw_images
+
 05/12/2015
 ---------------------------
 Released 3.1b1
