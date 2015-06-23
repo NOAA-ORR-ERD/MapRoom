@@ -1,3 +1,13 @@
+06/23/2015
+---------------------------
+Released 3.1b3
+- RM Fixup of some debug prints related to GDAL error
+- RM Fix for GDAL merc projections when libproj.dll installed on win
+- RM Added note about how to use OpenGL tracing for debugging
+- RM Fix for OS X rendering: canvas must be made current at each render
+- RM Fixes to prevent rendering before OpenGL context initialized
+- RM Fix for windows rendering: make sure context is set before gl operations
+
 06/11/2015
 ---------------------------
 Released 3.1b2
