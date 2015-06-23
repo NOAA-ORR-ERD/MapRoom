@@ -1,5 +1,10 @@
 # Maproom application using the Peppy2 framework
 
+# Uncomment to enable OpenGL command tracing (very slow).  This must occur
+# before any import of OpenGL which is why it's here.  :)
+#import OpenGL
+#OpenGL.FULL_LOGGING = True
+
 # Standard library imports.
 import logging
 
