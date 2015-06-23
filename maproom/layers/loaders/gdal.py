@@ -154,7 +154,10 @@ def calculate_pixel_to_projected_transform(dataset):
 
     DEFAULT_TRANSFORM = (0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
     if (transform == DEFAULT_TRANSFORM):
-        transform = gdal.GCPsToGeoTransform(dataset.GetGCPs())
+        cps = dataset.GetGCPs()
+        log.debug("GDAL GCPs to generate transform: %s" % str(cps))
+        transform = gdal.GCPsToGeoTransform(cps)
+    log.debug("GDAL transform: %s" % str(transform))
 
     return np.array(transform)
 

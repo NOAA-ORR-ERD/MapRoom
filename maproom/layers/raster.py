@@ -111,7 +111,6 @@ class RasterLayer(ProjectedLayer):
         """
         if not self.image_data:
             return
-        print self.image_data
 
         projection = self.manager.project.layer_canvas.projection
         self.renderer.set_image_projection(self.image_data, projection)

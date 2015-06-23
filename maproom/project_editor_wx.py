@@ -707,7 +707,6 @@ class ProjectEditor(FrameworkEditor):
 
     def zoom_to_layers(self, layers):
         rect = self.layer_manager.accumulate_layer_bounds_from_list(layers)
-        print "ZOOM: accumulated rect:", rect
         self.layer_canvas.zoom_to_world_rect(rect)
     
     def check_for_errors(self):
