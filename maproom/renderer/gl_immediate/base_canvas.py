@@ -48,7 +48,7 @@ class BaseCanvas(glcanvas.GLCanvas):
         glcanvas.GLCanvas.__init__(self, *args, **kwargs)
 
         self.init_context(self)
-        self.is_canvas_current = False
+        self.is_canvas_initialized = False
 
         self.overlay = ImmediateModeRenderer(self, None)
         self.picker = Picker()
@@ -101,7 +101,7 @@ class BaseCanvas(glcanvas.GLCanvas):
 
     def on_draw(self, event):
         if self.native.IsShownOnScreen():
-            if not self.is_canvas_current:
+            if not self.is_canvas_initialized:
                 self.SetCurrent(self.shared_context)
                 
                 # this has to be here because the window has to exist before creating
@@ -110,7 +110,7 @@ class BaseCanvas(glcanvas.GLCanvas):
                     self.init_font()
                     
                 wx.CallAfter(self.set_callbacks)
-                self.is_canvas_current = True
+                self.is_canvas_initialized = True
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             self.render()
 
@@ -459,7 +459,7 @@ class BaseCanvas(glcanvas.GLCanvas):
     # the methods below are used to render simple objects one at a time, in screen coordinates
 
     def render(self, event=None):
-        if not self.is_canvas_current:
+        if not self.is_canvas_initialized:
             log.error("Render called before GLContext created")
             return
         # Get interactive console here:
@@ -467,6 +467,7 @@ class BaseCanvas(glcanvas.GLCanvas):
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
         t0 = time.clock()
+        self.SetCurrent(self.shared_context)  # Needed every time for OS X
         self.update_renderers()
 
         s_r = self.get_screen_rect()
