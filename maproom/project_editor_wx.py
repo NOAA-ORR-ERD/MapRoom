@@ -465,6 +465,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_manager.layers_changed = True
         if b.zoom_layers:
             self.zoom_to_layers(b.zoom_layers)
+            b.refresh_needed = True
         if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True
         if b.refresh_needed:
@@ -702,9 +703,11 @@ class ProjectEditor(FrameworkEditor):
 
     def zoom_to_layer(self, layer):
         self.layer_canvas.zoom_to_world_rect(layer.bounds)
+        self.layer_canvas.render()
 
     def zoom_to_layers(self, layers):
         rect = self.layer_manager.accumulate_layer_bounds_from_list(layers)
+        print "ZOOM: accumulated rect:", rect
         self.layer_canvas.zoom_to_world_rect(rect)
     
     def check_for_errors(self):

@@ -268,8 +268,6 @@ class LayerCanvas(renderer.BaseCanvas):
         self.projected_units_per_pixel *= ratio
         self.constrain_zoom()
 
-        self.render()
-
     def zoom_to_include_world_rect(self, w_r):
         view_w_r = self.get_world_rect_from_screen_rect(self.get_screen_rect())
         if (not rect.contains_rect(view_w_r, w_r)):

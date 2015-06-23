@@ -21,8 +21,8 @@ from ..gl import data_types
 from .. import NullPicker
 
 import logging
-mouselog = logging.getLogger("mouse")
-mouselog.setLevel(logging.INFO)
+log = logging.getLogger(__name__)
+log.setLevel(logging.INFO)
 
 
 class BaseCanvas(glcanvas.GLCanvas):
@@ -123,7 +123,6 @@ class BaseCanvas(glcanvas.GLCanvas):
 
     def on_mouse_down(self, event):
         # self.SetFocus() # why would it not be focused?
-        mouselog.debug("in on_mouse_down: event=%s" % event)
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         self.mouse_is_down = True
@@ -460,6 +459,9 @@ class BaseCanvas(glcanvas.GLCanvas):
     # the methods below are used to render simple objects one at a time, in screen coordinates
 
     def render(self, event=None):
+        if not self.is_canvas_current:
+            log.error("Render called before GLContext created")
+            return
         # Get interactive console here:
 #        import traceback
 #        traceback.print_stack();
