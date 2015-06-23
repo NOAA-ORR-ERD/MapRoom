@@ -126,7 +126,7 @@ class ImageData(object):
             (selection_origin[0] + selection_size[0],
              selection_origin[1] + selection_size[1]),
             self.pixel_to_projected_transform)
-        if (True or self.projection.srs.find("+proj=longlat") != -1):
+        if (self.projection.srs.find("+proj=longlat") != -1):
             # for longlat projection, apparently someone decided that since the projection
             # is the identity, it might as well do something and so it returns the coordinates as
             # radians instead of degrees; so here we avoid using the projection altogether
