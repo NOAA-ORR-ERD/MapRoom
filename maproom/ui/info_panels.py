@@ -582,7 +582,13 @@ class MultiLineTextField(InfoField):
         
     def fill_data(self, layer):
         text = self.get_value(layer)
-        self.ctrl.ChangeValue(text)
+        current = self.ctrl.GetValue()
+        # ChangeValue also sets the cursor to the end, so if the value in the
+        # layer and the value in the control are the same, we assume that
+        # we're in the middle of an edit (meaning fill_data has been called
+        # by InfoPanel.set_fields) and we leave the cursor in place.
+        if text != current:
+            self.ctrl.ChangeValue(text)
     
     def on_text_changed(self, evt):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
@@ -591,10 +597,7 @@ class MultiLineTextField(InfoField):
         self.process_text_change(layer)
     
     def process_text_change(self, layer):
-        layer.name = self.ctrl.GetValue()
-        self.panel.ignore_next_update = True
-        # a side effect of select_layer() is to make sure the layer name is up-to-date
-        self.panel.project.layer_tree_control.select_layer(layer)
+        pass
         
 class OverlayTextField(MultiLineTextField):
     vertical_proportion = 1
@@ -606,8 +609,6 @@ class OverlayTextField(MultiLineTextField):
         text = self.ctrl.GetValue()
         if text == "<b>New Label</b>":
             self.ctrl.SetSelection(-1, -1)
-        else:
-            self.ctrl.SetInsertionPointEnd()
         self.ctrl.SetFocus()
     
     def get_value(self, layer):
