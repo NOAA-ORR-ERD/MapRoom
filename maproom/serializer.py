@@ -79,13 +79,14 @@ class TextDeserializer(object):
                 if not line.strip() or line.startswith("#"):
                     continue
             try:
-                cmd = self.unserialize_line(line, manager)
-                yield cmd
+                text_args = shlex.split(line.strip())
             except ValueError, e:
                 build_multiline = line
+                continue
+            cmd = self.unserialize_line(text_args, manager)
+            yield cmd
     
-    def unserialize_line(self, line, manager):
-        text_args = shlex.split(line.strip())
+    def unserialize_line(self, text_args, manager):
         short_name = text_args.pop(0)
         log.debug("unserialize: short_name=%s, args=%s" % (short_name, text_args))
         cmd_cls = Serializer.get_command(short_name)
@@ -94,9 +95,9 @@ class TextDeserializer(object):
             log.debug("  name=%s, type=%s" % (name, stype))
             converter = SerializedCommand.get_converter(stype)
             arg = converter.instance_from_args(text_args, manager, self)
-            log.debug("  converter=%s: %s" % (converter.__class__.__name__, str(arg)))
+            log.debug("  converter=%s: %s" % (converter.__class__.__name__, repr(arg)))
             cmd_args.append(arg)
-        cmd = "COMMAND: %s(%s)" % (cmd_cls.__name__, ",".join([str(a) for a in cmd_args]))
+        log.debug("COMMAND: %s(%s)" % (cmd_cls.__name__, ",".join([repr(a) for a in cmd_args])))
         cmd = cmd_cls(*cmd_args)
         return cmd
 
@@ -142,6 +143,19 @@ class LayerConverter(ArgumentConverter):
             # Old way: save layer references by name
             layer = manager.get_layer_by_name(val)
         return layer
+
+
+class TextConverter(ArgumentConverter):
+    stype = "text"
+    
+    def get_args(self, instance):
+        """Return list of strings that can be used to reconstruct the instance
+        """
+        return instance.encode("utf-8"),
+    
+    def instance_from_args(self, args, manager, deserializer):
+        text = args.pop(0)
+        return text.decode("utf-8")
 
 
 class IntConverter(ArgumentConverter):
@@ -261,7 +275,7 @@ class SerializedCommand(object):
     def __str__(self):
         output = []
         for stype, value in self.params:
-            print stype, value
+            print stype, repr(value)
             try:
                 c = self.converters[stype]
                 values = c.get_args(value)
