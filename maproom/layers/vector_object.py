@@ -494,7 +494,7 @@ class OverlayTextObject(OverlayImageObject):
     
     layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency"]
     
-    selection_info_panel = ["Overlay Text"]
+    selection_info_panel = ["Text Format", "Overlay Text"]
     
     def user_text_to_json(self):
         return self.user_text.encode("utf-8")
@@ -510,7 +510,7 @@ class OverlayTextObject(OverlayImageObject):
         from maproom.library.numpy_images import OffScreenHTML
         h = OffScreenHTML()
         c = int_to_html_color_string(self.style.line_color)
-        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size)
+        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format)
         return arr
 
 

@@ -622,6 +622,29 @@ class OverlayTextField(MultiLineTextField):
         self.panel.project.process_command(cmd)
 
 
+class TextFormatField(InfoField):
+    same_line = True
+    
+    def fill_data(self, layer):
+        self.ctrl.SetSelection(layer.style.text_format)
+    
+    def create_control(self):
+        names = [s[0] for s in LayerStyle.text_format_styles]
+        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                        style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        style = LayerStyle(text_format=item)
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
+
 class FontComboBox(wx.combo.OwnerDrawnComboBox):
     # Overridden from OwnerDrawnComboBox, called to draw each
     # item in the list
@@ -838,6 +861,7 @@ class InfoPanel(PANELTYPE):
         "Font": FontStyleField,
         "Font Size": FontSizeField,
         "Overlay Text": OverlayTextField,
+        "Text Format": TextFormatField,
         }
     
     def create_fields(self, layer, fields):

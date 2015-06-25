@@ -60,6 +60,11 @@ class LayerStyle(object):
         (3, ("Hatched", hatched)),
         ])
     
+    text_format_styles = [
+        ("Plain Text", None),
+        ("HTML", None),
+        ]
+    
     fonts = None  # Will be initialized in call to get_font_names
     
     standard_font_sizes = [4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72, 144]
@@ -87,7 +92,14 @@ class LayerStyle(object):
         'fill_color', 'fill_style', 'font', 'font_size'
         ]
     
-    valid = set(v3_serialization_order)
+    v4_serialization_order = [
+        'line_color', 'line_stipple', 'line_stipple_factor',
+        'line_width', 'line_start_marker', 'line_end_marker',
+        'fill_color', 'fill_style', 'font', 'font_size',
+        'text_format'
+        ]
+    
+    valid = set(v4_serialization_order)
     
     def __init__(self, **kwargs):
         if len(kwargs):
@@ -112,10 +124,11 @@ class LayerStyle(object):
             self.fill_style = 1
             self.font = ""
             self.font_size = self.default_font_size
+            self.text_format = 1
     
     def __str__(self):
-        args = [self.get_str(i) for i in self.v3_serialization_order]
-        return "stylev3:%s" % ",".join(args)
+        args = [self.get_str(i) for i in self.v4_serialization_order]
+        return "stylev4:%s" % ",".join(args)
     
     def get_str(self, k):
         v = getattr(self, k)
@@ -135,7 +148,6 @@ class LayerStyle(object):
     
     def parse_stylev1(self, txt):
         vals = txt.split(",")
-        print vals
         for k in self.v1_serialization_order:
             v = vals.pop(0)
             if v == "-":
@@ -146,7 +158,6 @@ class LayerStyle(object):
     
     def parse_stylev2(self, txt):
         vals = txt.split(",")
-        print vals
         for k in self.v2_serialization_order:
             v = vals.pop(0)
             if v == "-":
@@ -157,8 +168,19 @@ class LayerStyle(object):
     
     def parse_stylev3(self, txt):
         vals = txt.split(",")
-        print vals
         for k in self.v3_serialization_order:
+            v = vals.pop(0)
+            if v == "-":
+                v = None
+            elif k == 'font':
+                v = v.decode('utf-8')
+            else:
+                v = int(v, 16)
+            setattr(self, k, v)
+    
+    def parse_stylev4(self, txt):
+        vals = txt.split(",")
+        for k in self.v4_serialization_order:
             v = vals.pop(0)
             if v == "-":
                 v = None

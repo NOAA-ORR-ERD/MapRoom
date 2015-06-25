@@ -4,6 +4,8 @@ import wx.html
 
 import numpy as np
 
+import cgi
+
 from pyface.api import ImageResource
 
 def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
@@ -41,6 +43,16 @@ def get_square(size):
     arr[0:size, size-1, A] = wx.ALPHA_OPAQUE  # last col
 
     return arr
+
+
+def simple_text_formatter(text):
+    text = cgi.escape(text)
+    # double returns are a new paragraph
+    text = text.split("\n\n")
+    text = [p.strip().replace("\n","<br>") for p in text]
+    text = "<p>\n" + "\n</p>\n<p>\n".join(text) + "\n</p>"
+    
+    return text
 
 
 class OffScreenHTML(object):
@@ -102,7 +114,9 @@ class OffScreenHTML(object):
         self.hr.Render(0, 0, [])
         return self.width, self.hr.GetTotalHeight(), bitmap
 
-    def get_numpy(self, text, c=None, face="", size=12):
+    def get_numpy(self, text, c=None, face="", size=12, text_format=0):
+        if text_format == 0:
+            text = simple_text_formatter(text)
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
         w, h, bitmap = self.render(text, face, size)
