@@ -266,8 +266,6 @@ class RectangleMixin(object):
       o---------o
      0           1
     """
-    name = Unicode("Rectangle")
-    
     layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
     selection_info_panel = ["Point coordinates"]
@@ -291,6 +289,8 @@ class RectangleMixin(object):
 
 
 class RectangleVectorObject(RectangleMixin, FillableVectorObject):
+    name = Unicode("Rectangle")
+    
     type = Str("rectangle_obj")
     
     def get_marker_points(self):
