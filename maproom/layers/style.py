@@ -138,6 +138,14 @@ class LayerStyle(object):
             return v.encode('utf-8')
         return "%x" % v
     
+    def has_same_keywords(self, other_style):
+        for k in self.valid:
+            v1 = getattr(self, k)
+            v2 = getattr(other_style, k)
+            if (v1 is None and v2 is not None) or (v1 is not None and v2 is None):
+                return False
+        return True
+    
     def parse(self, txt):
         try:
             version, info = txt.split(":", 1)

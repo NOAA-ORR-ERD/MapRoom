@@ -431,6 +431,12 @@ class StyleChangeCommand(Command):
     def __str__(self):
         return "Layer Style"
     
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer and next_command.style.has_same_keywords(self.style):
+                self.style = next_command.style
+                return True
+    
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
