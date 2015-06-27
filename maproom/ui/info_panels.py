@@ -398,6 +398,48 @@ class AlphaField(FloatSliderField):
         if refresh:
             self.panel.project.refresh()
 
+class LineAlphaField(FloatSliderField):
+    def get_layer_color(self, layer):
+        return layer.style.line_color
+    
+    def get_layer_style(self, layer, color):
+        return LayerStyle(line_color=color)
+    
+    def get_style(self, layer, alpha):
+        color = self.get_layer_color(layer)
+        r, g, b, _ = int_to_color(color)
+        color = color_to_int(r, g, b, alpha)
+        return self.get_layer_style(layer, color)
+
+    def get_value(self, layer):
+        color = self.get_layer_color(layer)
+        r, g, b, a = int_to_color(color)
+        t = int((1.0 - a) * 100)
+        return t
+
+    def slider_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        refresh = False
+        c = self.ctrl
+        try:
+            val = (100 - int(c.GetValue())) / 100.0
+            style = self.get_style(layer, val)
+            cmd = StyleChangeCommand(layer, style)
+            wx.CallAfter(self.panel.project.process_command, cmd)
+            c.textCtrl.SetBackgroundColour("#FFFFFF")
+        except Exception as e:
+            c.textCtrl.SetBackgroundColour("#FF8080")
+
+class FillAlphaField(LineAlphaField):
+    def get_layer_color(self, layer):
+        return layer.style.fill_color
+    
+    def get_layer_style(self, layer, color):
+        return LayerStyle(fill_color=color)
+
+
 class ColorPickerField(InfoField):
     same_line = True
     
@@ -849,6 +891,8 @@ class InfoPanel(PANELTYPE):
         "Line segment count": LineVisibilityField,
         "Flagged points": FlaggedPointsField,
         "Transparency": AlphaField,
+        "Line Transparency": LineAlphaField,
+        "Fill Transparency": FillAlphaField,
         "Color": ColorField,
         "Line Color": ColorField,
         "Line Style": LineStyleField,

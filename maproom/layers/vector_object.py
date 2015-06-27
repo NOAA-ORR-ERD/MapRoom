@@ -40,20 +40,11 @@ class VectorObjectLayer(LineLayer):
     type = Str("vector_object")
     
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
-
-    alpha = Float(1.0)
     
     rebuild_needed = Bool(False)
     
-    def has_alpha(self):
-        return True
-    
     def set_layer_style_defaults(self):
         self.style.line_color = self.manager.default_style.line_color
-    
-    @on_trait_change('alpha')
-    def mark_rebuild(self):
-        self.rebuild_needed = True
 
     def set_visibility_when_selected(self, layer_visibility):
         layer_visibility['points'] = True
@@ -73,9 +64,9 @@ class VectorObjectLayer(LineLayer):
         """
         projected_point_data = self.compute_projected_point_data()
         r, g, b, a = int_to_color(self.style.line_color)
-        color = color_to_int(r, g, b, self.alpha)
+        point_color = color_to_int(r, g, b, 1.0)
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
-        self.rasterize(projected_point_data, self.points.z, self.style.line_color, color)
+        self.rasterize(projected_point_data, self.points.z, point_color, self.style.line_color)
         self.rebuild_image()
         self.rebuild_needed = False
 
@@ -105,7 +96,7 @@ class LineVectorObject(VectorObjectLayer):
     
     type = Str("line_obj")
     
-    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Line Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 
@@ -277,7 +268,7 @@ class RectangleMixin(object):
     """
     name = Unicode("Rectangle")
     
-    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Fill Style", "Fill Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
     selection_info_panel = ["Point coordinates"]
 
@@ -365,10 +356,19 @@ class ScaledImageObject(RectangleVectorObject):
     name = Unicode("Image")
     
     type = Str("scaled_image_obj")
+
+    alpha = Float(1.0)
     
     layer_info_panel = ["Layer name", "Transparency"]
     
     image_data = Any
+    
+    def has_alpha(self):
+        return True
+    
+    @on_trait_change('alpha')
+    def mark_rebuild(self):
+        self.rebuild_needed = True
     
     def get_image_array(self):
         from maproom.library.numpy_images import get_square
@@ -419,10 +419,19 @@ class OverlayImageObject(RectangleVectorObject):
     name = Unicode("Overlay Image")
     
     type = Str("overlay_image_obj")
+
+    alpha = Float(1.0)
     
     layer_info_panel = ["Layer name", "Transparency"]
     
     image_data = Any
+    
+    def has_alpha(self):
+        return True
+    
+    @on_trait_change('alpha')
+    def mark_rebuild(self):
+        self.rebuild_needed = True
     
     def get_image_array(self):
         from maproom.library.numpy_images import get_numpy_from_marplot_icon
