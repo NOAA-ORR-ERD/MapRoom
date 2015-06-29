@@ -70,6 +70,8 @@ class LayerManager(HasTraits):
     background_refresh_needed = Event
 
     pick_layer_index_map = {} # fixme: managed by the layer_control_wx -- horrible coupling!
+    
+    control_point_links = List(Any)
 
     @classmethod
     def create(cls, project):
@@ -554,6 +556,25 @@ class LayerManager(HasTraits):
         layers = [layer for layer in self.flatten() if layer.has_points()]
         layers.reverse()
         return layers
+
+    def set_control_point_link(self, layer1, cp1, layer2, cp2):
+        self.control_point_links.append((layer1, cp1, layer2, cp2))
+    
+    def update_linked_control_points(self, layer, undo_flags):
+        # FIXME: this adds a reference to the layer to the control_point_links
+        # list, which is currently not handled when the layer is removed from
+        # the layer manager
+        for layer1, cp1, layer2, cp2 in self.control_point_links:
+            moved = None
+            if layer == layer1:
+                layer2.copy_control_point_from(cp2, layer1, cp1)
+                moved = layer2
+            elif layer == layer2:
+                layer1.copy_control_point_from(cp1, layer2, cp2)
+                moved = layer1
+            if moved is not None and undo_flags is not None:
+                lf = undo_flags.add_layer_flags(moved)
+                lf.layer_items_moved = True
 
     def destroy_recursive(self, layer):
         if (layer.is_folder()):

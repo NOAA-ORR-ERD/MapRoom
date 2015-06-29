@@ -121,8 +121,7 @@ class MoveControlPointCommand(Command):
         lf.layer_items_moved = True
         lf.layer_contents_added = True
         layer.move_control_point(self.drag, self.anchor, self.dx, self.dy)
-        print "dx=%f, dy=%f" % (self.dx, self.dy)
-        print undo.data
+        editor.layer_manager.update_linked_control_points(layer, undo.flags)
         return undo
 
     def undo(self, editor):
@@ -130,6 +129,7 @@ class MoveControlPointCommand(Command):
         (old_x, old_y) = self.undo_info.data
         layer.points.x = old_x
         layer.points.y = old_y
+        editor.layer_manager.update_linked_control_points(layer, None)
         return self.undo_info
 
 class ChangeDepthCommand(Command):

@@ -100,7 +100,7 @@ class LineVectorObject(VectorObjectLayer):
     
     selection_info_panel = ["Point coordinates"]
 
-    corners = np.asarray((0, 1, 2, 3), dtype=np.uint8)
+    corners_from_flat = np.asarray((0, 1, 2, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1),), dtype=np.uint8)
     center_point_index = 2
     display_center_control_point = False
@@ -118,9 +118,16 @@ class LineVectorObject(VectorObjectLayer):
 
     def set_opposite_corners(self, p1, p2):
         p = np.concatenate((p1, p2), 0)  # flatten to 1D
-        c = p[self.corners].reshape(-1,2)
+        c = p[self.corners_from_flat].reshape(-1,2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
+    
+    def copy_control_point_from(self, cp, other_layer, other_cp):
+        x = self.points.x[cp]
+        y = self.points.y[cp]
+        x1 = other_layer.points.x[other_cp]
+        y1 = other_layer.points.y[other_cp]
+        self.move_control_point(cp, self.anchor_of[cp], x1 - x, y1 - y)
     
     def get_control_points_from_corners(self, c):
         num_cp = self.center_point_index + 1
@@ -176,7 +183,6 @@ class LineVectorObject(VectorObjectLayer):
         
         # FIXME: Why does specifying .x work for a range, but not for a single
         # element? Have to use the dict notation for a single element.
-        offset = self.center_point_index + 1
         self.points[0:offset].x += xoffset
         self.points[0:offset].y += yoffset
         
@@ -270,7 +276,7 @@ class RectangleMixin(object):
     
     selection_info_panel = ["Point coordinates"]
 
-    corners = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
+    corners_from_flat = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
     center_point_index = 4
     
@@ -439,7 +445,7 @@ class OverlayImageObject(RectangleVectorObject):
 
     def set_location(self, p1):
         p = np.concatenate((p1, p1), 0)  # flatten to 1D
-        c = p[self.corners].reshape(-1,2)
+        c = p[self.corners_from_flat].reshape(-1,2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
     
