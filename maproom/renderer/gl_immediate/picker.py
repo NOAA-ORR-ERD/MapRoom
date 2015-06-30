@@ -196,6 +196,10 @@ class Picker(object):
         (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
         #
         return type == POINTS_PICKER_OFFSET
+    
+    @staticmethod
+    def is_ugrid_point_type(type):
+        return type == POINTS_PICKER_OFFSET
 
     @staticmethod
     def is_ugrid_line(obj):

@@ -14,7 +14,7 @@ from command import UndoStack
 from renderer import color_to_int, int_to_color
 
 # Enthought library imports.
-from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict
+from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set
 from pyface.api import YES, NO, GUI
 
 
@@ -71,7 +71,10 @@ class LayerManager(HasTraits):
 
     pick_layer_index_map = {} # fixme: managed by the layer_control_wx -- horrible coupling!
     
-    control_point_links = List(Any)
+    # A set of sets, where each entry in the outer set is a set of layer/point
+    # tuples where each of those tuples represents a control point in a layer.
+    # If they're in the same set, they're the same point.
+    control_point_links = Set(Any)
 
     @classmethod
     def create(cls, project):
@@ -557,24 +560,73 @@ class LayerManager(HasTraits):
         layers.reverse()
         return layers
 
+    def find_control_point_set(self, entry):
+        for s in self.control_point_links:
+            if entry in s:
+                return s
+        return None
+
     def set_control_point_link(self, layer1, cp1, layer2, cp2):
-        self.control_point_links.append((layer1, cp1, layer2, cp2))
-    
-    def update_linked_control_points(self, layer, undo_flags):
         # FIXME: this adds a reference to the layer to the control_point_links
         # list, which is currently not handled when the layer is removed from
         # the layer manager
-        for layer1, cp1, layer2, cp2 in self.control_point_links:
-            moved = None
-            if layer == layer1:
-                layer2.copy_control_point_from(cp2, layer1, cp1)
-                moved = layer2
-            elif layer == layer2:
-                layer1.copy_control_point_from(cp1, layer2, cp2)
-                moved = layer1
-            if moved is not None and undo_flags is not None:
-                lf = undo_flags.add_layer_flags(moved)
-                lf.layer_items_moved = True
+        entry1 = (layer1, cp1)
+        s1 = self.find_control_point_set(entry1)
+        entry2 = (layer2, cp2)
+        s2 = self.find_control_point_set(entry2)
+        if s1 is None and s2 is None:
+            s = frozenset([entry1, entry2])
+        elif s1 is None and s2 is not None:
+            self.control_point_links.remove(s2)
+            s = set(s2)
+            s.add(entry1)
+            s = frozenset(s)
+        elif s1 is not None and s2 is None:
+            self.control_point_links.remove(s1)
+            s = set(s1)
+            s.add(entry2)
+            s = frozenset(s)
+        else:
+            # merge the two sets
+            self.control_point_links.remove(s1)
+            self.control_point_links.remove(s2)
+            s = set(s1)
+            s.update(s2)
+            s = frozenset(s)
+        self.control_point_links.add(s)
+        print "control_point_links:", self.control_point_links
+    
+    def update_linked_control_points(self, truth_layer, undo_flags, processed_layers=None):
+        if processed_layers is None:
+            processed_layers = set()
+        processed_layers.add(truth_layer)
+        print "truth layer", truth_layer
+        print "processed_layers", processed_layers
+        dep_entries = []
+        for s in self.control_point_links:
+            print "s", s
+            entries = set()
+            found_cp = None
+            for dep_layer, dep_cp in s:
+                if dep_layer == truth_layer:
+                    found_cp = dep_cp
+                else:
+                    entries.add((dep_layer, dep_cp))
+            if found_cp is not None:
+                dep_entries.append((found_cp, entries))
+        
+        print "dep_entries", dep_entries
+        moved_layers = set()
+        for truth_cp, entries in dep_entries:
+            for dep_layer, dep_cp in entries:
+                moved_layers.add(dep_layer)
+                dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
+                if undo_flags is not None:
+                    lf = undo_flags.add_layer_flags(dep_layer)
+                    lf.layer_items_moved = True
+        for new_truth_layer in moved_layers:
+            if new_truth_layer not in processed_layers:
+                self.update_linked_control_points(new_truth_layer, undo_flags, processed_layers)
 
     def destroy_recursive(self, layer):
         if (layer.is_folder()):

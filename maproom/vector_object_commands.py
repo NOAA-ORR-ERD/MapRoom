@@ -13,13 +13,20 @@ class DrawVectorObjectCommand(Command):
         ('cp1', 'point'),
         ('cp2', 'point'),
         ('style', 'style'),
+        ('snapped_layer', 'layer'),
+        ('snapped_cp', 'int'),
         ]
     
-    def __init__(self, event_layer, cp1, cp2, style):
+    def __init__(self, event_layer, cp1, cp2, style, snapped_layer, snapped_cp):
         Command.__init__(self, event_layer)
         self.cp1 = cp1
         self.cp2 = cp2
         self.style = style.get_copy()  # Make sure not sharing objects
+        if snapped_layer is not None:
+            self.snapped_layer = snapped_layer.invariant
+        else:
+            self.snapped_layer = None
+        self.snapped_cp = snapped_cp
     
     def __str__(self):
         return self.ui_name
@@ -45,6 +52,12 @@ class DrawVectorObjectCommand(Command):
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         lf.layer_loaded = True
+        if self.snapped_layer is not None:
+            sl = lm.get_layer_by_invariant(self.snapped_layer)
+            print "sl", sl
+            print "snapped_cp", self.snapped_cp
+            lm.set_control_point_link(layer, 1, sl, self.snapped_cp)
+            lm.update_linked_control_points(sl, undo.flags)
         undo.data = (layer.invariant, saved_invariant)
         
         return self.undo_info

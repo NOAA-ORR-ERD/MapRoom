@@ -36,6 +36,7 @@ class MouseHandler(object):
 
     def __init__(self, layer_control):
         self.layer_control = layer_control
+        self.snapped_object = None, 0
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
@@ -48,6 +49,12 @@ class MouseHandler(object):
         p = event.GetPosition()
         cp = c.get_world_point_from_screen_point(p)
         return cp
+    
+    def get_position(self, event):
+        return self.get_snap_position(event.GetPosition())
+    
+    def get_snap_position(self, position):
+        return position
 
     def process_mouse_motion_up(self, event):
         c = self.layer_control
@@ -525,10 +532,27 @@ class RectSelectMode(MouseHandler):
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
     
+    def get_snap_position(self, position):
+        c = self.layer_control
+        o = c.get_object_at_mouse_position(position)
+        self.snapped_object = None, 0
+        if (o is not None):
+            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
+            layer = c.layer_manager.get_layer_by_pick_index(layer_index)
+            print "layer:", layer, "layer_index", layer_index, "type", type, "oi", object_index
+            if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(type):
+                wp = (layer.points.x[object_index], layer.points.y[object_index])
+                position = c.get_screen_point_from_world_point(wp)
+                self.snapped_object = layer, object_index
+        return position
+    
+    def is_snappable_to_layer(self, layer):
+        return False
+
     def process_mouse_motion_down(self, event):
         c = self.layer_control
-        p = event.GetPosition()
-        c.mouse_move_position = event.GetPosition()
+        p = self.get_position(event)
+        c.mouse_move_position = p
         c.render(event)
 
     def process_mouse_up(self, event):
@@ -539,7 +563,7 @@ class RectSelectMode(MouseHandler):
 
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        c.mouse_move_position = event.GetPosition()
+        c.mouse_move_position = self.get_position(event)
         if self.normalize_mouse_coordinates:
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
                                                                c.mouse_move_position)
@@ -659,7 +683,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         cp2 = c.get_world_point_from_projected_point(p2)
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
-            cmd = self.vector_object_command(layer, cp1, cp2, layer.manager.default_style)
+            cmd = self.vector_object_command(layer, cp1, cp2, layer.manager.default_style, *self.snapped_object)
             e.process_command(cmd)
 
 
@@ -682,6 +706,9 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
     menu_item_name = "Add Line"
     menu_item_tooltip = "Add a new lines"
     vector_object_command = DrawLineCommand
+    
+    def is_snappable_to_layer(self, layer):
+        return hasattr(layer, "center_point_index")
 
     def render_overlay(self, renderer):
         c = self.layer_control
