@@ -71,9 +71,9 @@ class LayerManager(HasTraits):
 
     pick_layer_index_map = {} # fixme: managed by the layer_control_wx -- horrible coupling!
     
-    # A set of sets, where each entry in the outer set is a set of layer/point
-    # tuples where each of those tuples represents a control point in a layer.
-    # If they're in the same set, they're the same point.
+    # A set of frozensets, where each entry in the outer set is a frozenset of
+    # layer/control point tuples.  All tuples in the frozenset are coincident
+    # (linked) control points
     control_point_links = Set(Any)
 
     @classmethod
