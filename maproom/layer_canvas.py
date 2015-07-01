@@ -109,6 +109,9 @@ class LayerCanvas(renderer.BaseCanvas):
             for layer in self.layer_renderers.keys():
                 log.warning("  layer: %s" % layer)
     
+    def get_selected_layer(self):
+        return self.project.layer_tree_control.get_selected_layer()
+    
     def set_mouse_handler(self, mode):
         self.release_mouse()
         self.mouse_handler = mode(self)

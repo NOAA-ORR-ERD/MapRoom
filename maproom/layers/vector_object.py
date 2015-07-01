@@ -85,6 +85,17 @@ class VectorObjectLayer(LineLayer):
         if layer_visibility["points"]:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
+    def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        """Renders the outline of the vector object.
+        
+        If the vector object subclass is fillable, subclass from
+        FillableVectorObject instead of this base class.
+        """
+        log.log(5, "Rendering vector object control points %s!!!" % (self.name))
+        if (not layer_visibility["layer"]):
+            return
+        self.renderer.draw_points(layer_index_base, picker, self.point_size)
+
 
 class LineVectorObject(VectorObjectLayer):
     """Line uses 3 control points in the self.points array.  The midpoint is an

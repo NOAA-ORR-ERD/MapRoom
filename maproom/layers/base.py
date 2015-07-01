@@ -402,13 +402,23 @@ class Layer(HasTraits):
                screen_rect,
                layer_visibility,
                layer_index_base,
-               picker):
+               picker,
+               control_points_only=False):
         if hasattr(self, "render_projected"):
             self.renderer.prepare_to_render_projected_objects()
-            self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            if control_points_only:
+                self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            else:
+                self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
         if hasattr(self, "render_screen"):
             self.renderer.prepare_to_render_screen_objects()
-            self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            if control_points_only:
+                self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            else:
+                self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+    
+    def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        pass
 
 
 class Folder(Layer):
