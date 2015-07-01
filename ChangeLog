@@ -1,3 +1,16 @@
+06/30/2015
+---------------------------
+Released 3.1b4
+- RM Updated comment for control point links
+- RM Support multiple linked control points at the same point
+- RM Added linked control points
+- RM Fixed name of rectangle vector object
+- RM Fixed StyleChangeCommand to coelesce similar style changes
+- RM Added separate line and fill alpha
+- RM Added plain text formatting for text overlay objects
+- RM Fix for serializer to support unicode names in overlay text
+- RM Fixed cursor being reset to end of text in OverlayTextField
+
 06/23/2015
 ---------------------------
 Released 3.1b3
