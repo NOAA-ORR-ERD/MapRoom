@@ -795,3 +795,27 @@ class AddOverlayTextMode(MouseHandler):
             cp = self.get_world_point(event)
             cmd = AddTextCommand(layer, cp, layer.manager.default_style)
             e.process_command(cmd)
+
+
+class AddOverlayIconMode(MouseHandler):
+    icon = "shape_icon.png"
+    menu_item_name = "Add Icon"
+    menu_item_tooltip = "Add a new Marplot icon"
+
+    def __init__(self, *args, **kwargs):
+        MouseHandler.__init__(self, *args, **kwargs)
+        self.points = []
+        self.cursor_point = None
+    
+    def get_cursor(self):
+        return wx.StockCursor(wx.CURSOR_CROSS)
+
+    def process_mouse_up(self, event):
+        # After the first point, mouse up events add points
+        c = self.layer_control
+        e = c.project
+        layer = e.layer_tree_control.get_selected_layer()
+        if (layer is not None):
+            cp = self.get_world_point(event)
+            cmd = AddIconCommand(layer, cp, layer.manager.default_style)
+            e.process_command(cmd)
