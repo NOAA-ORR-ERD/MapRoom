@@ -14,7 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
-from ..renderer import color_to_int, int_to_color, int_to_html_color_string, ImageData
+from ..renderer import color_to_int, int_to_color, int_to_wx_color_tuple, int_to_html_color_string, ImageData
 
 from line import LineLayer
 from constants import *
@@ -539,6 +539,27 @@ class OverlayTextObject(OverlayImageObject):
         c = int_to_html_color_string(self.style.line_color)
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format)
         return arr
+
+
+class OverlayIconObject(OverlayImageObject):
+    """Texture mapped Marplot icon object that is fixed in size relative to the screen
+    
+    Uses the Marplot category icons.
+    """
+    name = Unicode("Icon")
+    
+    type = Str("overlay_icon_obj")
+    
+    layer_info_panel = ["Layer name", "Color", "Transparency"]
+    
+    def get_image_array(self):
+        from maproom.library.numpy_images import get_numpy_from_marplot_icon
+        r, g, b = int_to_wx_color_tuple(self.style.line_color)
+        return get_numpy_from_marplot_icon('marplot_drum.png', r, g, b)
+    
+    def set_style(self, style):
+        OverlayImageObject.set_style(self, style)
+        self.rebuild_needed = True  # Force rebuild to change image color
 
 
 class PolylineObject(RectangleMixin, FillableVectorObject):

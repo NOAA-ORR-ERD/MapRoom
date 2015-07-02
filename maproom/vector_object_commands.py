@@ -176,7 +176,7 @@ class AddTextCommand(DrawVectorObjectCommand):
 class AddIconCommand(DrawVectorObjectCommand):
     short_name = "icon_obj"
     ui_name = "Create Text"
-    vector_object_class = OverlayImageObject
+    vector_object_class = OverlayIconObject
     serialize_order = [
         ('layer', 'layer'),
         ('point', 'point'),
