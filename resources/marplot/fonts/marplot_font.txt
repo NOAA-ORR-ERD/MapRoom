@@ -1,0 +1,691 @@
+Places
+page=1   id=51   mid=51   x=879   y=178   width=28    height=34    xoffset=3     yoffset=2     xadvance=35    name=School
+page=1   id=52   mid=52   x=324   y=214   width=31    height=33    xoffset=3     yoffset=3     xadvance=38    name=Church
+page=1   id=53   mid=53   x=912   y=37    width=25    height=35    xoffset=3     yoffset=1     xadvance=32    name=Federal building
+page=1   id=54   mid=54   x=148   y=372   width=23    height=27    xoffset=9     yoffset=5     xadvance=42    name=Hospital
+page=1   id=56   mid=56   x=495   y=341   width=25    height=29    xoffset=3     yoffset=3     xadvance=33    name=Fallout shelter
+page=1   id=57   mid=57   x=648   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Village
+page=1   id=58   mid=58   x=944   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Historical site
+page=1   id=59   mid=59   x=684   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Archaeological site
+page=1   id=61   mid=61   x=656   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=41    name=Lighthouse
+page=1   id=62   mid=62   x=188   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Pier
+page=1   id=63   mid=63   x=756   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Platform
+page=1   id=64   mid=64   x=132   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Wildlife refuge
+
+Chemistry
+page=1   id=66   mid=66   x=0     y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Chemical interest
+page=1   id=67   mid=67   x=258   y=214   width=33    height=33    xoffset=3     yoffset=2     xadvance=40    name=Chemical placard (67)
+page=1   id=68   mid=68   x=1008  y=102   width=14    height=29    xoffset=13    yoffset=4     xadvance=42    name=Chemical sample
+page=1   id=69   mid=69   x=711   y=369   width=28    height=26    xoffset=3     yoffset=5     xadvance=36    name=Infectious substance
+page=1   id=70   mid=70   x=692   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Acetylene torch
+page=1   id=71   mid=71   x=728   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Above-ground tank
+page=1   id=72   mid=72   x=468   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Chemical drum
+page=1   id=73   mid=73   x=786   y=178   width=31    height=34    xoffset=3     yoffset=2     xadvance=38    name=Chemical storage
+page=1   id=74   mid=74   x=872   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Gas cylinders
+page=1   id=75   mid=75   x=74    y=214   width=40    height=33    xoffset=3     yoffset=2     xadvance=46    name=Corrosive
+page=1   id=76   mid=76   x=0     y=0     width=39    height=36    xoffset=3     yoffset=-1    xadvance=46    name=Explosive
+page=1   id=77   mid=77   x=978   y=246   width=22    height=31    xoffset=9     yoffset=2     xadvance=42    name=Flammable
+page=1   id=78   mid=78   x=418   y=214   width=24    height=33    xoffset=8     yoffset=1     xadvance=42    name=Oxidizer
+page=1   id=79   mid=79   x=46    y=282   width=33    height=30    xoffset=3     yoffset=3     xadvance=39    name=Poison
+page=1   id=80   mid=80   x=765   y=338   width=31    height=28    xoffset=2     yoffset=3     xadvance=37    name=Radioactive hazard
+
+Fire Department
+page=1   id=81   mid=81   x=0     y=214   width=24    height=34    xoffset=3     yoffset=1     xadvance=31    name=Fire department access
+page=1   id=82   mid=82   x=702   y=397   width=22    height=17    xoffset=9     yoffset=12    xadvance=42    name=Sprinkler connection
+page=1   id=83   mid=83   x=828   y=392   width=21    height=16    xoffset=10    yoffset=13    xadvance=42    name=Standpipe connection
+page=1   id=84   mid=84   x=372   y=423   width=27    height=9     xoffset=7     yoffset=18    xadvance=42    name=Fire pump
+page=1   id=85   mid=85   x=854   y=37    width=28    height=35    xoffset=3     yoffset=1     xadvance=35    name=Fire escape
+page=1   id=86   mid=86   x=0     y=282   width=22    height=31    xoffset=9     yoffset=2     xadvance=42    name=Fire extinguisher
+page=1   id=87   mid=87   x=683   y=339   width=20    height=29    xoffset=10    yoffset=3     xadvance=42    name=Fire hydrant
+
+Monitoring Stations
+page=1   id=209  mid=209  x=972   y=142   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Monitoring station
+page=1   id=89   mid=89   x=584   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Tidal station
+page=1   id=90   mid=90   x=216   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Weather station
+
+Industry
+page=1   id=98   mid=98   x=504   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Aquaculture
+page=1   id=99   mid=99   x=368   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Subsistence fishing
+page=1   id=100  mid=100  x=800   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Factory
+page=1   id=101  mid=101  x=540   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Logging
+page=1   id=102  mid=102  x=576   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Mining
+page=1   id=103  mid=103  x=980   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Nuclear power
+page=1   id=104  mid=104  x=612   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Pipeline
+page=1   id=105  mid=105  x=648   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Commercial or high-use recreational fishing
+
+Recreation Sites
+page=1   id=91   mid=91   x=746   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Camping
+page=1   id=92   mid=92   x=288   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Diving area
+page=1   id=93   mid=93   x=324   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=National park
+page=1   id=94   mid=94   x=360   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Park
+page=1   id=95   mid=95   x=396   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Beach
+page=1   id=96   mid=96   x=432   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Recreational fishing
+page=1   id=97   mid=97   x=468   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Sport fishing
+
+Sensitive Biological Resources
+page=1   id=111    mid=111  x=792   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Coral/hardbottom reef
+page=1   id=112    mid=112  x=180   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Mangroves
+page=1   id=113    mid=113  x=864   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Submerged aquatic vegetation
+page=1   id=114    mid=114  x=330   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Rare plant
+page=1   id=115    mid=115  x=936   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Fish
+page=1   id=116    mid=116  x=297   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Nursery area
+page=1   id=117    mid=117  x=0     y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Gastropod
+page=1   id=118    mid=118  x=36    y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Crab
+page=1   id=119    mid=119  x=72    y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Lobster/crayfish
+page=1   id=120    mid=120  x=108   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Bivalve
+page=1   id=121    mid=121  x=836   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Scallop
+page=1   id=122    mid=122  x=144   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Shrimp
+page=1   id=123    mid=123  x=180   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Squid/octopus
+page=1   id=124    mid=124  x=540   y=37    width=35    height=35    xoffset=3     yoffset=-1    xadvance=42    name=Alligator/crocodile
+page=1   id=125    mid=125  x=216   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Turtle
+page=1   id=126    mid=126  x=264   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Other reptile/ amphibian
+page=1   id=61568  mid=128  x=252   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Gull/tern
+page=1   id=129    mid=129  x=165   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Alcid/pelagic bird
+page=1   id=61570  mid=130  x=180   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Raptor
+page=1   id=61571  mid=131  x=144   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Shorebird
+page=1   id=61572  mid=132  x=108   y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Wading bird
+page=1   id=61573  mid=133  x=964   y=37    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Waterfowl
+page=1   id=61574  mid=134  x=504   y=178   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Bear
+page=1   id=61575  mid=135  x=396   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Deer
+page=1   id=61576  mid=136  x=360   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Dolphin
+page=1   id=61577  mid=137  x=288   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Manatee
+page=1   id=61578  mid=138  x=612   y=37    width=35    height=35    xoffset=3     yoffset=2     xadvance=42    name=Sea otter
+page=1   id=61579  mid=139  x=900   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Seal/sea lion
+page=1   id=61580  mid=140  x=864   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Small mammal
+page=1   id=141    mid=141  x=360   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Whale
+page=1   id=61582  mid=142  x=576   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Diving bird
+
+Water/Marine
+page=1   id=61591  mid=151  x=693   y=246   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Underwater outfall
+page=1   id=61592  mid=152  x=660   y=246   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Surface outfall
+page=1   id=61593  mid=153  x=540   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Water intake
+page=1   id=61594  mid=154  x=712   y=213   width=33    height=32    xoffset=3     yoffset=2     xadvance=39    name=Water supply
+page=1   id=61596  mid=156  x=188   y=425   width=21    height=12    xoffset=10    yoffset=18    xadvance=42    name=Drain
+page=1   id=157    mid=157  x=122   y=426   width=21    height=12    xoffset=10    yoffset=18    xadvance=42    name=Sewer
+page=1   id=61597  mid=158  x=275   y=424   width=20    height=11    xoffset=10    yoffset=19    xadvance=42    name=Storm drain
+page=1   id=61598  mid=159  x=145   y=426   width=21    height=11    xoffset=10    yoffset=19    xadvance=42    name=Sump
+page=1   id=161    mid=161  x=151   y=400   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=Channel buoy
+page=1   id=162    mid=162  x=134   y=401   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=Channel buoy
+page=1   id=163    mid=163  x=117   y=401   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=Harbor buoy
+page=1   id=164    mid=164  x=1006  y=366   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=Harbor buoy
+page=1   id=165    mid=165  x=42    y=427   width=26    height=15    xoffset=8     yoffset=13    xadvance=42    name=Mooring buoy
+page=1   id=166    mid=166  x=740   y=369   width=28    height=26    xoffset=3     yoffset=4     xadvance=35    name=Anchorage
+page=1   id=167    mid=167  x=462   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Marina
+page=1   id=168    mid=168  x=396   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Boat ramp
+page=1   id=169    mid=169  x=363   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Hoist
+page=1   id=171    mid=171  x=404   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Boom
+page=1   id=172    mid=172  x=827   y=367   width=26    height=24    xoffset=3     yoffset=6     xadvance=33    name=Exposed wreck
+page=1   id=173    mid=173  x=499   y=399   width=22    height=22    xoffset=9     yoffset=4     xadvance=42    name=Rock awash
+page=1   id=174    mid=174  x=308   y=400   width=23    height=23    xoffset=8     yoffset=3     xadvance=42    name=Sunken wreck
+page=1   id=175    mid=175  x=890   y=246   width=31    height=31    xoffset=3     yoffset=2     xadvance=38    name=Precautionary area
+
+Communications
+page=1   id=183  mid=183  x=216   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Radio communication
+page=1   id=184  mid=184  x=1000  y=37    width=23    height=34    xoffset=3     yoffset=1     xadvance=30    name=Satellite ground station
+page=1   id=185  mid=185  x=828   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Telephone
+
+Transportation (Services and Vehicles)
+page=1   id=186  mid=186  x=0     y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Bridge
+page=1   id=187  mid=187  x=324   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Gas
+page=1   id=188  mid=188  x=36    y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Police
+page=1   id=189  mid=189  x=72    y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Access
+page=1   id=190  mid=190  x=432   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Helicopter
+page=1   id=191  mid=191  x=108   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Fire truck
+page=1   id=192  mid=192  x=144   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Ambulance
+page=1   id=193  mid=193  x=180   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Heavy equipment
+page=1   id=194  mid=194  x=216   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Crane
+page=1   id=195  mid=195  x=751   y=178   width=34    height=34    xoffset=3     yoffset=1     xadvance=42    name=Boat trailer
+page=1   id=196  mid=196  x=612   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Trailer
+page=1   id=197  mid=197  x=252   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=Tractor trailer
+page=1   id=198  mid=198  x=576   y=37    width=35    height=35    xoffset=3     yoffset=1     xadvance=42    name=Rail tanker
+page=1   id=199  mid=199  x=75    y=402   width=20    height=24    xoffset=10    yoffset=7     xadvance=42    name=Skimmer
+page=1   id=200  mid=200  x=610   y=213   width=33    height=32    xoffset=3     yoffset=2     xadvance=39    name=Ferry
+page=1   id=201  mid=201  x=332   y=400   width=41    height=22    xoffset=3     yoffset=7     xadvance=48    name=USCG boat
+page=1   id=202  mid=202  x=522   y=399   width=36    height=21    xoffset=3     yoffset=8     xadvance=43    name=Medium vessel
+page=1   id=203  mid=203  x=748   y=396   width=39    height=16    xoffset=3     yoffset=13    xadvance=46    name=Small vessel
+page=1   id=204  mid=204  x=956   y=391   width=41    height=15    xoffset=3     yoffset=14    xadvance=48    name=Container ship
+page=1   id=205  mid=205  x=914   y=391   width=41    height=15    xoffset=3     yoffset=14    xadvance=48    name=Tanker
+page=1   id=206  mid=206  x=296   y=424   width=37    height=9     xoffset=3     yoffset=20    xadvance=44    name=Barge
+page=1   id=207  mid=207  x=950   y=246   width=27    height=31    xoffset=2     yoffset=4     xadvance=33    name=Airport
+page=1   id=208  mid=208  x=936   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Railroad crossing
+page=1   id=210  mid=210  x=720   y=37    width=33    height=35    xoffset=3     yoffset=1     xadvance=40    name=State highway
+page=1   id=211  mid=211  x=224   y=214   width=33    height=33    xoffset=3     yoffset=2     xadvance=40    name=Interstate
+
+Incident Command System (ICS) Facilities					
+page=1   id=226  mid=226  x=240   y=281   width=30    height=30    xoffset=3     yoffset=3     xadvance=37    name=Incident command post
+page=1   id=227  mid=227  x=944   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Incident base
+page=1   id=228  mid=228  x=33    y=249   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Camp
+page=1   id=229  mid=229  x=99    y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Staging area
+
+CAMEO Symbols
+page=1   id=177  mid=177  x=576   y=213   width=33    height=32    xoffset=3     yoffset=2     xadvance=40    name=ALOHA source point
+page=1   id=109  mid=109  x=2     y=445   width=22    height=22    xoffset=3     yoffset=1     xadvance=42    name=ALOHA threat point
+page=1   id=178  mid=178  x=638   y=397   width=11    height=21    xoffset=15    yoffset=7     xadvance=42    name=Environmentally sensitive area, lower priority
+page=1   id=179  mid=179  x=617   y=397   width=20    height=21    xoffset=10    yoffset=7     xadvance=42    name=Environmentally sensitive area, medium priority
+page=1   id=180  mid=180  x=446   y=399   width=29    height=22    xoffset=3     yoffset=7     xadvance=36    name=Environmentally sensitive area, highest priority
+page=1   id=214  mid=214  x=906   y=366   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=Less than 1 hour breakthrough time
+page=1   id=213  mid=213  x=50    y=402   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=1-3 hours breakthrough time
+page=1   id=215  mid=215  x=881   y=367   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=More than 3 hours breakthrough time
+
+Miscellaneous
+page=1   id=33   mid=33   x=96    y=426   width=25    height=12    xoffset=8     yoffset=9     xadvance=42    name=Polyline overlay
+page=1   id=34   mid=34   x=676   y=397   width=25    height=18    xoffset=8     yoffset=6     xadvance=42    name=Polygon overlay
+page=1   id=176  mid=176  x=356   y=214   width=30    height=33    xoffset=3     yoffset=2     xadvance=37    name=OSRO
+page=1   id=181  mid=181  x=144   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=High voltage
+page=1   id=182  mid=182  x=821   y=37    width=32    height=35    xoffset=3     yoffset=0     xadvance=38    name=Handicapped
+
+Logos
+page=1   id=41   mid=41   x=716   y=178   width=34    height=34    xoffset=3     yoffset=1     xadvance=41    name=Environmental Protection Agency
+page=1   id=42   mid=42   x=646   y=178   width=34    height=34    xoffset=3     yoffset=1     xadvance=40    name=National Oceanic and Atmospheric Administration
+page=1   id=43   mid=43   x=505   y=213   width=36    height=32    xoffset=3     yoffset=2     xadvance=43    name=U.S. Coast Guard
+page=1   id=44   mid=44   x=990   y=177   width=25    height=34    xoffset=7     yoffset=1     xadvance=42    name=Genwest Systems
+page=1   id=45   mid=45   x=114   y=281   width=31    height=30    xoffset=5     yoffset=3     xadvance=42    name=MARPLOT
+
+Shapes
+page=1   id=212  mid=212  x=0     y=402   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=Place point
+page=1   id=217  mid=217  x=1008  y=161   width=7     height=7     xoffset=18    yoffset=16    xadvance=42    name=Small dot
+page=1   id=218  mid=218  x=428   y=422   width=9     height=9     xoffset=16    yoffset=14    xadvance=42    name=Dot
+page=1   id=219  mid=219  x=911   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=Circle
+page=1   id=220  mid=220  x=216   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=Filled circle
+page=1   id=221  mid=221  x=442   y=422   width=30    height=30    xoffset=3     yoffset=7     xadvance=30    name=Cross
+page=1   id=222  mid=222  x=825   y=246   width=32    height=31    xoffset=3     yoffset=3     xadvance=39    name=Triangle
+page=1   id=223  mid=223  x=792   y=246   width=32    height=31    xoffset=3     yoffset=3     xadvance=39    name=Filled triangle
+page=1   id=224  mid=224  x=209   y=281   width=30    height=30    xoffset=3     yoffset=3     xadvance=37    name=Square
+page=1   id=225  mid=225  x=178   y=281   width=30    height=30    xoffset=3     yoffset=3     xadvance=37    name=Filled square
+
+Alphabet (A-Z)
+page=1   id=230  mid=230  x=0     y=374   width=25    height=27    xoffset=8     yoffset=2     xadvance=42    name=Letter A
+page=1   id=231  mid=231  x=541   y=371   width=19    height=27    xoffset=11    yoffset=2     xadvance=42    name=Letter B
+page=1   id=232  mid=232  x=595   y=339   width=21    height=29    xoffset=10    yoffset=1     xadvance=42    name=Letter C
+page=1   id=233  mid=233  x=288   y=372   width=21    height=27    xoffset=10    yoffset=2     xadvance=42    name=Letter D
+page=1   id=234  mid=234  x=675   y=369   width=17    height=27    xoffset=12    yoffset=2     xadvance=42    name=Letter E
+page=1   id=235  mid=235  x=693   y=369   width=17    height=27    xoffset=12    yoffset=2     xadvance=42    name=Letter F
+page=1   id=236  mid=236  x=617   y=339   width=21    height=29    xoffset=8     yoffset=1     xadvance=42    name=Letter G
+page=1   id=237  mid=237  x=420   y=371   width=20    height=27    xoffset=10    yoffset=2     xadvance=42    name=Letter H
+page=1   id=238  mid=238  x=1016  y=0     width=5     height=27    xoffset=17    yoffset=2     xadvance=42    name=Letter I
+page=1   id=239  mid=239  x=871   y=338   width=15    height=28    xoffset=12    yoffset=2     xadvance=42    name=Letter J
+page=1   id=240  mid=240  x=398   y=371   width=21    height=27    xoffset=10    yoffset=2     xadvance=42    name=Letter K
+page=1   id=241  mid=241  x=581   y=369   width=19    height=27    xoffset=11    yoffset=2     xadvance=42    name=Letter L
+page=1   id=242  mid=242  x=124   y=373   width=23    height=27    xoffset=9     yoffset=2     xadvance=42    name=Letter M
+page=1   id=243  mid=243  x=376   y=372   width=21    height=27    xoffset=10    yoffset=2     xadvance=42    name=Letter N
+page=1   id=244  mid=244  x=547   y=340   width=23    height=29    xoffset=9     yoffset=1     xadvance=42    name=Letter O
+page=1   id=245  mid=245  x=620   y=369   width=18    height=27    xoffset=11    yoffset=2     xadvance=42    name=Letter P
+page=1   id=246  mid=246  x=908   y=178   width=27    height=34    xoffset=7     yoffset=1     xadvance=42    name=Letter Q
+page=1   id=247  mid=247  x=561   y=370   width=19    height=27    xoffset=11    yoffset=2     xadvance=42    name=Letter R
+page=1   id=248  mid=248  x=725   y=339   width=19    height=29    xoffset=10    yoffset=1     xadvance=42    name=Letter S
+page=1   id=249  mid=249  x=172   y=372   width=23    height=27    xoffset=9     yoffset=2     xadvance=42    name=Letter T
+page=1   id=250  mid=250  x=829   y=338   width=20    height=28    xoffset=10    yoffset=2     xadvance=42    name=Letter U
+page=1   id=251  mid=251  x=951   y=338   width=25    height=27    xoffset=8     yoffset=2     xadvance=42    name=Letter V
+page=1   id=252  mid=252  x=919   y=338   width=31    height=27    xoffset=5     yoffset=2     xadvance=42    name=Letter W
+page=1   id=253  mid=253  x=265   y=372   width=22    height=27    xoffset=9     yoffset=2     xadvance=42    name=Letter X
+page=1   id=254  mid=254  x=196   y=372   width=22    height=27    xoffset=9     yoffset=2     xadvance=42    name=Letter Y
+page=1   id=255  mid=255  x=441   y=371   width=19    height=27    xoffset=10    yoffset=2     xadvance=42    name=Letter Z
+
+Operations
+page=2   id=33  mid=289  x=476   y=250   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Ambulance
+page=2   id=36  mid=292  x=444   y=148   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency medical operation
+page=2   id=37  mid=293  x=478   y=148   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Operations frame symbol
+page=2   id=38  mid=294  x=0     y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Operations background symbol
+page=2   id=39  mid=295  x=34    y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=EMT (emergency medical team) station locations
+page=2   id=40  mid=296  x=68    y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Medical evacuation helicopter station
+page=2   id=41  mid=297  x=102   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Health department facility
+page=2   id=42  mid=298  x=136   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Hospital
+page=2   id=43  mid=299  x=170   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Hospital ship
+page=2   id=44  mid=300  x=204   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Medical facilities out patient
+page=2   id=45  mid=301  x=238   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Morgue
+page=2   id=46  mid=302  x=272   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Pharmacies
+page=2   id=47  mid=303  x=306   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Triage
+page=2   id=48  mid=304  x=340   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency operation
+page=2   id=49  mid=305  x=374   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency collection evacuation point
+page=2   id=50  mid=306  x=408   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency incident command center
+page=2   id=51  mid=307  x=442   y=185   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency operations center
+page=2   id=52  mid=308  x=476   y=182   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency public information center
+page=2   id=53  mid=309  x=0     y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency shelters
+page=2   id=54  mid=310  x=34    y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency staging areas
+page=2   id=55  mid=311  x=68    y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency teams
+page=2   id=56  mid=312  x=102   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency water distribution center
+page=2   id=57  mid=313  x=136   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Emergency food distribution center
+page=2   id=58  mid=314  x=170   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Fire suppression operation
+page=2   id=59  mid=315  x=442   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Fire hydrant
+page=2   id=60  mid=316  x=204   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Other water supply location
+page=2   id=61  mid=317  x=238   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Fire station
+page=2   id=62  mid=318  x=272   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=U.S. Bureau of Alcohol, Tobacco, and Firearms
+page=2   id=63  mid=319  x=306   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Law enforcement operation
+page=2   id=64  mid=320  x=340   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Border patrol
+page=2   id=65  mid=321  x=374   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Customs service
+page=2   id=66  mid=322  x=408   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=U.S. Drug Enforcement Administration
+page=2   id=67  mid=323  x=442   y=219   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=U.S. Department of Justice
+page=2   id=68  mid=324  x=476   y=216   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Federal Bureau of Investigation
+page=2   id=69  mid=325  x=0     y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Police
+page=2   id=70  mid=326  x=34    y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Prison
+page=2   id=71  mid=327  x=68    y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Secret service
+page=2   id=72  mid=328  x=102   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=U.S. Transportation Security Administration
+page=2   id=73  mid=329  x=136   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=U.S. Coast Guard
+page=2   id=74  mid=330  x=170   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=U.S. Marshals Service
+page=2   id=75  mid=331  x=204   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Sensor operation
+page=2   id=76  mid=332  x=238   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Biological sensor symbol
+page=2   id=77  mid=333  x=272   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Chemical sensor
+page=2   id=78  mid=334  x=306   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Intrusion sensor
+page=2   id=79  mid=335  x=340   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Nuclear sensor
+page=2   id=80  mid=336  x=374   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=Radiological sensor symbol
+
+Natural Events
+page=2   id=93    mid=349  x=333   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Earth quake epicenter
+page=2   id=94    mid=350  x=0     y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Landslide
+page=2   id=95    mid=351  x=37    y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Subsidence
+page=2   id=96    mid=352  x=148   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Volcanic eruption
+page=2   id=97    mid=353  x=185   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Volcanic threat
+page=2   id=98    mid=354  x=222   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Drizzle
+page=2   id=99    mid=355  x=259   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Drought
+page=2   id=100   mid=356  x=296   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Flood
+page=2   id=101   mid=357  x=333   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Fog
+page=2   id=102   mid=358  x=370   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Hail
+page=2   id=103   mid=359  x=407   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Inversion
+page=2   id=104   mid=360  x=444   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Rain
+page=2   id=105   mid=361  x=0     y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Sand dust storm
+page=2   id=106   mid=362  x=37    y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Snow
+page=2   id=107   mid=363  x=74    y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Thunder storm
+page=2   id=108   mid=364  x=111   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Tornado
+page=2   id=109   mid=365  x=148   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Tropical cyclone
+page=2   id=110   mid=366  x=185   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Tsunami
+page=2   id=111   mid=367  x=222   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Bird infestation
+page=2   id=112   mid=368  x=259   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Insect infestation
+page=2   id=113   mid=369  x=296   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Rodent infestation
+page=2   id=114   mid=370  x=333   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Microbial infestation
+page=2   id=115   mid=371  x=370   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Reptile infestation
+page=2   id=116   mid=372  x=407   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Natural events background symbol
+page=2   id=117   mid=373  x=444   y=37    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Natural events frame symbol
+page=2   id=118   mid=374  x=0     y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=After shock
+page=2   id=119   mid=375  x=74    y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Avalanche
+
+Incidents
+page=2   id=8364  mid=384   x=407   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Marine incident
+page=2   id=8218  mid=386   x=111   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Flammable gas
+page=2   id=8222  mid=388   x=0     y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Non-flammable gas
+page=2   id=8230  mid=389   x=111   y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Spontaneously combustible
+page=2   id=8224  mid=390   x=444   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Organic peroxides
+page=2   id=8225  mid=391   x=407   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Oxidizers
+page=2   id=710   mid=392   x=370   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Hot spot
+page=2   id=8249  mid=395   x=74    y=0     width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Toxic gas
+page=2   id=8216  mid=401   x=185   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Hazardous when wet
+page=2   id=8217  mid=402   x=148   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Explosive
+page=2   id=8220  mid=403   x=74    y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Flammable liquid
+page=2   id=8221  mid=404   x=37    y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Flammable solid
+page=2   id=8226  mid=405   x=370   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Radioactive material
+page=2   id=8211  mid=406   x=259   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Chemical agents
+page=2   id=8212  mid=407   x=222   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Corrosive material
+page=2   id=732   mid=408   x=111   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Wildfire
+page=2   id=8482  mid=409   x=37    y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Marine hijacking
+page=2   id=8250  mid=411   x=370   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Toxic and infectious
+page=2   id=245   mid=501  x=296   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Civil displaced population
+page=2   id=246   mid=502  x=259   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Civil rioting
+page=2   id=247   mid=503  x=222   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Criminal activity incident
+page=2   id=248   mid=504  x=185   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Civil disturbance incident
+page=2   id=249   mid=505  x=148   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Civil demonstrations
+page=2   id=250   mid=506  x=111   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Bomb threat
+page=2   id=251   mid=507  x=74    y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Bomb
+page=2   id=252   mid=508  x=37    y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Bomb explosion
+page=2   id=253   mid=509  x=0     y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Looting
+page=2   id=254   mid=510  x=333   y=111   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Poisoning
+page=2   id=255   mid=511  x=444   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=Shooting
+
+Infrastructures
+page=2   id=125  mid=381  x=38    y=470   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Farms/ranches
+page=2   id=126  mid=382  x=0     y=470   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Infrastructure background symbol
+page=2   id=161  mid=417  x=456   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Infrastructure frame symbol
+page=2   id=162  mid=418  x=418   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Banks
+page=2   id=163  mid=419  x=380   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Military infrastructure
+page=2   id=164  mid=420  x=342   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Commercial food distribution center
+page=2   id=165  mid=421  x=304   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Agricultural and food infrastructure
+page=2   id=166  mid=422  x=266   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Animal feedlots
+page=2   id=167  mid=423  x=228   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Food production center
+page=2   id=168  mid=424  x=190   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Grain storage
+page=2   id=169  mid=425  x=152   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Banking finance and insurance infrastructure
+page=2   id=170  mid=426  x=114   y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=ATMs
+page=2   id=171  mid=427  x=76    y=437   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Water treatment facility
+page=2   id=172  mid=428  x=456   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Surface water intake
+page=2   id=174  mid=430  x=190   y=467   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Water storage
+page=2   id=175  mid=431  x=228   y=467   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Reservoir
+page=2   id=176  mid=432  x=114   y=467   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Pumping station
+page=2   id=177  mid=433  x=152   y=467   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Ground well
+page=2   id=178  mid=434  x=64    y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Discharge outfall
+page=2   id=179  mid=435  x=102   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Dam
+page=2   id=180  mid=436  x=140   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Critical valves
+page=2   id=181  mid=437  x=178   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Water supply infrastructure
+page=2   id=182  mid=438  x=216   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Tunnel
+page=2   id=183  mid=439  x=254   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Traffic inspection facility
+page=2   id=184  mid=440  x=292   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Food retail
+page=2   id=185  mid=441  x=330   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Traffic control point
+page=2   id=186  mid=442  x=368   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Toll facility
+page=2   id=187  mid=443  x=406   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Ship anchorage
+page=2   id=188  mid=444  x=444   y=287   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Rest stop
+page=2   id=189  mid=445  x=0     y=320   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Maintenance facility
+page=2   id=190  mid=446  x=38    y=320   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Rail station
+page=2   id=191  mid=447  x=76    y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Port
+page=2   id=192  mid=448  x=114   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Lock
+page=2   id=193  mid=449  x=152   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Helicopter landing site
+page=2   id=194  mid=450  x=190   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Ferry terminal
+page=2   id=195  mid=451  x=228   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Bus station
+page=2   id=196  mid=452  x=266   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Bridge
+page=2   id=197  mid=453  x=304   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Airport
+page=2   id=198  mid=454  x=342   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Air traffic control facility
+page=2   id=199  mid=455  x=380   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Transportation infrastructure
+page=2   id=200  mid=456  x=418   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Telecommunications tower
+page=2   id=201  mid=457  x=456   y=317   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Telecommunications infrastructure
+page=2   id=202  mid=458  x=0     y=350   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Telecommunications facility
+page=2   id=203  mid=459  x=38    y=350   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Elder care
+page=2   id=204  mid=460  x=76    y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Child day care
+page=2   id=205  mid=461  x=114   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Adult day care
+page=2   id=206  mid=462  x=152   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Special needs infrastructure
+page=2   id=207  mid=463  x=190   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Recreational area
+page=2   id=208  mid=464  x=228   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Religious institution
+page=2   id=209  mid=465  x=266   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Open facility
+page=2   id=210  mid=466  x=304   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Enclosed facility
+page=2   id=211  mid=467  x=342   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Public venues infrastructure
+page=2   id=212  mid=468  x=380   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Post office
+page=2   id=213  mid=469  x=418   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Postal distribution center
+page=2   id=214  mid=470  x=456   y=347   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Postal service infrastructure
+page=2   id=215  mid=471  x=0     y=380   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Military base
+page=2   id=216  mid=472  x=38    y=380   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Military armory
+page=2   id=217  mid=473  x=76    y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Government site infrastructure
+page=2   id=218  mid=474  x=114   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Propane facilities
+page=2   id=219  mid=475  x=152   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Petroleum facilities
+page=2   id=220  mid=476  x=190   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Nuclear facilities
+page=2   id=221  mid=477  x=228   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Natural gas facilities
+page=2   id=222  mid=478  x=266   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Generation stations
+page=2   id=223  mid=479  x=304   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Energy facilities infrastructure
+page=2   id=224  mid=480  x=342   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Schools
+page=2   id=225  mid=481  x=380   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=College/university
+page=2   id=226  mid=482  x=418   y=377   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Educational facilities infrastructure
+page=2   id=227  mid=483  x=76    y=467   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Pharmaceutical manufacturer
+page=2   id=228  mid=484  x=0     y=410   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Landfill
+page=2   id=229  mid=485  x=38    y=410   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Toxic Release Inventory
+page=2   id=230  mid=486  x=76    y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Superfund sites on the National Priorities List
+page=2   id=231  mid=487  x=114   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Commercial infrastructure
+page=2   id=232  mid=488  x=152   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Industrial site
+page=2   id=233  mid=489  x=190   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Hazardous material production
+page=2   id=234  mid=490  x=228   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Chemical plant
+page=2   id=235  mid=491  x=266   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Firearm manufacturers
+page=2   id=236  mid=492  x=304   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Firearm retailers
+page=2   id=237  mid=493  x=342   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Hazardous materials storage
+page=2   id=238  mid=494  x=380   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Financial exchanges
+page=2   id=239  mid=495  x=418   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Financial services other
+page=2   id=240  mid=496  x=456   y=407   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Federal reserve banks
+page=2   id=241  mid=497  x=0     y=440   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Bullion storage
+page=2   id=242  mid=498  x=38    y=440   width=37    height=29    xoffset=-1    yoffset=19    xadvance=34    name=Agricultural laboratories
+
+[Unused]
+page=1   id=32        mid=0    x=1016  y=33    width=3     height=3     xoffset=-1    yoffset=27    xadvance=42    name=[blank]
+page=1   id=35        mid=0    x=924   y=308   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=36        mid=0    x=891   y=308   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=37        mid=0    x=858   y=308   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=38        mid=0    x=825   y=308   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=39        mid=0    x=792   y=308   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=40        mid=0    x=759   y=308   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=46        mid=0    x=660   y=309   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=47        mid=0    x=627   y=309   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=48        mid=0    x=594   y=309   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=49        mid=0    x=561   y=309   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=50        mid=0    x=528   y=310   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=55        mid=0    x=132   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=60        mid=0    x=793   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=65        mid=0    x=727   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=88        mid=0    x=529   y=279   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=106       mid=0    x=463   y=281   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=107       mid=0    x=496   y=280   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=108       mid=0    x=595   y=279   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=109       mid=0    x=628   y=279   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=110       mid=0    x=661   y=279   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=127       mid=0    x=694   y=279   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=143       mid=0    x=760   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=144       mid=0    x=892   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=160       mid=0    x=330   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=170       mid=0    x=462   y=311   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=216       mid=0    x=397   y=281   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dashed rectangle]
+page=1   id=338       mid=0    x=108   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=339       mid=0    x=166   y=425   width=21    height=12    xoffset=10    yoffset=18    xadvance=42    name=[dup?]
+page=1   id=352       mid=0    x=648   y=37    width=35    height=35    xoffset=3     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=353       mid=0    x=678   y=213   width=33    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=376       mid=0    x=144   y=426   width=21    height=12    xoffset=10    yoffset=18    xadvance=42    name=[dup?]
+page=1   id=381       mid=0    x=36    y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=382       mid=0    x=254   y=424   width=20    height=11    xoffset=10    yoffset=19    xadvance=42    name=[dup?]
+page=1   id=710       mid=0    x=0     y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=732       mid=0    x=0     y=249   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=8222      mid=0    x=936   y=108   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=8240      mid=0    x=792   y=108   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61472     mid=0    x=1008  y=166   width=3     height=3     xoffset=-1    yoffset=27    xadvance=42    name=[dup?]
+page=1   id=61473     mid=0    x=998   y=391   width=25    height=12    xoffset=8     yoffset=9     xadvance=42    name=[dup?]
+page=1   id=61474     mid=0    x=650   y=397   width=25    height=18    xoffset=8     yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61475     mid=0    x=132   y=342   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61476     mid=0    x=462   y=341   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61477     mid=0    x=231   y=342   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61478     mid=0    x=396   y=341   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61479     mid=0    x=429   y=341   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61480     mid=0    x=430   y=281   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61481     mid=0    x=611   y=178   width=34    height=34    xoffset=3     yoffset=1     xadvance=41    name=[dup?]
+page=1   id=61482     mid=0    x=681   y=178   width=34    height=34    xoffset=3     yoffset=1     xadvance=40    name=[dup?]
+page=1   id=61483     mid=0    x=468   y=214   width=36    height=32    xoffset=3     yoffset=2     xadvance=43    name=[dup?]
+page=1   id=61484     mid=0    x=964   y=178   width=25    height=34    xoffset=7     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61485     mid=0    x=146   y=281   width=31    height=30    xoffset=5     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61486     mid=0    x=990   y=308   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61487     mid=0    x=364   y=281   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61488     mid=0    x=363   y=342   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61489     mid=0    x=330   y=342   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61490     mid=0    x=297   y=342   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61491     mid=0    x=850   y=178   width=28    height=34    xoffset=3     yoffset=2     xadvance=35    name=[dup?]
+page=1   id=61492     mid=0    x=292   y=214   width=31    height=33    xoffset=3     yoffset=3     xadvance=38    name=[dup?]
+page=1   id=61493     mid=0    x=938   y=37    width=25    height=35    xoffset=3     yoffset=1     xadvance=32    name=[dup?]
+page=1   id=61494     mid=0    x=76    y=373   width=23    height=27    xoffset=9     yoffset=5     xadvance=42    name=[dup?]
+page=1   id=61495     mid=0    x=264   y=342   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61496     mid=0    x=521   y=341   width=25    height=29    xoffset=3     yoffset=3     xadvance=33    name=[dup?]
+page=1   id=61497     mid=0    x=36    y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61498     mid=0    x=360   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61499     mid=0    x=144   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61500     mid=0    x=33    y=344   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61501     mid=0    x=396   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=41    name=[dup?]
+page=1   id=61502     mid=0    x=432   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61503     mid=0    x=252   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61504     mid=0    x=66    y=249   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61505     mid=0    x=165   y=342   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61506     mid=0    x=108   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61507     mid=0    x=190   y=214   width=33    height=33    xoffset=3     yoffset=2     xadvance=40    name=[dup?]
+page=1   id=61508     mid=0    x=1008  y=72    width=14    height=29    xoffset=13    yoffset=4     xadvance=42    name=[dup?]
+page=1   id=61509     mid=0    x=798   y=367   width=28    height=26    xoffset=3     yoffset=5     xadvance=36    name=[dup?]
+page=1   id=61510     mid=0    x=324   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61511     mid=0    x=764   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61512     mid=0    x=792   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61513     mid=0    x=818   y=178   width=31    height=34    xoffset=3     yoffset=2     xadvance=38    name=[dup?]
+page=1   id=61514     mid=0    x=288   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61515     mid=0    x=115   y=214   width=40    height=33    xoffset=3     yoffset=2     xadvance=46    name=[dup?]
+page=1   id=61516     mid=0    x=40    y=0     width=39    height=36    xoffset=3     yoffset=-1    xadvance=46    name=[dup?]
+page=1   id=61517     mid=0    x=23    y=282   width=22    height=31    xoffset=9     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61518     mid=0    x=443   y=214   width=24    height=33    xoffset=8     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61519     mid=0    x=80    y=282   width=33    height=30    xoffset=3     yoffset=3     xadvance=39    name=[dup?]
+page=1   id=61520     mid=0    x=797   y=338   width=31    height=28    xoffset=2     yoffset=3     xadvance=37    name=[dup?]
+page=1   id=61521     mid=0    x=25    y=214   width=24    height=34    xoffset=3     yoffset=1     xadvance=31    name=[dup?]
+page=1   id=61522     mid=0    x=725   y=396   width=22    height=17    xoffset=9     yoffset=12    xadvance=42    name=[dup?]
+page=1   id=61523     mid=0    x=850   y=392   width=21    height=16    xoffset=10    yoffset=13    xadvance=42    name=[dup?]
+page=1   id=61524     mid=0    x=400   y=423   width=27    height=9     xoffset=7     yoffset=18    xadvance=42    name=[dup?]
+page=1   id=61525     mid=0    x=883   y=37    width=28    height=35    xoffset=3     yoffset=1     xadvance=35    name=[dup?]
+page=1   id=61526     mid=0    x=1001  y=246   width=22    height=31    xoffset=9     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61527     mid=0    x=704   y=339   width=20    height=29    xoffset=10    yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61528     mid=0    x=429   y=311   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61529     mid=0    x=440   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61530     mid=0    x=684   y=108   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61531     mid=0    x=495   y=247   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61532     mid=0    x=612   y=108   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61533     mid=0    x=576   y=108   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61534     mid=0    x=540   y=108   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61535     mid=0    x=468   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61536     mid=0    x=72    y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61537     mid=0    x=36    y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61538     mid=0    x=0     y=74    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61539     mid=0    x=116   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61540     mid=0    x=620   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61541     mid=0    x=72    y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61542     mid=0    x=504   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61543     mid=0    x=152   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61544     mid=0    x=72    y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61545     mid=0    x=504   y=108   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61546     mid=0    x=297   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61547     mid=0    x=264   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61548     mid=0    x=165   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61549     mid=0    x=99    y=313   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61550     mid=0    x=66    y=313   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61551     mid=0    x=432   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61552     mid=0    x=396   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61553     mid=0    x=324   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61554     mid=0    x=878   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61555     mid=0    x=288   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61556     mid=0    x=231   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61557     mid=0    x=252   y=109   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61558     mid=0    x=972   y=72    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61559     mid=0    x=900   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61560     mid=0    x=828   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61561     mid=0    x=908   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61562     mid=0    x=756   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61563     mid=0    x=720   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61564     mid=0    x=504   y=37    width=35    height=35    xoffset=3     yoffset=-1    xadvance=42    name=[dup?]
+page=1   id=61565     mid=0    x=684   y=73    width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61566     mid=0    x=198   y=248   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61567     mid=0    x=0     y=344   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61569     mid=0    x=627   y=246   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61581     mid=0    x=720   y=143   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61583     mid=0    x=826   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61584     mid=0    x=859   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61585     mid=0    x=562   y=279   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61586     mid=0    x=925   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61587     mid=0    x=958   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61588     mid=0    x=991   y=278   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61589     mid=0    x=0     y=314   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61590     mid=0    x=33    y=314   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61595     mid=0    x=198   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61599     mid=0    x=232   y=425   width=21    height=12    xoffset=10    yoffset=18    xadvance=42    name=[dup?]
+page=1   id=61600     mid=0    x=231   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61601     mid=0    x=185   y=400   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61602     mid=0    x=168   y=400   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61603     mid=0    x=202   y=400   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61604     mid=0    x=219   y=400   width=16    height=24    xoffset=11    yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61605     mid=0    x=69    y=427   width=26    height=15    xoffset=8     yoffset=13    xadvance=42    name=[dup?]
+page=1   id=61606     mid=0    x=769   y=367   width=28    height=26    xoffset=3     yoffset=4     xadvance=35    name=[dup?]
+page=1   id=61607     mid=0    x=594   y=246   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61608     mid=0    x=561   y=246   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61609     mid=0    x=528   y=246   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61610     mid=0    x=363   y=312   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61611     mid=0    x=80    y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61612     mid=0    x=854   y=367   width=26    height=24    xoffset=3     yoffset=6     xadvance=33    name=[dup?]
+page=1   id=61613     mid=0    x=476   y=399   width=22    height=22    xoffset=9     yoffset=4     xadvance=42    name=[dup?]
+page=1   id=61614     mid=0    x=260   y=400   width=23    height=23    xoffset=8     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61615     mid=0    x=858   y=246   width=31    height=31    xoffset=3     yoffset=2     xadvance=38    name=[dup?]
+page=1   id=61616     mid=0    x=387   y=214   width=30    height=33    xoffset=3     yoffset=2     xadvance=37    name=[dup?]
+page=1   id=61617     mid=0    x=644   y=213   width=33    height=32    xoffset=3     yoffset=2     xadvance=40    name=[dup?]
+page=1   id=61618     mid=0    x=1010  y=212   width=11    height=21    xoffset=15    yoffset=7     xadvance=42    name=[dup?]
+page=1   id=61619     mid=0    x=596   y=397   width=20    height=21    xoffset=10    yoffset=7     xadvance=42    name=[dup?]
+page=1   id=61620     mid=0    x=416   y=399   width=29    height=22    xoffset=3     yoffset=7     xadvance=36    name=[dup?]
+page=1   id=61621     mid=0    x=396   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61622     mid=0    x=788   y=37    width=32    height=35    xoffset=3     yoffset=0     xadvance=38    name=[dup?]
+page=1   id=61623     mid=0    x=360   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61624     mid=0    x=50    y=214   width=23    height=34    xoffset=3     yoffset=1     xadvance=30    name=[dup?]
+page=1   id=61625     mid=0    x=288   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61626     mid=0    x=548   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61627     mid=0    x=252   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61628     mid=0    x=512   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61629     mid=0    x=476   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61630     mid=0    x=180   y=144   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61631     mid=0    x=332   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61632     mid=0    x=296   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61633     mid=0    x=260   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61634     mid=0    x=224   y=0     width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61635     mid=0    x=576   y=178   width=34    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61636     mid=0    x=324   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61637     mid=0    x=468   y=37    width=35    height=36    xoffset=3     yoffset=0     xadvance=42    name=[dup?]
+page=1   id=61638     mid=0    x=684   y=37    width=35    height=35    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61639     mid=0    x=96    y=401   width=20    height=24    xoffset=10    yoffset=7     xadvance=42    name=[dup?]
+page=1   id=61640     mid=0    x=542   y=213   width=33    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61641     mid=0    x=374   y=400   width=41    height=22    xoffset=3     yoffset=7     xadvance=48    name=[dup?]
+page=1   id=61642     mid=0    x=559   y=399   width=36    height=21    xoffset=3     yoffset=8     xadvance=43    name=[dup?]
+page=1   id=61643     mid=0    x=788   y=394   width=39    height=16    xoffset=3     yoffset=13    xadvance=46    name=[dup?]
+page=1   id=61644     mid=0    x=0     y=427   width=41    height=15    xoffset=3     yoffset=14    xadvance=48    name=[dup?]
+page=1   id=61645     mid=0    x=872   y=392   width=41    height=15    xoffset=3     yoffset=14    xadvance=48    name=[dup?]
+page=1   id=61646     mid=0    x=334   y=423   width=37    height=9     xoffset=3     yoffset=20    xadvance=44    name=[dup?]
+page=1   id=61647     mid=0    x=922   y=246   width=27    height=31    xoffset=2     yoffset=4     xadvance=33    name=[dup?]
+page=1   id=61648     mid=0    x=432   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61649     mid=0    x=468   y=179   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61650     mid=0    x=754   y=37    width=33    height=35    xoffset=3     yoffset=1     xadvance=40    name=[dup?]
+page=1   id=61651     mid=0    x=156   y=214   width=33    height=33    xoffset=3     yoffset=2     xadvance=40    name=[dup?]
+page=1   id=61652     mid=0    x=956   y=366   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61653     mid=0    x=931   y=366   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61654     mid=0    x=25    y=402   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61655     mid=0    x=981   y=366   width=24    height=24    xoffset=8     yoffset=6     xadvance=42    name=[dup?]
+page=1   id=61656     mid=0    x=99    y=343   width=32    height=29    xoffset=4     yoffset=3     xadvance=42    name=[dup?]
+page=1   id=61657     mid=0    x=1016  y=28    width=4     height=4     xoffset=18    yoffset=16    xadvance=42    name=[dup?]
+page=1   id=61658     mid=0    x=1010  y=234   width=9     height=8     xoffset=16    yoffset=14    xadvance=42    name=[dup?]
+page=1   id=61659     mid=0    x=977   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61660     mid=0    x=540   y=178   width=35    height=34    xoffset=3     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61661     mid=0    x=284   y=400   width=23    height=23    xoffset=3     yoffset=7     xadvance=30    name=[dup?]
+page=1   id=61662     mid=0    x=726   y=246   width=32    height=31    xoffset=3     yoffset=3     xadvance=39    name=[dup?]
+page=1   id=61663     mid=0    x=759   y=246   width=32    height=31    xoffset=3     yoffset=3     xadvance=39    name=[dup?]
+page=1   id=61664     mid=0    x=271   y=281   width=30    height=30    xoffset=3     yoffset=3     xadvance=37    name=[dup?]
+page=1   id=61665     mid=0    x=302   y=281   width=30    height=30    xoffset=3     yoffset=3     xadvance=37    name=[dup?]
+page=1   id=61666     mid=0    x=333   y=281   width=30    height=30    xoffset=3     yoffset=3     xadvance=37    name=[dup?]
+page=1   id=61667     mid=0    x=845   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61668     mid=0    x=812   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61669     mid=0    x=779   y=213   width=32    height=32    xoffset=3     yoffset=2     xadvance=39    name=[dup?]
+page=1   id=61670     mid=0    x=26    y=374   width=25    height=27    xoffset=8     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61671     mid=0    x=501   y=371   width=19    height=27    xoffset=11    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61672     mid=0    x=639   y=339   width=21    height=29    xoffset=10    yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61673     mid=0    x=354   y=372   width=21    height=27    xoffset=10    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61674     mid=0    x=639   y=369   width=17    height=27    xoffset=12    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61675     mid=0    x=657   y=369   width=17    height=27    xoffset=12    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61676     mid=0    x=661   y=339   width=21    height=29    xoffset=8     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61677     mid=0    x=1003  y=338   width=20    height=27    xoffset=10    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61678     mid=0    x=1016  y=161   width=5     height=27    xoffset=17    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61679     mid=0    x=1008  y=132   width=15    height=28    xoffset=12    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61680     mid=0    x=332   y=372   width=21    height=27    xoffset=10    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61681     mid=0    x=481   y=371   width=19    height=27    xoffset=11    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61682     mid=0    x=100   y=373   width=23    height=27    xoffset=9     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61683     mid=0    x=310   y=372   width=21    height=27    xoffset=10    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61684     mid=0    x=571   y=339   width=23    height=29    xoffset=9     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61685     mid=0    x=601   y=369   width=18    height=27    xoffset=11    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61686     mid=0    x=936   y=178   width=27    height=34    xoffset=7     yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61687     mid=0    x=461   y=371   width=19    height=27    xoffset=11    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61688     mid=0    x=745   y=339   width=19    height=29    xoffset=10    yoffset=1     xadvance=42    name=[dup?]
+page=1   id=61689     mid=0    x=52    y=374   width=23    height=27    xoffset=9     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61690     mid=0    x=850   y=338   width=20    height=28    xoffset=10    yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61691     mid=0    x=977   y=338   width=25    height=27    xoffset=8     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61692     mid=0    x=887   y=338   width=31    height=27    xoffset=5     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61693     mid=0    x=242   y=372   width=22    height=27    xoffset=9     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61694     mid=0    x=219   y=372   width=22    height=27    xoffset=9     yoffset=2     xadvance=42    name=[dup?]
+page=1   id=61695     mid=0    x=521   y=371   width=19    height=27    xoffset=10    yoffset=2     xadvance=42    name=[dup?]
+page=2   id=288       mid=0    x=493   y=8     width=3     height=3     xoffset=-1    yoffset=46    xadvance=13    name=[blank]
+page=2   id=290       mid=0    x=32    y=287   width=31    height=32    xoffset=0     yoffset=16    xadvance=31    name=[blank]
+page=2   id=291       mid=0    x=0     y=287   width=31    height=32    xoffset=0     yoffset=16    xadvance=31    name=[blank]
+page=2   id=305       mid=0    x=407   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[flame?]
+page=2   id=337       mid=0    x=485   y=8     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=338       mid=0    x=481   y=8     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=339       mid=0    x=505   y=4     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=340       mid=0    x=501   y=4     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=341       mid=0    x=497   y=4     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=342       mid=0    x=493   y=4     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=343       mid=0    x=489   y=4     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=344       mid=0    x=485   y=4     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=345       mid=0    x=505   y=8     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=346       mid=0    x=505   y=0     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=347       mid=0    x=501   y=0     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=348       mid=0    x=497   y=0     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=376       mid=0    x=493   y=0     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=377       mid=0    x=489   y=0     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=378       mid=0    x=485   y=0     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=379       mid=0    x=481   y=0     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=380       mid=0    x=501   y=8     width=3     height=3     xoffset=-1    yoffset=46    xadvance=31    name=[blank]
+page=2   id=416       mid=0    x=489   y=8     width=3     height=3     xoffset=-1    yoffset=46    xadvance=13    name=[blank]
+page=2   id=429       mid=0    x=408   y=253   width=33    height=33    xoffset=-1    yoffset=15    xadvance=31    name=[blank]
+page=2   id=499       mid=0    x=481   y=4     width=3     height=3     xoffset=-1    yoffset=46    xadvance=27    name=[blank]
+page=2   id=500       mid=0    x=497   y=8     width=3     height=3     xoffset=-1    yoffset=46    xadvance=27    name=[blank]
+page=2   id=711       mid=0    x=333   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[facility fire?]
+page=2   id=713       mid=0    x=296   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[? flame?]
+page=2   id=728       mid=0    x=259   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[house fire?]
+page=2   id=729       mid=0    x=222   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[school fire?]
+page=2   id=730       mid=0    x=185   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[fumes?]
+page=2   id=731       mid=0    x=148   y=74    width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[handicapped house fire?]
+page=2   id=733       mid=0    x=296   y=148   width=36    height=36    xoffset=-1    yoffset=12    xadvance=33    name=[storm drain without water?]
