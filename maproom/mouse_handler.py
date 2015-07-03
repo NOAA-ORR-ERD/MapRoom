@@ -683,8 +683,11 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         cp2 = c.get_world_point_from_projected_point(p2)
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
-            cmd = self.vector_object_command(layer, cp1, cp2, layer.manager.default_style, *self.snapped_object)
+            cmd = self.get_vector_object_command(layer, cp1, cp2, layer.manager.default_style)
             e.process_command(cmd)
+    
+    def get_vector_object_command(self, layer, cp1, cp2, style):
+        return self.vector_object_command(layer, cp1, cp2, style)
 
 
 class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
@@ -716,6 +719,9 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+    
+    def get_vector_object_command(self, layer, cp1, cp2, style):
+        return self.vector_object_command(layer, cp1, cp2, style, *self.snapped_object)
 
 
 class AddPolylineMode(MouseHandler):
