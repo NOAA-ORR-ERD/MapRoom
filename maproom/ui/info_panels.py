@@ -817,6 +817,35 @@ class EndMarkerField(MarkerField):
     def get_style(self, marker):
         return LayerStyle(line_end_marker=marker)
 
+class MarplotIconField(InfoField):
+    same_line = True
+    
+    def get_marker(self, layer):
+        return layer.style.icon_marker
+    
+    def get_style(self, marker):
+        return LayerStyle(icon_marker=marker)
+    
+    def fill_data(self, layer):
+        marker = self.get_marker(layer)
+        self.ctrl.SetSelection(marker)
+    
+    def create_control(self):
+        names = ["%s/%s" % m for m in LayerStyle.icon_styles]
+        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                             style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        style = self.get_style(item)
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
@@ -906,6 +935,7 @@ class InfoPanel(PANELTYPE):
         "Font Size": FontSizeField,
         "Overlay Text": OverlayTextField,
         "Text Format": TextFormatField,
+        "Marplot Icon": MarplotIconField,
         }
     
     def create_fields(self, layer, fields):

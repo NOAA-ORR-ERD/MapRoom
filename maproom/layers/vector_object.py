@@ -550,12 +550,10 @@ class OverlayIconObject(OverlayImageObject):
     
     type = Str("overlay_icon_obj")
     
-    layer_info_panel = ["Layer name", "Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Marplot Icon", "Color", "Transparency"]
     
     def get_image_array(self):
-        from maproom.library.numpy_images import get_numpy_from_marplot_icon
-        r, g, b = int_to_wx_color_tuple(self.style.line_color)
-        return get_numpy_from_marplot_icon('marplot_drum.png', r, g, b)
+        return self.style.get_numpy_image_from_icon()
     
     def set_style(self, style):
         OverlayImageObject.set_style(self, style)
