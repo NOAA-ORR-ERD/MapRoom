@@ -35,10 +35,10 @@ def int_to_color(color):
     floats = tuple([i/255.0 for i in ints])
     return floats
 
-def int_to_wx_color_tuple(color):
+def int_to_color_uint8(color):
     c = np.uint32(color) # handle plain python integer being passed in
     ints = np.frombuffer(c.tostring(), dtype=np.uint8)
-    return tuple(ints[0:3])
+    return tuple(ints)
 
 def int_to_html_color_string(color):
     c = np.uint32(color) # handle plain python integer being passed in

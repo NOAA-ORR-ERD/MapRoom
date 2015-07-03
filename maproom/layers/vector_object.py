@@ -14,7 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
-from ..renderer import color_to_int, int_to_color, int_to_wx_color_tuple, int_to_html_color_string, ImageData
+from ..renderer import color_to_int, int_to_color, int_to_html_color_string, ImageData
 
 from line import LineLayer
 from constants import *

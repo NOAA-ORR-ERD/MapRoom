@@ -7,7 +7,7 @@ import numpy as np
 
 from constants import *
 
-from ..renderer import color_to_int, int_to_wx_color_tuple
+from ..renderer import color_to_int, int_to_color_uint8
 
 from maproom.library.marplot_icons import *
 
@@ -308,7 +308,7 @@ class LayerStyle(object):
         bitmap = wx.BitmapFromImage(image)
         arr = np.empty((bitmap.Height, bitmap.Width, 4), np.uint8)
         bitmap.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
-        r, g, b = int_to_wx_color_tuple(self.line_color)
+        r, g, b, a = int_to_color_uint8(self.line_color)
         red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
         mask = (red == 255) & (green == 255) & (blue == 255)
         arr[:,:,:3][mask] = [r, g, b]
