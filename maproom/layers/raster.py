@@ -10,7 +10,7 @@ from pyface.api import YES
 
 from ..library import rect
 
-from ..renderer import color_to_int, data_types, NullPicker
+from ..renderer import color_floats_to_int, data_types, NullPicker
 
 from base import Layer, ProjectedLayer
 from constants import *

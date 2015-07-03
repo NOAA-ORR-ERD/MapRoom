@@ -10,7 +10,7 @@ from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
 from ..menu_commands import *
 from ..ui import sliders
-from ..renderer import color_to_int, int_to_color
+from ..renderer import color_floats_to_int, int_to_color_floats
 
 
 class InfoField(object):
@@ -407,13 +407,13 @@ class LineAlphaField(FloatSliderField):
     
     def get_style(self, layer, alpha):
         color = self.get_layer_color(layer)
-        r, g, b, _ = int_to_color(color)
-        color = color_to_int(r, g, b, alpha)
+        r, g, b, _ = int_to_color_floats(color)
+        color = color_floats_to_int(r, g, b, alpha)
         return self.get_layer_style(layer, color)
 
     def get_value(self, layer):
         color = self.get_layer_color(layer)
-        r, g, b, a = int_to_color(color)
+        r, g, b, a = int_to_color_floats(color)
         t = int((1.0 - a) * 100)
         return t
 
@@ -447,7 +447,7 @@ class ColorPickerField(InfoField):
         return ""
         
     def fill_data(self, layer):
-        color = tuple(int(255 * c) for c in int_to_color(self.get_value(layer))[0:3])
+        color = tuple(int(255 * c) for c in int_to_color_floats(self.get_value(layer))[0:3])
         self.ctrl.SetColour(color)
     
     def create_control(self):
@@ -460,7 +460,7 @@ class ColorPickerField(InfoField):
     def color_changed(self, event):
         color = [float(c/255.0) for c in event.GetValue()]
         color.append(1.0)
-        int_color = color_to_int(*color)
+        int_color = color_floats_to_int(*color)
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return

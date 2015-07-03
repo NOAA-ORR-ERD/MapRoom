@@ -14,7 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
-from ..renderer import color_to_int, int_to_color, int_to_html_color_string, ImageData
+from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, ImageData
 
 from line import LineLayer
 from constants import *
@@ -63,8 +63,8 @@ class VectorObjectLayer(LineLayer):
         
         """
         projected_point_data = self.compute_projected_point_data()
-        r, g, b, a = int_to_color(self.style.line_color)
-        point_color = color_to_int(r, g, b, 1.0)
+        r, g, b, a = int_to_color_floats(self.style.line_color)
+        point_color = color_floats_to_int(r, g, b, 1.0)
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         self.rasterize(projected_point_data, self.points.z, point_color, self.style.line_color)
         self.rebuild_image()
@@ -249,8 +249,8 @@ class FillableVectorObject(LineVectorObject):
 
     @on_trait_change('alpha')
     def mark_rebuild(self):
-        r, g, b, a = int_to_color(self.style.fill_color)
-        self.style.fill_color = color_to_int(r, g, b, self.alpha)
+        r, g, b, a = int_to_color_floats(self.style.fill_color)
+        self.style.fill_color = color_floats_to_int(r, g, b, self.alpha)
         self.rebuild_needed = True
     
     def set_layer_style_defaults(self):

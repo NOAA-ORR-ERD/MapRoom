@@ -11,7 +11,7 @@ from library.accumulator import flatten
 
 from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
 from command import UndoStack
-from renderer import color_to_int, int_to_color
+from renderer import color_floats_to_int, int_to_color_floats
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set

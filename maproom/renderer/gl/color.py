@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def color_to_int(red, green, blue, alpha):
+def color_floats_to_int(red, green, blue, alpha):
     """
     Given individual channel values for a color from 0.0 to 1.0, return that
     color as a single integer RGBA value.
@@ -29,7 +29,7 @@ def color_to_int(red, green, blue, alpha):
         dtype=np.uint8,
     ).view(np.uint32)[0]
 
-def int_to_color(color):
+def int_to_color_floats(color):
     c = np.uint32(color) # handle plain python integer being passed in
     ints = np.frombuffer(c.tostring(), dtype=np.uint8)
     floats = tuple([i/255.0 for i in ints])
@@ -48,9 +48,9 @@ def int_to_html_color_string(color):
 
 if __name__ == "__main__":
     rgba = (.5, .5, .5, 1)
-    i = color_to_int(*rgba)
+    i = color_floats_to_int(*rgba)
     print "%x" % i
     print type(i)
-    color = int_to_color(i)
+    color = int_to_color_floats(i)
     rgba2 = list(color)
     print rgba2

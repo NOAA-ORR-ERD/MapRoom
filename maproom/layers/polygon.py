@@ -12,7 +12,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.projection import Projection
 from ..library.Boundary import Boundaries, PointsError
-from ..renderer import color_to_int, data_types
+from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 
 from point import PointLayer
@@ -102,9 +102,9 @@ class PolygonLayer(PointLayer):
             self.polygon_adjacency_array = self.make_polygon_adjacency_array(n_points)
             
             # set up feature code to color map
-            green = color_to_int(0.25, 0.5, 0, 0.75)
-            blue = color_to_int(0.0, 0.0, 0.5, 0.75)
-            gray = color_to_int(0.5, 0.5, 0.5, 0.75)
+            green = color_floats_to_int(0.25, 0.5, 0, 0.75)
+            blue = color_floats_to_int(0.0, 0.0, 0.5, 0.75)
+            gray = color_floats_to_int(0.5, 0.5, 0.5, 0.75)
             color_array = np.array((0, green, blue, gray), dtype=np.uint32)
             
             total = 0
@@ -331,5 +331,5 @@ class PolygonLayer(PointLayer):
         if layer_visibility["polygons"]:
             self.renderer.draw_polygons(layer_index_base, picker,
                                         self.polygons.color,
-                                        color_to_int(0, 0, 0, 1.0),
+                                        color_floats_to_int(0, 0, 0, 1.0),
                                         1)

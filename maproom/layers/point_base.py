@@ -20,7 +20,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.accumulator import flatten
 from ..library.Boundary import Boundaries, PointsError
-from ..renderer import color_to_int, data_types
+from ..renderer import color_floats_to_int, data_types
 
 from base import ProjectedLayer
 from constants import *

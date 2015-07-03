@@ -7,7 +7,7 @@ import numpy as np
 
 from constants import *
 
-from ..renderer import color_to_int, int_to_color_uint8
+from ..renderer import color_floats_to_int, int_to_color_uint8
 
 from maproom.library.marplot_icons import *
 
@@ -30,16 +30,16 @@ class LayerStyle(object):
     
     """
     
-    default_line_color = color_to_int(0,.5,.3,1.0)
+    default_line_color = color_floats_to_int(0,.5,.3,1.0)
     
-    default_fill_color = color_to_int(0,.8,.7,1.0)
+    default_fill_color = color_floats_to_int(0,.8,.7,1.0)
 
     default_colors = [
-        color_to_int(0, 0, 1.0, 1),
-        color_to_int(0, 0.75, 0, 1),
-        color_to_int(0.5, 0, 1.0, 1),
-        color_to_int(1.0, 0.5, 0, 1),
-        color_to_int(0.5, 0.5, 0, 1),
+        color_floats_to_int(0, 0, 1.0, 1),
+        color_floats_to_int(0, 0.75, 0, 1),
+        color_floats_to_int(0.5, 0, 1.0, 1),
+        color_floats_to_int(1.0, 0.5, 0, 1),
+        color_floats_to_int(0.5, 0.5, 0, 1),
     ]
     default_color_index = 0
     

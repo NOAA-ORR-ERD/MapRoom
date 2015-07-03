@@ -11,7 +11,7 @@ import OpenGL.GLU as glu
 from peppy2 import get_image_path
 
 import maproom.library.rect as rect
-from .. import data_types, int_to_color
+from .. import data_types, int_to_color_floats
 from ..gl.textures import ImageTextures
 from ..gl.Tessellator import init_vertex_buffers, tessellate
 from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color
@@ -310,7 +310,7 @@ class ImmediateModeRenderer():
             gl.glColor(1.0, 1.0, 1.0, alpha)
         else:
             fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
-            r, g, b, a = int_to_color(fill_color)
+            r, g, b, a = int_to_color_floats(fill_color)
             gl.glColor(r, g, b, a)
         for i, vbo in enumerate(self.image_textures.vbo_vertexes):
             # have to bind texture before VBO
@@ -664,7 +664,7 @@ class ImmediateModeRenderer():
         self.vbo_line_segment_point_xys.bind()
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-        r, g, b, a = int_to_color(fill_color)
+        r, g, b, a = int_to_color_floats(fill_color)
         gl.glColor(r, g, b, a)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )

@@ -10,7 +10,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.Boundary import Boundaries, PointsError
 from ..library.textparse import parse_int_string, int_list_to_string
-from ..renderer import color_to_int, data_types
+from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
 
