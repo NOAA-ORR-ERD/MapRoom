@@ -421,6 +421,14 @@ class Layer(HasTraits):
         pass
 
 
+class EmptyLayer(Layer):
+    """Emply layer used when a folder has no other children.
+    """
+    name = Unicode("<empty folder>")
+    
+    type = Str("empty")
+
+
 class Folder(Layer):
     """Layer that contains other layers.
     """

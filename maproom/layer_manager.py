@@ -354,6 +354,28 @@ class LayerManager(HasTraits):
             item = tree[at_multi_index[0]]
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
 
+    def replace_layer(self, at_multi_index, layer):
+        if (at_multi_index is None or at_multi_index == []):
+            at_multi_index = self.find_default_insert_layer()
+
+        log.debug("before: layers are " + str(self.layers))
+        log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
+        if (not isinstance(layer, list)):
+            if layer.is_folder() and not layer.is_root():
+                layer = [layer]
+        replaced = self.replace_layer_recursive(at_multi_index, layer, self.layers)
+        log.debug("after: layers are " + str(self.layers))
+        return replaced
+
+    def replace_layer_recursive(self, at_multi_index, layer, tree):
+        if (len(at_multi_index) == 1):
+            replaced = tree[at_multi_index[0]]
+            tree[at_multi_index[0]] = layer
+            return replaced
+        else:
+            item = tree[at_multi_index[0]]
+            return self.replace_layer_recursive(at_multi_index[1:], layer, item)
+
     # FIXME: layer removal commands should return the hierarchy of layers
     # removed so that the operation can be undone correctly.
     def remove_layer(self, layer):

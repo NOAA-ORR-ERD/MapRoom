@@ -1,12 +1,9 @@
 import os
 import sys
 import wx
-try:
-    import wx.lib.agw.customtreectrl as treectrl
-except ImportError:
-    import wx.lib.customtreectrl as treectrl
+import peppy2.utils.wx.customtreectrl as treectrl
 
-from layers import Layer
+from layers import Layer, EmptyLayer
 
 
 import logging
@@ -209,6 +206,10 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         if item is None or not item.IsOk():
             return
 
+        # drop target can be before or after the item returned as the drop target
+        before = item.IsDropLineAbove()
+        print "dropped before:", before
+
         (target_category, target_layer) = self.GetItemPyData(item).Data
         if (target_category != "root" and target_category != "folder" and target_category != "layer"):
             self.project.window.error("You can only drag a layer onto another layer, a folder, or the tree root.", "Invalid Layer Drag")
@@ -217,30 +218,34 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         (source_category, source_layer) = self.GetItemPyData(local_dragged_item).Data
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(source_layer)
-        # here we "re-get" the source layer so that if it's a folder layer what we'll get is the
-        # folder's list, not just the folder pseudo-layer
-        source_layer = lm.get_layer_by_multi_index(mi_source)
-
         mi_target = lm.get_multi_index_of_layer(target_layer)
-
-        if (mi_target == mi_source):
-            return
 
         if (len(mi_target) > len(mi_source) and mi_target[0: len(mi_source)] == mi_source):
             self.project.window.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
+            self.Refresh()
             return
 
-        lm.remove_layer_at_multi_index(mi_source)
+        # here we "re-get" the source layer so that it's replaced by a
+        # placeholder and temporarily removed from the tree
+        temp_layer = EmptyLayer(layer_manager=lm)
+        source_layer = lm.replace_layer(mi_source, temp_layer)
 
-        # re-get the multi_index for the target, because it may have changed when the layer was removed
-        mi_target = lm.get_multi_index_of_layer(target_layer)
+#        lm.remove_layer_at_multi_index(mi_source)
+#
+#        # re-get the multi_index for the target, because it may have changed when the layer was removed
+#        mi_target = lm.get_multi_index_of_layer(target_layer)
+        print "target mi:", mi_target
         # if we are inserting onto a folder, insert as the second item in the folder
         # (the first item in the folder is the folder pseudo-layer)
         if (target_category == "root"):
             mi_target = [1]
-        elif (target_category == "folder"):
-            mi_target.append(1)
+#        elif (target_category == "folder"):
+#            mi_target.append(1)
+        else:
+            if not before:
+                mi_target[-1] = mi_target[-1] + 1
         lm.insert_layer(mi_target, source_layer)
+        lm.remove_layer(temp_layer)
         self.select_layer(source_layer)
         self.rebuild()
 
