@@ -206,10 +206,6 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         if item is None or not item.IsOk():
             return
 
-        # drop target can be before or after the item returned as the drop target
-        before = item.IsDropLineAbove()
-        print "dropped before:", before
-
         (target_category, target_layer) = self.GetItemPyData(item).Data
         if (target_category != "root" and target_category != "folder" and target_category != "layer"):
             self.project.window.error("You can only drag a layer onto another layer, a folder, or the tree root.", "Invalid Layer Drag")
@@ -234,7 +230,9 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
 #
 #        # re-get the multi_index for the target, because it may have changed when the layer was removed
 #        mi_target = lm.get_multi_index_of_layer(target_layer)
-        print "target mi:", mi_target
+        # drop target can be before or after the item returned as the drop target
+        before = event.IsDroppedBeforeItem()
+        print "target mi:", mi_target, "before", before
         # if we are inserting onto a folder, insert as the second item in the folder
         # (the first item in the folder is the folder pseudo-layer)
         if (target_category == "root"):
