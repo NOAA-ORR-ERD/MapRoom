@@ -65,10 +65,6 @@ class Layer(HasTraits):
     # of points selected)
     change_count = Int(0)
     
-    # FIXME: is really a view parameter so instead of affecting all views,
-    # should be stored in the view somehow
-    is_expanded = Bool(True)
-    
     load_error_string = Str
     
     manager = Any
