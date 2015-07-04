@@ -4,6 +4,8 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
+maproom/library/*.c
+maproom/renderer/*/*.c
 
 # C extensions
 *.so
@@ -14,6 +16,7 @@ env/
 build/
 develop-eggs/
 dist/
+dist-*/
 downloads/
 eggs/
 lib/
