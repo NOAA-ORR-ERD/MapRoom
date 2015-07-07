@@ -161,6 +161,10 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         vis = self.project.layer_visibility[layer]
         item = self.AppendItem(parent, layer.name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
         self.CheckItem2(item, vis["layer"])
+        if layer.is_folder():
+            # Force the appearance of expand button on folders to be used as
+            # drop target for dropping inside a folder
+            item.SetHasPlus(True)
 
         if layer in expanded_state:
             expanded = expanded_state[layer]
@@ -238,13 +242,14 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
 #        mi_target = lm.get_multi_index_of_layer(target_layer)
         # drop target can be before or after the item returned as the drop target
         before = event.IsDroppedBeforeItem()
+        in_folder = event.IsDroppedInFolder()
         print "target mi:", mi_target, "before", before
         # if we are inserting onto a folder, insert as the second item in the folder
         # (the first item in the folder is the folder pseudo-layer)
         if (target_category == "root"):
             mi_target = [1]
-#        elif (target_category == "folder"):
-#            mi_target.append(1)
+        elif target_category == "folder" and in_folder:
+            mi_target.append(1)
         else:
             if not before:
                 mi_target[-1] = mi_target[-1] + 1
