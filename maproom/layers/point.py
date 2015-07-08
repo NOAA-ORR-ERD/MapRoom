@@ -80,11 +80,6 @@ class PointLayer(PointBaseLayer):
                 self.select_point(p, STATE_FLAGGED)
             self.manager.dispatch_event('refresh_needed')
     
-    def clear_flagged(self, refresh=False):
-        self.clear_all_selections(STATE_FLAGGED)
-        if refresh:
-            self.manager.dispatch_event('refresh_needed')
-    
     def set_data(self, f_points, f_depths, f_line_segment_indexes):
         n = np.alen(f_points)
         self.set_layer_style_defaults()
@@ -135,82 +130,6 @@ class PointLayer(PointBaseLayer):
             count,
         ).view(np.recarray)
 
-    def compute_selected_bounding_rect(self):
-        bounds = self.compute_bounding_rect(STATE_SELECTED)
-        return bounds
-
-    def clear_all_selections(self, mark_type=STATE_SELECTED):
-        self.clear_all_point_selections(mark_type)
-        self.increment_change_count()
-
-    def clear_all_point_selections(self, mark_type=STATE_SELECTED):
-        if (self.points is not None):
-            self.points.state = self.points.state & (0xFFFFFFFF ^ mark_type)
-            self.increment_change_count()
-
-    def has_selection(self):
-        return self.get_num_points_selected() > 0
-
-    def has_flagged(self):
-        return self.get_num_points_flagged() > 0
-
-    def select_point(self, point_index, mark_type=STATE_SELECTED):
-        self.points.state[point_index] = self.points.state[point_index] | mark_type
-        self.increment_change_count()
-
-    def deselect_point(self, point_index, mark_type=STATE_SELECTED):
-        self.points.state[point_index] = self.points.state[point_index] & (0xFFFFFFFF ^ mark_type)
-        self.increment_change_count()
-
-    def is_point_selected(self, point_index, mark_type=STATE_SELECTED):
-        return self.points is not None and (self.points.state[point_index] & mark_type) != 0
-
-    def select_points(self, indexes, mark_type=STATE_SELECTED):
-        self.points.state[indexes] |= mark_type
-        self.increment_change_count()
-
-    def deselect_points(self, indexes, mark_type=STATE_SELECTED):
-        self.points.state[indexes] &= (0xFFFFFFFF ^ mark_type)
-        self.increment_change_count()
-    
-    def select_flagged(self, refresh=False):
-        indexes = self.get_selected_point_indexes(STATE_FLAGGED)
-        self.deselect_points(indexes, STATE_FLAGGED)
-        self.select_points(indexes, STATE_SELECTED)
-        if refresh:
-            self.manager.dispatch_event('refresh_needed')
-
-    def select_points_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
-        if (not is_toggle_mode and not is_add_mode):
-            self.clear_all_point_selections()
-        indexes = np.where(np.logical_and(
-            np.logical_and(self.points.x >= w_r[0][0], self.points.x <= w_r[1][0]),
-            np.logical_and(self.points.y >= w_r[0][1], self.points.y <= w_r[1][1])))
-        if (is_add_mode):
-            self.points.state[indexes] |= mark_type
-        if (is_toggle_mode):
-            self.points.state[indexes] ^= mark_type
-        self.increment_change_count()
-
-    def get_selected_point_indexes(self, mark_type=STATE_SELECTED):
-        if (self.points is None):
-            return []
-        return np.where((self.points.state & mark_type) != 0)[0]
-
-    def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
-        """Get all points from selected objects.
-        
-        Subclasses should override to provide a list of points that are
-        implicitly selected by an object being selected.
-        """
-        return self.get_selected_point_indexes(mark_type)
-
-    def get_num_points_selected(self, mark_type=STATE_SELECTED):
-        return len(self.get_selected_point_indexes(mark_type))
-
-    def get_num_points_flagged(self):
-        return len(self.get_selected_point_indexes(STATE_FLAGGED))
-    
     def dragging_selected_objects(self, world_dx, world_dy):
         indexes = self.get_selected_and_dependent_point_indexes()
         cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
