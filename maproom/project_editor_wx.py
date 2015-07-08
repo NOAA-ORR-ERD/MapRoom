@@ -417,6 +417,8 @@ class ProjectEditor(FrameworkEditor):
         if f.layers_changed:
             # Only set this to True, never back to False once True
             b.layers_changed = True
+        if f.refresh_needed:
+            b.refresh_needed = True
         for lf in f.layer_flags:
             layer = lf.layer
             b.layers.append(layer)
@@ -684,9 +686,9 @@ class ProjectEditor(FrameworkEditor):
         elif layer.is_folder():
             m = "A folder in the layer tree is selected. This will delete the entire sub-tree of layers."
         else:
-            m = "Are you sure you want to delete " + layer.name + "?"
+            m = None
 
-        if self.window.confirm(m, default=YES) != YES:
+        if m is not None and self.window.confirm(m, default=YES) != YES:
             return
 
         cmd = DeleteLayerCommand(layer)
