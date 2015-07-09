@@ -462,7 +462,7 @@ class ImmediateModeRenderer():
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
 
-    def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
+    def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         c = self.canvas
         # flip y to treat point as normal screen coordinates
         point_a = (point_a[0], rect.height(c.screen_rect) - point_a[1])
@@ -475,15 +475,19 @@ class ImmediateModeRenderer():
         gl.glColor(red, green, blue, alpha)
         gl.glLineStipple(stipple_factor, stipple_pattern)
         gl.glEnable(gl.GL_LINE_STIPPLE)
+        if xor:
+            gl.glEnable(gl.GL_COLOR_LOGIC_OP)
+            gl.glLogicOp(gl.GL_XOR)
         gl.glBegin(gl.GL_LINE_STRIP)
         gl.glVertex(point_a[0], point_a[1], 0)
         gl.glVertex(point_b[0], point_b[1], 0)
         gl.glEnd()
+        gl.glDisable(gl.GL_COLOR_LOGIC_OP)
         gl.glDisable(gl.GL_LINE_STIPPLE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
-    def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
+    def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         c = self.canvas
         h = rect.height(c.screen_rect)
         gl.glDisable(gl.GL_TEXTURE_2D)
@@ -493,11 +497,15 @@ class ImmediateModeRenderer():
         gl.glColor(red, green, blue, alpha)
         gl.glLineStipple(stipple_factor, stipple_pattern)
         gl.glEnable(gl.GL_LINE_STIPPLE)
+        if xor:
+            gl.glEnable(gl.GL_COLOR_LOGIC_OP)
+            gl.glLogicOp(gl.GL_XOR)
         gl.glBegin(gl.GL_LINE_STRIP)
         for p in points:
             # flip y to treat point as normal screen coordinates
             gl.glVertex(p[0], h - p[1], 0)
         gl.glEnd()
+        gl.glDisable(gl.GL_COLOR_LOGIC_OP)
         gl.glDisable(gl.GL_LINE_STIPPLE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)

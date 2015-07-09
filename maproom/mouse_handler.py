@@ -773,10 +773,10 @@ class AddPolylineMode(MouseHandler):
     def render_overlay(self, renderer):
         c = self.layer_control
         sp = [c.get_screen_point_from_world_point(p) for p in self.points]
-        renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 0)
+        renderer.draw_screen_lines(sp, 1.0, 1.0, 0, 1.0, xor=True)
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
-            renderer.draw_screen_line(sp[-1], cp, 1.0, 1.0, 0, 0)
+            renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class AddOverlayTextMode(MouseHandler):
