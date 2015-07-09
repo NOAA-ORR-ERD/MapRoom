@@ -193,7 +193,8 @@ class DeleteLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
         insertion_index = lm.get_multi_index_of_layer(layer)
-        undo.data = (layer, insertion_index, layer.invariant)
+        children = lm.get_children(layer)
+        undo.data = (layer, insertion_index, layer.invariant, children)
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         
@@ -206,8 +207,9 @@ class DeleteLayerCommand(Command):
 
     def undo(self, editor):
         lm = editor.layer_manager
-        layer, insertion_index, saved_invariant = self.undo_info.data
+        layer, insertion_index, saved_invariant, children = self.undo_info.data
         lm.insert_layer(insertion_index, layer, invariant=saved_invariant)
+        lm.insert_children(layer, children)
         return self.undo_info
 
 class MergeLayersCommand(Command):

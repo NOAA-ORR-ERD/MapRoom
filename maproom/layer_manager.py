@@ -102,6 +102,11 @@ class LayerManager(HasTraits):
             debug.debug_objects(self)
         return self
     
+    def __str__(self):
+        root = self.get_layer_by_multi_index([0])
+        layers = self.get_children(root)
+        return str(layers)
+    
     def update_default_style(self, style):
         self.default_style.copy_from(style)
     
@@ -333,6 +338,25 @@ class LayerManager(HasTraits):
             mi = None
         return mi
 
+    def insert_children(self, in_layer, children):
+        """Insert a list of children as children of the speficied folder
+        
+        The list of children should be generated from :func:`get_children`
+        """
+        log.debug("before: layers are " + str(self.layers))
+        mi = self.get_multi_index_of_layer(in_layer)
+        mi.append(1)
+        log.debug("inserting children " + str(children) + " using multi_index = " + str(mi))
+        for layer in children:
+            if isinstance(layer, list):
+                child = layer[0]
+                self.insert_layer(mi, child)
+                self.insert_children(child, layer[1:])
+            else:
+                self.insert_layer(mi, layer)
+            mi[-1] += 1
+        log.debug("after: layers are " + str(self.layers))
+
     def insert_layer(self, at_multi_index, layer, invariant=None):
         if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
@@ -493,6 +517,30 @@ class LayerManager(HasTraits):
             if (isinstance(item, list)):
                 i = item[0]
             ret.append(i)
+
+        return ret
+
+    def get_children(self, layer):
+        """Return a list containing the hierarchy starting at the specified
+        layer and containing any children and descendents.
+        
+        This potentially could include lists of lists of lists, as deep as the
+        hierarchy goes.
+        """
+        mi = self.get_multi_index_of_layer(layer)
+        l = self.get_layer_by_multi_index(mi)
+        if not isinstance(l, list):
+            return []
+
+        ret = []
+        for item in l[1:]:
+            # a list means the first element in the list is the folder layer containing the other elements in the list
+            if (isinstance(item, list)):
+                sub = [item[0]]
+                sub.extend(self.get_children(item[0]))
+                ret.append(sub)
+            else:
+                ret.append(item)
 
         return ret
 
