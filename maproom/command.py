@@ -235,7 +235,7 @@ class Command(object):
         pass
 
 
-class Batch(UndoStack):
+class Batch(Command):
     """A batch is immutable once created, so there's no need to allow
     intermediate index points.
     """
