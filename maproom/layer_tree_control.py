@@ -4,6 +4,7 @@ import wx
 import peppy2.utils.wx.customtreectrl as treectrl
 
 from layers import Layer, EmptyLayer
+from menu_commands import MoveLayerCommand
 
 
 import logging
@@ -231,32 +232,10 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
             self.Refresh()
             return
 
-        # here we "re-get" the source layer so that it's replaced by a
-        # placeholder and temporarily removed from the tree
-        temp_layer = EmptyLayer(layer_manager=lm)
-        source_layer = lm.replace_layer(mi_source, temp_layer)
-
-#        lm.remove_layer_at_multi_index(mi_source)
-#
-#        # re-get the multi_index for the target, because it may have changed when the layer was removed
-#        mi_target = lm.get_multi_index_of_layer(target_layer)
-        # drop target can be before or after the item returned as the drop target
         before = event.IsDroppedBeforeItem()
         in_folder = event.IsDroppedInFolder()
-        print "target mi:", mi_target, "before", before
-        # if we are inserting onto a folder, insert as the second item in the folder
-        # (the first item in the folder is the folder pseudo-layer)
-        if (target_category == "root"):
-            mi_target = [1]
-        elif target_category == "folder" and in_folder:
-            mi_target.append(1)
-        else:
-            if not before:
-                mi_target[-1] = mi_target[-1] + 1
-        lm.insert_layer(mi_target, source_layer)
-        lm.remove_layer(temp_layer)
-        self.select_layer(source_layer)
-        self.rebuild()
+        cmd = MoveLayerCommand(source_layer, target_layer, before, in_folder)
+        self.project.process_command(cmd)
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)

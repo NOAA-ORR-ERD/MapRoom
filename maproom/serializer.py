@@ -158,6 +158,18 @@ class TextConverter(ArgumentConverter):
         return text.decode("utf-8")
 
 
+class BoolConverter(ArgumentConverter):
+    stype = "bool"
+    
+    def instance_from_args(self, args, manager, deserializer):
+        text = args.pop(0)
+        if text == "None":
+            return None
+        if text == "True" or text == "1":
+            return True
+        return False
+
+
 class IntConverter(ArgumentConverter):
     stype = "int"
     

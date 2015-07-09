@@ -350,10 +350,10 @@ class LayerManager(HasTraits):
         for layer in children:
             if isinstance(layer, list):
                 child = layer[0]
-                self.insert_layer(mi, child)
+                self.insert_layer(mi, child, child.invariant)
                 self.insert_children(child, layer[1:])
             else:
-                self.insert_layer(mi, layer)
+                self.insert_layer(mi, layer, layer.invariant)
             mi[-1] += 1
         log.debug("after: layers are " + str(self.layers))
 
@@ -379,6 +379,11 @@ class LayerManager(HasTraits):
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
 
     def replace_layer(self, at_multi_index, layer):
+        """Replace a layer with another
+        
+        Returns a tuple containing the replaced layer as the first component
+        and a list (possibly empty) of its children as the second component.
+        """
         if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
@@ -389,7 +394,9 @@ class LayerManager(HasTraits):
                 layer = [layer]
         replaced = self.replace_layer_recursive(at_multi_index, layer, self.layers)
         log.debug("after: layers are " + str(self.layers))
-        return replaced
+        if isinstance(replaced, list):
+            return replaced[0], replaced[1:]
+        return replaced, []
 
     def replace_layer_recursive(self, at_multi_index, layer, tree):
         if (len(at_multi_index) == 1):
