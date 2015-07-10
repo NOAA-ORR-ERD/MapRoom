@@ -14,7 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
-from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, ImageData
+from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
 
 from line import LineLayer
 from constants import *
@@ -246,12 +246,6 @@ class LineVectorObject(VectorObjectLayer):
 class FillableVectorObject(LineVectorObject):
     # Fillable objects should (in general) display their center control point
     display_center_control_point = True
-
-    @on_trait_change('alpha')
-    def mark_rebuild(self):
-        r, g, b, a = int_to_color_floats(self.style.fill_color)
-        self.style.fill_color = color_floats_to_int(r, g, b, self.alpha)
-        self.rebuild_needed = True
     
     def set_layer_style_defaults(self):
         self.style.line_color = self.manager.default_style.line_color
@@ -374,19 +368,10 @@ class ScaledImageObject(RectangleVectorObject):
     name = Unicode("Image")
     
     type = Str("scaled_image_obj")
-
-    alpha = Float(1.0)
     
     layer_info_panel = ["Layer name", "Transparency"]
     
     image_data = Any
-    
-    def has_alpha(self):
-        return True
-    
-    @on_trait_change('alpha')
-    def mark_rebuild(self):
-        self.rebuild_needed = True
     
     def get_image_array(self):
         from maproom.library.numpy_images import get_square
@@ -421,7 +406,8 @@ class ScaledImageObject(RectangleVectorObject):
             return
         if self.rebuild_needed:
             self.rebuild_renderer()
-        self.renderer.draw_image(layer_index_base, picker, self.alpha)
+        alpha = alpha_from_int(self.style.line_color)
+        self.renderer.draw_image(layer_index_base, picker, alpha)
         if layer_visibility["points"]:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
@@ -437,19 +423,10 @@ class OverlayImageObject(RectangleVectorObject):
     name = Unicode("Overlay Image")
     
     type = Str("overlay_image_obj")
-
-    alpha = Float(1.0)
     
     layer_info_panel = ["Layer name", "Transparency"]
     
     image_data = Any
-    
-    def has_alpha(self):
-        return True
-    
-    @on_trait_change('alpha')
-    def mark_rebuild(self):
-        self.rebuild_needed = True
     
     def get_image_array(self):
         from maproom.library.numpy_images import get_numpy_from_marplot_icon
@@ -502,7 +479,8 @@ class OverlayImageObject(RectangleVectorObject):
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
         self.renderer.image_textures.center_at_screen_point(self.image_data, center, rect.height(c.screen_rect))
-        self.renderer.draw_image(layer_index_base, picker, self.alpha)
+        alpha = alpha_from_int(self.style.line_color)
+        self.renderer.draw_image(layer_index_base, picker, alpha)
 
 
 class OverlayTextObject(OverlayImageObject):

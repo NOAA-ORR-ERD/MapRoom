@@ -320,9 +320,6 @@ class Layer(HasTraits):
     def has_flagged(self):
         return False
     
-    def has_alpha(self):
-        return False
-    
     def display_properties(self):
         return []
     

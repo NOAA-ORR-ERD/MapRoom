@@ -10,7 +10,7 @@ from pyface.api import YES
 
 from ..library import rect
 
-from ..renderer import color_floats_to_int, data_types, NullPicker
+from ..renderer import alpha_from_int, data_types, NullPicker
 
 from base import Layer, ProjectedLayer
 from constants import *
@@ -28,14 +28,9 @@ class RasterLayer(ProjectedLayer):
 
     image_data = Any
     
-    alpha = Float(1.0)
-    
     layer_info_panel = ["Layer name", "Transparency", "Raster Size", "Memory Used"]
     
     selection_info_panel = []
-    
-    def has_alpha(self):
-        return True
     
     def get_info_panel_text(self, prop):
         if prop == "Raster Size":
@@ -123,4 +118,5 @@ class RasterLayer(ProjectedLayer):
         # the image
         null_picker = NullPicker()
         if (layer_visibility["images"]):
-            self.renderer.draw_image(layer_index_base, null_picker, self.alpha)
+            alpha = alpha_from_int(self.style.line_color)
+            self.renderer.draw_image(layer_index_base, null_picker, alpha)

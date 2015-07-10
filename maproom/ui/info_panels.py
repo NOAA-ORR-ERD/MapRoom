@@ -377,27 +377,6 @@ class FloatSliderField(InfoField):
     def slider_changed(self, event):
         pass
 
-class AlphaField(FloatSliderField):
-    def get_value(self, layer):
-        return int((1.0 - layer.alpha) * 100)
-
-    def slider_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
-        if (layer is None):
-            return
-        refresh = False
-        c = self.ctrl
-        try:
-            val = 100 - int(c.GetValue())
-            layer.alpha = float(val) / 100.0
-            c.textCtrl.SetBackgroundColour("#FFFFFF")
-            refresh = True
-        except Exception as e:
-            c.textCtrl.SetBackgroundColour("#FF8080")
-        
-        if refresh:
-            self.panel.project.refresh()
-
 class LineAlphaField(FloatSliderField):
     def get_layer_color(self, layer):
         return layer.style.line_color
@@ -919,7 +898,7 @@ class InfoPanel(PANELTYPE):
         "Point count": PointVisibilityField,
         "Line segment count": LineVisibilityField,
         "Flagged points": FlaggedPointsField,
-        "Transparency": AlphaField,
+        "Transparency": LineAlphaField,
         "Line Transparency": LineAlphaField,
         "Fill Transparency": FillAlphaField,
         "Color": ColorField,
