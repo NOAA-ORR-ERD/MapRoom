@@ -627,10 +627,8 @@ class RectSelectMode(MouseHandler):
                 # small adjustments to make stipple overlap gray rects perfectly
                 y1 -= 1
                 x2 += 1
-            renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            sp = [(x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)]
+            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class ZoomRectMode(RectSelectMode):
@@ -757,7 +755,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
         if c.mouse_is_down:
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
-            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
     
     def get_vector_object_command(self, layer, cp1, cp2, style):
         return self.vector_object_command(layer, cp1, cp2, style, *self.snapped_object)
