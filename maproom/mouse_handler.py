@@ -33,10 +33,15 @@ class MouseHandler(object):
     menu_item_name = "Generic Mouse Handler"
     menu_item_tooltip = "Tooltip for generic mouse handler"
     editor_trait_for_enabled = ""
+    
+    mouse_too_close_pixel_tolerance = 5
 
     def __init__(self, layer_control):
         self.layer_control = layer_control
         self.snapped_object = None, 0
+        self.first_mouse_down_position = 0, 0
+        self.after_first_mouse_up = False
+        self.mouse_up_too_close = False
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
@@ -92,6 +97,20 @@ class MouseHandler(object):
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
         #print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+    
+    def reset_early_mouse_params(self):
+        self.mouse_up_too_close = False
+        self.after_first_mouse_up = False
+    
+    def check_early_mouse_release(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        dx = p[0] - self.first_mouse_down_position[0]
+        dy = p[1] - self.first_mouse_down_position[1]
+        tol = self.mouse_too_close_pixel_tolerance
+        if abs(dx) < tol and abs(dy) < tol:
+            return True
+        return False
 
     def process_mouse_up(self, event):
         c = self.layer_control
@@ -548,6 +567,19 @@ class RectSelectMode(MouseHandler):
     
     def is_snappable_to_layer(self, layer):
         return False
+    
+    def process_mouse_down(self, event):
+        # Mouse down only sets the initial point, after that it is ignored
+        # unless it is released too soon.
+        if not self.after_first_mouse_up:
+            self.first_mouse_down_position = event.GetPosition()
+        else:
+            # reset mouse down position because the on_mouse_down event handler
+            # in base_canvas sets it every time the mouse is pressed.  Without
+            # this here it would move the start of the rectangle to this most
+            # recent mouse press which is not what we want.
+            c = self.layer_control
+            c.mouse_down_position = self.first_mouse_down_position
 
     def process_mouse_motion_down(self, event):
         c = self.layer_control
@@ -560,6 +592,12 @@ class RectSelectMode(MouseHandler):
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
             return
+        
+        if not self.after_first_mouse_up and self.check_early_mouse_release(event):
+            self.mouse_up_too_close = True
+            self.after_first_mouse_up = True
+            return
+        self.after_first_mouse_up = True
 
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
@@ -571,6 +609,7 @@ class RectSelectMode(MouseHandler):
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
         self.process_rect_select(x1, y1, x2, y2)
+        self.reset_early_mouse_params()
     
     def process_rect_select(self, x1, y1, x2, y2):
         raise RuntimeError("Abstract method")
@@ -741,6 +780,8 @@ class AddPolylineMode(MouseHandler):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_control
         if len(self.points) == 0:
+            self.reset_early_mouse_params()
+            self.first_mouse_down_position = event.GetPosition()
             cp = self.get_world_point(event)
             self.points.append(cp)
             c.render(event)
@@ -756,6 +797,13 @@ class AddPolylineMode(MouseHandler):
     def process_mouse_up(self, event):
         # After the first point, mouse up events add points
         c = self.layer_control
+        
+        if not self.after_first_mouse_up and self.check_early_mouse_release(event):
+            self.mouse_up_too_close = True
+            self.after_first_mouse_up = True
+            return
+        self.after_first_mouse_up = True
+        
         cp = self.get_world_point(event)
         self.points.append(cp)
         c.render(event)
