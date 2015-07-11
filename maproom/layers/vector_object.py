@@ -428,6 +428,10 @@ class OverlayImageObject(RectangleVectorObject):
     
     image_data = Any
     
+    screen_offset_from_center = np.asarray(
+        ((-0.5,-0.5), (0.5,-0.5), (0.5,0.5), (-0.5,0.5), (0,0)),
+        dtype=np.float32)
+
     def get_image_array(self):
         from maproom.library.numpy_images import get_numpy_from_marplot_icon
         return get_numpy_from_marplot_icon('marplot_drum.png')
@@ -451,6 +455,9 @@ class OverlayImageObject(RectangleVectorObject):
             projection = self.manager.project.layer_canvas.projection
             self.image_data.set_control_points(self.points, projection)
             self.renderer.set_image_projection(self.image_data, projection)
+    
+    def update_world_control_points(self):
+        pass
 
     def rebuild_image(self):
         """Update renderer
@@ -475,13 +482,21 @@ class OverlayImageObject(RectangleVectorObject):
         log.log(5, "Rendering overlay image!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if self.rebuild_needed:
             self.rebuild_renderer()
+        self.update_world_control_points()
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
         self.renderer.image_textures.center_at_screen_point(self.image_data, center, rect.height(c.screen_rect))
+        self.render_overlay(w_r, p_r, s_r, layer_visibility, layer_index_base, picker)
+    
+    def render_overlay(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         alpha = alpha_from_int(self.style.line_color)
         self.renderer.draw_image(layer_index_base, picker, alpha)
 
+    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        # without this, the superclass method from VectorObjectLayer will get
+        # called too
+        pass
 
 class OverlayTextObject(OverlayImageObject):
     """Texture mapped image object that is fixed in size relative to the screen
@@ -497,7 +512,7 @@ class OverlayTextObject(OverlayImageObject):
     
     user_text = Unicode("<b>New Label</b>")
     
-    layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency"]
+    layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
     selection_info_panel = ["Text Format", "Overlay Text"]
     
@@ -518,6 +533,35 @@ class OverlayTextObject(OverlayImageObject):
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format)
         return arr
 
+    def update_world_control_points(self):
+        h, w = self.image_data.x, self.image_data.y  # numpy image dimensions are reversed
+        c = self.renderer.canvas
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
+        
+        scale = self.screen_offset_from_center.T
+        xoffset = scale[0] * w + center[0]
+        yoffset = scale[1] * h + center[1]
+        
+        for i in range(4):
+            w = c.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
+            # p[i]['xy'] = w  # Doesn't work!
+            self.points.x[i] = w[0]
+            self.points.y[i] = w[1]
+        
+        projected_point_data = self.compute_projected_point_data()
+        self.renderer.set_points(projected_point_data, None, None)
+        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
+    
+    def render_overlay(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        self.renderer.prepare_to_render_projected_objects()
+        self.renderer.fill_object(layer_index_base, picker, self.style)
+        self.renderer.outline_object(layer_index_base, picker, self.style)
+        if layer_visibility["points"]:
+            self.renderer.draw_points(layer_index_base, picker, self.point_size)
+        self.renderer.prepare_to_render_screen_objects()
+        alpha = alpha_from_int(self.style.line_color)
+        self.renderer.draw_image(layer_index_base, picker, alpha)
 
 class OverlayIconObject(OverlayImageObject):
     """Texture mapped Marplot icon object that is fixed in size relative to the screen

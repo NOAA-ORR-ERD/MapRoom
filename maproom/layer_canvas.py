@@ -215,6 +215,12 @@ class LayerCanvas(renderer.BaseCanvas):
     def get_world_point_from_screen_point(self, screen_point):
         return self.get_world_point_from_projected_point(self.get_projected_point_from_screen_point(screen_point))
 
+    def get_numpy_world_point_from_screen_point(self, screen_point):
+        world_point = self.get_world_point_from_projected_point(self.get_projected_point_from_screen_point(screen_point))
+        w = np.empty_like(world_point)
+        w[:] = world_point
+        return w
+
     def get_world_rect_from_screen_rect(self, screen_rect):
         return self.get_world_rect_from_projected_rect(self.get_projected_rect_from_screen_rect(screen_rect))
 

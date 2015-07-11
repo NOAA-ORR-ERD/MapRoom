@@ -61,13 +61,14 @@ class ImmediateModeRenderer():
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
     
-    def set_points(self, xy, depths, color, num_points=-1):
+    def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
             num_points = np.alen(xy)
         if self.vbo_point_xys is None or np.alen(self.vbo_point_xys.data) != num_points:
             storage = np.zeros((num_points, 2), dtype=np.float32)
             self.vbo_point_xys = gl_vbo.VBO(storage)
-        self.vbo_point_colors = gl_vbo.VBO(color)
+        if color is not None:
+            self.vbo_point_colors = gl_vbo.VBO(color)
         self.vbo_point_xys[:num_points] = xy[:num_points]
     
     def set_lines(self, xy, indexes, color):
