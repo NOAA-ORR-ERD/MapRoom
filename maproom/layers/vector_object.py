@@ -512,6 +512,9 @@ class OverlayTextObject(OverlayImageObject):
     
     user_text = Unicode("<b>New Label</b>")
     
+    # FIXME: border_width probably belongs in the Style class
+    border_width = Int(10)
+    
     layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
     selection_info_panel = ["Text Format", "Overlay Text"]
@@ -534,7 +537,7 @@ class OverlayTextObject(OverlayImageObject):
         return arr
 
     def update_world_control_points(self):
-        h, w = self.image_data.x, self.image_data.y  # numpy image dimensions are reversed
+        h, w = self.image_data.x + self.border_width, self.image_data.y + self.border_width  # numpy image dimensions are reversed
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
