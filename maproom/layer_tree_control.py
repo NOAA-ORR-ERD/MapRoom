@@ -1,12 +1,10 @@
 import os
 import sys
 import wx
-try:
-    import wx.lib.agw.customtreectrl as treectrl
-except ImportError:
-    import wx.lib.customtreectrl as treectrl
+import peppy2.utils.wx.customtreectrl as treectrl
 
-from layers import Layer
+from layers import Layer, EmptyLayer
+from menu_commands import MoveLayerCommand
 
 
 import logging
@@ -26,8 +24,6 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         self.project = project
         
         self.Bind(treectrl.EVT_TREE_ITEM_CHECKED, self.handle_item_checked)
-        self.Bind(treectrl.EVT_TREE_ITEM_COLLAPSED, self.handle_item_collapsed)
-        self.Bind(treectrl.EVT_TREE_ITEM_EXPANDED, self.handle_item_expanded)
         self.Bind(treectrl.EVT_TREE_BEGIN_DRAG, self.handle_begin_drag)
         self.Bind(treectrl.EVT_TREE_END_DRAG, self.handle_end_drag)
         self.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
@@ -88,9 +84,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
             return False
 
         n = self.GetChildrenCount(item, False)
-        # apparently GetFirstChild() returns a tuple of the
-        # child and an integer (I think the integer is the "cookie" for calling GetNextChild())
-        child = self.GetFirstChild(item)[0]
+        child, cookie = self.GetFirstChild(item)
 
         while (n > 0):
             if (self.select_layer_recursive(layer, child)):
@@ -101,36 +95,58 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
 
         return False
 
+    def get_expanded_state(self):
+        state = dict()
+        self.get_expanded_state_recursive(self.GetRootItem(), state)
+        return state
+
+    def get_expanded_state_recursive(self, item, state):
+        if item is None:
+            return
+        (category, item_layer) = self.GetItemPyData(item).Data
+        state[item_layer] = item.IsExpanded()
+        if (not self.ItemHasChildren(item)):
+            return
+
+        n = self.GetChildrenCount(item, False)
+        child, cookie = self.GetFirstChild(item)
+
+        while (n > 0):
+            self.get_expanded_state_recursive(child, state)
+            child = self.GetNextSibling(child)
+            n -= 1
+
     def rebuild(self):
         # rebuild the tree from the layer manager's data
         if self.project is None:
             # Wait till there's an active project
             return
         selected = self.get_selected_layer()
+        expanded_state = self.get_expanded_state()
         lm = self.project.layer_manager
         self.DeleteAllItems()
         # self.Freeze()
         log.debug("LAYER_TREE: rebuiding layers = " + str(lm.layers))
-        self.add_layers_recursive(lm.layers, None)
+        self.add_layers_recursive(lm.layers, None, expanded_state)
         # self.Thaw()
         self.select_layer(selected)
         self.project.update_layer_selection_ui(selected)
 
-    def add_layers_recursive(self, layer_tree, parent):
+    def add_layers_recursive(self, layer_tree, parent, expanded_state):
         if (len(layer_tree) == 0):
             return
 
         # we assume the layer at the start of each list is a folder
-        folder_node = self.add_layer(layer_tree[0], parent)
+        folder_node = self.add_layer(layer_tree[0], parent, expanded_state)
         # import code; code.interact( local = locals() )
 
         for item in layer_tree[1:]:
             if (isinstance(item, Layer)):
-                node = self.add_layer(item, folder_node)
+                node = self.add_layer(item, folder_node, expanded_state)
             else:
-                self.add_layers_recursive(item, folder_node)
+                self.add_layers_recursive(item, folder_node, expanded_state)
 
-    def add_layer(self, layer, parent):
+    def add_layer(self, layer, parent, expanded_state):
         log.debug("LAYER_TREE: adding layer = " + str(layer.name))
         if (parent is None):
             data = wx.TreeItemData()
@@ -146,9 +162,17 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         vis = self.project.layer_visibility[layer]
         item = self.AppendItem(parent, layer.name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
         self.CheckItem2(item, vis["layer"])
+        if layer.is_folder():
+            # Force the appearance of expand button on folders to be used as
+            # drop target for dropping inside a folder
+            item.SetHasPlus(True)
 
-        if (layer.is_expanded):
-            self.Expand(item)
+        if layer in expanded_state:
+            expanded = expanded_state[layer]
+            if expanded:
+                item.Expand()
+            else:
+                item.Collapse()
 
         return item
 
@@ -176,22 +200,6 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         self.project.refresh()
         event.Skip()
 
-    def handle_item_collapsed(self, event):
-        pd = self.GetItemPyData(event.GetItem())
-        if (pd is None):
-            return
-
-        (category, layer) = pd.Data
-        layer.is_expanded = False
-
-    def handle_item_expanded(self, event):
-        pd = self.GetItemPyData(event.GetItem())
-        if (pd is None):
-            return
-
-        (category, layer) = pd.Data
-        layer.is_expanded = True
-
     def handle_begin_drag(self, event):
         (category, layer) = self.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
@@ -217,32 +225,17 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         (source_category, source_layer) = self.GetItemPyData(local_dragged_item).Data
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(source_layer)
-        # here we "re-get" the source layer so that if it's a folder layer what we'll get is the
-        # folder's list, not just the folder pseudo-layer
-        source_layer = lm.get_layer_by_multi_index(mi_source)
-
         mi_target = lm.get_multi_index_of_layer(target_layer)
-
-        if (mi_target == mi_source):
-            return
 
         if (len(mi_target) > len(mi_source) and mi_target[0: len(mi_source)] == mi_source):
             self.project.window.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
+            self.Refresh()
             return
 
-        lm.remove_layer_at_multi_index(mi_source)
-
-        # re-get the multi_index for the target, because it may have changed when the layer was removed
-        mi_target = lm.get_multi_index_of_layer(target_layer)
-        # if we are inserting onto a folder, insert as the second item in the folder
-        # (the first item in the folder is the folder pseudo-layer)
-        if (target_category == "root"):
-            mi_target = [1]
-        elif (target_category == "folder"):
-            mi_target.append(1)
-        lm.insert_layer(mi_target, source_layer)
-        self.select_layer(source_layer)
-        self.rebuild()
+        before = event.IsDroppedBeforeItem()
+        in_folder = event.IsDroppedInFolder()
+        cmd = MoveLayerCommand(source_layer, target_layer, before, in_folder)
+        self.project.process_command(cmd)
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)

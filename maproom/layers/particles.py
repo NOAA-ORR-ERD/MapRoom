@@ -7,7 +7,7 @@ import numpy as np
 
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
-from ..renderer import color_to_int
+from ..renderer import color_floats_to_int
 
 from point_base import PointBaseLayer
 
@@ -26,11 +26,11 @@ class ParticleLayer(PointBaseLayer):
     type = Str("particle")
     
     # FIXME: Arbitrary colors for now till we decide on values
-    status_code_to_color = np.array([color_to_int(0, 0, 0, 1.0),
-                                     color_to_int(1.0, 0, 0, 1.0),
-                                     color_to_int(0, 1.0, 0, 1.0),
-                                     color_to_int(0, 0, 1.0, 1.0),
-                                     color_to_int(0, 1.0, 1.0, 1.0),
+    status_code_to_color = np.array([color_floats_to_int(0, 0, 0, 1.0),
+                                     color_floats_to_int(1.0, 0, 0, 1.0),
+                                     color_floats_to_int(0, 1.0, 0, 1.0),
+                                     color_floats_to_int(0, 0, 1.0, 1.0),
+                                     color_floats_to_int(0, 1.0, 1.0, 1.0),
                                      ], dtype=np.uint32)
     
     # def set_layer_style_defaults(self):

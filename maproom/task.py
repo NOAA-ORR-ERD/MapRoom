@@ -507,6 +507,12 @@ class AddOverlayTextAction(MouseHandlerBaseAction):
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
+class AddOverlayIconAction(MouseHandlerBaseAction):
+    handler = AddOverlayIconMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
@@ -667,6 +673,7 @@ class MaproomProjectTask(FrameworkTask):
                            AddRectangleObjectAction(),
                            AddEllipseObjectAction(),
                            AddOverlayTextAction(),
+                           AddOverlayIconAction(),
                            ),
                      show_tool_names=False,
                      id="AnnotationLayerToolBar",),

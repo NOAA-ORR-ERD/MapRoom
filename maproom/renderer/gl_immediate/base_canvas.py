@@ -457,6 +457,12 @@ class BaseCanvas(glcanvas.GLCanvas):
 
     #
     # the methods below are used to render simple objects one at a time, in screen coordinates
+    
+    def get_selected_layer(self):
+        # Subclasses should return the selected layer, to be used to render the
+        # selected layer's control points above all others, regardless of the
+        # stacking order of the layers
+        return None
 
     def render(self, event=None):
         if not self.is_canvas_initialized:
@@ -477,34 +483,43 @@ class BaseCanvas(glcanvas.GLCanvas):
         if not self.prepare_to_render(p_r, s_r):
             return
 
+        selected = self.get_selected_layer()
+        layer_draw_order = list(enumerate(self.layer_manager.flatten()))
+        layer_draw_order.reverse()
+
         ## fixme -- why is this a function defined in here??
         ##   so that it can be called with and without pick-mode turned on
         ##   but it seems to be in the wrong place -- make it a regular  method?
         null_picker = NullPicker()
-        def render_layers(picker=null_picker):
-            list = self.layer_manager.flatten()
-            length = len(list)
+        def render_layers(layer_order, picker=null_picker):
             self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
             pick_layer_index = -1
-            for i, layer in enumerate(reversed(list)):
+            delayed_pick_layer = None
+            control_points_layer = None
+            for i, layer in layer_order:
+                vis = self.project.layer_visibility[layer]
                 if picker.is_active:
                     if layer.pickable:
                         pick_layer_index += 1
-                        self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
+                        self.layer_manager.pick_layer_index_map[pick_layer_index] = i
                         layer_index_base = get_picker_index_base(pick_layer_index)
-                        layer.render(self,
-                                     w_r, p_r, s_r,
-                                     self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                                     layer_index_base,
-                                     picker)
+                        if layer == selected:
+                            delayed_pick_layer = (layer, layer_index_base, vis)
+                        else:
+                            layer.render(self, w_r, p_r, s_r, vis, layer_index_base, picker)
                 else: # not in pick-mode
-                    layer.render(self,
-                                 w_r, p_r, s_r,
-                                 self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???
-                                 -1,
-                                 picker)
+                    if layer == selected:
+                        control_points_layer = (layer, vis)
+                    layer.render(self, w_r, p_r, s_r, vis, -1, picker)
+            if delayed_pick_layer is not None:
+                layer, layer_index_base, vis = delayed_pick_layer
+                layer.render(self, w_r, p_r, s_r, vis, layer_index_base, picker)
+            if control_points_layer is not None:
+                layer, vis = control_points_layer
+                layer.render(self, w_r, p_r, s_r, vis, -1, picker, control_points_only=True)
 
-        render_layers()
+
+        render_layers(layer_draw_order)
 
         self.overlay.prepare_to_render_screen_objects()
         if (self.bounding_boxes_shown):
@@ -515,7 +530,7 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.SwapBuffers()
 
         self.prepare_to_render_picker(s_r)
-        render_layers(picker=self.picker)
+        render_layers(layer_draw_order, picker=self.picker)
         self.done_rendering_picker()
 
         elapsed = time.clock() - t0

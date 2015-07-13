@@ -1,4 +1,4 @@
-from base import Layer, RootLayer, Folder, AnnotationLayer
+from base import Layer, EmptyLayer, RootLayer, Folder, AnnotationLayer
 from grid import Grid
 from line import LineLayer
 from triangle import TriangleLayer

@@ -33,10 +33,15 @@ class MouseHandler(object):
     menu_item_name = "Generic Mouse Handler"
     menu_item_tooltip = "Tooltip for generic mouse handler"
     editor_trait_for_enabled = ""
+    
+    mouse_too_close_pixel_tolerance = 5
 
     def __init__(self, layer_control):
         self.layer_control = layer_control
         self.snapped_object = None, 0
+        self.first_mouse_down_position = 0, 0
+        self.after_first_mouse_up = False
+        self.mouse_up_too_close = False
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
@@ -92,6 +97,20 @@ class MouseHandler(object):
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
         #print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+    
+    def reset_early_mouse_params(self):
+        self.mouse_up_too_close = False
+        self.after_first_mouse_up = False
+    
+    def check_early_mouse_release(self, event):
+        c = self.layer_control
+        p = event.GetPosition()
+        dx = p[0] - self.first_mouse_down_position[0]
+        dy = p[1] - self.first_mouse_down_position[1]
+        tol = self.mouse_too_close_pixel_tolerance
+        if abs(dx) < tol and abs(dy) < tol:
+            return True
+        return False
 
     def process_mouse_up(self, event):
         c = self.layer_control
@@ -548,6 +567,19 @@ class RectSelectMode(MouseHandler):
     
     def is_snappable_to_layer(self, layer):
         return False
+    
+    def process_mouse_down(self, event):
+        # Mouse down only sets the initial point, after that it is ignored
+        # unless it is released too soon.
+        if not self.after_first_mouse_up:
+            self.first_mouse_down_position = event.GetPosition()
+        else:
+            # reset mouse down position because the on_mouse_down event handler
+            # in base_canvas sets it every time the mouse is pressed.  Without
+            # this here it would move the start of the rectangle to this most
+            # recent mouse press which is not what we want.
+            c = self.layer_control
+            c.mouse_down_position = self.first_mouse_down_position
 
     def process_mouse_motion_down(self, event):
         c = self.layer_control
@@ -560,6 +592,12 @@ class RectSelectMode(MouseHandler):
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
             return
+        
+        if not self.after_first_mouse_up and self.check_early_mouse_release(event):
+            self.mouse_up_too_close = True
+            self.after_first_mouse_up = True
+            return
+        self.after_first_mouse_up = True
 
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
@@ -571,6 +609,7 @@ class RectSelectMode(MouseHandler):
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
         self.process_rect_select(x1, y1, x2, y2)
+        self.reset_early_mouse_params()
     
     def process_rect_select(self, x1, y1, x2, y2):
         raise RuntimeError("Abstract method")
@@ -588,10 +627,8 @@ class RectSelectMode(MouseHandler):
                 # small adjustments to make stipple overlap gray rects perfectly
                 y1 -= 1
                 x2 += 1
-            renderer.draw_screen_line((x1, y1), (x2, y1), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            renderer.draw_screen_line((x1, y1), (x1, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            renderer.draw_screen_line((x2, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
-            renderer.draw_screen_line((x1, y2), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            sp = [(x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)]
+            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class ZoomRectMode(RectSelectMode):
@@ -683,8 +720,11 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         cp2 = c.get_world_point_from_projected_point(p2)
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
-            cmd = self.vector_object_command(layer, cp1, cp2, layer.manager.default_style, *self.snapped_object)
+            cmd = self.get_vector_object_command(layer, cp1, cp2, layer.manager.default_style)
             e.process_command(cmd)
+    
+    def get_vector_object_command(self, layer, cp1, cp2, style):
+        return self.vector_object_command(layer, cp1, cp2, style)
 
 
 class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
@@ -715,7 +755,10 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
         if c.mouse_is_down:
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
-            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 0, 0, 1.0, 1, 0x00FF)
+            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
+    
+    def get_vector_object_command(self, layer, cp1, cp2, style):
+        return self.vector_object_command(layer, cp1, cp2, style, *self.snapped_object)
 
 
 class AddPolylineMode(MouseHandler):
@@ -735,6 +778,8 @@ class AddPolylineMode(MouseHandler):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_control
         if len(self.points) == 0:
+            self.reset_early_mouse_params()
+            self.first_mouse_down_position = event.GetPosition()
             cp = self.get_world_point(event)
             self.points.append(cp)
             c.render(event)
@@ -750,6 +795,13 @@ class AddPolylineMode(MouseHandler):
     def process_mouse_up(self, event):
         # After the first point, mouse up events add points
         c = self.layer_control
+        
+        if not self.after_first_mouse_up and self.check_early_mouse_release(event):
+            self.mouse_up_too_close = True
+            self.after_first_mouse_up = True
+            return
+        self.after_first_mouse_up = True
+        
         cp = self.get_world_point(event)
         self.points.append(cp)
         c.render(event)
@@ -767,10 +819,10 @@ class AddPolylineMode(MouseHandler):
     def render_overlay(self, renderer):
         c = self.layer_control
         sp = [c.get_screen_point_from_world_point(p) for p in self.points]
-        renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 0)
+        renderer.draw_screen_lines(sp, 1.0, 1.0, 0, 1.0, xor=True)
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
-            renderer.draw_screen_line(sp[-1], cp, 1.0, 1.0, 0, 0)
+            renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class AddOverlayTextMode(MouseHandler):
@@ -794,4 +846,28 @@ class AddOverlayTextMode(MouseHandler):
         if (layer is not None):
             cp = self.get_world_point(event)
             cmd = AddTextCommand(layer, cp, layer.manager.default_style)
+            e.process_command(cmd)
+
+
+class AddOverlayIconMode(MouseHandler):
+    icon = "shape_icon.png"
+    menu_item_name = "Add Icon"
+    menu_item_tooltip = "Add a new Marplot icon"
+
+    def __init__(self, *args, **kwargs):
+        MouseHandler.__init__(self, *args, **kwargs)
+        self.points = []
+        self.cursor_point = None
+    
+    def get_cursor(self):
+        return wx.StockCursor(wx.CURSOR_CROSS)
+
+    def process_mouse_up(self, event):
+        # After the first point, mouse up events add points
+        c = self.layer_control
+        e = c.project
+        layer = e.layer_tree_control.get_selected_layer()
+        if (layer is not None):
+            cp = self.get_world_point(event)
+            cmd = AddIconCommand(layer, cp, layer.manager.default_style)
             e.process_command(cmd)

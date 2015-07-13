@@ -4,7 +4,7 @@ from peppy2.framework.errors import ProgressCancelError
 from peppy2.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer
+from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, EmptyLayer
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -193,7 +193,8 @@ class DeleteLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
         insertion_index = lm.get_multi_index_of_layer(layer)
-        undo.data = (layer, insertion_index, layer.invariant)
+        children = lm.get_children(layer)
+        undo.data = (layer, insertion_index, layer.invariant, children)
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         
@@ -206,8 +207,9 @@ class DeleteLayerCommand(Command):
 
     def undo(self, editor):
         lm = editor.layer_manager
-        layer, insertion_index, saved_invariant = self.undo_info.data
+        layer, insertion_index, saved_invariant, children = self.undo_info.data
         lm.insert_layer(insertion_index, layer, invariant=saved_invariant)
+        lm.insert_children(layer, children)
         return self.undo_info
 
 class MergeLayersCommand(Command):
@@ -261,6 +263,79 @@ class MergeLayersCommand(Command):
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         return undo
+
+class MoveLayerCommand(Command):
+    short_name = "move_layer"
+    serialize_order =  [
+            ('moved_layer', 'layer'),
+            ('target_layer', 'layer'),
+            ('before', 'bool'),
+            ('in_folder', 'bool'),
+            ]
+    
+    def __init__(self, moved_layer, target_layer, before, in_folder):
+        Command.__init__(self)
+        self.moved_layer = moved_layer.invariant
+        self.name = str(moved_layer.name)
+        self.target_layer = target_layer.invariant
+        self.before = before
+        self.in_folder = in_folder
+    
+    def __str__(self):
+        return "Move Layer %s" % (self.name)
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        tree = editor.layer_tree_control
+        self.undo_info = undo = UndoInfo()
+        source_layer = lm.get_layer_by_invariant(self.moved_layer)
+        target_layer = lm.get_layer_by_invariant(self.target_layer)
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(source_layer)
+        lf.select_layer = True
+        lf.metadata_changed = True
+        
+        mi_source = lm.get_multi_index_of_layer(source_layer)
+        mi_target = lm.get_multi_index_of_layer(target_layer)
+
+        # here we "re-get" the source layer so that it's replaced by a
+        # placeholder and temporarily removed from the tree
+        temp_layer = EmptyLayer(layer_manager=lm)
+        source_layer, children = lm.replace_layer(mi_source, temp_layer)
+
+        # if we are inserting onto a folder, insert as the second item in the folder
+        # (the first item in the folder is the folder pseudo-layer)
+        if (target_layer.is_root()):
+            mi_target = [1]
+        elif target_layer.is_folder() and self.in_folder:
+            mi_target.append(1)
+        else:
+            if not self.before:
+                mi_target[-1] = mi_target[-1] + 1
+        lm.insert_layer(mi_target, source_layer, invariant=self.moved_layer)
+        mi_temp = lm.get_multi_index_of_layer(temp_layer)
+        lm.remove_layer(temp_layer)
+        lm.insert_children(source_layer, children)
+
+        undo.data = (mi_temp, )
+        
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        mi_temp, = self.undo_info.data
+        temp_layer = EmptyLayer(layer_manager=lm)
+        lm.insert_layer(mi_temp, temp_layer)
+        
+        source_layer = lm.get_layer_by_invariant(self.moved_layer)
+        children = lm.get_children(source_layer)
+        lm.remove_layer(source_layer)
+        mi_temp = lm.get_multi_index_of_layer(temp_layer)
+        lm.replace_layer(mi_temp, source_layer)
+        lm.insert_children(source_layer, children)
+        
+        return self.undo_info
 
 class TriangulateLayerCommand(Command):
     short_name = "triangulate"

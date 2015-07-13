@@ -18,7 +18,7 @@ class Picker:
     """
 
     CHANNELS = 4  # i.e., RGBA
-    BACKGROUND_COLOR = color_to_int(1, 1, 1, 1)
+    BACKGROUND_COLOR = color_floats_to_int(1, 1, 1, 1)
     BACKGROUND_COLOR_STRING = chr(255) * 3
     frame_buffer = None  # the container frame buffer object
     render_buffer = None  # the render buffer within the frame buffer for offscreen drawing

@@ -10,7 +10,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
 from ..library.Boundary import Boundaries, PointsError
-from ..renderer import color_to_int, data_types
+from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 

@@ -10,7 +10,7 @@ from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
 from ..menu_commands import *
 from ..ui import sliders
-from ..renderer import color_to_int, int_to_color
+from ..renderer import color_floats_to_int, int_to_color_floats
 
 
 class InfoField(object):
@@ -377,27 +377,6 @@ class FloatSliderField(InfoField):
     def slider_changed(self, event):
         pass
 
-class AlphaField(FloatSliderField):
-    def get_value(self, layer):
-        return int((1.0 - layer.alpha) * 100)
-
-    def slider_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
-        if (layer is None):
-            return
-        refresh = False
-        c = self.ctrl
-        try:
-            val = 100 - int(c.GetValue())
-            layer.alpha = float(val) / 100.0
-            c.textCtrl.SetBackgroundColour("#FFFFFF")
-            refresh = True
-        except Exception as e:
-            c.textCtrl.SetBackgroundColour("#FF8080")
-        
-        if refresh:
-            self.panel.project.refresh()
-
 class LineAlphaField(FloatSliderField):
     def get_layer_color(self, layer):
         return layer.style.line_color
@@ -407,13 +386,13 @@ class LineAlphaField(FloatSliderField):
     
     def get_style(self, layer, alpha):
         color = self.get_layer_color(layer)
-        r, g, b, _ = int_to_color(color)
-        color = color_to_int(r, g, b, alpha)
+        r, g, b, _ = int_to_color_floats(color)
+        color = color_floats_to_int(r, g, b, alpha)
         return self.get_layer_style(layer, color)
 
     def get_value(self, layer):
         color = self.get_layer_color(layer)
-        r, g, b, a = int_to_color(color)
+        r, g, b, a = int_to_color_floats(color)
         t = int((1.0 - a) * 100)
         return t
 
@@ -447,7 +426,7 @@ class ColorPickerField(InfoField):
         return ""
         
     def fill_data(self, layer):
-        color = tuple(int(255 * c) for c in int_to_color(self.get_value(layer))[0:3])
+        color = tuple(int(255 * c) for c in int_to_color_floats(self.get_value(layer))[0:3])
         self.ctrl.SetColour(color)
     
     def create_control(self):
@@ -460,7 +439,7 @@ class ColorPickerField(InfoField):
     def color_changed(self, event):
         color = [float(c/255.0) for c in event.GetValue()]
         color.append(1.0)
-        int_color = color_to_int(*color)
+        int_color = color_floats_to_int(*color)
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
@@ -817,6 +796,35 @@ class EndMarkerField(MarkerField):
     def get_style(self, marker):
         return LayerStyle(line_end_marker=marker)
 
+class MarplotIconField(InfoField):
+    same_line = True
+    
+    def get_marker(self, layer):
+        return layer.style.icon_marker
+    
+    def get_style(self, marker):
+        return LayerStyle(icon_marker=marker)
+    
+    def fill_data(self, layer):
+        marker = self.get_marker(layer)
+        self.ctrl.SetSelection(marker)
+    
+    def create_control(self):
+        names = ["%s/%s" % m for m in LayerStyle.icon_styles]
+        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                             style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        style = self.get_style(item)
+        cmd = StyleChangeCommand(layer, style)
+        self.panel.project.process_command(cmd)
+
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
@@ -890,7 +898,7 @@ class InfoPanel(PANELTYPE):
         "Point count": PointVisibilityField,
         "Line segment count": LineVisibilityField,
         "Flagged points": FlaggedPointsField,
-        "Transparency": AlphaField,
+        "Transparency": LineAlphaField,
         "Line Transparency": LineAlphaField,
         "Fill Transparency": FillAlphaField,
         "Color": ColorField,
@@ -906,6 +914,7 @@ class InfoPanel(PANELTYPE):
         "Font Size": FontSizeField,
         "Overlay Text": OverlayTextField,
         "Text Format": TextFormatField,
+        "Marplot Icon": MarplotIconField,
         }
     
     def create_fields(self, layer, fields):

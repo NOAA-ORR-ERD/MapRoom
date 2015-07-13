@@ -11,7 +11,7 @@ from library.accumulator import flatten
 
 from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
 from command import UndoStack
-from renderer import color_to_int, int_to_color
+from renderer import color_floats_to_int, int_to_color_floats
 
 # Enthought library imports.
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set
@@ -101,6 +101,11 @@ class LayerManager(HasTraits):
             import debug
             debug.debug_objects(self)
         return self
+    
+    def __str__(self):
+        root = self.get_layer_by_multi_index([0])
+        layers = self.get_children(root)
+        return str(layers)
     
     def update_default_style(self, style):
         self.default_style.copy_from(style)
@@ -333,6 +338,25 @@ class LayerManager(HasTraits):
             mi = None
         return mi
 
+    def insert_children(self, in_layer, children):
+        """Insert a list of children as children of the speficied folder
+        
+        The list of children should be generated from :func:`get_children`
+        """
+        log.debug("before: layers are " + str(self.layers))
+        mi = self.get_multi_index_of_layer(in_layer)
+        mi.append(1)
+        log.debug("inserting children " + str(children) + " using multi_index = " + str(mi))
+        for layer in children:
+            if isinstance(layer, list):
+                child = layer[0]
+                self.insert_layer(mi, child, child.invariant)
+                self.insert_children(child, layer[1:])
+            else:
+                self.insert_layer(mi, layer, layer.invariant)
+            mi[-1] += 1
+        log.debug("after: layers are " + str(self.layers))
+
     def insert_layer(self, at_multi_index, layer, invariant=None):
         if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
@@ -353,6 +377,35 @@ class LayerManager(HasTraits):
         else:
             item = tree[at_multi_index[0]]
             self.insert_layer_recursive(at_multi_index[1:], layer, item)
+
+    def replace_layer(self, at_multi_index, layer):
+        """Replace a layer with another
+        
+        Returns a tuple containing the replaced layer as the first component
+        and a list (possibly empty) of its children as the second component.
+        """
+        if (at_multi_index is None or at_multi_index == []):
+            at_multi_index = self.find_default_insert_layer()
+
+        log.debug("before: layers are " + str(self.layers))
+        log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
+        if (not isinstance(layer, list)):
+            if layer.is_folder() and not layer.is_root():
+                layer = [layer]
+        replaced = self.replace_layer_recursive(at_multi_index, layer, self.layers)
+        log.debug("after: layers are " + str(self.layers))
+        if isinstance(replaced, list):
+            return replaced[0], replaced[1:]
+        return replaced, []
+
+    def replace_layer_recursive(self, at_multi_index, layer, tree):
+        if (len(at_multi_index) == 1):
+            replaced = tree[at_multi_index[0]]
+            tree[at_multi_index[0]] = layer
+            return replaced
+        else:
+            item = tree[at_multi_index[0]]
+            return self.replace_layer_recursive(at_multi_index[1:], layer, item)
 
     # FIXME: layer removal commands should return the hierarchy of layers
     # removed so that the operation can be undone correctly.
@@ -471,6 +524,30 @@ class LayerManager(HasTraits):
             if (isinstance(item, list)):
                 i = item[0]
             ret.append(i)
+
+        return ret
+
+    def get_children(self, layer):
+        """Return a list containing the hierarchy starting at the specified
+        layer and containing any children and descendents.
+        
+        This potentially could include lists of lists of lists, as deep as the
+        hierarchy goes.
+        """
+        mi = self.get_multi_index_of_layer(layer)
+        l = self.get_layer_by_multi_index(mi)
+        if not isinstance(l, list):
+            return []
+
+        ret = []
+        for item in l[1:]:
+            # a list means the first element in the list is the folder layer containing the other elements in the list
+            if (isinstance(item, list)):
+                sub = [item[0]]
+                sub.extend(self.get_children(item[0]))
+                ret.append(sub)
+            else:
+                ret.append(item)
 
         return ret
 

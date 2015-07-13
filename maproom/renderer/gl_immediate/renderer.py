@@ -11,7 +11,7 @@ import OpenGL.GLU as glu
 from peppy2 import get_image_path
 
 import maproom.library.rect as rect
-from .. import data_types, int_to_color
+from .. import data_types, int_to_color_floats
 from ..gl.textures import ImageTextures
 from ..gl.Tessellator import init_vertex_buffers, tessellate
 from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color
@@ -61,13 +61,14 @@ class ImmediateModeRenderer():
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
     
-    def set_points(self, xy, depths, color, num_points=-1):
+    def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
             num_points = np.alen(xy)
         if self.vbo_point_xys is None or np.alen(self.vbo_point_xys.data) != num_points:
             storage = np.zeros((num_points, 2), dtype=np.float32)
             self.vbo_point_xys = gl_vbo.VBO(storage)
-        self.vbo_point_colors = gl_vbo.VBO(color)
+        if color is not None:
+            self.vbo_point_colors = gl_vbo.VBO(color)
         self.vbo_point_xys[:num_points] = xy[:num_points]
     
     def set_lines(self, xy, indexes, color):
@@ -310,7 +311,7 @@ class ImmediateModeRenderer():
             gl.glColor(1.0, 1.0, 1.0, alpha)
         else:
             fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
-            r, g, b, a = int_to_color(fill_color)
+            r, g, b, a = int_to_color_floats(fill_color)
             gl.glColor(r, g, b, a)
         for i, vbo in enumerate(self.image_textures.vbo_vertexes):
             # have to bind texture before VBO
@@ -462,7 +463,7 @@ class ImmediateModeRenderer():
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
 
-    def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
+    def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         c = self.canvas
         # flip y to treat point as normal screen coordinates
         point_a = (point_a[0], rect.height(c.screen_rect) - point_a[1])
@@ -475,15 +476,19 @@ class ImmediateModeRenderer():
         gl.glColor(red, green, blue, alpha)
         gl.glLineStipple(stipple_factor, stipple_pattern)
         gl.glEnable(gl.GL_LINE_STIPPLE)
+        if xor:
+            gl.glEnable(gl.GL_COLOR_LOGIC_OP)
+            gl.glLogicOp(gl.GL_XOR)
         gl.glBegin(gl.GL_LINE_STRIP)
         gl.glVertex(point_a[0], point_a[1], 0)
         gl.glVertex(point_b[0], point_b[1], 0)
         gl.glEnd()
+        gl.glDisable(gl.GL_COLOR_LOGIC_OP)
         gl.glDisable(gl.GL_LINE_STIPPLE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
-    def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
+    def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         c = self.canvas
         h = rect.height(c.screen_rect)
         gl.glDisable(gl.GL_TEXTURE_2D)
@@ -493,11 +498,15 @@ class ImmediateModeRenderer():
         gl.glColor(red, green, blue, alpha)
         gl.glLineStipple(stipple_factor, stipple_pattern)
         gl.glEnable(gl.GL_LINE_STIPPLE)
+        if xor:
+            gl.glEnable(gl.GL_COLOR_LOGIC_OP)
+            gl.glLogicOp(gl.GL_XOR)
         gl.glBegin(gl.GL_LINE_STRIP)
         for p in points:
             # flip y to treat point as normal screen coordinates
             gl.glVertex(p[0], h - p[1], 0)
         gl.glEnd()
+        gl.glDisable(gl.GL_COLOR_LOGIC_OP)
         gl.glDisable(gl.GL_LINE_STIPPLE)
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
@@ -664,7 +673,7 @@ class ImmediateModeRenderer():
         self.vbo_line_segment_point_xys.bind()
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-        r, g, b, a = int_to_color(fill_color)
+        r, g, b, a = int_to_color_floats(fill_color)
         gl.glColor(r, g, b, a)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )

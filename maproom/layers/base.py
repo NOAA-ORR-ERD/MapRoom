@@ -65,10 +65,6 @@ class Layer(HasTraits):
     # of points selected)
     change_count = Int(0)
     
-    # FIXME: is really a view parameter so instead of affecting all views,
-    # should be stored in the view somehow
-    is_expanded = Bool(True)
-    
     load_error_string = Str
     
     manager = Any
@@ -324,9 +320,6 @@ class Layer(HasTraits):
     def has_flagged(self):
         return False
     
-    def has_alpha(self):
-        return False
-    
     def display_properties(self):
         return []
     
@@ -402,13 +395,31 @@ class Layer(HasTraits):
                screen_rect,
                layer_visibility,
                layer_index_base,
-               picker):
+               picker,
+               control_points_only=False):
         if hasattr(self, "render_projected"):
             self.renderer.prepare_to_render_projected_objects()
-            self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            if control_points_only:
+                self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            else:
+                self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
         if hasattr(self, "render_screen"):
             self.renderer.prepare_to_render_screen_objects()
-            self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            if control_points_only:
+                self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            else:
+                self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+    
+    def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        pass
+
+
+class EmptyLayer(Layer):
+    """Emply layer used when a folder has no other children.
+    """
+    name = Unicode("<empty folder>")
+    
+    type = Str("empty")
 
 
 class Folder(Layer):

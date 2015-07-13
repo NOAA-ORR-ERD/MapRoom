@@ -31,7 +31,7 @@ class LayerCanvas(renderer.BaseCanvas):
     valid_mouse_modes = {
         'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
         'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
-        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddOverlayTextMode],
+        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddOverlayTextMode, AddOverlayIconMode],
         'default': [PanMode, ZoomRectMode],
         }
 
@@ -109,6 +109,9 @@ class LayerCanvas(renderer.BaseCanvas):
             for layer in self.layer_renderers.keys():
                 log.warning("  layer: %s" % layer)
     
+    def get_selected_layer(self):
+        return self.project.layer_tree_control.get_selected_layer()
+    
     def set_mouse_handler(self, mode):
         self.release_mouse()
         self.mouse_handler = mode(self)
@@ -154,7 +157,7 @@ class LayerCanvas(renderer.BaseCanvas):
             w_r = layer.bounds
             if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
                 s_r = self.get_screen_rect_from_world_rect(w_r)
-                r, g, b, a = renderer.int_to_color(layer.style.line_color)
+                r, g, b, a = renderer.int_to_color_floats(layer.style.line_color)
                 self.overlay.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
     # functions related to world coordinates, projected coordinates, and screen coordinates
@@ -211,6 +214,12 @@ class LayerCanvas(renderer.BaseCanvas):
 
     def get_world_point_from_screen_point(self, screen_point):
         return self.get_world_point_from_projected_point(self.get_projected_point_from_screen_point(screen_point))
+
+    def get_numpy_world_point_from_screen_point(self, screen_point):
+        world_point = self.get_world_point_from_projected_point(self.get_projected_point_from_screen_point(screen_point))
+        w = np.empty_like(world_point)
+        w[:] = world_point
+        return w
 
     def get_world_rect_from_screen_rect(self, screen_rect):
         return self.get_world_rect_from_projected_rect(self.get_projected_rect_from_screen_rect(screen_rect))
