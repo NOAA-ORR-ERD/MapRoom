@@ -80,38 +80,38 @@ class LayerStyle(object):
     default_line_width = 2
     default_line_width_index = standard_line_widths.index(default_line_width)
 
-    v1_serialization_order = [
+    stylev1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'fill_color',
         ]
 
-    v2_serialization_order = [
+    stylev2_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style',
         ]
     
-    v3_serialization_order = [
+    stylev3_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size'
         ]
     
-    v4_serialization_order = [
+    stylev4_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size',
         'text_format'
         ]
     
-    v5_serialization_order = [
+    stylev5_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size',
         'text_format', 'icon_marker'
         ]
     
-    valid = set(v5_serialization_order)
+    valid = set(stylev5_serialization_order)
     
     def __init__(self, **kwargs):
         if len(kwargs):
@@ -140,7 +140,7 @@ class LayerStyle(object):
             self.icon_marker = 325  # Shapes/Place point
     
     def __str__(self):
-        args = [self.get_str(i) for i in self.v5_serialization_order]
+        args = [self.get_str(i) for i in self.stylev5_serialization_order]
         return "stylev5:%s" % ",".join(args)
     
     def get_str(self, k):
@@ -162,58 +162,14 @@ class LayerStyle(object):
     def parse(self, txt):
         try:
             version, info = txt.split(":", 1)
-            method = getattr(self, "parse_%s" % version)
-            method(info)
+            order = getattr(self, "%s_serialization_order" % version)
+            self.parse_style(order, info)
         except Exception, e:
             raise
     
-    def parse_stylev1(self, txt):
+    def parse_style(self, order, txt):
         vals = txt.split(",")
-        for k in self.v1_serialization_order:
-            v = vals.pop(0)
-            if v == "-":
-                v = None
-            else:
-                v = int(v, 16)
-            setattr(self, k, v)
-    
-    def parse_stylev2(self, txt):
-        vals = txt.split(",")
-        for k in self.v2_serialization_order:
-            v = vals.pop(0)
-            if v == "-":
-                v = None
-            else:
-                v = int(v, 16)
-            setattr(self, k, v)
-    
-    def parse_stylev3(self, txt):
-        vals = txt.split(",")
-        for k in self.v3_serialization_order:
-            v = vals.pop(0)
-            if v == "-":
-                v = None
-            elif k == 'font':
-                v = v.decode('utf-8')
-            else:
-                v = int(v, 16)
-            setattr(self, k, v)
-    
-    def parse_stylev4(self, txt):
-        vals = txt.split(",")
-        for k in self.v4_serialization_order:
-            v = vals.pop(0)
-            if v == "-":
-                v = None
-            elif k == 'font':
-                v = v.decode('utf-8')
-            else:
-                v = int(v, 16)
-            setattr(self, k, v)
-    
-    def parse_stylev5(self, txt):
-        vals = txt.split(",")
-        for k in self.v5_serialization_order:
+        for k in order:
             v = vals.pop(0)
             if v == "-":
                 v = None
