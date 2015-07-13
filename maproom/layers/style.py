@@ -33,6 +33,8 @@ class LayerStyle(object):
     default_line_color = color_floats_to_int(0,.5,.3,1.0)
     
     default_fill_color = color_floats_to_int(0,.8,.7,1.0)
+    
+    default_text_color = color_floats_to_int(0,0,0,1.0)
 
     default_colors = [
         color_floats_to_int(0, 0, 1.0, 1),
@@ -111,7 +113,15 @@ class LayerStyle(object):
         'text_format', 'icon_marker'
         ]
     
-    valid = set(stylev5_serialization_order)
+    stylev6_serialization_order = [
+        'line_color', 'line_stipple', 'line_stipple_factor',
+        'line_width', 'line_start_marker', 'line_end_marker',
+        'fill_color', 'fill_style',
+        'text_color', 'font', 'font_size', 'text_format',
+        'icon_marker'
+        ]
+    
+    valid = set(stylev6_serialization_order)
     
     def __init__(self, **kwargs):
         if len(kwargs):
@@ -134,14 +144,15 @@ class LayerStyle(object):
             self.line_end_marker = 0
             self.fill_color = self.default_fill_color  # 4 byte including alpha
             self.fill_style = 1
+            self.text_color = self.default_text_color  # 4 byte including alpha
             self.font = ""
             self.font_size = self.default_font_size
             self.text_format = 1
             self.icon_marker = 325  # Shapes/Place point
     
     def __str__(self):
-        args = [self.get_str(i) for i in self.stylev5_serialization_order]
-        return "stylev5:%s" % ",".join(args)
+        args = [self.get_str(i) for i in self.stylev6_serialization_order]
+        return "stylev6:%s" % ",".join(args)
     
     def get_str(self, k):
         v = getattr(self, k)

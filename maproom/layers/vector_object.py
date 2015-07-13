@@ -518,7 +518,7 @@ class OverlayTextObject(OverlayImageObject):
     
     border_width = Int(10)
     
-    layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
+    layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Text Transparency", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
     selection_info_panel = ["Text Format", "Overlay Text"]
     
@@ -547,7 +547,7 @@ class OverlayTextObject(OverlayImageObject):
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
         h = OffScreenHTML()
-        c = int_to_html_color_string(self.style.line_color)
+        c = int_to_html_color_string(self.style.text_color)
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
         return arr
 
@@ -596,7 +596,7 @@ class OverlayTextObject(OverlayImageObject):
         if layer_visibility["points"]:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
         self.renderer.prepare_to_render_screen_objects()
-        alpha = alpha_from_int(self.style.line_color)
+        alpha = alpha_from_int(self.style.text_color)
         self.renderer.draw_image(layer_index_base, picker, alpha)
 
 class OverlayIconObject(OverlayImageObject):

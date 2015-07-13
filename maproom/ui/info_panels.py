@@ -418,6 +418,13 @@ class FillAlphaField(LineAlphaField):
     def get_layer_style(self, layer, color):
         return LayerStyle(fill_color=color)
 
+class TextAlphaField(LineAlphaField):
+    def get_layer_color(self, layer):
+        return layer.style.text_color
+    
+    def get_layer_style(self, layer, color):
+        return LayerStyle(text_color=color)
+
 
 class ColorPickerField(InfoField):
     same_line = True
@@ -460,6 +467,13 @@ class FillColorField(ColorPickerField):
         
     def get_value(self, layer):
         return layer.style.fill_color
+
+class TextColorField(ColorPickerField):
+    def get_style(self, color):
+        return LayerStyle(text_color=color)
+        
+    def get_value(self, layer):
+        return layer.style.text_color
 
 import wx.combo
 class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
@@ -909,7 +923,8 @@ class InfoPanel(PANELTYPE):
         "End Marker": EndMarkerField,
         "Fill Color": FillColorField,
         "Fill Style": FillStyleField,
-        "Text Color": ColorField,  # Same as Line Color except for the label
+        "Text Color": TextColorField,  # Same as Line Color except for the label
+        "Text Transparency": TextAlphaField,
         "Font": FontStyleField,
         "Font Size": FontSizeField,
         "Overlay Text": OverlayTextField,
