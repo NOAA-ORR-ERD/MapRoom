@@ -1,3 +1,44 @@
+07/13/2015
+---------------------------
+Released 3.1b5
+- RM Added border width around text
+- RM First cut at overlay text with background
+- RM Alpha style changes now undoable in raster images
+- RM Changed default overlay line drawing to be red xor rather than dashes
+- RM Fixed bug when mouse press and release too close to original point
+- RM Use XOR to render polylines as the figure is being drawn
+- RM Added MoveLayerCommand so drag and drop of layers now undoable
+- RM Now handle undo/redo of DeleteLayerCommand where layer has children
+- RM Fixed parent of (currently unused) Batch class
+- RM Fixed particle layer rendering
+- RM Removed dialog prompt for deleting layers (since undo works now)
+- RM Added drop inside folders with new code in customtreecontrol in peppy2
+- RM Fixed tree collapsing bug after dragging layer
+- RM Changed drop to use before/after state from event rather than item
+- RM updated gitignore to skip generated .c files and dist-* directories
+- RM First step for improving tree drag/drop support: using new peppy2 customtreectrl
+- RM Renamed color_to_int, int_to_color to color_floats_to_int, int_to_color_floats
+- RM Fixed vector command creation since lines are the only users of snapped_object
+- RM Changed int_to_wx_color_tuple to int_to_color_uint8
+- RM Added Icon objects to annotation layer
+- RM Added Marplot image resources
+- RM Added basic marplot icon object
+- RM Initial support for overlay icons
+- RM Selected layer is now pickable even if not top in stacking order
+
+06/30/2015
+---------------------------
+Released 3.1b4
+- RM Updated comment for control point links
+- RM Support multiple linked control points at the same point
+- RM Added linked control points
+- RM Fixed name of rectangle vector object
+- RM Fixed StyleChangeCommand to coelesce similar style changes
+- RM Added separate line and fill alpha
+- RM Added plain text formatting for text overlay objects
+- RM Fix for serializer to support unicode names in overlay text
+- RM Fixed cursor being reset to end of text in OverlayTextField
+
 06/23/2015
 ---------------------------
 Released 3.1b3
