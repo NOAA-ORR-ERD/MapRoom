@@ -512,7 +512,10 @@ class OverlayTextObject(OverlayImageObject):
     
     user_text = Unicode("<b>New Label</b>")
     
-    # FIXME: border_width probably belongs in the Style class
+    text_width = Float(200)
+    
+    text_height = Float(50)
+    
     border_width = Int(10)
     
     layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
@@ -525,6 +528,18 @@ class OverlayTextObject(OverlayImageObject):
     def user_text_from_json(self, json_data):
         self.user_text = json_data['user_text'].decode('utf-8')
     
+    def text_width_to_json(self):
+        return self.text_width
+
+    def text_width_from_json(self, json_data):
+        self.text_width = json_data['text_width']
+    
+    def text_height_to_json(self):
+        return self.text_height
+
+    def text_height_from_json(self, json_data):
+        self.text_height = json_data['text_height']
+    
     def set_style(self, style):
         OverlayImageObject.set_style(self, style)
         self.rebuild_needed = True  # Force rebuild to change image color
@@ -533,11 +548,11 @@ class OverlayTextObject(OverlayImageObject):
         from maproom.library.numpy_images import OffScreenHTML
         h = OffScreenHTML()
         c = int_to_html_color_string(self.style.line_color)
-        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format)
+        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
         return arr
 
     def update_world_control_points(self):
-        h, w = self.image_data.x + self.border_width, self.image_data.y + self.border_width  # numpy image dimensions are reversed
+        h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # numpy image dimensions are reversed
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
@@ -555,6 +570,24 @@ class OverlayTextObject(OverlayImageObject):
         projected_point_data = self.compute_projected_point_data()
         self.renderer.set_points(projected_point_data, None, None)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
+    
+    def move_control_point(self, drag, anchor, dx, dy):
+        # Only recalculate text box size if dragging a corner point; center
+        # point drag is rigid body move
+        if drag < self.center_point_index:
+            c = self.renderer.canvas
+            p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+            d = np.copy(p.xy[drag])
+            d += (dx, dy)
+            a = np.copy(p.xy[anchor])
+            
+            d_s = c.get_numpy_screen_point_from_world_point(d)
+            a_s = c.get_numpy_screen_point_from_world_point(a)
+
+            self.text_width = abs(d_s[0] - a_s[0]) - (2 * self.border_width)
+            self.text_height = abs(d_s[1] - a_s[1]) - (2 * self.border_width)
+
+        self.move_bounding_box_point(drag, anchor, dx, dy)
     
     def render_overlay(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         self.renderer.prepare_to_render_projected_objects()

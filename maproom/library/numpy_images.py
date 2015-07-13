@@ -65,8 +65,6 @@ class OffScreenHTML(object):
     """
     
     def __init__(self):
-        width, height = wx.GetDisplaySize()
-        self.width = width
         self.height = 100
         
         self.hr = wx.html.HtmlDCRenderer()
@@ -74,7 +72,7 @@ class OffScreenHTML(object):
         # White background will be transformed into transparent in get_numpy
         self.bg = (255, 255, 255)
     
-    def setup(self, text, bitmap, face, size):
+    def setup(self, text, bitmap, face, size, width):
         DC = wx.MemoryDC()
         DC.SelectObject(bitmap)
         DC = wx.GCDC(DC)
@@ -82,19 +80,19 @@ class OffScreenHTML(object):
         DC.Clear()
         
         self.hr.SetDC(DC, 1.0)
-        self.hr.SetSize(self.width, self.height)
+        self.hr.SetSize(width, self.height)
         self.hr.SetStandardFonts(size, face, "Deja Vu Sans Mono")
         
         self.hr.SetHtmlText(text)
         
         return DC
        
-    def render(self, source, face, size):
+    def render(self, source, face, size, width):
         """
         Render the html source to the bitmap
         """
-        bitmap = wx.EmptyBitmap(self.width, self.height)
-        dc = self.setup(source, bitmap, face, size)
+        bitmap = wx.EmptyBitmap(width, self.height)
+        dc = self.setup(source, bitmap, face, size, width)
         
         # Calculate the height of the final rendered text
         y = ylast = 0
@@ -106,20 +104,20 @@ class OffScreenHTML(object):
             
         if ylast > self.height:
             self.height = ylast
-            bitmap = wx.EmptyBitmap(self.width, self.height)
-            dc = self.setup(source, bitmap, face, size)
+            bitmap = wx.EmptyBitmap(width, self.height)
+            dc = self.setup(source, bitmap, face, size, width)
         
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
         # analogue to GetTotalHeight
         self.hr.Render(0, 0, [])
-        return self.width, self.hr.GetTotalHeight(), bitmap
+        return width, self.hr.GetTotalHeight(), bitmap
 
-    def get_numpy(self, text, c=None, face="", size=12, text_format=0):
+    def get_numpy(self, text, c=None, face="", size=12, text_format=0, width_in_pixels=200):
         if text_format == 0:
             text = simple_text_formatter(text)
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
-        w, h, bitmap = self.render(text, face, size)
+        w, h, bitmap = self.render(text, face, size, width_in_pixels)
         if h > 0:
             sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
             arr = np.empty((h, w, 4), np.uint8)
