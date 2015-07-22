@@ -95,6 +95,8 @@ class AddrParser(object):
     def __init__(self, filename):
         self.filename = filename
         self.fileroot, _ = os.path.splitext(os.path.basename(self.filename))
+        self.max_width = -1
+        self.max_height = -1
         self.parse()
     
     def parse(self):
@@ -115,7 +117,10 @@ class AddrParser(object):
                 else:
                     if category == "[Unused]":
                         continue
-                    icons.append(Icon(items))
+                    icon = Icon(items)
+                    icons.append(icon)
+                    self.max_width = max(self.max_width, icon.width)
+                    self.max_height = max(self.max_height, icon.height)
         
         if icons:
             self.icon_list[category] = icons
@@ -136,10 +141,10 @@ if __name__ == "__main__":
     icon_count = 0
     png_data = []
     
-    lines = ["# Automatically generated file, DO NOT EDIT!",
-             "# Generated from resources/marplot/fonts/parse_marplot.py",
-             "",]
-    lines.append("marplot_icons = [")
+    lines = [
+        "marplot_icons = [",
+        ]
+
     for category in sorted(mm.icon_list.keys()):
         lines.append("  ('%s', [" % category)
         for icon in sorted(mm.icon_list[category]):
@@ -152,7 +157,23 @@ if __name__ == "__main__":
     lines.append(",\n".join(png_data))
     lines.append("]")
     
+    header = """# Automatically generated file, DO NOT EDIT!",
+# Generated from resources/marplot/fonts/parse_marplot.py",
+
+def get_wx_bitmap(icon_num):
+    import wx
+    import cStringIO
+    
+    data = marplot_icon_data[icon_num]
+    image = wx.ImageFromStream(cStringIO.StringIO(data))
+    bitmap = wx.BitmapFromImage(image)
+    return bitmap
+
+marplot_icon_max_size = (%d, %d)
+
+""" % (mm.max_width, mm.max_height)
     with open("../../../maproom/library/marplot_icons.py", 'w') as fh:
+        fh.write(header)
         fh.write("\n".join(lines) + "\n")
     
 #    print page[1]

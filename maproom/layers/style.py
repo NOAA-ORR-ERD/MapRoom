@@ -270,9 +270,7 @@ class LayerStyle(object):
         return cls.fonts
     
     def get_numpy_image_from_icon(self):
-        data = marplot_icon_data[self.icon_marker]
-        image = wx.ImageFromStream(cStringIO.StringIO(data))
-        bitmap = wx.BitmapFromImage(image)
+        bitmap = get_wx_bitmap(self.icon_marker)
         arr = np.empty((bitmap.Height, bitmap.Width, 4), np.uint8)
         bitmap.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
         r, g, b, a = int_to_color_uint8(self.line_color)

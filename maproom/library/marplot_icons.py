@@ -1,5 +1,16 @@
-# Automatically generated file, DO NOT EDIT!
-# Generated from resources/marplot/fonts/parse_marplot.py
+# Automatically generated file, DO NOT EDIT!",
+# Generated from resources/marplot/fonts/parse_marplot.py",
+
+def get_wx_bitmap(icon_num):
+    import wx
+    import cStringIO
+    
+    data = marplot_icon_data[icon_num]
+    image = wx.ImageFromStream(cStringIO.StringIO(data))
+    bitmap = wx.BitmapFromImage(image)
+    return bitmap
+
+marplot_icon_max_size = (41, 36)
 
 marplot_icons = [
   ('Alphabet', [
