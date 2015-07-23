@@ -1,8 +1,10 @@
 import wx
 import wx.lib.sized_controls as sc
+import wx.lib.buttons as buttons
 
 from ..library import coordinates
 from ..library.textparse import parse_int_string
+from ..library.marplot_icons import *
 
 class FindPointDialog(sc.SizedDialog):
 
@@ -94,3 +96,75 @@ class JumpCoordsDialog(sc.SizedDialog):
                 self.coords_text.SetBackgroundColour("#FFFFFF")
         except:
             self.coords_text.SetBackgroundColour("#FF8080")
+
+class IconDialog(wx.Dialog):
+    def __init__(self, parent, iid):
+        wx.Dialog.__init__(self, parent, -1, "Choose MARPLOT Icon")
+        self.num_cols = 5
+
+        self.icon_list = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.VSCROLL)
+        self.grid = wx.FlexGridSizer(cols=self.num_cols, hgap=2, vgap=2)
+        self.icon_id_to_name = [name for cat, icons in marplot_icons for name, index in icons]
+        self.icon_id_to_cat = [cat for cat, icons in marplot_icons for name, index in icons]
+
+        self.Bind(wx.EVT_BUTTON, self.OnButton)
+        self.Bind(wx.EVT_ENTER_WINDOW, self.on_enter)
+        self.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
+        self.icon_list.SetScrollbars(0, marplot_icon_max_size[1], 0, (50+self.num_cols-1)/self.num_cols)
+
+        icon_cats = [cat for cat, icons in marplot_icons]
+        cat = wx.ListBox(self, -1, choices=icon_cats)
+        cat.Bind(wx.EVT_LISTBOX, self.on_category)
+        cat_id = icon_cats.index(self.icon_id_to_cat[iid])
+        cat.SetSelection(cat_id)
+        self.repopulate_grid(cat_id)
+
+        self.icon_list.SetSizer(self.grid)
+        self.icon_list.Layout()
+        self.icon_list.Fit()
+
+        self.name = wx.StaticText(self, -1, "", size=(marplot_icon_max_size[0] * (self.num_cols + 1), -1))
+
+        vsiz = wx.BoxSizer(wx.VERTICAL)
+        vsiz.Add(self.icon_list, 1, wx.EXPAND, 0)
+        vsiz.Add(self.name, 0, wx.EXPAND, 0)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(cat, 1, wx.EXPAND, 0)
+        sizer.Add(vsiz, 0, wx.EXPAND, 0)
+        self.SetSizer(sizer)
+        self.Fit()
+    
+    def repopulate_grid(self, cat_id):
+        self.grid.Clear(True)
+        cat_name, icons = marplot_icons[cat_id]
+        self.id_map = {}
+        parent = self.icon_list
+        for name, iid in icons:
+            bmp = get_wx_bitmap(iid)
+            wid = wx.NewId()
+            self.id_map[wid] = iid
+            b = buttons.GenBitmapButton(parent, wid, bmp, size=marplot_icon_max_size, style=wx.BORDER_NONE)
+            b.SetBackgroundColour("black")
+            self.grid.Add(b, flag=wx.ALIGN_CENTER_VERTICAL)
+            b.Bind(wx.EVT_ENTER_WINDOW, self.on_enter)
+            b.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
+        self.icon_list.SetScrollbars(0, marplot_icon_max_size[1], 0, (len(icons)+self.num_cols-1)/self.num_cols)
+        self.icon_list.Layout()
+
+    def OnButton(self, event):
+        iid = self.id_map[event.GetId()]
+        self.EndModal(iid)
+    
+    def on_category(self, event):
+        self.repopulate_grid(event.GetSelection())
+    
+    def on_enter(self, event):
+        wid = event.GetId()
+        if wid in self.id_map:
+            iid = self.id_map[wid]
+            name = self.icon_id_to_name[iid]
+            self.name.SetLabel(name)
+    
+    def on_leave(self, event):
+        self.name.SetLabel("")

@@ -71,6 +71,7 @@ class LayerStyle(object):
         ]
     
     icon_styles = [(cat, name) for cat, icons in marplot_icons for name, index in icons]
+    icon_id_to_name = [name for cat, icons in marplot_icons for name, index in icons]
     
     fonts = None  # Will be initialized in call to get_font_names
     

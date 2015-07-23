@@ -4,12 +4,13 @@ import wx.lib.buttons as buttons
 
 from pyface.api import ImageResource
 
+import sliders
+import dialogs
 from ..layers import constants, LayerStyle
 from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
 from ..menu_commands import *
-from ..ui import sliders
 from ..renderer import color_floats_to_int, int_to_color_floats
 
 
@@ -821,23 +822,24 @@ class MarplotIconField(InfoField):
     
     def fill_data(self, layer):
         marker = self.get_marker(layer)
-        self.ctrl.SetSelection(marker)
+        self.ctrl.SetLabel(LayerStyle.icon_id_to_name[marker])
     
     def create_control(self):
-        names = ["%s/%s" % m for m in LayerStyle.icon_styles]
-        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
-                             style=wx.CB_READONLY)
-        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        c = wx.Button(self.parent, -1, "none", size=(100, -1))
+        c.Bind(wx.EVT_BUTTON, self.style_changed)
         return c
         
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
-        item = event.GetSelection()
-        style = self.get_style(item)
-        cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        marker = self.get_marker(layer)
+        d = dialogs.IconDialog(self.panel.project.control, marker)
+        new_id = d.ShowModal()
+        if new_id != wx.ID_CANCEL:
+            style = self.get_style(new_id)
+            cmd = StyleChangeCommand(layer, style)
+            self.panel.project.process_command(cmd)
 
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
