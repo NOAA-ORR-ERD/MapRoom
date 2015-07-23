@@ -95,6 +95,15 @@ class UndoStack(list):
         for c in self:
             s.add(c)
         return s
+    
+    def unserialize_text(self, text, manager):
+        from serializer import TextDeserializer
+        
+        offset = manager.get_invariant_offset()
+        s = TextDeserializer(text, offset)
+        for cmd in s.iter_cmds(manager):
+            yield cmd
+        
 
 
 class LayerStatus(object):

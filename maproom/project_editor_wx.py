@@ -20,7 +20,7 @@ from layer_manager import LayerManager
 import renderer
 from layers import loaders
 from layers.constants import *
-from command import BatchStatus
+from command import UndoStack, BatchStatus
 from mouse_handler import *
 from menu_commands import *
 from serializer import UnknownCommandError
@@ -102,8 +102,11 @@ class ProjectEditor(FrameworkEditor):
                 batch_flags = BatchStatus()
                 print "FIXME: Add load project command that clears all layers"
                 self.path = metadata.uri
-                loader.load_project(metadata, self.layer_manager, batch_flags)
-                batch_flags.zoom_to_all()
+                extra = loader.load_project(metadata, self.layer_manager, batch_flags)
+                if extra is not None:
+                    self.parse_extra_json(extra, batch_flags)
+                if batch_flags.zoom_rect is None:
+                    batch_flags.zoom_to_all()
                 self.perform_batch_flags(batch_flags)
             elif hasattr(loader, "iter_log"):
                 line = 0
@@ -139,6 +142,13 @@ class ProjectEditor(FrameworkEditor):
                 self.process_command(cmd)
 
         self.dirty = False
+    
+    def parse_extra_json(self, json, batch_flags):
+        for serialized_data in json:
+            if serialized_data == "commands":
+                continue
+            for cmd in self.layer_manager.undo_stack.unserialize_text(serialized_data, self.layer_manager):
+                self.process_batch_command(cmd, batch_flags)
 
     def view_of(self, editor):
         """ Copy the view of the supplied editor.
@@ -160,8 +170,11 @@ class ProjectEditor(FrameworkEditor):
         try:
             progress_log.info("START=Saving %s" % path)
             
-            # FIXME: need to determine the project file format!!!
-            error = self.layer_manager.save_all(path)
+            cmd = self.get_savepoint()
+            u = UndoStack()
+            u.add_command(cmd)
+            text = str(u.serialize())
+            error = self.layer_manager.save_all(path, ["commands", text])
         except ProgressCancelError, e:
             error = e.message
         finally:
@@ -173,6 +186,11 @@ class ProjectEditor(FrameworkEditor):
             self.path = path
             self.layer_manager.undo_stack.set_save_point()
             self.dirty = self.layer_manager.undo_stack.is_dirty()
+    
+    def get_savepoint(self):
+        layer = self.layer_tree_control.get_selected_layer()
+        cmd = SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
+        return cmd
 
     def save_log(self, path):
         """ Saves the command log to a text file
@@ -180,8 +198,7 @@ class ProjectEditor(FrameworkEditor):
         # Add temporary SavepointCommand to command history so that it can be
         # serialized, but remove it after seriarization so it doesn't clutter
         # the history
-        layer = self.layer_tree_control.get_selected_layer()
-        cmd = SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
+        cmd = self.get_savepoint()
         self.layer_manager.undo_stack.add_command(cmd)
         serializer = self.layer_manager.undo_stack.serialize()
         try:

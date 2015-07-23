@@ -19,9 +19,7 @@ class CommandLogLoader(BaseLoader):
     
     def iter_log(self, metadata, manager):
         project = []
-        offset = manager.get_invariant_offset()
         with open(metadata.uri, "r") as fh:
             text = fh.read()
-            s = TextDeserializer(text, offset)
-            for cmd in s.iter_cmds(manager):
+            for cmd in manager.undo_stack.unserialize_text(text, manager):
                 yield cmd

@@ -245,6 +245,11 @@ class LayerManager(HasTraits):
     
     def load_all_from_json(self, json):
         order = []
+        if json[0] == "extra json data":
+            extra_json = json[1]
+            json = json[2:]
+        else:
+            extra_json = None
         for serialized_data in json:
             loaded = Layer.load_from_json(serialized_data, self)
             index = serialized_data['index']
@@ -252,7 +257,7 @@ class LayerManager(HasTraits):
             print "processed json from layer", loaded
         order.sort()
         print "load_all_from_json: order", order
-        return order
+        return order, extra_json
     
     def add_all(self, layer_order, editor=None):
         existing = self.flatten()
@@ -276,13 +281,16 @@ class LayerManager(HasTraits):
                 layers.append(layer)
         return layers
     
-    def save_all(self, file_path):
+    def save_all(self, file_path, extra_json_data=None):
         log.debug("saving layers in project file: " + file_path)
         layer_info = self.flatten_with_indexes()
         log.debug("layers are " + str(self.layers))
         log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
         log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t,s  in Layer.get_subclasses().iteritems()]))
         project = []
+        if extra_json_data is not None:
+            project.append("extra json data")
+            project.append(extra_json_data)
         for index, layer in layer_info:
             print "index=%s, layer=%s, path=%s" % (index, layer, layer.file_path)
             data = layer.serialize_json(index)
