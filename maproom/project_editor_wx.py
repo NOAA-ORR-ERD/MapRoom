@@ -131,7 +131,8 @@ class ProjectEditor(FrameworkEditor):
                     header.extend(errors)
                     text = "\n".join(header)
                     self.window.error(text, "Error restoring from command log")
-                batch_flags.zoom_to_all()
+                if batch_flags.zoom_rect is None:
+                    batch_flags.zoom_to_all()
                 self.perform_batch_flags(batch_flags)
             else:
                 cmd = LoadLayersCommand(metadata)
@@ -176,6 +177,12 @@ class ProjectEditor(FrameworkEditor):
     def save_log(self, path):
         """ Saves the command log to a text file
         """
+        # Add temporary SavepointCommand to command history so that it can be
+        # serialized, but remove it after seriarization so it doesn't clutter
+        # the history
+        layer = self.layer_tree_control.get_selected_layer()
+        cmd = SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
+        self.layer_manager.undo_stack.add_command(cmd)
         serializer = self.layer_manager.undo_stack.serialize()
         try:
             fh = open(path, "wb")
@@ -183,6 +190,7 @@ class ProjectEditor(FrameworkEditor):
             fh.close()
         except IOError, e:
             self.window.error(str(e))
+        self.layer_manager.undo_stack.pop_command()
 
     def save_layer(self, path, loader=None):
         """ Saves the contents of the current layer in an appropriate file
@@ -419,6 +427,8 @@ class ProjectEditor(FrameworkEditor):
             b.layers_changed = True
         if f.refresh_needed:
             b.refresh_needed = True
+        if f.zoom_rect is not None:
+            b.zoom_rect = f.zoom_rect
         for lf in f.layer_flags:
             layer = lf.layer
             b.layers.append(layer)
@@ -467,6 +477,9 @@ class ProjectEditor(FrameworkEditor):
             self.layer_manager.layers_changed = True
         if b.zoom_layers:
             self.zoom_to_layers(b.zoom_layers)
+            b.refresh_needed = True
+        if b.zoom_rect is not None:
+            self.layer_canvas.zoom_to_world_rect(b.zoom_rect, False)
             b.refresh_needed = True
         if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True

@@ -258,13 +258,16 @@ class LayerCanvas(renderer.BaseCanvas):
         if (w_r != rect.NONE_RECT):
             self.zoom_to_world_rect(w_r)
 
-    def zoom_to_world_rect(self, w_r):
+    def zoom_to_world_rect(self, w_r, border=True):
         if (w_r == rect.NONE_RECT):
             return
         p_r = self.get_projected_rect_from_world_rect(w_r)
         size = self.get_screen_size()
-        # so that when we zoom, the points don't hit the very edge of the window
-        EDGE_PADDING = 20
+        if border:
+            # so that when we zoom, the points don't hit the very edge of the window
+            EDGE_PADDING = 20
+        else:
+            EDGE_PADDING = 0
         size.x -= EDGE_PADDING * 2
         size.y -= EDGE_PADDING * 2
         pixels_h = rect.width(p_r) / self.projected_units_per_pixel
@@ -277,8 +280,11 @@ class LayerCanvas(renderer.BaseCanvas):
         self.projected_units_per_pixel *= ratio
         self.constrain_zoom()
 
+    def get_zoom_rect(self):
+        return self.get_world_rect_from_screen_rect(self.get_screen_rect())
+
     def zoom_to_include_world_rect(self, w_r):
-        view_w_r = self.get_world_rect_from_screen_rect(self.get_screen_rect())
+        view_w_r = self.get_zoom_rect()
         if (not rect.contains_rect(view_w_r, w_r)):
             # first try just panning
             p_r = self.get_projected_rect_from_world_rect(w_r)

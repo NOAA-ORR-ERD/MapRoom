@@ -412,3 +412,33 @@ class TriangulateLayerCommand(Command):
         lf = undo.flags.add_layer_flags(old_t_layer)
         lf.select_layer = True
         return undo
+
+class SavepointCommand(Command):
+    short_name = "savepoint"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('world_rect', 'rect'),
+            ]
+    
+    def __init__(self, layer, world_rect):
+        Command.__init__(self, layer)
+        self.world_rect = world_rect
+    
+    def __str__(self):
+        return "Save Point"
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        if layer is not None:
+            lf = undo.flags.add_layer_flags(layer)
+            lf.select_layer = True
+        undo.flags.zoom_rect = self.world_rect
+
+        return self.undo_info
+
+    def undo(self, editor):
+        undo = UndoInfo()
+        undo.flags.refresh_needed = True
+        return undo

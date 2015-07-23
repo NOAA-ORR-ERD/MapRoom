@@ -77,6 +77,13 @@ class UndoStack(list):
         if command.is_recordable():
             self[self.insert_index:] = [command]
             self.insert_index += 1
+
+    def pop_command(self):
+        last = self.get_undo_command()
+        if last is not None:
+            self.insert_index -= 1
+            self[self.insert_index:self.insert_index + 1] = []
+        return last
     
     def history_list(self):
         h = [str(c) for c in self]
@@ -146,6 +153,9 @@ class BatchStatus(object):
         
         # Any (error) messages will be added to this list
         self.messages = []
+        
+        # Specific zoom parameters
+        self.zoom_rect = None
     
     def zoom_to_all(self):
         self.zoom_layers = self.layers
@@ -173,6 +183,9 @@ class CommandStatus(object):
         self.layers_changed = False
         
         self.layer_flags = []
+        
+        # Specific zoom parameters
+        self.zoom_rect = None
     
     def add_layer_flags(self, layer):
         lf = LayerStatus(layer)
