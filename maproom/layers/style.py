@@ -30,9 +30,9 @@ class LayerStyle(object):
     
     """
     
-    default_line_color = color_floats_to_int(0,.5,.3,1.0)
+    default_line_color = color_floats_to_int(1.0,0,0,1.0)
     
-    default_fill_color = color_floats_to_int(0,.8,.7,1.0)
+    default_fill_color = color_floats_to_int(1.0,1.0,1.0,0.5)
     
     default_text_color = color_floats_to_int(0,0,0,1.0)
 
