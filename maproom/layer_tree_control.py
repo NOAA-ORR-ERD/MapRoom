@@ -173,6 +173,9 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
                 item.Expand()
             else:
                 item.Collapse()
+        else:
+            # expand by default if not listed
+            item.Expand()
 
         return item
 
