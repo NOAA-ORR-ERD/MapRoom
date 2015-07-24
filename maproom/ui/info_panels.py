@@ -840,6 +840,7 @@ class MarplotIconField(InfoField):
             style = self.get_style(new_id)
             cmd = StyleChangeCommand(layer, style)
             self.panel.project.process_command(cmd)
+            self.fill_data(layer)
 
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel

@@ -23,6 +23,8 @@ from library.mem_use import get_mem_use
 from mouse_handler import *
 from menu_commands import *
 from vector_object_commands import *
+from ui.dialogs import StyleDialog
+from peppy2.framework.actions import PreferencesAction
 
 import logging
 log = logging.getLogger(__name__)
@@ -179,6 +181,24 @@ class SaveImageAction(EditorAction):
         dialog = FileDialog(parent=event.task.window.control, action='save as')
         if dialog.open() == OK:
             self.active_editor.save_image(dialog.path)
+
+class DefaultStyleAction(EditorAction):
+    name = 'Set Style...'
+    tooltip = 'Choose the line, fill and font styles'
+
+    def perform(self, event):
+        dialog = StyleDialog(parent=event.task.window.control, action='save as')
+        if dialog.open() == OK:
+            self.active_editor.save_layer(dialog.path)
+
+    def perform(self, event):
+        GUI.invoke_later(self.show_dialog, self.active_editor)
+    
+    def show_dialog(self, project):
+        dialog = StyleDialog(project)
+        status = dialog.ShowModal()
+        if status == wx.ID_OK:
+            project.layer_manager.update_default_style(dialog.get_style())
 
 class BoundingBoxAction(EditorAction):
     name = 'Show Bounding Boxes'
@@ -811,6 +831,13 @@ class MaproomProjectTask(FrameworkTask):
                         Separator(),
                         ClearFlaggedAction(),
                         FlaggedToSelectionAction(),
+                        ]
+                elif group_name == "PrefGroup":
+                    return [
+                        Group(
+                            DefaultStyleAction(),
+                            PreferencesAction(),
+                            absolute_position="last"),
                         ]
                 elif group_name == "FindGroup":
                     return [

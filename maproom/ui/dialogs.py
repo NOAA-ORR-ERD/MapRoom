@@ -5,6 +5,7 @@ import wx.lib.buttons as buttons
 from ..library import coordinates
 from ..library.textparse import parse_int_string
 from ..library.marplot_icons import *
+from ..mock import MockProject
 
 class FindPointDialog(sc.SizedDialog):
 
@@ -168,3 +169,43 @@ class IconDialog(wx.Dialog):
     
     def on_leave(self, event):
         self.name.SetLabel("")
+
+
+class StyleDialog(wx.Dialog):
+    def __init__(self, project):
+        wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300,-1))
+        self.lm = project.layer_manager
+        
+        self.mock_project = MockProject()
+        self.mock_project.control = None
+        self.layer = self.mock_project.layer_tree_control.get_selected_layer()
+        self.layer.style.copy_from(self.lm.default_style)
+        self.layer.layer_info_panel = ["Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency", "Text Color", "Font", "Font Size", "Text Transparency", "Marplot Icon"]
+        
+        # Can't import from the top level because info_panels imports this
+        # file, creating a circular import loop
+        from info_panels import LayerInfoPanel
+        self.info = LayerInfoPanel(self, self.mock_project)
+        self.info.display_panel_for_layer(self.mock_project, self.layer)
+        
+        # Force the minimum client area to be big enough so there's no scrollbar
+        vsiz = (400, self.info.GetBestVirtualSize()[1]+50)
+        self.info.SetMinSize(vsiz)
+        self.info.Layout()
+        
+        btnsizer = wx.StdDialogButtonSizer()
+        btn = wx.Button(self, wx.ID_OK)
+        btn.SetDefault()
+        btnsizer.AddButton(btn)
+        btn = wx.Button(self, wx.ID_CANCEL)
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(self.info, 1, wx.EXPAND, 0)
+        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+        self.SetSizer(sizer)
+        self.Fit()
+
+    def get_style(self):
+        return self.layer.style
