@@ -44,10 +44,6 @@ class LayerManager(HasTraits):
     
     next_invariant = Int(0)
     
-    batch = Bool
-    
-    events = List(Any)
-    
     layer_loaded = Event
     
     layers_changed = Event
@@ -199,11 +195,8 @@ class LayerManager(HasTraits):
         self.layers = []
     
     def dispatch_event(self, event, value=True):
-        log.debug("batch=%s: dispatching event %s = %s" % (self.batch, event, value))
-        if self.batch:
-            self.events.append((event, value))
-        else:
-            setattr(self, event, value)
+        log.debug("dispatching event %s = %s" % (event, value))
+        setattr(self, event, value)
     
     def post_event(self, event_name, *args):
         log.debug("event: %s.  args=%s" % (event_name, str(args)))
