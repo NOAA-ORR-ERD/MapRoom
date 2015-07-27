@@ -82,7 +82,7 @@ class VectorObjectLayer(LineLayer):
         if self.rebuild_needed:
             self.rebuild_renderer()
         self.renderer.outline_object(layer_index_base, picker, self.style)
-        if layer_visibility["points"]:
+        if layer_visibility["points"] or picker.is_active:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
     def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
@@ -259,7 +259,7 @@ class FillableVectorObject(LineVectorObject):
             self.rebuild_renderer()
         self.renderer.fill_object(layer_index_base, picker, self.style)
         self.renderer.outline_object(layer_index_base, picker, self.style)
-        if layer_visibility["points"]:
+        if layer_visibility["points"] or picker.is_active:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
             
 
@@ -408,7 +408,7 @@ class ScaledImageObject(RectangleVectorObject):
             self.rebuild_renderer()
         alpha = alpha_from_int(self.style.line_color)
         self.renderer.draw_image(layer_index_base, picker, alpha)
-        if layer_visibility["points"]:
+        if layer_visibility["points"] or picker.is_active:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
 
 
@@ -593,7 +593,7 @@ class OverlayTextObject(OverlayImageObject):
         self.renderer.prepare_to_render_projected_objects()
         self.renderer.fill_object(layer_index_base, picker, self.style)
         self.renderer.outline_object(layer_index_base, picker, self.style)
-        if layer_visibility["points"]:
+        if layer_visibility["points"] or picker.is_active:
             self.renderer.draw_points(layer_index_base, picker, self.point_size)
         self.renderer.prepare_to_render_screen_objects()
         alpha = alpha_from_int(self.style.text_color)
