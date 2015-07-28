@@ -124,7 +124,6 @@ class DrawLineCommand(DrawVectorObjectCommand):
             print "sl", sl
             print "snapped_cp", self.snapped_cp
             lm.set_control_point_link(layer, 1, sl, self.snapped_cp)
-            lm.update_linked_control_points(sl, undo.flags)
         return undo
 
 

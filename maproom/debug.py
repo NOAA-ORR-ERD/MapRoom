@@ -25,9 +25,9 @@ def debug_objects(lm):
     c.set_style(lm.default_style)
     lm.insert_layer([2], c)
     lm.set_control_point_link(c, 0, a, 0)
-    lm.update_linked_control_points(a, None)
+    lm.update_linked_control_points()
     lm.set_control_point_link(c, 1, b, 1)
-    lm.update_linked_control_points(b, None)
+    lm.update_linked_control_points()
     
     c = layers.LineVectorObject(manager=lm)
     c.set_opposite_corners((-20,10), (0,3))
@@ -35,7 +35,7 @@ def debug_objects(lm):
     c.set_style(lm.default_style)
     lm.insert_layer([2], c)
     lm.set_control_point_link(c, 1, b, 3)
-    lm.update_linked_control_points(b, None)
+    lm.update_linked_control_points()
     
     c = layers.LineVectorObject(manager=lm)
     c.set_opposite_corners((-15,10), (0,3))
@@ -43,7 +43,7 @@ def debug_objects(lm):
     c.set_style(lm.default_style)
     lm.insert_layer([2], c)
     lm.set_control_point_link(c, 1, b, 3)
-    lm.update_linked_control_points(b, None)
+    lm.update_linked_control_points()
     
     c = layers.LineVectorObject(manager=lm)
     c.set_opposite_corners((-10,10), (0,3))
@@ -51,7 +51,7 @@ def debug_objects(lm):
     c.set_style(lm.default_style)
     lm.insert_layer([2], c)
     lm.set_control_point_link(c, 1, b, 3)
-    lm.update_linked_control_points(b, None)
+    lm.update_linked_control_points()
     
 #    a = layers.PolylineObject(manager=lm)
 #    a.set_points([

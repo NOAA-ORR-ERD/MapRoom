@@ -134,7 +134,7 @@ class LineVectorObject(VectorObjectLayer):
         self.set_data(cp, 0.0, self.lines)
     
     def copy_control_point_from(self, cp, other_layer, other_cp):
-        print "copy control point from", cp, other_layer, other_cp
+        print "copy control point from", other_layer.name, other_cp, "to", self.name, cp
         x = self.points.x[cp]
         y = self.points.y[cp]
         x1 = other_layer.points.x[other_cp]
@@ -472,6 +472,11 @@ class OverlayImageObject(RectangleVectorObject):
             self.image_data.load_numpy_array(self.points, raw)
         self.renderer.set_image_screen(self.image_data)
 
+    def pre_render(self):
+        if self.rebuild_needed:
+            self.rebuild_renderer()
+        self.update_world_control_points()
+
     def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Marker rendering occurs in screen coordinates
         
@@ -480,9 +485,6 @@ class OverlayImageObject(RectangleVectorObject):
         if (not layer_visibility["layer"]):
             return
         log.log(5, "Rendering overlay image!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
-        if self.rebuild_needed:
-            self.rebuild_renderer()
-        self.update_world_control_points()
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])

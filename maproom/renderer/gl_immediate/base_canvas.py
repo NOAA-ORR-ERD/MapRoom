@@ -487,6 +487,14 @@ class BaseCanvas(glcanvas.GLCanvas):
         layer_draw_order = list(enumerate(self.layer_manager.flatten()))
         layer_draw_order.reverse()
 
+        # Update any linked control points by first looping through all layers
+        # to update the world position, then updating the links.
+        for i, layer in layer_draw_order:
+            layer.pre_render()
+        affected_layers = self.layer_manager.update_linked_control_points()
+        for layer in affected_layers:
+            layer.rebuild_renderer(True)
+
         ## fixme -- why is this a function defined in here??
         ##   so that it can be called with and without pick-mode turned on
         ##   but it seems to be in the wrong place -- make it a regular  method?

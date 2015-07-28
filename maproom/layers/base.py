@@ -389,6 +389,16 @@ class Layer(HasTraits):
         """
         pass
 
+    def pre_render(self):
+        """Set up or rebuild any rendering elements prior to rendering.
+        
+        The rendering loop in BaseCanvas.render loops through all layers and
+        calls this method on each of them before any layers are rendered.
+        This can be used to update the world coordinates that other layers
+        may depend on, used e.g. with linked control points.
+        """
+        pass
+
     def render(self, renderer,
                world_rect,
                projected_rect,

@@ -67,10 +67,9 @@ class LayerManager(HasTraits):
 
     pick_layer_index_map = {} # fixme: managed by the layer_control_wx -- horrible coupling!
     
-    # A set of frozensets, where each entry in the outer set is a frozenset of
-    # layer/control point tuples.  All tuples in the frozenset are coincident
-    # (linked) control points
-    control_point_links = Set(Any)
+    # Linked control points are slaves of a truth layer: a dict that maps the
+    # dependent layer/control point to the truth layer/control point
+    control_point_links = Dict(Any)
 
     @classmethod
     def create(cls, project):
@@ -638,73 +637,25 @@ class LayerManager(HasTraits):
         layers.reverse()
         return layers
 
-    def find_control_point_set(self, entry):
-        for s in self.control_point_links:
-            if entry in s:
-                return s
-        return None
 
-    def set_control_point_link(self, layer1, cp1, layer2, cp2):
-        # FIXME: this adds a reference to the layer to the control_point_links
-        # list, which is currently not handled when the layer is removed from
-        # the layer manager
-        entry1 = (layer1, cp1)
-        s1 = self.find_control_point_set(entry1)
-        entry2 = (layer2, cp2)
-        s2 = self.find_control_point_set(entry2)
-        if s1 is None and s2 is None:
-            s = frozenset([entry1, entry2])
-        elif s1 is None and s2 is not None:
-            self.control_point_links.remove(s2)
-            s = set(s2)
-            s.add(entry1)
-            s = frozenset(s)
-        elif s1 is not None and s2 is None:
-            self.control_point_links.remove(s1)
-            s = set(s1)
-            s.add(entry2)
-            s = frozenset(s)
-        else:
-            # merge the two sets
-            self.control_point_links.remove(s1)
-            self.control_point_links.remove(s2)
-            s = set(s1)
-            s.update(s2)
-            s = frozenset(s)
-        self.control_point_links.add(s)
-        print "control_point_links:", self.control_point_links
+    def set_control_point_link(self, layer, cp, truth_layer, truth_cp):
+        entry = (layer.invariant, cp)
+        truth = (truth_layer.invariant, truth_cp)
+        self.control_point_links[entry] = truth
     
-    def update_linked_control_points(self, truth_layer, undo_flags, processed_layers=None):
-        if processed_layers is None:
-            processed_layers = set()
-        processed_layers.add(truth_layer)
-        print "truth layer", truth_layer
-        print "processed_layers", processed_layers
-        dep_entries = []
-        for s in self.control_point_links:
-            print "s", s
-            entries = set()
-            found_cp = None
-            for dep_layer, dep_cp in s:
-                if dep_layer == truth_layer:
-                    found_cp = dep_cp
-                else:
-                    entries.add((dep_layer, dep_cp))
-            if found_cp is not None:
-                dep_entries.append((found_cp, entries))
+    def update_linked_control_points(self):
+        """Update control points in depedent layers from the truth layers.
         
-        print "dep_entries", dep_entries
-        moved_layers = set()
-        for truth_cp, entries in dep_entries:
-            for dep_layer, dep_cp in entries:
-                moved_layers.add(dep_layer)
-                dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
-                if undo_flags is not None:
-                    lf = undo_flags.add_layer_flags(dep_layer)
-                    lf.layer_items_moved = True
-        for new_truth_layer in moved_layers:
-            if new_truth_layer not in processed_layers:
-                self.update_linked_control_points(new_truth_layer, undo_flags, processed_layers)
+        The truth_layer is the layer that control point values are taken from
+        and propagated to the dependent layer
+        """
+        layers = []
+        for dep, truth in self.control_point_links.iteritems():
+            truth_layer, truth_cp = self.get_layer_by_invariant(truth[0]), truth[1]
+            dep_layer, dep_cp = self.get_layer_by_invariant(dep[0]), dep[1]
+            dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
+            layers.append(dep_layer)
+        return layers
 
     def destroy_recursive(self, layer):
         if (layer.is_folder()):
