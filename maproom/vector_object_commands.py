@@ -47,8 +47,13 @@ class DrawVectorObjectCommand(Command):
         lf.layer_loaded = True
         undo.data = (layer.invariant, saved_invariant)
         
+        self.perform_post(editor, lm, layer, undo)
+        
         return self.undo_info
     
+    def perform_post(self, editor, lm, layer, undo):
+        pass
+
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
         layer.set_opposite_corners(self.cp1, self.cp2)
@@ -69,7 +74,13 @@ class DrawVectorObjectCommand(Command):
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
+        
+        self.undo_post(editor, lm, layer, undo)
+        
         return undo
+
+    def undo_post(self, editor, lm, layer, undo):
+        pass
 
 
 class DrawRectangleCommand(DrawVectorObjectCommand):
@@ -111,20 +122,20 @@ class DrawLineCommand(DrawVectorObjectCommand):
         layer.set_style(self.style)
         return layer
 
-    def perform(self, editor):
-        undo = DrawVectorObjectCommand.perform(self, editor)
+    def perform_post(self, editor, lm, layer, undo):
         if self.snapped_layer is not None:
-            # Convoluted way to get the layer that isn't returned
-            # by DrawVectorObjectCommand.perform.  Calling
-            # get_vector_object_layer will return a brand new object!
-            layer = undo.flags.layer_flags[0].layer
-            
-            lm = editor.layer_manager
             sl = lm.get_layer_by_invariant(self.snapped_layer)
             print "sl", sl
             print "snapped_cp", self.snapped_cp
+            # The control point is always 1 because it's only possible to snap
+            # to the endpoint
             lm.set_control_point_link(layer, 1, sl, self.snapped_cp)
-        return undo
+
+    def undo_post(self, editor, lm, layer, undo):
+        if self.snapped_layer is not None:
+            # Since the drag point is always the end, the anchor point is
+            # always the beginning, i.e.  0
+            layer.remove_from_master_control_points(1, 0)
 
 
 class DrawPolylineCommand(DrawVectorObjectCommand):
