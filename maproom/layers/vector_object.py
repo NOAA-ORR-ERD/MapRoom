@@ -160,8 +160,8 @@ class LineVectorObject(VectorObjectLayer):
         self.drag_point = point_index
         self.find_anchor_of(point_index)
         
-    def dragging_selected_objects(self, world_dx, world_dy):
-        cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy)
+    def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp):
+        cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy, snapped_layer, snapped_cp)
         return cmd
     
     def move_control_point(self, drag, anchor, dx, dy):

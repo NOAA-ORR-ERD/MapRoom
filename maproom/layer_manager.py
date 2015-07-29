@@ -658,6 +658,7 @@ class LayerManager(HasTraits):
         else:
             entry = (dep_or_layer.invariant, truth_or_cp)
             truth = (truth_layer.invariant, truth_cp)
+        log.debug("control_point_links: adding %s from %s" % (entry, truth))
         self.control_point_links[entry] = truth
     
     def remove_control_point_links(self, layer, remove_cp=-1):
@@ -675,7 +676,7 @@ class LayerManager(HasTraits):
             if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp):
                 to_remove.append((dep, truth))
         for dep, truth in to_remove:
-            #print "removing", truth
+            log.debug("control_point_links: removing %s from %s" % (dep, truth))
             del self.control_point_links[dep]
         return to_remove
     

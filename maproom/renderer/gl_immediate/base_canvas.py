@@ -52,6 +52,7 @@ class BaseCanvas(glcanvas.GLCanvas):
 
         self.overlay = ImmediateModeRenderer(self, None)
         self.picker = Picker()
+        self.hide_picker_layer = None
 
         self.screen_rect = rect.EMPTY_RECT
 
@@ -464,7 +465,10 @@ class BaseCanvas(glcanvas.GLCanvas):
         # stacking order of the layers
         return None
 
-    def render(self, event=None):
+    def hide_from_picker(self, layer):
+        self.hide_picker_layer = layer
+
+    def render(self, event=None, hide_picker_layer=None):
         if not self.is_canvas_initialized:
             log.error("Render called before GLContext created")
             return
@@ -511,7 +515,10 @@ class BaseCanvas(glcanvas.GLCanvas):
                         pick_layer_index += 1
                         self.layer_manager.pick_layer_index_map[pick_layer_index] = i
                         layer_index_base = get_picker_index_base(pick_layer_index)
-                        if layer == selected:
+                        if layer == self.hide_picker_layer:
+                            log.debug("Hiding picker layer %s from picking itself" % pick_layer_index)
+                            continue
+                        elif layer == selected:
                             delayed_pick_layer = (layer, layer_index_base, vis)
                         else:
                             layer.render(self, w_r, p_r, s_r, vis, layer_index_base, picker)

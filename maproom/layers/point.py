@@ -130,7 +130,7 @@ class PointLayer(PointBaseLayer):
             count,
         ).view(np.recarray)
 
-    def dragging_selected_objects(self, world_dx, world_dy):
+    def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp):
         indexes = self.get_selected_and_dependent_point_indexes()
         cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
         return cmd

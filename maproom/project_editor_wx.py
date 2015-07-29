@@ -661,16 +661,16 @@ class ProjectEditor(FrameworkEditor):
         if refresh:
             self.refresh()
 
-    def dragged(self, world_d_x, world_d_y):
+    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp):
         if (self.clickable_object_mouse_is_over is None):
             return
 
         (layer_index, type, subtype, object_index) = self.layer_canvas.picker.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_pick_index(layer_index)
-        cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
         self.process_command(cmd)
 
-    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y):
+    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
         if (self.clickable_object_mouse_is_over is None):
             return
 
@@ -689,7 +689,7 @@ class ProjectEditor(FrameworkEditor):
         (layer_index, type, subtype, object_index) = self.layer_canvas.picker.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_pick_index(layer_index)
 
-        cmd = layer.dragging_selected_objects(world_d_x, world_d_y)
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
         self.process_command(cmd)
 
     def clickable_object_is_ugrid_point(self):

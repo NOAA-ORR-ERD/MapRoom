@@ -38,10 +38,12 @@ class MouseHandler(object):
 
     def __init__(self, layer_control):
         self.layer_control = layer_control
+        self.layer_control.hide_from_picker(None)
         self.snapped_object = None, 0
         self.first_mouse_down_position = 0, 0
         self.after_first_mouse_up = False
         self.mouse_up_too_close = False
+        self.can_snap = False
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
@@ -59,6 +61,19 @@ class MouseHandler(object):
         return self.get_snap_position(event.GetPosition())
     
     def get_snap_position(self, position):
+        if self.can_snap:
+            c = self.layer_control
+            o = c.get_object_at_mouse_position(position)
+            self.snapped_object = None, 0
+            if (o is not None):
+                (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
+                layer = c.layer_manager.get_layer_by_pick_index(layer_index)
+                before = tuple(position)
+                if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(type):
+                    wp = (layer.points.x[object_index], layer.points.y[object_index])
+                    position = c.get_screen_point_from_world_point(wp)
+                    self.snapped_object = layer, object_index
+                    log.debug("snapping to layer_index %s type %s oi %s %s %s" % (layer_index, type, object_index, before, position))
         return position
 
     def process_mouse_motion_up(self, event):
@@ -268,10 +283,6 @@ class ObjectSelectionMode(MouseHandler):
     
     This is a precursor to an object-based control system of mouse modes
     """
-
-    def __init__(self, layer_control):
-        self.layer_control = layer_control
-
     def process_mouse_down(self, event):
         c = self.layer_control
         e = c.project
@@ -305,7 +316,7 @@ class ObjectSelectionMode(MouseHandler):
 
     def process_mouse_motion_down(self, event):
         c = self.layer_control
-        p = event.GetPosition()
+        p = self.get_position(event)
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
@@ -315,7 +326,7 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             if not c.HasCapture():
                 c.CaptureMouse()
-            c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
+            c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_object)
             c.mouse_down_position = p
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
@@ -323,6 +334,7 @@ class ObjectSelectionMode(MouseHandler):
 
     def process_mouse_up(self, event):
         c = self.layer_control
+        c.hide_from_picker(None)
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
             return
@@ -342,12 +354,12 @@ class ObjectSelectionMode(MouseHandler):
             c.selection_box_is_being_defined = False
             c.render()
         else:
-            p = event.GetPosition()
+            p = self.get_position(event)
             w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
             w_p1 = c.get_world_point_from_screen_point(p)
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
-            c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
+            c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_object)
         c.selection_box_is_being_defined = False
     
     def delete_key_pressed(self):
@@ -551,20 +563,6 @@ class RectSelectMode(MouseHandler):
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
     
-    def get_snap_position(self, position):
-        c = self.layer_control
-        o = c.get_object_at_mouse_position(position)
-        self.snapped_object = None, 0
-        if (o is not None):
-            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
-            layer = c.layer_manager.get_layer_by_pick_index(layer_index)
-            print "layer:", layer, "layer_index", layer_index, "type", type, "oi", object_index
-            if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(type):
-                wp = (layer.points.x[object_index], layer.points.y[object_index])
-                position = c.get_screen_point_from_world_point(wp)
-                self.snapped_object = layer, object_index
-        return position
-    
     def is_snappable_to_layer(self, layer):
         return False
     
@@ -580,6 +578,7 @@ class RectSelectMode(MouseHandler):
             # recent mouse press which is not what we want.
             c = self.layer_control
             c.mouse_down_position = self.first_mouse_down_position
+        self.can_snap = True
 
     def process_mouse_motion_down(self, event):
         c = self.layer_control
@@ -670,6 +669,9 @@ class ControlPointSelectionMode(ObjectSelectionMode):
     icon = "select.png"
     menu_item_name = "Control Point Edit Mode"
     menu_item_tooltip = "Select objects and move control points in the current layer"
+    
+    def is_snappable_to_layer(self, layer):
+        return hasattr(layer, "center_point_index")
 
     def get_cursor(self):
         e = self.layer_control.editor
@@ -687,6 +689,13 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         else:
             maintain_aspect = False
         layer.set_anchor_point(point_index, maintain_aspect=maintain_aspect)
+        if layer.type == "line_obj":
+            self.can_snap = True
+            c.hide_from_picker(layer)
+            c.render() # force re-rendering to hide the current layer from the picker
+        else:
+            self.can_snap = False
+            c.hide_from_picker(None)
 
     def clicked_on_polygon_fill(self, event, layer, ignored_index, world_point):
         # Clicking on filled portion of polygon corresponds to clicking on the
