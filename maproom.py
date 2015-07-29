@@ -37,7 +37,10 @@ def main(argv):
     """
     logging.basicConfig(level=logging.WARNING)
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+    if "-d" in argv:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
     for toolkit in ['pyface', 'envisage', 'traits', 'traitsui', 'apptools']:
         _ = logging.getLogger(toolkit)
         _.setLevel(logging.WARNING)

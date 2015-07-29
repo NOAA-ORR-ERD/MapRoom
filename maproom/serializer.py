@@ -287,7 +287,6 @@ class SerializedCommand(object):
     def __str__(self):
         output = []
         for stype, value in self.params:
-            print stype, repr(value)
             try:
                 c = self.converters[stype]
                 values = c.get_args(value)

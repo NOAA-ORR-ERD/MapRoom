@@ -71,9 +71,6 @@ class MovePointsCommand(Command):
         lf.layer_contents_added = True
         layer.points.x[self.indexes] += self.dx
         layer.points.y[self.indexes] += self.dy
-        print "dx=%f, dy=%f" % (self.dx, self.dy)
-        print self.indexes
-        print undo.data
         return undo
 
     def undo(self, editor):
@@ -328,7 +325,6 @@ class DeleteLinesCommand(Command):
         old_line_segments = np.copy(layer.line_segment_indexes[old_line_indexes])
         old_points = np.copy(layer.points[self.point_indexes])
         undo.data = (old_points, old_line_segments, old_line_indexes)
-        print "DeleteLinesCommand: (point indexes, points, line segments, line indexes) %s %s" % (self.point_indexes, str(undo.data))
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True

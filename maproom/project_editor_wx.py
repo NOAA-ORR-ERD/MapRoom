@@ -266,7 +266,7 @@ class ProjectEditor(FrameworkEditor):
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
         self.undo_history = self.window.get_dock_pane('maproom.undo_history_pane').control
         
-        # log.debug("LayerEditor: task=%s" % self.task)
+        log.debug("LayerEditor: task=%s" % self.task)
 
         return self.layer_canvas.get_native_control()
     
@@ -274,12 +274,12 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:layer_loaded')
     def layer_loaded(self, layer):
-        # log.debug("layer_loaded called for %s" % layer)
+        log.debug("layer_loaded called for %s" % layer)
         self.layer_visibility[layer] = layer.get_visibility_dict()
     
     @on_trait_change('layer_manager:layers_changed')
     def layers_changed(self):
-        # log.debug("layers_changed called!!!")
+        log.debug("layers_changed called!!!")
         self.layer_tree_control.rebuild()
     
     def update_layer_selection_ui(self, sel_layer=None):
@@ -321,13 +321,13 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_points = False
             self.layer_has_selection = False
             self.layer_has_flagged = False
-        # log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
+        log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
         self.update_undo_redo()
         self.window._aui_manager.Update()
     
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
-        # log.debug("undo_stack_changed called!!!")
+        log.debug("undo_stack_changed called!!!")
         self.refresh()
     
     @on_trait_change('layer_manager:layer_contents_changed')
@@ -347,7 +347,7 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, layer):
-        # log.debug("layer_metadata_changed called!!! layer=%s" % layer)
+        log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
     
     @on_trait_change('layer_manager:refresh_needed')

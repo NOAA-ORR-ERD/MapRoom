@@ -134,7 +134,7 @@ class LineVectorObject(VectorObjectLayer):
         self.set_data(cp, 0.0, self.lines)
     
     def copy_control_point_from(self, cp, other_layer, other_cp):
-        print "copy control point from", other_layer.name, other_cp, "to", self.name, cp
+        log.log(5, "copy control point from %s %s to %s %s" % (other_layer.name, other_cp, self.name, cp))
         x = self.points.x[cp]
         y = self.points.y[cp]
         x1 = other_layer.points.x[other_cp]

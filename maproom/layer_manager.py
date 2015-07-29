@@ -670,12 +670,12 @@ class LayerManager(HasTraits):
         """
         to_remove = []
         for dep, truth in self.control_point_links.iteritems():
-            print "checking", self.control_point_links[dep]
+            #print "checking", self.control_point_links[dep]
             dep_layer_invariant, dep_cp = dep[0], dep[1]
             if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp):
                 to_remove.append((dep, truth))
         for dep, truth in to_remove:
-            print "removing", truth
+            #print "removing", truth
             del self.control_point_links[dep]
         return to_remove
     
