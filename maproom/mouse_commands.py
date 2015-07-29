@@ -115,7 +115,8 @@ class MoveControlPointCommand(Command):
         self.undo_info = undo = UndoInfo()
         old_x = np.copy(layer.points.x)
         old_y = np.copy(layer.points.y)
-        undo.data = (old_x, old_y)
+        links = layer.remove_from_master_control_points(self.drag, self.anchor)
+        undo.data = (old_x, old_y, links)
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
@@ -125,9 +126,11 @@ class MoveControlPointCommand(Command):
 
     def undo(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
-        (old_x, old_y) = self.undo_info.data
+        (old_x, old_y, links) = self.undo_info.data
         layer.points.x = old_x
         layer.points.y = old_y
+        for dep, master in links:
+            editor.layer_manager.set_control_point_link(dep, master)
         return self.undo_info
 
 class ChangeDepthCommand(Command):

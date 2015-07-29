@@ -180,6 +180,16 @@ class LineVectorObject(VectorObjectLayer):
     def move_polyline_point(self, anchor, dx, dy):
         pass
     
+    def remove_from_master_control_points(self, drag, anchor):
+        # if the item is moved and it's linked to a master control point,
+        # detatch it.  Moving dependent points will not update the master
+        # point.
+        if drag != anchor:
+            remove = drag
+        else:
+            remove = -1
+        return self.manager.remove_control_point_links(self, remove)
+    
     def move_bounding_box_point(self, drag, anchor, dx, dy):
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         old_origin = np.copy(p.xy[0])  # without copy it will be changed below
@@ -250,6 +260,11 @@ class FillableVectorObject(LineVectorObject):
     def set_layer_style_defaults(self):
         self.style.line_color = self.manager.default_style.line_color
         self.style.fill_color = self.manager.default_style.fill_color
+
+    def remove_from_master_control_points(self, drag, anchor):
+        # linked control points only possible with lines, so skip the test to
+        # save time
+        return []
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))

@@ -638,10 +638,46 @@ class LayerManager(HasTraits):
         return layers
 
 
-    def set_control_point_link(self, layer, cp, truth_layer, truth_cp):
-        entry = (layer.invariant, cp)
-        truth = (truth_layer.invariant, truth_cp)
+    def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None):
+        """Links a control point to a truth (master) layer
+        
+        Parameters can be passed two ways: if only two parameters
+        are passed in, they will each be tuples of (layer.invariant,
+        control_point_index), the first tuple being the dependent layer &
+        second the master layer.  Otherwise, all 4 parameters are needed,
+        individually specifying the dependent layer and its control point,
+        followed by the truth layer and its control point.
+        
+        Passing in two arguments is a convenience for using the return
+        data from remove_control_point_links in the undo method of
+        MoveControlPointCommand.
+        """
+        if truth_layer is None:
+            entry = dep_or_layer
+            truth = truth_or_cp
+        else:
+            entry = (dep_or_layer.invariant, truth_or_cp)
+            truth = (truth_layer.invariant, truth_cp)
         self.control_point_links[entry] = truth
+    
+    def remove_control_point_links(self, layer, remove_cp=-1):
+        """Remove links to truth layer control points from the specified
+        dependent layer.
+        
+        If a remove_cp is specified, only remove that control point's
+        reference, otherwise remove all control points links that are on the
+        dependent layer.
+        """
+        to_remove = []
+        for dep, truth in self.control_point_links.iteritems():
+            print "checking", self.control_point_links[dep]
+            dep_layer_invariant, dep_cp = dep[0], dep[1]
+            if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp):
+                to_remove.append((dep, truth))
+        for dep, truth in to_remove:
+            print "removing", truth
+            del self.control_point_links[dep]
+        return to_remove
     
     def update_linked_control_points(self):
         """Update control points in depedent layers from the truth layers.
