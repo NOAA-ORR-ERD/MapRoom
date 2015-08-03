@@ -113,6 +113,7 @@ class LineVectorObject(VectorObjectLayer):
 
     corners_from_flat = np.asarray((0, 1, 2, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1),), dtype=np.uint8)
+    num_corners = 2
     center_point_index = 2
     display_center_control_point = False
     
@@ -144,9 +145,13 @@ class LineVectorObject(VectorObjectLayer):
     def get_control_points_from_corners(self, c):
         num_cp = self.center_point_index + 1
         cp = np.empty((num_cp,2), dtype=np.float32)
-        cp[0:self.center_point_index] = c
+        cp[0:self.num_corners] = c
         cp[self.center_point_index] = c.mean(0)
+        self.compute_constrained_control_points(cp)
         return cp
+    
+    def compute_constrained_control_points(self, cp):
+        pass
 
     def find_anchor_of(self, point_index):
         if point_index > self.center_point_index:
@@ -285,13 +290,13 @@ class RectangleMixin(object):
     The center is an additional control point, which is constrained and not
     independent of the corners.
     
-     3           2
-      o---------o
+     3     6     2
+      o----o----o
       |         |
-      |    o 4  |
+    7 o    o 8  o 5
       |         |
-      o---------o
-     0           1
+      o----o----o
+     0     4     1
     """
     layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
@@ -299,21 +304,37 @@ class RectangleMixin(object):
 
     corners_from_flat = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
-    center_point_index = 4
+    num_corners = 4
+    center_point_index = 8
     
     # return the anchor point of the index point. E.g. anchor_of[0] = 2
-    anchor_of = np.asarray((2, 3, 0, 1, 4), dtype=np.uint8)
+    anchor_of = np.asarray((2, 3, 0, 1, 6, 7, 4, 5, 8), dtype=np.uint8)
     
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
-        ((0,0), (1,0), (1,1), (0,1), (0.5,0.5)), # anchor point is 0 (drag point is 2)
-        ((1,0), (0,0), (0,1), (1,1), (0.5,0.5)), # anchor point is 1 (drag is 3)
-        ((1,1), (0,1), (0,0), (1,0), (0.5,0.5)), # anchor point is 2, etc.
-        ((0,1), (1,1), (1,0), (0,0), (0.5,0.5)),
-        ((1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
+        ((0,0), (1,0), (1,1), (0,1), (.5,0), (1,.5), (.5,1), (0,.5), (.5,.5)), # anchor point is 0 (drag point is 2)
+        ((1,0), (0,0), (0,1), (1,1), (.5,0), (0,.5), (.5,1), (1,.5), (.5,.5)), # anchor point is 1 (drag is 3)
+        ((1,1), (0,1), (0,0), (1,0), (.5,1), (0,.5), (.5,0), (1,.5), (.5,.5)), # anchor point is 2, etc.
+        ((0,1), (1,1), (1,0), (0,0), (.5,1), (1,.5), (.5,0), (0,.5), (.5,.5)),
+        ((0,0), (0,0), (0,1), (0,1), (0,0), (0,.5), (0,1), (0,.5), (0,.5)), # edges start here
+        ((1,0), (0,0), (0,0), (1,0), (.5,0), (0,0), (.5,0), (1,0), (.5,0)),
+        ((0,1), (0,1), (0,0), (0,0), (0,1), (0,.5), (0,0), (0,.5), (0,.5)),
+        ((0,0), (1,0), (1,0), (0,0), (.5,0), (1,0), (.5,0), (0,0), (.5,0)),
+        ((1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
         ), dtype=np.float32)
-
+    
+    def compute_constrained_control_points(self, cp):
+        x1 = cp[0,0]
+        x2 = cp[1,0]
+        xm = (x1 + x2)*.5
+        y1 = cp[0,1]
+        y2 = cp[2,1]
+        ym = (y1 + y2)*.5
+        cp[4] = (xm, y1)
+        cp[5] = (x2, ym)
+        cp[6] = (xm, y2)
+        cp[7] = (x1, ym)
 
 class RectangleVectorObject(RectangleMixin, FillableVectorObject):
     name = Unicode("Rectangle")
@@ -344,8 +365,8 @@ class EllipseVectorObject(RectangleVectorObject):
         height = p[2][1] - p[1][1]
         sx = width / 2
         sy = height / 2
-        cx = p[4][0]
-        cy = p[4][1]
+        cx = p[self.center_point_index][0]
+        cy = p[self.center_point_index][1]
          
         num_segments = 128
         xy = np.zeros((num_segments, 2), dtype=np.float32)
@@ -444,7 +465,7 @@ class OverlayImageObject(RectangleVectorObject):
     image_data = Any
     
     screen_offset_from_center = np.asarray(
-        ((-0.5,-0.5), (0.5,-0.5), (0.5,0.5), (-0.5,0.5), (0,0)),
+        ((-0.5,-0.5), (0.5,-0.5), (0.5,0.5), (-0.5,0.5), (0,-0.5), (0.5,0), (0,0.5), (-0.5,0), (0,0)),
         dtype=np.float32)
 
     def get_image_array(self):
@@ -456,13 +477,6 @@ class OverlayImageObject(RectangleVectorObject):
         c = p[self.corners_from_flat].reshape(-1,2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
-    
-    def get_control_points_from_corners(self, c):
-        num_cp = self.center_point_index + 1
-        cp = np.empty((num_cp,2), dtype=np.float32)
-        cp[0:self.center_point_index] = c
-        cp[self.center_point_index] = c.mean(0)
-        return cp
     
     def move_control_point(self, drag, anchor, dx, dy):
         RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
@@ -578,7 +592,7 @@ class OverlayTextObject(OverlayImageObject):
         xoffset = scale[0] * w + center[0]
         yoffset = scale[1] * h + center[1]
         
-        for i in range(4):
+        for i in range(self.center_point_index):
             w = c.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
@@ -589,8 +603,8 @@ class OverlayTextObject(OverlayImageObject):
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
     
     def move_control_point(self, drag, anchor, dx, dy):
-        # Only recalculate text box size if dragging a corner point; center
-        # point drag is rigid body move
+        # Note: center point drag is rigid body move so text box size is only
+        # recalculated if dragging some other control point
         if drag < self.center_point_index:
             c = self.renderer.canvas
             p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
@@ -601,8 +615,17 @@ class OverlayTextObject(OverlayImageObject):
             d_s = c.get_numpy_screen_point_from_world_point(d)
             a_s = c.get_numpy_screen_point_from_world_point(a)
 
-            self.text_width = abs(d_s[0] - a_s[0]) - (2 * self.border_width)
-            self.text_height = abs(d_s[1] - a_s[1]) - (2 * self.border_width)
+            if drag < self.num_corners:
+                # Dragging a corner changes both width and heiht
+                self.text_width = abs(d_s[0] - a_s[0]) - (2 * self.border_width)
+                self.text_height = abs(d_s[1] - a_s[1]) - (2 * self.border_width)
+            else:
+                # Dragging an edge only changes one dimension
+                oc = self.screen_offset_from_center[drag]
+                if abs(oc[1]) > 0:
+                    self.text_height = abs(d_s[1] - a_s[1]) - (2 * self.border_width)
+                else:
+                    self.text_width = abs(d_s[0] - a_s[0]) - (2 * self.border_width)
 
         self.move_bounding_box_point(drag, anchor, dx, dy)
     
@@ -662,9 +685,9 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
     def set_points(self, points):
         points = np.asarray(points)
         
-        # initialize boundary box control points (5 points: corners & center)
-        # with zeros; will be filled in with call to recalc_bounding_box below
-        cp = np.zeros((5,2), dtype=np.float32)
+        # initialize boundary box control points with zeros; will be filled in
+        # with call to recalc_bounding_box below
+        cp = np.zeros((self.center_point_index + 1,2), dtype=np.float32)
         
         p = np.concatenate((cp, points), 0)  # flatten to 1D
         num_points = np.alen(points)
