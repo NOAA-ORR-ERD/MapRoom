@@ -53,14 +53,14 @@ def debug_objects(lm):
     lm.set_control_point_link(c, 1, b, 3)
     lm.update_linked_control_points()
     
-#    a = layers.PolylineObject(manager=lm)
-#    a.set_points([
-#        (-15,-2),
-#        (5, -8),
-#        (10, -20),
-#        (8, -5),
-#        (-17, -10),
-#        ])
-#    a.set_style(lm.default_style)
-#    a.style.fill_style = 0
-#    lm.insert_layer([2], a)
+    a = layers.PolylineObject(manager=lm)
+    a.set_points([
+        (15,12),
+        (25, 18),
+        (10, 30),
+        (8, 15),
+        (17, 10),
+        ])
+    a.set_style(lm.default_style)
+    a.style.fill_style = 0
+    lm.insert_layer([2], a)
