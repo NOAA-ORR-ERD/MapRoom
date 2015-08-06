@@ -43,6 +43,13 @@ class VectorObjectLayer(LineLayer):
     
     rebuild_needed = Bool(False)
     
+    # class attributes
+    center_point_index = 0
+    
+    display_center_control_point = False
+    
+    control_point_color = color_floats_to_int(0, 0, 0, 1.0)
+
     def set_layer_style_defaults(self):
         self.style.line_color = self.manager.default_style.line_color
 
@@ -115,7 +122,6 @@ class LineVectorObject(VectorObjectLayer):
     lines = np.asarray(((0, 1),), dtype=np.uint8)
     num_corners = 2
     center_point_index = 2
-    display_center_control_point = False
     
     # return the anchor point of the index point. E.g. anchor_of[0] = 1
     anchor_of = np.asarray((1, 0, 2), dtype=np.uint8)
@@ -221,13 +227,20 @@ class LineVectorObject(VectorObjectLayer):
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         pass
     
-    def rasterize(self, projected_point_data, z, cp_color, line_color):
+    def rasterize_points(self, projected_point_data, z, cp_color):
         n = np.alen(self.points)
         if not self.display_center_control_point:
             n -= 1
         colors = np.empty(n, dtype=np.uint32)
         colors.fill(cp_color)
+        num_cp = self.center_point_index
+        if self.display_center_control_point:
+            num_cp += 1
+        colors[0:num_cp] = self.control_point_color
         self.renderer.set_points(projected_point_data, z, colors, num_points=n)
+    
+    def rasterize(self, projected_point_data, z, cp_color, line_color):
+        self.rasterize_points(projected_point_data, z, cp_color)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
@@ -355,9 +368,7 @@ class EllipseVectorObject(RectangleVectorObject):
     type = Str("ellipse_obj")
     
     def rasterize(self, projected_point_data, z, cp_color, line_color):
-        colors = np.empty(np.alen(self.points), dtype=np.uint32)
-        colors.fill(cp_color)
-        self.renderer.set_points(projected_point_data, z, colors)
+        self.rasterize_points(projected_point_data, z, cp_color)
         p = projected_point_data
         
         # FIXME: this only supports axis aligned ellipses
@@ -721,12 +732,7 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
         p.xy[offset:] = points
         
     def rasterize(self, projected_point_data, z, cp_color, line_color):
-        n = np.alen(self.points)
-        if not self.display_center_control_point:
-            n -= 1
-        colors = np.empty(n, dtype=np.uint32)
-        colors.fill(cp_color)
-        self.renderer.set_points(projected_point_data, z, colors, num_points=n)
+        self.rasterize_points(projected_point_data, z, cp_color)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
