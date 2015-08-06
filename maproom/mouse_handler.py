@@ -39,7 +39,7 @@ class MouseHandler(object):
     def __init__(self, layer_control):
         self.layer_control = layer_control
         self.layer_control.hide_from_picker(None)
-        self.snapped_object = None, 0
+        self.snapped_point = None, 0
         self.first_mouse_down_position = 0, 0
         self.after_first_mouse_up = False
         self.mouse_up_too_close = False
@@ -64,7 +64,7 @@ class MouseHandler(object):
         if self.can_snap:
             c = self.layer_control
             o = c.get_object_at_mouse_position(position)
-            self.snapped_object = None, 0
+            self.snapped_point = None, 0
             if (o is not None):
                 (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
                 layer = c.layer_manager.get_layer_by_pick_index(layer_index)
@@ -72,7 +72,7 @@ class MouseHandler(object):
                 if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(type):
                     wp = (layer.points.x[object_index], layer.points.y[object_index])
                     position = c.get_screen_point_from_world_point(wp)
-                    self.snapped_object = layer, object_index
+                    self.snapped_point = layer, object_index
                     log.debug("snapping to layer_index %s type %s oi %s %s %s" % (layer_index, type, object_index, before, position))
         return position
 
@@ -232,7 +232,22 @@ class MouseHandler(object):
         
         
         """
-        pass
+        self.render_snapped_point(renderer)
+
+    def render_snapped_point(self, renderer):
+        """Highlight snapped point when applicable
+        
+        """
+        layer, index = self.snapped_point
+        if layer is not None:
+            c = self.layer_control
+            x = layer.points.x[index]
+            y = layer.points.y[index]
+            s = c.get_numpy_screen_point_from_world_point((x, y))
+            x, y = s[0], s[1]
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates((x-5, y-5), (x+5, y+5))
+            r = ((x1, y1), (x2, y2))
+            renderer.draw_screen_box(r, 0.0, 0.0, 0.0, 1.0)
 
 class PanMode(MouseHandler):
     """Mouse mode to pan the viewport
@@ -326,7 +341,7 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             if not c.HasCapture():
                 c.CaptureMouse()
-            c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_object)
+            c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
             c.mouse_down_position = p
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
@@ -359,7 +374,7 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
-            c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_object)
+            c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
         c.selection_box_is_being_defined = False
     
     def delete_key_pressed(self):
@@ -628,6 +643,7 @@ class RectSelectMode(MouseHandler):
                 x2 += 1
             sp = [(x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)]
             renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+        self.render_snapped_point(renderer)
 
 
 class ZoomRectMode(RectSelectMode):
@@ -765,9 +781,10 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
+        self.render_snapped_point(renderer)
     
     def get_vector_object_command(self, layer, cp1, cp2, style):
-        return self.vector_object_command(layer, cp1, cp2, style, *self.snapped_object)
+        return self.vector_object_command(layer, cp1, cp2, style, *self.snapped_point)
 
 
 class AddPolylineMode(MouseHandler):
@@ -832,6 +849,7 @@ class AddPolylineMode(MouseHandler):
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
             renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
+        self.render_snapped_point(renderer)
 
 
 class AddOverlayTextMode(MouseHandler):
