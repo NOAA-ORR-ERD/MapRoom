@@ -9,11 +9,21 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..renderer import color_floats_to_int
 
+from base import Folder
 from point_base import PointBaseLayer
 
 # import logging
 # log = logging.getLogger(__name__)
 # progress_log = logging.getLogger("progress")
+
+
+class ParticleFolder(Folder):
+    """Layer for vector annotation image
+    
+    """
+    name = Unicode("Particles")
+
+    type = Str("particles")
 
 
 class ParticleLayer(PointBaseLayer):

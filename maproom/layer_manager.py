@@ -206,6 +206,7 @@ class LayerManager(HasTraits):
         return callback
     
     def add_layers(self, layers, is_project, editor):
+        parent = None
         if is_project:
             # remove all other layers so the project can be inserted in the
             # correct order
@@ -217,11 +218,15 @@ class LayerManager(HasTraits):
             # layers are inserted from the beginning, so reverse loaded layers
             # so they won't show up backwards
             layers.reverse()
+        else:
+            if layers[0].is_folder():
+                parent = layers.pop(0)
+                self.insert_loaded_layer(parent, editor)
         
         for layer in layers:
             layer.check_projection(editor.window)
             if not layer.load_error_string:
-                self.insert_loaded_layer(layer, editor)
+                self.insert_loaded_layer(layer, editor, last_child_of=parent)
         return layers
     
     def check_layer(self, layer, window):
@@ -305,10 +310,10 @@ class LayerManager(HasTraits):
             return error
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, mi=None):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None):
         self.dispatch_event('layer_loaded', layer)
         if mi is None:
-            mi = self.get_insertion_multi_index(before, after, first_child_of)
+            mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
         self.insert_layer(mi, layer, invariant=invariant)
     
     def find_default_insert_layer(self):
@@ -325,10 +330,14 @@ class LayerManager(HasTraits):
                 break
         return [pos]
     
-    def get_insertion_multi_index(self, before=None, after=None, first_child_of=None):
+    def get_insertion_multi_index(self, before=None, after=None, first_child_of=None, last_child_of=None):
         if first_child_of is not None:
             mi = self.get_multi_index_of_layer(first_child_of)
             mi.append(1)
+        elif last_child_of is not None:
+            mi = self.get_multi_index_of_layer(last_child_of)
+            children = self.get_layer_children(last_child_of)
+            mi.append(len(children) + 1)
         elif before is not None:
             mi = self.get_multi_index_of_layer(before)
         elif after is not None:

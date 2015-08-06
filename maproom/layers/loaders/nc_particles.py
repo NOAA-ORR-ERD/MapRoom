@@ -9,7 +9,7 @@ import numpy as np
 #import re
 
 from common import BaseLayerLoader
-from maproom.layers.particles import ParticleLayer
+from maproom.layers.particles import ParticleLayer, ParticleFolder
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -67,13 +67,17 @@ class ParticleLoader(BaseLayerLoader):
         :param manager: The layer manager
 
         """
-        layers = []
+        parent = ParticleFolder(manager=manager)
+        parent.file_path = metadata.uri
+        parent.mime = self.mime ## fixme: tricky here, as one file has multiple layers
+        parent.name = os.path.split(parent.file_path)[1]
+        layers = [parent]
         ## loop through all the time steps in the file.
         for (points, status_codes, time) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
             layer.mime = self.mime ## fixme: tricky here, as one file has multiple layers
-            layer.name = os.path.split(layer.file_path)[1] + time.isoformat().rsplit(':',1)[0]
+            layer.name = time.isoformat().rsplit(':',1)[0]
             progress_log.info("Finished loading %s" % layer.name)
             layer.set_data(points, status_codes)
             layers.append(layer)
