@@ -310,6 +310,13 @@ class Layer(HasTraits):
         
         """
         pass
+    
+    def set_visibility_when_checked(self, checked, project_layer_visibility):
+        """Called when layer visibility changes to provide a hook if the layer
+        has elements that should be visibile only when it it selected.
+        
+        """
+        pass
 
     def has_points(self):
         return False
@@ -441,6 +448,13 @@ class Folder(Layer):
     
     def is_folder(self):
         return True
+    
+    def set_visibility_when_checked(self, checked, project_layer_visibility):
+        # Folders will automatically set their children's visiblity state to
+        # the parent state
+        children = self.manager.get_layer_children(self)
+        for layer in children:
+            project_layer_visibility[layer]["layer"] = checked
 
 
 class RootLayer(Folder):

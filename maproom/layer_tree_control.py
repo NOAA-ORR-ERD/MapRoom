@@ -194,12 +194,34 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
 
         self.layer_to_item.pop(layer, None)
 
+    def update_checked_from_visibility(self):
+        self.update_checked_from_visibility_recursive(self.GetRootItem())
+
+    def update_checked_from_visibility_recursive(self, item):
+        if item is None:
+            return
+        (category, layer) = self.GetItemPyData(item).Data
+        checked = self.project.layer_visibility[layer]["layer"]
+        self.CheckItem2(item, checked, True)
+        if (not self.ItemHasChildren(item)):
+            return
+
+        n = self.GetChildrenCount(item, False)
+        child, cookie = self.GetFirstChild(item)
+
+        while (n > 0):
+            self.update_checked_from_visibility_recursive(child)
+            child = self.GetNextSibling(child)
+            n -= 1
+
     def handle_item_checked(self, event):
         (category, layer) = self.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
         checked = self.IsItemChecked(item)
         vis = self.project.layer_visibility[layer]
-        vis[category] = checked
+        vis["layer"] = checked
+        layer.set_visibility_when_checked(checked, self.project.layer_visibility)
+        self.update_checked_from_visibility_recursive(item)
         self.project.refresh()
         event.Skip()
 
