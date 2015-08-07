@@ -48,7 +48,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         item = self.GetSelection()
         if (item is None):
             return None
-        (category, layer) = self.GetItemPyData(item).Data
+        (layer, ) = self.GetItemPyData(item).Data
 
         return layer
 
@@ -56,7 +56,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         item = self.GetSelection()
         if (item is None):
             return False
-        (category, selected) = self.GetItemPyData(item).Data
+        (selected, ) = self.GetItemPyData(item).Data
         return layer == selected
 
     def select_layer(self, layer):
@@ -70,7 +70,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
             self.select_layer_recursive(layer, self.GetRootItem())
 
     def select_layer_recursive(self, layer, item):
-        (category, item_layer) = self.GetItemPyData(item).Data
+        (item_layer, ) = self.GetItemPyData(item).Data
 
         if (item_layer == layer):
             self.SelectItem(item, True)
@@ -103,7 +103,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
     def get_expanded_state_recursive(self, item, state):
         if item is None:
             return
-        (category, item_layer) = self.GetItemPyData(item).Data
+        (item_layer, ) = self.GetItemPyData(item).Data
         state[item_layer] = item.IsExpanded()
         if (not self.ItemHasChildren(item)):
             return
@@ -148,16 +148,10 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
 
     def add_layer(self, layer, parent, expanded_state):
         log.debug("LAYER_TREE: adding layer = " + str(layer.name))
-        if (parent is None):
-            data = wx.TreeItemData()
-            data.SetData(("root", layer))
-            return self.AddRoot(layer.name, data=data)
-
         data = wx.TreeItemData()
-        if layer.is_folder():
-            data.SetData(("folder", layer))
-        else:
-            data.SetData(("layer", layer))
+        data.SetData((layer, ))
+        if (parent is None):
+            return self.AddRoot(layer.name, data=data)
 
         vis = self.project.layer_visibility[layer]
         item = self.AppendItem(parent, layer.name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
@@ -200,7 +194,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
     def update_checked_from_visibility_recursive(self, item):
         if item is None:
             return
-        (category, layer) = self.GetItemPyData(item).Data
+        (layer, ) = self.GetItemPyData(item).Data
         checked = self.project.layer_visibility[layer]["layer"]
         self.CheckItem2(item, checked, True)
         if (not self.ItemHasChildren(item)):
@@ -215,7 +209,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
             n -= 1
 
     def handle_item_checked(self, event):
-        (category, layer) = self.GetItemPyData(event.GetItem()).Data
+        (layer, ) = self.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
         checked = self.IsItemChecked(item)
         vis = self.project.layer_visibility[layer]
@@ -226,10 +220,10 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         event.Skip()
 
     def handle_begin_drag(self, event):
-        (category, layer) = self.GetItemPyData(event.GetItem()).Data
+        (layer, ) = self.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
         checked = self.IsItemChecked(item)
-        if (category == "folder" or category == "layer"):
+        if not layer.is_root():
             event.Allow()
             self.dragged_item = item
 
@@ -242,12 +236,8 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         if item is None or not item.IsOk():
             return
 
-        (target_category, target_layer) = self.GetItemPyData(item).Data
-        if (target_category != "root" and target_category != "folder" and target_category != "layer"):
-            self.project.window.error("You can only drag a layer onto another layer, a folder, or the tree root.", "Invalid Layer Drag")
-            return
-
-        (source_category, source_layer) = self.GetItemPyData(local_dragged_item).Data
+        (target_layer, ) = self.GetItemPyData(item).Data
+        (source_layer, ) = self.GetItemPyData(local_dragged_item).Data
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(source_layer)
         mi_target = lm.get_multi_index_of_layer(target_layer)
@@ -283,7 +273,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
 
     def move_selected_layer(self, delta, to_extreme=False):
         item = self.GetSelection()
-        (category, layer) = self.GetItemPyData(item).Data
+        (layer, ) = self.GetItemPyData(item).Data
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(layer)
         mi_target = mi_source[: len(mi_source) - 1]
