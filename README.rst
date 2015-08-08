@@ -11,8 +11,8 @@ Easily installable stuff
 
 This combination of library versions is known to work:
 
-pip install numpy==1.7.2 PyOpenGL==3.0.2 pyproj==1.9.3 GDAL==1.10.0 Cython==0.19.2
-# pip install PyOpenGL_accelerate==3.0.2
+pip install numpy==1.9.2 PyOpenGL==3.1.0 pyproj==1.9.4 Cython==0.22.1
+# pip install PyOpenGL_accelerate==3.1.0
 
 PyOpenGL_accelerate is currently not used because a paint event is apparently
 being triggered before the window is realized on screen, or something similar.
@@ -34,18 +34,36 @@ cd ..
 git clone https://github.com/MacPython/mac-builds.git
 cd mac-builds/packages/netCDF4
 gattai netcdf.gattai
-cd ../../..
-git clone https://github.com/pyugrid/pyugrid.git
-cd pyugrid
-python setup install
 
 
+NOTE: GCC 4.9 isn't supported in the configuration for hdf5, so I had to manually edit the file mac-builds/packages/netCDF4/hdf5-1.8.11/config/gnu-flags after a failed compile and restart gattai::
+
+    --- config/gnu-flags~   2015-08-08 08:15:46.592158772 -0700
+    +++ config/gnu-flags    2015-08-08 08:15:52.088158628 -0700
+    @@ -189,7 +189,7 @@
+     # Closer to the gcc 4.8 release, we should check for additional flags to
+     # include and break it out into it's own section, like the other versions
+     # below. -QAK
+    -  gcc-4.[78]*)
+    +  gcc-4.[789]*)
+         # Replace -ansi flag with -std=c99 flag
+         H5_CFLAGS="`echo $H5_CFLAGS | sed -e 's/-ansi/-std=c99/g'`"
 
 
-netcdf:
+netcdf if needed to be compiled manually::
 
-./configure --prefix=/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild --disable-shared CFLAGS=-I/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/include -fPIC CXXFLAGS=-I/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/include -fPIC LDFLAGS=-L/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/lib prefix=/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild LIBS=-ldl
+    ./configure --prefix=/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild --disable-shared CFLAGS="-I/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/include -fPIC" CXXFLAGS="-I/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/include -fPIC" LDFLAGS=-L/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild/lib prefix=/data/virtualenv/wx3/src/mac-builds/packages/DepsBuild LIBS=-ldl\
+    make
+    make install
 
+Manual build of netcdf4-python::
+
+    # On ubuntu, libcurl.so isn't properly installed, so need to manually link
+    # sudo ln -s libcurl.so.4 /usr/lib/x86_64-linux-gnu/libcurl.so
+    tar xfvz netCDF4-1.0.4.tar.gz
+    cd netCDF4-1.0.4/
+    python ../patch_setup.py
+    python setup_static.py install
 
 
 GEOS and Shapely
@@ -53,6 +71,29 @@ GEOS and Shapely
 
 brew install geos
 pip install shapely
+
+
+GDAL
+----
+
+GDAL must be built by hand, after numpy is installed::
+
+    cd gdal-1.11.2/
+    ./configure --prefix=/data/virtualenv/wx3
+    make -j3
+    make install
+    cd swig/python/
+    python setup.py install
+
+wxPython
+--------
+
+On ubuntu, wxPython fails to compile the python modules due to some formatting
+warnings being treated as errors.  Changing the CFLAGS is required::
+
+    CFLAGS=-Wno-error=format-security CPPFLAGS=-Wno-error=format-security python setup.py install
+
+
 
 
 
