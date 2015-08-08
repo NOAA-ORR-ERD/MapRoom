@@ -843,6 +843,65 @@ class MarplotIconField(InfoField):
             self.fill_data(layer)
 
 
+class ParticleField(InfoField):
+    same_line = True
+    
+    def get_valid_timestep_names(self, layer):
+        children = layer.get_particle_layers()
+        self.total_timesteps = len(children)
+        names = [c.name for c in children]
+        return names
+    
+    def get_timestep_index(self, layer):
+        raise NotImplementedError
+    
+    def fill_data(self, layer):
+        names = self.get_valid_timestep_names(layer)
+        self.ctrl.SetItems(names)
+        selected = self.get_timestep_index(layer)
+        self.ctrl.SetSelection(selected)
+    
+    def create_control(self):
+        names = ["all"]
+        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+                             style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.timestep_changed)
+        return c
+        
+    def timestep_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        index = event.GetSelection()
+        print "timestep selected:", index
+        self.highlight_timestep(layer, index)
+    
+    def highlight_timestep(self, layer, index):
+        raise NotImplementedError
+
+class ParticleStartField(ParticleField):
+    def get_timestep_index(self, layer):
+        i = layer.start_index
+        if i < 0:
+            i = 0
+        return i
+    
+    def highlight_timestep(self, layer, index):
+        layer.set_start_index(index)
+        layer.update_timestep_visibility(self.panel.project)
+
+class ParticleEndField(ParticleField):
+    def get_timestep_index(self, layer):
+        i = layer.end_index
+        if i < 0:
+            i = self.total_timesteps - 1
+        return i
+    
+    def highlight_timestep(self, layer, index):
+        layer.set_end_index(index)
+        layer.update_timestep_visibility(self.panel.project)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
 
@@ -933,6 +992,8 @@ class InfoPanel(PANELTYPE):
         "Overlay Text": OverlayTextField,
         "Text Format": TextFormatField,
         "Marplot Icon": MarplotIconField,
+        "Start Time": ParticleStartField,
+        "End Time": ParticleEndField,
         }
     
     def create_fields(self, layer, fields):

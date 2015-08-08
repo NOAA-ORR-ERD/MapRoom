@@ -24,7 +24,51 @@ class ParticleFolder(Folder):
     name = Unicode("Particles")
 
     type = Str("particles")
-
+    
+    start_index = Int(-1)
+    
+    end_index = Int(-1)
+    
+    layer_info_panel = ["Start Time", "End Time"]
+    
+    def get_particle_layers(self):
+        timesteps = []
+        children = self.manager.get_layer_children(self)
+        for layer in children:
+            if layer.type == "particle":
+                timesteps.append(layer)
+        return timesteps
+    
+    def clamp_index(self, index):
+        if index < 0:
+            index = 0
+        else:
+            steps = self.get_particle_layers()
+            if index >= len(steps):
+                index = len(steps) - 1
+        return index
+    
+    def set_start_index(self, index):
+        index = self.clamp_index(index)
+        self.start_index = index
+        if self.end_index < index:
+            self.end_index = index
+    
+    def set_end_index(self, index):
+        index = self.clamp_index(index)
+        self.end_index = index
+        if self.start_index > index:
+            self.start_index = index
+    
+    def update_timestep_visibility(self,  project):
+        # Folders will automatically set their children's visiblity state to
+        # the parent state
+        steps = self.get_particle_layers()
+        for i, layer in enumerate(steps):
+            checked = (self.start_index <= i <= self.end_index)
+            project.layer_visibility[layer]["layer"] = checked
+        project.layer_metadata_changed(self)
+        project.refresh()
 
 class ParticleLayer(PointBaseLayer):
     """Layer for particle files from GNOME, etc.
