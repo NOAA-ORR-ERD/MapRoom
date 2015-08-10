@@ -9,15 +9,16 @@ Prerequisites
 Easily installable stuff
 ------------------------
 
-This combination of library versions is known to work:
+This combination of library versions is known to work::
 
-pip install numpy==1.9.2 PyOpenGL==3.1.0 pyproj==1.9.4 Cython==0.22.1
-# pip install PyOpenGL_accelerate==3.1.0
+    pip install numpy==1.9.2 PyOpenGL==3.1.0 pyproj==1.9.4 Cython==0.22.1
+    # pip install PyOpenGL_accelerate==3.1.0
 
-PyOpenGL_accelerate is currently not used because a paint event is apparently
-being triggered before the window is realized on screen, or something similar.
-It seems like the GLCanvas isn't fully initialized, perhaps? Not sure, but
-the workaround for the moment is just to not use PyOpenGL_accelerate.
+PyOpenGL_accelerate is currently not used on all platforms because a paint
+event is apparently being triggered before the window is realized on screen,
+or something similar.  It seems like the GLCanvas isn't fully initialized,
+perhaps? Not sure, but the workaround for the moment is just to not use
+PyOpenGL_accelerate if this error occurs on a particular platform.
 
 Platform library dependencies
 -----------------------------
@@ -25,15 +26,15 @@ Platform library dependencies
 Loading and saving triangle meshes requires pyugrid.  This requires NetCDF4
 which in turn requires hdf5 support, neither of which is directly buildable
 using pip.  The package gattai supports building library dependencies, so the
-following steps are required:
+following steps are required::
 
-git clone https://github.com/MacPython/gattai.git
-cd gattai
-python setup.py install
-cd ..
-git clone https://github.com/MacPython/mac-builds.git
-cd mac-builds/packages/netCDF4
-gattai netcdf.gattai
+    git clone https://github.com/MacPython/gattai.git
+    cd gattai
+    python setup.py install
+    cd ..
+    git clone https://github.com/MacPython/mac-builds.git
+    cd mac-builds/packages/netCDF4
+    gattai netcdf.gattai
 
 
 NOTE: GCC 4.9 isn't supported in the configuration for hdf5, so I had to manually edit the file mac-builds/packages/netCDF4/hdf5-1.8.11/config/gnu-flags after a failed compile and restart gattai::
@@ -69,8 +70,14 @@ Manual build of netcdf4-python::
 GEOS and Shapely
 ----------------
 
-brew install geos
-pip install shapely
+On OS X, the `Homebrew package manager <http://brew.sh/>`_ is required to install the GEOS dependency::
+
+    brew install geos
+
+Other platforms need the appropriate libgeos_c file installed in a library
+directory.  Then, install Shapely::
+
+    pip install shapely
 
 
 GDAL
@@ -103,13 +110,13 @@ Usage
 Requires the peppy2 framework, which in turn requires Enthought and its slew
 of dependencies.
 
-To run, add the maproom plugin to the peppy2 framework by:
+To run, add the maproom plugin to the peppy2 framework by::
 
-python setup.py develop
+    python setup.py develop
 
-and then run the peppy2 framework by
+and then run the peppy2 framework by::
 
-peppy2 TestData/Verdat/000011.verdat
+    peppy2 TestData/Verdat/000011.verdat
 
 
 Building redistributable versions
