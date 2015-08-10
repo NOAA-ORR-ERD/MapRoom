@@ -893,8 +893,9 @@ class ParticleStartField(ParticleField):
 class ParticleEndField(ParticleField):
     def get_timestep_index(self, layer):
         i = layer.end_index
-        if i < 0:
-            i = self.total_timesteps - 1
+        last_index = self.total_timesteps - 1
+        if i > last_index:
+            i = last_index
         return i
     
     def highlight_timestep(self, layer, index):

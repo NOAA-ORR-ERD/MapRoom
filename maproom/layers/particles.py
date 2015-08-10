@@ -1,8 +1,14 @@
 """
 Layer type for particles
 
-not much here now -- but there will be...
+Particle folders now manage particle layers within the folders, but there's
+nothing explicit about keeping particle layers in there.  They can be moved
+around but only the ones within the folder will be managed by the folder.
+Also there's nothing currently preventing other layer types being moved into
+a particle folder.
 """
+import sys
+
 import numpy as np
 
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
@@ -25,9 +31,9 @@ class ParticleFolder(Folder):
 
     type = Str("particles")
     
-    start_index = Int(-1)
+    start_index = Int(0)
     
-    end_index = Int(-1)
+    end_index = Int(sys.maxint)
     
     layer_info_panel = ["Start Time", "End Time"]
     
@@ -43,9 +49,9 @@ class ParticleFolder(Folder):
         if index < 0:
             index = 0
         else:
-            steps = self.get_particle_layers()
-            if index >= len(steps):
-                index = len(steps) - 1
+            last_index = len(self.get_particle_layers()) - 1
+            if index > last_index:
+                index = last_index
         return index
     
     def set_start_index(self, index):
