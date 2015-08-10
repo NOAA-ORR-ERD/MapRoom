@@ -206,14 +206,29 @@ class BoundingBoxAction(EditorAction):
     style = 'toggle'
 
     def perform(self, event):
-        value = not self.active_editor.layer_canvas.bounding_boxes_shown
-        self.active_editor.layer_canvas.bounding_boxes_shown = value
+        value = not self.active_editor.layer_canvas.debug_show_bounding_boxes
+        self.active_editor.layer_canvas.debug_show_bounding_boxes = value
         GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
     def _update_checked(self):
         if self.active_editor:
-            self.checked = self.active_editor.layer_canvas.bounding_boxes_shown
+            self.checked = self.active_editor.layer_canvas.debug_show_bounding_boxes
+
+class PickerFramebufferAction(EditorAction):
+    name = 'Show Picker Framebuffer'
+    tooltip = 'Display the picker framebuffer instead of the normal view'
+    style = 'toggle'
+
+    def perform(self, event):
+        value = not self.active_editor.layer_canvas.debug_show_picker_framebuffer
+        self.active_editor.layer_canvas.debug_show_picker_framebuffer = value
+        GUI.invoke_later(self.active_editor.layer_canvas.render)
+
+    @on_trait_change('active_editor')
+    def _update_checked(self):
+        if self.active_editor:
+            self.checked = self.active_editor.layer_canvas.debug_show_picker_framebuffer
 
 class ZoomInAction(EditorAction):
     name = 'Zoom In'
@@ -749,6 +764,11 @@ class MaproomProjectTask(FrameworkTask):
             # Menubar additions
             SchemaAddition(id='bb',
                            factory=BoundingBoxAction,
+                           path='MenuBar/View',
+                           after="TaskGroupEnd",
+                           ),
+            SchemaAddition(id='pfb',
+                           factory=PickerFramebufferAction,
                            path='MenuBar/View',
                            after="TaskGroupEnd",
                            ),

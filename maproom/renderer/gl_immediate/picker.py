@@ -89,6 +89,16 @@ class Picker(object):
         gl_fbo.glBindFramebufferEXT(gl_fbo.GL_FRAMEBUFFER_EXT, 0)
         gl.glDrawBuffer(gl.GL_BACK)
 
+    def render_picker_to_screen(self):
+        if self.frame_buffer is None:
+            return
+        gl_fbo.glBindFramebufferEXT(gl.GL_READ_FRAMEBUFFER, self.frame_buffer)
+        gl_fbo.glBindFramebufferEXT(gl.GL_DRAW_FRAMEBUFFER, 0)
+        w = rect.width(self.screen_rect)
+        h = rect.height(self.screen_rect)
+        gl.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
+        gl_fbo.glBindFramebufferEXT(gl.GL_READ_FRAMEBUFFER, 0)
+
     def bind_picker_colors_for_lines(self, layer_index, object_count):
         self.bind_picker_colors(layer_index + LINES_PICKER_OFFSET,
                                 object_count, True)

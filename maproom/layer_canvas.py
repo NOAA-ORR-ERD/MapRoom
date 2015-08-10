@@ -69,8 +69,6 @@ class LayerCanvas(renderer.BaseCanvas):
         self.forced_cursor = None
         self.set_mouse_handler(MouseHandler)  # dummy initial mouse handler
         self.default_pan_mode = PanMode(self)
-        
-        self.bounding_boxes_shown = False
 
         self.projection = Projection(preferences.DEFAULT_PROJECTION_STRING)
 

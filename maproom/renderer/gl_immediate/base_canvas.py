@@ -55,6 +55,9 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.hide_picker_layer = None
 
         self.screen_rect = rect.EMPTY_RECT
+        
+        self.debug_show_bounding_boxes = False
+        self.debug_show_picker_framebuffer = False
 
         # two variables keep track of what's visible on the screen:
         # (1) the projected point at the center of the screen
@@ -537,16 +540,18 @@ class BaseCanvas(glcanvas.GLCanvas):
         render_layers(layer_draw_order)
 
         self.overlay.prepare_to_render_screen_objects()
-        if (self.bounding_boxes_shown):
+        if self.debug_show_bounding_boxes:
             self.draw_bounding_boxes()
         
         self.mouse_handler.render_overlay(self.overlay)
 
-        self.SwapBuffers()
-
         self.prepare_to_render_picker(s_r)
         render_layers(layer_draw_order, picker=self.picker)
         self.done_rendering_picker()
+        if self.debug_show_picker_framebuffer:
+            self.picker.render_picker_to_screen()
+
+        self.SwapBuffers()
 
         elapsed = time.clock() - t0
 
