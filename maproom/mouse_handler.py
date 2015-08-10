@@ -21,7 +21,6 @@ The RenderWindow class -- where the opengl rendering really takes place.
 import logging
 log = logging.getLogger(__name__)
 mouselog = logging.getLogger("mouse")
-mouselog.setLevel(logging.INFO)
 
 class MouseHandler(object):
     """

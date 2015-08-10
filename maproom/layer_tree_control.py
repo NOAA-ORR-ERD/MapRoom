@@ -9,7 +9,6 @@ from menu_commands import MoveLayerCommand
 
 import logging
 log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
 
 class LayerTreeControl(treectrl.CustomTreeCtrl):
 
