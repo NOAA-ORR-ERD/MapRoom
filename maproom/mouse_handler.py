@@ -366,7 +366,6 @@ class ObjectSelectionMode(MouseHandler):
             if (layer is not None):
                 self.select_objects_in_rect(event, w_r, layer)
             c.selection_box_is_being_defined = False
-            c.render()
         else:
             p = self.get_position(event)
             w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
@@ -375,6 +374,12 @@ class ObjectSelectionMode(MouseHandler):
             #print "down: %s" % str(c.mouse_down_position)
             c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
         c.selection_box_is_being_defined = False
+        
+        # This render is needed to update the picker buffer because the
+        # rendered lines may have only been drawn in the overlay layer.  (Might
+        # possibly render twice if the finished_drag renders because the final
+        # drag position is different from the last rendered drag position)
+        c.render()
     
     def delete_key_pressed(self):
         self.layer_control.project.delete_selection()

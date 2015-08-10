@@ -671,20 +671,8 @@ class ProjectEditor(FrameworkEditor):
         self.process_command(cmd)
 
     def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
-        if (self.clickable_object_mouse_is_over is None):
+        if self.clickable_object_mouse_is_over is None or (world_d_x == 0 and world_d_y == 0):
             return
-
-        # Can't compare mouse positions in screen coordinates, because the
-        # screen may have been scrolled or zoomed.  Have to look at world
-        # coords to see if there has been a change.
-        
-        if (world_d_x == 0 and world_d_y == 0):
-            return
-
-#        w_p0 = self.layer_canvas.get_world_point_from_screen_point(mouse_down_position)
-#        w_p1 = self.layer_canvas.get_world_point_from_screen_point(mouse_move_position)
-#        world_d_x = w_p1[0] - w_p0[0]
-#        world_d_y = w_p1[1] - w_p0[1]
 
         (layer_index, type, subtype, object_index) = self.layer_canvas.picker.parse_clickable_object(self.clickable_object_mouse_is_over)
         layer = self.layer_manager.get_layer_by_pick_index(layer_index)

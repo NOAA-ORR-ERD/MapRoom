@@ -470,7 +470,7 @@ class BaseCanvas(glcanvas.GLCanvas):
     def hide_from_picker(self, layer):
         self.hide_picker_layer = layer
 
-    def render(self, event=None, hide_picker_layer=None):
+    def render(self, event=None):
         if not self.is_canvas_initialized:
             log.error("Render called before GLContext created")
             return

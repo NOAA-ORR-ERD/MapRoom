@@ -497,7 +497,8 @@ class OverlayImageObject(RectangleVectorObject):
             self.renderer.set_image_projection(self.image_data, projection)
     
     def update_world_control_points(self):
-        pass
+        projected_point_data = self.compute_projected_point_data()
+        self.renderer.set_points(projected_point_data, None, None)
 
     def rebuild_image(self):
         """Update renderer
