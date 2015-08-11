@@ -1,3 +1,47 @@
+08/11/2015
+---------------------------
+Released 3.1b6
+- RM Fixed #615: added boundary check on screen point before picker object lookup
+- RM Changed default fill color to grey so it would be more easily visible for debugging
+- RM Fixed initial style on polygon objects to be filled
+- RM Fixed #612: added polygon object for annotation layer
+- RM Added debug menu command to add sample annotiation layer objects
+- RM field widths and popup widths now class attrs of InfoField
+- RM Fixed #613: changed ParticleField combo boxes to custom wx.comboctrl
+- RM Fixed #611: changed rendering order of control points
+- RM Fixed #614: needed refresh after finishing ObjectSelectionMode drag to update picker buffer
+- RM Removed explitic specification of setLevel for loggers
+- RM Added debug option to view the picker buffer on screen
+- RM Fixed #610: end_index now a big number and clamped on first use
+- RM Added AnnotationLayer as parent for --debug-objects
+- RM RST changes in README
+- RM Simple UI for setting visibility on range of particle layers
+- RM Updated install instructions
+- RM Removed category hack from LayerTreeControl
+- RM Folder visibility change now affects child layers
+- RM Added particle layer folders
+- RM Added overlay highlight for snapping to point
+- RM Changed corner/edge/center control point color to black
+- RM Added polyline into debug_objects
+- RM Added mid-line control points to vector objects
+- RM Added control point linking when dragging endpoint of a line
+- RM Fixed undo bug in DrawLineCommand that wasn't removing linked control points
+- RM Changed default debug level to INFO unless "-d" command line arg
+- RM Fixed control point unlinking when object is moved
+- RM Changed linked control points into master/slave only (before, moving either object would affect the other. now, only the master object movement will update the slave)
+- RM Force control point drawing in picker for all vector object layers
+- RM Changed line and fill colors in default style
+- RM Fixes #602: added style dialog
+- RM Fixes #601: expand folders in tree control if they are new
+- RM Removed old vestigial batch handling from dispatch_event
+- RM Fixes #600: added savepoint to project file
+- RM Refs #600: added savepoint command to hold zoom rect and selected layer
+- RM Added MARPLOT icon dialog
+- RM Added width/height calculation to marplot image generator
+- RM Added separate text color style
+- RM Added text wrapping in overlay text
+- RM Fixed redundancy in all the parse_style* methods
+
 07/13/2015
 ---------------------------
 Released 3.1b5
