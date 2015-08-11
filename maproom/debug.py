@@ -73,7 +73,6 @@ def debug_objects(lm):
         (2, 20),
         ])
     a.set_style(lm.default_style)
-    a.style.fill_style = 0
     lm.insert_layer([2, 999], a)
     
     a = layers.OverlayIconObject(manager=lm)

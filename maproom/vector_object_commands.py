@@ -151,8 +151,11 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
     def __init__(self, event_layer, points, style):
         Command.__init__(self, event_layer)
         self.points = points
+        self.init_style(style)
+    
+    def init_style(self, style):
         self.style = style.get_copy()  # Make sure not sharing objects
-        self.style.fill_style = 0
+        self.style.fill_style = 0  # Turn off fill by default because it's a polyLINE
     
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
@@ -165,6 +168,9 @@ class DrawPolygonCommand(DrawPolylineCommand):
     short_name = "polygon_obj"
     ui_name = "Polygon"
     vector_object_class = PolygonObject
+    
+    def init_style(self, style):
+        self.style = style.get_copy()  # Make sure not sharing objects
 
 
 class AddTextCommand(DrawVectorObjectCommand):
