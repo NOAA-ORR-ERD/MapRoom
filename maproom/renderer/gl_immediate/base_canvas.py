@@ -456,7 +456,9 @@ class BaseCanvas(glcanvas.GLCanvas):
         gl.glDisable(gl.GL_BLEND)
 
     def get_object_at_mouse_position(self, screen_point):
-        return self.picker.get_object_at_mouse_position(screen_point)
+        if rect.contains_point(self.screen_rect, screen_point):
+            return self.picker.get_object_at_mouse_position(screen_point)
+        return None
 
     #
     # the methods below are used to render simple objects one at a time, in screen coordinates
