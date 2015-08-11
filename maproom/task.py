@@ -592,6 +592,21 @@ class OpenLogDirectoryAction(Action):
             file_manager = 'xdg-open'
         subprocess.call([file_manager, dirname])
 
+class DebugAnnotationLayersAction(EditorAction):
+    name = 'Sample Annotation Layer'
+    tooltip = 'Create a sample annotation layer with examples of all vector objects'
+
+    def perform(self, event):
+        GUI.invoke_later(self.after, self.active_editor)
+    
+    def after(self, project):
+        import debug
+        lm = project.layer_manager
+        debug.debug_objects(lm)
+        lm.update_default_visibility(project.layer_visibility)
+        project.layer_metadata_changed(None)
+        project.layer_canvas.zoom_to_fit()
+
 
 @provides(IAbout)
 class MaproomProjectTask(FrameworkTask):
@@ -788,6 +803,10 @@ class MaproomProjectTask(FrameworkTask):
             SchemaAddition(factory=zoomgroup,
                            path='MenuBar/View',
                            absolute_position="first",
+                           ),
+            SchemaAddition(id='dal',
+                           factory=DebugAnnotationLayersAction,
+                           path='MenuBar/Help/Debug',
                            ),
             
             # Toolbar additions
