@@ -1,5 +1,6 @@
 import sys
 import wx
+import wx.combo
 import wx.lib.buttons as buttons
 
 from pyface.api import ImageResource
@@ -476,7 +477,7 @@ class TextColorField(ColorPickerField):
     def get_value(self, layer):
         return layer.style.text_color
 
-import wx.combo
+
 class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
 
     # Overridden from OwnerDrawnComboBox, called to draw each
@@ -843,6 +844,74 @@ class MarplotIconField(InfoField):
             self.fill_data(layer)
 
 
+class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
+    """Popup for wx.combo.ComboCtrl, based on wxPython demo and converted to
+    the ListBox rather than the full ListCtrl
+    """
+    def __init__(self):
+        # Since we are using multiple inheritance, and don't know yet
+        # which window is to be the parent, we'll do 2-phase create of
+        # the ListCtrl instead, and call its Create method later in
+        # our Create method.  (See Create below.)
+        self.PostCreate(wx.PreListBox())
+
+        # Need to call this last so the ComboCtrl recognizes that this is of
+        # type ComboPopup
+        wx.combo.ComboPopup.__init__(self)
+
+    def OnMotion(self, evt):
+        if evt.LeftIsDown():
+            item = self.HitTest(evt.GetPosition())
+            if item >= 0:
+                self.Select(item)
+
+    def OnLeftUp(self, evt):
+        self.Dismiss()
+
+    # This is called immediately after construction finishes.  You can
+    # use self.GetCombo if needed to get to the ComboCtrl instance.
+    def Init(self):
+        self.value = -1
+        self.curitem = -1
+
+    # Create the popup child control.  Return true for success.
+    def Create(self, parent):
+        wx.ListBox.Create(self, parent,
+                          style=wx.LB_SINGLE|wx.SIMPLE_BORDER)
+        self.Bind(wx.EVT_MOTION, self.OnMotion)
+        self.Bind(wx.EVT_LEFT_DOWN, self.OnMotion)
+        self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
+        return True
+
+    # Return the widget that is to be used for the popup
+    def GetControl(self):
+        return self
+
+    # Called just prior to displaying the popup, you can use it to
+    # 'select' the current item.
+    def SetStringValue(self, val):
+        idx = self.FindString(val)
+        if idx != wx.NOT_FOUND:
+            self.Select(idx)
+
+    # Called when popup is dismissed
+    def OnDismiss(self):
+        ev = wx.CommandEvent(commandType=wx.EVT_COMBOBOX.typeId)
+        ev.SetInt(self.GetSelection())
+        print "selection", self.GetSelection()
+        self.GetEventHandler().ProcessEvent(ev)
+        wx.combo.ComboPopup.OnDismiss(self)
+
+    # Return final size of popup. Called on every popup, just prior to OnPopup.
+    # minWidth = preferred minimum width for window
+    # prefHeight = preferred height. Only applies if > 0,
+    # maxHeight = max height for window, as limited by screen size
+    #   and should only be rounded down, if necessary.
+    def GetAdjustedSize(self, minWidth, prefHeight, maxHeight):
+        return wx.combo.ComboPopup.GetAdjustedSize(self, 250, prefHeight, maxHeight)
+
+    SetItems = wx.ListBox.Set
+
 class ParticleField(InfoField):
     same_line = True
     
@@ -857,14 +926,16 @@ class ParticleField(InfoField):
     
     def fill_data(self, layer):
         names = self.get_valid_timestep_names(layer)
-        self.ctrl.SetItems(names)
+        self.popup.SetItems(names)
         selected = self.get_timestep_index(layer)
-        self.ctrl.SetSelection(selected)
+        self.popup.SetSelection(selected)
+        self.ctrl.SetText(names[selected])
     
     def create_control(self):
         names = ["all"]
-        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
-                             style=wx.CB_READONLY)
+        c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(100,-1))
+        self.popup = ListBoxComboPopup()
+        c.SetPopupControl(self.popup)
         c.Bind(wx.EVT_COMBOBOX, self.timestep_changed)
         return c
         
