@@ -23,6 +23,10 @@ class InfoField(object):
     # 0 will fill available space based on the total proportion in the sizer.
     vertical_proportion = 0
     
+    default_width = 100
+    
+    popup_width = 300
+    
     def __init__(self, panel, field_name):
         self.field_name = field_name
         self.panel = panel
@@ -441,7 +445,7 @@ class ColorPickerField(InfoField):
     def create_control(self):
         import wx.lib.colourselect as csel
         color = (0, 0, 0)
-        c = csel.ColourSelect(self.parent, -1, "", color, size=(100,-1))
+        c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width,-1))
         c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
         return c
         
@@ -543,7 +547,7 @@ class LineStyleField(InfoField):
     
     def create_control(self):
         names = [s[0] for s in LayerStyle.line_styles]
-        c = PenStyleComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+        c = PenStyleComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                              style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
@@ -568,7 +572,7 @@ class LineWidthField(InfoField):
     
     def create_control(self):
         names = [str(s) for s in LayerStyle.standard_line_widths]
-        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+        c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                         style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
@@ -592,7 +596,7 @@ class FillStyleField(InfoField):
         self.ctrl.SetSelection(index)
     
     def create_control(self):
-        c = wx.combo.BitmapComboBox(self.parent, -1, "", size=(100, -1),
+        c = wx.combo.BitmapComboBox(self.parent, -1, "", size=(self.default_width, -1),
                              style=wx.CB_READONLY)
         for i, s in LayerStyle.fill_styles.iteritems():
             c.Append(s[0])
@@ -667,7 +671,7 @@ class TextFormatField(InfoField):
     
     def create_control(self):
         names = [s[0] for s in LayerStyle.text_format_styles]
-        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+        c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                         style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
@@ -728,7 +732,7 @@ class FontStyleField(InfoField):
     
     def create_control(self):
         names = LayerStyle.get_font_names()
-        c = FontComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+        c = FontComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                              style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
@@ -754,7 +758,7 @@ class FontSizeField(InfoField):
     def create_control(self):
         names = [str(s) for s in LayerStyle.standard_font_sizes]
         c = wx.ComboBox(self.parent, -1, str(LayerStyle.default_font_size),
-                        size=(100, -1), choices=names, style=wx.CB_READONLY)
+                        size=(self.default_width, -1), choices=names, style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
         
@@ -784,7 +788,7 @@ class MarkerField(InfoField):
     
     def create_control(self):
         names = [m[0] for m in LayerStyle.marker_styles]
-        c = wx.ComboBox(self.parent, -1, "", size=(100, -1), choices=names,
+        c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                              style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
@@ -826,7 +830,7 @@ class MarplotIconField(InfoField):
         self.ctrl.SetLabel(LayerStyle.icon_id_to_name[marker])
     
     def create_control(self):
-        c = wx.Button(self.parent, -1, "none", size=(100, -1))
+        c = wx.Button(self.parent, -1, "none", size=(self.default_width, -1))
         c.Bind(wx.EVT_BUTTON, self.style_changed)
         return c
         
@@ -898,7 +902,6 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
     def OnDismiss(self):
         ev = wx.CommandEvent(commandType=wx.EVT_COMBOBOX.typeId)
         ev.SetInt(self.GetSelection())
-        print "selection", self.GetSelection()
         self.GetEventHandler().ProcessEvent(ev)
         wx.combo.ComboPopup.OnDismiss(self)
 
@@ -908,7 +911,7 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
     # maxHeight = max height for window, as limited by screen size
     #   and should only be rounded down, if necessary.
     def GetAdjustedSize(self, minWidth, prefHeight, maxHeight):
-        return wx.combo.ComboPopup.GetAdjustedSize(self, 250, prefHeight, maxHeight)
+        return wx.combo.ComboPopup.GetAdjustedSize(self, InfoField.popup_width, prefHeight, maxHeight)
 
     SetItems = wx.ListBox.Set
 
@@ -933,7 +936,7 @@ class ParticleField(InfoField):
     
     def create_control(self):
         names = ["all"]
-        c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(100,-1))
+        c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width,-1))
         self.popup = ListBoxComboPopup()
         c.SetPopupControl(self.popup)
         c.Bind(wx.EVT_COMBOBOX, self.timestep_changed)
@@ -944,7 +947,6 @@ class ParticleField(InfoField):
         if (layer is None):
             return
         index = event.GetSelection()
-        print "timestep selected:", index
         self.highlight_timestep(layer, index)
     
     def highlight_timestep(self, layer, index):
