@@ -694,11 +694,14 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
         cp = np.zeros((self.center_point_index + 1,2), dtype=np.float32)
         
         p = np.concatenate((cp, points), 0)  # flatten to 1D
-        num_points = np.alen(points)
-        offset = self.center_point_index + 1
-        lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
+        lines = self.get_polylines(np.alen(points))
         self.set_data(p, 0.0, np.asarray(lines, dtype=np.uint32))
         self.recalc_bounding_box()
+    
+    def get_polylines(self, num_points):
+        offset = self.center_point_index + 1
+        lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
+        return lines
     
     def move_polyline_point(self, anchor, dx, dy):
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
@@ -737,3 +740,19 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
             return (
                 (indexes.point1[0], indexes.point2[0], self.style.line_start_marker),
                 (indexes.point2[-1], indexes.point1[-1], self.style.line_end_marker))
+
+
+class PolygonObject(PolylineObject):
+    name = Unicode("Polygon")
+    
+    type = Str("polygon_obj")
+    
+    def get_polylines(self, num_points):
+        offset = self.center_point_index + 1
+        lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
+        lines.append((offset + num_points - 1, offset))
+        return lines
+
+    def get_marker_points(self):
+        # Polygon is closed, so endpoint markers don't make sense
+        return []

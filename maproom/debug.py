@@ -64,6 +64,18 @@ def debug_objects(lm):
     a.style.fill_style = 0
     lm.insert_layer([2, 999], a)
     
+    a = layers.PolygonObject(manager=lm)
+    a.set_points([
+        (0, 25),
+        (-10, 30),
+        (-20, 20),
+        (-10, 15),
+        (2, 20),
+        ])
+    a.set_style(lm.default_style)
+    a.style.fill_style = 0
+    lm.insert_layer([2, 999], a)
+    
     a = layers.OverlayIconObject(manager=lm)
     a.set_location((20, -10))
     a.set_style(lm.default_style)

@@ -161,6 +161,12 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
         return layer
 
 
+class DrawPolygonCommand(DrawPolylineCommand):
+    short_name = "polygon_obj"
+    ui_name = "Polygon"
+    vector_object_class = PolygonObject
+
+
 class AddTextCommand(DrawVectorObjectCommand):
     short_name = "text_obj"
     ui_name = "Create Text"

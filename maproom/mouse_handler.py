@@ -795,6 +795,7 @@ class AddPolylineMode(MouseHandler):
     icon = "shape_polyline.png"
     menu_item_name = "Add Polyline"
     menu_item_tooltip = "Add a new polyline"
+    vector_object_command = DrawPolylineCommand
 
     def __init__(self, *args, **kwargs):
         MouseHandler.__init__(self, *args, **kwargs)
@@ -843,7 +844,7 @@ class AddPolylineMode(MouseHandler):
         if len(self.points) > 1:
             layer = e.layer_tree_control.get_selected_layer()
             if (layer is not None):
-                cmd = DrawPolylineCommand(layer, self.points, layer.manager.default_style)
+                cmd = self.vector_object_command(layer, self.points, layer.manager.default_style)
                 e.process_command(cmd)
 
     def render_overlay(self, renderer):
@@ -853,6 +854,24 @@ class AddPolylineMode(MouseHandler):
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
             renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
+        self.render_snapped_point(renderer)
+
+
+class AddPolygonMode(AddPolylineMode):
+    icon = "shape_polygon.png"
+    menu_item_name = "Add Polygon"
+    menu_item_tooltip = "Add a new polygon"
+    vector_object_command = DrawPolygonCommand
+
+    def render_overlay(self, renderer):
+        c = self.layer_control
+        sp = [c.get_screen_point_from_world_point(p) for p in self.points]
+        renderer.draw_screen_lines(sp, 1.0, 1.0, 0, 1.0, xor=True)
+        if self.cursor_point is not None and len(sp) > 0:
+            cp = c.get_screen_point_from_world_point(self.cursor_point)
+            renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
+            if len(sp) > 2:
+                renderer.draw_screen_line(sp[0], sp[-1], 1.0, 1.0, 0, 1.0, xor=True, stipple_pattern=0xf0f0)
         self.render_snapped_point(renderer)
 
 

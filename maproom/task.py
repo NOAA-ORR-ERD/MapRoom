@@ -536,6 +536,12 @@ class AddPolylineObjectAction(MouseHandlerBaseAction):
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
+class AddPolygonObjectAction(MouseHandlerBaseAction):
+    handler = AddPolygonMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
 class AddOverlayTextAction(MouseHandlerBaseAction):
     handler = AddOverlayTextMode
     name = handler.menu_item_name
@@ -722,6 +728,7 @@ class MaproomProjectTask(FrameworkTask):
                            AddPolylineObjectAction(),
                            AddRectangleObjectAction(),
                            AddEllipseObjectAction(),
+                           AddPolygonObjectAction(),
                            AddOverlayTextAction(),
                            AddOverlayIconAction(),
                            ),
