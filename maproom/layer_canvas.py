@@ -56,7 +56,6 @@ class LayerCanvas(renderer.ScreenCanvas):
     def __init__(self, *args, **kwargs):
         self.project = kwargs.pop('project')
         self.layer_manager = kwargs.pop('layer_manager')
-        self.editor = self.project
         
         renderer.ScreenCanvas.__init__(self, *args, **kwargs)
         

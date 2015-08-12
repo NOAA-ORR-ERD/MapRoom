@@ -59,8 +59,8 @@ class FindPointDialog(sc.SizedDialog):
 
 class JumpCoordsDialog(sc.SizedDialog):
 
-    def __init__(self, layer_control, display_format):
-        sc.SizedDialog.__init__(self, wx.GetTopLevelParent(layer_control), wx.ID_ANY, "Jump to Coordinates")
+    def __init__(self, layer_canvas, display_format):
+        sc.SizedDialog.__init__(self, wx.GetTopLevelParent(layer_canvas), wx.ID_ANY, "Jump to Coordinates")
 
         panel = self.GetContentsPane()
         wx.StaticText(panel, -1, "Please enter the coordinates to jump to")
@@ -69,7 +69,7 @@ class JumpCoordsDialog(sc.SizedDialog):
         self.coords_text.SetSizerProps(expand=True)
         self.coords_text.Bind(wx.EVT_TEXT, self.OnText)
 
-        center_lat_lon = layer_control.get_world_point_from_projected_point(layer_control.projected_point_center)
+        center_lat_lon = layer_canvas.get_world_point_from_projected_point(layer_canvas.projected_point_center)
         self.coords_text.Value = coordinates.format_coords_for_display(center_lat_lon[0], center_lat_lon[1], display_format)
 
         btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)

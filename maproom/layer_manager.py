@@ -64,7 +64,7 @@ class LayerManager(HasTraits):
     
     background_refresh_needed = Event
 
-    pick_layer_index_map = {} # fixme: managed by the layer_control_wx -- horrible coupling!
+    pick_layer_index_map = {} # fixme: managed by the layer_convas -- horrible coupling!
     
     # Linked control points are slaves of a truth layer: a dict that maps the
     # dependent layer/control point to the truth layer/control point

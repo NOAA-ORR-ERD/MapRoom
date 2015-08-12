@@ -35,9 +35,9 @@ class MouseHandler(object):
     
     mouse_too_close_pixel_tolerance = 5
 
-    def __init__(self, layer_control):
-        self.layer_control = layer_control
-        self.layer_control.hide_from_picker(None)
+    def __init__(self, layer_canvas):
+        self.layer_canvas = layer_canvas
+        self.layer_canvas.hide_from_picker(None)
         self.snapped_point = None, 0
         self.first_mouse_down_position = 0, 0
         self.after_first_mouse_up = False
@@ -51,7 +51,7 @@ class MouseHandler(object):
         return
 
     def get_world_point(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         p = event.GetPosition()
         cp = c.get_world_point_from_screen_point(p)
         return cp
@@ -61,7 +61,7 @@ class MouseHandler(object):
     
     def get_snap_position(self, position):
         if self.can_snap:
-            c = self.layer_control
+            c = self.layer_canvas
             o = c.get_object_at_mouse_position(position)
             self.snapped_point = None, 0
             if (o is not None):
@@ -76,7 +76,7 @@ class MouseHandler(object):
         return position
 
     def process_mouse_motion_up(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
         prefs = c.project.task.get_preferences()
@@ -89,23 +89,23 @@ class MouseHandler(object):
         if (o is not None):
             (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
             layer = c.layer_manager.get_layer_by_pick_index(layer_index)
-            c.editor.clickable_object_in_layer = layer
+            c.project.clickable_object_in_layer = layer
             if (c.project.layer_tree_control.is_selected_layer(layer)):
-                c.editor.clickable_object_mouse_is_over = o
+                c.project.clickable_object_mouse_is_over = o
             else:
-                c.editor.clickable_object_mouse_is_over = None
+                c.project.clickable_object_mouse_is_over = None
             if c.picker.is_ugrid_point(o):
                 status_text += "  Point %s on %s" % (object_index + 1, str(layer))
 
         else:
-            c.editor.clickable_object_mouse_is_over = None
-            c.editor.clickable_object_in_layer = None
-        mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.editor.clickable_object_mouse_is_over is not None))
+            c.project.clickable_object_mouse_is_over = None
+            c.project.clickable_object_in_layer = None
+        mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.project.clickable_object_mouse_is_over is not None))
 
         c.project.task.status_bar.message = status_text
 
     def process_mouse_motion_down(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
@@ -117,7 +117,7 @@ class MouseHandler(object):
         self.after_first_mouse_up = False
     
     def check_early_mouse_release(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         p = event.GetPosition()
         dx = p[0] - self.first_mouse_down_position[0]
         dy = p[1] - self.first_mouse_down_position[1]
@@ -127,7 +127,7 @@ class MouseHandler(object):
         return False
 
     def process_mouse_up(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
         c.selection_box_is_being_defined = False
@@ -139,7 +139,7 @@ class MouseHandler(object):
         event.Skip()
 
     def process_mouse_wheel_scroll(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         rotation = event.GetWheelRotation()
         delta = event.GetWheelDelta()
         window = event.GetEventObject()
@@ -196,7 +196,7 @@ class MouseHandler(object):
 
     def process_mouse_leave(self, event):
         # this messes up object dragging when the mouse goes outside the window
-        # c.editor.clickable_object_mouse_is_over = None
+        # c.project.clickable_object_mouse_is_over = None
         pass
 
     def process_key_down(self, event):
@@ -206,7 +206,7 @@ class MouseHandler(object):
         pass
 
     def process_key_char(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         if c.mouse_is_down:
             effective_mode = c.get_effective_tool_mode(event)
             if isinstance(effective_mode, RectSelectMode):
@@ -221,7 +221,7 @@ class MouseHandler(object):
                 self.delete_key_pressed()
     
     def esc_key_pressed(self):
-        self.layer_control.editor.clear_all_selections()
+        self.layer_canvas.project.clear_all_selections()
     
     def delete_key_pressed(self):
         pass
@@ -239,7 +239,7 @@ class MouseHandler(object):
         """
         layer, index = self.snapped_point
         if layer is not None:
-            c = self.layer_control
+            c = self.layer_canvas
             x = layer.points.x[index]
             y = layer.points.y[index]
             s = c.get_numpy_screen_point_from_world_point((x, y))
@@ -257,16 +257,16 @@ class PanMode(MouseHandler):
     editor_trait_for_enabled = ""
 
     def get_cursor(self):
-        c = self.layer_control
+        c = self.layer_canvas
         if c.mouse_is_down:
-            return self.layer_control.hand_closed_cursor
-        return self.layer_control.hand_cursor
+            return self.layer_canvas.hand_closed_cursor
+        return self.layer_canvas.hand_cursor
 
     def process_mouse_down(self, event):
         return
 
     def process_mouse_motion_down(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
@@ -282,7 +282,7 @@ class PanMode(MouseHandler):
             c.render(event)
 
     def process_mouse_up(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
             return
@@ -298,7 +298,7 @@ class ObjectSelectionMode(MouseHandler):
     This is a precursor to an object-based control system of mouse modes
     """
     def process_mouse_down(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         lm = c.layer_manager
 
@@ -329,7 +329,7 @@ class ObjectSelectionMode(MouseHandler):
                     self.clicked_on_empty_space(event, layer, world_point)
 
     def process_mouse_motion_down(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         p = self.get_position(event)
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
@@ -340,14 +340,14 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             if not c.HasCapture():
                 c.CaptureMouse()
-            c.editor.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+            c.project.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
             c.mouse_down_position = p
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
             c.render(event)
 
     def process_mouse_up(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         c.hide_from_picker(None)
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
@@ -372,7 +372,7 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
-            c.editor.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+            c.project.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
         c.selection_box_is_being_defined = False
         
         # This render is needed to update the picker buffer because the
@@ -382,7 +382,7 @@ class ObjectSelectionMode(MouseHandler):
         c.render()
     
     def delete_key_pressed(self):
-        self.layer_control.project.delete_selection()
+        self.layer_canvas.project.delete_selection()
         
     def clicked_on_point(self, event, layer, point_index):
         pass
@@ -397,7 +397,7 @@ class ObjectSelectionMode(MouseHandler):
         pass
 
     def clicked_on_different_layer(self, event, layer):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         e.layer_tree_control.select_layer(layer)
 
@@ -411,7 +411,7 @@ class PointSelectionMode(ObjectSelectionMode):
     editor_trait_for_enabled = "layer_has_points"
 
     def get_cursor(self):
-        e = self.layer_control.editor
+        e = self.layer_canvas.project
         if e.clickable_object_mouse_is_over is not None:
             if e.clickable_object_is_ugrid_line():
                 return wx.StockCursor(wx.CURSOR_BULLSEYE)
@@ -420,7 +420,7 @@ class PointSelectionMode(ObjectSelectionMode):
         return wx.StockCursor(wx.CURSOR_PENCIL)
 
     def clicked_on_point(self, event, layer, point_index):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         vis = e.layer_visibility[layer]['layer']
 
@@ -445,7 +445,7 @@ class PointSelectionMode(ObjectSelectionMode):
         e.refresh()
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         lm = c.layer_manager
         vis = e.layer_visibility[layer]['layer']
@@ -462,7 +462,7 @@ class PointSelectionMode(ObjectSelectionMode):
 
     def clicked_on_empty_space(self, event, layer, world_point):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         vis = e.layer_visibility[layer]['layer']
         if layer.is_folder():
@@ -489,13 +489,13 @@ class LineSelectionMode(PointSelectionMode):
     editor_trait_for_enabled = "layer_has_points"
 
     def get_cursor(self):
-        e = self.layer_control.editor
+        e = self.layer_canvas.project
         if e.clickable_object_mouse_is_over is not None:
             return wx.StockCursor(wx.CURSOR_HAND)
         return wx.StockCursor(wx.CURSOR_PENCIL)
 
     def clicked_on_point(self, event, layer, point_index):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         lm = c.layer_manager
         vis = e.layer_visibility[layer]['layer']
@@ -528,7 +528,7 @@ class LineSelectionMode(PointSelectionMode):
             e.task.status_bar.message = message
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         lm = c.layer_manager
         vis = e.layer_visibility[layer]['layer']
@@ -555,7 +555,7 @@ class LineSelectionMode(PointSelectionMode):
         
     def clicked_on_empty_space(self, event, layer, world_point):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         lm = c.layer_manager
         vis = e.layer_visibility[layer]['layer']
@@ -595,18 +595,18 @@ class RectSelectMode(MouseHandler):
             # in base_canvas sets it every time the mouse is pressed.  Without
             # this here it would move the start of the rectangle to this most
             # recent mouse press which is not what we want.
-            c = self.layer_control
+            c = self.layer_canvas
             c.mouse_down_position = self.first_mouse_down_position
         self.can_snap = True
 
     def process_mouse_motion_down(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         p = self.get_position(event)
         c.mouse_move_position = p
         c.render(event)
 
     def process_mouse_up(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
             return
@@ -633,7 +633,7 @@ class RectSelectMode(MouseHandler):
         raise RuntimeError("Abstract method")
 
     def render_overlay(self, renderer):
-        c = self.layer_control
+        c = self.layer_canvas
         if c.mouse_is_down:
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
                                                                c.mouse_move_position)
@@ -656,7 +656,7 @@ class ZoomRectMode(RectSelectMode):
     menu_item_tooltip = "Zoom in to increase magnification of the current layer"
 
     def process_rect_select(self, x1, y1, x2, y2):
-        c = self.layer_control
+        c = self.layer_canvas
         d_x = x2 - x1
         d_y = y2 - y1
         if (d_x >= 5 and d_y >= 5):
@@ -675,7 +675,7 @@ class CropRectMode(RectSelectMode):
     menu_item_tooltip = "Crop the current layer"
 
     def process_rect_select(self, x1, y1, x2, y2):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
         w_r = c.get_world_rect_from_projected_rect(p_r)
@@ -694,13 +694,13 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         return hasattr(layer, "center_point_index")
 
     def get_cursor(self):
-        e = self.layer_control.editor
+        e = self.layer_canvas.project
         if e.clickable_object_mouse_is_over is not None:
             return wx.StockCursor(wx.CURSOR_HAND)
         return wx.StockCursor(wx.CURSOR_ARROW)
 
     def clicked_on_point(self, event, layer, point_index):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         vis = e.layer_visibility[layer]['layer']
 
@@ -724,7 +724,7 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         self.clicked_on_point(event, layer, layer.center_point_index)
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         lm = c.layer_manager
         vis = e.layer_visibility[layer]['layer']
@@ -741,7 +741,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     vector_object_command = None
 
     def process_rect_select(self, x1, y1, x2, y2):
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         p1 = c.get_projected_point_from_screen_point((x1, y1))
         p2 = c.get_projected_point_from_screen_point((x2, y2))
@@ -780,7 +780,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
         return hasattr(layer, "center_point_index")
 
     def render_overlay(self, renderer):
-        c = self.layer_control
+        c = self.layer_canvas
         if c.mouse_is_down:
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
@@ -807,7 +807,7 @@ class AddPolylineMode(MouseHandler):
     
     def process_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
-        c = self.layer_control
+        c = self.layer_canvas
         if len(self.points) == 0:
             self.reset_early_mouse_params()
             self.first_mouse_down_position = event.GetPosition()
@@ -816,7 +816,7 @@ class AddPolylineMode(MouseHandler):
             c.render(event)
 
     def process_mouse_motion_up(self, event):
-        c = self.layer_control
+        c = self.layer_canvas
         self.cursor_point = self.get_world_point(event)
         c.render(event)
     
@@ -825,7 +825,7 @@ class AddPolylineMode(MouseHandler):
 
     def process_mouse_up(self, event):
         # After the first point, mouse up events add points
-        c = self.layer_control
+        c = self.layer_canvas
         
         if not self.after_first_mouse_up and self.check_early_mouse_release(event):
             self.mouse_up_too_close = True
@@ -839,7 +839,7 @@ class AddPolylineMode(MouseHandler):
     
     def process_right_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         if len(self.points) > 1:
             layer = e.layer_tree_control.get_selected_layer()
@@ -848,7 +848,7 @@ class AddPolylineMode(MouseHandler):
                 e.process_command(cmd)
 
     def render_overlay(self, renderer):
-        c = self.layer_control
+        c = self.layer_canvas
         sp = [c.get_screen_point_from_world_point(p) for p in self.points]
         renderer.draw_screen_lines(sp, 1.0, 1.0, 0, 1.0, xor=True)
         if self.cursor_point is not None and len(sp) > 0:
@@ -864,7 +864,7 @@ class AddPolygonMode(AddPolylineMode):
     vector_object_command = DrawPolygonCommand
 
     def render_overlay(self, renderer):
-        c = self.layer_control
+        c = self.layer_canvas
         sp = [c.get_screen_point_from_world_point(p) for p in self.points]
         renderer.draw_screen_lines(sp, 1.0, 1.0, 0, 1.0, xor=True)
         if self.cursor_point is not None and len(sp) > 0:
@@ -890,7 +890,7 @@ class AddOverlayTextMode(MouseHandler):
 
     def process_mouse_up(self, event):
         # After the first point, mouse up events add points
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         layer = e.layer_tree_control.get_selected_layer()
         if (layer is not None):
@@ -914,7 +914,7 @@ class AddOverlayIconMode(MouseHandler):
 
     def process_mouse_up(self, event):
         # After the first point, mouse up events add points
-        c = self.layer_control
+        c = self.layer_canvas
         e = c.project
         layer = e.layer_tree_control.get_selected_layer()
         if (layer is not None):

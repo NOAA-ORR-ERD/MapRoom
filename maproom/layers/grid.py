@@ -42,7 +42,7 @@ class Grid(ScreenLayer):
         return ScreenLayer.create_renderer(self, canvas)
     
     def resize(self, world_rect, screen_rect):
-        prefs = self.renderer.canvas.editor.task.get_preferences()
+        prefs = self.renderer.canvas.project.task.get_preferences()
         if prefs.coordinate_display_format == "decimal degrees":
             self.grid = self.decimal_degree_grid
         else:
