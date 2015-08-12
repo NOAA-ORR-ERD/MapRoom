@@ -22,7 +22,7 @@ The RenderWindow class -- where the opengl rendering really takes place.
 import logging
 log = logging.getLogger(__name__)
 
-class LayerCanvas(renderer.BaseCanvas):
+class LayerCanvas(renderer.ScreenCanvas):
 
     """
     The core rendering class for MapRoom app.
@@ -58,7 +58,7 @@ class LayerCanvas(renderer.BaseCanvas):
         self.layer_manager = kwargs.pop('layer_manager')
         self.editor = self.project
         
-        renderer.BaseCanvas.__init__(self, *args, **kwargs)
+        renderer.ScreenCanvas.__init__(self, *args, **kwargs)
         
         self.layer_renderers = {}
 

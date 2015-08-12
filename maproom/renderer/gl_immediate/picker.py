@@ -8,16 +8,12 @@ import OpenGL.GL.EXT.framebuffer_object as gl_fbo
 import maproom.library.rect as rect
 
 from ..gl.color import *
-# import Image, ImageDraw
 
 MAX_PICKER_OFFSET = 4
 
 POINTS_PICKER_OFFSET = 0
 LINES_PICKER_OFFSET = 1
 FILL_PICKER_OFFSET = 2
-
-def get_picker_index_base(layer_index):
-    return layer_index * MAX_PICKER_OFFSET
 
 class Picker(object):
     """
@@ -33,6 +29,10 @@ class Picker(object):
     vbo_colors = None
     
     is_active = True
+    
+    @classmethod
+    def get_picker_index_base(cls, layer_index):
+        return layer_index * MAX_PICKER_OFFSET
 
     def __init__(self):
         # self.colored_objects = {} # renderer -> ( index, original color )
@@ -238,27 +238,3 @@ class Picker(object):
         # print str( obj ) + "," + str( ( layer_index, type, subtype ) )
         #
         return (layer_pick_index, type, subtype, object_index)
-
-"""
-        if self.frame_buffer is None:
-            gl.glClear( gl.GL_COLOR_BUFFER_BIT )
-        
-
-        self.window.SetCursor( wx.StockCursor( wx.CURSOR_HAND ) )
-        
-
-        # If the control/command or shift key is down, then add to the
-        # selection rather than replacing it (see mouse_released() below).
-        # This allows multi-selection.
-        if event.CmdDown() or event.ShiftDown():
-            return
-        
-
-        self.window.Bind( wx.EVT_MOTION, self.mouse_moved )
-        self.window.Bind( wx.EVT_LEFT_DOWN, self.mouse_pressed )
-        self.window.Bind( wx.EVT_LEFT_UP, self.mouse_released )
-        self.window.Bind( wx.EVT_RIGHT_DOWN, self.mouse_pressed )
-        self.window.Bind( wx.EVT_RIGHT_UP, self.mouse_right_released )
-        self.window.Bind( wx.EVT_LEFT_DCLICK, self.mouse_double_clicked )
-        self.window.Bind( wx.EVT_LEAVE_WINDOW, self.mouse_left )
-"""

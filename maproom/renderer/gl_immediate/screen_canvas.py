@@ -13,18 +13,18 @@ import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
 from renderer import ImmediateModeRenderer
-from picker import Picker, get_picker_index_base
+from picker import Picker
 import maproom.library.rect as rect
 
 from ..gl.font import load_font_texture_with_alpha
 from ..gl import data_types
-from .. import NullPicker
+from .. import NullPicker, BaseCanvas
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class BaseCanvas(glcanvas.GLCanvas):
+class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     """
     The core rendering class for MapRoom app.
@@ -49,22 +49,8 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.init_context(self)
         self.is_canvas_initialized = False
 
-        self.overlay = ImmediateModeRenderer(self, None)
-        self.picker = Picker()
-        self.hide_picker_layer = None
+        BaseCanvas.__init__(self)
 
-        self.screen_rect = rect.EMPTY_RECT
-        
-        self.debug_show_bounding_boxes = False
-        self.debug_show_picker_framebuffer = False
-
-        # two variables keep track of what's visible on the screen:
-        # (1) the projected point at the center of the screen
-        self.projected_point_center = (0, 0)
-        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)        
-        ## does this get re-set anyway? pretty arbitrary.
-        self.projected_units_per_pixel = 10000
-        
         # Texture creation must be deferred until after the call to SetCurrent
         # so that the GLContext is attached to the actual window
         self.font_texture = None
@@ -77,6 +63,12 @@ class BaseCanvas(glcanvas.GLCanvas):
         self.mouse_handler = None  # defined in subclass
         
         self.native = self.get_native_control()
+    
+    def get_picker(self):
+        return Picker()
+    
+    def get_overlay_renderer(self):
+        return ImmediateModeRenderer(self, None)
 
     def get_native_control(self):
         return self
@@ -411,150 +403,41 @@ class BaseCanvas(glcanvas.GLCanvas):
         
         return n, self.font_texture
 
-    def prepare_to_render(self, projected_rect, screen_rect):
-        self.screen_rect = screen_rect
-        self.s_w = rect.width(screen_rect)
-        self.s_h = rect.height(screen_rect)
-        self.projected_rect = projected_rect
-        p_w = rect.width(projected_rect)
-        p_h = rect.height(projected_rect)
-
-        if (self.s_w <= 0 or self.s_h <= 0 or p_w <= 0 or p_h <= 0):
-            return False
-        
+    def prepare_screen_viewport(self):
         gl.glDisable(gl.GL_LIGHTING)
         # Don't cull polygons that are wound the wrong way.
         gl.glDisable(gl.GL_CULL_FACE)
 
         gl.glViewport(0, 0, self.s_w, self.s_h)
-        self.set_up_for_regular_rendering()
+        self.set_screen_rendering_attributes()
         gl.glClearColor(1.0, 1.0, 1.0, 0)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-        
-        return True
 
-    def prepare_to_render_picker(self, screen_rect):
-        self.picker.prepare_to_render(screen_rect)
-        self.set_up_for_picker_rendering()
-        gl.glClearColor(1.0, 1.0, 1.0, 1.0)
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
-    def done_rendering_picker(self):
-        self.picker.done_rendering()
-        self.set_up_for_regular_rendering()
-
-    def set_up_for_regular_rendering(self):
+    def set_screen_rendering_attributes(self):
         gl.glEnable(gl.GL_POINT_SMOOTH)
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
         gl.glEnable(gl.GL_BLEND)
         gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
 
-    def set_up_for_picker_rendering(self):
+    def prepare_picker_viewport(self):
+        gl.glClearColor(1.0, 1.0, 1.0, 1.0)
+        gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
+    def set_picker_rendering_attributes(self):
         gl.glDisable(gl.GL_POINT_SMOOTH)
         gl.glDisable(gl.GL_LINE_SMOOTH)
         gl.glDisable(gl.GL_BLEND)
 
-    def get_object_at_mouse_position(self, screen_point):
-        if rect.contains_point(self.screen_rect, screen_point):
-            return self.picker.get_object_at_mouse_position(screen_point)
-        return None
-
-    #
-    # the methods below are used to render simple objects one at a time, in screen coordinates
-    
-    def get_selected_layer(self):
-        # Subclasses should return the selected layer, to be used to render the
-        # selected layer's control points above all others, regardless of the
-        # stacking order of the layers
-        return None
-
-    def hide_from_picker(self, layer):
-        self.hide_picker_layer = layer
-
-    def render(self, event=None):
+    def is_screen_ready(self):
         if not self.is_canvas_initialized:
             log.error("Render called before GLContext created")
-            return
-        # Get interactive console here:
-#        import traceback
-#        traceback.print_stack();
-#        import code; code.interact( local = locals() )
-        t0 = time.clock()
+            return False
         self.SetCurrent(self.shared_context)  # Needed every time for OS X
-        self.update_renderers()
-
-        s_r = self.get_screen_rect()
-        p_r = self.get_projected_rect_from_screen_rect(s_r)
-        w_r = self.get_world_rect_from_projected_rect(p_r)
-
-        if not self.prepare_to_render(p_r, s_r):
-            return
-
-        selected = self.get_selected_layer()
-        layer_draw_order = list(enumerate(self.layer_manager.flatten()))
-        layer_draw_order.reverse()
-
-        # Update any linked control points by first looping through all layers
-        # to update the world position, then updating the links.
-        for i, layer in layer_draw_order:
-            layer.pre_render()
-        affected_layers = self.layer_manager.update_linked_control_points()
-        for layer in affected_layers:
-            layer.rebuild_renderer(True)
-
-        ## fixme -- why is this a function defined in here??
-        ##   so that it can be called with and without pick-mode turned on
-        ##   but it seems to be in the wrong place -- make it a regular  method?
-        null_picker = NullPicker()
-        def render_layers(layer_order, picker=null_picker):
-            self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
-            pick_layer_index = -1
-            delayed_pick_layer = None
-            control_points_layer = None
-            for i, layer in layer_order:
-                vis = self.project.layer_visibility[layer]
-                if picker.is_active:
-                    if layer.pickable:
-                        pick_layer_index += 1
-                        self.layer_manager.pick_layer_index_map[pick_layer_index] = i
-                        layer_index_base = get_picker_index_base(pick_layer_index)
-                        if layer == self.hide_picker_layer:
-                            log.debug("Hiding picker layer %s from picking itself" % pick_layer_index)
-                            continue
-                        elif layer == selected:
-                            delayed_pick_layer = (layer, layer_index_base, vis)
-                        else:
-                            layer.render(self, w_r, p_r, s_r, vis, layer_index_base, picker)
-                else: # not in pick-mode
-                    if layer == selected:
-                        control_points_layer = (layer, vis)
-                    layer.render(self, w_r, p_r, s_r, vis, -1, picker)
-            if delayed_pick_layer is not None:
-                layer, layer_index_base, vis = delayed_pick_layer
-                layer.render(self, w_r, p_r, s_r, vis, layer_index_base, picker)
-            if control_points_layer is not None:
-                layer, vis = control_points_layer
-                layer.render(self, w_r, p_r, s_r, vis, -1, picker, control_points_only=True)
-
-
-        render_layers(layer_draw_order)
-
-        self.overlay.prepare_to_render_screen_objects()
-        if self.debug_show_bounding_boxes:
-            self.draw_bounding_boxes()
+        return True
         
-        self.mouse_handler.render_overlay(self.overlay)
-
-        self.prepare_to_render_picker(s_r)
-        render_layers(layer_draw_order, picker=self.picker)
-        self.done_rendering_picker()
-        if self.debug_show_picker_framebuffer:
-            self.picker.render_picker_to_screen()
-
+    def post_render_update_ui_hook(self, elapsed, event):
         self.SwapBuffers()
-
-        elapsed = time.clock() - t0
 
         def update_status(message):
             self.project.task.status_bar.debug = message

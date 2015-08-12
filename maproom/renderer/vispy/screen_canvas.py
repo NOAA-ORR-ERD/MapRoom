@@ -28,7 +28,7 @@ POINTS_SUB_LAYER_PICKER_OFFSET = 1
 LINES_SUB_LAYER_PICKER_OFFSET = 2
 
 
-class BaseCanvas(app.Canvas):
+class ScreenCanvas(app.Canvas):
 
     """
     The core rendering class for MapRoom app.
