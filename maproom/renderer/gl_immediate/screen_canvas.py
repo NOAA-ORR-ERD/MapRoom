@@ -40,6 +40,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             cls.shared_context = glcanvas.GLContext(canvas)
 
     def __init__(self, *args, **kwargs):
+        project = kwargs.pop('project')
+        layer_manager = kwargs.pop('layer_manager')
         kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
                                 glcanvas.WX_GL_DOUBLEBUFFER,
                                 glcanvas.WX_GL_MIN_ALPHA, 8, )
@@ -49,7 +51,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.init_context(self)
         self.is_canvas_initialized = False
 
-        BaseCanvas.__init__(self)
+        BaseCanvas.__init__(self, layer_manager, project)
 
         # Texture creation must be deferred until after the call to SetCurrent
         # so that the GLContext is attached to the actual window

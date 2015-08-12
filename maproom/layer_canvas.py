@@ -54,12 +54,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         return mouse_mode
     
     def __init__(self, *args, **kwargs):
-        self.project = kwargs.pop('project')
-        self.layer_manager = kwargs.pop('layer_manager')
-        
         renderer.ScreenCanvas.__init__(self, *args, **kwargs)
-        
-        self.layer_renderers = {}
 
         p = get_image_path("icons/hand.ico", file=__name__)
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
@@ -73,21 +68,6 @@ class LayerCanvas(renderer.ScreenCanvas):
 
         self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
 
-    def change_view(self, layer_manager):
-        self.layer_manager = layer_manager
-
-    def update_renderers(self):
-        for layer in self.layer_manager.flatten():
-            if not layer in self.layer_renderers:
-                r = layer.create_renderer(self)
-                self.layer_renderers[layer] = r
-        pass
-    
-    def remove_renderer_for_layer(self, layer):
-        if layer in self.layer_renderers:
-            del self.layer_renderers[layer]
-        pass
-
     def rebuild_renderers(self):
         for layer in self.layer_manager.flatten():
             # Don't rebuild image layers because their numpy data has been
@@ -97,15 +77,6 @@ class LayerCanvas(renderer.ScreenCanvas):
                 self.remove_renderer_for_layer(layer)
         self.update_renderers()
 
-    def rebuild_renderer_for_layer(self, layer, in_place=False):
-        if layer in self.layer_renderers:
-            layer.rebuild_renderer(in_place)
-            log.debug("renderer rebuilt")
-        else:
-            log.warning("layer %s isn't in layer_renderers!" % layer)
-            for layer in self.layer_renderers.keys():
-                log.warning("  layer: %s" % layer)
-    
     def get_selected_layer(self):
         return self.project.layer_tree_control.get_selected_layer()
     

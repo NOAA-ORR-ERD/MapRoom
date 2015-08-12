@@ -16,7 +16,12 @@ class BaseCanvas(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, layer_manager, project):
+        self.layer_manager = layer_manager
+        self.project = project
+        
+        self.layer_renderers = {}
+        
         self.overlay = self.get_overlay_renderer()
         self.picker = self.get_picker()
         self.hide_picker_layer = None
@@ -45,6 +50,35 @@ class BaseCanvas(object):
     def get_renderer(self, layer):
         return NullRenderer(self, layer)
 
+    def change_view(self, layer_manager):
+        self.layer_manager = layer_manager
+
+    def update_renderers(self):
+        for layer in self.layer_manager.flatten():
+            if not layer in self.layer_renderers:
+                r = layer.create_renderer(self)
+                self.layer_renderers[layer] = r
+        pass
+    
+    def remove_renderer_for_layer(self, layer):
+        if layer in self.layer_renderers:
+            del self.layer_renderers[layer]
+        pass
+
+    def rebuild_renderers(self):
+        for layer in self.layer_manager.flatten():
+            self.remove_renderer_for_layer(layer)
+        self.update_renderers()
+
+    def rebuild_renderer_for_layer(self, layer, in_place=False):
+        if layer in self.layer_renderers:
+            layer.rebuild_renderer(in_place)
+            log.debug("renderer rebuilt")
+        else:
+            log.warning("layer %s isn't in layer_renderers!" % layer)
+            for layer in self.layer_renderers.keys():
+                log.warning("  layer: %s" % layer)
+    
     def begin_rendering_screen(self, projected_rect, screen_rect):
         self.screen_rect = screen_rect
         self.s_w = rect.width(screen_rect)
