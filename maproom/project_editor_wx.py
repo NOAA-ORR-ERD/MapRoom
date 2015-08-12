@@ -35,6 +35,9 @@ class ProjectEditor(FrameworkEditor):
     
     See the IProjectEditor interface for the API documentation.
     """
+    
+    printable = True
+    
     layer_manager = Any
     
     layer_zoomable = Bool
@@ -246,6 +249,17 @@ class ProjectEditor(FrameworkEditor):
             image.SaveFile(path, t)
         else:
             self.window.error("Unsupported image type %s" % ext)
+    
+    def print_preview(self):
+        self.window.error("Can't preview yet. Working on it!")
+    
+    def print_page(self):
+        pdf_canvas = renderer.PDFCanvas(layer_manager=self.layer_manager, project=self)
+        pdf_canvas.update_renderers()
+        pdf_canvas.render()
+    
+    def save_as_pdf(self, path=None):
+        self.window.error("Can't export to PDF yet. Working on it!")
 
     ###########################################################################
     # Private interface.
