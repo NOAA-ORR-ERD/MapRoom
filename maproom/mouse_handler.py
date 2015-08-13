@@ -46,24 +46,6 @@ class MouseHandler(object):
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
-    
-    def popup_context_menu(self, event, menu):
-        """Popup a simple context menu with menu items defined by the entries
-        in the menu array.
-        
-        Each entry is a 3-tuple contining the string name, the data to be used
-        as the callback data, and the callback function.
-        """
-        if menu is not None:
-            c = self.layer_canvas
-            popup = wx.Menu()
-            self.right_click_data = dict()
-            for name, data, callback in menu:
-                i = wx.NewId()
-                popup.Append(i, name)
-                self.right_click_data[i] = data
-                c.Bind(wx.EVT_MENU, callback, id=i)
-            c.PopupMenu(popup, event.GetPosition())
 
     def process_mouse_down(self, event):
         return
@@ -751,17 +733,11 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         try:
             if layer.can_anchor_point_move():
                 menu = [
-                    ("Set Anchor to Control Point %d" % point_index, [layer, point_index], self.on_set_anchor_point),
+                    ("Set Anchor to Control Point %d" % point_index, SetAnchorCommand(layer, point_index)),
                     ]
         except AttributeError:
             pass
-        self.popup_context_menu(event, menu)
-    
-    def on_set_anchor_point(self, event):
-        layer, point_index = self.right_click_data[event.GetId()]
-        cmd = SetAnchorCommand(layer, point_index)
-        e = self.layer_canvas.project
-        e.process_command(cmd)
+        self.layer_canvas.popup_context_menu(event, menu)
 
     def is_snappable_to_layer(self, layer):
         return hasattr(layer, "center_point_index")
