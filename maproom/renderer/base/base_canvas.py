@@ -6,6 +6,8 @@ import numpy as np
 
 from picker import NullPicker
 import maproom.library.rect as rect
+from maproom.library.projection import Projection, NullProjection
+import maproom.preferences
 
 import logging
 log = logging.getLogger(__name__)
@@ -30,6 +32,8 @@ class BaseCanvas(object):
         
         self.debug_show_bounding_boxes = False
         self.debug_show_picker_framebuffer = False
+
+        self.projection = Projection(maproom.preferences.DEFAULT_PROJECTION_STRING)
 
         # two variables keep track of what's visible on the screen:
         # (1) the projected point at the center of the screen
@@ -211,10 +215,185 @@ class BaseCanvas(object):
     def post_render_update_ui_hook(self, elapsed, event):
         pass
 
+    def draw_bounding_boxes(self):
+        layers = self.layer_manager.flatten()
+        for layer in layers:
+            w_r = layer.bounds
+            if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
+                s_r = self.get_screen_rect_from_world_rect(w_r)
+                r, g, b, a = renderer.int_to_color_floats(layer.style.line_color)
+                self.overlay.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
+
     # functions related to world coordinates, projected coordinates, and screen coordinates
 
     def get_screen_size(self):
         raise NotImplementedError
+
+    def get_screen_rect(self):
+        size = self.get_screen_size()
+        #
+        return ((0, 0), (size[0], size[1]))
+
+    def get_projected_point_from_screen_point(self, screen_point):
+        c = rect.center(self.get_screen_rect())
+        d = (screen_point[0] - c[0], screen_point[1] - c[1])
+        d_p = (d[0] * self.projected_units_per_pixel, d[1] * self.projected_units_per_pixel)
+        #
+        return (self.projected_point_center[0] + d_p[0],
+                self.projected_point_center[1] - d_p[1])
+
+    def get_projected_rect_from_screen_rect(self, screen_rect):
+        left_bottom = (screen_rect[0][0], screen_rect[1][1])
+        right_top = (screen_rect[1][0], screen_rect[0][1])
+        #
+        return (self.get_projected_point_from_screen_point(left_bottom),
+                self.get_projected_point_from_screen_point(right_top))
+
+    def get_screen_point_from_projected_point(self, projected_point):
+        d_p = (projected_point[0] - self.projected_point_center[0],
+               projected_point[1] - self.projected_point_center[1])
+        d = (d_p[0] / self.projected_units_per_pixel, d_p[1] / self.projected_units_per_pixel)
+        r = self.get_screen_rect()
+        c = rect.center(r)
+        #
+        return (c[0] + d[0], c[1] - d[1])
+
+    def get_screen_rect_from_projected_rect(self, projected_rect):
+        left_top = (projected_rect[0][0], projected_rect[1][1])
+        right_bottom = (projected_rect[1][0], projected_rect[0][1])
+        #
+        return (self.get_screen_point_from_projected_point(left_top),
+                self.get_screen_point_from_projected_point(right_bottom))
+
+    def get_world_point_from_projected_point(self, projected_point):
+        return self.projection(projected_point[0], projected_point[1], inverse=True)
+
+    def get_world_rect_from_projected_rect(self, projected_rect):
+        return (self.get_world_point_from_projected_point(projected_rect[0]),
+                self.get_world_point_from_projected_point(projected_rect[1]))
+
+    def get_projected_point_from_world_point(self, world_point):
+        return self.projection(world_point[0], world_point[1])
+
+    def get_projected_rect_from_world_rect(self, world_rect):
+        return (self.get_projected_point_from_world_point(world_rect[0]),
+                self.get_projected_point_from_world_point(world_rect[1]))
+
+    def get_world_point_from_screen_point(self, screen_point):
+        return self.get_world_point_from_projected_point(self.get_projected_point_from_screen_point(screen_point))
+
+    def get_numpy_world_point_from_screen_point(self, screen_point):
+        world_point = self.get_world_point_from_projected_point(self.get_projected_point_from_screen_point(screen_point))
+        w = np.empty_like(world_point)
+        w[:] = world_point
+        return w
+
+    def get_world_rect_from_screen_rect(self, screen_rect):
+        return self.get_world_rect_from_projected_rect(self.get_projected_rect_from_screen_rect(screen_rect))
+
+    def get_screen_point_from_world_point(self, world_point):
+        screen_point = self.get_screen_point_from_projected_point(self.get_projected_point_from_world_point(world_point))
+        # screen points are pixels, which should be int values
+        return (round(screen_point[0]), round(screen_point[1]))
+
+    def get_numpy_screen_point_from_world_point(self, world_point):
+        screen_point = self.get_screen_point_from_projected_point(self.get_projected_point_from_world_point(world_point))
+        s = np.empty_like(world_point)
+        s[:] = screen_point
+        return s
+
+    def get_screen_rect_from_world_rect(self, world_rect):
+        rect = self.get_screen_rect_from_projected_rect(self.get_projected_rect_from_world_rect(world_rect))
+        return ((int(round(rect[0][0])), int(round(rect[0][1]))), (int(round(rect[1][0])), int(round(rect[1][1]))))
+
+    def zoom(self, steps=1, ratio=2.0, focus_point_screen=None):
+        if ratio > 0:
+            self.projected_units_per_pixel /= ratio
+        else:
+            self.projected_units_per_pixel *= abs(ratio)
+        self.constrain_zoom()
+        self.render()
+
+    def zoom_in(self):
+        self.zoom(ratio=2.0)
+
+    def zoom_out(self):
+        self.zoom(ratio=-2.0)
+
+    def zoom_to_fit(self):
+        w_r = self.layer_manager.accumulate_layer_rects(self.project.layer_visibility)
+        if (w_r != rect.NONE_RECT):
+            self.zoom_to_world_rect(w_r)
+
+    def zoom_to_world_rect(self, w_r, border=True):
+        if (w_r == rect.NONE_RECT):
+            return
+        p_r = self.get_projected_rect_from_world_rect(w_r)
+        size = self.get_screen_size()
+        if border:
+            # so that when we zoom, the points don't hit the very edge of the window
+            EDGE_PADDING = 20
+        else:
+            EDGE_PADDING = 0
+        size.x -= EDGE_PADDING * 2
+        size.y -= EDGE_PADDING * 2
+        pixels_h = rect.width(p_r) / self.projected_units_per_pixel
+        pixels_v = rect.height(p_r) / self.projected_units_per_pixel
+        ratio_h = float(pixels_h) / float(size[0])
+        ratio_v = float(pixels_v) / float(size[1])
+        ratio = max(ratio_h, ratio_v)
+
+        self.projected_point_center = rect.center(p_r)
+        self.projected_units_per_pixel *= ratio
+        self.constrain_zoom()
+
+    def get_zoom_rect(self):
+        return self.get_world_rect_from_screen_rect(self.get_screen_rect())
+
+    def zoom_to_include_world_rect(self, w_r):
+        view_w_r = self.get_zoom_rect()
+        if (not rect.contains_rect(view_w_r, w_r)):
+            # first try just panning
+            p_r = self.get_projected_rect_from_world_rect(w_r)
+            self.projected_point_center = rect.center(p_r)
+            view_w_r = self.get_world_rect_from_screen_rect(self.get_screen_rect())
+            if (not rect.contains_rect(view_w_r, w_r)):
+                # otherwise we have to zoom (i.e., zoom out because panning didn't work)
+                self.zoom_to_world_rect(w_r)
+
+    def constrain_zoom(self):
+        ## fixme: this  should not be hard coded -- could scale to projection(90,90, inverse=True or ??)
+        ## Also should be in some kind of app preferences location...
+        min_val = .02
+        max_val = 80000
+        self.projected_units_per_pixel = max(self.projected_units_per_pixel, min_val)
+        self.projected_units_per_pixel = min(self.projected_units_per_pixel, max_val)
+
+    def get_surrounding_screen_rects(self, r):
+        # return four disjoint rects surround r on the screen
+        sr = self.get_screen_rect()
+
+        if (r[0][1] <= sr[0][1]):
+            above = rect.EMPTY_RECT
+        else:
+            above = (sr[0], (sr[1][0], r[0][1]))
+
+        if (r[1][1] >= sr[1][1]):
+            below = rect.EMPTY_RECT
+        else:
+            below = ((sr[0][0], r[1][1]), sr[1])
+
+        if (r[0][0] <= sr[0][0]):
+            left = rect.EMPTY_RECT
+        else:
+            left = ((sr[0][0], r[0][1]), (r[0][0], r[1][1]))
+
+        if (r[1][0] >= sr[1][0]):
+            right = rect.EMPTY_RECT
+        else:
+            right = ((r[1][0], r[0][1]), (sr[1][0], r[1][1]))
+
+        return [above, below, left, right]
 
     def get_canvas_as_image(self):
         raise NotImplementedError
