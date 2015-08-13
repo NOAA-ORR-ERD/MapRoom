@@ -128,7 +128,7 @@ class LineVectorObject(VectorObjectLayer):
     
     layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Line Transparency"]
     
-    selection_info_panel = ["Point coordinates"]
+    selection_info_panel = ["Anchor Point"]
 
     corners_from_flat = np.asarray((0, 1, 2, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1),), dtype=np.uint8)
@@ -323,7 +323,7 @@ class RectangleMixin(object):
     """
     layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
-    selection_info_panel = ["Point coordinates"]
+    selection_info_panel = ["Anchor Point"]
 
     corners_from_flat = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)

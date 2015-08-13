@@ -245,16 +245,24 @@ class PointCoordinatesField(TextEditField):
     def is_displayed(self, layer):
         return layer.get_num_points_selected() > 0
     
-    def get_value(self, layer):
+    def get_point_index(self, layer):
         if (layer is None):
-            return ""
+            return -1
         indexes = layer.get_selected_point_indexes()
         if len(indexes) == 0:
+            return -1
+        return indexes[0]
+    
+    def get_value(self, layer):
+        i = self.get_point_index(layer)
+        if i < 0:
             return ""
-        i = indexes[0]
         prefs = self.panel.project.task.get_preferences()
         coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
         return coords_text
+
+    def get_command(self, layer, index, dx, dy):
+        return MovePointsCommand(layer, [index], dx, dy)
 
     def process_text_change(self, layer):
         c = self.ctrl
@@ -264,16 +272,28 @@ class PointCoordinatesField(TextEditField):
             if new_point == (-1, -1):
                 c.SetBackgroundColour("#FF8080")
                 return
-            index = layer.get_selected_point_indexes()[0]
+            index = self.get_point_index(layer)
             current_point = (layer.points.x[index], layer.points.y[index])
             x_diff = new_point[0] - current_point[0]
             y_diff = new_point[1] - current_point[1]
-            cmd = MovePointsCommand(layer, [index], x_diff, y_diff)
+            cmd = self.get_command(layer, index, x_diff, y_diff)
             self.panel.project.process_command(cmd)
         except Exception as e:
             import traceback
             print traceback.format_exc(e)
             c.SetBackgroundColour("#FF8080")
+
+class AnchorPointField(PointCoordinatesField):
+    def is_displayed(self, layer):
+        return True
+    
+    def get_point_index(self, layer):
+        if (layer is None):
+            return -1
+        return layer.center_point_index
+
+    def get_command(self, layer, index, dx, dy):
+        return MoveControlPointCommand(layer, index, index, dx, dy, None, None)
 
 class PointIndexesField(TextEditField):
     def is_displayed(self, layer):
@@ -1068,6 +1088,7 @@ class InfoPanel(PANELTYPE):
         "Marplot Icon": MarplotIconField,
         "Start Time": ParticleStartField,
         "End Time": ParticleEndField,
+        "Anchor Point": AnchorPointField,
         }
     
     def create_fields(self, layer, fields):
