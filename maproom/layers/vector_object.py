@@ -60,6 +60,16 @@ class VectorObjectLayer(LineLayer):
     def clear_visibility_when_deselected(self, layer_visibility):
         layer_visibility['points'] = False
     
+    def has_points(self):
+        # Points on vector layers aren't individually editable
+        return False
+    
+    def has_selection(self):
+        # "selection" on a vector layer is coerced to mean that when a vector
+        # layer is selected in the layer tree control, the entire layer is
+        # selected
+        return True
+    
     def delete_all_selected_objects(self):
         return DeleteLayerCommand(self)
     
