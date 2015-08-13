@@ -507,3 +507,42 @@ class TextCommand(Command):
         layer.user_text = old_text
         layer.rebuild_needed = True
         return self.undo_info
+
+class SetAnchorCommand(Command):
+    short_name = "text_anchor"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('anchor', 'int'),
+            ]
+    
+    def __init__(self, layer, anchor):
+        Command.__init__(self, layer)
+        self.anchor = anchor
+    
+    def __str__(self):
+        return "Set Anchor Point"
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer:
+                self.anchor = next_command.anchor
+                return True
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = (layer.anchor_point_index, self.anchor)
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_display_properties_changed = True
+        layer.set_anchor_index(self.anchor)
+        layer.rebuild_needed = True
+        return undo
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        old_anchor, anchor = self.undo_info.data
+        layer.set_anchor_index(old_anchor)
+        layer.rebuild_needed = True
+        return self.undo_info

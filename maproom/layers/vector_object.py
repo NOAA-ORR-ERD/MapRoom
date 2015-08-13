@@ -470,7 +470,7 @@ class ScaledImageObject(RectangleVectorObject):
 class OverlayImageObject(RectangleVectorObject):
     """Texture mapped image object that is fixed in size relative to the screen
     
-    Image uses 4 control points like the rectangle, but uses a texture
+    Image uses the same control points as the rectangle, but uses a texture
     object as the foreground.  The background color will show through in
     trasparent pixels.
     
@@ -483,8 +483,12 @@ class OverlayImageObject(RectangleVectorObject):
     
     image_data = Any
     
+    anchor_point_index = Int(8)  # Defaults to center point as the anchor
+    
+    # Screen y coords are backwards from world y coords (screen y increases
+    # downward)
     screen_offset_from_center = np.asarray(
-        ((-0.5,-0.5), (0.5,-0.5), (0.5,0.5), (-0.5,0.5), (0,-0.5), (0.5,0), (0,0.5), (-0.5,0), (0,0)),
+        ((-0.5,0.5), (0.5,0.5), (0.5,-0.5), (-0.5,-0.5), (0,0.5), (0.5,0), (0,-0.5), (-0.5,0), (0,0)),
         dtype=np.float32)
 
     def get_image_array(self):
@@ -496,6 +500,11 @@ class OverlayImageObject(RectangleVectorObject):
         c = p[self.corners_from_flat].reshape(-1,2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
+    
+    def set_anchor_index(self, index):
+        if index == self.anchor_point_index:
+            return
+        self.anchor_point_index = index
     
     def move_control_point(self, drag, anchor, dx, dy):
         RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
@@ -549,6 +558,15 @@ class OverlayImageObject(RectangleVectorObject):
         # called too
         pass
 
+    def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        if (not layer_visibility["layer"]):
+            return
+        if self.anchor_point_index != self.center_point_index:
+            flagged = [self.anchor_point_index]
+        else:
+            flagged = []
+        self.renderer.draw_points(layer_index_base, picker, self.point_size, flagged_point_indexes=flagged)
+
 class OverlayTextObject(OverlayImageObject):
     """Texture mapped image object that is fixed in size relative to the screen
     
@@ -571,7 +589,7 @@ class OverlayTextObject(OverlayImageObject):
     
     layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Text Transparency", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
     
-    selection_info_panel = ["Text Format", "Overlay Text"]
+    selection_info_panel = ["Anchor Point", "Text Format", "Overlay Text"]
     
     def user_text_to_json(self):
         return self.user_text.encode("utf-8")
@@ -603,16 +621,17 @@ class OverlayTextObject(OverlayImageObject):
         return arr
 
     def update_world_control_points(self):
-        h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # numpy image dimensions are reversed
+        h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # array indexes of numpy images are reversed
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
-        center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
+        anchor = c.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
+        anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
         
         scale = self.screen_offset_from_center.T
-        xoffset = scale[0] * w + center[0]
-        yoffset = scale[1] * h + center[1]
+        xoffset = (scale[0] - anchor_to_center[0]) * w + anchor[0]
+        yoffset = (scale[1] - anchor_to_center[1]) * h + anchor[1]
         
-        for i in range(self.center_point_index):
+        for i in range(self.center_point_index + 1):
             w = c.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
@@ -667,6 +686,8 @@ class OverlayIconObject(OverlayImageObject):
     type = Str("overlay_icon_obj")
     
     layer_info_panel = ["Layer name", "Marplot Icon", "Color", "Transparency"]
+    
+    anchor_point_index = Int(8)  # Defaults to center point as the anchor
     
     def get_image_array(self):
         return self.style.get_numpy_image_from_icon()

@@ -295,6 +295,27 @@ class AnchorCoordinatesField(PointCoordinatesField):
     def get_command(self, layer, index, dx, dy):
         return MoveControlPointCommand(layer, index, index, dx, dy, None, None)
 
+class AnchorPointField(InfoField):
+    same_line = True
+    
+    def fill_data(self, layer):
+        self.ctrl.SetSelection(layer.anchor_point_index)
+    
+    def create_control(self):
+        names = [str(s) for s in range(9)]
+        c = wx.ComboBox(self.parent, -1, "",
+                        size=(self.default_width, -1), choices=names, style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.anchor_changed)
+        return c
+        
+    def anchor_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        cmd = SetAnchorCommand(layer, item)
+        self.panel.project.process_command(cmd)
+
 class PointIndexesField(TextEditField):
     def is_displayed(self, layer):
         return layer.get_num_points_selected() > 0
@@ -1089,6 +1110,7 @@ class InfoPanel(PANELTYPE):
         "Start Time": ParticleStartField,
         "End Time": ParticleEndField,
         "Anchor Coordinates": AnchorCoordinatesField,
+        "Anchor Point": AnchorPointField,
         }
     
     def create_fields(self, layer, fields):
