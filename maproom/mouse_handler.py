@@ -46,6 +46,24 @@ class MouseHandler(object):
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
+    
+    def popup_context_menu(self, event, menu):
+        """Popup a simple context menu with menu items defined by the entries
+        in the menu array.
+        
+        Each entry is a 3-tuple contining the string name, the data to be used
+        as the callback data, and the callback function.
+        """
+        if menu is not None:
+            c = self.layer_canvas
+            popup = wx.Menu()
+            self.right_click_data = dict()
+            for name, data, callback in menu:
+                i = wx.NewId()
+                popup.Append(i, name)
+                self.right_click_data[i] = data
+                c.Bind(wx.EVT_MENU, callback, id=i)
+            c.PopupMenu(popup, event.GetPosition())
 
     def process_mouse_down(self, event):
         return
@@ -133,7 +151,45 @@ class MouseHandler(object):
         c.selection_box_is_being_defined = False
 
     def process_right_mouse_down(self, event):
-        event.Skip()
+        c = self.layer_canvas
+        e = c.project
+        lm = c.layer_manager
+
+        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
+            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
+            layer = lm.get_layer_by_pick_index(layer_index)
+            if (e.clickable_object_is_ugrid_point()):
+                self.right_clicked_on_point(event, layer, object_index)
+            elif (e.clickable_object_is_ugrid_line()):
+                world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                self.right_clicked_on_line_segment(event, layer, object_index, world_point)
+            elif (e.clickable_object_is_polygon_fill()):
+                world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                self.right_clicked_on_polygon_fill(event, layer, object_index, world_point)
+        elif (e.clickable_object_in_layer is not None):
+            # clicked on something in different layer.
+            self.right_clicked_on_different_layer(event, e.clickable_object_in_layer)
+        else:  # the mouse is not on a clickable object
+            # fixme: there should be a reference to the layer manager in the RenderWindow
+            # and we could get the selected layer from there -- or is selected purely a UI concept?
+            layer = e.layer_tree_control.get_selected_layer()
+            world_point = c.get_world_point_from_screen_point(event.GetPosition())
+            self.right_clicked_on_empty_space(event, layer, world_point)
+        
+    def right_clicked_on_point(self, event, layer, point_index):
+        pass
+
+    def right_clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        pass
+
+    def right_clicked_on_polygon_fill(self, event, layer, polygon_index, world_point):
+        pass
+
+    def right_clicked_on_empty_space(self, event, layer, world_point):
+        pass
+
+    def right_clicked_on_different_layer(self, event, layer):
+        pass
 
     def process_right_mouse_up(self, event):
         event.Skip()
@@ -690,6 +746,23 @@ class ControlPointSelectionMode(ObjectSelectionMode):
     menu_item_name = "Control Point Edit Mode"
     menu_item_tooltip = "Select objects and move control points in the current layer"
     
+    def right_clicked_on_point(self, event, layer, point_index):
+        menu = None
+        try:
+            if layer.can_anchor_point_move():
+                menu = [
+                    ("Set Anchor to Control Point %d" % point_index, [layer, point_index], self.on_set_anchor_point),
+                    ]
+        except AttributeError:
+            pass
+        self.popup_context_menu(event, menu)
+    
+    def on_set_anchor_point(self, event):
+        layer, point_index = self.right_click_data[event.GetId()]
+        cmd = SetAnchorCommand(layer, point_index)
+        e = self.layer_canvas.project
+        e.process_command(cmd)
+
     def is_snappable_to_layer(self, layer):
         return hasattr(layer, "center_point_index")
 

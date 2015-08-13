@@ -490,6 +490,9 @@ class OverlayImageObject(RectangleVectorObject):
     screen_offset_from_center = np.asarray(
         ((-0.5,0.5), (0.5,0.5), (0.5,-0.5), (-0.5,-0.5), (0,0.5), (0.5,0), (0,-0.5), (-0.5,0), (0,0)),
         dtype=np.float32)
+    
+    def can_anchor_point_move(self):
+        return True
 
     def get_image_array(self):
         from maproom.library.numpy_images import get_numpy_from_marplot_icon
@@ -688,6 +691,9 @@ class OverlayIconObject(OverlayImageObject):
     layer_info_panel = ["Layer name", "Marplot Icon", "Color", "Transparency"]
     
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
+    
+    def can_anchor_point_move(self):
+        return False
     
     def get_image_array(self):
         return self.style.get_numpy_image_from_icon()
