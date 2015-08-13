@@ -423,7 +423,7 @@ class ProjectEditor(FrameworkEditor):
         undo = self.layer_manager.undo_stack.redo(self)
         self.process_flags(undo.flags)
     
-    def process_command(self, command):
+    def process_command(self, command, new_mouse_mode=None):
         """Process a single command and immediately update the UI to reflect
         the results of the command.
         """
@@ -432,6 +432,10 @@ class ProjectEditor(FrameworkEditor):
         self.perform_batch_flags(b)
         history = self.layer_manager.undo_stack.serialize()
         self.window.application.save_log(str(history), "command_log", ".mrc")
+        if new_mouse_mode is not None:
+            self.mouse_mode = new_mouse_mode
+            self.update_layer_selection_ui()
+
         return undo
     
     def process_flags(self, flags):

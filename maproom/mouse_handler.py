@@ -799,7 +799,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
             cmd = self.get_vector_object_command(layer, cp1, cp2, layer.manager.default_style)
-            e.process_command(cmd)
+            e.process_command(cmd, ControlPointSelectionMode)
     
     def get_vector_object_command(self, layer, cp1, cp2, style):
         return self.vector_object_command(layer, cp1, cp2, style)
@@ -894,7 +894,7 @@ class AddPolylineMode(MouseHandler):
             layer = e.layer_tree_control.get_selected_layer()
             if (layer is not None):
                 cmd = self.vector_object_command(layer, self.points, layer.manager.default_style)
-                e.process_command(cmd)
+                e.process_command(cmd, ControlPointSelectionMode)
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
@@ -938,7 +938,7 @@ class AddOverlayMode(MouseHandler):
         if (layer is not None):
             cp = self.get_world_point(event)
             cmd = self.vector_object_command(layer, cp, layer.manager.default_style)
-            e.process_command(cmd)
+            e.process_command(cmd, ControlPointSelectionMode)
 
 
 class AddOverlayTextMode(AddOverlayMode):
