@@ -283,7 +283,7 @@ class PointCoordinatesField(TextEditField):
             print traceback.format_exc(e)
             c.SetBackgroundColour("#FF8080")
 
-class AnchorPointField(PointCoordinatesField):
+class AnchorCoordinatesField(PointCoordinatesField):
     def is_displayed(self, layer):
         return True
     
@@ -1088,7 +1088,7 @@ class InfoPanel(PANELTYPE):
         "Marplot Icon": MarplotIconField,
         "Start Time": ParticleStartField,
         "End Time": ParticleEndField,
-        "Anchor Point": AnchorPointField,
+        "Anchor Coordinates": AnchorCoordinatesField,
         }
     
     def create_fields(self, layer, fields):
