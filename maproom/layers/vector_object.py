@@ -14,6 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..mouse_commands import MoveControlPointCommand
+from ..menu_commands import DeleteLayerCommand
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
 
 from line import LineLayer
@@ -58,6 +59,9 @@ class VectorObjectLayer(LineLayer):
 
     def clear_visibility_when_deselected(self, layer_visibility):
         layer_visibility['points'] = False
+    
+    def delete_all_selected_objects(self):
+        return DeleteLayerCommand(self)
     
     def rebuild_image(self):
         """Hook for image-based renderers to rebuild image data

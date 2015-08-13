@@ -288,6 +288,9 @@ class Layer(HasTraits):
         self.clear_all_polygon_selections(mark_type)
         self.increment_change_count()
 
+    def delete_all_selected_objects(self):
+        pass
+
     def clear_all_point_selections(self, mark_type=STATE_SELECTED):
         pass
 
