@@ -1,3 +1,18 @@
+08/13/2015
+---------------------------
+Released 3.1b7
+- RM Added context menu framework to support setting anchor point of text boxes
+- RM Fixed #616: Added user selectable anchor point for overlay objects
+- RM Renamed info panel field to AnchorCoordinates
+- RM Fixed #618: anchor point now set correctly using text box
+- RM Refactored projection stuff from LayerCanvas onto BaseCanvas
+- RM Changed point delete to delete vector object layer when a vector object is selected
+- RM Delete selection on annotation layer objects now deletes the whole layer
+- RM Initial stubs for PDF rendering
+- RM Moved layer_renderer stuff into BaseCanvas so other subclasses than LayerCanvas can use it
+- RM Attribute renaming: layer_control -> layer_canvas, editor -> project
+- RM Refactored BaseCanvas into ScreenCanvas and new BaseCanvas class
+
 08/11/2015
 ---------------------------
 Released 3.1b6
