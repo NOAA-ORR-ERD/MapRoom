@@ -413,7 +413,7 @@ class Layer(HasTraits):
                 self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
             if hasattr(self, "render_screen"):
                 renderer.prepare_to_render_screen_objects()
-                self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+                self.render_screen(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
             if picker.is_active:
                 # Control points should always be clickable, so render them
                 # on top of everything else in this layer when creating the
@@ -487,5 +487,5 @@ class ProjectedLayer(Layer):
 
 
 class ScreenLayer(Layer):
-    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
         print "Layer %s doesn't have screen objects to render" % self.name

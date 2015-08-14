@@ -267,7 +267,7 @@ class LineVectorObject(VectorObjectLayer):
         return ((0, 1, self.style.line_start_marker),
                 (1, 0, self.style.line_end_marker))
 
-    def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Marker rendering occurs in screen coordinates
         
         It doesn't scale with the image, it scales with the line size on screen
@@ -275,12 +275,11 @@ class LineVectorObject(VectorObjectLayer):
         if (not layer_visibility["layer"] or picker.is_active):
             return
         log.log(5, "Rendering markers!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
-        c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         markers = []
         for start, end, marker in self.get_marker_points():
             markers.append((p[start]['xy'], p[end]['xy'], marker))
-        self.renderer.draw_screen_markers(markers, self.style)
+        renderer.draw_screen_markers(markers, self.style)
 
 
 class FillableVectorObject(LineVectorObject):
@@ -538,7 +537,7 @@ class OverlayImageObject(RectangleVectorObject):
             self.rebuild_renderer(renderer)
         self.update_world_control_points(renderer)
 
-    def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Marker rendering occurs in screen coordinates
         
         It doesn't scale with the image, it scales with the line size on screen
@@ -546,15 +545,15 @@ class OverlayImageObject(RectangleVectorObject):
         if (not layer_visibility["layer"]):
             return
         log.log(5, "Rendering overlay image!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
-        c = self.renderer.canvas
+        c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
-        self.renderer.image_textures.center_at_screen_point(self.image_data, center, rect.height(c.screen_rect))
-        self.render_overlay(w_r, p_r, s_r, layer_visibility, layer_index_base, picker)
+        renderer.image_textures.center_at_screen_point(self.image_data, center, rect.height(c.screen_rect))
+        self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker)
     
-    def render_overlay(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         alpha = alpha_from_int(self.style.line_color)
-        self.renderer.draw_image(layer_index_base, picker, alpha)
+        renderer.draw_image(layer_index_base, picker, alpha)
 
     def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         # without this, the superclass method from VectorObjectLayer will get
@@ -671,13 +670,13 @@ class OverlayTextObject(OverlayImageObject):
 
         self.move_bounding_box_point(drag, anchor, dx, dy)
     
-    def render_overlay(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
-        self.renderer.prepare_to_render_projected_objects()
-        self.renderer.fill_object(layer_index_base, picker, self.style)
-        self.renderer.outline_object(layer_index_base, picker, self.style)
-        self.renderer.prepare_to_render_screen_objects()
+    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        renderer.prepare_to_render_projected_objects()
+        renderer.fill_object(layer_index_base, picker, self.style)
+        renderer.outline_object(layer_index_base, picker, self.style)
+        renderer.prepare_to_render_screen_objects()
         alpha = alpha_from_int(self.style.text_color)
-        self.renderer.draw_image(layer_index_base, picker, alpha)
+        renderer.draw_image(layer_index_base, picker, alpha)
 
 class OverlayIconObject(OverlayImageObject):
     """Texture mapped Marplot icon object that is fixed in size relative to the screen

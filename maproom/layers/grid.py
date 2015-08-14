@@ -55,11 +55,11 @@ class Grid(ScreenLayer):
             dtype=np.float64)
 
     # fixme == this should be able to get the various rects from the render_window object...
-    def render_screen(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
         if (not layer_visibility["layer"] or picker.is_active):
             return
         log.log(5, "Rendering grid!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
-        render_window = self.renderer.canvas
+        render_window = renderer.canvas
 #        print "projected_rect = %r" % (projected_rect,)
 #        print "screen_rect = %r" % (screen_rect,)
         self.resize(world_rect, screen_rect)
@@ -75,14 +75,14 @@ class Grid(ScreenLayer):
             w_p = (longitude, world_rect[0][1])
             s_p = render_window.get_screen_point_from_world_point(w_p)
             s = self.grid.format_lon_line_label(longitude)
-            size = self.renderer.get_drawn_string_dimensions(s)
-            self.renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5),
+            size = renderer.get_drawn_string_dimensions(s)
+            renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5),
                                              (s_p[0], screen_rect[1][1]))
             """
             for offset in xrange( 200 ):
-                self.renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] + offset * 2 ), s )
+                renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] + offset * 2 ), s )
             """
-            self.renderer.draw_screen_string((s_p[0] - size[0] / 2, screen_rect[0][1]), s)
+            renderer.draw_screen_string((s_p[0] - size[0] / 2, screen_rect[0][1]), s)
 
         for latitude in self.lat_steps:
 
@@ -92,10 +92,10 @@ class Grid(ScreenLayer):
             w_p = (world_rect[0][0], latitude)
             s_p = render_window.get_screen_point_from_world_point(w_p)
             s = self.grid.format_lat_line_label(latitude)
-            size = self.renderer.get_drawn_string_dimensions(s)
-            self.renderer.draw_screen_line((screen_rect[0][0], s_p[1]),
+            size = renderer.get_drawn_string_dimensions(s)
+            renderer.draw_screen_line((screen_rect[0][0], s_p[1]),
                                              (screen_rect[1][0] - size[0] - 5, s_p[1]))
-            self.renderer.draw_screen_string(
+            renderer.draw_screen_string(
                 (screen_rect[1][0] - size[0] - 3, s_p[1] - size[1] / 2 - 1), s)
 
 
