@@ -180,7 +180,7 @@ class StyleDialog(wx.Dialog):
         self.mock_project.control = None
         self.layer = self.mock_project.layer_tree_control.get_selected_layer()
         self.layer.style.copy_from(self.lm.default_style)
-        self.layer.layer_info_panel = ["Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency", "Text Color", "Font", "Font Size", "Text Transparency", "Marplot Icon"]
+        self.layer.layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Marplot icon"]
         
         # Can't import from the top level because info_panels imports this
         # file, creating a circular import loop

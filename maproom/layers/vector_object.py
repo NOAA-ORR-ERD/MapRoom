@@ -126,9 +126,9 @@ class LineVectorObject(VectorObjectLayer):
     
     type = Str("line_obj")
     
-    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Start Marker", "End Marker", "Line Transparency"]
+    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency"]
     
-    selection_info_panel = ["Anchor Coordinates"]
+    selection_info_panel = ["Anchor coordinates"]
 
     corners_from_flat = np.asarray((0, 1, 2, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1),), dtype=np.uint8)
@@ -320,9 +320,9 @@ class RectangleMixin(object):
       o----o----o
      0     4     1
     """
-    layer_info_panel = ["Layer name", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
+    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
     
-    selection_info_panel = ["Anchor Coordinates"]
+    selection_info_panel = ["Anchor coordinates"]
 
     corners_from_flat = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
@@ -593,9 +593,9 @@ class OverlayTextObject(OverlayImageObject):
     
     border_width = Int(10)
     
-    layer_info_panel = ["Layer name", "Text Color", "Font", "Font Size", "Text Transparency", "Line Style", "Line Width", "Line Color", "Line Transparency", "Fill Style", "Fill Color", "Fill Transparency"]
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
     
-    selection_info_panel = ["Anchor Point", "Text Format", "Overlay Text"]
+    selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
     
     def user_text_to_json(self):
         return self.user_text.encode("utf-8")
@@ -691,7 +691,7 @@ class OverlayIconObject(OverlayImageObject):
     
     type = Str("overlay_icon_obj")
     
-    layer_info_panel = ["Layer name", "Marplot Icon", "Color", "Transparency"]
+    layer_info_panel = ["Layer name", "Marplot icon", "color", "transparency"]
     
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
     
