@@ -164,7 +164,8 @@ class BaseCanvas(object):
         # Update any linked control points by first looping through all layers
         # to update the world position, then updating the links.
         for i, layer in layer_draw_order:
-            layer.pre_render()
+            renderer = self.layer_renderers[layer]
+            layer.pre_render(renderer)
         affected_layers = self.layer_manager.update_linked_control_points()
         for layer in affected_layers:
             layer.rebuild_renderer(True)

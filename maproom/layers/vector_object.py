@@ -516,9 +516,9 @@ class OverlayImageObject(RectangleVectorObject):
             self.image_data.set_control_points(self.points, projection)
             self.renderer.set_image_projection(self.image_data, projection)
     
-    def update_world_control_points(self):
+    def update_world_control_points(self, renderer):
         projected_point_data = self.compute_projected_point_data()
-        self.renderer.set_points(projected_point_data, None, None)
+        renderer.set_points(projected_point_data, None, None)
 
     def rebuild_image(self):
         """Update renderer
@@ -533,10 +533,10 @@ class OverlayImageObject(RectangleVectorObject):
             self.image_data.load_numpy_array(self.points, raw)
         self.renderer.set_image_screen(self.image_data)
 
-    def pre_render(self):
+    def pre_render(self, renderer):
         if self.rebuild_needed:
-            self.rebuild_renderer()
-        self.update_world_control_points()
+            self.rebuild_renderer(renderer)
+        self.update_world_control_points(renderer)
 
     def render_screen(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Marker rendering occurs in screen coordinates
@@ -623,7 +623,7 @@ class OverlayTextObject(OverlayImageObject):
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
         return arr
 
-    def update_world_control_points(self):
+    def update_world_control_points(self, renderer):
         h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # array indexes of numpy images are reversed
         c = self.renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
@@ -641,8 +641,8 @@ class OverlayTextObject(OverlayImageObject):
             self.points.y[i] = w[1]
         
         projected_point_data = self.compute_projected_point_data()
-        self.renderer.set_points(projected_point_data, None, None)
-        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
+        renderer.set_points(projected_point_data, None, None)
+        renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
     
     def move_control_point(self, drag, anchor, dx, dy):
         # Note: center point drag is rigid body move so text box size is only
