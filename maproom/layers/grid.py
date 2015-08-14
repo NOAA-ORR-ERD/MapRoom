@@ -28,8 +28,8 @@ class Grid(ScreenLayer):
     # a nice amount of spacing between lines
     REFERENCE_PIXEL_SIZE = (100, 100)
     
-    def resize(self, world_rect, screen_rect):
-        prefs = self.renderer.canvas.project.task.get_preferences()
+    def resize(self, renderer, world_rect, screen_rect):
+        prefs = renderer.canvas.project.task.get_preferences()
         if prefs.coordinate_display_format == "decimal degrees":
             self.grid = DecimalDegreeGridLines()
         else:
@@ -62,7 +62,7 @@ class Grid(ScreenLayer):
         render_window = renderer.canvas
 #        print "projected_rect = %r" % (projected_rect,)
 #        print "screen_rect = %r" % (screen_rect,)
-        self.resize(world_rect, screen_rect)
+        self.resize(renderer, world_rect, screen_rect)
 #        print "lon_step = " + str(self.lon_step)
 #        print "lat_step = " + str(self.lat_step)
 #        print "world_rect = " + str(world_rect)

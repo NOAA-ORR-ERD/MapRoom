@@ -68,8 +68,6 @@ class Layer(HasTraits):
     load_error_string = Str
     
     manager = Any
-    
-    renderer = Any
 
     pickable = False # is this a layer that support picking?
 

@@ -436,9 +436,11 @@ class ScaledImageObject(RectangleVectorObject):
     def move_control_point(self, drag, anchor, dx, dy):
         RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
         if self.image_data is not None:
-            projection = self.manager.project.layer_canvas.projection
+            c = self.manager.project.layer_canvas
+            renderer = c.get_renderer(self)
+            projection = c.projection
             self.image_data.set_control_points(self.points, projection)
-            self.renderer.set_image_projection(self.image_data, projection)
+            renderer.set_image_projection(self.image_data, projection)
 
     def rebuild_image(self, renderer):
         """Update renderer
@@ -511,9 +513,11 @@ class OverlayImageObject(RectangleVectorObject):
     def move_control_point(self, drag, anchor, dx, dy):
         RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
         if self.image_data is not None:
-            projection = self.manager.project.layer_canvas.projection
+            c = self.manager.project.layer_canvas
+            renderer = c.get_renderer(self)
+            projection = c.projection
             self.image_data.set_control_points(self.points, projection)
-            self.renderer.set_image_projection(self.image_data, projection)
+            renderer.set_image_projection(self.image_data, projection)
     
     def update_world_control_points(self, renderer):
         projected_point_data = self.compute_projected_point_data()
@@ -647,7 +651,7 @@ class OverlayTextObject(OverlayImageObject):
         # Note: center point drag is rigid body move so text box size is only
         # recalculated if dragging some other control point
         if drag < self.center_point_index:
-            c = self.renderer.canvas
+            c = self.manager.project.layer_canvas
             p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
             d = np.copy(p.xy[drag])
             d += (dx, dy)

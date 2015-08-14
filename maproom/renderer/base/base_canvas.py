@@ -57,17 +57,15 @@ class BaseCanvas(object):
     def change_view(self, layer_manager):
         self.layer_manager = layer_manager
 
+    def get_renderer(self, layer):
+        return self.layer_renderers[layer]
+
     def update_renderers(self):
         for layer in self.layer_manager.flatten():
             if not layer in self.layer_renderers:
                 r = self.new_renderer(layer)
-                layer.renderer = r
                 layer.rebuild_renderer(r)
                 self.layer_renderers[layer] = r
-            else:
-                # FIXME: currently, layers expect the renderer object to be an
-                # instance attribute
-                layer.renderer = self.layer_renderers[layer]
     
     def remove_renderer_for_layer(self, layer):
         if layer in self.layer_renderers:
