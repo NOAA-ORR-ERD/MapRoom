@@ -14,6 +14,9 @@ from ..mouse_commands import *
 from ..menu_commands import *
 from ..renderer import color_floats_to_int, int_to_color_floats
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class InfoField(object):
     same_line = False
@@ -77,8 +80,11 @@ class InfoField(object):
         self.panel.sizer.Add(self.parent, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, 0)
         self.show(True)
     
-    def fill_data(self):
+    def fill_data(self, layer):
         raise NotImplementedError
+    
+    def is_valid(self):
+        return True
     
     def wants_focus(self):
         return False
@@ -144,10 +150,26 @@ class TextEditField(InfoField):
         c.Bind(wx.EVT_TEXT, self.on_text_changed)
         c.SetEditable(True)
         return c
-        
+    
     def fill_data(self, layer):
         text = self.get_value(layer)
         self.ctrl.ChangeValue(text)
+        self.is_valid()
+    
+    def is_valid(self):
+        c = self.ctrl
+        c.SetBackgroundColour("#FFFFFF")
+        try:
+            self.parse_from_string()
+            valid = True
+        except Exception as e:
+            c.SetBackgroundColour("#FF8080")
+            valid = False
+        self.ctrl.Refresh()
+        return valid
+    
+    def parse_from_string(self):
+        return self.ctrl.GetValue()
     
     def on_text_changed(self, evt):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
@@ -184,14 +206,12 @@ class DefaultDepthField(TextEditField):
             text = str(layer.default_depth)
         return text
     
+    def parse_from_string(self):
+        return float(self.ctrl.GetValue())
+    
     def process_text_change(self, layer):
-        c = self.ctrl
-        c.SetBackgroundColour("#FFFFFF")
-        try:
-            layer.default_depth = float(c.GetValue())
-        except Exception as e:
-            c.SetBackgroundColour("#FF8080")
-        c.Refresh()
+        if self.is_valid():
+            layer.default_depth = self.parse_from_string()
         
 class PointDepthField(TextEditField):
     same_line = True
@@ -225,21 +245,20 @@ class PointDepthField(TextEditField):
             s = str(depth)
         return s
     
+    def parse_from_string(self):
+        text = self.ctrl.GetValue()
+        if text == "":
+            return None
+        return float(text)
+    
     def process_text_change(self, layer):
-        cmd = None
-        c = self.ctrl
-        c.SetBackgroundColour("#FFFFFF")
-        try:
-            # layer.default_depth = float( c.GetValue() )
-            depth = float(c.GetValue())
-            selected_point_indexes = layer.get_selected_point_indexes()
-            if len(selected_point_indexes > 0):
-                cmd = ChangeDepthCommand(layer, selected_point_indexes, depth)
-                self.panel.project.process_command(cmd)
-        except Exception as e:
-            print e
-            c.SetBackgroundColour("#FF8080")
-        c.Refresh()
+        if self.is_valid():
+            depth = self.parse_from_string()
+            if depth is not None:
+                selected_point_indexes = layer.get_selected_point_indexes()
+                if len(selected_point_indexes > 0):
+                    cmd = ChangeDepthCommand(layer, selected_point_indexes, depth)
+                    self.panel.project.process_command(cmd)
         
 class PointCoordinatesField(TextEditField):
     def is_displayed(self, layer):
@@ -260,28 +279,26 @@ class PointCoordinatesField(TextEditField):
         prefs = self.panel.project.task.get_preferences()
         coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
         return coords_text
+    
+    def parse_from_string(self):
+        text = self.ctrl.GetValue()
+        c = coordinates.lat_lon_from_format_string(text)
+        if c == (-1, -1):
+            raise ValueError("Invalid coordinates %s" % text)
+        return c
 
     def get_command(self, layer, index, dx, dy):
         return MovePointsCommand(layer, [index], dx, dy)
 
     def process_text_change(self, layer):
-        c = self.ctrl
-        c.SetBackgroundColour("#FFFFFF")
-        try:
-            new_point = coordinates.lat_lon_from_format_string(c.GetValue())
-            if new_point == (-1, -1):
-                c.SetBackgroundColour("#FF8080")
-                return
+        if self.is_valid():
+            new_point = self.parse_from_string()
             index = self.get_point_index(layer)
             current_point = (layer.points.x[index], layer.points.y[index])
             x_diff = new_point[0] - current_point[0]
             y_diff = new_point[1] - current_point[1]
             cmd = self.get_command(layer, index, x_diff, y_diff)
             self.panel.project.process_command(cmd)
-        except Exception as e:
-            import traceback
-            print traceback.format_exc(e)
-            c.SetBackgroundColour("#FF8080")
 
 class AnchorCoordinatesField(PointCoordinatesField):
     def is_displayed(self, layer):
@@ -1058,12 +1075,31 @@ class InfoPanel(PANELTYPE):
 
             return
 
+        different_layer = True
+        selection_changed = False
         if (layer is None or self.current_layer_displayed is None):
             if (layer == self.current_layer_displayed):
                 return
-        else:
-            if (self.current_layer_displayed == layer and self.current_layer_change_count == layer.change_count):
+        elif self.current_layer_displayed == layer:
+            if self.current_layer_change_count == layer.change_count:
                 return
+            if layer.change_count > self.current_layer_change_count + 1:
+                # NOTE: this is using an unobvious side effect to determine if
+                # the selection has changed.  The selection change is needed
+                # to determine whether to set new text in e.g.  the point
+                # coordinates box, or leave the text as is so the user can
+                # continue to edit.  The change count will always be increased
+                # by least 2 when a new point or line is selected (or points
+                # added to the selection etc.) in a point_base subclass.
+                # 
+                # Vector object layers operate differently because the
+                # selection doesn't apply, but the selection changed should
+                # always remain false for these layers because processing a
+                # command only increases the layer count by one.
+                selection_changed = True
+            different_layer = False
+
+        log.debug("%s: change count=%s, old count=%s, diff layer=%s" % (layer.name, layer.change_count, self.current_layer_change_count, different_layer))
 
         self.current_layer_displayed = layer
         self.current_layer_change_count = -1
@@ -1071,12 +1107,14 @@ class InfoPanel(PANELTYPE):
             self.current_layer_change_count = layer.change_count
 
         fields = self.get_visible_fields(layer)
-        self.display_fields(layer, fields)
+        self.display_fields(layer, fields, different_layer, selection_changed)
 
-    def display_fields(self, layer, fields):
+    def display_fields(self, layer, fields, different_layer, selection_changed):
         if self.current_fields == fields:
-            self.set_fields(layer, fields)
+            log.debug("reusing current fields")
+            self.set_fields(layer, fields, different_layer, selection_changed)
         else:
+            log.debug("creating fields")
             self.create_fields(layer, fields)
     
     known_fields = {
@@ -1164,16 +1202,17 @@ class InfoPanel(PANELTYPE):
         self.Refresh()
         self.current_fields = list(fields)
     
-    def set_fields(self, layer, fields):
+    def set_fields(self, layer, fields, different_layer, selection_changed):
         focus = None
         for field_name in fields:
             if field_name in self.field_map:
                 field = self.field_map[field_name]
                 if field.is_displayed(layer):
-                    field.fill_data(layer)
+                    if different_layer or selection_changed:
+                        field.fill_data(layer)
+                        if field.wants_focus():
+                            focus = field
                     field.show()
-                    if field.wants_focus():
-                        focus = field
                 else:
                     field.hide()
         self.constrain_size(focus)
