@@ -24,13 +24,13 @@ class BaseCanvas(object):
         
         self.layer_renderers = {}
         
-        self.overlay = self.get_overlay_renderer()
+        self.init_overlay()
+        
         self.picker = self.get_picker()
         self.hide_picker_layer = None
 
         self.screen_rect = rect.EMPTY_RECT
         
-        self.debug_show_bounding_boxes = False
         self.debug_show_picker_framebuffer = False
 
         self.projection = Projection(maproom.preferences.DEFAULT_PROJECTION_STRING)
@@ -45,11 +45,11 @@ class BaseCanvas(object):
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
     
+    def init_overlay(self):
+        pass
+    
     def get_picker(self):
         return NullPicker()
-    
-    def get_overlay_renderer(self):
-        return NullRenderer(self, None)
     
     def get_renderer(self, layer):
         return NullRenderer(self, layer)
@@ -197,11 +197,7 @@ class BaseCanvas(object):
 
         render_layers(layer_draw_order)
 
-        self.overlay.prepare_to_render_screen_objects()
-        if self.debug_show_bounding_boxes:
-            self.draw_bounding_boxes()
-        
-        self.mouse_handler.render_overlay(self.overlay)
+        self.render_overlay()
 
         self.begin_rendering_picker(s_r)
         render_layers(layer_draw_order, picker=self.picker)
@@ -211,18 +207,12 @@ class BaseCanvas(object):
 
         elapsed = time.clock() - t0
         self.post_render_update_ui_hook(elapsed, event)
+    
+    def render_overlay(self):
+        pass
 
     def post_render_update_ui_hook(self, elapsed, event):
         pass
-
-    def draw_bounding_boxes(self):
-        layers = self.layer_manager.flatten()
-        for layer in layers:
-            w_r = layer.bounds
-            if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
-                s_r = self.get_screen_rect_from_world_rect(w_r)
-                r, g, b, a = renderer.int_to_color_floats(layer.style.line_color)
-                self.overlay.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
 
     # functions related to world coordinates, projected coordinates, and screen coordinates
 

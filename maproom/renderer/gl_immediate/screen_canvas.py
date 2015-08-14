@@ -18,7 +18,7 @@ import maproom.library.rect as rect
 
 from ..gl.font import load_font_texture_with_alpha
 from ..gl import data_types
-from .. import NullPicker, BaseCanvas
+from .. import NullPicker, BaseCanvas, int_to_color_floats
 
 import logging
 log = logging.getLogger(__name__)
@@ -66,11 +66,12 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         
         self.native = self.get_native_control()
     
+    def init_overlay(self):
+        self.debug_show_bounding_boxes = False
+        self.overlay = ImmediateModeRenderer(self, None)
+    
     def get_picker(self):
         return Picker()
-    
-    def get_overlay_renderer(self):
-        return ImmediateModeRenderer(self, None)
 
     def get_native_control(self):
         return self
@@ -459,7 +460,22 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             return False
         self.SetCurrent(self.shared_context)  # Needed every time for OS X
         return True
-        
+    
+    def render_overlay(self):
+        self.overlay.prepare_to_render_screen_objects()
+        if self.debug_show_bounding_boxes:
+            self.draw_bounding_boxes()
+        self.mouse_handler.render_overlay(self.overlay)
+
+    def draw_bounding_boxes(self):
+        layers = self.layer_manager.flatten()
+        for layer in layers:
+            w_r = layer.bounds
+            if (w_r != rect.EMPTY_RECT) and (w_r != rect.NONE_RECT):
+                s_r = self.get_screen_rect_from_world_rect(w_r)
+                r, g, b, a = int_to_color_floats(layer.style.line_color)
+                self.overlay.draw_screen_box(s_r, r, g, b, 0.5, stipple_pattern=0xf0f0)
+
     def post_render_update_ui_hook(self, elapsed, event):
         self.SwapBuffers()
 
