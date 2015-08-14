@@ -323,10 +323,7 @@ class PolygonLayer(PointLayer):
         renderer.set_polygons(self.polygons, self.polygon_adjacency_array)
     
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
-        log.log(5, "Rendering polygon layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
-        if (not layer_visibility["layer"]):
-            return
-
+        log.log(5, "Rendering polygon layer!!! pick=%s" % (picker))
         # the polygons
         if layer_visibility["polygons"]:
             renderer.draw_polygons(layer_index_base, picker,

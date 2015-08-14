@@ -333,8 +333,8 @@ class TriangleLayer(PointLayer):
         renderer.set_triangles(triangles, tri_points_color)
     
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
-        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
-        if (not layer_visibility["layer"] or picker.is_active):
+        log.log(5, "Rendering line layer!!! pick=%s" % (picker))
+        if picker.is_active:
             return
 
         if layer_visibility["triangles"]:

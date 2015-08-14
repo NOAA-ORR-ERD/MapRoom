@@ -97,9 +97,7 @@ class VectorObjectLayer(LineLayer):
         If the vector object subclass is fillable, subclass from
         FillableVectorObject instead of this base class.
         """
-        log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
-        if (not layer_visibility["layer"]):
-            return
+        log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         renderer.outline_object(layer_index_base, picker, self.style)
@@ -111,8 +109,6 @@ class VectorObjectLayer(LineLayer):
         FillableVectorObject instead of this base class.
         """
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
-        if (not layer_visibility["layer"]):
-            return
         renderer.draw_points(layer_index_base, picker, self.point_size)
 
 
@@ -272,9 +268,7 @@ class LineVectorObject(VectorObjectLayer):
         
         It doesn't scale with the image, it scales with the line size on screen
         """
-        if (not layer_visibility["layer"] or picker.is_active):
-            return
-        log.log(5, "Rendering markers!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        log.log(5, "Rendering markers!!! pick=%s" % (picker))
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         markers = []
         for start, end, marker in self.get_marker_points():
@@ -296,9 +290,7 @@ class FillableVectorObject(LineVectorObject):
         return []
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
-        log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
-        if (not layer_visibility["layer"]):
-            return
+        log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         renderer.fill_object(layer_index_base, picker, self.style)
@@ -459,9 +451,7 @@ class ScaledImageObject(RectangleVectorObject):
         If the vector object subclass is fillable, subclass from
         FillableVectorObject instead of this base class.
         """
-        log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
-        if (not layer_visibility["layer"]):
-            return
+        log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         alpha = alpha_from_int(self.style.line_color)
@@ -546,9 +536,7 @@ class OverlayImageObject(RectangleVectorObject):
         
         It doesn't scale with the image, it scales with the line size on screen
         """
-        if (not layer_visibility["layer"]):
-            return
-        log.log(5, "Rendering overlay image!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        log.log(5, "Rendering overlay image %s!!! pick=%s" % (self.name, picker))
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
@@ -565,8 +553,6 @@ class OverlayImageObject(RectangleVectorObject):
         pass
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
-        if (not layer_visibility["layer"]):
-            return
         if self.anchor_point_index != self.center_point_index:
             flagged = [self.anchor_point_index]
         else:

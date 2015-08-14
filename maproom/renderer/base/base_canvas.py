@@ -179,6 +179,9 @@ class BaseCanvas(object):
             for i, layer in layer_order:
                 renderer = self.layer_renderers[layer]
                 vis = self.project.layer_visibility[layer]
+                if not vis["layer"]:
+                    # short circuit displaying anything if entire layer is hidden
+                    continue
                 if picker.is_active:
                     if layer.pickable:
                         pick_layer_index += 1
