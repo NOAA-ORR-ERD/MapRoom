@@ -82,7 +82,8 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
-        pass
+        print "line", point_a[0], point_a[1], point_b[0], point_b[1]
+        self.canvas.pdf.line(point_a[0], point_a[1], point_b[0], point_b[1])
 
     def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         pass

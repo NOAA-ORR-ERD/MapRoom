@@ -103,6 +103,9 @@ class BaseCanvas(object):
     
     def prepare_screen_viewport(self):
         pass
+    
+    def finalize_rendering_screen(self):
+        pass
 
     def set_screen_rendering_attributes(self):
         pass
@@ -219,6 +222,8 @@ class BaseCanvas(object):
 
         elapsed = time.clock() - t0
         self.post_render_update_ui_hook(elapsed, event)
+        
+        self.finalize_rendering_screen()
     
     def render_overlay(self):
         pass

@@ -66,8 +66,13 @@ class PDFCanvas(BaseCanvas):
         c.rect(0, 0, w, h, stroke=1, fill=0)
         c.drawString(0, 0, "Hello MapRoom!")
         
-        c.showPage()
-        c.save()
+        self.pdf = c
+        
+        print self.layer_renderers
+    
+    def finalize_rendering_screen(self):
+        self.pdf.showPage()
+        self.pdf.save()
 
     def set_screen_rendering_attributes(self):
         pass
