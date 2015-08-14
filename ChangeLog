@@ -1,3 +1,21 @@
+08/14/2015
+---------------------------
+Released 3.1b8
+- RM Fixed #621: added depth toggle
+- RM Fixed problem with cursor location and deleting in text fields
+- RM Refs #75: removed renderer attribute from Layer
+- RM Refs #75: renamed get_[picker|renderer] to new_*
+- RM Refs #75: converted render_projected, rebuild_renderer to take renderer arg
+- RM Refs #75: converted render_screen to take renderer arg
+- RM Refs #75: converted render_control_points_only to take renderer arg
+- RM Refs #75: converted pre_render to take renderer argument
+- RM Refs #75: Removed create_renderer as first step to allowing alternate renderers
+- RM Stub get_drawn_string_dimensions so blank image can get through mock PDF rendering
+- RM Refactored overlay stuff out of BaseCanvas to ScreenCanvas
+- RM Fixed #620: switches back to select mode after adding an annotation object
+- RM Added common base class for overlay modes
+- RM Moved context menu framework into ScreenCanvas
+
 08/13/2015
 ---------------------------
 Released 3.1b7
