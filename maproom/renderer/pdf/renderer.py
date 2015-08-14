@@ -97,7 +97,7 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def get_drawn_string_dimensions(self, text):
-        pass
+        return (100, 20)  # FIXME: need to figure out ReportLab font metrics
 
     def draw_screen_string(self, point, text):
         pass
