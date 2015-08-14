@@ -322,23 +322,23 @@ class TriangleLayer(PointLayer):
                 colors[i] = self.color_interp(d, colormap, alpha)
         return colors
     
-    def rebuild_renderer(self, in_place=False):
+    def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer
         
         """
         projected_point_data = self.compute_projected_point_data()
-        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         triangles = self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
         tri_points_color = self.get_triangle_point_colors()
-        self.renderer.set_triangles(triangles, tri_points_color)
+        renderer.set_triangles(triangles, tri_points_color)
     
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"] or picker.is_active):
             return
 
         if layer_visibility["triangles"]:
-            self.renderer.draw_triangles(self.style.line_width)
+            renderer.draw_triangles(self.style.line_width)
 
         if layer_visibility["labels"]:
-            self.renderer.draw_labels_at_points(self.points.z, s_r, p_r)
+            renderer.draw_labels_at_points(self.points.z, s_r, p_r)

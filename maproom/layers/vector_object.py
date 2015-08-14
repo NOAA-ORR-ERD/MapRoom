@@ -73,13 +73,13 @@ class VectorObjectLayer(LineLayer):
     def delete_all_selected_objects(self):
         return DeleteLayerCommand(self)
     
-    def rebuild_image(self):
+    def rebuild_image(self, renderer):
         """Hook for image-based renderers to rebuild image data
         
         """
         pass
     
-    def rebuild_renderer(self, in_place=False):
+    def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         
         """
@@ -87,11 +87,11 @@ class VectorObjectLayer(LineLayer):
         r, g, b, a = int_to_color_floats(self.style.line_color)
         point_color = color_floats_to_int(r, g, b, 1.0)
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
-        self.rasterize(projected_point_data, self.points.z, point_color, self.style.line_color)
-        self.rebuild_image()
+        self.rasterize(renderer, projected_point_data, self.points.z, point_color, self.style.line_color)
+        self.rebuild_image(renderer)
         self.rebuild_needed = False
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Renders the outline of the vector object.
         
         If the vector object subclass is fillable, subclass from
@@ -101,8 +101,8 @@ class VectorObjectLayer(LineLayer):
         if (not layer_visibility["layer"]):
             return
         if self.rebuild_needed:
-            self.rebuild_renderer()
-        self.renderer.outline_object(layer_index_base, picker, self.style)
+            self.rebuild_renderer(renderer)
+        renderer.outline_object(layer_index_base, picker, self.style)
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Renders the outline of the vector object.
@@ -239,7 +239,7 @@ class LineVectorObject(VectorObjectLayer):
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         pass
     
-    def rasterize_points(self, projected_point_data, z, cp_color):
+    def rasterize_points(self, renderer, projected_point_data, z, cp_color):
         n = np.alen(self.points)
         if not self.display_center_control_point:
             n -= 1
@@ -249,13 +249,13 @@ class LineVectorObject(VectorObjectLayer):
         if self.display_center_control_point:
             num_cp += 1
         colors[0:num_cp] = self.control_point_color
-        self.renderer.set_points(projected_point_data, z, colors, num_points=n)
+        renderer.set_points(projected_point_data, z, colors, num_points=n)
     
-    def rasterize(self, projected_point_data, z, cp_color, line_color):
-        self.rasterize_points(projected_point_data, z, cp_color)
+    def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
+        self.rasterize_points(renderer, projected_point_data, z, cp_color)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
-        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
+        renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
     def get_marker_points(self):
         """Return a tuple of point indexes for each marker.
@@ -295,14 +295,14 @@ class FillableVectorObject(LineVectorObject):
         # save time
         return []
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering vector object %s!!! visible=%s, pick=%s" % (self.name, layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
         if self.rebuild_needed:
-            self.rebuild_renderer()
-        self.renderer.fill_object(layer_index_base, picker, self.style)
-        self.renderer.outline_object(layer_index_base, picker, self.style)
+            self.rebuild_renderer(renderer)
+        renderer.fill_object(layer_index_base, picker, self.style)
+        renderer.outline_object(layer_index_base, picker, self.style)
 
 
 class RectangleMixin(object):
@@ -376,8 +376,8 @@ class EllipseVectorObject(RectangleVectorObject):
     
     type = Str("ellipse_obj")
     
-    def rasterize(self, projected_point_data, z, cp_color, line_color):
-        self.rasterize_points(projected_point_data, z, cp_color)
+    def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
+        self.rasterize_points(renderer, projected_point_data, z, cp_color)
         p = projected_point_data
         
         # FIXME: this only supports axis aligned ellipses
@@ -410,7 +410,7 @@ class EllipseVectorObject(RectangleVectorObject):
         # set_lines expects a color list for each point, not a single color
         colors = np.empty(num_segments, dtype=np.uint32)
         colors.fill(line_color)
-        self.renderer.set_lines(xy, lsi, colors)
+        renderer.set_lines(xy, lsi, colors)
 
 
 class ScaledImageObject(RectangleVectorObject):
@@ -440,7 +440,7 @@ class ScaledImageObject(RectangleVectorObject):
             self.image_data.set_control_points(self.points, projection)
             self.renderer.set_image_projection(self.image_data, projection)
 
-    def rebuild_image(self):
+    def rebuild_image(self, renderer):
         """Update renderer
         
         """
@@ -449,9 +449,9 @@ class ScaledImageObject(RectangleVectorObject):
             raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(self.points, raw, projection)
-        self.renderer.set_image_projection(self.image_data, projection)
+        renderer.set_image_projection(self.image_data, projection)
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Renders the outline of the vector object.
         
         If the vector object subclass is fillable, subclass from
@@ -461,9 +461,9 @@ class ScaledImageObject(RectangleVectorObject):
         if (not layer_visibility["layer"]):
             return
         if self.rebuild_needed:
-            self.rebuild_renderer()
+            self.rebuild_renderer(renderer)
         alpha = alpha_from_int(self.style.line_color)
-        self.renderer.draw_image(layer_index_base, picker, alpha)
+        renderer.draw_image(layer_index_base, picker, alpha)
 
 
 class OverlayImageObject(RectangleVectorObject):
@@ -519,18 +519,18 @@ class OverlayImageObject(RectangleVectorObject):
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, None, None)
 
-    def rebuild_image(self):
+    def rebuild_image(self, renderer):
         """Update renderer
         
         """
         if self.rebuild_needed:
-            self.renderer.release_textures()
+            renderer.release_textures()
             self.image_data = None
         if self.image_data is None:
             raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(self.points, raw)
-        self.renderer.set_image_screen(self.image_data)
+        renderer.set_image_screen(self.image_data)
 
     def pre_render(self, renderer):
         if self.rebuild_needed:
@@ -555,7 +555,7 @@ class OverlayImageObject(RectangleVectorObject):
         alpha = alpha_from_int(self.style.line_color)
         renderer.draw_image(layer_index_base, picker, alpha)
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         # without this, the superclass method from VectorObjectLayer will get
         # called too
         pass
@@ -624,7 +624,7 @@ class OverlayTextObject(OverlayImageObject):
 
     def update_world_control_points(self, renderer):
         h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # array indexes of numpy images are reversed
-        c = self.renderer.canvas
+        c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         anchor = c.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
         anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
@@ -767,11 +767,11 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
         points = ((p.xy[offset:] - old_origin) * scale) + new_origin
         p.xy[offset:] = points
         
-    def rasterize(self, projected_point_data, z, cp_color, line_color):
-        self.rasterize_points(projected_point_data, z, cp_color)
+    def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
+        self.rasterize_points(renderer, projected_point_data, z, cp_color)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
-        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
+        renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
     def get_marker_points(self):
         # Markers are only used on the first and last segments of the line

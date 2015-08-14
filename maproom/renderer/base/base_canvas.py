@@ -62,7 +62,7 @@ class BaseCanvas(object):
             if not layer in self.layer_renderers:
                 r = self.get_renderer(layer)
                 layer.renderer = r
-                layer.rebuild_renderer()
+                layer.rebuild_renderer(r)
                 self.layer_renderers[layer] = r
             else:
                 # FIXME: currently, layers expect the renderer object to be an
@@ -81,7 +81,8 @@ class BaseCanvas(object):
 
     def rebuild_renderer_for_layer(self, layer, in_place=False):
         if layer in self.layer_renderers:
-            layer.rebuild_renderer(in_place)
+            r = self.layer_renderers[layer]
+            layer.rebuild_renderer(r, in_place)
             log.debug("renderer rebuilt")
         else:
             log.warning("layer %s isn't in layer_renderers!" % layer)
@@ -168,7 +169,8 @@ class BaseCanvas(object):
             layer.pre_render(renderer)
         affected_layers = self.layer_manager.update_linked_control_points()
         for layer in affected_layers:
-            layer.rebuild_renderer(True)
+            renderer = self.layer_renderers[layer]
+            layer.rebuild_renderer(renderer, True)
 
         null_picker = NullPicker()
         def render_layers(layer_order, picker=null_picker):

@@ -317,19 +317,19 @@ class PolygonLayer(PointLayer):
         lf.layer_contents_deleted = True
         return undo
 
-    def rebuild_renderer(self, in_place=False):
+    def rebuild_renderer(self, renderer, in_place=False):
         projected_point_data = self.compute_projected_point_data()
-        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
-        self.renderer.set_polygons(self.polygons, self.polygon_adjacency_array)
+        renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        renderer.set_polygons(self.polygons, self.polygon_adjacency_array)
     
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering polygon layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
 
         # the polygons
         if layer_visibility["polygons"]:
-            self.renderer.draw_polygons(layer_index_base, picker,
+            renderer.draw_polygons(layer_index_base, picker,
                                         self.polygons.color,
                                         color_floats_to_int(0, 0, 0, 1.0),
                                         1)

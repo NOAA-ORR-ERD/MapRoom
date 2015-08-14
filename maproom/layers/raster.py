@@ -100,7 +100,7 @@ class RasterLayer(ProjectedLayer):
 
         return bounds
     
-    def rebuild_renderer(self, in_place=False):
+    def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         
         """
@@ -108,9 +108,9 @@ class RasterLayer(ProjectedLayer):
             return
 
         projection = self.manager.project.layer_canvas.projection
-        self.renderer.set_image_projection(self.image_data, projection)
+        renderer.set_image_projection(self.image_data, projection)
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"] or picker.is_active):
             return
@@ -119,4 +119,4 @@ class RasterLayer(ProjectedLayer):
         null_picker = NullPicker()
         if (layer_visibility["images"]):
             alpha = alpha_from_int(self.style.line_color)
-            self.renderer.draw_image(layer_index_base, null_picker, alpha)
+            renderer.draw_image(layer_index_base, null_picker, alpha)

@@ -249,30 +249,28 @@ class PointBaseLayer(ProjectedLayer):
         projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
         return projected_point_data
     
-    def rebuild_renderer(self, in_place=False):
+    def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         
         """
         projected_point_data = self.compute_projected_point_data()
-        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
 
         if layer_visibility["points"]:
-            self.renderer.draw_points(layer_index_base, picker, self.point_size,
+            renderer.draw_points(layer_index_base, picker, self.point_size,
                                       self.get_selected_point_indexes(),
                                       self.get_selected_point_indexes(STATE_FLAGGED))
 
         # the labels
         if layer_visibility["labels"]:
-            self.renderer.draw_labels_at_points(self.points.z, s_r, p_r)
+            renderer.draw_labels_at_points(self.points.z, s_r, p_r)
                 
         # render selections after everything else
         if (not picker.is_active):
             if layer_visibility["points"]:
-                self.renderer.draw_selected_points(
-                    self.point_size,
-                    self.get_selected_point_indexes())
+                renderer.draw_selected_points(self.point_size, self.get_selected_point_indexes())

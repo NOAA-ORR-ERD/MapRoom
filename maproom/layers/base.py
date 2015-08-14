@@ -380,7 +380,7 @@ class Layer(HasTraits):
     def crop_rectangle(self, world_rect):
         raise NotImplementedError
     
-    def rebuild_renderer(self, in_place=False):
+    def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         
         """
@@ -410,7 +410,7 @@ class Layer(HasTraits):
         else:
             if hasattr(self, "render_projected"):
                 renderer.prepare_to_render_projected_objects()
-                self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+                self.render_projected(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
             if hasattr(self, "render_screen"):
                 renderer.prepare_to_render_screen_objects()
                 self.render_screen(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
@@ -482,7 +482,7 @@ class AnnotationLayer(Folder):
 
 
 class ProjectedLayer(Layer):
-    def render_projected(self, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
         print "Layer %s doesn't have projected objects to render" % self.name
 
 

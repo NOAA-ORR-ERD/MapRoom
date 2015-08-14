@@ -500,15 +500,15 @@ class LineLayer(PointLayer):
         if (len(points_to_delete) > 0):
             return MergePointsCommand(self, list(points_to_delete))
     
-    def rebuild_renderer(self, in_place=False):
+    def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer
         
         """
         projected_point_data = self.compute_projected_point_data()
-        self.renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
-        self.renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
+        renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
 
-    def render_projected(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Actually draw the screen using the current display canvas renderer
         
         """
@@ -518,27 +518,23 @@ class LineLayer(PointLayer):
 
         # the points and line segments
         if layer_visibility["lines"]:
-            self.renderer.draw_lines(layer_index_base, picker, self.style,
+            renderer.draw_lines(layer_index_base, picker, self.style,
                             self.get_selected_line_segment_indexes(),
                             self.get_selected_line_segment_indexes(STATE_FLAGGED))
 
         if layer_visibility["points"]:
-            self.renderer.draw_points(layer_index_base, picker, self.point_size,
+            renderer.draw_points(layer_index_base, picker, self.point_size,
                              self.get_selected_point_indexes(),
                              self.get_selected_point_indexes(STATE_FLAGGED))
 
         # the labels
         if layer_visibility["labels"]:
-            self.renderer.draw_labels_at_points(self.points.z, s_r, p_r)
+            renderer.draw_labels_at_points(self.points.z, s_r, p_r)
             
         # render selections after everything else
         if (not picker.is_active):
             if layer_visibility["lines"]:
-                self.renderer.draw_selected_lines(
-                    self.style,
-                    self.get_selected_line_segment_indexes())
+                renderer.draw_selected_lines(self.style, self.get_selected_line_segment_indexes())
 
             if layer_visibility["points"]:
-                self.renderer.draw_selected_points(
-                    self.point_size,
-                    self.get_selected_point_indexes())
+                renderer.draw_selected_points(self.point_size, self.get_selected_point_indexes())
