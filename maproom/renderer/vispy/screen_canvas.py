@@ -148,7 +148,7 @@ class ScreenCanvas(app.Canvas):
         
         self.mouse_handler.process_key_char(event)
     
-    def get_renderer(self, layer):
+    def new_renderer(self, layer):
         r = VispyRenderer(self, layer)
         return r
     

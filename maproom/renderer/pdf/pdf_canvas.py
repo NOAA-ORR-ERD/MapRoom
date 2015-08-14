@@ -20,13 +20,10 @@ class PDFCanvas(BaseCanvas):
     def __init__(self, *args, **kwargs):
         BaseCanvas.__init__(self, *args, **kwargs)
 
-    def get_picker(self):
+    def new_picker(self):
         return NullPicker()
     
-    def get_overlay_renderer(self):
-        return ReportLabRenderer(self, None)
-    
-    def get_renderer(self, layer):
+    def new_renderer(self, layer):
         return ReportLabRenderer(self, layer)
     
     def prepare_screen_viewport(self):

@@ -70,7 +70,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.debug_show_bounding_boxes = False
         self.overlay = ImmediateModeRenderer(self, None)
     
-    def get_picker(self):
+    def new_picker(self):
         return Picker()
 
     def get_native_control(self):
@@ -211,7 +211,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         cmd = self.context_menu_data[event.GetId()]
         self.project.process_command(cmd)
     
-    def get_renderer(self, layer):
+    def new_renderer(self, layer):
         r = ImmediateModeRenderer(self, layer)
         return r
     

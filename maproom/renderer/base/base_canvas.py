@@ -26,7 +26,7 @@ class BaseCanvas(object):
         
         self.init_overlay()
         
-        self.picker = self.get_picker()
+        self.picker = self.new_picker()
         self.hide_picker_layer = None
 
         self.screen_rect = rect.EMPTY_RECT
@@ -48,10 +48,10 @@ class BaseCanvas(object):
     def init_overlay(self):
         pass
     
-    def get_picker(self):
+    def new_picker(self):
         return NullPicker()
     
-    def get_renderer(self, layer):
+    def new_renderer(self, layer):
         return NullRenderer(self, layer)
 
     def change_view(self, layer_manager):
@@ -60,7 +60,7 @@ class BaseCanvas(object):
     def update_renderers(self):
         for layer in self.layer_manager.flatten():
             if not layer in self.layer_renderers:
-                r = self.get_renderer(layer)
+                r = self.new_renderer(layer)
                 layer.renderer = r
                 layer.rebuild_renderer(r)
                 self.layer_renderers[layer] = r
