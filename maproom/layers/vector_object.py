@@ -104,7 +104,7 @@ class VectorObjectLayer(LineLayer):
             self.rebuild_renderer()
         self.renderer.outline_object(layer_index_base, picker, self.style)
 
-    def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         """Renders the outline of the vector object.
         
         If the vector object subclass is fillable, subclass from
@@ -113,7 +113,7 @@ class VectorObjectLayer(LineLayer):
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
         if (not layer_visibility["layer"]):
             return
-        self.renderer.draw_points(layer_index_base, picker, self.point_size)
+        renderer.draw_points(layer_index_base, picker, self.point_size)
 
 
 class LineVectorObject(VectorObjectLayer):
@@ -561,14 +561,14 @@ class OverlayImageObject(RectangleVectorObject):
         # called too
         pass
 
-    def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         if (not layer_visibility["layer"]):
             return
         if self.anchor_point_index != self.center_point_index:
             flagged = [self.anchor_point_index]
         else:
             flagged = []
-        self.renderer.draw_points(layer_index_base, picker, self.point_size, flagged_point_indexes=flagged)
+        renderer.draw_points(layer_index_base, picker, self.point_size, flagged_point_indexes=flagged)
 
 class OverlayTextObject(OverlayImageObject):
     """Texture mapped image object that is fixed in size relative to the screen

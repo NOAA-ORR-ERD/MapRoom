@@ -406,7 +406,7 @@ class Layer(HasTraits):
                control_points_only=False):
         if control_points_only:
             renderer.prepare_to_render_projected_objects()
-            self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            self.render_control_points_only(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
         else:
             if hasattr(self, "render_projected"):
                 renderer.prepare_to_render_projected_objects()
@@ -419,9 +419,9 @@ class Layer(HasTraits):
                 # on top of everything else in this layer when creating the
                 # picker framebuffer
                 renderer.prepare_to_render_projected_objects()
-                self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+                self.render_control_points_only(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
     
-    def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         pass
 
 
