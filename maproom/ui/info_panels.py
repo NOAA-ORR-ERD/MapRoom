@@ -143,7 +143,14 @@ class PointVisibilityField(VisibilityField):
 
 class LineVisibilityField(VisibilityField):
     visibility_name = 'lines'
-        
+
+class DepthVisibilityField(VisibilityField):
+    visibility_name = 'labels'
+    
+    def fill_data(self, layer):
+        self.ctrl.SetLabel("")
+
+
 class TextEditField(InfoField):
     def create_control(self):
         c = wx.TextCtrl(self.parent)
@@ -1126,6 +1133,7 @@ class InfoPanel(PANELTYPE):
         "Point index": PointIndexesField,
         "Point count": PointVisibilityField,
         "Line segment count": LineVisibilityField,
+        "Show depth": DepthVisibilityField,
         "Flagged points": FlaggedPointsField,
         "Transparency": LineAlphaField,
         "Line Transparency": LineAlphaField,

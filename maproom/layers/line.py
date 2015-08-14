@@ -36,7 +36,7 @@ class LineLayer(PointLayer):
 
     visibility_items = ["points", "lines", "labels"]
     
-    layer_info_panel = ["Layer name", "Point count", "Line segment count", "Flagged points", "Default depth", "Depth unit", "Color"]
+    layer_info_panel = ["Layer name", "Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     def __str__(self):
         try:
