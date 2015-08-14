@@ -154,6 +154,10 @@ class BatchStatus(object):
         
         self.metadata_changed = False
         
+        # If any editable properties have changed (those show up in the
+        # InfoPanel)
+        self.editable_properties_changed = False
+        
         self.refresh_needed = False
         
         # all layers that have been zoomed will appear in the list

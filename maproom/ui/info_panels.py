@@ -91,6 +91,11 @@ class InfoField(object):
     
     def set_focus(self):
         pass
+    
+    def process_command(self, cmd):
+        # Override the normal refreshing of the InfoPanel when editing the
+        # properties here because refreshing them messes up the text editing.
+        self.panel.project.process_command(cmd, override_editable_properties_changed=False)
 
 class LabelField(InfoField):
     same_line = True
@@ -201,7 +206,7 @@ class LayerNameField(TextEditField):
     def process_text_change(self, layer):
         name = self.ctrl.GetValue()
         cmd = RenameLayerCommand(layer, name)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
         
 class DefaultDepthField(TextEditField):
     same_line = True
@@ -265,7 +270,7 @@ class PointDepthField(TextEditField):
                 selected_point_indexes = layer.get_selected_point_indexes()
                 if len(selected_point_indexes > 0):
                     cmd = ChangeDepthCommand(layer, selected_point_indexes, depth)
-                    self.panel.project.process_command(cmd)
+                    self.process_command(cmd)
         
 class PointCoordinatesField(TextEditField):
     def is_displayed(self, layer):
@@ -305,7 +310,7 @@ class PointCoordinatesField(TextEditField):
             x_diff = new_point[0] - current_point[0]
             y_diff = new_point[1] - current_point[1]
             cmd = self.get_command(layer, index, x_diff, y_diff)
-            self.panel.project.process_command(cmd)
+            self.process_command(cmd)
 
 class AnchorCoordinatesField(PointCoordinatesField):
     def is_displayed(self, layer):
@@ -338,7 +343,7 @@ class AnchorPointField(InfoField):
             return
         item = event.GetSelection()
         cmd = SetAnchorCommand(layer, item)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 class PointIndexesField(TextEditField):
     def is_displayed(self, layer):
@@ -477,7 +482,7 @@ class LineAlphaField(FloatSliderField):
             val = (100 - int(c.GetValue())) / 100.0
             style = self.get_style(layer, val)
             cmd = StyleChangeCommand(layer, style)
-            wx.CallAfter(self.panel.project.process_command, cmd)
+            wx.CallAfter(self.process_command, cmd)
             c.textCtrl.SetBackgroundColour("#FFFFFF")
         except Exception as e:
             c.textCtrl.SetBackgroundColour("#FF8080")
@@ -523,7 +528,7 @@ class ColorPickerField(InfoField):
             return
         style = self.get_style(int_color)
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 class ColorField(ColorPickerField):
     def get_style(self, color):
@@ -625,7 +630,7 @@ class LineStyleField(InfoField):
         line_style = LayerStyle.line_styles[item]
         style = LayerStyle(line_stipple=line_style[1])
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 
 class LineWidthField(InfoField):
@@ -650,7 +655,7 @@ class LineWidthField(InfoField):
         line_width = LayerStyle.standard_line_widths[item]
         style = LayerStyle(line_width=line_width)
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 
 class FillStyleField(InfoField):
@@ -676,7 +681,7 @@ class FillStyleField(InfoField):
         item = event.GetSelection()
         style = LayerStyle(fill_style=item)
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
         
 class MultiLineTextField(InfoField):
@@ -725,7 +730,7 @@ class OverlayTextField(MultiLineTextField):
     def process_text_change(self, layer):
         text = self.ctrl.GetValue()
         cmd = TextCommand(layer, text)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 
 class TextFormatField(InfoField):
@@ -748,7 +753,7 @@ class TextFormatField(InfoField):
         item = event.GetSelection()
         style = LayerStyle(text_format=item)
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 
 class FontComboBox(wx.combo.OwnerDrawnComboBox):
@@ -810,7 +815,7 @@ class FontStyleField(InfoField):
         font = LayerStyle.get_font_name(item)
         style = LayerStyle(font=font)
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 
 class FontSizeField(InfoField):
@@ -835,7 +840,7 @@ class FontSizeField(InfoField):
         size = LayerStyle.standard_font_sizes[item]
         style = LayerStyle(font_size=size)
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 
 class MarkerField(InfoField):
@@ -865,7 +870,7 @@ class MarkerField(InfoField):
         item = event.GetSelection()
         style = self.get_style(item)
         cmd = StyleChangeCommand(layer, style)
-        self.panel.project.process_command(cmd)
+        self.process_command(cmd)
 
 class StartMarkerField(MarkerField):
     def get_marker(self, layer):
@@ -909,7 +914,7 @@ class MarplotIconField(InfoField):
         if new_id != wx.ID_CANCEL:
             style = self.get_style(new_id)
             cmd = StyleChangeCommand(layer, style)
-            self.panel.project.process_command(cmd)
+            self.process_command(cmd)
             self.fill_data(layer)
 
 
@@ -1074,7 +1079,7 @@ class InfoPanel(PANELTYPE):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
     
-    def display_panel_for_layer(self, project, layer):
+    def display_panel_for_layer(self, project, layer, force_selection_change=False):
         self.project = project
 
         if (self.ignore_next_update):
@@ -1083,7 +1088,7 @@ class InfoPanel(PANELTYPE):
             return
 
         different_layer = True
-        selection_changed = False
+        selection_changed = force_selection_change
         if (layer is None or self.current_layer_displayed is None):
             if (layer == self.current_layer_displayed):
                 return
@@ -1106,7 +1111,7 @@ class InfoPanel(PANELTYPE):
                 selection_changed = True
             different_layer = False
 
-        log.debug("%s: change count=%s, old count=%s, diff layer=%s" % (layer.name, layer.change_count, self.current_layer_change_count, different_layer))
+        log.debug("%s: change count=%s, old count=%s, diff layer=%s, sel_changed=%s" % (layer.name, layer.change_count, self.current_layer_change_count, different_layer, selection_changed))
 
         self.current_layer_displayed = layer
         self.current_layer_change_count = -1

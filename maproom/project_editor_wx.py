@@ -365,7 +365,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
     
     @on_trait_change('layer_manager:refresh_needed')
-    def refresh(self):
+    def refresh(self, editable_properties_changed=False):
         log.debug("refresh called")
         if self.control is None:
             return
@@ -376,8 +376,8 @@ class ProjectEditor(FrameworkEditor):
         
         sel_layer = self.layer_tree_control.get_selected_layer()
         self.update_layer_contents_ui(sel_layer)
-        self.layer_info.display_panel_for_layer(self, sel_layer)
-        self.selection_info.display_panel_for_layer(self, sel_layer)
+        self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
+        self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
         self.last_refresh = time.clock()
         self.control.Refresh()
     
@@ -423,12 +423,14 @@ class ProjectEditor(FrameworkEditor):
         undo = self.layer_manager.undo_stack.redo(self)
         self.process_flags(undo.flags)
     
-    def process_command(self, command, new_mouse_mode=None):
+    def process_command(self, command, new_mouse_mode=None, override_editable_properties_changed=None):
         """Process a single command and immediately update the UI to reflect
         the results of the command.
         """
         b = BatchStatus()
         undo = self.process_batch_command(command, b)
+        if override_editable_properties_changed is not None:
+            b.editable_properties_changed = override_editable_properties_changed
         self.perform_batch_flags(b)
         history = self.layer_manager.undo_stack.serialize()
         self.window.application.save_log(str(history), "command_log", ".mrc")
@@ -470,6 +472,7 @@ class ProjectEditor(FrameworkEditor):
             if lf.layer_items_moved:
                 layer.update_bounds()
                 b.need_rebuild[layer] = True
+                b.editable_properties_changed = True
             if lf.layer_display_properties_changed:
                 b.need_rebuild[layer] = False
                 b.refresh_needed = True
@@ -519,7 +522,7 @@ class ProjectEditor(FrameworkEditor):
         if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True
         if b.refresh_needed:
-            self.layer_manager.refresh_needed = True
+            self.layer_manager.refresh_needed = b.editable_properties_changed
         if b.select_layer:
             self.layer_tree_control.select_layer(b.select_layer)
         
