@@ -44,12 +44,28 @@ class PDFCanvas(BaseCanvas):
             size = (size[1], size[0])
         return size
     
+    def get_page_margins(self):
+        return (50, 50)
+    
     def prepare_screen_viewport(self):
-        print self.screen_rect
+        w, h = self.screen_rect[1]
+        ar = w * 1.0 / h
         pagesize = self.get_page_size()
-        print pagesize
         c = canvas.Canvas("maproom.pdf", pagesize=pagesize)
-        c.drawString(100,100,"Hello MapRoom!")
+        
+        margins = self.get_page_margins()
+        c.translate(*margins)
+        
+        drawing_area = (pagesize[0] - (2 * margins[0]), pagesize[1] - (2 * margins[1]))
+        if ar > 1.0:
+            scale = (drawing_area[0] / w, drawing_area[1] / w / ar)
+        else:
+            scale = (drawing_area[0] / h, drawing_area[1] / h / ar)
+        print w, h, ar, pagesize, drawing_area, scale
+        c.scale(*scale)
+        c.rect(0, 0, w, h, stroke=1, fill=0)
+        c.drawString(0, 0, "Hello MapRoom!")
+        
         c.showPage()
         c.save()
 
