@@ -27,26 +27,13 @@ class Grid(ScreenLayer):
     LINE_COLOR = (0, 0, 0, 0.75)
     # a nice amount of spacing between lines
     REFERENCE_PIXEL_SIZE = (100, 100)
-
-    def create_renderer(self, canvas):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
-        
-        """
-        self.degree_minute_grid = DegreeMinuteGridLines()
-        self.decimal_degree_grid = DecimalDegreeGridLines()
-        return ScreenLayer.create_renderer(self, canvas)
     
     def resize(self, world_rect, screen_rect):
         prefs = self.renderer.canvas.project.task.get_preferences()
         if prefs.coordinate_display_format == "decimal degrees":
-            self.grid = self.decimal_degree_grid
+            self.grid = DecimalDegreeGridLines()
         else:
-            self.grid = self.degree_minute_grid
+            self.grid = DegreeMinuteGridLines()
         self.lat_step = self.grid.get_step_size(0)
         self.lon_step = self.grid.get_step_size(0)
 

@@ -380,19 +380,6 @@ class Layer(HasTraits):
     def crop_rectangle(self, world_rect):
         raise NotImplementedError
     
-    def create_renderer(self, canvas):
-        """Create the graphic renderer for this layer.
-        
-        There may be multiple views of this layer (e.g.  in different windows),
-        so we can't just create the renderer as an attribute of this object.
-        The storage parameter is attached to the view and independent of
-        other views of this layer.
-        
-        """
-        self.renderer = canvas.get_renderer(self)
-        self.rebuild_renderer()
-        return self.renderer
-    
     def rebuild_renderer(self, in_place=False):
         """Update renderer
         
@@ -418,20 +405,20 @@ class Layer(HasTraits):
                picker,
                control_points_only=False):
         if control_points_only:
-            self.renderer.prepare_to_render_projected_objects()
+            renderer.prepare_to_render_projected_objects()
             self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
         else:
             if hasattr(self, "render_projected"):
-                self.renderer.prepare_to_render_projected_objects()
+                renderer.prepare_to_render_projected_objects()
                 self.render_projected(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
             if hasattr(self, "render_screen"):
-                self.renderer.prepare_to_render_screen_objects()
+                renderer.prepare_to_render_screen_objects()
                 self.render_screen(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
             if picker.is_active:
                 # Control points should always be clickable, so render them
                 # on top of everything else in this layer when creating the
                 # picker framebuffer
-                self.renderer.prepare_to_render_projected_objects()
+                renderer.prepare_to_render_projected_objects()
                 self.render_control_points_only(world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
     
     def render_control_points_only(self, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):

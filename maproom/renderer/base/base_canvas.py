@@ -60,9 +60,14 @@ class BaseCanvas(object):
     def update_renderers(self):
         for layer in self.layer_manager.flatten():
             if not layer in self.layer_renderers:
-                r = layer.create_renderer(self)
+                r = self.get_renderer(layer)
+                layer.renderer = r
+                layer.rebuild_renderer()
                 self.layer_renderers[layer] = r
-        pass
+            else:
+                # FIXME: currently, layers expect the renderer object to be an
+                # instance attribute
+                layer.renderer = self.layer_renderers[layer]
     
     def remove_renderer_for_layer(self, layer):
         if layer in self.layer_renderers:
@@ -171,6 +176,7 @@ class BaseCanvas(object):
             delayed_pick_layer = None
             control_points_layer = None
             for i, layer in layer_order:
+                renderer = self.layer_renderers[layer]
                 vis = self.project.layer_visibility[layer]
                 if picker.is_active:
                     if layer.pickable:
@@ -183,17 +189,17 @@ class BaseCanvas(object):
                         elif layer == selected:
                             delayed_pick_layer = (layer, layer_index_base, vis)
                         else:
-                            layer.render(self, w_r, p_r, s_r, vis, layer_index_base, picker)
+                            layer.render(renderer, w_r, p_r, s_r, vis, layer_index_base, picker)
                 else: # not in pick-mode
                     if layer == selected:
                         control_points_layer = (layer, vis)
-                    layer.render(self, w_r, p_r, s_r, vis, -1, picker)
+                    layer.render(renderer, w_r, p_r, s_r, vis, -1, picker)
             if delayed_pick_layer is not None:
                 layer, layer_index_base, vis = delayed_pick_layer
-                layer.render(self, w_r, p_r, s_r, vis, layer_index_base, picker)
+                layer.render(renderer, w_r, p_r, s_r, vis, layer_index_base, picker)
             if control_points_layer is not None:
                 layer, vis = control_points_layer
-                layer.render(self, w_r, p_r, s_r, vis, -1, picker, control_points_only=True)
+                layer.render(renderer, w_r, p_r, s_r, vis, -1, picker, control_points_only=True)
 
         render_layers(layer_draw_order)
 
