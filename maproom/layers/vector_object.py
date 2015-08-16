@@ -540,7 +540,7 @@ class OverlayImageObject(RectangleVectorObject):
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
-        renderer.image_textures.center_at_screen_point(self.image_data, center, rect.height(c.screen_rect))
+        renderer.set_image_center_at_screen_point(self.image_data, center, c.screen_rect)
         self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker)
     
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):

@@ -14,6 +14,8 @@ class ReportLabRenderer(BaseRenderer):
     def __init__(self, canvas, layer):
         self.canvas = canvas
         self.layer = layer
+        self.image_textures = None
+        self.image_projected_rects = []
 
     def prepare_to_render_projected_objects(self):
         pass
@@ -62,6 +64,9 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def set_image_screen(self, image_data):
+        pass
+    
+    def set_image_center_at_screen_point(self, image_data, center, screen_rect):
         pass
     
     def release_textures(self):
