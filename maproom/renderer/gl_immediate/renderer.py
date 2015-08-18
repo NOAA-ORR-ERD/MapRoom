@@ -300,6 +300,9 @@ class ImmediateModeRenderer():
         height = rect.height(screen_rect)
         self.image_textures.center_at_screen_point(image_data, center, height)
     
+    def set_image_to_screen_rect(self, image_data, screen_rect):
+        self.image_textures.use_screen_rect(image_data, screen_rect)
+    
     def release_textures(self):
         if self.image_textures is not None:
             self.image_textures.destroy()

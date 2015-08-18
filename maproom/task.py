@@ -288,6 +288,14 @@ class NewAnnotationLayerAction(EditorAction):
         cmd = AddLayerCommand("annotation")
         self.active_editor.process_command(cmd)
 
+class NewWMSLayerAction(EditorAction):
+    name = 'New WMS Layer'
+    tooltip = 'Create new Web Map Service layer'
+
+    def perform(self, event):
+        cmd = AddLayerCommand("wms")
+        self.active_editor.process_command(cmd)
+
 class DeleteLayerAction(EditorAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
@@ -855,6 +863,7 @@ class MaproomProjectTask(FrameworkTask):
                         NewProjectAction(),
                         NewVectorLayerAction(),
                         NewAnnotationLayerAction(),
+                        NewWMSLayerAction(),
                         NewLonLatLayerAction(),
                         ]
                 elif group_name == "SaveGroup":

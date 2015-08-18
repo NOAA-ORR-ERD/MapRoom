@@ -80,3 +80,6 @@ def debug_objects(lm):
     a.set_style(lm.default_style)
     a.style.icon_marker = 186
     lm.insert_layer([2, 999], a)
+    
+    a = layers.WMSLayer(manager=lm)
+    lm.insert_layer([3], a)

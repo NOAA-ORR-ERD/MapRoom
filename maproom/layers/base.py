@@ -384,7 +384,7 @@ class Layer(HasTraits):
         """
         pass
 
-    def pre_render(self, renderer):
+    def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
         """Set up or rebuild any rendering elements prior to rendering.
         
         The rendering loop in BaseCanvas.render loops through all layers and

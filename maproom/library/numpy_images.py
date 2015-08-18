@@ -23,8 +23,8 @@ def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
     return arr
 
 
-def get_square(size):
-    arr = np.empty((size, size, 4), np.uint8)
+def get_rect(w, h):
+    arr = np.empty((h, w, 4), np.uint8)
 
     # just some indexes to keep track of which byte is which
     R, G, B, A = range(4)
@@ -37,12 +37,16 @@ def get_square(size):
     arr[:,:,A] = alpha
 
     # Set the alpha for the border pixels to be fully opaque
-    arr[0,      0:size, A] = wx.ALPHA_OPAQUE  # first row
-    arr[size-1, 0:size, A] = wx.ALPHA_OPAQUE  # last row
-    arr[0:size, 0,      A] = wx.ALPHA_OPAQUE  # first col
-    arr[0:size, size-1, A] = wx.ALPHA_OPAQUE  # last col
+    arr[0,   0:w, A] = wx.ALPHA_OPAQUE  # first row
+    arr[h-1, 0:w, A] = wx.ALPHA_OPAQUE  # last row
+    arr[0:h, 0,   A] = wx.ALPHA_OPAQUE  # first col
+    arr[0:h, w-1, A] = wx.ALPHA_OPAQUE  # last col
 
     return arr
+
+
+def get_square(size):
+    return get_rect(size, size)
 
 
 def simple_text_formatter(text):
