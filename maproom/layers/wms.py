@@ -1,17 +1,17 @@
 import numpy as np
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Bool, Any
+from traits.api import Unicode, Str, Int, Bool, Any
 
 from ..library import rect, coordinates
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
 
-from base import ScreenLayer
+from base import ProjectedLayer
 
 import logging
 log = logging.getLogger(__name__)
 
-class WMSLayer(ScreenLayer):
+class WMSLayer(ProjectedLayer):
     """Web Map Service
     
     """
@@ -23,6 +23,10 @@ class WMSLayer(ScreenLayer):
     
     current_size = Any((50, 200))
     
+    current_world = Any(((0, 0), (10, 10)))
+    
+    timer = Int(999)
+    
     rebuild_needed = Bool(True)
     
     def get_image_array(self):
@@ -30,6 +34,7 @@ class WMSLayer(ScreenLayer):
         return get_rect(*self.current_size)
 
     def rebuild_renderer(self, renderer, in_place=False):
+        projection = self.manager.project.layer_canvas.projection
         if self.rebuild_needed:
             renderer.release_textures()
             self.image_data = None
@@ -37,27 +42,29 @@ class WMSLayer(ScreenLayer):
             raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(None, raw)
-        renderer.set_image_screen(self.image_data)
+            self.image_data.set_rect(self.current_world, None)
+        renderer.set_image_projection(self.image_data, projection)
         self.rebuild_needed = False
 
     def resize(self, renderer, world_rect, screen_rect):
         print "world_rect = %r" % (world_rect,)
         print "screen_rect = %r" % (screen_rect,)
         s = rect.size(screen_rect)
-        if s != self.current_size:
+        if (s[0] != self.current_size[0] or s[1] != self.current_size[1]) or True:
             self.current_size = s
-            self.rebuild_needed = True
+            self.timer += 1
+            if self.timer > 100:
+                self.rebuild_needed = True
+                self.timer = 0
+        self.current_world = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
 
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
         self.resize(renderer, world_rect, screen_rect)
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
 
-    # fixme == this should be able to get the various rects from the render_window object...
-    def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
         if picker.is_active:
             return
         log.log(5, "Rendering wms!!! pick=%s" % (picker))
-        render_window = renderer.canvas
-        renderer.set_image_to_screen_rect(self.image_data, screen_rect)
         renderer.draw_image(layer_index_base, picker, 1.0)

@@ -4,10 +4,15 @@ import numpy as np
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 
+import pyproj
+
 from maproom.library.accumulator import flatten
 import maproom.library.rect as rect
 
 import data_types
+
+import logging
+log = logging.getLogger(__name__)
 
 
 def apply_transform(point, transform):
@@ -126,7 +131,9 @@ class ImageData(object):
             (selection_origin[0] + selection_size[0],
              selection_origin[1] + selection_size[1]),
             self.pixel_to_projected_transform)
-        if (self.projection.srs.find("+proj=longlat") != -1):
+        log.debug("calc_world_rect: projection=%s" % self.projection.srs)
+        log.debug("  before: %s" % str((left_bottom_projected, left_top_projected, right_top_projected, right_bottom_projected)))
+        if self.projection.srs.find("+proj=longlat") != -1 or self.projection.srs.find("+proj=latlong") != -1:
             # for longlat projection, apparently someone decided that since the projection
             # is the identity, it might as well do something and so it returns the coordinates as
             # radians instead of degrees; so here we avoid using the projection altogether
@@ -139,6 +146,7 @@ class ImageData(object):
             left_top_world = self.projection(left_top_projected[0], left_top_projected[1], inverse=True)
             right_top_world = self.projection(right_top_projected[0], right_top_projected[1], inverse=True)
             right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
+        log.debug("  after: %s" % str((left_bottom_world, left_top_world, right_top_world, right_bottom_world)))
         
         return left_bottom_world, left_top_world, right_top_world, right_bottom_world
     
@@ -147,6 +155,8 @@ class ImageData(object):
         for entry in self.image_sizes:
             selection_origin, selection_size = entry
             world_rect = self.calc_world_rect(selection_origin, selection_size)
+            log.debug("image size: %s" % str(entry))
+            log.debug("world rect: %s" % str(world_rect))
             self.image_world_rects.append(world_rect)
 
     def load_texture_data(self, subimage_loader):
@@ -163,6 +173,14 @@ class ImageData(object):
         yoffset = cp[0][1]
         xscale = (cp[1][0] - cp[0][0])/self.x
         yscale = (cp[3][1] - cp[0][1])/self.y
+        self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
+        self.set_projection(projection)
+    
+    def set_rect(self, rect, projection):
+        xoffset = rect[0][0]
+        yoffset = rect[0][1]
+        xscale = (rect[1][0] - rect[0][0])/self.x
+        yscale = (rect[1][1] - rect[0][1])/self.y
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
     
@@ -291,6 +309,7 @@ class ImageTextures(object):
     
     def set_projection(self, image_data, projection):
         image_projected_rects = []
+        log.debug("set_projection: world rects=%s" % str(image_data.image_world_rects))
         for lb, lt, rt, rb in image_data.image_world_rects:
             left_bottom_projected = projection(lb[0], lb[1])
             left_top_projected = projection(lt[0], lt[1])
@@ -300,8 +319,10 @@ class ImageTextures(object):
                                            left_top_projected,
                                            right_top_projected,
                                            right_bottom_projected) )
+            log.debug("  world -> proj: %s -> %s" % (str((lb, lt, rt, rb)), str(image_projected_rects[-1])))
 
         for i, projected_rect in enumerate(image_projected_rects):
+            log.debug("  projected #%d: %s" % (i, str(projected_rect)))
             raw = self.vbo_vertexes[i].data
             vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = projected_rect[0][0]
