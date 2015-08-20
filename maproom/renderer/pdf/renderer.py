@@ -105,12 +105,16 @@ class ReportLabRenderer(BaseRenderer):
 
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         print "line", point_a[0], point_a[1], point_b[0], point_b[1]
-        self.canvas.pdf.line(point_a[0], point_a[1], point_b[0], point_b[1])
+        c = self.canvas
+        h = rect.height(c.screen_rect)
+        c.pdf.line(point_a[0], h - point_a[1], point_b[0], h - point_b[1])
 
     def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
+        c = self.canvas
+        h = rect.height(c.screen_rect)
         for x1, y1, x2, y2 in points:
             print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
-            self.canvas.pdf.line(x1, y1, x2, y2)
+            c.pdf.line(x1, h - y1, x2, h - y2)
 
     def draw_screen_markers(self, markers, style):
         pass
