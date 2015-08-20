@@ -20,6 +20,8 @@ class ReportLabRenderer(BaseRenderer):
         self.line_colors = None
         self.image_textures = None
         self.image_projected_rects = []
+        
+        self.debug_text_bounding_box = False
 
     def prepare_to_render_projected_objects(self):
         self.canvas.set_projected_viewport()
@@ -126,10 +128,16 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def get_drawn_string_dimensions(self, text):
-        return (100, 20)  # FIXME: need to figure out ReportLab font metrics
+        return self.canvas.get_font_metrics(text)
 
     def draw_screen_string(self, point, text):
-        pass
+        c = self.canvas
+        h = rect.height(c.screen_rect) - c.font_scale
+        print "text %f,%f -> '%s'" % (point[0], h - point[1], text.encode("utf-8"))
+        c.pdf.drawString(point[0], h - point[1], text)
+        if self.debug_text_bounding_box:
+            dims = self.get_drawn_string_dimensions(text)
+            c.pdf.rect(point[0], h - point[1], dims[0], dims[1], fill=0, stroke=1)
 
     # Vector object drawing routines
 

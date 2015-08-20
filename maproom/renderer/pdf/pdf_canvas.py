@@ -8,6 +8,7 @@ import wx
 
 from reportlab.pdfgen import canvas
 import reportlab.lib.pagesizes as pagesizes
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 from renderer import ReportLabRenderer
 import maproom.library.rect as rect
@@ -30,6 +31,10 @@ class PDFCanvas(BaseCanvas):
     def __init__(self, *args, **kwargs):
         BaseCanvas.__init__(self, *args, **kwargs)
         self.screen_size = (1600, 900)
+        self.viewport_scale = 1.0
+        self.font_name = "Courier"
+        self.font_size = 5
+        self.font_scale = 0
 
     def new_picker(self):
         return NullPicker()
@@ -51,6 +56,9 @@ class PDFCanvas(BaseCanvas):
     def get_page_margins(self):
         return (50, 50)
     
+    def get_font_metrics(self, text):
+        return stringWidth(text, self.font_name, self.font_scale), self.font_scale
+    
     def set_viewport(self, rect):
         self.pdf.resetTransforms()
         x1, y1 = rect[0]
@@ -63,15 +71,18 @@ class PDFCanvas(BaseCanvas):
         
         drawing_area = (pagesize[0] - (2 * margins[0]), pagesize[1] - (2 * margins[1]))
         if ar > 1.0:
-            scale = (drawing_area[0] / w, drawing_area[0] / w)
+            scale = drawing_area[0] / w
         else:
-            scale = (drawing_area[0] / h, drawing_area[0] / h)
+            scale = drawing_area[0] / h
+        self.viewport_scale = scale
         print "viewport:", x1, y1, w, h, ar, pagesize, drawing_area, scale
-        self.pdf.scale(*scale)
+        self.pdf.scale(scale, scale)
         self.pdf.translate(-x1, -y1)
         p = self.pdf.beginPath()
         p.rect(x1, y1, w, h)
         self.pdf.clipPath(p, fill=0, stroke=0)
+        self.font_scale = self.font_size / self.viewport_scale
+        self.pdf.setFont(self.font_name, self.font_scale)
     
     def set_screen_viewport(self):
         print "screen rect!", self.screen_rect
