@@ -73,6 +73,8 @@ def debug_objects(lm):
         (2, 20),
         ])
     a.set_style(lm.default_style)
+    a.style.line_stipple = 0
+    a.style.fill_color = a.style.default_colors[2]
     lm.insert_layer([2, 999], a)
     
     a = layers.OverlayIconObject(manager=lm)

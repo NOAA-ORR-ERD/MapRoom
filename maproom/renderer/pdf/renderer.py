@@ -175,37 +175,37 @@ class ReportLabRenderer(BaseRenderer):
         print "rgb, a:", (r, g, b), a
         return (r, g, b), a
     
-    def set_stroke_color(self, style):
+    def set_stroke_style(self, style):
+        d = self.canvas.pdf
         rgb, a = self.convert_color(style.line_color)
-        self.canvas.pdf.setStrokeColor(rgb, a)
+        d.setStrokeColor(rgb, a)
+        w = style.line_width / self.canvas.viewport_scale
+        d.setLineWidth(w)
+        return style.line_stipple > 0
     
-    def set_fill_color(self, style):
+    def set_fill_style(self, style):
         rgb, a = self.convert_color(style.fill_color)
         self.canvas.pdf.setFillColor(rgb, a)
-    
-    def set_line_width(self, style):
-        w = style.line_width / self.canvas.viewport_scale
-        self.canvas.pdf.setLineWidth(w)
+        return style.fill_style > 0
 
     def fill_object(self, layer_index_base, picker, style):
         d = self.canvas.pdf
-        self.set_fill_color(style)
-        p = d.beginPath()
-        x, y = self.line_xys[0]
-        p.moveTo(x, y)
-        for x, y in self.line_xys[1:]:
-            print "%f -> %f" % (x, y)
-            p.lineTo(x, y)
-        d.drawPath(p, fill=1, stroke=0)
+        if self.set_fill_style(style):
+            p = d.beginPath()
+            x, y = self.line_xys[0]
+            p.moveTo(x, y)
+            for x, y in self.line_xys[1:]:
+                print "%f -> %f" % (x, y)
+                p.lineTo(x, y)
+            d.drawPath(p, fill=1, stroke=0)
 
     def outline_object(self, layer_index_base, picker, style):
         d = self.canvas.pdf
-        self.set_stroke_color(style)
-        self.set_line_width(style)
-        p = d.beginPath()
-        x, y = self.line_xys[0]
-        p.moveTo(x, y)
-        for x, y in self.line_xys[1:]:
-            print "%f -> %f" % (x, y)
-            p.lineTo(x, y)
-        d.drawPath(p, fill=0, stroke=1)
+        if self.set_stroke_style(style):
+            p = d.beginPath()
+            x, y = self.line_xys[0]
+            p.moveTo(x, y)
+            for x, y in self.line_xys[1:]:
+                print "%f -> %f" % (x, y)
+                p.lineTo(x, y)
+            d.drawPath(p, fill=0, stroke=1)
