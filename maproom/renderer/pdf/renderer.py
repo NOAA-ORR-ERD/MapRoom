@@ -6,7 +6,7 @@ import numpy as np
 from peppy2 import get_image_path
 
 import maproom.library.rect as rect
-from .. import data_types, int_to_color_floats
+from .. import data_types, int_to_color_floats, color_floats_to_int
 from .. import BaseRenderer
 
 
@@ -29,17 +29,28 @@ class ReportLabRenderer(BaseRenderer):
     def prepare_to_render_screen_objects(self):
         self.canvas.set_screen_viewport()
     
+    def convert_colors(self, color, count):
+        if color is None:
+            black = ((0.0, 0.0, 0.0), 1.0)
+            converted = [black for i in range(count)]
+        else:
+            print "colors", color.view(dtype=np.uint32)
+            c = color.view(dtype=np.uint32)
+            
+            converted = [((r, g, b), a) for r, g, b, a in [int_to_color_floats(color) for color in c]]
+            print "colors", converted
+        return converted
+    
     def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
             num_points = np.alen(xy)
         self.point_xys = np.empty((num_points, 2), dtype=np.float32)
         self.point_xys[:num_points] = xy[:num_points]
+        self.point_colors = self.convert_colors(color, num_points)
     
     def set_lines(self, xy, indexes, color):
         self.line_xys = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
-        if (color is not None):
-            # double the colors since each segment has two vertexes
-            self.line_colors = color.copy()
+        self.line_colors = self.convert_colors(color, np.alen(self.line_xys) / 2)
     
     def draw_lines(self,
                    layer_index_base,
@@ -47,10 +58,12 @@ class ReportLabRenderer(BaseRenderer):
                    style,
                    selected_line_segment_indexes=[],
                    flagged_line_segment_indexes=[]):  # flagged_line_segment_indexes not yet used
+        c = self.canvas
         points = self.line_xys.reshape(-1, 4)
-        for x1, y1, x2, y2 in points:
+        for (x1, y1, x2, y2), (rgb, alpha) in zip(points, self.line_colors):
             print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
-            self.canvas.pdf.line(x1, y1, x2, y2)
+            c.pdf.setStrokeColor(rgb, alpha)
+            c.pdf.line(x1, y1, x2, y2)
 
     def draw_selected_lines(self, style, selected_line_segment_indexes=[]):
         pass
@@ -61,11 +74,12 @@ class ReportLabRenderer(BaseRenderer):
                     point_size,
                     selected_point_indexes=[],
                     flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
-        c = self.canvas.pdf
+        c = self.canvas
         r = point_size * self.canvas.projected_units_per_pixel / 2
-        for x, y in self.point_xys:
+        for (x, y), (rgb, alpha) in zip(self.point_xys, self.point_colors):
             print "point %f,%f, r=%f" % (x, y, r)
-            c.circle(x, y, r, fill=1, stroke=0)
+            c.pdf.setFillColor(rgb, alpha)
+            c.pdf.circle(x, y, r, fill=1, stroke=0)
 
     def draw_selected_points(self, point_size, selected_point_indexes=[]):
         pass
@@ -76,6 +90,7 @@ class ReportLabRenderer(BaseRenderer):
         if n == 0:
             return
         
+        c.pdf.setFillColor((0.0, 0.0, 0.0), 1.0)
         for index, s in enumerate(labels):
             x, y = relevant_points[index]
             w, h = c.get_font_metrics(s)
@@ -120,11 +135,13 @@ class ReportLabRenderer(BaseRenderer):
         print "line", point_a[0], point_a[1], point_b[0], point_b[1]
         c = self.canvas
         h = rect.height(c.screen_rect)
+        c.pdf.setStrokeColor((red, green, blue), alpha)
         c.pdf.line(point_a[0], h - point_a[1], point_b[0], h - point_b[1])
 
     def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         c = self.canvas
         h = rect.height(c.screen_rect)
+        c.pdf.setStrokeColor((red, green, blue), alpha)
         for x1, y1, x2, y2 in points:
             print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
             c.pdf.line(x1, h - y1, x2, h - y2)
@@ -145,6 +162,7 @@ class ReportLabRenderer(BaseRenderer):
         c = self.canvas
         h = rect.height(c.screen_rect) - c.font_scale
         print "text %f,%f -> '%s'" % (point[0], h - point[1], text.encode("utf-8"))
+        c.pdf.setFillColor((0.0, 0.0, 0.0), 1.0)
         c.pdf.drawString(point[0], h - point[1], text)
         if self.debug_text_bounding_box:
             dims = self.get_drawn_string_dimensions(text)
