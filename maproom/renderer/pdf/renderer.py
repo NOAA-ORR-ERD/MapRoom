@@ -14,6 +14,8 @@ class ReportLabRenderer(BaseRenderer):
     def __init__(self, canvas, layer):
         self.canvas = canvas
         self.layer = layer
+        self.point_xys = None
+        self.point_colors = None
         self.image_textures = None
         self.image_projected_rects = []
 
@@ -24,7 +26,10 @@ class ReportLabRenderer(BaseRenderer):
         pass
     
     def set_points(self, xy, depths, color=None, num_points=-1):
-        pass
+        if num_points == -1:
+            num_points = np.alen(xy)
+        self.point_xys = np.empty((num_points, 2), dtype=np.float32)
+        self.point_xys[:num_points] = xy[:num_points]
     
     def set_lines(self, xy, indexes, color):
         pass
