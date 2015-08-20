@@ -255,6 +255,7 @@ class ProjectEditor(FrameworkEditor):
     
     def print_page(self):
         pdf_canvas = renderer.PDFCanvas(layer_manager=self.layer_manager, project=self)
+        pdf_canvas.copy_viewport_from(self.layer_canvas)
         pdf_canvas.update_renderers()
         pdf_canvas.render()
     

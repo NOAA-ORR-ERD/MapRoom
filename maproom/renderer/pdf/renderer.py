@@ -16,14 +16,16 @@ class ReportLabRenderer(BaseRenderer):
         self.layer = layer
         self.point_xys = None
         self.point_colors = None
+        self.line_xys = None
+        self.line_colors = None
         self.image_textures = None
         self.image_projected_rects = []
 
     def prepare_to_render_projected_objects(self):
-        pass
+        self.canvas.set_projected_viewport()
 
     def prepare_to_render_screen_objects(self):
-        pass
+        self.canvas.set_screen_viewport()
     
     def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
@@ -32,7 +34,10 @@ class ReportLabRenderer(BaseRenderer):
         self.point_xys[:num_points] = xy[:num_points]
     
     def set_lines(self, xy, indexes, color):
-        pass
+        self.line_xys = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
+        if (color is not None):
+            # double the colors since each segment has two vertexes
+            self.line_colors = color.copy()
     
     def draw_lines(self,
                    layer_index_base,
@@ -40,7 +45,10 @@ class ReportLabRenderer(BaseRenderer):
                    style,
                    selected_line_segment_indexes=[],
                    flagged_line_segment_indexes=[]):  # flagged_line_segment_indexes not yet used
-        pass
+        points = self.line_xys.reshape(-1, 4)
+        for x1, y1, x2, y2 in points:
+            print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
+            self.canvas.pdf.line(x1, y1, x2, y2)
 
     def draw_selected_lines(self, style, selected_line_segment_indexes=[]):
         pass
@@ -96,7 +104,9 @@ class ReportLabRenderer(BaseRenderer):
         self.canvas.pdf.line(point_a[0], point_a[1], point_b[0], point_b[1])
 
     def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
-        pass
+        for x1, y1, x2, y2 in points:
+            print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
+            self.canvas.pdf.line(x1, y1, x2, y2)
 
     def draw_screen_markers(self, markers, style):
         pass
@@ -116,7 +126,26 @@ class ReportLabRenderer(BaseRenderer):
     # Vector object drawing routines
 
     def fill_object(self, layer_index_base, picker, style):
-        pass
+        c = self.canvas.pdf
+        p = c.beginPath()
+        x, y = self.line_xys[0]
+        p.moveTo(x, y)
+        for x, y in self.line_xys[1:]:
+            print "%f -> %f" % (x, y)
+            p.lineTo(x, y)
+        p.close()
+        c.drawPath(p, fill=1, stroke=0)
 
     def outline_object(self, layer_index_base, picker, style):
-        pass
+        c = self.canvas.pdf
+#        c.setStrokeColorRGB(0.2,0.3,0.5)
+#        c.setFillColorRGB(0.8,0.6,0.2)
+#        c.setLineWidth(4)
+        p = c.beginPath()
+        x, y = self.line_xys[0]
+        p.moveTo(x, y)
+        for x, y in self.line_xys[1:]:
+            print "%f -> %f" % (x, y)
+            p.lineTo(x, y)
+        p.close()
+        c.drawPath(p, fill=0, stroke=1)

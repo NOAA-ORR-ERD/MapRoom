@@ -235,6 +235,11 @@ class BaseCanvas(object):
 
     def get_screen_size(self):
         raise NotImplementedError
+    
+    def set_screen_size(self, size):
+        # provided for non-screen based canvas like PDF that copy their
+        # settings from a screen canvas
+        pass
 
     def get_screen_rect(self):
         size = self.get_screen_size()
@@ -375,6 +380,12 @@ class BaseCanvas(object):
         max_val = 80000
         self.projected_units_per_pixel = max(self.projected_units_per_pixel, min_val)
         self.projected_units_per_pixel = min(self.projected_units_per_pixel, max_val)
+    
+    def copy_viewport_from(self, other):
+        self.projected_units_per_pixel = other.projected_units_per_pixel
+        self.projected_point_center = tuple(other.projected_point_center)
+        self.projection = other.projection
+        self.set_screen_size(other.get_screen_size())
 
     def get_surrounding_screen_rects(self, r):
         # return four disjoint rects surround r on the screen

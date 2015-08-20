@@ -29,6 +29,7 @@ class PDFCanvas(BaseCanvas):
     
     def __init__(self, *args, **kwargs):
         BaseCanvas.__init__(self, *args, **kwargs)
+        self.screen_size = (1600, 900)
 
     def new_picker(self):
         return NullPicker()
@@ -47,9 +48,11 @@ class PDFCanvas(BaseCanvas):
     def get_page_margins(self):
         return (50, 50)
     
-    def set_default_viewport(self):
+    def set_viewport(self, rect):
         self.pdf.resetTransforms()
-        w, h = self.screen_rect[1]
+        x1, y1 = rect[0]
+        x2, y2 = rect[1]
+        w, h = (x2 - x1, y2 - y1)
         ar = w * 1.0 / h
         pagesize = self.get_page_size()
         margins = self.get_page_margins()
@@ -60,8 +63,17 @@ class PDFCanvas(BaseCanvas):
             scale = (drawing_area[0] / w, drawing_area[1] / w / ar)
         else:
             scale = (drawing_area[0] / h, drawing_area[1] / h / ar)
-        print w, h, ar, pagesize, drawing_area, scale
+        print "viewport:", x1, y1, w, h, ar, pagesize, drawing_area, scale
         self.pdf.scale(*scale)
+        self.pdf.translate(-x1, -y1)
+    
+    def set_screen_viewport(self):
+        print "screen rect!", self.screen_rect
+        self.set_viewport(self.screen_rect)
+    
+    def set_projected_viewport(self):
+        print "proj rect!", self.projected_rect
+        self.set_viewport(self.projected_rect)
     
     def debug_boundingbox(self):
         w, h = self.screen_rect[1]
@@ -73,9 +85,6 @@ class PDFCanvas(BaseCanvas):
     def prepare_screen_viewport(self):
         pagesize = self.get_page_size()
         self.pdf = canvas.Canvas("maproom.pdf", pagesize=pagesize)
-        self.set_default_viewport()
-        
-        self.debug_boundingbox()
 
     def finalize_rendering_screen(self):
         self.pdf.showPage()
@@ -88,5 +97,8 @@ class PDFCanvas(BaseCanvas):
         return True
 
     def get_screen_rect(self):
-        # FIXME: need real coords
-        return ((0, 0), (1024, 768))
+        w, h = self.screen_size
+        return ((0, 0), (w, h))
+    
+    def set_screen_size(self, size):
+        self.screen_size = size
