@@ -63,9 +63,9 @@ class PDFCanvas(BaseCanvas):
         
         drawing_area = (pagesize[0] - (2 * margins[0]), pagesize[1] - (2 * margins[1]))
         if ar > 1.0:
-            scale = (drawing_area[0] / w, drawing_area[1] / w / ar)
+            scale = (drawing_area[0] / w, drawing_area[0] / w)
         else:
-            scale = (drawing_area[0] / h, drawing_area[1] / h / ar)
+            scale = (drawing_area[0] / h, drawing_area[0] / h)
         print "viewport:", x1, y1, w, h, ar, pagesize, drawing_area, scale
         self.pdf.scale(*scale)
         self.pdf.translate(-x1, -y1)
