@@ -706,6 +706,31 @@ class LayerManager(HasTraits):
             dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
             layers.append(dep_layer)
         return layers
+    
+    def remove_all_links_to_layer(self, layer):
+        """Remove all links to the specified layer, whether it's a truth layer
+        or a dependent layer.
+        
+        Used when deleting a layer.
+        """
+        to_remove = []
+        for dep, truth in self.control_point_links.iteritems():
+            invariant, _ = dep[0], dep[1]
+            if invariant == layer.invariant:
+                to_remove.append((dep, truth))
+            else:
+                invariant, _ = truth[0], truth[1]
+                if invariant == layer.invariant:
+                    to_remove.append((dep, truth))
+        for dep, truth in to_remove:
+            log.debug("control_point_links: removing %s from %s" % (dep, truth))
+            del self.control_point_links[dep]
+        return to_remove
+    
+    def restore_all_links_to_layer(self, layer, links):
+        for dep, truth in links:
+            log.debug("control_point_links: restoring %s from %s" % (dep, truth))
+            self.control_point_links[dep] = truth
 
     def destroy_recursive(self, layer):
         if (layer.is_folder()):
