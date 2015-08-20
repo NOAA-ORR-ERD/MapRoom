@@ -69,6 +69,9 @@ class PDFCanvas(BaseCanvas):
         print "viewport:", x1, y1, w, h, ar, pagesize, drawing_area, scale
         self.pdf.scale(*scale)
         self.pdf.translate(-x1, -y1)
+        p = self.pdf.beginPath()
+        p.rect(x1, y1, w, h)
+        self.pdf.clipPath(p, fill=0, stroke=0)
     
     def set_screen_viewport(self):
         print "screen rect!", self.screen_rect
