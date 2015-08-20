@@ -110,6 +110,9 @@ class BaseCanvas(object):
     def set_screen_rendering_attributes(self):
         pass
 
+    def is_canvas_pickable(self):
+        return True
+
     def begin_rendering_picker(self, screen_rect):
         self.picker.prepare_to_render(screen_rect)
         self.set_picker_rendering_attributes()
@@ -214,11 +217,12 @@ class BaseCanvas(object):
 
         self.render_overlay()
 
-        self.begin_rendering_picker(s_r)
-        render_layers(layer_draw_order, picker=self.picker)
-        self.done_rendering_picker()
-        if self.debug_show_picker_framebuffer:
-            self.picker.render_picker_to_screen()
+        if self.is_canvas_pickable():
+            self.begin_rendering_picker(s_r)
+            render_layers(layer_draw_order, picker=self.picker)
+            self.done_rendering_picker()
+            if self.debug_show_picker_framebuffer:
+                self.picker.render_picker_to_screen()
 
         elapsed = time.clock() - t0
         self.post_render_update_ui_hook(elapsed, event)

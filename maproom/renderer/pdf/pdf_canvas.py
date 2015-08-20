@@ -33,6 +33,9 @@ class PDFCanvas(BaseCanvas):
 
     def new_picker(self):
         return NullPicker()
+
+    def is_canvas_pickable(self):
+        return False
     
     def new_renderer(self, layer):
         return ReportLabRenderer(self, layer)
