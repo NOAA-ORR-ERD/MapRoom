@@ -59,7 +59,11 @@ class ReportLabRenderer(BaseRenderer):
                     point_size,
                     selected_point_indexes=[],
                     flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
-        pass
+        c = self.canvas.pdf
+        r = point_size * self.canvas.projected_units_per_pixel / 2
+        for x, y in self.point_xys:
+            print "point %f,%f, r=%f" % (x, y, r)
+            c.circle(x, y, r, fill=1, stroke=0)
 
     def draw_selected_points(self, point_size, selected_point_indexes=[]):
         pass
