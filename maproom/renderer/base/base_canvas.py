@@ -31,6 +31,10 @@ class BaseCanvas(object):
 
         self.screen_rect = rect.EMPTY_RECT
         
+        # limiting value to prevent screen cluttering: if more characters would
+        # be visible in all labels on screen, disable the display of the labels
+        self.max_label_characters = 1000
+
         self.debug_show_picker_framebuffer = False
 
         self.projection = Projection(maproom.preferences.DEFAULT_PROJECTION_STRING)
@@ -416,6 +420,23 @@ class BaseCanvas(object):
             right = ((r[1][0], r[0][1]), (sr[1][0], r[1][1]))
 
         return [above, below, left, right]
+
+    def get_visible_labels(self, values, projected_points, projected_rect):
+        r1 = projected_points[:, 0] >= projected_rect[0][0]
+        r2 = projected_points[:, 0] <= projected_rect[1][0]
+        r3 = projected_points[:, 1] >= projected_rect[0][1]
+        r4 = projected_points[:, 1] <= projected_rect[1][1]
+        mask = np.logical_and(np.logical_and(r1, r2), np.logical_and(r3, r4))
+        relevant_indexes = np.where(mask)[0]
+        relevant_points = projected_points[relevant_indexes]
+
+        relevant_values = values[relevant_indexes]
+        labels = map(str, relevant_values)
+        n = sum(map(len, labels))
+
+        if (n == 0 or n > self.max_label_characters):
+            return 0, 0, 0
+        return n, labels, relevant_points
 
     def get_canvas_as_image(self):
         raise NotImplementedError

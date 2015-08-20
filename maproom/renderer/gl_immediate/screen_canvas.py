@@ -56,7 +56,6 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         # Texture creation must be deferred until after the call to SetCurrent
         # so that the GLContext is attached to the actual window
         self.font_texture = None
-        self.max_label_characters = 1000
 
         # Only bind paint event; others depend on window being realized
         self.Bind(wx.EVT_PAINT, self.on_draw)
@@ -333,19 +332,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         return n, self.font_texture
 
     def prepare_string_texture_for_labels(self, values, projected_points, projected_rect): 
-        r1 = projected_points[:, 0] >= projected_rect[0][0]
-        r2 = projected_points[:, 0] <= projected_rect[1][0]
-        r3 = projected_points[:, 1] >= projected_rect[0][1]
-        r4 = projected_points[:, 1] <= projected_rect[1][1]
-        mask = np.logical_and(np.logical_and(r1, r2), np.logical_and(r3, r4))
-        relevant_indexes = np.where(mask)[0]
-        relevant_points = projected_points[relevant_indexes]
-
-        relevant_values = values[relevant_indexes]
-        labels = map(str, relevant_values)
-        n = sum(map(len, labels))
-
-        if (n == 0 or n > self.max_label_characters):
+        n, labels, relevant_points = self.get_visible_labels(values, projected_points, projected_rect)
+        if n == 0:
             return 0, 0
 
         screen_vertex_accumulators = [[], [], [], [], [], [], [], []]

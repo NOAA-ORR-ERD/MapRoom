@@ -71,7 +71,18 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def draw_labels_at_points(self, values, screen_rect, projected_rect):
-        pass
+        c = self.canvas
+        n, labels, relevant_points = c.get_visible_labels(values, self.point_xys, projected_rect)
+        if n == 0:
+            return
+        
+        for index, s in enumerate(labels):
+            x, y = relevant_points[index]
+            w, h = c.get_font_metrics(s)
+            x -= w / 2
+            y -= h
+            c.pdf.drawString(x, y, s)
+            print "label %f,%f: %s" % (x, y, s)
 
     def set_triangles(self, triangle_point_indexes, triangle_point_colors):
         pass
