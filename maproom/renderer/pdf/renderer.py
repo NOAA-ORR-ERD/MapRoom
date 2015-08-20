@@ -34,9 +34,7 @@ class ReportLabRenderer(BaseRenderer):
             black = ((0.0, 0.0, 0.0), 1.0)
             converted = [black for i in range(count)]
         else:
-            print "colors", color.view(dtype=np.uint32)
             c = color.view(dtype=np.uint32)
-            
             converted = [((r, g, b), a) for r, g, b, a in [int_to_color_floats(color) for color in c]]
             print "colors", converted
         return converted
@@ -170,27 +168,42 @@ class ReportLabRenderer(BaseRenderer):
 
     # Vector object drawing routines
 
+    def convert_color(self, color):
+        r, g, b, a = int_to_color_floats(color)
+        print "rgb, a:", (r, g, b), a
+        return (r, g, b), a
+    
+    def set_stroke_color(self, style):
+        rgb, a = self.convert_color(style.line_color)
+        self.canvas.pdf.setStrokeColor(rgb, a)
+    
+    def set_fill_color(self, style):
+        rgb, a = self.convert_color(style.fill_color)
+        self.canvas.pdf.setFillColor(rgb, a)
+    
+    def set_line_width(self, style):
+        w = style.line_width
+        self.canvas.pdf.setLineWidth(w)
+
     def fill_object(self, layer_index_base, picker, style):
-        c = self.canvas.pdf
-        p = c.beginPath()
+        d = self.canvas.pdf
+        self.set_fill_color(style)
+        p = d.beginPath()
         x, y = self.line_xys[0]
         p.moveTo(x, y)
         for x, y in self.line_xys[1:]:
             print "%f -> %f" % (x, y)
             p.lineTo(x, y)
-        p.close()
-        c.drawPath(p, fill=1, stroke=0)
+        d.drawPath(p, fill=1, stroke=0)
 
     def outline_object(self, layer_index_base, picker, style):
-        c = self.canvas.pdf
-#        c.setStrokeColorRGB(0.2,0.3,0.5)
-#        c.setFillColorRGB(0.8,0.6,0.2)
-#        c.setLineWidth(4)
-        p = c.beginPath()
+        d = self.canvas.pdf
+        self.set_stroke_color(style)
+        self.set_line_width(style)
+        p = d.beginPath()
         x, y = self.line_xys[0]
         p.moveTo(x, y)
         for x, y in self.line_xys[1:]:
             print "%f -> %f" % (x, y)
             p.lineTo(x, y)
-        p.close()
-        c.drawPath(p, fill=0, stroke=1)
+        d.drawPath(p, fill=0, stroke=1)
