@@ -122,12 +122,33 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def set_polygons(self, polygons, point_adjacency_array):
-        pass
+        self.point_adjacency_array = point_adjacency_array.copy()
+        self.polygons = polygons.copy()
 
     def draw_polygons(self, layer_index_base, picker,
                       polygon_colors, line_color, line_width,
                       broken_polygon_index=None):
-        pass
+        d = self.canvas.pdf
+        rgb, a = self.convert_color(line_color)
+        d.setStrokeColor(rgb, a)
+        w = line_width / self.canvas.viewport_scale
+        d.setLineWidth(w)
+        
+        for polygon in self.polygons:
+            rgb, a = self.convert_color(polygon['color'])
+            d.setFillColor(rgb, a)
+            p = d.beginPath()
+            current = polygon['start']
+            x, y = self.point_xys[current]
+            p.moveTo(x, y)
+            count = polygon['count']
+            while count > 0:
+                next, polygon_id = self.point_adjacency_array[current]
+                x, y = self.point_xys[next]
+                p.lineTo(x, y)
+                count -= 1
+                current = next
+            d.drawPath(p, fill=1, stroke=1)
 
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         print "line", point_a[0], point_a[1], point_b[0], point_b[1]
