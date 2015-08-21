@@ -169,6 +169,15 @@ def get_wx_bitmap(icon_num):
     bitmap = wx.BitmapFromImage(image)
     return bitmap
 
+def get_numpy_bitmap(icon_num):
+    from PIL import Image
+    import numpy as np
+    import cStringIO
+    
+    data = marplot_icon_data[icon_num]
+    image = Image.open(cStringIO.StringIO(data))
+    return np.array(image)
+
 marplot_icon_max_size = (%d, %d)
 
 """ % (mm.max_width, mm.max_height)

@@ -271,9 +271,7 @@ class LayerStyle(object):
         return cls.fonts
     
     def get_numpy_image_from_icon(self):
-        bitmap = get_wx_bitmap(self.icon_marker)
-        arr = np.empty((bitmap.Height, bitmap.Width, 4), np.uint8)
-        bitmap.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
+        arr = get_numpy_bitmap(self.icon_marker)
         r, g, b, a = int_to_color_uint8(self.line_color)
         red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
         mask = (red == 255) & (green == 255) & (blue == 255)
