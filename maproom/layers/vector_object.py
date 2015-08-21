@@ -677,7 +677,7 @@ class OverlayIconObject(OverlayImageObject):
     
     type = Str("overlay_icon_obj")
     
-    layer_info_panel = ["Layer name", "Marplot icon", "color", "transparency"]
+    layer_info_panel = ["Layer name", "Marplot icon", "Color", "Transparency"]
     
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
     
