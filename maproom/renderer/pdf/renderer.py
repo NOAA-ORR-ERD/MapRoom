@@ -31,7 +31,7 @@ class PDFImage(object):
             return
         for i in xrange(len(image_data.image_sizes)):
             image_array = image_list[i]
-            image = Image.fromarray(image_array)
+            image = Image.fromarray(image_array, mode='RGBA')
             print "PIL image:", image
             self.images.append(image)
     
@@ -180,7 +180,9 @@ class ReportLabRenderer(BaseRenderer):
         d = self.canvas.pdf
         for image, x, y, w, h in self.images.foreach():
             print "draw_image: %s @ %f,%f" % (image, x, y)
-            d.drawImage(ImageReader(image), x, y, w, h) 
+            d.drawImage(ImageReader(image), x, y, w, h) #, mask=[0,1,0,1,0,1]) 
+            arr = np.array(image)
+            print arr[:,:,3]
 
     def set_invalid_polygons(self, polygons, polygon_count):
         pass
