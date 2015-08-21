@@ -73,7 +73,10 @@ class ImageData(object):
         """
         # release images by allowing garbage collector to collect the now
         # unrefcounted images.
-        self.images = True
+        
+        # UPDATE: need to keep raw images around for PDF rendering
+        #self.images = True
+        pass
     
     def set_projection(self, projection=None):
         if projection is None:

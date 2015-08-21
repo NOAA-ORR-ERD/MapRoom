@@ -3,11 +3,68 @@ import sys
 import wx
 import numpy as np
 
+from PIL import Image
+
+from reportlab.lib.utils import ImageReader
+
 from peppy2 import get_image_path
 
 import maproom.library.rect as rect
 from .. import data_types, int_to_color_floats, color_floats_to_int
 from .. import BaseRenderer
+
+
+class PDFImage(object):
+    def __init__(self, image_data):
+        self.images = []
+        self.xywh = []
+        self.load(image_data)
+
+    def foreach(self):
+        for image, xywh in zip(self.images, self.xywh):
+            yield image, xywh[0], xywh[1], xywh[2], xywh[3]
+
+    def load(self, image_data):
+        n = 0
+        image_list = image_data.images
+        if not image_list:
+            return
+        for i in xrange(len(image_data.image_sizes)):
+            image_array = image_list[i]
+            image = Image.fromarray(image_array)
+            print "PIL image:", image
+            self.images.append(image)
+    
+    def set_projection(self, image_data, projection):
+        self.xywh = []
+        for lb, lt, rt, rb in image_data.image_world_rects:
+            print "  world:", lb, rt
+            x1, y1 = projection(lb[0], lb[1])
+            x2, y2 = projection(rt[0], rt[1])
+            print "  projected:", x1, y1, x2, y2
+            self.xywh.append((x1, y1, x2 - x1, y2 - y1))
+    
+    def use_screen_rect(self, image_data, r):
+        self.xywh = []
+        for i, entry in enumerate(image_data.image_sizes):
+            selection_origin, selection_size = entry
+            print "  use_screen_rect:", selection_origin, selection_size
+            x = selection_origin[1] + r[0][0]
+            y = selection_origin[0] + r[0][1]
+            w = selection_size[1]
+            h = selection_size[0]
+            print "  after selected:", x, y, w, h
+            self.xywh.append((x, y, w, h))
+    
+    def center_at_screen_point(self, image_data, point, screen_height):
+        left = int(point[0] - image_data.y/2)
+        bottom = int(point[1] + image_data.x/2)
+        right = left + image_data.y
+        top = bottom + image_data.x
+        # flip y to treat rect as normal opengl coordinates
+        r = ((left, screen_height - bottom),
+             (right, screen_height - top))
+        self.use_screen_rect(image_data, r)
 
 
 class ReportLabRenderer(BaseRenderer):
@@ -18,8 +75,7 @@ class ReportLabRenderer(BaseRenderer):
         self.point_colors = None
         self.line_xys = None
         self.line_colors = None
-        self.image_textures = None
-        self.image_projected_rects = []
+        self.images = None
         
         self.debug_text_bounding_box = False
 
@@ -104,19 +160,27 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def set_image_projection(self, image_data, projection):
-        pass
+        if self.images is None:
+            self.images = PDFImage(image_data)
+        self.images.set_projection(image_data, projection)
 
     def set_image_screen(self, image_data):
-        pass
+        if self.images is None:
+            self.images = PDFImage(image_data)
     
     def set_image_center_at_screen_point(self, image_data, center, screen_rect):
-        pass
+        height = rect.height(screen_rect)
+        print "screen height", height
+        self.images.center_at_screen_point(image_data, center, height)
     
     def release_textures(self):
         pass
 
     def draw_image(self, layer_index_base, picker, alpha=1.0):
-        pass
+        d = self.canvas.pdf
+        for image, x, y, w, h in self.images.foreach():
+            print "draw_image: %s @ %f,%f" % (image, x, y)
+            d.drawImage(ImageReader(image), x, y, w, h) 
 
     def set_invalid_polygons(self, polygons, polygon_count):
         pass
