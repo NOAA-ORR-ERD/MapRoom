@@ -180,7 +180,7 @@ class ReportLabRenderer(BaseRenderer):
         d = self.canvas.pdf
         for image, x, y, w, h in self.images.foreach():
             print "draw_image: %s @ %f,%f" % (image, x, y)
-            d.drawImage(ImageReader(image), x, y, w, h) #, mask=[0,1,0,1,0,1]) 
+            d.drawImage(ImageReader(image), x, y, w, h, mask="auto")
             arr = np.array(image)
             print arr[:,:,3]
 
