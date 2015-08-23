@@ -30,6 +30,7 @@ class PDFCanvas(BaseCanvas):
     """
     
     def __init__(self, *args, **kwargs):
+        self.path = kwargs.pop('path')
         BaseCanvas.__init__(self, *args, **kwargs)
         self.screen_size = (1600, 900)
         self.viewport_scale = 1.0
@@ -106,7 +107,7 @@ class PDFCanvas(BaseCanvas):
     
     def prepare_screen_viewport(self):
         pagesize = self.get_page_size()
-        self.pdf = canvas.Canvas("maproom.pdf", pagesize=pagesize)
+        self.pdf = canvas.Canvas(self.path, pagesize=pagesize)
 
     def finalize_rendering_screen(self):
         self.pdf.showPage()

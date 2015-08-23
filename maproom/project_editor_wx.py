@@ -254,13 +254,13 @@ class ProjectEditor(FrameworkEditor):
         self.window.error("Can't preview yet. Working on it!")
     
     def print_page(self):
-        pdf_canvas = renderer.PDFCanvas(layer_manager=self.layer_manager, project=self)
+        self.save_as_pdf("maproom.pdf")
+    
+    def save_as_pdf(self, path=None):
+        pdf_canvas = renderer.PDFCanvas(layer_manager=self.layer_manager, project=self, path=path)
         pdf_canvas.copy_viewport_from(self.layer_canvas)
         pdf_canvas.update_renderers()
         pdf_canvas.render()
-    
-    def save_as_pdf(self, path=None):
-        self.window.error("Can't export to PDF yet. Working on it!")
 
     ###########################################################################
     # Private interface.
