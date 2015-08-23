@@ -179,10 +179,11 @@ class ReportLabRenderer(BaseRenderer):
     def draw_image(self, layer_index_base, picker, alpha=1.0):
         d = self.canvas.pdf
         for image, x, y, w, h in self.images.foreach():
-            print "draw_image: %s @ %f,%f" % (image, x, y)
-            d.drawImage(ImageReader(image), x, y, w, h, mask="auto")
-            arr = np.array(image)
-            print arr[:,:,3]
+            if self.canvas.is_onscreen(x, y, w, h):
+                print "draw_image: %s @ %f,%f" % (image, x, y)
+                d.drawImage(ImageReader(image), x, y, w, h, mask="auto")
+            else:
+                print "  skipping draw_image (fully clipped): %s @ %f,%f" % (image, x, y)
 
     def set_invalid_polygons(self, polygons, polygon_count):
         pass

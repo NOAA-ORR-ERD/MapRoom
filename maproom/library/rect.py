@@ -36,6 +36,12 @@ def contains_rect(r1, r2):
     return contains_point(r1, r2[0]) and contains_point(r1, r2[1])
 
 
+def intersects(r1, r2):
+    ax1, ay1, ax2, ay2 = get_normalized_coordinates(*r1)
+    bx1, by1, bx2, by2 = get_normalized_coordinates(*r2)
+    return ax1 < bx2 and ax2 > bx1 and ay1 < by2 and ay2 > by1
+
+
 def zoom_in_2(r):
     w = width(r)
     h = height(r)

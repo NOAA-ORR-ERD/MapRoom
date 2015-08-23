@@ -84,6 +84,10 @@ class PDFCanvas(BaseCanvas):
         self.font_scale = self.font_size / self.viewport_scale
         self.pdf.setFont(self.font_name, self.font_scale)
     
+    def is_onscreen(self, x, y, w, h):
+        r = ((x, y), (x + w, y + h))
+        return rect.intersects(r, self.projected_rect)
+    
     def set_screen_viewport(self):
         print "screen rect!", self.screen_rect
         self.set_viewport(self.screen_rect)
