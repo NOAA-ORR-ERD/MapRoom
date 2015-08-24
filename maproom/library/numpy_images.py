@@ -76,7 +76,7 @@ class OffScreenHTML(object):
         # White background will be transformed into transparent in get_numpy
         self.bg = (255, 255, 255)
     
-    def setup(self, text, bitmap, face, size, width):
+    def setup(self, text, bitmap, face, size):
         DC = wx.MemoryDC()
         DC.SelectObject(bitmap)
         DC = wx.GCDC(DC)
@@ -84,7 +84,7 @@ class OffScreenHTML(object):
         DC.Clear()
         
         self.hr.SetDC(DC, 1.0)
-        self.hr.SetSize(width, self.height)
+        self.hr.SetSize(bitmap.Width, self.height)
         self.hr.SetStandardFonts(size, face, "Deja Vu Sans Mono")
         
         self.hr.SetHtmlText(text)
@@ -96,7 +96,7 @@ class OffScreenHTML(object):
         Render the html source to the bitmap
         """
         bitmap = wx.EmptyBitmap(width, self.height)
-        dc = self.setup(source, bitmap, face, size, width)
+        dc = self.setup(source, bitmap, face, size)
         
         # Calculate the height of the final rendered text
         y = ylast = 0
@@ -114,9 +114,12 @@ class OffScreenHTML(object):
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
         # analogue to GetTotalHeight
         self.hr.Render(0, 0, [])
-        return width, self.hr.GetTotalHeight(), bitmap
+        return bitmap.Width, self.hr.GetTotalHeight(), bitmap
 
     def get_numpy(self, text, c=None, face="", size=12, text_format=0, width_in_pixels=200):
+        if width_in_pixels < 1:
+            return self.get_blank()
+        
         if text_format == 0:
             text = simple_text_formatter(text)
         if c is not None:
@@ -141,9 +144,12 @@ class OffScreenHTML(object):
         else:
             # he HTML renderer doesn't render anything when the input is empty
             # or only whitespace, so need to return a fake (blank) image
-            bb = np.asarray([255, 255, 255, 0], dtype=np.uint8).reshape((1, 1, 4))
+            bb = self.get_blank()
 
         return bb
+    
+    def get_blank(self):
+        return np.asarray([255, 255, 255, 0], dtype=np.uint8).reshape((1, 1, 4))
 
     def get_png(self, text, filename):
         w, h, bitmap = self.render(text)
