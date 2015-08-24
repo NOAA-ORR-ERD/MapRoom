@@ -34,6 +34,12 @@ class PDFCanvas(BaseCanvas):
         BaseCanvas.__init__(self, *args, **kwargs)
         self.screen_size = (1600, 900)
         self.viewport_scale = 1.0
+        
+        # linewidth_factor is an empircal scale factor gauged to make the
+        # linewidths on the printed output match the relative sizes on the
+        # screen. < 1 reduces width in printed output
+        self.linewidth_factor = 0.6
+
         self.font_name = "Courier"
         self.font_size = 5
         self.font_scale = 0

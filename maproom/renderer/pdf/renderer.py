@@ -197,9 +197,7 @@ class ReportLabRenderer(BaseRenderer):
                       broken_polygon_index=None):
         d = self.canvas.pdf
         rgb, a = self.convert_color(line_color)
-        d.setStrokeColor(rgb, a)
-        w = line_width / self.canvas.viewport_scale
-        d.setLineWidth(w)
+        self.set_stroke(rgb, a, line_width)
         
         for polygon in self.polygons:
             rgb, a = self.convert_color(polygon['color'])
@@ -221,15 +219,13 @@ class ReportLabRenderer(BaseRenderer):
         print "line", point_a[0], point_a[1], point_b[0], point_b[1]
         c = self.canvas
         h = rect.height(c.screen_rect)
-        c.pdf.setStrokeColor((red, green, blue), alpha)
-        c.pdf.setLineWidth(width / c.viewport_scale)
+        self.set_stroke((red, green, blue), alpha, width)
         c.pdf.line(point_a[0], h - point_a[1], point_b[0], h - point_b[1])
 
     def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         c = self.canvas
         h = rect.height(c.screen_rect)
-        c.pdf.setStrokeColor((red, green, blue), alpha)
-        c.pdf.setLineWidth(width / c.viewport_scale)
+        self.set_stroke((red, green, blue), alpha, width)
         for x1, y1, x2, y2 in points:
             print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
             c.pdf.line(x1, h - y1, x2, h - y2)
@@ -296,12 +292,17 @@ class ReportLabRenderer(BaseRenderer):
         return (r, g, b), a
     
     def set_stroke_style(self, style):
-        d = self.canvas.pdf
         rgb, a = self.convert_color(style.line_color)
-        d.setStrokeColor(rgb, a)
-        w = style.line_width / self.canvas.viewport_scale
-        d.setLineWidth(w)
+        self.set_stroke(rgb, a, style.line_width)
         return style.line_stipple > 0
+    
+    def set_stroke(self, rgb, a, width):
+        d = self.canvas.pdf
+        d.setStrokeColor(rgb, a)
+        w = width / self.canvas.viewport_scale * self.canvas.linewidth_factor
+        d.setLineWidth(w)
+        d.setLineJoin(1)  # rounded
+        d.setLineCap(1)  # rounded
     
     def set_fill_style(self, style):
         rgb, a = self.convert_color(style.fill_color)
