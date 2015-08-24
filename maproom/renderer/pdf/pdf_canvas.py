@@ -71,6 +71,7 @@ class PDFCanvas(BaseCanvas):
         self.pdf.resetTransforms()
         x1, y1 = rect[0]
         x2, y2 = rect[1]
+        self.current_viewport = ((x1, y1), (x2, y2))
         w, h = (x2 - x1, y2 - y1)
         ar = w * 1.0 / h
         pagesize = self.get_page_size()
@@ -94,7 +95,7 @@ class PDFCanvas(BaseCanvas):
     
     def is_onscreen(self, x, y, w, h):
         r = ((x, y), (x + w, y + h))
-        return rect.intersects(r, self.projected_rect)
+        return rect.intersects(r, self.current_viewport)
     
     def set_screen_viewport(self):
         print "screen rect!", self.screen_rect
