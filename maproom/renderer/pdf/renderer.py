@@ -235,7 +235,39 @@ class ReportLabRenderer(BaseRenderer):
             c.pdf.line(x1, h - y1, x2, h - y2)
 
     def draw_screen_markers(self, markers, style):
-        pass
+        c = self.canvas
+        self.set_stroke_style(style)
+        
+        # Markers use the same the fill color as the line color
+        rgb, a = self.convert_color(style.line_color)
+        c.pdf.setFillColor(rgb, a)
+        
+        for p1, p2, symbol in markers:
+            marker_points, filled = style.get_marker_data(symbol)
+            if marker_points is None:
+                continue
+            # Compute the angles in screen coordinates, because using world
+            # coordinates for the angles results in the projection being applied,
+            # which shows distortion as it moves away from the equator
+            point = c.get_numpy_screen_point_from_world_point(p1)
+            d = point - c.get_numpy_screen_point_from_world_point(p2)
+            mag = np.linalg.norm(d)
+            if mag > 0.0:
+                d = d / np.linalg.norm(d)
+            else:
+                d[:] = (1, 0)
+            r = np.array(((d[0], d[1]), (d[1], -d[0])), dtype=np.float32)
+            points = (np.dot(marker_points, r) * style.line_width) + point
+            #self.renderer.draw_screen_lines(a, self.style.line_width, smooth=True, color4b=self.style.line_color)
+            h = rect.height(c.screen_rect)
+            p = c.pdf.beginPath()
+            x, y = points[0]
+            p.moveTo(x, h - y)
+            for x, y in points[1:]:
+                print "%f -> %f" % (x, y)
+                p.lineTo(x, h -y)
+            p.close()
+            c.pdf.drawPath(p, fill=filled, stroke=1)
 
     def draw_screen_box(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, width=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
         pass

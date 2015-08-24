@@ -22,6 +22,8 @@ def debug_objects(lm):
     c.copy_control_point_from(0, a, 0)
     c.copy_control_point_from(1, b, 1)
     c.set_style(lm.default_style)
+    c.style.line_start_marker = 1
+    c.style.line_end_marker = 2
     lm.insert_layer([2, 999], c)
     lm.set_control_point_link(c, 0, a, 0)
     lm.update_linked_control_points()
@@ -32,6 +34,8 @@ def debug_objects(lm):
     c.set_opposite_corners((-20,10), (0,3))
     c.copy_control_point_from(1, b, 3)
     c.set_style(lm.default_style)
+    c.style.line_start_marker = 1
+    c.style.line_end_marker = 2
     lm.insert_layer([2, 999], c)
     lm.set_control_point_link(c, 1, b, 3)
     lm.update_linked_control_points()
@@ -40,6 +44,8 @@ def debug_objects(lm):
     c.set_opposite_corners((-15,10), (0,3))
     c.copy_control_point_from(1, b, 3)
     c.set_style(lm.default_style)
+    c.style.line_start_marker = 1
+    c.style.line_end_marker = 2
     lm.insert_layer([2, 999], c)
     lm.set_control_point_link(c, 1, b, 3)
     lm.update_linked_control_points()
@@ -48,6 +54,8 @@ def debug_objects(lm):
     c.set_opposite_corners((-10,10), (0,3))
     c.copy_control_point_from(1, b, 3)
     c.set_style(lm.default_style)
+    c.style.line_start_marker = 1
+    c.style.line_end_marker = 2
     lm.insert_layer([2, 999], c)
     lm.set_control_point_link(c, 1, b, 3)
     lm.update_linked_control_points()
