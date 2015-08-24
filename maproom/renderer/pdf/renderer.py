@@ -92,7 +92,6 @@ class ReportLabRenderer(BaseRenderer):
         else:
             c = color.view(dtype=np.uint32)
             converted = [((r, g, b), a) for r, g, b, a in [int_to_color_floats(color) for color in c]]
-            print "colors", converted
         return converted
     
     def set_points(self, xy, depths, color=None, num_points=-1):
@@ -288,7 +287,6 @@ class ReportLabRenderer(BaseRenderer):
 
     def convert_color(self, color):
         r, g, b, a = int_to_color_floats(color)
-        print "rgb, a:", (r, g, b), a
         return (r, g, b), a
     
     def set_stroke_style(self, style):
