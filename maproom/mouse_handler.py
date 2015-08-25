@@ -271,6 +271,30 @@ class MouseHandler(object):
         """
         self.render_snapped_point(renderer)
 
+    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp):
+        c = self.layer_canvas
+        e = c.project
+        lm = c.layer_manager
+        if (e.clickable_object_mouse_is_over is None):
+            return
+
+        (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
+        layer = lm.get_layer_by_pick_index(layer_index)
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
+        e.process_command(cmd)
+
+    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
+        c = self.layer_canvas
+        e = c.project
+        lm = c.layer_manager
+        if e.clickable_object_mouse_is_over is None or (world_d_x == 0 and world_d_y == 0):
+            return
+
+        (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(self.clickable_object_mouse_is_over)
+        layer = lm.get_layer_by_pick_index(layer_index)
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
+        e.process_command(cmd)
+
     def render_snapped_point(self, renderer):
         """Highlight snapped point when applicable
         
@@ -378,7 +402,7 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             if not c.HasCapture():
                 c.CaptureMouse()
-            c.project.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+            self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
             c.mouse_down_position = p
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
@@ -410,7 +434,7 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
-            c.project.finished_drag(c.mouse_down_position, c.mouse_move_position, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+            self.finished_drag(c.mouse_down_position, p, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
         c.selection_box_is_being_defined = False
         
         # This render is needed to update the picker buffer because the
