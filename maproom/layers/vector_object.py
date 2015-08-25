@@ -646,17 +646,24 @@ class OverlayTextObject(OverlayImageObject):
             d_s = c.get_numpy_screen_point_from_world_point(d)
             a_s = c.get_numpy_screen_point_from_world_point(a)
 
+            min_border = (2 * self.border_width)
             if drag < self.num_corners:
                 # Dragging a corner changes both width and heiht
-                self.text_width = abs(d_s[0] - a_s[0]) - (2 * self.border_width)
-                self.text_height = abs(d_s[1] - a_s[1]) - (2 * self.border_width)
+                self.text_width = abs(d_s[0] - a_s[0]) - min_border
+                self.text_height = abs(d_s[1] - a_s[1]) - min_border
             else:
                 # Dragging an edge only changes one dimension
                 oc = self.screen_offset_from_center[drag]
                 if abs(oc[1]) > 0:
-                    self.text_height = abs(d_s[1] - a_s[1]) - (2 * self.border_width)
+                    self.text_height = abs(d_s[1] - a_s[1]) - min_border
                 else:
-                    self.text_width = abs(d_s[0] - a_s[0]) - (2 * self.border_width)
+                    self.text_width = abs(d_s[0] - a_s[0]) - min_border
+            if self.text_width < min_border:
+                self.text_width = min_border
+                dx = 0
+            if self.text_height < min_border:
+                self.text_height = min_border
+                dy = 0
 
         self.move_bounding_box_point(drag, anchor, dx, dy)
     
