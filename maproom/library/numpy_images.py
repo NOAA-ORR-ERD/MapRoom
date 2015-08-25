@@ -109,7 +109,7 @@ class OffScreenHTML(object):
         if ylast > self.height:
             self.height = ylast
             bitmap = wx.EmptyBitmap(width, self.height)
-            dc = self.setup(source, bitmap, face, size, width)
+            dc = self.setup(source, bitmap, face, size)
         
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
         # analogue to GetTotalHeight
