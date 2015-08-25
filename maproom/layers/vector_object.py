@@ -573,9 +573,9 @@ class OverlayTextObject(OverlayImageObject):
     
     user_text = Unicode("<b>New Label</b>")
     
-    text_width = Float(200)
+    text_width = Float(-1)
     
-    text_height = Float(50)
+    text_height = Float(-1)
     
     border_width = Int(10)
     
@@ -612,11 +612,20 @@ class OverlayTextObject(OverlayImageObject):
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
         return arr
 
+    def set_location_and_size(self, p1, w, h):
+        self.text_width = w
+        self.text_height = h
+        p = np.concatenate((p1, p1), 0)  # flatten to 1D
+        c = p[self.corners_from_flat].reshape(-1,2)
+        cp = self.get_control_points_from_corners(c)
+        self.set_data(cp, 0.0, self.lines)
+
     def update_world_control_points(self, renderer):
         h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # array indexes of numpy images are reversed
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         anchor = c.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
+        print "anchor (center):", anchor
         anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
         
         scale = self.screen_offset_from_center.T
@@ -625,6 +634,7 @@ class OverlayTextObject(OverlayImageObject):
         
         for i in range(self.center_point_index + 1):
             w = c.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
+            print "world point for anchor %d" % i, w
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
             self.points.y[i] = w[1]

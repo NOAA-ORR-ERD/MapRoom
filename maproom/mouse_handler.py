@@ -961,8 +961,11 @@ class AddOverlayMode(MouseHandler):
         layer = e.layer_tree_control.get_selected_layer()
         if (layer is not None):
             cp = self.get_world_point(event)
-            cmd = self.vector_object_command(layer, cp, layer.manager.default_style)
+            cmd = self.get_vector_object_command(layer, cp, layer.manager.default_style)
             e.process_command(cmd, ControlPointSelectionMode)
+    
+    def get_vector_object_command(self, layer, cp, style):
+        return self.vector_object_command(layer, cp, style)
 
 
 class AddOverlayTextMode(AddOverlayMode):
@@ -970,6 +973,9 @@ class AddOverlayTextMode(AddOverlayMode):
     menu_item_name = "Add Text"
     menu_item_tooltip = "Add a new text overlay"
     vector_object_command = AddTextCommand
+    
+    def get_vector_object_command(self, layer, cp, style):
+        return self.vector_object_command(layer, cp, style, 300, 250)
 
 
 class AddOverlayIconMode(AddOverlayMode):

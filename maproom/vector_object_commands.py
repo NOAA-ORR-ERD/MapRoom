@@ -181,16 +181,20 @@ class AddTextCommand(DrawVectorObjectCommand):
         ('layer', 'layer'),
         ('point', 'point'),
         ('style', 'style'),
+        ('screen_width', 'int'),
+        ('screen_height', 'int'),
         ]
     
-    def __init__(self, event_layer, point, style):
+    def __init__(self, event_layer, point, style, screen_width, screen_height):
         Command.__init__(self, event_layer)
         self.point = point
         self.style = style.get_copy()  # Make sure not sharing objects
+        self.screen_width = screen_width
+        self.screen_height = screen_height
     
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
-        layer.set_location(self.point)
+        layer.set_location_and_size(self.point, self.screen_width, self.screen_height)
         layer.set_style(self.style)
         return layer
 
