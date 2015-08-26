@@ -625,7 +625,7 @@ class OverlayTextObject(OverlayImageObject):
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         anchor = c.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
-        print "anchor (center):", anchor
+        print "anchor (center):", anchor, "text w,h", self.text_width, self.text_height
         anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
         
         scale = self.screen_offset_from_center.T
@@ -646,6 +646,7 @@ class OverlayTextObject(OverlayImageObject):
     def move_control_point(self, drag, anchor, dx, dy):
         # Note: center point drag is rigid body move so text box size is only
         # recalculated if dragging some other control point
+        print "BEFORE: move_cp: text w,h", self.text_width, self.text_height
         if drag < self.center_point_index:
             c = self.manager.project.layer_canvas
             p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
@@ -674,6 +675,7 @@ class OverlayTextObject(OverlayImageObject):
             if self.text_height < min_border:
                 self.text_height = min_border
                 dy = 0
+            print " AFTER: move_cp: text w,h", self.text_width, self.text_height
 
         self.move_bounding_box_point(drag, anchor, dx, dy)
     
