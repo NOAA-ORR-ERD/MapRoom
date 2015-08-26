@@ -108,8 +108,7 @@ class ProjectEditor(FrameworkEditor):
                 extra = loader.load_project(metadata, self.layer_manager, batch_flags)
                 if extra is not None:
                     self.parse_extra_json(extra, batch_flags)
-                if batch_flags.zoom_rect is None:
-                    batch_flags.zoom_to_all()
+                self.layer_canvas.zoom_to_layers(batch_flags.layers)
                 self.perform_batch_flags(batch_flags)
             elif hasattr(loader, "iter_log"):
                 line = 0
@@ -137,8 +136,6 @@ class ProjectEditor(FrameworkEditor):
                     header.extend(errors)
                     text = "\n".join(header)
                     self.window.error(text, "Error restoring from command log")
-                if batch_flags.zoom_rect is None:
-                    batch_flags.zoom_to_all()
                 self.perform_batch_flags(batch_flags)
             else:
                 cmd = LoadLayersCommand(metadata)
@@ -465,8 +462,8 @@ class ProjectEditor(FrameworkEditor):
             b.layers_changed = True
         if f.refresh_needed:
             b.refresh_needed = True
-        if f.zoom_rect is not None:
-            b.zoom_rect = f.zoom_rect
+        if f.fast_viewport_refresh_needed:
+            b.fast_viewport_refresh_needed = True
         for lf in f.layer_flags:
             layer = lf.layer
             b.layers.append(layer)
@@ -492,8 +489,6 @@ class ProjectEditor(FrameworkEditor):
             if lf.layer_loaded:
                 self.layer_manager.layer_loaded = layer
                 b.layers_changed = True
-            if lf.zoom_to_layer:
-                b.zoom_layers.append(layer)
             if lf.layer_metadata_changed:
                 b.metadata_changed = True
     
@@ -514,16 +509,12 @@ class ProjectEditor(FrameworkEditor):
         
         if b.layers_changed:
             self.layer_manager.layers_changed = True
-        if b.zoom_layers:
-            self.zoom_to_layers(b.zoom_layers)
-            b.refresh_needed = True
-        if b.zoom_rect is not None:
-            self.layer_canvas.zoom_to_world_rect(b.zoom_rect, False)
-            b.refresh_needed = True
         if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True
         if b.refresh_needed:
             self.layer_manager.refresh_needed = b.editable_properties_changed
+        if b.fast_viewport_refresh_needed:
+            self.layer_canvas.render()
         if b.select_layer:
             self.layer_tree_control.select_layer(b.select_layer)
         
@@ -713,23 +704,6 @@ class ProjectEditor(FrameworkEditor):
         cmd = DeleteLayerCommand(layer)
         self.process_command(cmd)
 
-    #### wx event handlers ####################################################
-
-    #### old RenderController
-    
-    def zoom_to_selected_layer(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            self.zoom_to_layer(sel_layer)
-
-    def zoom_to_layer(self, layer):
-        self.layer_canvas.zoom_to_world_rect(layer.bounds)
-        self.layer_canvas.render()
-
-    def zoom_to_layers(self, layers):
-        rect = self.layer_manager.accumulate_layer_bounds_from_list(layers)
-        self.layer_canvas.zoom_to_world_rect(rect)
-    
     def check_for_errors(self):
         error = None
         sel_layer = self.layer_tree_control.get_selected_layer()

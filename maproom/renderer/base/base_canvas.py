@@ -328,26 +328,37 @@ class BaseCanvas(object):
 
     def zoom(self, steps=1, ratio=2.0, focus_point_screen=None):
         if ratio > 0:
-            self.projected_units_per_pixel /= ratio
+            units_per_pixel = self.projected_units_per_pixel / ratio
         else:
-            self.projected_units_per_pixel *= abs(ratio)
-        self.constrain_zoom()
-        self.render()
+            units_per_pixel = self.projected_units_per_pixel * abs(ratio)
+        return self.constrain_zoom(units_per_pixel)
 
     def zoom_in(self):
-        self.zoom(ratio=2.0)
+        return self.zoom(ratio=2.0)
 
     def zoom_out(self):
-        self.zoom(ratio=-2.0)
+        return self.zoom(ratio=-2.0)
 
     def zoom_to_fit(self):
-        w_r = self.layer_manager.accumulate_layer_rects(self.project.layer_visibility)
-        if (w_r != rect.NONE_RECT):
-            self.zoom_to_world_rect(w_r)
+        layers = self.layer_manager.get_visible_layers(self.project.layer_visibility)
+        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_layers(layers)
+
+    def zoom_to_layers(self, layers):
+        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_layers(layers)
+
+    def calc_zoom_to_layers(self, layers):
+        w_r = self.layer_manager.accumulate_layer_bounds(layers)
+        if (w_r == rect.NONE_RECT):
+            return self.projected_point_center, self.projected_units_per_pixel
+        return self.calc_zoom_to_world_rect(w_r)
 
     def zoom_to_world_rect(self, w_r, border=True):
+        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_world_rect(w_r, border)
+
+    def calc_zoom_to_world_rect(self, w_r, border=True):
         if (w_r == rect.NONE_RECT):
-            return
+            return self.projected_point_center, self.projected_units_per_pixel
+        
         p_r = self.get_projected_rect_from_world_rect(w_r)
         size = self.get_screen_size()
         if border:
@@ -363,9 +374,9 @@ class BaseCanvas(object):
         ratio_v = float(pixels_v) / float(size[1])
         ratio = max(ratio_h, ratio_v)
 
-        self.projected_point_center = rect.center(p_r)
-        self.projected_units_per_pixel *= ratio
-        self.constrain_zoom()
+        center = rect.center(p_r)
+        units_per_pixel = self.constrain_zoom(self.projected_units_per_pixel * ratio)
+        return center, units_per_pixel
 
     def get_zoom_rect(self):
         return self.get_world_rect_from_screen_rect(self.get_screen_rect())
@@ -381,13 +392,14 @@ class BaseCanvas(object):
                 # otherwise we have to zoom (i.e., zoom out because panning didn't work)
                 self.zoom_to_world_rect(w_r)
 
-    def constrain_zoom(self):
+    def constrain_zoom(self, units_per_pixel):
         ## fixme: this  should not be hard coded -- could scale to projection(90,90, inverse=True or ??)
         ## Also should be in some kind of app preferences location...
         min_val = .02
         max_val = 80000
-        self.projected_units_per_pixel = max(self.projected_units_per_pixel, min_val)
-        self.projected_units_per_pixel = min(self.projected_units_per_pixel, max_val)
+        units_per_pixel = max(units_per_pixel, min_val)
+        units_per_pixel = min(units_per_pixel, max_val)
+        return units_per_pixel
     
     def copy_viewport_from(self, other):
         self.projected_units_per_pixel = other.projected_units_per_pixel

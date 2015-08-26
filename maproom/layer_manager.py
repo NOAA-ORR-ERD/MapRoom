@@ -606,21 +606,15 @@ class LayerManager(HasTraits):
         #
         return n
 
-    def accumulate_layer_rects(self, layer_visibility, only_visible_layers=True):
-        result = rect.NONE_RECT
-
-        if (len(self.layers) == 0):
-            return result
-
+    def get_visible_layers(self, layer_visibility, only_visible_layers=True):
         layers = []
         for layer in self.flatten():
             if (only_visible_layers and not layer_visibility[layer]["layer"]):
                 continue
             layers.append(layer)
+        return layers
 
-        return self.accumulate_layer_bounds_from_list(layers)
-
-    def accumulate_layer_bounds_from_list(self, layers):
+    def accumulate_layer_bounds(self, layers):
         result = rect.NONE_RECT
 
         for layer in layers:

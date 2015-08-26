@@ -2,6 +2,49 @@ import numpy as np
 
 from command import Command, UndoInfo
 
+class ViewportCommand(Command):
+    short_name = "viewport"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('center', 'point'),
+        ('units_per_pixel', 'float'),
+        ]
+    
+    def __init__(self, layer, center=None, units_per_pixel=None):
+        Command.__init__(self, layer)
+        self.center = center
+        self.units_per_pixel = units_per_pixel
+    
+    def __str__(self):
+        return "Viewport Change"
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer:
+                self.center = next_command.center
+                self.units_per_pixel = next_command.units_per_pixel
+                return True
+    
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        c = editor.layer_canvas
+        undo.data = (c.projected_point_center, c.projected_units_per_pixel)
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        if layer is not None:
+            center, units_per_pixel = c.zoom_to_world_rect(layer.bounds)
+        elif self.center is not None:
+            center, units_per_pixel = self.center, self.units_per_pixel
+        c.projected_point_center = center
+        c.projected_units_per_pixel = units_per_pixel
+        undo.flags.fast_viewport_refresh_needed = True
+        return undo
+
+    def undo(self, editor):
+        (old_center, old_units_per_pixel) = self.undo_info.data
+        editor.layer_canvas.projected_point_center = old_center
+        editor.layer_canvas.projected_units_per_pixel = old_units_per_pixel
+        return self.undo_info
+
 class InsertPointCommand(Command):
     short_name = "pt"
     serialize_order = [

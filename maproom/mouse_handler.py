@@ -178,6 +178,7 @@ class MouseHandler(object):
 
     def process_mouse_wheel_scroll(self, event):
         c = self.layer_canvas
+        e = c.project
         rotation = event.GetWheelRotation()
         delta = event.GetWheelDelta()
         window = event.GetEventObject()
@@ -205,7 +206,7 @@ class MouseHandler(object):
             
         world_point = c.get_world_point_from_screen_point(screen_point)
 
-        prefs = c.project.task.get_preferences()
+        prefs = e.task.get_preferences()
 
         zoom = 1.2
         zoom_speed = prefs.zoom_speed
@@ -217,20 +218,21 @@ class MouseHandler(object):
             zoom = 2.0
 
         if (amount < 0):
-            c.projected_units_per_pixel *= zoom
+            units_per_pixel = c.projected_units_per_pixel * zoom
         else:
-            c.projected_units_per_pixel /= zoom
-        c.constrain_zoom()
+            units_per_pixel = c.projected_units_per_pixel / zoom
+        units_per_pixel = c.constrain_zoom(units_per_pixel)
 
         projected_point = c.get_projected_point_from_screen_point(screen_point)
         new_projected_point = c.get_projected_point_from_world_point(world_point)
 
         delta = (new_projected_point[0] - projected_point[0], new_projected_point[1] - projected_point[1])
 
-        c.projected_point_center = (c.projected_point_center[0] + delta[0],
-                                       c.projected_point_center[1] + delta[1])
+        center = (c.projected_point_center[0] + delta[0],
+                  c.projected_point_center[1] + delta[1])
 
-        c.render()
+        cmd = ViewportCommand(None, center, units_per_pixel)
+        e.process_command(cmd)
 
     def process_mouse_leave(self, event):
         # this messes up object dragging when the mouse goes outside the window
@@ -329,6 +331,7 @@ class PanMode(MouseHandler):
 
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
+        e = c.project
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
@@ -338,10 +341,13 @@ class PanMode(MouseHandler):
             # the user has panned the map
             d_x_p = d_x * c.projected_units_per_pixel
             d_y_p = d_y * c.projected_units_per_pixel
-            c.projected_point_center = (c.projected_point_center[0] - d_x_p,
-                                           c.projected_point_center[1] - d_y_p)
+            center = (c.projected_point_center[0] - d_x_p,
+                      c.projected_point_center[1] - d_y_p)
             c.mouse_down_position = p
-            c.render(event)
+
+            cmd = ViewportCommand(None, center, c.projected_units_per_pixel)
+            e.process_command(cmd)
+            event.Skip()
 
     def process_mouse_up(self, event):
         c = self.layer_canvas

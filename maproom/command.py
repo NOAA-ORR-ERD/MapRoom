@@ -133,9 +133,6 @@ class LayerStatus(object):
         
         # ...needs to be selected after the command finishes
         self.select_layer = False
-        
-        # True if layer should be zoomed
-        self.zoom_to_layer = False
 
 
 class BatchStatus(object):
@@ -160,17 +157,10 @@ class BatchStatus(object):
         
         self.refresh_needed = False
         
-        # all layers that have been zoomed will appear in the list
-        self.zoom_layers = []
+        self.fast_viewport_refresh_needed = False
         
         # Any (error) messages will be added to this list
         self.messages = []
-        
-        # Specific zoom parameters
-        self.zoom_rect = None
-    
-    def zoom_to_all(self):
-        self.zoom_layers = self.layers
 
 
 class CommandStatus(object):
@@ -184,8 +174,11 @@ class CommandStatus(object):
         # Message displayed to the user
         self.message = None
         
-        # True if screen redraw needed
+        # True if all controls & map window need to be redrawn
         self.refresh_needed = False
+        
+        # True if only map window redraw needed
+        self.fast_viewport_refresh_needed = False
         
         # True if projection changed on any layer
         self.projection_changed = False
@@ -195,9 +188,6 @@ class CommandStatus(object):
         self.layers_changed = False
         
         self.layer_flags = []
-        
-        # Specific zoom parameters
-        self.zoom_rect = None
     
     def add_layer_flags(self, layer):
         lf = LayerStatus(layer)

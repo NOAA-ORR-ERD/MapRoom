@@ -61,7 +61,6 @@ class LoadLayersCommand(Command):
                 lf = undo.flags.add_layer_flags(layer)
                 lf.select_layer = True
                 lf.layer_loaded = True
-                lf.zoom_to_layer = True
                 
             undo.flags.layers_changed = True
             undo.flags.refresh_needed = True
@@ -438,7 +437,6 @@ class SavepointCommand(Command):
         if layer is not None:
             lf = undo.flags.add_layer_flags(layer)
             lf.select_layer = True
-        undo.flags.zoom_rect = self.world_rect
 
         return self.undo_info
 

@@ -236,7 +236,10 @@ class ZoomInAction(EditorAction):
     image = ImageResource('zoom_in')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_canvas.zoom_in)
+        c = self.active_editor.layer_canvas
+        units_per_pixel = c.zoom_in()
+        cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
+        self.active_editor.process_command(cmd)
 
 class ZoomOutAction(EditorAction):
     name = 'Zoom Out'
@@ -244,7 +247,10 @@ class ZoomOutAction(EditorAction):
     image = ImageResource('zoom_out')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_canvas.zoom_out)
+        c = self.active_editor.layer_canvas
+        units_per_pixel = c.zoom_out()
+        cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
+        self.active_editor.process_command(cmd)
 
 class ZoomToFit(EditorAction):
     name = 'Zoom to Fit'
@@ -252,7 +258,10 @@ class ZoomToFit(EditorAction):
     image = ImageResource('zoom_fit')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_canvas.zoom_to_fit)
+        c = self.active_editor.layer_canvas
+        center, units_per_pixel = c.zoom_to_fit()
+        cmd = ViewportCommand(None, center, units_per_pixel)
+        self.active_editor.process_command(cmd)
 
 class ZoomToLayer(EditorAction):
     name = 'Zoom to Layer'
@@ -261,7 +270,10 @@ class ZoomToLayer(EditorAction):
     image = ImageResource('zoom_to_layer')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.zoom_to_selected_layer)
+        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            cmd = ViewportCommand(sel_layer)
+            self.active_editor.process_command(cmd)
 
 class NewVectorLayerAction(EditorAction):
     name = 'New Verdat Layer'
