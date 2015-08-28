@@ -63,6 +63,8 @@ class LayerManager(HasTraits):
     refresh_needed = Event
     
     background_refresh_needed = Event
+    
+    threaded_image_loaded = Event
 
     pick_layer_index_map = {} # fixme: managed by the layer_convas -- horrible coupling!
     

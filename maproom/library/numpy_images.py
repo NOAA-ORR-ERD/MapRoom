@@ -1,8 +1,11 @@
 #!/usr/bin/env python
+import cStringIO
+
 import wx
 import wx.html
 
 import numpy as np
+from PIL import Image
 
 import cgi
 
@@ -21,6 +24,11 @@ def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
     mask = (red == 255) & (green == 255) & (blue == 255)
     arr[:,:,:3][mask] = [r, g, b]
     return arr
+
+
+def get_numpy_from_data(data):
+    image = Image.open(cStringIO.StringIO(data))
+    return np.array(image)
 
 
 def get_rect(w, h):

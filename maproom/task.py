@@ -11,7 +11,7 @@ from pyface.tasks.api import Task, TaskWindow, IEditor, \
 from pyface.action.api import Group, Separator, Action, ActionItem
 from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
     SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
-from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event
+from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
 
 from peppy2.framework.task import FrameworkTask
 from peppy2.framework.i_about import IAbout
@@ -24,6 +24,7 @@ from mouse_handler import *
 from menu_commands import *
 from vector_object_commands import *
 from ui.dialogs import StyleDialog
+from library.thread_utils import BackgroundWMSDownloader
 from peppy2.framework.actions import PreferencesAction
 
 import logging
@@ -866,6 +867,11 @@ class MaproomProjectTask(FrameworkTask):
         for pane in self.window.dock_panes:
             if pane.id in visible:
                 pane.visible = visible[pane.id]
+        
+        self.init_threaded_processing()
+
+    def prepare_destroy(self):
+        self.stop_threaded_processing()
     
     def get_actions(self, location, menu_name, group_name):
         if location == "Menu":
@@ -997,3 +1003,23 @@ class MaproomProjectTask(FrameworkTask):
                  mime == "application/x-nc_ugrid" or
                  mime == "application/x-nc_particles"
                  )
+
+    downloaders = Dict
+
+    def init_threaded_processing(self):
+        pass
+    
+    def stop_threaded_processing(self):
+        log.debug("Stopping threaded services...")
+        while len(self.downloaders) > 0:
+            url, wms = self.downloaders.popitem()
+            log.debug("Stopping threaded downloader %s" % t)
+            wms = None
+
+    def get_threaded_wms(self, url=None):
+        if url is None:
+            url = 'http://egisws02.nos.noaa.gov/ArcGIS/services/RNC/NOAA_RNC/ImageServer/WMSServer?'
+        if url not in self.downloaders:
+            wms = BackgroundWMSDownloader(url)
+            self.downloaders[url] = wms
+        return self.downloaders[url]

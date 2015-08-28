@@ -8,6 +8,8 @@ from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_col
 
 from base import ProjectedLayer
 
+from maproom.library import numpy_images
+
 import logging
 log = logging.getLogger(__name__)
 
@@ -29,9 +31,17 @@ class WMSLayer(ProjectedLayer):
     
     rebuild_needed = Bool(True)
     
+    threaded_request_ready = Any(None)
+    
     def get_image_array(self):
-        from maproom.library.numpy_images import get_rect
-        return get_rect(*self.current_size)
+        if self.threaded_request_ready is None:
+            wms = self.manager.project.task.get_threaded_wms()
+            wms.request_map(self.current_world, self.current_size, self.manager, self)
+            return self.current_world, numpy_images.get_rect(*self.current_size)
+        else:
+            wms = self.threaded_request_ready
+            self.threaded_request_ready = None
+            return wms.world_rect, wms.get_image_array()
 
     def rebuild_renderer(self, renderer, in_place=False):
         projection = self.manager.project.layer_canvas.projection
@@ -39,10 +49,15 @@ class WMSLayer(ProjectedLayer):
             renderer.release_textures()
             self.image_data = None
         if self.image_data is None:
-            raw = self.get_image_array()
+            world_rect, raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(None, raw)
-            self.image_data.set_rect(self.current_world, None)
+            # OpenGL y coords are backwards, so simply flip world y coords and
+            # OpenGL handles it correctly.
+            flipped = ((world_rect[0][0], world_rect[1][1]),
+                       (world_rect[1][0], world_rect[0][1]))
+            self.image_data.set_rect(flipped, None)
+            print "setting image data from wms connection:", world_rect
         renderer.set_image_projection(self.image_data, projection)
         self.rebuild_needed = False
 

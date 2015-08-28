@@ -388,6 +388,15 @@ class ProjectEditor(FrameworkEditor):
             return
         self.refresh()
     
+    @on_trait_change('layer_manager:threaded_image_loaded')
+    def threaded_image_loaded(self, data):
+        log.debug("threaded image loaded called")
+        layer, wms_request = data
+        print "event happed on %s" % layer
+        print "data:", len(wms_request.data)
+        layer.rebuild_needed = True
+        layer.threaded_request_ready = wms_request
+        wx.CallAfter(self.layer_canvas.render)
     
     
     # New Command processor
