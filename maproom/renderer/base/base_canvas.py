@@ -40,11 +40,11 @@ class BaseCanvas(object):
         self.projection = Projection(maproom.preferences.DEFAULT_PROJECTION_STRING)
 
         # two variables keep track of what's visible on the screen:
-        # (1) the projected point at the center of the screen
-        self.projected_point_center = (0, 0)
+        # (1) the projected point at the center of the screen (Seattle Area)
+        self.projected_point_center = (-13664393.732, 6048089.93218)
         # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)        
         ## does this get re-set anyway? pretty arbitrary.
-        self.projected_units_per_pixel = 10000
+        self.projected_units_per_pixel = 1000
         
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
