@@ -37,7 +37,7 @@ class WMSLayer(ProjectedLayer):
         if self.threaded_request_ready is None:
             wms = self.manager.project.task.get_threaded_wms()
             wms.request_map(self.current_world, self.current_size, self.manager, self)
-            return self.current_world, numpy_images.get_rect(*self.current_size)
+            return self.current_world, numpy_images.get_checkerboard(*self.current_size)
         else:
             wms = self.threaded_request_ready
             self.threaded_request_ready = None

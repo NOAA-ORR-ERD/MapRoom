@@ -53,6 +53,17 @@ def get_rect(w, h):
     return arr
 
 
+def get_checkerboard(w, h, sq=16):
+    arr = np.empty((h, w, 4), np.uint8)
+
+    # Algorithm from http://stackoverflow.com/questions/2169478/how-to-make-a-checkerboard-in-numpy
+    c = np.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (h, w))
+    arr[c == 0] = (64, 64, 64, 128)
+    arr[c == 1] = (192, 192, 192, 128)
+
+    return arr
+
+
 def get_square(size):
     return get_rect(size, size)
 
