@@ -1013,7 +1013,7 @@ class MaproomProjectTask(FrameworkTask):
         log.debug("Stopping threaded services...")
         while len(self.downloaders) > 0:
             url, wms = self.downloaders.popitem()
-            log.debug("Stopping threaded downloader %s" % t)
+            log.debug("Stopping threaded downloader %s" % wms)
             wms = None
 
     def get_threaded_wms(self, url=None):
