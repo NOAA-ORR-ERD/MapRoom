@@ -23,11 +23,9 @@ class WMSLayer(ProjectedLayer):
     
     image_data = Any
     
-    current_size = Any((50, 200))
+    current_size = Any(None)  # holds tuple of screen size
     
-    current_world = Any(((0, 0), (10, 10)))
-    
-    timer = Int(999)
+    current_world = Any(None)  # holds rect of world coords
     
     rebuild_needed = Bool(True)
     
@@ -48,7 +46,7 @@ class WMSLayer(ProjectedLayer):
         if self.rebuild_needed:
             renderer.release_textures()
             self.image_data = None
-        if self.image_data is None:
+        if self.image_data is None and self.current_size is not None:
             world_rect, raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[0], raw.shape[1])
             self.image_data.load_numpy_array(None, raw)
@@ -58,20 +56,27 @@ class WMSLayer(ProjectedLayer):
                        (world_rect[1][0], world_rect[0][1]))
             self.image_data.set_rect(flipped, None)
             print "setting image data from wms connection:", world_rect
-        renderer.set_image_projection(self.image_data, projection)
-        self.rebuild_needed = False
+        if self.image_data is not None:
+            renderer.set_image_projection(self.image_data, projection)
+            self.rebuild_needed = False
 
     def resize(self, renderer, world_rect, screen_rect):
         print "world_rect = %r" % (world_rect,)
         print "screen_rect = %r" % (screen_rect,)
         s = rect.size(screen_rect)
-        if (s[0] != self.current_size[0] or s[1] != self.current_size[1]) or True:
-            self.current_size = s
-            self.timer += 1
-            if self.timer > 100:
-                self.rebuild_needed = True
-                self.timer = 0
-        self.current_world = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
+        w = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
+        if self.current_size is not None:
+            if s != self.current_size or w != self.current_world:
+                renderer.canvas.set_minimum_delay_callback(self.wms_rebuild, 1000)
+        self.current_size = s
+        self.current_world = w
+        if self.image_data is None:
+            # first time, set up immediate callback
+            self.rebuild_needed = True
+    
+    def wms_rebuild(self, canvas):
+        self.rebuild_needed = True
+        canvas.render()
 
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
         self.resize(renderer, world_rect, screen_rect)
@@ -82,4 +87,5 @@ class WMSLayer(ProjectedLayer):
         if picker.is_active:
             return
         log.log(5, "Rendering wms!!! pick=%s" % (picker))
-        renderer.draw_image(layer_index_base, picker, 1.0)
+        if self.image_data is not None:
+            renderer.draw_image(layer_index_base, picker, 1.0)

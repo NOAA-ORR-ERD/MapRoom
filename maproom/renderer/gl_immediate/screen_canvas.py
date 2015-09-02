@@ -64,6 +64,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.mouse_handler = None  # defined in subclass
         
         self.native = self.get_native_control()
+        
+        self.minimum_delay_timers = {}
     
     def init_overlay(self):
         self.debug_show_bounding_boxes = False
@@ -91,6 +93,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
         self.Bind(wx.EVT_MENU, self.on_popup_menu)
+        self.Bind(wx.EVT_TIMER, self.on_timer)
         
         # Prevent flashing on Windows by doing nothing on an erase background event.
         ## fixme -- I think you can pass a flag to the Window instead...
@@ -209,6 +212,36 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
     def on_popup_menu(self, event):
         cmd = self.context_menu_data[event.GetId()]
         self.project.process_command(cmd)
+    
+    def on_timer(self, event):
+        id = event.GetTimer().GetId()
+        timer, callback = self.minimum_delay_timers.pop(id)
+        log.debug("timer %d triggered for callback %s" % (timer.GetId(), callback))
+        wx.CallAfter(callback, self)
+    
+    def set_minimum_delay_callback(self, callback, delay):
+        """Trigger a callback after a delay.
+        
+        Only one timer against a particular callback is allowed.  If this
+        method is called before the delay time expires, it will reset to the
+        full delay, effectively rescheduling the callback.
+        
+        E.g. this is used in the WMS layer to prevent the background image
+        from being reloaded while the user is panning the view around,
+        preventing unnecessary traffic to the external webserver.
+        """
+        timer = None
+        for saved_timer, saved_callback in self.minimum_delay_timers.values():
+            if callback == saved_callback:
+                timer = saved_timer
+                log.debug("found timer %d for callback %s" % (timer.GetId(), callback))
+                break
+        if timer is None:
+            timer = wx.Timer(self.native)
+            self.minimum_delay_timers[timer.GetId()] = (timer, callback)
+            log.debug("created timer %d for callback %s" % (timer.GetId(), callback))
+            
+        timer.Start(delay, oneShot=True)
     
     def new_renderer(self, layer):
         r = ImmediateModeRenderer(self, layer)
