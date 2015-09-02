@@ -1,12 +1,15 @@
 """Thread utilities
 
 """
+from requests.exceptions import HTTPError
 
 from owslib.wms import WebMapService, ServiceException
 
 from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
 
 from numpy_images import get_numpy_from_data
+
+blank_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00@\x00\x00\x00@\x08\x06\x00\x00\x00\xaaiq\xde\x00\x00\x00\x06bKGD\x00\xff\x00\xff\x00\xff\xa0\xbd\xa7\x93\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\x07tIME\x07\xdf\t\x02\x10/\x0b\x11M\xec5\x00\x00\x00\x1diTXtComment\x00\x00\x00\x00\x00Created with GIMPd.e\x07\x00\x00\x00mIDATx\xda\xed\xdb\xb1\x01\x00 \x08\xc4@\xb1\xfa\xfdg\xa5\xc7=\xe42\xc2\xf5\xa9N\xe6ln3@'s\xcf\xf2\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0G\xb5}\x9f\x7f\x96\x0b\x08\x89\xb7w\x1e\xe3\x00\x00\x00\x00IEND\xaeB`\x82"
 
 
 class BackgroundWMSDownloader(BackgroundHttpDownloader):
@@ -39,6 +42,12 @@ class WMSInitRequest(UnskippableURLRequest):
             self.setup(wms)
         except ServiceException, e:
             self.error = e
+        except HTTPError, e:
+            print "Error contacting", self.url, e
+            self.error = e
+    
+    def is_valid(self):
+        return self.current_layer is not None
     
     def setup(self, wms):
         self.wms = wms
@@ -84,15 +93,18 @@ class WMSInitRequest(UnskippableURLRequest):
         print wms.getOperationByName('GetMap').formatOptions
     
     def get_image(self, wr, size):
-        img = self.wms.getmap(layers=[self.current_layer],
-                         styles=[''],
-                         srs='EPSG:4326',
-                         bbox=(wr[0][0], wr[0][1], wr[1][0], wr[1][1]),
-                         size=size,
-                         format='image/png',
-                         transparent=True
-                         )
-        data = img.read()
+        if self.is_valid():
+            img = self.wms.getmap(layers=[self.current_layer],
+                             styles=[''],
+                             srs='EPSG:4326',
+                             bbox=(wr[0][0], wr[0][1], wr[1][0], wr[1][1]),
+                             size=size,
+                             format='image/png',
+                             transparent=True
+                             )
+            data = img.read()
+        else:
+            data = blank_png
         return data
 
 
