@@ -1,3 +1,63 @@
+09/08/2015
+---------------------------
+Released 3.1b9
+- RM Fixed initial zoom of loaded layers
+- RM Fixed viewport command zoom & serialization
+- RM Changed default color of checkerboard to be less bold
+- RM Changed to alpha owslib with support for WMS 1.3.0
+- RM Added calc_to_zoom_fit to return zoom params rather than set them
+- RM Refs #604: basic error handling for 404 on WMS server
+- RM Refs #604: Added set_minimum_delay_callback to trigger UI updates for WMS layer
+- RM Changed mod 2 to and 0x1
+- RM Refs #604: better algorithm from stack overflow for checkerboard
+- RM Refs #604: Added checkerboard to be used as placeholder image
+- RM Corrected typo in log message for threaded shutdown
+- RM Refs #604: added initial support for background loading of WMS images
+- RM Changed starting location to the Seattle region
+- RM Refs #628: added debug prints to try to help figure out world to screen mapping problem
+- RM Refs #628: added ViewportCommand so changes in zoom or position of map get recorded
+- RM Added screen width and height to AddTextCommand
+- RM Moved dragged and finished_drag into mouse_handler out of project_editor
+- RM Restrict text object resizing to minimum width/height
+- RM Fixed param change in refactoring of OffScreenHTML.setup
+- RM Removed debug printing for pdf colors
+- RM Fixed is_onscreen check to use current viewport, not always projected
+- RM Fixed degenerate bitmap width in numpy_images text generation
+- RM Refs #75: added line width scale correction
+- RM Refs #75: added marker drawing on pdf canvas
+- RM Refs #75: added save_as_pdf and path argument to PDFCanvas
+- RM Fixed #623: importing rl_settings seems to be all it needed
+- RM Refs #75: added rectangle intersection & check for PDF images offscreen
+- RM Fixed #627: reportlab.canvas.drawImage uses undocumented keyword mask="auto" to force alpha channel
+- RM Refs #627: added some debug printing to try to figure out reportlab transparency
+- RM Added PIL image reader for marplot icons, saving some conversion steps
+- RM Corrected icon object info panel labels
+- RM Refs #75: initial image support
+- RM Refs #75: added polygon support
+- RM Refs #75: handles no fill/no line in style
+- RM Refs #75: fixed line width to use viewport_scale
+- RM Refs #75: added stroke/fill colors for objects
+- RM Refs #75: added colors to points, lines & text
+- RM Refs #75: added label drawing of point depths
+- RM Refs #75: added font metrics and draw_screen_string
+- RM Refs #75: screen line y axis wasn't reversed
+- RM Refs #75: fixed aspect ratio calculations
+- RM Refs #75: added point rendering
+- RM Fixed #626: added remove/restore for all control points links to layer
+- RM Refs #75: added clipping rectangle
+- RM Refs #75: added short circuit to skip picking for write-only renderers
+- RM Refs #75: added method to copy viewport to pdf canvas for correct scaling
+- RM Refs #75: Added default viewport reset function in prep for handling both projected & screen rendering
+- RM Refs #604: changed WMS to projected layer
+- RM Refs #604: added placeholder layer for WMS support
+- RM Refactored image texture centering into renderer
+- RM Added screen line rendering for pdfs
+- RM Added aspect ratio calculations to pdf
+- RM Added first ReportLab code to create a hello world in a pdf
+- RM Moved layer visibility check into BaseCanvas.render
+- RM Removed capitalization from info panel identifier 2nd & subsequent words
+- RM Fixed #622: added editable_properties_changed to Layer and logic to process_command
+
 08/14/2015
 ---------------------------
 Released 3.1b8
