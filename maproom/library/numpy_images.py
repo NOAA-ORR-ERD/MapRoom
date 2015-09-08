@@ -55,8 +55,8 @@ def get_rect(w, h):
 
 def get_checkerboard(w, h, sq=16):
     # Algorithm from http://stackoverflow.com/questions/2169478/how-to-make-a-checkerboard-in-numpy
-    color1 = (64, 64, 64, 128)
-    color2 = (192, 192, 192, 128)
+    color1 = (64, 64, 64, 32)
+    color2 = (255, 255, 255, 32)
     coords = np.ogrid[0:h, 0:w]
     idx = (coords[0] // sq + coords[1] // sq) & 1
     vals = np.array([color1, color2], dtype=np.uint8)
