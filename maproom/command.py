@@ -203,6 +203,13 @@ class UndoInfo(object):
     
     def __str__(self):
         return "index=%d, flags=%s" % (self.index, str(dir(self.flags)))
+    
+    def affected_layers(self):
+        layers = []
+        for lf in self.flags.layer_flags:
+            layers.append(lf.layer)
+        return layers
+
 
 class Command(object):
     short_name = None

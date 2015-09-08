@@ -108,8 +108,10 @@ class ProjectEditor(FrameworkEditor):
                 extra = loader.load_project(metadata, self.layer_manager, batch_flags)
                 if extra is not None:
                     self.parse_extra_json(extra, batch_flags)
-                self.layer_canvas.zoom_to_layers(batch_flags.layers)
                 self.perform_batch_flags(batch_flags)
+                center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
+                cmd = ViewportCommand(None, center, units_per_pixel)
+                self.process_command(cmd)
             elif hasattr(loader, "iter_log"):
                 line = 0
                 batch_flags = BatchStatus()
@@ -139,6 +141,13 @@ class ProjectEditor(FrameworkEditor):
                 self.perform_batch_flags(batch_flags)
             else:
                 cmd = LoadLayersCommand(metadata)
+                self.process_command(cmd)
+                layers = cmd.undo_info.affected_layers()
+                if len(layers) == 1:
+                    cmd = ViewportCommand(layers[0])
+                else:
+                    center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
+                    cmd = ViewportCommand(None, center, units_per_pixel)
                 self.process_command(cmd)
 
         self.dirty = False
