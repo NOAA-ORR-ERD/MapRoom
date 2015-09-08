@@ -1016,10 +1016,11 @@ class MaproomProjectTask(FrameworkTask):
             log.debug("Stopping threaded downloader %s" % wms)
             wms = None
 
-    def get_threaded_wms(self, url=None):
+    def get_threaded_wms(self, url=None, version="1.1.1"):
         if url is None:
-            url = 'http://egisws02.nos.noaa.gov/ArcGIS/services/RNC/NOAA_RNC/ImageServer/WMSServer?'
+            url = "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?"
+            version = "1.3.0"
         if url not in self.downloaders:
-            wms = BackgroundWMSDownloader(url)
+            wms = BackgroundWMSDownloader(url, version)
             self.downloaders[url] = wms
         return self.downloaders[url]

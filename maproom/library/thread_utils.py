@@ -3,7 +3,8 @@
 """
 from requests.exceptions import HTTPError
 
-from owslib.wms import WebMapService, ServiceException
+from owslib.wms import WebMapService
+from owslib.util import ServiceException
 
 from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
 
@@ -133,7 +134,10 @@ class WMSRequest(BaseRequest):
 if __name__ == "__main__":
     import time
     
-    wms = BackgroundWMSDownloader('http://egisws02.nos.noaa.gov/ArcGIS/services/RNC/NOAA_RNC/ImageServer/WMSServer?')
+    #wms = BackgroundWMSDownloader('http://egisws02.nos.noaa.gov/ArcGIS/services/RNC/NOAA_RNC/ImageServer/WMSServer?')
+    #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/MapServer/WMSServer?', "1.3.0")
+    #wms = BackgroundWMSDownloader('http://ows.terrestris.de/osm/service?')
+    wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?', "1.3.0")
     
     test = wms.request_map(((-130.71649285948095, 41.886646386289456), (-115.31936888967233, 51.256696088097456)), (800, 800))
     test = wms.request_map(((-130.71649285948095, 41.886646386289456), (-115.31936888967233, 51.256696088097456)), (800, 800))
