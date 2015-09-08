@@ -194,10 +194,14 @@ class PointConverter(ArgumentConverter):
     stype = "point"
     
     def get_args(self, instance):
+        if instance is None:
+            return None,
         return instance  # already a tuple
     
     def instance_from_args(self, args, manager, deserializer):
         lon = args.pop(0)
+        if lon == "None":
+            return None
         lat = args.pop(0)
         return (float(lon), float(lat))
 

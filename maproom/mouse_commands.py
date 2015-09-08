@@ -31,7 +31,7 @@ class ViewportCommand(Command):
         undo.data = (c.projected_point_center, c.projected_units_per_pixel)
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         if layer is not None:
-            center, units_per_pixel = c.zoom_to_world_rect(layer.bounds)
+            center, units_per_pixel = c.calc_zoom_to_world_rect(layer.bounds)
         elif self.center is not None:
             center, units_per_pixel = self.center, self.units_per_pixel
         c.projected_point_center = center
