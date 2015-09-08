@@ -260,7 +260,7 @@ class ZoomToFit(EditorAction):
 
     def perform(self, event):
         c = self.active_editor.layer_canvas
-        center, units_per_pixel = c.zoom_to_fit()
+        center, units_per_pixel = c.calc_zoom_to_fit()
         cmd = ViewportCommand(None, center, units_per_pixel)
         self.active_editor.process_command(cmd)
 

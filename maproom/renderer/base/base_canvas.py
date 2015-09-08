@@ -340,8 +340,11 @@ class BaseCanvas(object):
         return self.zoom(ratio=-2.0)
 
     def zoom_to_fit(self):
+        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_fit()
+
+    def calc_zoom_to_fit(self):
         layers = self.layer_manager.get_visible_layers(self.project.layer_visibility)
-        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_layers(layers)
+        return self.calc_zoom_to_layers(layers)
 
     def zoom_to_layers(self, layers):
         self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_layers(layers)
