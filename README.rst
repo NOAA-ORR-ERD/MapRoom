@@ -100,6 +100,15 @@ warnings being treated as errors.  Changing the CFLAGS is required::
 
     CFLAGS=-Wno-error=format-security CPPFLAGS=-Wno-error=format-security python setup.py install
 
+OWSLib
+------
+
+Currently, WMS 1.3.0 support is experimental and only on an unofficial branch of the library. Have to check out from:
+
+git clone https://github.com/b-cube/OWSLib.git owslib130
+cd owslib130
+git chckout -b wms130 remotes/origin/WMS-1.3.0
+
 
 
 
@@ -132,3 +141,10 @@ Debugging py2app:
 * ./dist-3.X/mac/Maproom.app/Contents/MacOS/Maproom
 
 will display stdout to the terminal
+
+py2exe
+------
+
+NOTE: Don't install any packages as eggs (zip files).  py2exe can't include
+dependencies correctly if they are inside eggs.
+
