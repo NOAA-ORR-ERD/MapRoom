@@ -37,11 +37,10 @@ class WMSLayer(ProjectedLayer):
     
     threaded_request_ready = Any(None)
     
+    checkerboard_when_loading = False
+    
     def get_image_array(self):
         if self.threaded_request_ready is None:
-            downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
-            layers = [self.map_layer]
-            downloader.request_map(self.current_world, self.current_size, layers, self.manager, self)
             return self.current_world, numpy_images.get_checkerboard(*self.current_size)
         else:
             wms_result = self.threaded_request_ready
@@ -70,20 +69,25 @@ class WMSLayer(ProjectedLayer):
     def resize(self, renderer, world_rect, screen_rect):
         print "world_rect = %r" % (world_rect,)
         print "screen_rect = %r" % (screen_rect,)
-        s = rect.size(screen_rect)
-        w = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
-        if self.current_size is not None:
-            if s != self.current_size or w != self.current_world:
+        old_size = self.current_size
+        old_world = self.current_world
+        self.current_size = rect.size(screen_rect)
+        self.current_world = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
+        if old_size is not None:
+            if old_size != self.current_size or old_world != self.current_world:
                 renderer.canvas.set_minimum_delay_callback(self.wms_rebuild, 1000)
-        self.current_size = s
-        self.current_world = w
-        if self.image_data is None:
-            # first time, set up immediate callback
+        else:
+            # first time, load map immediately
+            self.wms_rebuild(renderer.canvas)
             self.rebuild_needed = True
     
     def wms_rebuild(self, canvas):
-        self.rebuild_needed = True
-        canvas.render()
+        downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
+        layers = [self.map_layer]
+        downloader.request_map(self.current_world, self.current_size, layers, self.manager, self)
+        if self.checkerboard_when_loading:
+            self.rebuild_needed = True
+            canvas.render()
 
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
         self.resize(renderer, world_rect, screen_rect)
