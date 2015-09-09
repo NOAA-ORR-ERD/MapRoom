@@ -28,7 +28,10 @@ def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
 
 def get_numpy_from_data(data):
     image = Image.open(cStringIO.StringIO(data))
-    return np.array(image)
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+    arr = np.array(image)
+    return arr
 
 
 def get_rect(w, h):
