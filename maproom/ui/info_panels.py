@@ -1046,6 +1046,30 @@ class ParticleEndField(ParticleField):
         layer.update_timestep_visibility(self.panel.project)
 
 
+class MapServerField(InfoField):
+    same_line = True
+    
+    def fill_data(self, layer):
+        self.ctrl.SetSelection(layer.map_server_id)
+    
+    def create_control(self):
+        names = self.panel.project.task.get_known_wms_names()
+        c = wx.ComboBox(self.parent, -1, str(LayerStyle.default_font_size),
+                        size=(self.default_width, -1), choices=names, style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+        
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        if item != layer.map_server_id:
+            layer.map_server_id = item
+            layer.map_layer = ""
+            layer.wms_rebuild(self.panel.project.layer_canvas)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
 
@@ -1162,6 +1186,7 @@ class InfoPanel(PANELTYPE):
         "End time": ParticleEndField,
         "Anchor coordinates": AnchorCoordinatesField,
         "Anchor point": AnchorPointField,
+        "Map server": MapServerField,
         }
     
     def create_fields(self, layer, fields):

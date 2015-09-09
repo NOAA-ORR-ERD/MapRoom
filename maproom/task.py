@@ -1018,9 +1018,29 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_threaded_wms(self, url=None, version="1.1.1"):
         if url is None:
-            url = "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?"
-            version = "1.3.0"
+            url, version = self.get_known_wms()[0]
         if url not in self.downloaders:
             wms = BackgroundWMSDownloader(url, version)
             self.downloaders[url] = wms
         return self.downloaders[url]
+
+    def get_threaded_wms_by_id(self, id):
+        url, version = self.get_known_wms()[id]
+        return self.get_threaded_wms(url, version)
+
+    def get_known_wms(self):
+        return [
+            ("http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
+            ("http://ows.terrestris.de/osm/service?", "1.1.1"),
+            ]
+
+    def get_known_wms_names(self):
+        return [s[0] for s in self.get_known_wms()]
+    
+    def get_index_of_wms(self, wms_url):
+        for i, s in enumerate(self.get_known_wms()):
+            if wms_url == s[0]:
+                return i
+        if not wms_url:
+            return 0
+        raise IndexError

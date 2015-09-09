@@ -21,6 +21,12 @@ class WMSLayer(ProjectedLayer):
     
     type = Str("wms")
     
+    layer_info_panel = ["Map server", "Map layer"]
+    
+    map_server_id = Int(0)
+    
+    map_layer = Str("")
+    
     image_data = Any
     
     current_size = Any(None)  # holds tuple of screen size
@@ -33,13 +39,14 @@ class WMSLayer(ProjectedLayer):
     
     def get_image_array(self):
         if self.threaded_request_ready is None:
-            wms = self.manager.project.task.get_threaded_wms()
-            wms.request_map(self.current_world, self.current_size, self.manager, self)
+            downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
+            layers = [self.map_layer]
+            downloader.request_map(self.current_world, self.current_size, layers, self.manager, self)
             return self.current_world, numpy_images.get_checkerboard(*self.current_size)
         else:
-            wms = self.threaded_request_ready
+            wms_result = self.threaded_request_ready
             self.threaded_request_ready = None
-            return wms.world_rect, wms.get_image_array()
+            return wms_result.world_rect, wms_result.get_image_array()
 
     def rebuild_renderer(self, renderer, in_place=False):
         projection = self.manager.project.layer_canvas.projection

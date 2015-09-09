@@ -23,8 +23,8 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
         self.wms = WMSInitRequest(self.url, self.version)
         self.send_request(self.wms)
     
-    def request_map(self, world_rect, image_size, event=None, event_data=None):
-        req = WMSRequest(self.wms, world_rect, image_size, event, event_data)
+    def request_map(self, world_rect, image_size, layer=None, event=None, event_data=None):
+        req = WMSRequest(self.wms, world_rect, image_size, layer, event, event_data)
         self.send_request(req)
         return req
 
@@ -36,6 +36,7 @@ class WMSInitRequest(UnskippableURLRequest):
         UnskippableURLRequest.__init__(self, url)
         self.version = version
         self.current_layer = None
+        self.layer_keys = []
         
     def get_data_from_server(self):
         try:
@@ -52,9 +53,9 @@ class WMSInitRequest(UnskippableURLRequest):
     
     def setup(self, wms):
         self.wms = wms
-        k = self.wms.contents.keys()
-        k.sort()
-        self.current_layer = k[0]
+        self.layer_keys = self.wms.contents.keys()
+        self.layer_keys.sort()
+        self.current_layer = self.layer_keys[0]
         self.debug()
     
     def debug(self):
@@ -93,9 +94,16 @@ class WMSInitRequest(UnskippableURLRequest):
         print wms.getOperationByName('GetMap').methods
         print wms.getOperationByName('GetMap').formatOptions
     
-    def get_image(self, wr, size):
+    def get_image(self, wr, size, layers=None):
+        if layers is None:
+            layers = [self.current_layer]
+        corrected = []
+        for name in layers:
+            if not name:
+                name = self.current_layer
+            corrected.append(name)
         if self.is_valid():
-            img = self.wms.getmap(layers=[self.current_layer],
+            img = self.wms.getmap(layers=corrected,
                              styles=[''],
                              srs='EPSG:4326',
                              bbox=(wr[0][0], wr[0][1], wr[1][0], wr[1][1]),
@@ -110,18 +118,19 @@ class WMSInitRequest(UnskippableURLRequest):
 
 
 class WMSRequest(BaseRequest):
-    def __init__(self, wms, world_rect, image_size, manager=None, event_data=None):
+    def __init__(self, wms, world_rect, image_size, layers=None, manager=None, event_data=None):
         BaseRequest.__init__(self)
         self.url = "%s image @%s from %s" % (image_size, world_rect, wms.url)
         self.wms = wms
         self.world_rect = world_rect
         self.image_size = image_size
+        self.layers = layers
         self.manager = manager
         self.event_data = event_data
     
     def get_data_from_server(self):
         try:
-            self.data = self.wms.get_image(self.world_rect , self.image_size)
+            self.data = self.wms.get_image(self.world_rect , self.image_size, self.layers)
             if self.manager is not None:
                 self.manager.threaded_image_loaded = (self.event_data, self)
         except ServiceException, e:
@@ -137,7 +146,18 @@ if __name__ == "__main__":
     #wms = BackgroundWMSDownloader('http://egisws02.nos.noaa.gov/ArcGIS/services/RNC/NOAA_RNC/ImageServer/WMSServer?')
     #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/MapServer/WMSServer?', "1.3.0")
     #wms = BackgroundWMSDownloader('http://ows.terrestris.de/osm/service?')
-    wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?', "1.3.0")
+    #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?', "1.3.0")
+    wms = BackgroundWMSDownloader('http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?', "1.3.0")
+
+#http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
+# Capabilities: http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
+    
+    # FAILS:
+    # http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?LAYERS=0&STYLES=&WIDTH=800&FORMAT=image%2Fpng&CRS=EPSG%3A4326&REQUEST=GetMap&HEIGHT=800&BGCOLOR=0xFFFFFF&VERSION=1.3.0&BBOX=41.886646386289456%2C-130.71649285948095%2C51.256696088097456%2C-115.31936888967233&EXCEPTIONS=XML&TRANSPARENT=TRUE
+    # WORKS:
+    # http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
+    # FAILS:
+    # http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?LAYERS=0&STYLES=&WIDTH=800&FORMAT=image%2Fpng&REQUEST=GetMap&HEIGHT=800&BGCOLOR=0xFFFFFF&VERSION=1.3.0&EXCEPTIONS=XML&TRANSPARENT=TRUE&BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&SRS=EPSG%3A102113
     
     test = wms.request_map(((-130.71649285948095, 41.886646386289456), (-115.31936888967233, 51.256696088097456)), (800, 800))
     test = wms.request_map(((-130.71649285948095, 41.886646386289456), (-115.31936888967233, 51.256696088097456)), (800, 800))
