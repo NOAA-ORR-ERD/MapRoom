@@ -165,7 +165,12 @@ class WMSRequest(BaseRequest):
             self.error = e
     
     def get_image_array(self):
-        return get_numpy_from_data(self.data)
+        try:
+            return get_numpy_from_data(self.data)
+        except IOError:
+            # some WMSes return HTML data instead of an image on an error
+            # (usually see this when outside the bounding box)
+            return get_numpy_from_data(blank_png)
 
 
 if __name__ == "__main__":
@@ -179,8 +184,9 @@ if __name__ == "__main__":
     #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/MapServer/WMSServer?', "1.3.0")
     #wms = BackgroundWMSDownloader('http://ows.terrestris.de/osm/service?')
     #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?', "1.3.0")
-    wms = BackgroundWMSDownloader('http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?', "1.3.0")
-
+    #wms = BackgroundWMSDownloader('http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?', "1.3.0")
+    wms = BackgroundWMSDownloader('http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?', "1.3.0")
+    
 #http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
 # Capabilities: http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
     
@@ -198,6 +204,7 @@ if __name__ == "__main__":
     test = wms.request_map(wr, pr, size)
     test = wms.request_map(wr, pr, size)
     test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
+    test = wms.request_map(wr, pr, size)
     while True:
         if test.is_finished:
             break
