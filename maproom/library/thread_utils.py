@@ -23,8 +23,8 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
         self.wms = WMSInitRequest(self.url, self.version)
         self.send_request(self.wms)
     
-    def request_map(self, world_rect, image_size, layer=None, event=None, event_data=None):
-        req = WMSRequest(self.wms, world_rect, image_size, layer, event, event_data)
+    def request_map(self, world_rect, proj_rect, image_size, layer=None, event=None, event_data=None):
+        req = WMSRequest(self.wms, world_rect, proj_rect, image_size, layer, event, event_data)
         self.send_request(req)
         return req
 
@@ -94,19 +94,46 @@ class WMSInitRequest(UnskippableURLRequest):
         print wms.getOperationByName('GetMap').methods
         print wms.getOperationByName('GetMap').formatOptions
     
-    def get_image(self, wr, size, layers=None):
+    def get_bbox(self, layers, wr, pr):
+        types = [("102100", "p"),
+                 ("102113", "p"),
+                 ("3857", "p"),
+                 ("900913" "p"),
+                 ("4326" "w"),
+                 ]
+        # FIXME: only using the first layer for coord sys.  Can different
+        # layers have different allowed coordinate systems?
+        layer = layers[0]
+        bbox = None
+        c = {t.split(":",1)[1]: t for t in self.wms[layer].crsOptions}
+        for crs, which in types:
+            if crs in c:
+                if which == "p":
+                    bbox = (pr[0][0], pr[0][1], pr[1][0], pr[1][1])
+                else:
+                    bbox = (wr[0][0], wr[0][1], wr[1][0], wr[1][1])
+                break
+        if bbox is None:
+            bbox = (wr[0][0], wr[0][1], wr[1][0], wr[1][1])
+        return c[crs], bbox
+    
+    def get_image(self, wr, pr, size, layers=None):
         if layers is None:
             layers = [self.current_layer]
+            styles = ['']
+        else:
+            styles = ['' for a in layers]
         corrected = []
         for name in layers:
             if not name:
                 name = self.current_layer
             corrected.append(name)
         if self.is_valid():
+            crs, bbox = self.get_bbox(corrected, wr, pr)
             img = self.wms.getmap(layers=corrected,
-                             styles=[''],
-                             srs='EPSG:4326',
-                             bbox=(wr[0][0], wr[0][1], wr[1][0], wr[1][1]),
+                             styles=styles,
+                             srs=crs,
+                             bbox=bbox,
                              size=size,
                              format='image/png',
                              transparent=True
@@ -118,11 +145,12 @@ class WMSInitRequest(UnskippableURLRequest):
 
 
 class WMSRequest(BaseRequest):
-    def __init__(self, wms, world_rect, image_size, layers=None, manager=None, event_data=None):
+    def __init__(self, wms, world_rect, proj_rect, image_size, layers=None, manager=None, event_data=None):
         BaseRequest.__init__(self)
         self.url = "%s image @%s from %s" % (image_size, world_rect, wms.url)
         self.wms = wms
         self.world_rect = world_rect
+        self.proj_rect = proj_rect
         self.image_size = image_size
         self.layers = layers
         self.manager = manager
@@ -130,7 +158,7 @@ class WMSRequest(BaseRequest):
     
     def get_data_from_server(self):
         try:
-            self.data = self.wms.get_image(self.world_rect , self.image_size, self.layers)
+            self.data = self.wms.get_image(self.world_rect, self.proj_rect, self.image_size, self.layers)
             if self.manager is not None:
                 self.manager.threaded_image_loaded = (self.event_data, self)
         except ServiceException, e:
@@ -142,6 +170,10 @@ class WMSRequest(BaseRequest):
 
 if __name__ == "__main__":
     import time
+    
+    wr = ((-126.59861836927804, 45.49049794230259), (-118.90005638437373, 50.081373712237856))
+    pr = ((-14092893.732, 5668589.93218), (-13235893.732, 6427589.93218))
+    size = (857, 759)
     
     #wms = BackgroundWMSDownloader('http://egisws02.nos.noaa.gov/ArcGIS/services/RNC/NOAA_RNC/ImageServer/WMSServer?')
     #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/MapServer/WMSServer?', "1.3.0")
@@ -159,9 +191,13 @@ if __name__ == "__main__":
     # FAILS:
     # http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?LAYERS=0&STYLES=&WIDTH=800&FORMAT=image%2Fpng&REQUEST=GetMap&HEIGHT=800&BGCOLOR=0xFFFFFF&VERSION=1.3.0&EXCEPTIONS=XML&TRANSPARENT=TRUE&BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&SRS=EPSG%3A102113
     
-    test = wms.request_map(((-130.71649285948095, 41.886646386289456), (-115.31936888967233, 51.256696088097456)), (800, 800))
-    test = wms.request_map(((-130.71649285948095, 41.886646386289456), (-115.31936888967233, 51.256696088097456)), (800, 800))
-    test = wms.request_map(((-130.71649285948095, 41.886646386289456), (-115.31936888967233, 51.256696088097456)), (800, 800))
+# http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?BBOX=-9151321.3960644,4688981.1460582,-9128122.757984,4705204.9053088&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
+    # Capabilities: http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
+# crsoptions ['EPSG:102100']
+    
+    test = wms.request_map(wr, pr, size)
+    test = wms.request_map(wr, pr, size)
+    test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
     while True:
         if test.is_finished:
             break

@@ -31,6 +31,8 @@ class WMSLayer(ProjectedLayer):
     
     current_size = Any(None)  # holds tuple of screen size
     
+    current_proj = Any(None)  # holds rect of projected coords
+    
     current_world = Any(None)  # holds rect of world coords
     
     rebuild_needed = Bool(True)
@@ -66,12 +68,14 @@ class WMSLayer(ProjectedLayer):
             renderer.set_image_projection(self.image_data, projection)
             self.rebuild_needed = False
 
-    def resize(self, renderer, world_rect, screen_rect):
+    def resize(self, renderer, world_rect, proj_rect, screen_rect):
         print "world_rect = %r" % (world_rect,)
+        print "proj_rect = %r" % (proj_rect,)
         print "screen_rect = %r" % (screen_rect,)
         old_size = self.current_size
         old_world = self.current_world
         self.current_size = rect.size(screen_rect)
+        self.current_proj = ((proj_rect[0][0], proj_rect[0][1]), (proj_rect[1][0], proj_rect[1][1]))
         self.current_world = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
         if old_size is not None:
             if old_size != self.current_size or old_world != self.current_world:
@@ -84,13 +88,13 @@ class WMSLayer(ProjectedLayer):
     def wms_rebuild(self, canvas):
         downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
         layers = [self.map_layer]
-        downloader.request_map(self.current_world, self.current_size, layers, self.manager, self)
+        downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, self)
         if self.checkerboard_when_loading:
             self.rebuild_needed = True
             canvas.render()
 
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
-        self.resize(renderer, world_rect, screen_rect)
+        self.resize(renderer, world_rect, projected_rect, screen_rect)
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
 

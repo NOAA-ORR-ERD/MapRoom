@@ -1031,6 +1031,8 @@ class MaproomProjectTask(FrameworkTask):
     def get_known_wms(self):
         return [
             ("http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
+            ("http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
+            ("http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
             ("http://ows.terrestris.de/osm/service?", "1.1.1"),
             ]
 
