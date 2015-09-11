@@ -137,6 +137,9 @@ class WMSInitRequest(UnskippableURLRequest):
                 break
         print wms.getOperationByName('GetMap').methods
         print wms.getOperationByName('GetMap').formatOptions
+        
+        for name in self.layer_keys:
+            print "layer:", name, "crsoptions", wms[layer].crsOptions
     
     def get_layer_info(self):
         layer_info = []
@@ -145,14 +148,15 @@ class WMSInitRequest(UnskippableURLRequest):
         return layer_info
     
     def get_default_layers(self):
-        return [self.layer_keys[0]]
+        print self.layer_keys
+        return list(self.layer_keys)
     
     def get_bbox(self, layers, wr, pr):
         types = [("102100", "p"),
                  ("102113", "p"),
                  ("3857", "p"),
-                 ("900913" "p"),
-                 ("4326" "w"),
+                 ("900913", "p"),
+                 ("4326", "w"),
                  ]
         # FIXME: only using the first layer for coord sys.  Can different
         # layers have different allowed coordinate systems?
@@ -172,10 +176,7 @@ class WMSInitRequest(UnskippableURLRequest):
     
     def get_image(self, wr, pr, size, layers=None):
         if layers is None:
-            layers = [self.current_layer]
-            styles = ['']
-        else:
-            styles = ['' for a in layers]
+            layers = self.get_default_layers()
         corrected = []
         for name in layers:
             if not name:
@@ -184,7 +185,7 @@ class WMSInitRequest(UnskippableURLRequest):
         if self.is_valid():
             crs, bbox = self.get_bbox(corrected, wr, pr)
             img = self.wms.getmap(layers=corrected,
-                             styles=styles,
+#                             styles=styles,
                              srs=crs,
                              bbox=bbox,
                              size=size,
@@ -248,13 +249,13 @@ if __name__ == "__main__":
 # crsoptions ['EPSG:102100']
     
     h = WMSHost.get_wms_by_name("USGS Topo Large")
-    h = WMSHost.get_wms_by_name("NOAA RNC")
+#    h = WMSHost.get_wms_by_name("NOAA RNC")
     wms = BackgroundWMSDownloader(h)
 
-    test = wms.request_map(wr, pr, size)
-    test = wms.request_map(wr, pr, size)
-    test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
-    test = wms.request_map(wr, pr, size)
+#    test = wms.request_map(wr, pr, size)
+#    test = wms.request_map(wr, pr, size)
+#    test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
+    test = wms.request_map(wr, pr, size, layer=['10', '11', '12', '14', '15', '17', '18', '19', '20'])
     while True:
         if test.is_finished:
             break
