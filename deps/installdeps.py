@@ -9,13 +9,14 @@ deps = [
     ['https://github.com/DiffSK/configobj.git'],
     
     ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
-    ['https://github.com/pyugrid/pyugrid.git',],
+    ['https://github.com/robmcmullen/pyugrid.git',],
     ['https://github.com/robmcmullen/traits.git',],
     ['https://github.com/robmcmullen/pyface.git',],
     ['https://github.com/robmcmullen/traitsui.git',],
     ['https://github.com/enthought/apptools.git',],
     ['https://github.com/robmcmullen/envisage.git',],
     ['https://github.com/robmcmullen/peppy2.git',],
+    ['https://github.com/robmcmullen/OWSLib.git',],
 ]
 
 topdir = os.getcwd()

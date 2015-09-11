@@ -103,11 +103,12 @@ warnings being treated as errors.  Changing the CFLAGS is required::
 OWSLib
 ------
 
-Currently, WMS 1.3.0 support is experimental and only on an unofficial branch of the library. Have to check out from:
+Currently, WMS 1.3.0 support is experimental and only on an unofficial branch
+of the OWSLib official repository.  I have forked the repo and fixed the
+1.3.0 support to handle the nonstandard servers that we deal with, so use this
+command to clone my repository::
 
-git clone https://github.com/b-cube/OWSLib.git owslib130
-cd owslib130
-git chckout -b wms130 remotes/origin/WMS-1.3.0
+    git clone https://github.com/robmcmullen/OWSLib.git owslib130
 
 
 
