@@ -1064,10 +1064,54 @@ class MapServerField(InfoField):
         if (layer is None):
             return
         item = event.GetSelection()
-        if item != layer.map_server_id:
-            layer.map_server_id = item
-            layer.map_layer = ""
-            layer.wms_rebuild(self.panel.project.layer_canvas)
+        layer.change_server_id(item, self.panel.project.layer_canvas)
+
+
+class MapOverlayField(InfoField):
+    same_line = False
+    
+    def fill_data(self, layer):
+        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        wms = downloader.wms
+        titles = [n[1] for n in wms.get_layer_info()]
+        print "MAP OVERLAY LAYER TITLES", titles
+        self.ctrl.SetItems(titles)
+        self.set_selected(layer, wms)
+    
+    def set_selected(self, layer, wms):
+        names = [n[0] for n in wms.get_layer_info()]
+        print "MAP OVERLAY LAYER NAMES", names
+        print "LAYERS USED", layer.map_layers
+        selected = []
+        for i, name in enumerate(names):
+            print " CHECKING", name, i
+            if name in layer.map_layers:
+                selected.append(i)
+        print "SELECTED", selected
+        self.ctrl.SetChecked(selected)
+    
+    def create_control(self):
+        names = []
+        c = wx.CheckListBox(self.parent, -1, size=(self.default_width, -1), choices=names)
+        #c.Bind(wx.EVT_LISTBOX, self.overlay_selected)
+        c.Bind(wx.EVT_CHECKLISTBOX, self.overlay_selected)
+        return c
+        
+    def overlay_selected(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        item = event.GetSelection()
+        print "selected item", item
+        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        wms = downloader.wms
+        name = wms.get_layer_info()[item][0]
+        if name in layer.map_layers:
+            layer.map_layers.remove(name)
+        else:
+            layer.map_layers.add(name)
+        self.set_selected(layer, wms)
+        layer.wms_rebuild(self.panel.project.layer_canvas)
 
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
@@ -1187,6 +1231,7 @@ class InfoPanel(PANELTYPE):
         "Anchor coordinates": AnchorCoordinatesField,
         "Anchor point": AnchorPointField,
         "Map server": MapServerField,
+        "Map layer": MapOverlayField,
         }
     
     def create_fields(self, layer, fields):

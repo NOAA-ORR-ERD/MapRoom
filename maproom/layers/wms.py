@@ -1,7 +1,7 @@
 import numpy as np
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Int, Bool, Any
+from traits.api import Unicode, Str, Int, Bool, Any, Set
 
 from ..library import rect, coordinates
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
@@ -25,7 +25,7 @@ class WMSLayer(ProjectedLayer):
     
     map_server_id = Int(0)
     
-    map_layer = Str("")
+    map_layers = Set(Str)
     
     image_data = Any
     
@@ -87,11 +87,31 @@ class WMSLayer(ProjectedLayer):
     
     def wms_rebuild(self, canvas):
         downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
-        layers = [self.map_layer]
-        downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, self)
-        if self.checkerboard_when_loading:
-            self.rebuild_needed = True
-            canvas.render()
+        if downloader.is_valid():
+            if not self.map_layers:
+                self.map_layers = set(downloader.wms.get_default_layers())
+                canvas.project.update_info_panels(self, True)
+            layers = list(self.map_layers)
+            downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, self)
+            if self.checkerboard_when_loading:
+                self.rebuild_needed = True
+                canvas.render()
+        else:
+            # Try again, waiting till we get a successful contact
+            if not downloader.wms.has_error():
+                print "WMS not initialized yet, waiting..."
+                self.change_count += 1  # Force info panel update
+                canvas.set_minimum_delay_callback(self.wms_rebuild, 200)
+            else:
+                print "WMS error, not attempting to contact again"
+    
+    def change_server_id(self, id, canvas):
+        if id != self.map_server_id:
+            self.map_server_id = id
+            self.map_layers = set()
+            self.wms_rebuild(canvas)
+            self.change_count += 1  # Force info panel update
+            canvas.project.update_info_panels(self, True)
 
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
         self.resize(renderer, world_rect, projected_rect, screen_rect)

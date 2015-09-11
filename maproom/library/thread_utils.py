@@ -23,6 +23,9 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
         self.wms = WMSInitRequest(self.url, self.version)
         self.send_request(self.wms)
     
+    def is_valid(self):
+        return self.wms.is_valid()
+    
     def request_map(self, world_rect, proj_rect, image_size, layer=None, event=None, event_data=None):
         req = WMSRequest(self.wms, world_rect, proj_rect, image_size, layer, event, event_data)
         self.send_request(req)
@@ -93,6 +96,15 @@ class WMSInitRequest(UnskippableURLRequest):
                 break
         print wms.getOperationByName('GetMap').methods
         print wms.getOperationByName('GetMap').formatOptions
+    
+    def get_layer_info(self):
+        layer_info = []
+        for name in self.layer_keys:
+            layer_info.append((name, self.wms[name].title))
+        return layer_info
+    
+    def get_default_layers(self):
+        return [self.layer_keys[0]]
     
     def get_bbox(self, layers, wr, pr):
         types = [("102100", "p"),

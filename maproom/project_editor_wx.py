@@ -326,9 +326,8 @@ class ProjectEditor(FrameworkEditor):
             self.mouse_mode = PanMode
         self.layer_canvas.set_mouse_handler(self.mouse_mode)
         self.multiple_layers = self.layer_manager.count_layers() > 1
+        self.update_info_panels(sel_layer)
         self.update_layer_contents_ui(sel_layer)
-        self.layer_info.display_panel_for_layer(self, sel_layer)
-        self.selection_info.display_panel_for_layer(self, sel_layer)
         self.task.layer_selection_changed = sel_layer
     
     def update_layer_contents_ui(self, sel_layer=None):
@@ -345,6 +344,10 @@ class ProjectEditor(FrameworkEditor):
         log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
         self.update_undo_redo()
         self.window._aui_manager.Update()
+    
+    def update_info_panels(self, layer, force=False):
+        self.layer_info.display_panel_for_layer(self, layer, force)
+        self.selection_info.display_panel_for_layer(self, layer, force)
     
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
