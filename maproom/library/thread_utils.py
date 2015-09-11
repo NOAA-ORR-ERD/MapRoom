@@ -13,14 +13,47 @@ from numpy_images import get_numpy_from_data
 blank_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00@\x00\x00\x00@\x08\x06\x00\x00\x00\xaaiq\xde\x00\x00\x00\x06bKGD\x00\xff\x00\xff\x00\xff\xa0\xbd\xa7\x93\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\x07tIME\x07\xdf\t\x02\x10/\x0b\x11M\xec5\x00\x00\x00\x1diTXtComment\x00\x00\x00\x00\x00Created with GIMPd.e\x07\x00\x00\x00mIDATx\xda\xed\xdb\xb1\x01\x00 \x08\xc4@\xb1\xfa\xfdg\xa5\xc7=\xe42\xc2\xf5\xa9N\xe6ln3@'s\xcf\xf2\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0G\xb5}\x9f\x7f\x96\x0b\x08\x89\xb7w\x1e\xe3\x00\x00\x00\x00IEND\xaeB`\x82"
 
 
-class BackgroundWMSDownloader(BackgroundHttpDownloader):
-    def __init__(self, url, version='1.1.1'):
+class WMSHost(object):
+    cached_known_wms = None
+    
+    def __init__(self, name, url, version):
+        self.name = name
         self.url = url
         self.version = version
+    
+    def __hash__(self):
+        return hash(self.url)
+
+    @classmethod
+    def get_known_wms(cls):
+        if cls.cached_known_wms is None:
+            cls.cached_known_wms = [
+                cls("NOAA RNC", "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
+                cls("NOAA Maritime Charts", "http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
+                cls("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
+                cls("OpenStreetMap from terrestris.de", "http://ows.terrestris.de/osm/service?", "1.1.1"),
+                cls("USGS Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSTopoLarge/MapServer/WMSServer?", "1.3.0"),
+                cls("USGS Imagery Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSImageryTopoLarge/MapServer/WMSServer?", "1.3.0"),
+                cls("USGS National Atlas Map Reference", "http://webservices.nationalatlas.gov/wms/map_reference?", "1.3.0"),
+                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0"),
+                ]
+        return cls.cached_known_wms
+    
+    @classmethod
+    def get_wms_by_name(cls, name):
+        for h in cls.get_known_wms():
+            if h.name == name:
+                return h
+        return None
+
+
+class BackgroundWMSDownloader(BackgroundHttpDownloader):
+    def __init__(self, wmshost):
+        self.wmshost = wmshost
         BackgroundHttpDownloader.__init__(self)
 
     def get_server_config(self):
-        self.wms = WMSInitRequest(self.url, self.version)
+        self.wms = WMSInitRequest(self.wmshost.url, self.wmshost.version)
         self.send_request(self.wms)
     
     def is_valid(self):
@@ -200,13 +233,6 @@ if __name__ == "__main__":
     pr = ((-14092893.732, 5668589.93218), (-13235893.732, 6427589.93218))
     size = (857, 759)
     
-    #wms = BackgroundWMSDownloader('http://egisws02.nos.noaa.gov/ArcGIS/services/RNC/NOAA_RNC/ImageServer/WMSServer?')
-    #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/MapServer/WMSServer?', "1.3.0")
-    #wms = BackgroundWMSDownloader('http://ows.terrestris.de/osm/service?')
-    #wms = BackgroundWMSDownloader('http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?', "1.3.0")
-    #wms = BackgroundWMSDownloader('http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?', "1.3.0")
-    wms = BackgroundWMSDownloader('http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?', "1.3.0")
-    
 #http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
 # Capabilities: http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
     
@@ -221,6 +247,10 @@ if __name__ == "__main__":
     # Capabilities: http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
 # crsoptions ['EPSG:102100']
     
+    h = WMSHost.get_wms_by_name("USGS Topo Large")
+    h = WMSHost.get_wms_by_name("NOAA RNC")
+    wms = BackgroundWMSDownloader(h)
+
     test = wms.request_map(wr, pr, size)
     test = wms.request_map(wr, pr, size)
     test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])

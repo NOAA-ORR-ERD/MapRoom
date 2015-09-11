@@ -8,6 +8,9 @@ Web Mapping Services
 WMS
 ===
 
+* Lots of WMS servers at the national map site: http://nationalmap.gov/small_scale/infodocs/wms_intro.html
+
+
 
 
 WMS Examples

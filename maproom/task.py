@@ -24,7 +24,7 @@ from mouse_handler import *
 from menu_commands import *
 from vector_object_commands import *
 from ui.dialogs import StyleDialog
-from library.thread_utils import BackgroundWMSDownloader
+from library.thread_utils import BackgroundWMSDownloader, WMSHost
 from peppy2.framework.actions import PreferencesAction
 
 import logging
@@ -1016,33 +1016,17 @@ class MaproomProjectTask(FrameworkTask):
             log.debug("Stopping threaded downloader %s" % wms)
             wms = None
 
-    def get_threaded_wms(self, url=None, version="1.1.1"):
-        if url is None:
-            url, version = self.get_known_wms()[0]
-        if url not in self.downloaders:
-            wms = BackgroundWMSDownloader(url, version)
-            self.downloaders[url] = wms
-        return self.downloaders[url]
+    def get_threaded_wms(self, wmshost=None):
+        if wmshost is None:
+            wmshost = WMSHost.get_known_wms()[0]
+        if wmshost.url not in self.downloaders:
+            wms = BackgroundWMSDownloader(wmshost)
+            self.downloaders[wmshost.url] = wms
+        return self.downloaders[wmshost.url]
 
     def get_threaded_wms_by_id(self, id):
-        url, version = self.get_known_wms()[id]
-        return self.get_threaded_wms(url, version)
-
-    def get_known_wms(self):
-        return [
-            ("http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
-            ("http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
-            ("http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
-            ("http://ows.terrestris.de/osm/service?", "1.1.1"),
-            ]
+        wmshost = WMSHost.get_known_wms()[id]
+        return self.get_threaded_wms(wmshost)
 
     def get_known_wms_names(self):
-        return [s[0] for s in self.get_known_wms()]
-    
-    def get_index_of_wms(self, wms_url):
-        for i, s in enumerate(self.get_known_wms()):
-            if wms_url == s[0]:
-                return i
-        if not wms_url:
-            return 0
-        raise IndexError
+        return [s.name for s in WMSHost.get_known_wms()]
