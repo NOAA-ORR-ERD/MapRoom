@@ -42,6 +42,11 @@ class WMSInitRequest(UnskippableURLRequest):
         self.layer_keys = []
         
     def get_data_from_server(self):
+#        if True:  # To test error handling, uncomment this
+#            import time
+#            time.sleep(1)
+#            self.error = "Test error"
+#            return
         try:
             wms = WebMapService(self.url, self.version)
             self.setup(wms)
@@ -49,6 +54,9 @@ class WMSInitRequest(UnskippableURLRequest):
             self.error = e
         except HTTPError, e:
             print "Error contacting", self.url, e
+            self.error = e
+        except AttributeError, e:
+            print "Bad response from server", self.url
             self.error = e
     
     def is_valid(self):

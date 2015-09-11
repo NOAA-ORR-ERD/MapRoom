@@ -2,6 +2,7 @@ import sys
 import wx
 import wx.combo
 import wx.lib.buttons as buttons
+from wx.lib.stattext import GenStaticText
 
 from pyface.api import ImageResource
 
@@ -20,6 +21,7 @@ log = logging.getLogger(__name__)
 
 class InfoField(object):
     same_line = False
+    display_label = True
     
     # wx.Sizer proportion of the main control (not the label).  See the
     # wx.Sizer docs, but basically 0 will fix vertical size to initial size, >
@@ -48,12 +50,13 @@ class InfoField(object):
         self.parent = wx.Window(self.panel)
         self.box =  wx.BoxSizer(wx.VERTICAL)
         self.parent.SetSizer(self.box)
-        self.label = wx.StaticText(self.parent, label=self.field_name, style=wx.ST_ELLIPSIZE_END)
-        bold_font = self.parent.GetFont()
-        bold_font.SetWeight(weight=wx.FONTWEIGHT_BOLD)
-        self.label.SetFont(bold_font)
+        if self.display_label:
+            self.label = wx.StaticText(self.parent, label=self.field_name, style=wx.ST_ELLIPSIZE_END)
+            bold_font = self.parent.GetFont()
+            bold_font.SetWeight(weight=wx.FONTWEIGHT_BOLD)
+            self.label.SetFont(bold_font)
         self.create_all_controls()
-        if self.same_line:
+        if self.same_line and self.display_label:
             hbox = wx.BoxSizer(wx.HORIZONTAL)
             hbox.Add(self.label, 99, wx.ALIGN_CENTER)
             hbox.AddStretchSpacer(1)
@@ -62,8 +65,9 @@ class InfoField(object):
                 hbox.Add(extra, 0, wx.ALIGN_CENTER)
             self.box.Add(hbox, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
         else:
-            self.box.Add(self.label, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
-            self.box.AddSpacer(self.panel.LABEL_SPACING)
+            if self.display_label:
+                self.box.Add(self.label, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
+                self.box.AddSpacer(self.panel.LABEL_SPACING)
             self.box.Add(self.ctrl, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
             for extra in self.extra_ctrls:
                 hbox.Add(extra, 0, wx.ALIGN_CENTER)
@@ -1114,6 +1118,57 @@ class MapOverlayField(InfoField):
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
 
+class ServerStatusField(InfoField):
+    same_line = False
+    
+    def fill_data(self, layer):
+        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        wms = downloader.wms
+        c = self.ctrl
+        color = None
+        if wms.has_error():
+            text = wms.error
+            color = "#FF8080"
+        elif wms.is_valid():
+            text = "OK"
+        else:
+            text = "Initializing"
+        if color is None:
+            attr = self.panel.GetDefaultAttributes()
+            color = attr.colBg
+        c.SetBackgroundColour(color)
+        c.SetLabel(text)
+    
+    def create_control(self):
+        c = GenStaticText(self.parent, style=wx.ALIGN_LEFT)
+        return c
+
+
+class ServerReloadField(InfoField):
+    display_label = False
+    
+    def fill_data(self, layer):
+        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        wms = downloader.wms
+        if wms.has_error():
+            self.ctrl.Show(True)
+        else:
+            self.ctrl.Show(False)
+    
+    def create_control(self):
+        c = wx.Button(self.parent, -1, "Retry")
+        c.Bind(wx.EVT_BUTTON, self.on_press)
+        return c
+    
+    def on_press(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        downloader.get_server_config()
+        layer.wms_rebuild(self.panel.project.layer_canvas)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 class InfoPanel(PANELTYPE):
 
@@ -1232,6 +1287,8 @@ class InfoPanel(PANELTYPE):
         "Anchor point": AnchorPointField,
         "Map server": MapServerField,
         "Map layer": MapOverlayField,
+        "Server status": ServerStatusField,
+        "Server reload": ServerReloadField,
         }
     
     def create_fields(self, layer, fields):

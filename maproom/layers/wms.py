@@ -23,6 +23,8 @@ class WMSLayer(ProjectedLayer):
     
     layer_info_panel = ["Map server", "Map layer"]
     
+    selection_info_panel = ["Server status", "Server reload"]
+    
     map_server_id = Int(0)
     
     map_layers = Set(Str)
@@ -90,7 +92,6 @@ class WMSLayer(ProjectedLayer):
         if downloader.is_valid():
             if not self.map_layers:
                 self.map_layers = set(downloader.wms.get_default_layers())
-                canvas.project.update_info_panels(self, True)
             layers = list(self.map_layers)
             downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, self)
             if self.checkerboard_when_loading:
@@ -100,10 +101,11 @@ class WMSLayer(ProjectedLayer):
             # Try again, waiting till we get a successful contact
             if not downloader.wms.has_error():
                 print "WMS not initialized yet, waiting..."
-                self.change_count += 1  # Force info panel update
                 canvas.set_minimum_delay_callback(self.wms_rebuild, 200)
             else:
                 print "WMS error, not attempting to contact again"
+        self.change_count += 1  # Force info panel update
+        canvas.project.update_info_panels(self, True)
     
     def change_server_id(self, id, canvas):
         if id != self.map_server_id:
