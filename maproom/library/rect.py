@@ -153,3 +153,23 @@ def get_rect_of_points(points):
     for p in points:
         r = accumulate_point(r, p)
     return r
+
+
+def n_or_s(y):
+    if y < 0: return "S"
+    return "N"
+
+def e_or_w(x):
+    if x < 0: return "W"
+    return "E"
+
+
+def pretty_format(r):
+    if r is None or r == NONE_RECT:
+        return "(invalid rect)"
+    x1, y1, x2, y2 = get_normalized_coordinates(*r)
+    return "%s%s, %s%s\n%s%s, %s%s" % (
+        x1, e_or_w(x1),
+        y1, n_or_s(y1),
+        x2, e_or_w(x2),
+        y2, n_or_s(y2))

@@ -10,6 +10,8 @@ from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, 
 
 from numpy_images import get_numpy_from_data
 
+import rect
+
 import logging
 import multiprocessing
 log = multiprocessing.log_to_stderr()
@@ -80,6 +82,7 @@ class WMSInitRequest(UnskippableURLRequest):
         self.version = version
         self.current_layer = None
         self.layer_keys = []
+        self.world_bbox_rect = None
         
     def get_data_from_server(self):
 #        if True:  # To test error handling, uncomment this
@@ -110,7 +113,17 @@ class WMSInitRequest(UnskippableURLRequest):
         self.layer_keys = self.wms.contents.keys()
         self.layer_keys.sort()
         self.current_layer = self.layer_keys[0]
+        self.world_bbox_rect = self.get_global_bbox()
         self.debug()
+    
+    def get_global_bbox(self):
+        bbox = ((None, None), (None, None))
+        for name in self.layer_keys:
+            b = self.wms[name].boundingBoxWGS84
+            print "layer", name, "bbox", b
+            r = ((b[0], b[1]), (b[2], b[3]))
+            bbox = rect.accumulate_rect(bbox, r)
+        return bbox
     
     def debug(self):
         wms = self.wms
@@ -224,6 +237,9 @@ class WMSRequest(BaseRequest):
         try:
             log.debug("HERE1")
             self.data = self.wms.get_image(self.world_rect, self.proj_rect, self.image_size, self.layers)
+            
+            if not rect.intersects(self.world_rect, self.wms.world_bbox_rect):
+                self.error = "Outside WMS boundary of %s" % rect.pretty_format(self.wms.world_bbox_rect)
             log.debug("HERE2")
         except ServiceException, e:
             log.debug("HERE5")
@@ -265,15 +281,15 @@ if __name__ == "__main__":
     # Capabilities: http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
 # crsoptions ['EPSG:102100']
     
-    h = WMSHost.get_wms_by_name("USGS National Atlas 1 Million")
+    h = WMSHost.get_wms_by_name("USACE Inland ENC")
 #    h = WMSHost.get_wms_by_name("NOAA RNC")
-    wms = BackgroundWMSDownloader(h)
+    downloader = BackgroundWMSDownloader(h)
 
-    test = wms.request_map(wr, pr, size)
-    test = wms.request_map(wr, pr, size)
-    test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
-    test = wms.request_map(wr, pr, size, layer=['10', '11', '12', '14', '15', '17', '18', '19', '20'])
-    test = wms.request_map(wr, pr, size)
+    test = downloader.request_map(wr, pr, size)
+    test = downloader.request_map(wr, pr, size)
+    test = downloader.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
+    test = downloader.request_map(wr, pr, size, layer=['10', '11', '12', '14', '15', '17', '18', '19', '20'])
+    test = downloader.request_map(wr, pr, size)
     while True:
         if test.is_finished:
             break
@@ -283,11 +299,11 @@ if __name__ == "__main__":
     if test.error:
         print "Error!", test.error
     else:
+        print "world bbox", downloader.wms.world_bbox_rect
         outfile = 'wmstest.png'
         out = open(outfile, 'wb')
         out.write(test.data)
         out.close()
         print "Generated image", outfile
             
-    wms = None
-    
+    downloader = None
