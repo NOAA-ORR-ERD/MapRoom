@@ -2,7 +2,7 @@ import sys
 import wx
 import wx.combo
 import wx.lib.buttons as buttons
-from wx.lib.stattext import GenStaticText
+from wx.lib.expando import ExpandoTextCtrl
 
 from pyface.api import ImageResource
 
@@ -1051,7 +1051,7 @@ class ParticleEndField(ParticleField):
 
 
 class MapServerField(InfoField):
-    same_line = True
+    same_line = False
     
     def fill_data(self, layer):
         self.ctrl.SetSelection(layer.map_server_id)
@@ -1118,13 +1118,31 @@ class MapOverlayField(InfoField):
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
 
-class ServerStatusField(InfoField):
+class ExpandableErrorField(InfoField):
     same_line = False
     
     def fill_data(self, layer):
+        text, color = self.get_error_text(layer)
+        if color is None:
+            attr = self.panel.GetDefaultAttributes()
+            color = attr.colBg
+        self.ctrl.SetBackgroundColour(color)
+        self.ctrl.SetValue(str(text))
+    
+    def get_error_text(layer):
+        raise NotImplementedError
+    
+    def create_control(self):
+        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
+        return c
+
+
+class ServerStatusField(ExpandableErrorField):
+    same_line = False
+    
+    def get_error_text(self, layer):
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
         wms = downloader.wms
-        c = self.ctrl
         color = None
         if wms.has_error():
             text = wms.error
@@ -1133,15 +1151,7 @@ class ServerStatusField(InfoField):
             text = "OK"
         else:
             text = "Initializing"
-        if color is None:
-            attr = self.panel.GetDefaultAttributes()
-            color = attr.colBg
-        c.SetBackgroundColour(color)
-        c.SetLabel(text)
-    
-    def create_control(self):
-        c = GenStaticText(self.parent, style=wx.ALIGN_LEFT)
-        return c
+        return text, color
 
 
 class ServerReloadField(InfoField):
@@ -1167,6 +1177,27 @@ class ServerReloadField(InfoField):
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
         downloader.get_server_config()
         layer.wms_rebuild(self.panel.project.layer_canvas)
+
+
+
+class DownloadStatusField(ExpandableErrorField):
+    same_line = False
+    
+    def get_error_text(self, layer):
+        color = None
+        if layer.download_error:
+            text = layer.download_error
+            color = "#FF8080"
+        else:
+            text = "OK"
+        if color is None:
+            attr = self.panel.GetDefaultAttributes()
+            color = attr.colBg
+        return text, color
+    
+    def create_control(self):
+        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
+        return c
 
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
@@ -1289,6 +1320,7 @@ class InfoPanel(PANELTYPE):
         "Map layer": MapOverlayField,
         "Server status": ServerStatusField,
         "Server reload": ServerReloadField,
+        "Map status": DownloadStatusField,
         }
     
     def create_fields(self, layer, fields):

@@ -23,7 +23,7 @@ class WMSLayer(ProjectedLayer):
     
     layer_info_panel = ["Map server", "Map layer"]
     
-    selection_info_panel = ["Server status", "Server reload"]
+    selection_info_panel = ["Server status", "Server reload", "Map status"]
     
     map_server_id = Int(0)
     
@@ -41,15 +41,18 @@ class WMSLayer(ProjectedLayer):
     
     threaded_request_ready = Any(None)
     
+    download_error = Any(None)
+    
     checkerboard_when_loading = False
     
     def get_image_array(self):
         if self.threaded_request_ready is None:
-            return self.current_world, numpy_images.get_checkerboard(*self.current_size)
+            return self.current_world, numpy_images.get_checkerboard(*self.current_size), None
         else:
             wms_result = self.threaded_request_ready
             self.threaded_request_ready = None
-            return wms_result.world_rect, wms_result.get_image_array()
+            print "RESULT!!!!", wms_result
+            return wms_result.world_rect, wms_result.get_image_array(), wms_result.error
 
     def rebuild_renderer(self, renderer, in_place=False):
         projection = self.manager.project.layer_canvas.projection
@@ -57,15 +60,20 @@ class WMSLayer(ProjectedLayer):
             renderer.release_textures()
             self.image_data = None
         if self.image_data is None and self.current_size is not None:
-            world_rect, raw = self.get_image_array()
-            self.image_data = ImageData(raw.shape[0], raw.shape[1])
-            self.image_data.load_numpy_array(None, raw)
-            # OpenGL y coords are backwards, so simply flip world y coords and
-            # OpenGL handles it correctly.
-            flipped = ((world_rect[0][0], world_rect[1][1]),
-                       (world_rect[1][0], world_rect[0][1]))
-            self.image_data.set_rect(flipped, None)
-            print "setting image data from wms connection:", world_rect
+            world_rect, raw, error = self.get_image_array()
+            self.download_error = error
+            print "DOWNLOAD ERROR:", error
+            if error is None:
+                self.image_data = ImageData(raw.shape[0], raw.shape[1])
+                self.image_data.load_numpy_array(None, raw)
+                # OpenGL y coords are backwards, so simply flip world y coords and
+                # OpenGL handles it correctly.
+                flipped = ((world_rect[0][0], world_rect[1][1]),
+                           (world_rect[1][0], world_rect[0][1]))
+                self.image_data.set_rect(flipped, None)
+                print "setting image data from wms connection:", world_rect
+            self.change_count += 1  # Force info panel update
+            self.manager.project.layer_canvas.project.update_info_panels(self, True)
         if self.image_data is not None:
             renderer.set_image_projection(self.image_data, projection)
             self.rebuild_needed = False
@@ -98,6 +106,7 @@ class WMSLayer(ProjectedLayer):
                 self.rebuild_needed = True
                 canvas.render()
         else:
+            self.download_error = None
             # Try again, waiting till we get a successful contact
             if not downloader.wms.has_error():
                 print "WMS not initialized yet, waiting..."

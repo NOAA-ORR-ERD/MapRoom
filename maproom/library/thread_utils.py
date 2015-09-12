@@ -10,6 +10,12 @@ from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, 
 
 from numpy_images import get_numpy_from_data
 
+import logging
+import multiprocessing
+log = multiprocessing.log_to_stderr()
+log.setLevel(logging.DEBUG)
+
+
 blank_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00@\x00\x00\x00@\x08\x06\x00\x00\x00\xaaiq\xde\x00\x00\x00\x06bKGD\x00\xff\x00\xff\x00\xff\xa0\xbd\xa7\x93\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\x07tIME\x07\xdf\t\x02\x10/\x0b\x11M\xec5\x00\x00\x00\x1diTXtComment\x00\x00\x00\x00\x00Created with GIMPd.e\x07\x00\x00\x00mIDATx\xda\xed\xdb\xb1\x01\x00 \x08\xc4@\xb1\xfa\xfdg\xa5\xc7=\xe42\xc2\xf5\xa9N\xe6ln3@'s\xcf\xf2\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0G\xb5}\x9f\x7f\x96\x0b\x08\x89\xb7w\x1e\xe3\x00\x00\x00\x00IEND\xaeB`\x82"
 
 
@@ -28,6 +34,7 @@ class WMSHost(object):
     def get_known_wms(cls):
         if cls.cached_known_wms is None:
             cls.cached_known_wms = [
+                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0"),
                 cls("NOAA RNC", "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
                 cls("NOAA Maritime Charts", "http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
                 cls("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
@@ -90,6 +97,9 @@ class WMSInitRequest(UnskippableURLRequest):
             self.error = e
         except AttributeError, e:
             print "Bad response from server", self.url
+            self.error = e
+        except Exception, e:
+            print "Server error", self.url
             self.error = e
     
     def is_valid(self):
@@ -212,16 +222,23 @@ class WMSRequest(BaseRequest):
     
     def get_data_from_server(self):
         try:
+            log.debug("HERE1")
             self.data = self.wms.get_image(self.world_rect, self.proj_rect, self.image_size, self.layers)
-            if self.manager is not None:
-                self.manager.threaded_image_loaded = (self.event_data, self)
+            log.debug("HERE2")
         except ServiceException, e:
+            log.debug("HERE5")
             self.error = e
+        except Exception, e:
+            log.debug("HERE4")
+            self.error = e
+        if self.manager is not None:
+            log.debug("HERE3")
+            self.manager.threaded_image_loaded = (self.event_data, self)
     
     def get_image_array(self):
         try:
             return get_numpy_from_data(self.data)
-        except IOError:
+        except (IOError, TypeError):
             # some WMSes return HTML data instead of an image on an error
             # (usually see this when outside the bounding box)
             return get_numpy_from_data(blank_png)
@@ -248,23 +265,29 @@ if __name__ == "__main__":
     # Capabilities: http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
 # crsoptions ['EPSG:102100']
     
-    h = WMSHost.get_wms_by_name("USGS Topo Large")
+    h = WMSHost.get_wms_by_name("USGS National Atlas 1 Million")
 #    h = WMSHost.get_wms_by_name("NOAA RNC")
     wms = BackgroundWMSDownloader(h)
 
-#    test = wms.request_map(wr, pr, size)
-#    test = wms.request_map(wr, pr, size)
-#    test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
+    test = wms.request_map(wr, pr, size)
+    test = wms.request_map(wr, pr, size)
+    test = wms.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
     test = wms.request_map(wr, pr, size, layer=['10', '11', '12', '14', '15', '17', '18', '19', '20'])
+    test = wms.request_map(wr, pr, size)
     while True:
         if test.is_finished:
             break
         time.sleep(1)
         print "Waiting for test..."
 
-    out = open('wmstest.png', 'wb')
-    out.write(test.data)
-    out.close()
+    if test.error:
+        print "Error!", test.error
+    else:
+        outfile = 'wmstest.png'
+        out = open(outfile, 'wb')
+        out.write(test.data)
+        out.close()
+        print "Generated image", outfile
             
     wms = None
     

@@ -405,7 +405,7 @@ class ProjectEditor(FrameworkEditor):
         log.debug("threaded image loaded called")
         layer, wms_request = data
         print "event happed on %s" % layer
-        print "data:", len(wms_request.data)
+        print "wms_request:", wms_request
         layer.rebuild_needed = True
         layer.threaded_request_ready = wms_request
         wx.CallAfter(self.layer_canvas.render)
