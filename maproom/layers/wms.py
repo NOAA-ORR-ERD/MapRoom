@@ -27,7 +27,7 @@ class WMSLayer(ProjectedLayer):
     
     map_server_id = Int(0)
     
-    map_layers = Set(Str)
+    map_layers = Any(None)  # holds a set of names representing shown overlay layers
     
     image_data = Any
     
@@ -98,7 +98,7 @@ class WMSLayer(ProjectedLayer):
     def wms_rebuild(self, canvas):
         downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
         if downloader.is_valid():
-            if not self.map_layers:
+            if self.map_layers is None:
                 self.map_layers = set(downloader.wms.get_default_layers())
             layers = list(self.map_layers)
             self.download_status_text = (None, "Downloading...")
@@ -120,7 +120,7 @@ class WMSLayer(ProjectedLayer):
     def change_server_id(self, id, canvas):
         if id != self.map_server_id:
             self.map_server_id = id
-            self.map_layers = set()
+            self.map_layers = None
             self.wms_rebuild(canvas)
             self.change_count += 1  # Force info panel update
             canvas.project.update_info_panels(self, True)

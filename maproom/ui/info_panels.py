@@ -1099,6 +1099,9 @@ class MapOverlayField(InfoField):
         c = wx.CheckListBox(self.parent, -1, size=(self.default_width, -1), choices=names)
         #c.Bind(wx.EVT_LISTBOX, self.overlay_selected)
         c.Bind(wx.EVT_CHECKLISTBOX, self.overlay_selected)
+        c.Bind(wx.EVT_RIGHT_DOWN, self.on_popup)
+        c.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
+        c.Bind(wx.EVT_MENU, self.on_clear_all, id=wx.ID_CLEAR)
         return c
         
     def overlay_selected(self, event):
@@ -1114,6 +1117,36 @@ class MapOverlayField(InfoField):
             layer.map_layers.remove(name)
         else:
             layer.map_layers.add(name)
+        self.set_selected(layer, wms)
+        layer.wms_rebuild(self.panel.project.layer_canvas)
+    
+    def on_popup(self, event):
+        popup = wx.Menu()
+        popup.Append(wx.ID_SELECTALL, "Select All Layers")
+        popup.Append(wx.ID_CLEAR, "Clear All Selections")
+        id = self.ctrl.PopupMenu(popup, event.GetPosition())
+        print "POPUP ID:", id
+    
+    def on_select_all(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        wms = downloader.wms
+        names = [n[0] for n in wms.get_layer_info()]
+        layer.map_layers = set(names)
+        print "SELECTED!", layer.map_layers
+        self.set_selected(layer, wms)
+        layer.wms_rebuild(self.panel.project.layer_canvas)
+    
+    def on_clear_all(self, event):
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        wms = downloader.wms
+        layer.map_layers = set()
+        print "CLEARED!", layer.map_layers
         self.set_selected(layer, wms)
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
