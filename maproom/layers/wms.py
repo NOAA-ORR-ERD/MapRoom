@@ -41,7 +41,7 @@ class WMSLayer(ProjectedLayer):
     
     threaded_request_ready = Any(None)
     
-    download_error = Any(None)
+    download_status_text = Any(None)
     
     checkerboard_when_loading = False
     
@@ -61,7 +61,7 @@ class WMSLayer(ProjectedLayer):
             self.image_data = None
         if self.image_data is None and self.current_size is not None:
             world_rect, raw, error = self.get_image_array()
-            self.download_error = error
+            self.download_status_text = ("error", error)
             print "DOWNLOAD ERROR:", error
             if error is None:
                 self.image_data = ImageData(raw.shape[0], raw.shape[1])
@@ -101,12 +101,13 @@ class WMSLayer(ProjectedLayer):
             if not self.map_layers:
                 self.map_layers = set(downloader.wms.get_default_layers())
             layers = list(self.map_layers)
+            self.download_status_text = (None, "Downloading...")
             downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, self)
             if self.checkerboard_when_loading:
                 self.rebuild_needed = True
                 canvas.render()
         else:
-            self.download_error = None
+            self.download_status_text = None
             # Try again, waiting till we get a successful contact
             if not downloader.wms.has_error():
                 print "WMS not initialized yet, waiting..."

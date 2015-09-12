@@ -1185,11 +1185,14 @@ class DownloadStatusField(ExpandableErrorField):
     
     def get_error_text(self, layer):
         color = None
-        if layer.download_error:
-            text = layer.download_error
-            color = "#FF8080"
+        if layer.download_status_text is not None:
+            stype, text = layer.download_status_text
+            if text is None:
+                text = "OK"
+            elif stype == "error":
+                color = "#FF8080"
         else:
-            text = "OK"
+            text = "Waiting for server"
         if color is None:
             attr = self.panel.GetDefaultAttributes()
             color = attr.colBg
