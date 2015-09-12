@@ -1100,8 +1100,10 @@ class MapOverlayField(InfoField):
         #c.Bind(wx.EVT_LISTBOX, self.overlay_selected)
         c.Bind(wx.EVT_CHECKLISTBOX, self.overlay_selected)
         c.Bind(wx.EVT_RIGHT_DOWN, self.on_popup)
-        c.Bind(wx.EVT_MENU, self.on_select_all, id=wx.ID_SELECTALL)
-        c.Bind(wx.EVT_MENU, self.on_clear_all, id=wx.ID_CLEAR)
+        self.select_id = wx.NewId()
+        c.Bind(wx.EVT_MENU, self.on_select_all, id=self.select_id)
+        self.clear_id = wx.NewId()
+        c.Bind(wx.EVT_MENU, self.on_clear_all, id=self.clear_id)
         return c
         
     def overlay_selected(self, event):
@@ -1122,8 +1124,8 @@ class MapOverlayField(InfoField):
     
     def on_popup(self, event):
         popup = wx.Menu()
-        popup.Append(wx.ID_SELECTALL, "Select All Layers")
-        popup.Append(wx.ID_CLEAR, "Clear All Selections")
+        popup.Append(self.select_id, "Select All Layers")
+        popup.Append(self.clear_id, "Clear All Selections")
         id = self.ctrl.PopupMenu(popup, event.GetPosition())
         print "POPUP ID:", id
     
