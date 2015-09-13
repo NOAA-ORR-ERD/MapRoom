@@ -1,3 +1,30 @@
+09/13/2015
+---------------------------
+Released 3.1b10
+- RM Refs #604: removed some debug printing
+- RM Refs #604: added transparency to WMS layers
+- RM Refs #604: fixed image problem when switching active layers
+- RM Refs #604: fixed race condition in MapOverlayField
+- RM Refs #604: added method to remove common prefix from layer titles
+- RM Refs #604: fixed popup menu code for OS X
+- RM Refs #604: changed from standard WX ids on popup
+- RM Refs #604: added context menu to select all/clear overlays
+- RM Refs #604: added error message when outside WMS bounding box
+- RM Refs #604: fixed download status to display when waiting for download
+- RM Refs #604: added map download status and better error checking
+- RM Refs #604: changed default layers to be all known layers
+- RM Refs #604: added WMSHost class to allow human readable names for WMS sites
+- RM Refs #604: added server error reporting & retry
+- RM Updated deps to my versions of OWSLib and pyugrid
+- RM Refs #604: added overlay selection for WMS
+- RM Refs #604: Return blank image on WMS image error
+- RM Added some docs & example URLs and capabilities for WMS/WMTS
+- RM Refs #604: Initial support for web mercator (projected) bbox
+- RM Refs #604: skip checkerboard image when moving/scaling wms layer
+- RM Refs #604: initial support for selecting WMS server
+- RM Updated readme for WMS, py2exe quirks
+- RM Refs #604: added support for paletted images
+
 09/08/2015
 ---------------------------
 Released 3.1b9
