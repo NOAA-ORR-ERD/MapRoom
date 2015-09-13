@@ -21,9 +21,9 @@ class WMSLayer(ProjectedLayer):
     
     type = Str("wms")
     
-    layer_info_panel = ["Map server", "Map layer"]
+    layer_info_panel = ["Transparency", "Server status", "Server reload", "Map status"]
     
-    selection_info_panel = ["Server status", "Server reload", "Map status"]
+    selection_info_panel = ["Map server", "Map layer"]
     
     map_server_id = Int(0)
     
@@ -141,4 +141,5 @@ class WMSLayer(ProjectedLayer):
             return
         log.log(5, "Rendering wms!!! pick=%s" % (picker))
         if self.image_data is not None:
-            renderer.draw_image(layer_index_base, picker, 1.0)
+            alpha = alpha_from_int(self.style.line_color)
+            renderer.draw_image(layer_index_base, picker, alpha)
