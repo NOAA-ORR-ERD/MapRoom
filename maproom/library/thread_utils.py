@@ -24,27 +24,37 @@ blank_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00@\x00\x00\x00@\x08\x
 class WMSHost(object):
     cached_known_wms = None
     
-    def __init__(self, name, url, version):
+    def __init__(self, name, url, version, strip_prefix=""):
         self.name = name
+        if url.endswith("?"):
+            url = url[:-1]
         self.url = url
         self.version = version
+        self.strip_prefix = strip_prefix
+        self.strip_prefix_len = len(strip_prefix)
     
     def __hash__(self):
         return hash(self.url)
+    
+    def convert_title(self, title):
+        if self.strip_prefix:
+            if title.startswith(self.strip_prefix):
+                return title[self.strip_prefix_len:]
+        return title
 
     @classmethod
     def get_known_wms(cls):
         if cls.cached_known_wms is None:
             cls.cached_known_wms = [
-                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0"),
+                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
                 cls("NOAA RNC", "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
                 cls("NOAA Maritime Charts", "http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
                 cls("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
                 cls("OpenStreetMap from terrestris.de", "http://ows.terrestris.de/osm/service?", "1.1.1"),
                 cls("USGS Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSTopoLarge/MapServer/WMSServer?", "1.3.0"),
                 cls("USGS Imagery Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSImageryTopoLarge/MapServer/WMSServer?", "1.3.0"),
-                cls("USGS National Atlas Map Reference", "http://webservices.nationalatlas.gov/wms/map_reference?", "1.3.0"),
-                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0"),
+                cls("USGS National Atlas Map Reference", "http://webservices.nationalatlas.gov/wms/map_reference?", "1.3.0", "Map Reference - "),
+                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
                 ]
         return cls.cached_known_wms
     
@@ -62,7 +72,7 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
         BackgroundHttpDownloader.__init__(self)
 
     def get_server_config(self):
-        self.wms = WMSInitRequest(self.wmshost.url, self.wmshost.version)
+        self.wms = WMSInitRequest(self.wmshost)
         self.send_request(self.wms)
     
     def is_valid(self):
@@ -75,11 +85,9 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
 
 
 class WMSInitRequest(UnskippableURLRequest):
-    def __init__(self, url, version='1.1.1'):
-        if url.endswith("?"):
-            url = url[:-1]
-        UnskippableURLRequest.__init__(self, url)
-        self.version = version
+    def __init__(self, wmshost):
+        self.wmshost = wmshost
+        UnskippableURLRequest.__init__(self, wmshost.url)
         self.current_layer = None
         self.layer_keys = []
         self.world_bbox_rect = None
@@ -91,7 +99,7 @@ class WMSInitRequest(UnskippableURLRequest):
 #            self.error = "Test error"
 #            return
         try:
-            wms = WebMapService(self.url, self.version)
+            wms = WebMapService(self.url, self.wmshost.version)
             self.setup(wms)
         except ServiceException, e:
             self.error = e
@@ -162,12 +170,12 @@ class WMSInitRequest(UnskippableURLRequest):
         print wms.getOperationByName('GetMap').formatOptions
         
         for name in self.layer_keys:
-            print "layer:", name, "crsoptions", wms[layer].crsOptions
+            print "layer:", name, "title", self.wmshost.convert_title(self.wms[name].title), "crsoptions", wms[layer].crsOptions
     
     def get_layer_info(self):
         layer_info = []
         for name in self.layer_keys:
-            layer_info.append((name, self.wms[name].title))
+            layer_info.append((name, self.wmshost.convert_title(self.wms[name].title)))
         return layer_info
     
     def get_default_layers(self):
