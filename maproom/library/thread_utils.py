@@ -46,7 +46,7 @@ class WMSHost(object):
     def get_known_wms(cls):
         if cls.cached_known_wms is None:
             cls.cached_known_wms = [
-                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
+#                cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
                 cls("NOAA RNC", "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
                 cls("NOAA Maritime Charts", "http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
                 cls("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
@@ -243,20 +243,15 @@ class WMSRequest(BaseRequest):
     
     def get_data_from_server(self):
         try:
-            log.debug("HERE1")
             self.data = self.wms.get_image(self.world_rect, self.proj_rect, self.image_size, self.layers)
             
             if not rect.intersects(self.world_rect, self.wms.world_bbox_rect):
                 self.error = "Outside WMS boundary of %s" % rect.pretty_format(self.wms.world_bbox_rect)
-            log.debug("HERE2")
         except ServiceException, e:
-            log.debug("HERE5")
             self.error = e
         except Exception, e:
-            log.debug("HERE4")
             self.error = e
         if self.manager is not None:
-            log.debug("HERE3")
             self.manager.threaded_image_loaded = (self.event_data, self)
     
     def get_image_array(self):

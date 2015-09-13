@@ -1078,21 +1078,16 @@ class MapOverlayField(InfoField):
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
         wms = downloader.wms
         titles = [n[1] for n in wms.get_layer_info()]
-        print "MAP OVERLAY LAYER TITLES", titles
         self.ctrl.SetItems(titles)
         self.set_selected(layer, wms)
     
     def set_selected(self, layer, wms):
         names = [n[0] for n in wms.get_layer_info()]
-        print "MAP OVERLAY LAYER NAMES", names
-        print "LAYERS USED", layer.map_layers
         selected = []
         if layer.map_layers is not None:
             for i, name in enumerate(names):
-                print " CHECKING", name, i
                 if name in layer.map_layers:
                     selected.append(i)
-        print "SELECTED", selected
         self.ctrl.SetChecked(selected)
     
     def create_control(self):
@@ -1111,7 +1106,6 @@ class MapOverlayField(InfoField):
         if (layer is None):
             return
         item = event.GetSelection()
-        print "selected item", item
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
         wms = downloader.wms
         name = wms.get_layer_info()[item][0]
@@ -1126,8 +1120,7 @@ class MapOverlayField(InfoField):
         popup = wx.Menu()
         popup.Append(self.select_id, "Select All Layers")
         popup.Append(self.clear_id, "Clear All Selections")
-        id = self.ctrl.PopupMenu(popup, event.GetPosition())
-        print "POPUP ID:", id
+        self.ctrl.PopupMenu(popup, event.GetPosition())
     
     def on_menu(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
@@ -1138,10 +1131,8 @@ class MapOverlayField(InfoField):
         if event.GetId() == self.select_id:
             names = [n[0] for n in wms.get_layer_info()]
             layer.map_layers = set(names)
-            print "SELECTED!", layer.map_layers
         else:
             layer.map_layers = set()
-            print "CLEARED!", layer.map_layers
         self.set_selected(layer, wms)
         layer.wms_rebuild(self.panel.project.layer_canvas)
 

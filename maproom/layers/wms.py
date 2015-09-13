@@ -51,7 +51,7 @@ class WMSLayer(ProjectedLayer):
         else:
             wms_result = self.threaded_request_ready
             self.threaded_request_ready = None
-            print "RESULT!!!!", wms_result
+            log.debug("threaded_request_ready = %s" % wms_result)
             return wms_result.world_rect, wms_result.get_image_array(), wms_result.error
 
     def rebuild_renderer(self, renderer, in_place=False):
@@ -62,7 +62,6 @@ class WMSLayer(ProjectedLayer):
         if self.image_data is None and self.current_size is not None:
             world_rect, raw, error = self.get_image_array()
             self.download_status_text = ("error", error)
-            print "DOWNLOAD ERROR:", error
             
             # Need to use an image even on an error condition, otherwise when
             # the screen is redrawn from some external event (window unhidden,
@@ -77,7 +76,6 @@ class WMSLayer(ProjectedLayer):
             flipped = ((world_rect[0][0], world_rect[1][1]),
                        (world_rect[1][0], world_rect[0][1]))
             self.image_data.set_rect(flipped, None)
-            print "setting image data from wms connection:", world_rect
             self.change_count += 1  # Force info panel update
             self.manager.project.layer_canvas.project.update_info_panels(self, True)
         if self.image_data is not None:
@@ -85,9 +83,6 @@ class WMSLayer(ProjectedLayer):
             self.rebuild_needed = False
 
     def resize(self, renderer, world_rect, proj_rect, screen_rect):
-        print "world_rect = %r" % (world_rect,)
-        print "proj_rect = %r" % (proj_rect,)
-        print "screen_rect = %r" % (screen_rect,)
         old_size = self.current_size
         old_world = self.current_world
         self.current_size = rect.size(screen_rect)
@@ -116,10 +111,10 @@ class WMSLayer(ProjectedLayer):
             self.download_status_text = None
             # Try again, waiting till we get a successful contact
             if not downloader.wms.has_error():
-                print "WMS not initialized yet, waiting..."
+                log.debug("WMS not initialized yet, waiting...")
                 canvas.set_minimum_delay_callback(self.wms_rebuild, 200)
             else:
-                print "WMS error, not attempting to contact again"
+                log.debug("WMS error, not attempting to contact again")
         self.change_count += 1  # Force info panel update
         canvas.project.update_info_panels(self, True)
     
