@@ -346,8 +346,12 @@ class ProjectEditor(FrameworkEditor):
         self.window._aui_manager.Update()
     
     def update_info_panels(self, layer, force=False):
-        self.layer_info.display_panel_for_layer(self, layer, force)
-        self.selection_info.display_panel_for_layer(self, layer, force)
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer == layer:
+            self.layer_info.display_panel_for_layer(self, layer, force)
+            self.selection_info.display_panel_for_layer(self, layer, force)
+        else:
+            log.debug("Attempting to update panel for layer %s that isn't current", layer)
     
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):

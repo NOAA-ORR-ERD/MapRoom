@@ -63,15 +63,21 @@ class WMSLayer(ProjectedLayer):
             world_rect, raw, error = self.get_image_array()
             self.download_status_text = ("error", error)
             print "DOWNLOAD ERROR:", error
-            if error is None:
-                self.image_data = ImageData(raw.shape[0], raw.shape[1])
-                self.image_data.load_numpy_array(None, raw)
-                # OpenGL y coords are backwards, so simply flip world y coords and
-                # OpenGL handles it correctly.
-                flipped = ((world_rect[0][0], world_rect[1][1]),
-                           (world_rect[1][0], world_rect[0][1]))
-                self.image_data.set_rect(flipped, None)
-                print "setting image data from wms connection:", world_rect
+            
+            # Need to use an image even on an error condition, otherwise when
+            # the screen is redrawn from some external event (window unhidden,
+            # switching layer, etc.) the checkerboard image will be loaded
+            # but because rebuild_needed wasn't set, no corresponding threaded
+            # call will be issued to load a new image
+            
+            self.image_data = ImageData(raw.shape[0], raw.shape[1])
+            self.image_data.load_numpy_array(None, raw)
+            # OpenGL y coords are backwards, so simply flip world y coords and
+            # OpenGL handles it correctly.
+            flipped = ((world_rect[0][0], world_rect[1][1]),
+                       (world_rect[1][0], world_rect[0][1]))
+            self.image_data.set_rect(flipped, None)
+            print "setting image data from wms connection:", world_rect
             self.change_count += 1  # Force info panel update
             self.manager.project.layer_canvas.project.update_info_panels(self, True)
         if self.image_data is not None:
