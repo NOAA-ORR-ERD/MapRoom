@@ -1087,10 +1087,11 @@ class MapOverlayField(InfoField):
         print "MAP OVERLAY LAYER NAMES", names
         print "LAYERS USED", layer.map_layers
         selected = []
-        for i, name in enumerate(names):
-            print " CHECKING", name, i
-            if name in layer.map_layers:
-                selected.append(i)
+        if layer.map_layers is not None:
+            for i, name in enumerate(names):
+                print " CHECKING", name, i
+                if name in layer.map_layers:
+                    selected.append(i)
         print "SELECTED", selected
         self.ctrl.SetChecked(selected)
     
