@@ -1101,9 +1101,8 @@ class MapOverlayField(InfoField):
         c.Bind(wx.EVT_CHECKLISTBOX, self.overlay_selected)
         c.Bind(wx.EVT_RIGHT_DOWN, self.on_popup)
         self.select_id = wx.NewId()
-        c.Bind(wx.EVT_MENU, self.on_select_all, id=self.select_id)
         self.clear_id = wx.NewId()
-        c.Bind(wx.EVT_MENU, self.on_clear_all, id=self.clear_id)
+        c.Bind(wx.EVT_MENU, self.on_menu)
         return c
         
     def overlay_selected(self, event):
@@ -1129,26 +1128,19 @@ class MapOverlayField(InfoField):
         id = self.ctrl.PopupMenu(popup, event.GetPosition())
         print "POPUP ID:", id
     
-    def on_select_all(self, event):
+    def on_menu(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
         wms = downloader.wms
-        names = [n[0] for n in wms.get_layer_info()]
-        layer.map_layers = set(names)
-        print "SELECTED!", layer.map_layers
-        self.set_selected(layer, wms)
-        layer.wms_rebuild(self.panel.project.layer_canvas)
-    
-    def on_clear_all(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
-        if (layer is None):
-            return
-        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
-        wms = downloader.wms
-        layer.map_layers = set()
-        print "CLEARED!", layer.map_layers
+        if event.GetId() == self.select_id:
+            names = [n[0] for n in wms.get_layer_info()]
+            layer.map_layers = set(names)
+            print "SELECTED!", layer.map_layers
+        else:
+            layer.map_layers = set()
+            print "CLEARED!", layer.map_layers
         self.set_selected(layer, wms)
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
