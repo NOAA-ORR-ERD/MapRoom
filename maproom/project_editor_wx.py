@@ -257,10 +257,21 @@ class ProjectEditor(FrameworkEditor):
             self.window.error("Unsupported image type %s" % ext)
     
     def print_preview(self):
-        self.window.error("Can't preview yet. Working on it!")
+        import os
+        temp = os.path.join(self.window.application.cache_dir, "preview.pdf")
+        self.save_as_pdf(temp)
+        try:
+            os.startfile(temp)
+        except AttributeError:
+            import subprocess
+            if sys.platform == "darwin":
+                file_manager = '/usr/bin/open'
+            else:
+                file_manager = 'xdg-open'
+            subprocess.call([file_manager, temp])
     
     def print_page(self):
-        self.save_as_pdf("maproom.pdf")
+        self.print_preview()
     
     def save_as_pdf(self, path=None):
         pdf_canvas = renderer.PDFCanvas(layer_manager=self.layer_manager, project=self, path=path)
