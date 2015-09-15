@@ -33,9 +33,9 @@ class RasterLayer(ProjectedLayer):
     selection_info_panel = []
     
     def get_info_panel_text(self, prop):
-        if prop == "Raster Size":
+        if prop == "Raster size":
             return "%dx%d" % (self.image_data.x, self.image_data.y)
-        elif prop == "Memory Used":
+        elif prop == "Memory used":
             return "%sM" % (self.image_data.x * self.image_data.y * 4 / 1024 / 1024)
 
     def empty(self):
