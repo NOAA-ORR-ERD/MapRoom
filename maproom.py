@@ -50,6 +50,7 @@ def main(argv):
                 log.setLevel(logging.DEBUG)
 
     else:
+        logger = logging.getLogger()
         logger.setLevel(logging.INFO)
     for toolkit in ['pyface', 'envisage', 'traits', 'traitsui', 'apptools']:
         _ = logging.getLogger(toolkit)
