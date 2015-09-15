@@ -441,7 +441,7 @@ class ScaledImageObject(RectangleVectorObject):
         projection = self.manager.project.layer_canvas.projection
         if self.image_data is None:
             raw = self.get_image_array()
-            self.image_data = ImageData(raw.shape[0], raw.shape[1])
+            self.image_data = ImageData(raw.shape[1], raw.shape[0])
             self.image_data.load_numpy_array(self.points, raw, projection)
         renderer.set_image_projection(self.image_data, projection)
 
@@ -522,7 +522,7 @@ class OverlayImageObject(RectangleVectorObject):
             self.image_data = None
         if self.image_data is None:
             raw = self.get_image_array()
-            self.image_data = ImageData(raw.shape[0], raw.shape[1])
+            self.image_data = ImageData(raw.shape[1], raw.shape[0])
             self.image_data.load_numpy_array(self.points, raw)
         renderer.set_image_screen(self.image_data)
 

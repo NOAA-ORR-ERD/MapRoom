@@ -69,7 +69,7 @@ class WMSLayer(ProjectedLayer):
             # but because rebuild_needed wasn't set, no corresponding threaded
             # call will be issued to load a new image
             
-            self.image_data = ImageData(raw.shape[0], raw.shape[1])
+            self.image_data = ImageData(raw.shape[1], raw.shape[0])
             self.image_data.load_numpy_array(None, raw)
             # OpenGL y coords are backwards, so simply flip world y coords and
             # OpenGL handles it correctly.

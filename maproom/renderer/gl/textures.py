@@ -207,8 +207,9 @@ class RawSubImageLoader(SubImageLoader):
         self.array = array
     
     def load(self, origin, size):
-        return self.array[origin[0]:origin[0] + size[0],
-                          origin[1]:origin[1] + size[1],:]
+        # numpy image coords are reversed!
+        return self.array[origin[1]:origin[1] + size[1],
+                          origin[0]:origin[0] + size[0],:]
 
 
 class ImageTextures(object):
@@ -342,10 +343,10 @@ class ImageTextures(object):
     def use_screen_rect(self, image_data, r):
         for i, entry in enumerate(image_data.image_sizes):
             selection_origin, selection_size = entry
-            x = selection_origin[1]
-            y = selection_origin[0]
-            w = selection_size[1]
-            h = selection_size[0]
+            x = selection_origin[0]
+            y = selection_origin[1]
+            w = selection_size[0]
+            h = selection_size[1]
             raw = self.vbo_vertexes[i].data
             vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = x + r[0][0]
@@ -360,10 +361,10 @@ class ImageTextures(object):
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
     
     def center_at_screen_point(self, image_data, point, screen_height):
-        left = int(point[0] - image_data.y/2)
-        bottom = int(point[1] + image_data.x/2)
-        right = left + image_data.y
-        top = bottom + image_data.x
+        left = int(point[0] - image_data.x/2)
+        bottom = int(point[1] + image_data.y/2)
+        right = left + image_data.x
+        top = bottom + image_data.y
         # flip y to treat rect as normal opengl coordinates
         r = ((left, screen_height - bottom),
              (right, screen_height - top))
