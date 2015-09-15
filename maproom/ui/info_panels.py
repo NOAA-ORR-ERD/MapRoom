@@ -75,6 +75,8 @@ class InfoField(object):
     
     def create_all_controls(self):
         self.ctrl = self.create_control()
+        if sys.platform.startswith("win"):
+            self.ctrl.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
         self.extra_ctrls = self.create_extra_controls()
     
     def create_extra_controls(self):
@@ -100,6 +102,16 @@ class InfoField(object):
         # Override the normal refreshing of the InfoPanel when editing the
         # properties here because refreshing them messes up the text editing.
         self.panel.project.process_command(cmd, override_editable_properties_changed=False)
+
+    def on_mouse_wheel_scroll(self, event):
+        screen_point = event.GetPosition()
+        size = self.ctrl.GetSize()
+        if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
+#            print "Mouse not over info panel %s: trying map!" % self
+            self.panel.project.control.on_mouse_wheel_scroll(event)
+            return
+        
+        event.Skip()
 
 class LabelField(InfoField):
     same_line = True
