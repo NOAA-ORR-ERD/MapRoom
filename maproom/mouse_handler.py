@@ -728,13 +728,8 @@ class ZoomRectMode(RectSelectMode):
         d_x = x2 - x1
         d_y = y2 - y1
         if (d_x >= 5 and d_y >= 5):
-            p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
-            c.projected_point_center = rect.center(p_r)
-            s_r = c.get_screen_rect()
-            ratio_h = float(d_x) / float(rect.width(s_r))
-            ratio_v = float(d_y) / float(rect.height(s_r))
-            c.projected_units_per_pixel *= max(ratio_h, ratio_v)
-            c.constrain_zoom()
+            w_r =  c.get_world_rect_from_screen_rect(((x1, y1), (x2, y2)))
+            c.zoom_to_world_rect(w_r)
             c.render()
 
 class CropRectMode(RectSelectMode):
