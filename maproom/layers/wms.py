@@ -45,6 +45,9 @@ class WMSLayer(ProjectedLayer):
     
     checkerboard_when_loading = False
     
+    def is_valid_threaded_result(self, map_server_id):
+        return map_server_id == self.map_server_id
+    
     def get_image_array(self):
         if self.threaded_request_ready is None:
             return self.current_world, numpy_images.get_checkerboard(*self.current_size), None
@@ -103,7 +106,7 @@ class WMSLayer(ProjectedLayer):
                 self.map_layers = set(downloader.wms.get_default_layers())
             layers = list(self.map_layers)
             self.download_status_text = (None, "Downloading...")
-            downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, self)
+            downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, (self, self.map_server_id))
             if self.checkerboard_when_loading:
                 self.rebuild_needed = True
                 canvas.render()
