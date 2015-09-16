@@ -1,3 +1,17 @@
+09/15/2015
+---------------------------
+Released 3.1b11
+- RM Refs #604: checks for server id before triggering wms update
+- RM Added "+over" to projection string to allow extreme zoom out
+- RM Fixed #631: added mouse wheel event handler to redirect events to map
+- RM Fixed logger statement misplacement
+- RM Fixed several instances of reversed numpy image coordinates
+- RM Fixed case of property so raster size & memory used show up again
+- RM Added flags to -d command line option
+- RM Changed to EPSG:3857 as default projection
+- RM Fixed zoom to rect toolbar action
+- RM Added print preview to call native OS PDF viewer
+
 09/13/2015
 ---------------------------
 Released 3.1b10
