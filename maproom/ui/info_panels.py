@@ -1089,7 +1089,7 @@ class MapOverlayField(InfoField):
     def fill_data(self, layer):
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
         wms = downloader.wms
-        titles = [n[1] for n in wms.get_layer_info()]
+        titles = [str(n[1]) for n in wms.get_layer_info()]
         self.ctrl.SetItems(titles)
         self.set_selected(layer, wms)
     

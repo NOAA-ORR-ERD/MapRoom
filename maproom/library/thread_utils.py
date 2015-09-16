@@ -50,11 +50,12 @@ class WMSHost(object):
                 cls("NOAA RNC", "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
                 cls("NOAA Maritime Charts", "http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
                 cls("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
-                cls("OpenStreetMap from terrestris.de", "http://ows.terrestris.de/osm/service?", "1.1.1"),
+                cls("OpenStreetMap WMS Deutschland", "http://ows.terrestris.de/osm/service?", "1.1.1"),
                 cls("USGS Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSTopoLarge/MapServer/WMSServer?", "1.3.0"),
                 cls("USGS Imagery Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSImageryTopoLarge/MapServer/WMSServer?", "1.3.0"),
                 cls("USGS National Atlas Map Reference", "http://webservices.nationalatlas.gov/wms/map_reference?", "1.3.0", "Map Reference - "),
                 cls("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
+                cls("NRL", "http://geoint.nrlssc.navy.mil/nrltileserver/wms/fast?", "1.1.1"),
                 ]
         return cls.cached_known_wms
     
@@ -180,7 +181,7 @@ class WMSInitRequest(UnskippableURLRequest):
     
     def get_default_layers(self):
         print self.layer_keys
-        return list(self.layer_keys)
+        return [self.layer_keys[0],]
     
     def get_bbox(self, layers, wr, pr):
         types = [("102100", "p"),
