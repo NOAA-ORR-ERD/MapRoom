@@ -833,21 +833,21 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
 class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_square.png"
     menu_item_name = "Add Rectangle"
-    menu_item_tooltip = "Add a new rectangles or squares"
+    menu_item_tooltip = "Add a new rectangle or square"
     vector_object_command = DrawRectangleCommand
 
 
 class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_circle.png"
     menu_item_name = "Add Ellipse"
-    menu_item_tooltip = "Add a new ellipses or circles"
+    menu_item_tooltip = "Add a new ellipse or circle"
     vector_object_command = DrawEllipseCommand
 
 
 class AddLineMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_line.png"
     menu_item_name = "Add Line"
-    menu_item_tooltip = "Add a new lines"
+    menu_item_tooltip = "Add a new line"
     vector_object_command = DrawLineCommand
     
     def is_snappable_to_layer(self, layer):
