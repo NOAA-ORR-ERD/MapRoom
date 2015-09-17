@@ -25,7 +25,7 @@ from menu_commands import *
 from vector_object_commands import *
 from ui.dialogs import StyleDialog
 from library.thread_utils import BackgroundWMSDownloader, WMSHost
-from peppy2.framework.actions import PreferencesAction
+from peppy2.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup
 
 import logging
 log = logging.getLogger(__name__)
@@ -99,33 +99,12 @@ class SaveLayerAsFormatAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save_layer(dialog.path)
 
-class SaveLayerGroup(Group):
+class SaveLayerGroup(TaskDynamicSubmenuGroup):
     """ A menu for changing the active task in a task window.
     """
-
-    #### 'ActionManager' interface ############################################
-
     id = 'SaveLayerGroup'
-    items = List
-
-    #### 'TaskChangeMenuManager' interface ####################################
-
-    # The ActionManager to which the group belongs.
-    manager = Any
-
-    # The window that contains the group.
-    task = Instance('peppy2.framework.task.FrameworkTask')
-
-    # ENTHOUGHT QUIRK: This doesn't work: can't have a property depending on
-    # a task because this forces task_default to be called very early in the
-    # initialization process, before the window hierarchy is defined.
-    #
-    # active_editor = Property(Instance(IEditor),
-    #                         depends_on='task.active_editor')
-        
-    ###########################################################################
-    # Private interface.
-    ###########################################################################
+    
+    event_name = Str('layer_selection_changed')
 
     def _get_items(self, layer=None):
         items = []
@@ -138,41 +117,6 @@ class SaveLayerGroup(Group):
                     items.append(ActionItem(action=action))
             
         return items
-
-    def _rebuild(self, layer=None):
-        # Clear out the old group, then build the new one.
-        self.destroy()
-        self.items = self._get_items(layer)
-
-        # Inform our manager that it needs to be rebuilt.
-        self.manager.changed = True
-        
-    #### Trait initializers ###################################################
-
-    def _items_default(self):
-        log.debug("SAVELAYERGROUP: _items_default!!!")
-        self.task.on_trait_change(self._rebuild, 'layer_selection_changed')
-        return self._get_items()
-
-    def _manager_default(self):
-        manager = self
-        while isinstance(manager, Group):
-            manager = manager.parent
-        log.debug("SAVELAYERGROUP: _manager_default=%s!!!" % manager)
-        return manager
-    
-    def _task_default(self):
-        log.debug("SAVELAYERGROUP: _task_default=%s!!!" % self.manager.controller.task)
-        return self.manager.controller.task
-    
-    # ENTHOUGHT QUIRK: This doesn't work: the trait change decorator never
-    # seems to get called, however specifying the on_trait_change in the
-    # _items_default method works.
-    #
-    #    @on_trait_change('task.layer_selection_changed')
-    #    def updated_fired(self, event):
-    #        log.debug("SAVELAYERGROUP: updated!!!")
-    #        self._rebuild(event)
 
 class SaveImageAction(EditorAction):
     name = 'Save As Image...'
@@ -930,9 +874,6 @@ class MaproomProjectTask(FrameworkTask):
                         SaveProjectAction(),
                         SaveProjectAsAction(),
                         ]
-        
-        # fall back to parent if it's not found here
-        return FrameworkTask.get_actions(self, location, menu_name, group_name)
 
     def get_editor(self, guess=None):
         """ Opens a new empty window
