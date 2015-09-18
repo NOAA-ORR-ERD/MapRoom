@@ -279,6 +279,13 @@ class ProjectEditor(FrameworkEditor):
         pdf_canvas.update_renderers()
         pdf_canvas.render()
 
+    @property
+    def most_recent_path(self):
+        cmd = self.layer_manager.undo_stack.find_most_recent(LoadLayersCommand)
+        if cmd is None:
+            return self.path
+        return os.path.dirname(cmd.metadata.uri)
+
     ###########################################################################
     # Private interface.
     ###########################################################################

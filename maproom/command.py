@@ -102,7 +102,12 @@ class UndoStack(list):
         s = TextDeserializer(text, offset)
         for cmd in s.iter_cmds(manager):
             yield cmd
-        
+    
+    def find_most_recent(self, cmdcls):
+        for cmd in reversed(self):
+            if isinstance(cmd, cmdcls):
+                return cmd
+        return None
 
 
 class LayerStatus(object):
