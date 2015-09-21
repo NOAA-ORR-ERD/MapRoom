@@ -5,6 +5,9 @@ Web Mapping Services
 * `ERMA web application <https://erma.noaa.gov/atlantic/erma.html#/x=-76.85270&y=37.93959&z=13&layers=27+11355>`_
 
 
+* `EPSG:3857 <http://wiki.openstreetmap.org/wiki/EPSG:3857>`_
+
+
 WMS
 ===
 
@@ -1022,4 +1025,15 @@ WMTS
 ====
 
 * http://map1c.vis.earthdata.nasa.gov/wmts-geo/wmts.cgi?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&\LAYER=VIIRS_CityLights_2012&STYLE=default&TILEMATRIXSET=EPSG4326_500m&\TILEMATRIX=6&TILEROW=4&TILECOL=4&FORMAT=image%2Fjpeg
+
+
+From http://gis.stackexchange.com/questions/31769/is-there-a-public-web-map-tiling-service-wmts-available::
+
+    those looking to test their web map applications against an Esri REST WMTS, please use USGS The National Map basemap services, which are published using ArcGIS Server 10.2:
+
+    http://basemap.nationalmap.gov/arcgis/rest/services
+
+    Click on any of the services in this directory and you will see a 'WMTS' link in the upper left corner which points towards the getcapabilities file for that service.
+
+    An example Tile request from the 'USGSShadedReliefonly' map service: http://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/WMTS/tile/1.0.0/USGSShadedReliefOnly/default/default028mm/4/7/4.jpg
 
