@@ -80,8 +80,7 @@ class MouseHandler(object):
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
         prefs = c.project.task.get_preferences()
-        status_text = coordinates.format_coords_for_display(
-            proj_p[0], proj_p[1], prefs.coordinate_display_format)
+        status_text = "%s  Zoom level=%.2f" % (coordinates.format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
 
         c.release_mouse()
         # print "mouse is not down"
@@ -208,20 +207,16 @@ class MouseHandler(object):
 
         prefs = e.task.get_preferences()
 
-        zoom = 1.2
+        zoom = 1.25
         zoom_speed = prefs.zoom_speed
         if zoom_speed == "Slow":
-            zoom = 1.2
+            zoom = 1.25
         elif zoom_speed == "Medium":
-            zoom = 1.6
+            zoom = 1.5
         elif zoom_speed == "Fast":
             zoom = 2.0
 
-        if (amount < 0):
-            units_per_pixel = c.projected_units_per_pixel * zoom
-        else:
-            units_per_pixel = c.projected_units_per_pixel / zoom
-        units_per_pixel = c.constrain_zoom(units_per_pixel)
+        units_per_pixel = c.zoom(amount, zoom)
 
         projected_point = c.get_projected_point_from_screen_point(screen_point)
         new_projected_point = c.get_projected_point_from_world_point(world_point)
@@ -233,6 +228,11 @@ class MouseHandler(object):
 
         cmd = ViewportCommand(None, center, units_per_pixel)
         e.process_command(cmd)
+        
+        p = event.GetPosition()
+        proj_p = c.get_world_point_from_screen_point(p)
+        status_text = "%s  Zoom level=%.2f" % (coordinates.format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
+        c.project.task.status_bar.message = status_text
 
     def process_mouse_leave(self, event):
         # this messes up object dragging when the mouse goes outside the window

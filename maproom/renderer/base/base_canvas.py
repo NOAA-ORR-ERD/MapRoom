@@ -41,10 +41,8 @@ class BaseCanvas(object):
 
         # two variables keep track of what's visible on the screen:
         # (1) the projected point at the center of the screen (Seattle Area)
-        self.projected_point_center = (-13664393.732, 6048089.93218)
         # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)        
-        ## does this get re-set anyway? pretty arbitrary.
-        self.projected_units_per_pixel = 1000
+        self.set_viewport((-13664393.732, 6048089.93218), 1000)
         
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
@@ -326,18 +324,27 @@ class BaseCanvas(object):
         rect = self.get_screen_rect_from_projected_rect(self.get_projected_rect_from_world_rect(world_rect))
         return ((int(round(rect[0][0])), int(round(rect[0][1]))), (int(round(rect[1][0])), int(round(rect[1][1]))))
 
-    def zoom(self, steps=1, ratio=2.0, focus_point_screen=None):
-        if ratio > 0:
-            units_per_pixel = self.projected_units_per_pixel / ratio
+    def zoom(self, amount=1, ratio=2.0, focus_point_screen=None):
+        zoom_level = self.get_zoom_level(self.projected_units_per_pixel)
+        zoom_level = self.get_zoom_level(self.projected_units_per_pixel, round=.25)
+        if amount > 0:
+            zoom_level += ratio - 1.0
         else:
-            units_per_pixel = self.projected_units_per_pixel * abs(ratio)
+            zoom_level -= ratio - 1.0
+        units_per_pixel = self.get_units_per_pixel_from_zoom(zoom_level)
         return self.constrain_zoom(units_per_pixel)
 
     def zoom_in(self):
-        return self.zoom(ratio=2.0)
+        zoom_level = self.get_zoom_level(self.projected_units_per_pixel, round=.25)
+        zoom_level += .5
+        units_per_pixel = self.get_units_per_pixel_from_zoom(zoom_level)
+        return self.constrain_zoom(units_per_pixel)
 
     def zoom_out(self):
-        return self.zoom(ratio=-2.0)
+        zoom_level = self.get_zoom_level(self.projected_units_per_pixel, round=.25)
+        zoom_level -= .5
+        units_per_pixel = self.get_units_per_pixel_from_zoom(zoom_level)
+        return self.constrain_zoom(units_per_pixel)
 
     def zoom_to_fit(self):
         self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_fit()
@@ -351,8 +358,6 @@ class BaseCanvas(object):
 
     def calc_zoom_to_layers(self, layers):
         w_r = self.layer_manager.accumulate_layer_bounds(layers)
-        if (w_r == rect.NONE_RECT):
-            return self.projected_point_center, self.projected_units_per_pixel
         return self.calc_zoom_to_world_rect(w_r)
 
     def zoom_to_world_rect(self, w_r, border=True):
@@ -376,9 +381,9 @@ class BaseCanvas(object):
         ratio_h = float(pixels_h) / float(size[0])
         ratio_v = float(pixels_v) / float(size[1])
         ratio = max(ratio_h, ratio_v)
-
-        center = rect.center(p_r)
+        
         units_per_pixel = self.constrain_zoom(self.projected_units_per_pixel * ratio)
+        center = rect.center(p_r)
         return center, units_per_pixel
 
     def get_zoom_rect(self):
@@ -396,13 +401,41 @@ class BaseCanvas(object):
                 self.zoom_to_world_rect(w_r)
 
     def constrain_zoom(self, units_per_pixel):
-        ## fixme: this  should not be hard coded -- could scale to projection(90,90, inverse=True or ??)
-        ## Also should be in some kind of app preferences location...
-        min_val = .02
-        max_val = 80000
-        units_per_pixel = max(units_per_pixel, min_val)
-        units_per_pixel = min(units_per_pixel, max_val)
+        # Using open street map style zoom factors to limit zoom
+        max_zoom_in = self.get_units_per_pixel_from_zoom(22)
+        max_zoom_out = self.get_units_per_pixel_from_zoom(1.0)
+        units_per_pixel = max(units_per_pixel, max_zoom_in)
+        units_per_pixel = min(units_per_pixel, max_zoom_out)
         return units_per_pixel
+    
+    def get_zoom_level(self, units_per_pixel, round=0.0):
+        # Calculate tile size in standard wmts/google maps units.  At each zoom
+        # level n, there are 2**n tiles across the 360 degrees of longitude,
+        # where each tile is 256 pixels wide.
+        delta_lon_per_tile = self.get_delta_lon_per_pixel(256, units_per_pixel)
+        num_tiles = 360.0 / delta_lon_per_tile
+        zoom_level = math.log(num_tiles, 2)
+        if round > 0.0:
+            zoom_level = int(zoom_level / round) * round
+        log.debug("get_zoom_level: units_per_pixel", units_per_pixel, "num_tiles", num_tiles, "zoom level", zoom_level)
+        return zoom_level
+    
+    def get_delta_lon_per_pixel(self, num_pixels, units_per_pixel=None):
+        if units_per_pixel is None:
+            units_per_pixel = self.projected_units_per_pixel
+        return self.get_world_point_from_projected_point((num_pixels * units_per_pixel, 0.0))[0]
+    
+    def get_units_per_pixel_from_zoom(self, zoom_level):
+        num_tiles = math.pow(2.0, zoom_level)
+        delta_lon_per_tile = 360.0 / num_tiles
+        units_per_pixel = self.get_projected_point_from_world_point((delta_lon_per_tile / 256.0, 0.0))[0]
+        log.debug("get_units_per_pixel_from_zoom: units_per_pixel", units_per_pixel, "num_tiles", num_tiles, "zoom level", zoom_level)
+        return units_per_pixel
+    
+    def set_viewport(self, center, units_per_pixel):
+        self.projected_point_center = center
+        self.projected_units_per_pixel = units_per_pixel
+        self.zoom_level = self.get_zoom_level(units_per_pixel)
     
     def copy_viewport_from(self, other):
         self.projected_units_per_pixel = other.projected_units_per_pixel

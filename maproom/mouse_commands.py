@@ -34,15 +34,13 @@ class ViewportCommand(Command):
             center, units_per_pixel = c.calc_zoom_to_world_rect(layer.bounds)
         elif self.center is not None:
             center, units_per_pixel = self.center, self.units_per_pixel
-        c.projected_point_center = center
-        c.projected_units_per_pixel = units_per_pixel
+        c.set_viewport(center, units_per_pixel)
         undo.flags.fast_viewport_refresh_needed = True
         return undo
 
     def undo(self, editor):
         (old_center, old_units_per_pixel) = self.undo_info.data
-        editor.layer_canvas.projected_point_center = old_center
-        editor.layer_canvas.projected_units_per_pixel = old_units_per_pixel
+        editor.layer_canvas.set_viewport(old_center, old_units_per_pixel)
         return self.undo_info
 
 class InsertPointCommand(Command):
