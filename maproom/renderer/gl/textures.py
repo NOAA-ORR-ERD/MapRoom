@@ -26,6 +26,14 @@ def apply_transform(point, transform):
     )
 
 
+class Image(object):
+    def __init__(self, origin, size):
+        self.origin = origin  # Origin relative to original image if this is a subset
+        self.size = size  # width, height in pixels
+        self.world_rect = None
+        self.data = None
+
+
 class ImageData(object):
     """ Temporary storage object to hold raw image data before converted to GL
     textures.
@@ -54,9 +62,7 @@ class ImageData(object):
         self.projection = None
         self.pixel_to_projected_transform = np.array((0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
         
-        self.images = []
-        self.image_sizes = []
-        self.image_world_rects = []
+        self.image_list = []
         
         self.calc_textures(self.texture_size)
     
@@ -88,10 +94,10 @@ class ImageData(object):
     def get_bounds(self):
         bounds = rect.NONE_RECT
 
-        if (self.image_world_rects):
-            b = self.image_world_rects[0]
-            for r in self.image_world_rects[1:]:
-                b = rect.accumulate_rect(b, r)
+        if (self.image_list):
+            b = self.image_list[0].world_rect
+            for r in self.image_list[1:]:
+                b = rect.accumulate_rect(b, r.world_rect)
             bounds = rect.accumulate_rect(bounds, b)
         
         return bounds
@@ -104,7 +110,7 @@ class ImageData(object):
         num_rows = self.y / texture_size
         if ((self.y % texture_size) != 0):
             num_rows += 1
-        self.image_sizes = []
+        self.image_list = []
         for r in xrange(num_rows):
             selection_height = texture_size
             if (((r + 1) * texture_size) > self.y):
@@ -114,7 +120,9 @@ class ImageData(object):
                 selection_width = texture_size
                 if (((c + 1) * texture_size) > self.x):
                     selection_width -= (c + 1) * texture_size - self.x
-                self.image_sizes.append((selection_origin, (selection_width, selection_height)))
+                
+                image = Image(selection_origin, (selection_width, selection_height))
+                self.image_list.append(image)
     
     def calc_world_rect(self, selection_origin, selection_size):
         # we invert the y in going to projected coordinates
@@ -154,22 +162,16 @@ class ImageData(object):
         return left_bottom_world, left_top_world, right_top_world, right_bottom_world
     
     def calc_image_world_rects(self):
-        self.image_world_rects = []
-        for entry in self.image_sizes:
-            selection_origin, selection_size = entry
-            world_rect = self.calc_world_rect(selection_origin, selection_size)
+        for entry in self.image_list:
+            world_rect = self.calc_world_rect(entry.origin, entry.size)
             log.debug("image size: %s" % str(entry))
             log.debug("world rect: %s" % str(world_rect))
-            self.image_world_rects.append(world_rect)
+            entry.world_rect = world_rect
 
     def load_texture_data(self, subimage_loader):
-        subimage_loader.prepare(len(self.image_sizes))
-        images = []
-        for entry in self.image_sizes:
-            selection_origin, selection_size = entry
-            image = subimage_loader.load(selection_origin, selection_size)
-            images.append(image)
-        self.images = images
+        subimage_loader.prepare(len(self.image_list))
+        for entry in self.image_list:
+            entry.data = subimage_loader.load(entry.origin, entry.size)
     
     def set_control_points(self, cp, projection):
         xoffset = cp[0][0]
@@ -231,12 +233,7 @@ class ImageTextures(object):
         texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
 
         n = 0
-        image_list = image_data.images
-        for i in xrange(len(image_data.image_sizes)):
-            if image_list:
-                image_data = image_list[i]
-            else:
-                image_data = None
+        for i, image in enumerate(image_data.image_list):
             self.textures.append(gl.glGenTextures(1))
             gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[i])
             # Mipmap levels: half-sized, quarter-sized, etc.
@@ -250,17 +247,17 @@ class ImageTextures(object):
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
             gl.glTexEnvf(gl.GL_TEXTURE_FILTER_CONTROL, gl.GL_TEXTURE_LOD_BIAS, -0.5)
             
-            if image_data is not None:
+            if image.data is not None:
                 gl.glTexImage2D(
                     gl.GL_TEXTURE_2D,
                     0,  # level
                     gl.GL_RGBA8,
-                    image_data.shape[1],  # width
-                    image_data.shape[0],  # height
+                    image.data.shape[1],  # width
+                    image.data.shape[0],  # height
                     0,  # border
                     gl.GL_RGBA,
                     gl.GL_UNSIGNED_BYTE,
-                    image_data
+                    image.data
                 )
             else:
                 gl.glTexImage2D(
@@ -313,40 +310,35 @@ class ImageTextures(object):
     
     def set_projection(self, image_data, projection):
         image_projected_rects = []
-        log.debug("set_projection: world rects=%s" % str(image_data.image_world_rects))
-        for lb, lt, rt, rb in image_data.image_world_rects:
-            left_bottom_projected = projection(lb[0], lb[1])
-            left_top_projected = projection(lt[0], lt[1])
-            right_top_projected = projection(rt[0], rt[1])
-            right_bottom_projected = projection(rb[0], rb[1])
-            image_projected_rects.append( (left_bottom_projected,
-                                           left_top_projected,
-                                           right_top_projected,
-                                           right_bottom_projected) )
-            log.debug("  world -> proj: %s -> %s" % (str((lb, lt, rt, rb)), str(image_projected_rects[-1])))
+        log.debug("set_projection: image_list=%s" % str(image_data.image_list))
+        for i, image in enumerate(image_data.image_list):
+            log.debug("  world rect #%d: %s" % (i, str(image.world_rect)))
+            lb, lt, rt, rb = image.world_rect
+            lb_projected = projection(lb[0], lb[1])
+            lt_projected = projection(lt[0], lt[1])
+            rt_projected = projection(rt[0], rt[1])
+            rb_projected = projection(rb[0], rb[1])
 
-        for i, projected_rect in enumerate(image_projected_rects):
-            log.debug("  projected #%d: %s" % (i, str(projected_rect)))
+            log.debug("  projected #%d: %s" % (i, str((lb_projected, lt_projected, rt_projected, rb_projected))))
             raw = self.vbo_vertexes[i].data
             vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
-            vertex_data.x_lb = projected_rect[0][0]
-            vertex_data.y_lb = projected_rect[0][1]
-            vertex_data.x_lt = projected_rect[1][0]
-            vertex_data.y_lt = projected_rect[1][1]
-            vertex_data.x_rt = projected_rect[2][0]
-            vertex_data.y_rt = projected_rect[2][1]
-            vertex_data.x_rb = projected_rect[3][0]
-            vertex_data.y_rb = projected_rect[3][1]
+            vertex_data.x_lb = lb_projected[0]
+            vertex_data.y_lb = lb_projected[1]
+            vertex_data.x_lt = lt_projected[0]
+            vertex_data.y_lt = lt_projected[1]
+            vertex_data.x_rt = rt_projected[0]
+            vertex_data.y_rt = rt_projected[1]
+            vertex_data.x_rb = rb_projected[0]
+            vertex_data.y_rb = rb_projected[1]
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
     
     def use_screen_rect(self, image_data, r):
-        for i, entry in enumerate(image_data.image_sizes):
-            selection_origin, selection_size = entry
-            x = selection_origin[0]
-            y = selection_origin[1]
-            w = selection_size[0]
-            h = selection_size[1]
+        for i, image in enumerate(image_data.image_list):
+            x = image.origin[0]
+            y = image.origin[1]
+            w = image.size[0]
+            h = image.size[1]
             raw = self.vbo_vertexes[i].data
             vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = x + r[0][0]
