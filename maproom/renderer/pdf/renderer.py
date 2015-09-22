@@ -225,9 +225,14 @@ class ReportLabRenderer(BaseRenderer):
         c = self.canvas
         h = rect.height(c.screen_rect)
         self.set_stroke((red, green, blue), alpha, width)
-        for x1, y1, x2, y2 in points:
-            print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
-            c.pdf.line(x1, h - y1, x2, h - y2)
+        if len(points) > 1:
+            d = c.pdf
+            p = d.beginPath()
+            x, y = points[0]
+            p.moveTo(x, h - y)
+            for x, y in points[1:]:
+                p.lineTo(x, h - y)
+            d.drawPath(p, fill=0, stroke=1)
 
     def draw_screen_markers(self, markers, style):
         c = self.canvas
