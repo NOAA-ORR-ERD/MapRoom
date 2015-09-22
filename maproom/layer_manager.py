@@ -9,7 +9,7 @@ import numpy as np
 import library.rect as rect
 from library.accumulator import flatten
 
-from layers import Layer, RootLayer, Grid, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
+from layers import Layer, RootLayer, Grid, Scale, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
 from command import UndoStack
 from renderer import color_floats_to_int, int_to_color_floats
 
@@ -91,6 +91,8 @@ class LayerManager(HasTraits):
         self.insert_layer([0], layer)
         grid = Grid(manager=self)
         self.insert_layer([1], grid)
+        scale = Scale(manager=self)
+        self.insert_layer([2], scale)
         
         # Add hook to create layer instances for debugging purposes
         if "--debug-objects" in self.project.window.application.command_line_args:

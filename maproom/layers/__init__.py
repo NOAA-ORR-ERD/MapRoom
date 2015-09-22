@@ -1,5 +1,6 @@
 from base import Layer, EmptyLayer, RootLayer, Folder, AnnotationLayer
 from grid import Grid
+from scale import Scale
 from line import LineLayer
 from triangle import TriangleLayer
 from polygon import PolygonLayer

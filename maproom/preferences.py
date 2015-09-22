@@ -37,6 +37,9 @@ class MaproomPreferences(PreferencesHelper):
         "Fast",
         )
 
+    # display scale legend by default
+    show_scale = Bool(True)
+
 
 class MaproomPreferencesPane(PreferencesPane):
     """ The preferences pane for the Framework application.
@@ -57,6 +60,9 @@ class MaproomPreferencesPane(PreferencesPane):
                       show_labels = False),
                HGroup(Item('zoom_speed'),
                       Label('Scroll Zoom Speed'),
+                      show_labels = False),
+               HGroup(Item('show_scale'),
+                      Label('Show Scale Layer'),
                       show_labels = False),
                label='MapRoom'),
         resizable=True)
