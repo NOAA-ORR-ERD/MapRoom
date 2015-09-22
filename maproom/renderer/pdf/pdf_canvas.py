@@ -67,7 +67,7 @@ class PDFCanvas(BaseCanvas):
     def get_font_metrics(self, text):
         return stringWidth(text, self.font_name, self.font_scale), self.font_scale
     
-    def set_viewport(self, rect):
+    def set_viewport_rect(self, rect):
         self.pdf.resetTransforms()
         x1, y1 = rect[0]
         x2, y2 = rect[1]
@@ -99,11 +99,11 @@ class PDFCanvas(BaseCanvas):
     
     def set_screen_viewport(self):
         print "screen rect!", self.screen_rect
-        self.set_viewport(self.screen_rect)
+        self.set_viewport_rect(self.screen_rect)
     
     def set_projected_viewport(self):
         print "proj rect!", self.projected_rect
-        self.set_viewport(self.projected_rect)
+        self.set_viewport_rect(self.projected_rect)
     
     def debug_boundingbox(self):
         w, h = self.screen_rect[1]
