@@ -129,7 +129,9 @@ class WMSLayer(ProjectedLayer):
             self.change_count += 1  # Force info panel update
             canvas.project.update_info_panels(self, True)
 
-    def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
+    def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
+        if not layer_visibility["layer"]:
+            return
         self.resize(renderer, world_rect, projected_rect, screen_rect)
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)

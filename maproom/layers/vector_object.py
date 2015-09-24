@@ -526,7 +526,7 @@ class OverlayImageObject(RectangleVectorObject):
             self.image_data.load_numpy_array(self.points, raw)
         renderer.set_image_screen(self.image_data)
 
-    def pre_render(self, renderer, world_rect, projected_rect, screen_rect):
+    def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         self.update_world_control_points(renderer)
