@@ -735,6 +735,8 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
     
     type = Str("polyline_obj")
     
+    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+
     def set_points(self, points):
         points = np.asarray(points)
         
