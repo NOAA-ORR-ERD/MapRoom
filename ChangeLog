@@ -1,3 +1,21 @@
+09/24/2015
+---------------------------
+Released 3.1b12
+- RM Refactored textures.py to put image metadata in a single class
+- RM Removed execute bit from test data files
+- RM Added polyconic map example
+- RM Added some examples of the Lambert Conformal Conic projection
+- RM Fixed method name collision in PDF renderer
+- RM Fixed draw_screen_lines in PDF renderer
+- RM Fixed #534: added scale layer to show legend
+- RM Corrected font extent offset error
+- RM Changed zooming to be based on Open Street Maps-style zoom levels
+- RM Added some pointers to web references
+- RM Added most recent path as default for loading new files
+- RM Changed order of toolbar so polygon comes right after polyline
+- RM Changed SaveLayerGroup to use new TaskDynamicSubmenuGroup superclass
+- RM Refs #604: fix for non-strings in WMS layer info
+
 09/15/2015
 ---------------------------
 Released 3.1b11
