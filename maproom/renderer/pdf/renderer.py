@@ -26,18 +26,15 @@ class PDFImage(object):
 
     def load(self, image_data):
         n = 0
-        image_list = image_data.images
-        if not image_list:
-            return
-        for i in xrange(len(image_data.image_sizes)):
-            image_array = image_list[i]
-            image = Image.fromarray(image_array, mode='RGBA')
-            print "PIL image:", image
-            self.images.append(image)
+        for image in image_data.image_list:
+            converted = Image.fromarray(image.data, mode='RGBA')
+            print "PIL image:", converted
+            self.images.append(converted)
     
     def set_projection(self, image_data, projection):
         self.xywh = []
-        for lb, lt, rt, rb in image_data.image_world_rects:
+        for image in image_data.image_list:
+            lb, lt, rt, rb = image.world_rect
             print "  world:", lb, rt
             x1, y1 = projection(lb[0], lb[1])
             x2, y2 = projection(rt[0], rt[1])
@@ -46,13 +43,12 @@ class PDFImage(object):
     
     def use_screen_rect(self, image_data, r):
         self.xywh = []
-        for i, entry in enumerate(image_data.image_sizes):
-            selection_origin, selection_size = entry
-            print "  use_screen_rect:", selection_origin, selection_size
-            x = selection_origin[0] + r[0][0]
-            y = selection_origin[1] + r[0][1]
-            w = selection_size[0]
-            h = selection_size[1]
+        for image in image_data.image_list:
+            print "  use_screen_rect:", image.origin, image.size
+            x = image.origin[0] + r[0][0]
+            y = image.origin[1] + r[0][1]
+            w = image.size[0]
+            h = image.size[1]
             print "  after selected:", x, y, w, h
             self.xywh.append((x, y, w, h))
     
