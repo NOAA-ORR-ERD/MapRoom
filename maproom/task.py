@@ -25,6 +25,7 @@ from menu_commands import *
 from vector_object_commands import *
 from ui.dialogs import StyleDialog
 from library.thread_utils import BackgroundWMSDownloader, WMSHost
+from library.tile_utils import BackgroundTileDownloader, TileHost
 from peppy2.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup
 
 import logging
@@ -971,3 +972,18 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_known_wms_names(self):
         return [s.name for s in WMSHost.get_known_wms()]
+
+    def get_threaded_tile_server(self, tilehost=None):
+        if tilehost is None:
+            tilehost = TileHost.get_known_tile_server()[0]
+        if tilehost.url not in self.downloaders:
+            ts = BackgroundTileDownloader(tilehost)
+            self.downloaders[tilehost.url] = ts
+        return self.downloaders[tilehost.url]
+
+    def get_threaded_tile_server_by_id(self, id):
+        tilehost = TileHost.get_known_tile_server()[id]
+        return self.get_threaded_tile_server(tilehost)
+
+    def get_known_tile_server_names(self):
+        return [s.name for s in TileHost.get_known_tile_server()]

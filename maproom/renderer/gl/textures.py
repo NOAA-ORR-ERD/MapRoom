@@ -214,6 +214,28 @@ class RawSubImageLoader(SubImageLoader):
                           origin[0]:origin[0] + size[0],:]
 
 
+class TileImageData(ImageData):
+    def __init__(self, zoom_level, projection, downloader, texture_size=256):
+        ImageData.__init__(self, 0, 0, texture_size)
+        self.zoom_level = zoom_level
+        self.projection = projection
+        self.downloader = downloader
+    
+    def calc_textures(self, texture_size):
+        # all textures are the same size
+        image = Image((0, 0), (self.texture_size, self.texture_size))
+        self.image_list.append(image)
+
+    def update_tiles(self, w_r):
+        tile_host = self.downloader.tile_host
+        top_left = tile_host.world_to_tile_num(self.zoom_level, w_r[0][0], w_r[1][1])
+        bot_right = tile_host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
+        print "UPDATE_TILES:", top_left, bot_right
+
+
+
+
+
 class ImageTextures(object):
     """Class to allow sharing of textures between views
     
