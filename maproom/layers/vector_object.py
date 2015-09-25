@@ -625,7 +625,7 @@ class OverlayTextObject(OverlayImageObject):
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         anchor = c.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
-        print "anchor (center):", anchor, "text w,h", self.text_width, self.text_height
+        #print "anchor (center):", anchor, "text w,h", self.text_width, self.text_height
         anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
         
         scale = self.screen_offset_from_center.T
@@ -634,7 +634,7 @@ class OverlayTextObject(OverlayImageObject):
         
         for i in range(self.center_point_index + 1):
             w = c.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
-            print "world point for anchor %d" % i, w
+            #print "world point for anchor %d" % i, w
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
             self.points.y[i] = w[1]
