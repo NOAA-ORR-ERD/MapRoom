@@ -214,25 +214,93 @@ class RawSubImageLoader(SubImageLoader):
                           origin[0]:origin[0] + size[0],:]
 
 
+class TileImage(Image):
+    def __init__(self):
+        Image.__init__(self, None, None)
+        
+
 class TileImageData(ImageData):
-    def __init__(self, zoom_level, projection, downloader, texture_size=256):
+    def __init__(self, projection, downloader, texture_size=256):
         ImageData.__init__(self, 0, 0, texture_size)
-        self.zoom_level = zoom_level
+        self.zoom_level = -1
+        self.last_zoom_level = -1
         self.projection = projection
         self.downloader = downloader
+        self.last_requested = None
+        self.requested = dict()  # (x, y): Image
     
     def calc_textures(self, texture_size):
         # all textures are the same size
         image = Image((0, 0), (self.texture_size, self.texture_size))
         self.image_list.append(image)
 
-    def update_tiles(self, w_r):
+    def update_tiles(self, zoom, w_r):
         tile_host = self.downloader.tile_host
+        if self.zoom_level != zoom:
+            self.set_zoom_level(zoom)
         top_left = tile_host.world_to_tile_num(self.zoom_level, w_r[0][0], w_r[1][1])
         bot_right = tile_host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
         print "UPDATE_TILES:", top_left, bot_right
+        tile_list = self.calc_center_tiles(top_left, bot_right)
+        self.request_tiles(tile_host, tile_list)
+        tile_list = self.calc_border_tiles(top_left, bot_right)
+        self.request_tiles(tile_host, tile_list)
 
-
+    def set_zoom_level(self, zoom):
+        zoom = int(zoom)
+        if zoom == self.last_zoom_level:
+            # if zoom levels are just swapped, don't throw anything away, just
+            # change the pointers around
+            self.zoom_level, self.last_zoom_level = self.last_zoom_level, self.zoom_level
+            self.requested, self.last_requested = self.last_requested, self.requested
+        elif zoom != self.zoom_level:
+            self.release_tiles()
+            self.last_zoom_level = self.zoom_level
+            self.last_requested = self.requested
+            self.zoom_level = zoom
+            self.requested = dict()
+    
+    def release_tiles(self):
+        print "RELEASING TILES FOR ZOOM=%d: %s" % (self.last_zoom_level, self.last_requested)
+    
+    def calc_center_tiles(self, tl, br):
+        needed = []
+        x1, y1 = tl
+        x2, y2 = br
+        for x in range(x1, x2 + 1):
+            for y in range(y1, y2 + 1):
+                tile = (x, y)
+                if not tile in self.requested:
+                    needed.append(tile)
+        return needed
+    
+    def calc_border_tiles(self, tl, br):
+        needed = []
+        z = self.zoom_level
+        x1, y1 = tl
+        x2, y2 = br
+        x1 = max(x1 - 1, 0)
+        y1 = max(y1 - 1, 0)
+        n = (2 << (z - 1)) - 1
+        x2 = min(x2 + 1, n)
+        y2 = min(y2 + 1, n)
+        for x in [x1, x2]:
+            for y in range(y1, y2 + 1):
+                tile = (x, y)
+                if not tile in self.requested:
+                    needed.append(tile)
+        for y in [y1, y2]:
+            for x in range(x1 + 1, x2):
+                tile = (x, y)
+                if not tile in self.requested:
+                    needed.append(tile)
+        return needed
+    
+    def request_tiles(self, tile_host, tiles):
+        for tile in tiles:
+            if tile not in self.requested:
+                print "REQUESTING TILE:", tile
+                self.requested[tile] = TileImage()
 
 
 

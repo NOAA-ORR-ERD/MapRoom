@@ -61,7 +61,7 @@ class TileLayer(ProjectedLayer):
             self.image_data = None
         if self.image_data is None:
             downloader = self.manager.project.task.get_threaded_tile_server_by_id(self.map_server_id)
-            self.image_data = TileImageData(self.manager.project.layer_canvas.zoom_level, projection, downloader)
+            self.image_data = TileImageData(projection, downloader)
         if self.image_data is not None:
             self.change_count += 1  # Force info panel update
             self.manager.project.layer_canvas.project.update_info_panels(self, True)
@@ -78,10 +78,11 @@ class TileLayer(ProjectedLayer):
             renderer.canvas.set_minimum_delay_callback(self.zoom_changed, 1000)
             return
         # first time, load map immediately
-        self.image_data.update_tiles(self.current_world)
+        self.image_data.update_tiles(zoom_level, self.current_world)
     
     def zoom_changed(self, canvas):
         print "ZOOM CHANGED:", canvas.zoom_level
+        self.image_data.update_tiles(canvas.zoom_level, self.current_world)
         self.change_count += 1  # Force info panel update
         canvas.project.update_info_panels(self, True)
     
