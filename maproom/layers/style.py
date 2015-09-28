@@ -30,9 +30,9 @@ class LayerStyle(object):
     
     """
     
-    default_line_color = color_floats_to_int(1.0,0,0,1.0)
+    default_line_color = color_floats_to_int(0,0,0,1.0)
     
-    default_fill_color = color_floats_to_int(0.8,0.8,0.8,0.5)
+    default_fill_color = color_floats_to_int(1.0,1.0,1.0,0.75)
     
     default_text_color = color_floats_to_int(0,0,0,1.0)
 
@@ -149,7 +149,7 @@ class LayerStyle(object):
             self.font = ""
             self.font_size = self.default_font_size
             self.text_format = 1
-            self.icon_marker = 325  # Shapes/Place point
+            self.icon_marker = 320  # Shapes/Cross
     
     def __str__(self):
         args = [self.get_str(i) for i in self.stylev6_serialization_order]
