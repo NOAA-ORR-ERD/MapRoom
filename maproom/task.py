@@ -24,8 +24,8 @@ from mouse_handler import *
 from menu_commands import *
 from vector_object_commands import *
 from ui.dialogs import StyleDialog
-from library.thread_utils import BackgroundWMSDownloader, WMSHost
-from library.tile_utils import BackgroundTileDownloader, TileHost
+from library.thread_utils import BackgroundWMSDownloader
+from library.tile_utils import BackgroundTileDownloader
 from peppy2.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup
 
 import logging
@@ -960,30 +960,30 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_threaded_wms(self, wmshost=None):
         if wmshost is None:
-            wmshost = WMSHost.get_known_wms()[0]
+            wmshost = BackgroundWMSDownloader.get_known_wms()[0]
         if wmshost.url not in self.downloaders:
             wms = BackgroundWMSDownloader(wmshost)
             self.downloaders[wmshost.url] = wms
         return self.downloaders[wmshost.url]
 
     def get_threaded_wms_by_id(self, id):
-        wmshost = WMSHost.get_known_wms()[id]
+        wmshost = BackgroundWMSDownloader.get_known_wms()[id]
         return self.get_threaded_wms(wmshost)
 
     def get_known_wms_names(self):
-        return [s.name for s in WMSHost.get_known_wms()]
+        return [s.name for s in BackgroundWMSDownloader.get_known_wms()]
 
     def get_threaded_tile_server(self, tilehost=None):
         if tilehost is None:
-            tilehost = TileHost.get_known_tile_server()[0]
+            tilehost = BackgroundTileDownloader.get_known_tile_server()[0]
         if tilehost.url not in self.downloaders:
             ts = BackgroundTileDownloader(tilehost)
             self.downloaders[tilehost.url] = ts
         return self.downloaders[tilehost.url]
 
     def get_threaded_tile_server_by_id(self, id):
-        tilehost = TileHost.get_known_tile_server()[id]
+        tilehost = BackgroundTileDownloader.get_known_tile_server()[id]
         return self.get_threaded_tile_server(tilehost)
 
     def get_known_tile_server_names(self):
-        return [s.name for s in TileHost.get_known_tile_server()]
+        return [s.name for s in BackgroundTileDownloader.get_known_tile_server()]
