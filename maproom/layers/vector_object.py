@@ -312,10 +312,6 @@ class RectangleMixin(object):
       o----o----o
      0     4     1
     """
-    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
-    
-    selection_info_panel = ["Anchor coordinates"]
-
     corners_from_flat = np.asarray((0, 1, 2, 1, 2, 3, 0, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
     num_corners = 4
@@ -355,6 +351,10 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
     
     type = Str("rectangle_obj")
     
+    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    
+    selection_info_panel = ["Anchor coordinates"]
+
     def get_marker_points(self):
         return []
 
@@ -711,7 +711,7 @@ class OverlayIconObject(OverlayImageObject):
         self.rebuild_needed = True  # Force rebuild to change image color
 
 
-class PolylineObject(RectangleMixin, FillableVectorObject):
+class PolylineMixin(object):
     """Polyline uses 4 control points in the self.points array as the control
     points for the bounding box, one center point, and subsequent points as
     the list of points that define the segmented line.
@@ -731,11 +731,6 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
       o---------o
      0           1
     """
-    name = Unicode("Polyline")
-    
-    type = Str("polyline_obj")
-    
-    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     def set_points(self, points):
         points = np.asarray(points)
@@ -784,6 +779,12 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
         colors.fill(line_color)
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
+
+class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
+    name = Unicode("Polyline")
+    
+    type = Str("polyline_obj")
+
     def get_marker_points(self):
         # Markers are only used on the first and last segments of the line
         indexes = self.line_segment_indexes
@@ -793,10 +794,12 @@ class PolylineObject(RectangleMixin, FillableVectorObject):
                 (indexes.point2[-1], indexes.point1[-1], self.style.line_end_marker))
 
 
-class PolygonObject(PolylineObject):
+class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     name = Unicode("Polygon")
     
     type = Str("polygon_obj")
+    
+    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
     
     def get_polylines(self, num_points):
         offset = self.center_point_index + 1
