@@ -1,5 +1,6 @@
 import os
 import time
+import math
 
 import wx
 import wx.glcanvas as glcanvas
@@ -838,10 +839,30 @@ class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_circle.png"
+    icon = "shape_ellipse.png"
     menu_item_name = "Add Ellipse"
     menu_item_tooltip = "Add a new ellipse or circle"
     vector_object_command = DrawEllipseCommand
+
+
+class AddCircleMode(AddVectorObjectByBoundingBoxMode):
+    icon = "shape_circle.png"
+    menu_item_name = "Add Circle"
+    menu_item_tooltip = "Add a new circle from center point"
+    vector_object_command = DrawCircleCommand
+
+    def render_overlay(self, renderer):
+        c = self.layer_canvas
+        if c.mouse_is_down:
+            (x1, y1) = c.mouse_down_position
+            (x2, y2) = c.mouse_move_position
+            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
+            dx = x2 - x1
+            dy = y2 - y1
+            r = math.sqrt(dx * dx + dy * dy)
+            sp = [(x1 - r, y1 - r), (x1 + r, y1 - r), (x1 + r, y1 + r), (x1 - r, y1 + r), (x1 - r, y1 - r)]
+            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+        self.render_snapped_point(renderer)
 
 
 class AddLineMode(AddVectorObjectByBoundingBoxMode):

@@ -490,6 +490,12 @@ class AddEllipseObjectAction(MouseHandlerBaseAction):
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
+class AddCircleObjectAction(MouseHandlerBaseAction):
+    handler = AddCircleMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
 class AddLineObjectAction(MouseHandlerBaseAction):
     handler = AddLineMode
     name = handler.menu_item_name
@@ -695,6 +701,7 @@ class MaproomProjectTask(FrameworkTask):
                            AddPolygonObjectAction(),
                            AddRectangleObjectAction(),
                            AddEllipseObjectAction(),
+                           AddCircleObjectAction(),
                            AddOverlayTextAction(),
                            AddOverlayIconAction(),
                            ),

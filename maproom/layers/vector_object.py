@@ -367,6 +367,21 @@ class EllipseVectorObject(RectangleVectorObject):
     name = Unicode("Ellipse")
     
     type = Str("ellipse_obj")
+
+    def set_center_and_radius(self, p1, p2):
+        x = p1[0]
+        y = p1[1]
+        dx = x - p2[0]
+        dy = y - p2[1]
+        r = math.sqrt(dx * dx + dy * dy) * math.sqrt(2.0) * 0.5
+        
+        c = np.empty((4,2), dtype=np.float32)
+        c[0] = (x - r, y - r)
+        c[1] = (x + r, y - r)
+        c[2] = (x + r, y + r)
+        c[3] = (x - r, y + r)
+        cp = self.get_control_points_from_corners(c)
+        self.set_data(cp, 0.0, self.lines)
     
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)

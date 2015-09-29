@@ -95,6 +95,18 @@ class DrawEllipseCommand(DrawVectorObjectCommand):
     vector_object_class = EllipseVectorObject
 
 
+class DrawCircleCommand(DrawVectorObjectCommand):
+    short_name = "circle_obj"
+    ui_name = "Circle"
+    vector_object_class = EllipseVectorObject
+
+    def get_vector_object_layer(self, lm):
+        layer = self.vector_object_class(manager=lm)
+        layer.set_center_and_radius(self.cp1, self.cp2)
+        layer.set_style(self.style)
+        return layer
+
+
 class DrawLineCommand(DrawVectorObjectCommand):
     short_name = "line_obj"
     ui_name = "Line"

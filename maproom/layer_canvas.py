@@ -27,7 +27,7 @@ class LayerCanvas(renderer.ScreenCanvas):
     valid_mouse_modes = {
         'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
         'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
-        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode],
+        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode],
         'default': [PanMode, ZoomRectMode],
         }
 
