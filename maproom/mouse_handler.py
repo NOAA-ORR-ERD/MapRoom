@@ -854,14 +854,24 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
     def render_overlay(self, renderer):
         c = self.layer_canvas
         if c.mouse_is_down:
-            (x1, y1) = c.mouse_down_position
-            (x2, y2) = c.mouse_move_position
-            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
+            x1, y1 = c.get_world_point_from_screen_point(c.mouse_down_position)
+            x2, y2 = c.get_world_point_from_screen_point(c.mouse_move_position)
             dx = x2 - x1
             dy = y2 - y1
             r = math.sqrt(dx * dx + dy * dy)
-            sp = [(x1 - r, y1 - r), (x1 + r, y1 - r), (x1 + r, y1 + r), (x1 - r, y1 + r), (x1 - r, y1 - r)]
+            w = [(x1 - r, y1 - r), (x1 + r, y1 - r), (x1 + r, y1 + r), (x1 - r, y1 + r), (x1 - r, y1 - r)]
+            
+            sp = [c.get_screen_point_from_world_point(p) for p in w]
             renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+            
+            (x1, y1) = c.mouse_down_position
+            (x2, y2) = c.mouse_move_position
+            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
+#            dx = x2 - x1
+#            dy = y2 - y1
+#            r = math.sqrt(dx * dx + dy * dy)
+#            sp = [(x1 - r, y1 - r), (x1 + r, y1 - r), (x1 + r, y1 + r), (x1 - r, y1 + r), (x1 - r, y1 - r)]
+#            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
         self.render_snapped_point(renderer)
 
 

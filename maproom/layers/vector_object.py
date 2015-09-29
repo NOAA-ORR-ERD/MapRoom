@@ -373,7 +373,7 @@ class EllipseVectorObject(RectangleVectorObject):
         y = p1[1]
         dx = x - p2[0]
         dy = y - p2[1]
-        r = math.sqrt(dx * dx + dy * dy) * math.sqrt(2.0) * 0.5
+        r = math.sqrt(dx * dx + dy * dy)
         
         c = np.empty((4,2), dtype=np.float32)
         c[0] = (x - r, y - r)
