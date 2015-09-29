@@ -479,13 +479,13 @@ class ControlPointAction(MouseHandlerBaseAction):
     image = ImageResource(handler.icon)
 
 class AddRectangleObjectAction(MouseHandlerBaseAction):
-    handler = AddEllipseMode
+    handler = AddRectangleMode
     name = handler.menu_item_name
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
 class AddEllipseObjectAction(MouseHandlerBaseAction):
-    handler = AddRectangleMode
+    handler = AddEllipseMode
     name = handler.menu_item_name
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
