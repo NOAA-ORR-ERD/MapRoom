@@ -14,6 +14,7 @@ import data_types
 
 import logging
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 def apply_transform(point, transform):
@@ -216,8 +217,10 @@ class RawSubImageLoader(SubImageLoader):
 
 
 class TileImage(Image):
-    def __init__(self, texture_size, world_rect):
+    def __init__(self, xy, zoom_level, texture_size, world_rect):
         Image.__init__(self, None, (texture_size, texture_size))
+        self.xy = xy
+        self.z = zoom_level
         self.world_rect = world_rect
 
 
@@ -230,7 +233,7 @@ class TileImageData(ImageData):
         self.downloader = downloader
         self.last_requested = None
         self.requested = dict()  # (x, y): Image
-        renderer.set_image_projection(self, projection)
+        renderer.set_tiles(self)
     
     def calc_textures(self, texture_size):
         pass
@@ -302,7 +305,7 @@ class TileImageData(ImageData):
             if tile not in self.requested:
                 print "REQUESTING TILE:", tile
                 req = self.downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
-                self.requested[tile] = TileImage(self.texture_size, req.world_rect)
+                self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_rect)
     
     def add_tiles(self, queue, image_textures):
         try:
@@ -317,16 +320,15 @@ class TileImageData(ImageData):
                     # for the same zoom level, let's use it.
                     if tile_request.zoom == self.zoom_level:
                         print "  Using tile received but not requested:", tile
-                        self.requested[tile] = TileImage(self.texture_size, tile_request.world_rect)
+                        self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, tile_request.world_rect)
                     else:
                         print "  Ignoring tile received but not requested:", tile
                 if tile in self.requested:
                     tile_image = self.requested[tile]
                     tile_image.data = tile_request.get_image_array()
-                        
+                    image_textures.add_tile(tile_image, self.projection)
         except Queue.Empty:
             pass
-
 
 
 class ImageTextures(object):
@@ -481,4 +483,144 @@ class ImageTextures(object):
         for texture in self.textures:
             gl.glDeleteTextures(np.array([texture], np.uint32))
         self.vbo_vertexes = None
+        self.vbo_texture_coordinates = None
+
+
+class VBOTexture(object):
+    def __init__(self, xy, z, tex_id):
+        self.xy = xy
+        self.z = z
+        self.tex_id = tex_id
+        self.vbo_vertexes = None
+
+class TileTextures(object):
+    """Class to allow sharing of textures between views
+    
+    """
+    def __init__(self, image_data):
+        self.blank = np.array([128, 128, 128, 128], 'B')
+        self.tiles = []
+        self.vbo_texture_coordinates = None  # just one, same one for all images
+
+    def get_vbo_texture_coords(self):
+        texcoord_data = np.zeros(
+            (1, ),
+            dtype=data_types.TEXTURE_COORDINATE_DTYPE,
+        ).view(np.recarray)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
+
+        texcoord_data.u_lb = 0
+        texcoord_data.v_lb = 1.0
+        texcoord_data.u_lt = 0
+        texcoord_data.v_lt = 0
+        texcoord_data.u_rt = 1.0
+        texcoord_data.v_rt = 0
+        texcoord_data.u_rb = 1.0
+        texcoord_data.v_rb = 1.0
+
+        self.vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
+
+    def add_tile(self, image, projection):
+        tile = VBOTexture(image.xy, image.z, gl.glGenTextures(1))
+        gl.glBindTexture(gl.GL_TEXTURE_2D, tile.tex_id)
+        # Mipmap levels: half-sized, quarter-sized, etc.
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAX_LEVEL, 4)
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_GENERATE_MIPMAP, gl.GL_TRUE)
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR_MIPMAP_LINEAR)
+        # gl.glTexParameter( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR )
+        # gl.glTexParameter( gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST )
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+        gl.glTexEnvf(gl.GL_TEXTURE_FILTER_CONTROL, gl.GL_TEXTURE_LOD_BIAS, -0.5)
+        
+        if image.data is not None:
+            gl.glTexImage2D(
+                gl.GL_TEXTURE_2D,
+                0,  # level
+                gl.GL_RGBA8,
+                image.data.shape[1],  # width
+                image.data.shape[0],  # height
+                0,  # border
+                gl.GL_RGBA,
+                gl.GL_UNSIGNED_BYTE,
+                image.data
+            )
+        else:
+            gl.glTexImage2D(
+                gl.GL_TEXTURE_2D,
+                0,  # level
+                gl.GL_RGBA8,
+                1,  # width
+                1,  # height
+                0,  # border
+                gl.GL_RGBA,
+                gl.GL_UNSIGNED_BYTE,
+                self.blank
+            )
+
+        vertex_data = np.zeros(
+            (1, ),
+            dtype=data_types.QUAD_VERTEX_DTYPE,
+        ).view(np.recarray)
+        vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1,8)
+        # we fill the vbo_vertexes data in reproject() below
+        tile.vbo_vertexes = gl_vbo.VBO(vertex_raw)
+        self.set_projection(tile, image, projection)
+        
+        if self.vbo_texture_coordinates is None:
+            self.get_vbo_texture_coords()
+
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+        
+        self.tiles.append(tile)
+    
+    def set_projection(self, tile, image, projection):
+        log.debug("  world rect %s: %s" % (tile.xy, str(image.world_rect)))
+        lb, rt = image.world_rect
+        lb_projected = projection(lb[0], lb[1])
+        lt_projected = projection(lb[0], rt[1])
+        rt_projected = projection(rt[0], rt[1])
+        rb_projected = projection(rt[0], lb[1])
+
+        log.debug("  projected %s: %s" % (tile.xy, str((lb_projected, lt_projected, rt_projected, rb_projected))))
+        raw = tile.vbo_vertexes.data
+        vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
+        vertex_data.x_lb = lb_projected[0]
+        vertex_data.y_lb = lb_projected[1]
+        vertex_data.x_lt = lt_projected[0]
+        vertex_data.y_lt = lt_projected[1]
+        vertex_data.x_rt = rt_projected[0]
+        vertex_data.y_rt = rt_projected[1]
+        vertex_data.x_rb = rb_projected[0]
+        vertex_data.y_rb = rb_projected[1]
+
+        tile.vbo_vertexes[: np.alen(vertex_data)] = raw
+    
+    def reorder_tiles(self, image_data):
+        z_front = image_data.zoom_level
+        z_behind = image_data.last_zoom_level
+        front = []
+        behind = []
+        for tile in self.tiles:
+            if tile.z == z_front:
+                front.append(tile)
+            elif tile.z == z_behind:
+                behind.append(tile)
+            else:
+                self.remove_tile(tile)
+        
+        # Tiles that appear in front will be drawn last.  Tiles that have
+        # been removed won't appear in either the front or behind list
+        # will be garbage collected
+        self.tiles = behind
+        self.tiles.extend(front)
+    
+    def remove_tile(self, tile):
+        gl.glDeleteTextures(np.array([tile.tex_id], np.uint32))
+        tile.vbo_vertexes = None
+
+    def destroy(self):
+        for tile in self.tiles:
+            self.remove_tile(tile)
         self.vbo_texture_coordinates = None

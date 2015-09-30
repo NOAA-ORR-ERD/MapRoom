@@ -57,7 +57,7 @@ class TileLayer(ProjectedLayer):
         # Called only when tile server changed: throws away current tiles and
         # starts fresh
         if self.rebuild_needed:
-            renderer.release_textures()
+            renderer.release_tiles()
             self.image_data = None
             self.rebuild_needed = False
         if self.image_data is None:
@@ -65,7 +65,8 @@ class TileLayer(ProjectedLayer):
             downloader = self.manager.project.task.get_threaded_tile_server_by_id(self.map_server_id)
             self.image_data = TileImageData(projection, downloader, renderer)
         if self.image_data is not None:
-            self.image_data.add_tiles(self.threaded_request_results, renderer.image_textures)
+            self.image_data.add_tiles(self.threaded_request_results, renderer.image_tiles)
+            renderer.image_tiles.reorder_tiles(self.image_data)
             self.change_count += 1  # Force info panel update
             self.manager.project.layer_canvas.project.update_info_panels(self, True)
 
@@ -110,4 +111,4 @@ class TileLayer(ProjectedLayer):
         if self.image_data is not None:
             alpha = alpha_from_int(self.style.line_color)
             print "DRAW TILES HERE!!!"
-            #renderer.draw_image(layer_index_base, picker, alpha)
+            renderer.draw_tiles(layer_index_base, picker, alpha)

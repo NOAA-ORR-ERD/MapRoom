@@ -220,12 +220,12 @@ class TileHost(object):
     def tile_num_to_world_rect(self, zoom, x, y):
         zoom = int(zoom)
         if zoom == 0:
-            return ((-180.0, 0), (180.0, 0))
+            return ((-180.0, -85.0511287798066), (180.0, 85.0511287798066))
         n = 2 << (zoom - 1)
-        lon1 = (x / n * 360.0) - 180.0
-        lon2 = ((x + 1) / n * 360.0) - 180.0
-        lat1 = math.atan(math.sinh(math.pi * (1 - (2 * (y + 1)) / n))) * self.rad2deg
-        lat2 = math.atan(math.sinh(math.pi * (1 - (2 * y / n)))) * self.rad2deg
+        lon1 = (x * 360.0 / n) - 180.0
+        lon2 = ((x + 1) * 360.0 / n) - 180.0
+        lat1 = math.atan(math.sinh(math.pi * (1.0 - (2.0 * (y + 1) / n)))) * self.rad2deg
+        lat2 = math.atan(math.sinh(math.pi * (1.0 - (2.0 * y / n)))) * self.rad2deg
         return ((lon1, lat1), (lon2, lat2))
     
     def get_tile_init_request(self):
@@ -297,12 +297,12 @@ class BackgroundTileDownloader(BackgroundHttpDownloader):
 class TileRequest(UnskippableRequest):
     def __init__(self, tile_server, zoom, x, y, manager=None, event_data=None):
         BaseRequest.__init__(self)
-        self.url = "tile (%s,%s)@zoom=%s from %s" % (x, y, zoom, tile_server.url)
         self.tile_server = tile_server
         self.zoom = zoom
         self.x = x
         self.y = y
         self.world_rect = self.tile_server.tile_host.tile_num_to_world_rect(self.zoom, self.x, self.y)
+        self.url = "tile (%s,%s,z=%s)@%s from %s" % (x, y, zoom, self.world_rect, tile_server.url)
         self.manager = manager
         self.event_data = event_data
     

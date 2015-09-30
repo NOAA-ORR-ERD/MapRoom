@@ -12,7 +12,7 @@ from peppy2 import get_image_path
 
 import maproom.library.rect as rect
 from .. import data_types, int_to_color_floats
-from ..gl.textures import ImageTextures
+from ..gl.textures import ImageTextures, TileTextures
 from ..gl.Tessellator import init_vertex_buffers, tessellate
 from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color
 
@@ -35,6 +35,7 @@ class ImmediateModeRenderer():
         self.vbo_triangle_point_colors = None
         self.image_textures = None
         self.image_projected_rects = []
+        self.image_tiles = None
 
     def prepare_to_render_projected_objects(self):
         c = self.canvas
@@ -295,7 +296,7 @@ class ImmediateModeRenderer():
             self.image_textures = ImageTextures(image_data)
             # Release the raw image data to free up memory.
             image_data.release_images()
-    
+
     def set_image_center_at_screen_point(self, image_data, center, screen_rect):
         height = rect.height(screen_rect)
         self.image_textures.center_at_screen_point(image_data, center, height)
@@ -337,6 +338,52 @@ class ImmediateModeRenderer():
                 self.image_textures.vbo_texture_coordinates.unbind()
 
             vbo.unbind()
+        gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+        if texture:
+            gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+            gl.glDisable(gl.GL_TEXTURE_2D)
+    
+    def set_tiles(self, image_data):
+        if self.image_tiles is None:
+            self.image_tiles = TileTextures(image_data)
+    
+    def release_tiles(self):
+        if self.image_tiles is not None:
+            self.image_tiles.destroy()
+            self.image_tiles = None
+
+    def draw_tiles(self, layer_index_base, picker, alpha=1.0):
+        if picker.is_active:
+            return
+        gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+        texture = not picker.is_active
+        gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
+        if texture:
+            gl.glEnable(gl.GL_TEXTURE_2D)
+            gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
+            gl.glColor(1.0, 1.0, 1.0, alpha)
+        else:
+            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
+            r, g, b, a = int_to_color_floats(fill_color)
+            gl.glColor(r, g, b, a)
+        for tile in self.image_tiles.tiles:
+            # have to bind texture before VBO
+            if texture:
+                gl.glBindTexture(gl.GL_TEXTURE_2D, tile.tex_id)
+            tile.vbo_vertexes.bind()
+            gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            if texture:
+                self.image_tiles.vbo_texture_coordinates.bind()
+                gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
+
+            gl.glDrawArrays(gl.GL_QUADS, 0, 4)
+
+            if texture:
+                self.image_tiles.vbo_texture_coordinates.unbind()
+
+            tile.vbo_vertexes.unbind()
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
         if texture:
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
