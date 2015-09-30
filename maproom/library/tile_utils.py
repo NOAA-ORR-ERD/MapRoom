@@ -3,17 +3,19 @@
 """
 import math
 
+import urllib2 as urllib2
 from requests.exceptions import HTTPError
 
-from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
+from owslib.util import ServiceException
+
+from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableRequest, UnskippableURLRequest
 
 from numpy_images import get_numpy_from_data
 
 import rect
 
 import logging
-import multiprocessing
-log = multiprocessing.log_to_stderr()
+log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 
@@ -21,69 +23,6 @@ loading_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x01\x00\x00\x00\x01\x
 
 error_png = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x01\x00\x00\x00\x01\x00\x08\x06\x00\x00\x00\\r\xa8f\x00\x00\x00\x06bKGD\x00\xff\x00\xff\x00\xff\xa0\xbd\xa7\x93\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\x07tIME\x07\xdf\t\x16\x11/\x0cQ\x90\xd3i\x00\x00\x00\x0ciTXtComment\x00\x00\x00\x00\x00\xbc\xae\xb2\x99\x00\x00\x05\xeaIDATx\xda\xed\xdb\xcf\x8b\x9cw\x01\xc7\xf1\xcf3\xb3?\xdd\x99\x9dI6\xbb\xcd&ms\xc8/\xaaB\xda\x93\x04zJ@\xda\x82PP\xc4\x83\x12\xf0R\xf1\xe0\xc5\xb4\'\xc1\xf5\xa4\xe0\xc9"=\xb4\x12A\xc4\x8bETZ\t\x84\xf4R\x10\xa4\xa5?\x90V\x12b\x9bj\x93\xe6\xc7\xc6dv\x9f\x99\x9d\xdd\x9d\x99\xc7\x83\xad\xd0\xea?\xb0\xb3\xaf\xd7\xf1a\xe7\xf2\x81\xef\x9b\xe7yf\xb6XYY\xa9\x02\xecN\x02\x00\xbb\xf7\xec\xd7\xcc\x00\xbb\x97\x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00 \x00&\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\xc6\xd2\x84\t\xc6\xdb\x13_{\xfc\xe2\xc2\xd2\xc2\xa9z\xbd\xfe\xa9\xeb\xc5\xff\xfce\xf1\xdfkE\x92\xc1p\x94\xd5[\xab\xaf\xbc\xfc\xe2\x9fN[Q\x00\xd8\xa1\x16\x96\x16N\x9d{\xf6\x97)jE\x06\xa3\xed\xcf\x1c\xf8*\xd5\xc7\xc7\xbe\xb7]&)RU\xb5T\xa3*U\x869\xfb\xcc\xf7OYP\x00\xd8\xc1\xea\xf5z\x86\x19\xa4\xd8\xfeM\xba\x17\xde\xcc\x9e\x8b\xbd\xdc~\xe6\xc1\xcc5\x1b\xb9t\xe9\xcf\xf9[\xf7\xf9\\\xbf\xddI\xb39\x9f\x9bw:\xa9OLf\xad\xdb\xcf\x99\'\xaaLN\xd4\r\xe8\x1d\x00\xe3\xa0\xd3\xb9\x93\xceCSY+\xcb\xf4\xce\xbf\x9b\xb2\xfc(eY\xa6\xd8|3\x9b\x1b\xeb\xd9\xe8\xadgk\xa3\xcc\xc6F\x99A\xbf\x9b\xa2\x18\xfd\xdf\x07\x05\xdc\x01\xb0\x83|r\x84[\xad\xc5\xa4\xda\xce\xe7\xbe\xb77\xf9\xf1\x1b\x99\xfe\xea\xbe,-\x1f\xc8\xec\xf6\xdf\xb318\x9af\xbb\x99\xa9z-\x13\x93S){\xfd\x14\xc5\xa6\x00\xb8\x03`\\2\xd0\xe9tR\x96\xeb\xb9\xb74\xcc\xda\x9eA6~{%\x19\x8eR\xf5^\xcd\xf6f\x99\xdez7\xdb\x9b\xbdl\xf6\xbb\xd9\xda\xec\xa5(*\xb3\t\x00\xe3\xa2\xd5ZJ\xa3\xb1\x90vk\x7ff\xbf\xf3\xf9\xecy\xa3\x96\x85\xc9\xe5,\xee[\xcc\x03\xfbVs\xe8\xc6\xf39\xb0\xd8\xca\x03\xf7\xb5rp\xa9\xfd\xe9\xdb\x07\x04\x80\x9d\xfd\x10\xd0\xefo\xa6[\xf6\xd2Y\xebd}n\x98\xbb\xc7\x92\xfe\xaf\xdeK5\xecg\xea\xda/r\xe2\xe4\x89\xcc\xbc\xff\xeb\xf4\xbbeF[\xdd\x8f?\xa5\x00\x02\xc0X\xbc\x03\x98\x9dm\xa71\xbf\x90Vk\x7f\x9a\x8d\xc5L~\xf3\xe1\xcc~0\x91|4\x93\x99\xcbog~\xf9\x91\xec\xbdw>\xc7\xab\x9f\xe7\xc4\x81s\xa9\xd7F\x8e\xff.\xe0%\xe0.\t\xc0z\xa7\x9b\xb2\xdcL\xd2\xcd\xeb\xd7n\xe4\x1f\xdb\xb5\xdcwd\x98\x03\x17\xde\xce\x17\xcf\xfc$\xc3\xb5?\xe6\x0b_9\x9b+\xaf\xfc,{\xde{0\xc5BO\x00\xdc\x01\xb0\xf3\x0b\xf0\x9f_\xf8\xcd\xb7\xf7\'3\xed\xbc\xd5\x1b\xe4\xea\xd6d\xda\xed\xc5\x14\x07\xcb\x0c&\xd6\xd2ho\xe4\x85\x9f\xfe!\x8d\xf6F\xb6o\xdc\xca\xb5\xf5K\xa9&\xa7l\'\x00\x8c\x83\xaa\xaa\xf2\x97\x7f\xbe\x9f\x97\xae\xbc\x9b\x0f\xffu\'\xfd~?\xbd{\x9d\xcc\xdd\xba\x99\xa3_\xffA\x86\xe5kI\x92a\xf9Z\x0e\x7fc%\xc3A/\xa3bd8\x01`\x1c\x1e\x01z\x83nn\x0f\xb73=\xd5\xc8\xdcl+3\xd3s9\xf8\xd7\xb7r\xf4\xe4\x994\xe7?\xc8h\xebz\x92d\xb4u=\xed\xb9\xab9r\xf2L\xee]x\xcex\x02\xc08$\xa0(jif>\x8d\xa2\x99\xe9\xe1l\xf6\xde\xede\xfa\xeez\x16\x8f\x1d\xca\xa8\x7f9\xc9(\xdf\xfe\xee\xfdIF\x19\xf5/g\xf1\xd8\xa1T\x83\xad\x1c\x9d\xb9i>\x01`\'\x1b\x0c\x86\x19\x0e\x879\xb8\xf7\xe1<r\xe4\xb1\x1c_~4\xcb\xaf_\xcc\xe1G\x9f\xcad\xe3pj\x8d\xd3\xa9\xb7\x9e\xcc\xb9\xe7>L\xbd\xf5dj\x8d\xd3\x99l\x1c\xce\xfd\xc7\xbf\x9c/5\xae\x1ap\xcc\xf9\x16`\xcc\xad\xdeZ=\xff\xf4\xd3g\x1f\xabON\xe4\x93\x7f\xf9\xfd\xd6\xbe\xe4\x9d\xdf\xfd(\xef\xfc\xbe\x96\xa2V\xa4\xa8\xd5\xf2P\xb3\xc8\xab\xcf\xfe0\xd5h\x94jT%\xa3Qf\x9b3\x06\x14\x00v\xb2\x97^|\xf9\xf1\xcf^{\xc1,x\x04\x00\x04\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x04\x00\x10\x00@\x00\x00\x01\x00\x010\x01\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x02\x00\x08\x00 \x00\x80\x00\x00\x02\x00\x08\x000\x96\x8a\x95\x95\x95\xca\x0c\xb0;\xfd\x1b\xa6\x88N\xb9\xbd\x88*T\x00\x00\x00\x00IEND\xaeB`\x82'
 
-
-
-class TileHost(object):
-    cached_known_tile_server = None
-    
-    def __init__(self, name, url, strip_prefix="", tile_size=256):
-        self.name = name
-        if url.endswith("?"):
-            url = url[:-1]
-        self.url = url
-        self.strip_prefix = strip_prefix
-        self.strip_prefix_len = len(strip_prefix)
-        self.tile_size = tile_size
-    
-    def __hash__(self):
-        return hash(self.url)
-    
-    def world_to_tile_num(self, zoom, lon, lat):
-        zoom = int(zoom)
-        if zoom == 0:
-            return (0, 0)
-        lat_rad = lat * math.pi / 180.0
-        n = 2 << (zoom - 1)
-        xtile = int((lon + 180.0) / 360.0 * n)
-        ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
-        return (xtile, ytile)
-    
-    
-
-    @classmethod
-    def get_known_tile_server(cls):
-        if cls.cached_known_tile_server is None:
-            cls.cached_known_tile_server = [
-                cls("MapQuest", "http://otile4.mqcdn.com/tiles/1.0.0/osm/"),
-                cls("MapQuest Satellite", "http://otile4.mqcdn.com/tiles/1.0.0/sat/"),
-                cls("OpenStreetMap", "http://b.tile.openstreetmap.org/"),
-                ]
-        return cls.cached_known_tile_server
-    
-    @classmethod
-    def get_tile_server_by_name(cls, name):
-        for h in cls.get_known_tile_server():
-            if h.name == name:
-                return h
-        return None
-
-
-class BackgroundTileDownloader(BackgroundHttpDownloader):
-    def __init__(self, tile_host):
-        self.tile_host = tile_host
-        BackgroundHttpDownloader.__init__(self)
-
-    def get_server_config(self):
-        self.tile_server = TileServerInitRequest(self.tile_host)
-        self.send_request(self.tile_server)
-    
-    def is_valid(self):
-        return self.tile_server.is_valid()
-    
-    def request_map(self, world_rect, proj_rect, image_size, layer=None, event=None, event_data=None):
-        req = TileServerRequest(self.tile_server, world_rect, proj_rect, image_size, layer, event, event_data)
-        self.send_request(req)
-        return req
 
 
 class TileServerInitRequest(UnskippableURLRequest):
@@ -94,6 +33,42 @@ class TileServerInitRequest(UnskippableURLRequest):
         self.layer_keys = []
         self.world_bbox_rect = None
         
+    def get_data_from_server(self):
+        self.layer_keys = [self.tile_host.name]
+        self.current_layer = self.tile_host.name
+    
+    def is_valid(self):
+        return self.current_layer is not None
+    
+    def get_layer_info(self):
+        layer_info = []
+        for name in self.layer_keys:
+            layer_info.append((name, self.tile_server.convert_title(self.tile_server[name].title)))
+        return layer_info
+    
+    def get_default_layers(self):
+        print self.layer_keys
+        return list(self.layer_keys)
+    
+    def get_image(self, zoom, x, y):
+        print "TileServerInitRequest.get_image(%s,%s,%s)" % (zoom, x, y)
+        data = loading_png
+        return data
+
+
+class URLTileServerInitRequest(TileServerInitRequest):
+    def get_image(self, zoom, x, y):
+        if self.is_valid():
+            url = self.tile_host.get_tile_url(zoom, x, y)
+            request = urllib2.Request(url)
+            response = urllib2.urlopen(request)
+            data = response.read()
+        else:
+            data = error_png
+        return data
+
+
+class WMTSTileServerInitRequest(TileServerInitRequest):
     def get_data_from_server(self):
 #        if True:  # To test error handling, uncomment this
 #            import time
@@ -114,9 +89,6 @@ class TileServerInitRequest(UnskippableURLRequest):
         except Exception, e:
             print "Server error", self.url
             self.error = e
-    
-    def is_valid(self):
-        return self.current_layer is not None
     
     def setup(self, tile_server):
         self.tile_server = tile_server
@@ -174,16 +146,6 @@ class TileServerInitRequest(UnskippableURLRequest):
         for name in self.layer_keys:
             print "layer:", name, "title", self.tile_server.convert_title(self.tile_server[name].title), "crsoptions", tile_server[layer].crsOptions
     
-    def get_layer_info(self):
-        layer_info = []
-        for name in self.layer_keys:
-            layer_info.append((name, self.tile_server.convert_title(self.tile_server[name].title)))
-        return layer_info
-    
-    def get_default_layers(self):
-        print self.layer_keys
-        return list(self.layer_keys)
-    
     def get_bbox(self, layers, wr, pr):
         types = [("102100", "p"),
                  ("102113", "p"),
@@ -227,28 +189,128 @@ class TileServerInitRequest(UnskippableURLRequest):
                              )
             data = img.read()
         else:
-            data = blank_png
+            data = loading_png
         return data
 
+class TileHost(object):
+    def __init__(self, name, url, strip_prefix="", tile_size=256):
+        self.name = name
+        if url.endswith("?"):
+            url = url[:-1]
+        self.url = url
+        self.strip_prefix = strip_prefix
+        self.strip_prefix_len = len(strip_prefix)
+        self.tile_size = tile_size
+    
+    def __hash__(self):
+        return hash(self.url)
+    
+    def world_to_tile_num(self, zoom, lon, lat):
+        zoom = int(zoom)
+        if zoom == 0:
+            return (0, 0)
+        lat_rad = lat * math.pi / 180.0
+        n = 2 << (zoom - 1)
+        xtile = int((lon + 180.0) / 360.0 * n)
+        ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
+        return (xtile, ytile)
+    
+    rad2deg = 180.0 / math.pi
+    
+    def tile_num_to_world_rect(self, zoom, x, y):
+        zoom = int(zoom)
+        if zoom == 0:
+            return ((-180.0, 0), (180.0, 0))
+        n = 2 << (zoom - 1)
+        lon1 = (x / n * 360.0) - 180.0
+        lon2 = ((x + 1) / n * 360.0) - 180.0
+        lat1 = math.atan(math.sinh(math.pi * (1 - (2 * (y + 1)) / n))) * self.rad2deg
+        lat2 = math.atan(math.sinh(math.pi * (1 - (2 * y / n)))) * self.rad2deg
+        return ((lon1, lat1), (lon2, lat2))
+    
+    def get_tile_init_request(self):
+        raise NotImplementedError
+    
+    def get_tile_url(self, zoom, x, y):
+        return "%s/%s/%s/%s.png" % (self.url, zoom, x, y)
 
-class TileServerRequest(BaseRequest):
-    def __init__(self, tile_server, world_rect, proj_rect, image_size, layers=None, manager=None, event_data=None):
+
+class LocalTileHost(TileHost):
+    def __init__(self, name, tile_size=256):
+        TileHost.__init__(self, name, "", tile_size=tile_size)
+    
+    def __hash__(self):
+        return hash(self.name)
+
+    def get_tile_init_request(self):
+        return TileServerInitRequest(self)
+
+
+class OpenTileHost(TileHost):
+    def get_tile_init_request(self):
+        return URLTileServerInitRequest(self)
+
+
+class WMTSTileHost(TileHost):
+    def get_tile_init_request(self):
+        return WMTSTileServerInitRequest(self)
+
+
+class BackgroundTileDownloader(BackgroundHttpDownloader):
+    cached_known_tile_server = None
+    
+    def __init__(self, tile_host):
+        self.tile_host = tile_host
+        BackgroundHttpDownloader.__init__(self)
+
+    @classmethod
+    def get_known_tile_server(cls):
+        if cls.cached_known_tile_server is None:
+            cls.cached_known_tile_server = [
+                LocalTileHost("Blank"),
+                OpenTileHost("MapQuest", "http://otile4.mqcdn.com/tiles/1.0.0/osm/"),
+                OpenTileHost("MapQuest Satellite", "http://otile4.mqcdn.com/tiles/1.0.0/sat/"),
+                OpenTileHost("OpenStreetMap", "http://b.tile.openstreetmap.org/"),
+                ]
+        return cls.cached_known_tile_server
+    
+    @classmethod
+    def get_tile_server_by_name(cls, name):
+        for h in cls.get_known_tile_server():
+            if h.name == name:
+                return h
+        return None
+
+    def get_server_config(self):
+        self.tile_server = self.tile_host.get_tile_init_request()
+        self.send_request(self.tile_server)
+    
+    def is_valid(self):
+        return self.tile_server.is_valid()
+    
+    def request_tile(self, zoom, x, y, event=None, event_data=None):
+        req = TileRequest(self.tile_server, zoom, x, y, event, event_data)
+        self.send_request(req)
+        return req
+
+
+class TileRequest(UnskippableRequest):
+    def __init__(self, tile_server, zoom, x, y, manager=None, event_data=None):
         BaseRequest.__init__(self)
-        self.url = "%s image @%s from %s" % (image_size, world_rect, tile_server.url)
+        self.url = "tile (%s,%s)@zoom=%s from %s" % (x, y, zoom, tile_server.url)
         self.tile_server = tile_server
-        self.world_rect = world_rect
-        self.proj_rect = proj_rect
-        self.image_size = image_size
-        self.layers = layers
+        self.zoom = zoom
+        self.x = x
+        self.y = y
+        self.world_rect = self.tile_server.tile_host.tile_num_to_world_rect(self.zoom, self.x, self.y)
         self.manager = manager
         self.event_data = event_data
     
     def get_data_from_server(self):
         try:
-            self.data = self.tile_server.get_image(self.world_rect, self.proj_rect, self.image_size, self.layers)
-            
-            if not rect.intersects(self.world_rect, self.tile_server.world_bbox_rect):
-                self.error = "Outside TileServer boundary of %s" % rect.pretty_format(self.tile_server.world_bbox_rect)
+            self.data = self.tile_server.get_image(self.zoom, self.x, self.y)
+        except urllib2.URLError, e:
+            self.error = e
         except ServiceException, e:
             self.error = e
         except Exception, e:
@@ -262,25 +324,18 @@ class TileServerRequest(BaseRequest):
         except (IOError, TypeError):
             # some TileServeres return HTML data instead of an image on an error
             # (usually see this when outside the bounding box)
-            return get_numpy_from_data(blank_png)
+            return get_numpy_from_data(loading_png)
 
 
 if __name__ == "__main__":
     import time
     
-    wr = ((-126.59861836927804, 45.49049794230259), (-118.90005638437373, 50.081373712237856))
-    pr = ((-14092893.732, 5668589.93218), (-13235893.732, 6427589.93218))
-    size = (857, 759)
-    
-    
     h = TileHost.get_tile_server_by_name("OpenStreetMap")
     downloader = BackgroundTileDownloader(h)
 
-    test = downloader.request_map(wr, pr, size)
-    test = downloader.request_map(wr, pr, size)
-    test = downloader.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
-    test = downloader.request_map(wr, pr, size, layer=['10', '11', '12', '14', '15', '17', '18', '19', '20'])
-    test = downloader.request_map(wr, pr, size)
+    test = downloader.request_tile(0, 0, 0)
+    test = downloader.request_tile(1, 0, 0)
+    test = downloader.request_tile(1, 1, 0)
     while True:
         if test.is_finished:
             break

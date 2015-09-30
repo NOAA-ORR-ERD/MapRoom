@@ -1,9 +1,10 @@
 import os
+import Queue
+
 import wx
 import numpy as np
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
-
 import pyproj
 
 from maproom.library.accumulator import flatten
@@ -215,12 +216,13 @@ class RawSubImageLoader(SubImageLoader):
 
 
 class TileImage(Image):
-    def __init__(self):
-        Image.__init__(self, None, None)
-        
+    def __init__(self, texture_size, world_rect):
+        Image.__init__(self, None, (texture_size, texture_size))
+        self.world_rect = world_rect
+
 
 class TileImageData(ImageData):
-    def __init__(self, projection, downloader, texture_size=256):
+    def __init__(self, projection, downloader, renderer, texture_size=256):
         ImageData.__init__(self, 0, 0, texture_size)
         self.zoom_level = -1
         self.last_zoom_level = -1
@@ -228,13 +230,12 @@ class TileImageData(ImageData):
         self.downloader = downloader
         self.last_requested = None
         self.requested = dict()  # (x, y): Image
+        renderer.set_image_projection(self, projection)
     
     def calc_textures(self, texture_size):
-        # all textures are the same size
-        image = Image((0, 0), (self.texture_size, self.texture_size))
-        self.image_list.append(image)
+        pass
 
-    def update_tiles(self, zoom, w_r):
+    def update_tiles(self, zoom, w_r, manager, event_data):
         tile_host = self.downloader.tile_host
         if self.zoom_level != zoom:
             self.set_zoom_level(zoom)
@@ -242,9 +243,9 @@ class TileImageData(ImageData):
         bot_right = tile_host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
         print "UPDATE_TILES:", top_left, bot_right
         tile_list = self.calc_center_tiles(top_left, bot_right)
-        self.request_tiles(tile_host, tile_list)
+        self.request_tiles(tile_list, manager, event_data)
         tile_list = self.calc_border_tiles(top_left, bot_right)
-        self.request_tiles(tile_host, tile_list)
+        self.request_tiles(tile_list, manager, event_data)
 
     def set_zoom_level(self, zoom):
         zoom = int(zoom)
@@ -296,11 +297,35 @@ class TileImageData(ImageData):
                     needed.append(tile)
         return needed
     
-    def request_tiles(self, tile_host, tiles):
+    def request_tiles(self, tiles, manager, event_data):
         for tile in tiles:
             if tile not in self.requested:
                 print "REQUESTING TILE:", tile
-                self.requested[tile] = TileImage()
+                req = self.downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
+                self.requested[tile] = TileImage(self.texture_size, req.world_rect)
+    
+    def add_tiles(self, queue, image_textures):
+        try:
+            while True:
+                tile_request = queue.get_nowait()
+                print "GOT TILE:", tile_request
+                tile = (tile_request.x, tile_request.y)
+                if tile not in self.requested:
+                    # Hmmm, got tile info for something that's not currently in
+                    # the request list.  Maybe a really late server response?
+                    # Or the user zoomed in and out really quickly? If it's
+                    # for the same zoom level, let's use it.
+                    if tile_request.zoom == self.zoom_level:
+                        print "  Using tile received but not requested:", tile
+                        self.requested[tile] = TileImage(self.texture_size, tile_request.world_rect)
+                    else:
+                        print "  Ignoring tile received but not requested:", tile
+                if tile in self.requested:
+                    tile_image = self.requested[tile]
+                    tile_image.data = tile_request.get_image_array()
+                        
+        except Queue.Empty:
+            pass
 
 
 

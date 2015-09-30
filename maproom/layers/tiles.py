@@ -1,4 +1,5 @@
 import numpy as np
+import Queue
 
 # Enthought library imports.
 from traits.api import Unicode, Str, Int, Bool, Any, Set
@@ -37,35 +38,36 @@ class TileLayer(ProjectedLayer):
     
     rebuild_needed = Bool(True)
     
-    threaded_request_ready = Any(None)
+    threaded_request_results = Any
     
     download_status_text = Any(None)
     
     checkerboard_when_loading = False
     
-    def get_image_array(self):
-        if self.threaded_request_ready is None:
-            return self.current_world, numpy_images.get_checkerboard(*self.current_size), None
-        else:
-            tile_result = self.threaded_request_ready
-            self.threaded_request_ready = None
-            log.debug("threaded_request_ready = %s" % wms_result)
-            return tile_result.world_rect, tile_result.get_image_array(), tile_result.error
-
+    def _threaded_request_results_default(self):
+        return Queue.Queue()
+    
+    def is_valid_threaded_result(self, map_server_id, tile_request):
+        if map_server_id == self.map_server_id:
+            self.threaded_request_results.put_nowait(tile_request)
+            return True
+        return False
+    
     def rebuild_renderer(self, renderer, in_place=False):
         # Called only when tile server changed: throws away current tiles and
         # starts fresh
-        projection = self.manager.project.layer_canvas.projection
         if self.rebuild_needed:
             renderer.release_textures()
             self.image_data = None
+            self.rebuild_needed = False
         if self.image_data is None:
+            projection = self.manager.project.layer_canvas.projection
             downloader = self.manager.project.task.get_threaded_tile_server_by_id(self.map_server_id)
-            self.image_data = TileImageData(projection, downloader)
+            self.image_data = TileImageData(projection, downloader, renderer)
         if self.image_data is not None:
+            self.image_data.add_tiles(self.threaded_request_results, renderer.image_textures)
             self.change_count += 1  # Force info panel update
             self.manager.project.layer_canvas.project.update_info_panels(self, True)
-            self.rebuild_needed = False
 
     def resize(self, renderer, world_rect, proj_rect, screen_rect):
         zoom_level = renderer.canvas.zoom_level
@@ -78,11 +80,11 @@ class TileLayer(ProjectedLayer):
             renderer.canvas.set_minimum_delay_callback(self.zoom_changed, 1000)
             return
         # first time, load map immediately
-        self.image_data.update_tiles(zoom_level, self.current_world)
+        self.image_data.update_tiles(zoom_level, self.current_world, self.manager, (self, self.map_server_id))
     
     def zoom_changed(self, canvas):
         print "ZOOM CHANGED:", canvas.zoom_level
-        self.image_data.update_tiles(canvas.zoom_level, self.current_world)
+        self.image_data.update_tiles(canvas.zoom_level, self.current_world, self.manager, (self, self.map_server_id))
         self.change_count += 1  # Force info panel update
         canvas.project.update_info_panels(self, True)
     
@@ -98,8 +100,7 @@ class TileLayer(ProjectedLayer):
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
         if not layer_visibility["layer"]:
             return
-        if self.image_data is None:
-            self.rebuild_renderer(renderer)
+        self.rebuild_renderer(renderer)
         self.resize(renderer, world_rect, projected_rect, screen_rect)
 
     def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):

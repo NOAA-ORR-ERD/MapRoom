@@ -45,8 +45,12 @@ class WMSLayer(ProjectedLayer):
     
     checkerboard_when_loading = False
     
-    def is_valid_threaded_result(self, map_server_id):
-        return map_server_id == self.map_server_id
+    def is_valid_threaded_result(self, map_server_id, wms_request):
+        if map_server_id == self.map_server_id:
+            self.rebuild_needed = True
+            self.threaded_request_ready = wms_request
+            return True
+        return False
     
     def get_image_array(self):
         if self.threaded_request_ready is None:

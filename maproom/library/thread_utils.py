@@ -13,8 +13,7 @@ from numpy_images import get_numpy_from_data
 import rect
 
 import logging
-import multiprocessing
-log = multiprocessing.log_to_stderr()
+log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
 

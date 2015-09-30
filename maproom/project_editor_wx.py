@@ -428,9 +428,7 @@ class ProjectEditor(FrameworkEditor):
         (layer, map_server_id), wms_request = data
         print "event happed on %s for map server id %d" % (layer, map_server_id)
         print "wms_request:", wms_request
-        if layer.is_valid_threaded_result(map_server_id):
-            layer.rebuild_needed = True
-            layer.threaded_request_ready = wms_request
+        if layer.is_valid_threaded_result(map_server_id, wms_request):
             wx.CallAfter(self.layer_canvas.render)
         else:
             print "Throwing away result from old map server id"
