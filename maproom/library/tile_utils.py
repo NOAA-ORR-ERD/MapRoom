@@ -296,7 +296,7 @@ class BackgroundTileDownloader(BackgroundHttpDownloader):
 
 class TileRequest(UnskippableRequest):
     def __init__(self, tile_server, zoom, x, y, manager=None, event_data=None):
-        BaseRequest.__init__(self)
+        UnskippableRequest.__init__(self)
         self.tile_server = tile_server
         self.zoom = zoom
         self.x = x
