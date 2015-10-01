@@ -246,8 +246,10 @@ class TileImageData(ImageData):
         bot_right = tile_host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
         print "UPDATE_TILES:", top_left, bot_right
         tile_list = self.calc_center_tiles(top_left, bot_right)
+        print "CENTER TILES:", tile_list
         self.request_tiles(tile_list, manager, event_data)
         tile_list = self.calc_border_tiles(top_left, bot_right)
+        print "BORDER TILES", tile_list
         self.request_tiles(tile_list, manager, event_data)
 
     def set_zoom_level(self, zoom):
