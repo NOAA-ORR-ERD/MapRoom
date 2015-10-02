@@ -1066,12 +1066,13 @@ class MapServerField(InfoField):
     same_line = False
     
     def fill_data(self, layer):
+        names = layer.get_server_names()
+        self.ctrl.SetItems(names)
         self.ctrl.SetSelection(layer.map_server_id)
     
     def create_control(self):
-        names = self.panel.project.task.get_known_wms_names()
         c = wx.ComboBox(self.parent, -1, str(LayerStyle.default_font_size),
-                        size=(self.default_width, -1), choices=names, style=wx.CB_READONLY)
+                        size=(self.default_width, -1), choices=[], style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
         
@@ -1087,7 +1088,7 @@ class MapOverlayField(InfoField):
     same_line = False
     
     def fill_data(self, layer):
-        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        downloader = layer.get_downloader(layer.map_server_id)
         wms = downloader.wms
         titles = [str(n[1]) for n in wms.get_layer_info()]
         self.ctrl.SetItems(titles)
@@ -1351,6 +1352,7 @@ class InfoPanel(PANELTYPE):
         "Anchor coordinates": AnchorCoordinatesField,
         "Anchor point": AnchorPointField,
         "Map server": MapServerField,
+        "Tile server": MapServerField,
         "Map layer": MapOverlayField,
         "Server status": ServerStatusField,
         "Server reload": ServerReloadField,

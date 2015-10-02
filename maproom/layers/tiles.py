@@ -22,7 +22,9 @@ class TileLayer(ProjectedLayer):
     
     type = Str("tiles")
     
-    layer_info_panel = ["Transparency"]
+    layer_info_panel = ["Transparency", "Server status", "Server reload"]
+    
+    selection_info_panel = ["Tile server"]
     
     map_server_id = Int(0)
     
@@ -62,7 +64,7 @@ class TileLayer(ProjectedLayer):
             self.rebuild_needed = False
         if self.image_data is None:
             projection = self.manager.project.layer_canvas.projection
-            downloader = self.manager.project.task.get_threaded_tile_server_by_id(self.map_server_id)
+            downloader = self.get_downloader(self.map_server_id)
             self.image_data = TileImageData(projection, downloader, renderer)
         if self.image_data is not None:
             self.image_data.add_tiles(self.threaded_request_results, renderer.image_tiles)
@@ -112,3 +114,11 @@ class TileLayer(ProjectedLayer):
             alpha = alpha_from_int(self.style.line_color)
             print "DRAW TILES HERE!!!"
             renderer.draw_tiles(layer_index_base, picker, alpha)
+    
+    # Utility routines used by info_panels to abstract the server info
+    
+    def get_downloader(self, server_id):
+        return self.manager.project.task.get_threaded_tile_server_by_id(server_id)
+    
+    def get_server_names(self):
+        return self.manager.project.task.get_known_tile_server_names()

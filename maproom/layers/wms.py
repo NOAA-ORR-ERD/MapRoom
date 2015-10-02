@@ -147,3 +147,11 @@ class WMSLayer(ProjectedLayer):
         if self.image_data is not None:
             alpha = alpha_from_int(self.style.line_color)
             renderer.draw_image(layer_index_base, picker, alpha)
+    
+    # Utility routines used by info_panels to abstract the server info
+    
+    def get_downloader(self, server_id):
+        return self.manager.project.task.get_threaded_wms_by_id(server_id)
+    
+    def get_server_names(self):
+        return self.manager.project.task.get_known_wms_names()
