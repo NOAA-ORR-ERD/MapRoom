@@ -8,7 +8,7 @@ from requests.exceptions import HTTPError
 
 from owslib.util import ServiceException
 
-from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableRequest, UnskippableURLRequest
+from peppy2.utils.background_http import BackgroundHttpMultiDownloader, BaseRequest, UnskippableRequest
 
 from numpy_images import get_numpy_from_data
 
@@ -25,10 +25,10 @@ error_png = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x01\x00\x00\x00\x01\x00
 
 
 
-class TileServerInitRequest(UnskippableURLRequest):
+class TileServerInitRequest(UnskippableRequest):
     def __init__(self, tile_host):
         self.tile_host = tile_host
-        UnskippableURLRequest.__init__(self, tile_host.url)
+        UnskippableRequest.__init__(self)
         self.current_layer = None
         self.layer_keys = []
         self.world_bbox_rect = None
@@ -192,17 +192,21 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
         return data
 
 class TileHost(object):
-    def __init__(self, name, url, strip_prefix="", tile_size=256):
+    def __init__(self, name, url_list, strip_prefix="", tile_size=256):
         self.name = name
-        if url.endswith("?"):
-            url = url[:-1]
-        self.url = url
+        self.urls = []
+        for url in url_list:
+            if url.endswith("?"):
+                url = url[:-1]
+            self.urls.append(url)
+        self.url_index = 0
+        self.num_urls = len(self.urls)
         self.strip_prefix = strip_prefix
         self.strip_prefix_len = len(strip_prefix)
         self.tile_size = tile_size
     
     def __hash__(self):
-        return hash(self.url)
+        return hash(self.urls[0])
     
     def world_to_tile_num(self, zoom, lon, lat, clamp=True):
         zoom = int(zoom)
@@ -237,12 +241,17 @@ class TileHost(object):
         raise NotImplementedError
     
     def get_tile_url(self, zoom, x, y):
-        return "%s/%s/%s/%s.png" % (self.url, zoom, x, y)
+        # mostly round robin URL index.  If multiple threads hit this at the
+        # same time the same URLs might be used in each thread, but not worth
+        # thread locking
+        self.url_index = (self.url_index + 1) % self.num_urls
+        url = self.urls[self.url_index]
+        return "%s/%s/%s/%s.png" % (url, zoom, x, y)
 
 
 class LocalTileHost(TileHost):
     def __init__(self, name, tile_size=256):
-        TileHost.__init__(self, name, "", tile_size=tile_size)
+        TileHost.__init__(self, name, [""], tile_size=tile_size)
     
     def __hash__(self):
         return hash(self.name)
@@ -261,21 +270,21 @@ class WMTSTileHost(TileHost):
         return WMTSTileServerInitRequest(self)
 
 
-class BackgroundTileDownloader(BackgroundHttpDownloader):
+class BackgroundTileDownloader(BackgroundHttpMultiDownloader):
     cached_known_tile_server = None
     
     def __init__(self, tile_host):
         self.tile_host = tile_host
-        BackgroundHttpDownloader.__init__(self)
+        BackgroundHttpMultiDownloader.__init__(self)
 
     @classmethod
     def get_known_tile_server(cls):
         if cls.cached_known_tile_server is None:
             cls.cached_known_tile_server = [
-                LocalTileHost("Blank"),
-                OpenTileHost("MapQuest", "http://otile4.mqcdn.com/tiles/1.0.0/osm/"),
-                OpenTileHost("MapQuest Satellite", "http://otile4.mqcdn.com/tiles/1.0.0/sat/"),
-                OpenTileHost("OpenStreetMap", "http://b.tile.openstreetmap.org/"),
+#                LocalTileHost("Blank"),
+                OpenTileHost("MapQuest", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/", "http://otile2.mqcdn.com/tiles/1.0.0/osm/", "http://otile3.mqcdn.com/tiles/1.0.0/osm/", "http://otile4.mqcdn.com/tiles/1.0.0/osm/"]),
+                OpenTileHost("MapQuest Satellite", ["http://otile1.mqcdn.com/tiles/1.0.0/sat/", "http://otile2.mqcdn.com/tiles/1.0.0/sat/", "http://otile3.mqcdn.com/tiles/1.0.0/sat/", "http://otile4.mqcdn.com/tiles/1.0.0/sat/"]),
+                OpenTileHost("OpenStreetMap", ["http://a.tile.openstreetmap.org/", "http://b.tile.openstreetmap.org/", "http://c.tile.openstreetmap.org/"]),
                 ]
         return cls.cached_known_tile_server
     

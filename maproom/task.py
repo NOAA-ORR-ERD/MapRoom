@@ -983,10 +983,10 @@ class MaproomProjectTask(FrameworkTask):
     def get_threaded_tile_server(self, tilehost=None):
         if tilehost is None:
             tilehost = BackgroundTileDownloader.get_known_tile_server()[0]
-        if tilehost.url not in self.downloaders:
+        if tilehost not in self.downloaders:
             ts = BackgroundTileDownloader(tilehost)
-            self.downloaders[tilehost.url] = ts
-        return self.downloaders[tilehost.url]
+            self.downloaders[tilehost] = ts
+        return self.downloaders[tilehost]
 
     def get_threaded_tile_server_by_id(self, id):
         tilehost = BackgroundTileDownloader.get_known_tile_server()[id]
