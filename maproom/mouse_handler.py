@@ -218,6 +218,9 @@ class MouseHandler(object):
             zoom = 2.0
 
         units_per_pixel = c.zoom(amount, zoom)
+        # Store the units per pixel value so the projection calculations will
+        # take them into account to correctly calculate the delta
+        c.projected_units_per_pixel = units_per_pixel
 
         projected_point = c.get_projected_point_from_screen_point(screen_point)
         new_projected_point = c.get_projected_point_from_world_point(world_point)
