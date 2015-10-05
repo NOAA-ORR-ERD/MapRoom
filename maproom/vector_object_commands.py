@@ -98,7 +98,7 @@ class DrawEllipseCommand(DrawVectorObjectCommand):
 class DrawCircleCommand(DrawVectorObjectCommand):
     short_name = "circle_obj"
     ui_name = "Circle"
-    vector_object_class = EllipseVectorObject
+    vector_object_class = CircleVectorObject
 
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)

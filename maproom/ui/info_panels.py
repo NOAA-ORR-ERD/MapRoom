@@ -1372,6 +1372,7 @@ class InfoPanel(PANELTYPE):
         "Server reload": ServerReloadField,
         "Map status": DownloadStatusField,
         "Path length": WholeLinePropertyField,
+        "Radius": WholeLinePropertyField,
         }
     
     def create_fields(self, layer, fields):

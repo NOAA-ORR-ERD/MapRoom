@@ -381,21 +381,6 @@ class EllipseVectorObject(RectangleVectorObject):
     
     type = Str("ellipse_obj")
 
-    def set_center_and_radius(self, p1, p2):
-        x = p1[0]
-        y = p1[1]
-        dx = x - p2[0]
-        dy = y - p2[1]
-        r = math.sqrt(dx * dx + dy * dy)
-        
-        c = np.empty((4,2), dtype=np.float32)
-        c[0] = (x - r, y - r)
-        c[1] = (x + r, y - r)
-        c[2] = (x + r, y + r)
-        c[3] = (x - r, y + r)
-        cp = self.get_control_points_from_corners(c)
-        self.set_data(cp, 0.0, self.lines)
-    
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
         p = projected_point_data
@@ -432,6 +417,44 @@ class EllipseVectorObject(RectangleVectorObject):
         colors.fill(line_color)
         renderer.set_lines(xy, lsi, colors)
 
+
+class CircleVectorObject(EllipseVectorObject):
+    """Special case of the ellipse where the object is constrained to be a
+    circle on resizing.
+    
+    """
+    name = Unicode("Circle")
+    
+    type = Str("circle_obj")
+    
+    selection_info_panel = ["Anchor coordinates", "Radius"]
+
+    def get_info_panel_text(self, prop):
+        if prop == "Radius":
+            km = self.calculate_distances()
+            return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
+        return EllipseVectorObject.get_info_panel_text(self, prop)
+
+    def get_radius(self):
+        dx = (self.points[2].x - self.points[0].x) / 2.0
+        dy = (self.points[2].x - self.points[0].x) / 2.0
+        return math.sqrt(dx*dx + dy*dy)
+
+    def set_center_and_radius(self, p1, p2):
+        x = p1[0]
+        y = p1[1]
+        dx = x - p2[0]
+        dy = y - p2[1]
+        r = math.sqrt(dx * dx + dy * dy)
+        
+        c = np.empty((4,2), dtype=np.float32)
+        c[0] = (x - r, y - r)
+        c[1] = (x + r, y - r)
+        c[2] = (x + r, y + r)
+        c[3] = (x - r, y + r)
+        cp = self.get_control_points_from_corners(c)
+        self.set_data(cp, 0.0, self.lines)
+    
 
 class ScaledImageObject(RectangleVectorObject):
     """Texture mapped image object that scales to the lat/lon view
