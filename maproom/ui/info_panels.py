@@ -124,6 +124,20 @@ class SimplePropertyField(LabelField):
     def fill_data(self, layer):
         text = layer.get_info_panel_text(self.field_name)
         self.ctrl.SetLabel(text)
+
+class WholeLinePropertyField(SimplePropertyField):
+    same_line = False
+
+class MultiLinePropertyField(InfoField):
+    same_line = False
+    
+    def fill_data(self, layer):
+        text = layer.get_info_panel_text(self.field_name)
+        self.ctrl.SetValue(str(text))
+    
+    def create_control(self):
+        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
+        return c
         
 class BooleanLabelField(SimplePropertyField):
     def create_extra_controls(self):
@@ -1357,6 +1371,7 @@ class InfoPanel(PANELTYPE):
         "Server status": ServerStatusField,
         "Server reload": ServerReloadField,
         "Map status": DownloadStatusField,
+        "Path length": WholeLinePropertyField,
         }
     
     def create_fields(self, layer, fields):

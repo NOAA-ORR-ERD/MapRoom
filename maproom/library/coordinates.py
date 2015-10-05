@@ -1,7 +1,73 @@
 # coding=utf8
 import re
+import math
 
 import unittest
+
+
+def haversine_at_const_lat(delta_deg_lon, deg_lat, r=6371.0):
+    lon = math.radians(delta_deg_lon)
+    lat = math.radians(deg_lat)
+    clat = math.cos(lat)
+    slon = math.sin(lon/2)
+    a = clat * clat * slon * slon
+    c = 2 * math.asin(math.sqrt(a))
+    d = r * c
+    return d
+
+def haversine_list(points, r=6371.0):
+    print points
+    lon1 = math.radians(points[0]['x'])
+    lat1 = math.radians(points[0]['y'])
+    
+    path = 0.0
+    for p in points[1:]:
+        lon2 = math.radians(p['x'])
+        lat2 = math.radians(p['y'])
+        
+        # haversine formula 
+        sdlon = math.sin((lon2 - lon1) / 2.0)
+        sdlat = math.sin((lat2 - lat1) / 2.0)
+        a = sdlat * sdlat + math.cos(lat1) * math.cos(lat2) * sdlon * sdlon
+        c = 2 * math.asin(math.sqrt(a))
+        d = r * c
+        path += d
+        lon1, lat1 = lon2, lat2
+    return path
+
+def km_to_string(km):
+    if km < 1.0:
+        s = "%d m" % (km * 1000)
+    else:
+        s = "%d km" % km
+    return s
+
+def km_to_rounded_string(val, sigfigs=5):
+    if val < 1.0:
+        val *= 1000
+        unit = "m"
+    else:
+        unit = "km"
+    format = "%%.%dg" % (sigfigs)
+    val = float(format % val)
+    return "%s %s" % (val, unit)
+
+def ft_to_string(ft):
+    if ft < 5000:
+        s = "%d ft" % ft
+    else:
+        s = "%d mi" % (ft / 5280)
+    return s
+
+def mi_to_rounded_string(val, sigfigs=5):
+    if val < 1.0:
+        val *= 5280
+        unit = "ft"
+    else:
+        unit = "mi"
+    format = "%%.%dg" % (sigfigs)
+    val = float(format % val)
+    return "%s %s" % (val, unit)
 
 
 def float_to_degrees_minutes_seconds(value, directions=None):

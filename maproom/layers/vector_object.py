@@ -13,6 +13,7 @@ from traits.api import on_trait_change, Unicode, Str, Any, Float, Bool, Int
 from pyface.api import YES
 
 from ..library import rect
+from ..library.coordinates import haversine_list, km_to_rounded_string, mi_to_rounded_string
 from ..mouse_commands import MoveControlPointCommand
 from ..menu_commands import DeleteLayerCommand
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
@@ -51,6 +52,12 @@ class VectorObjectLayer(LineLayer):
     
     control_point_color = color_floats_to_int(0, 0, 0, 1.0)
 
+    def get_info_panel_text(self, prop):
+        if prop == "Path length":
+            km = self.calculate_distances()
+            return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
+        return LineLayer.get_info_panel_text(self, prop)
+
     def set_layer_style_defaults(self):
         self.style.line_color = self.manager.default_style.line_color
 
@@ -73,6 +80,9 @@ class VectorObjectLayer(LineLayer):
     def delete_all_selected_objects(self):
         return DeleteLayerCommand(self)
     
+    def calculate_distances(self, cp):
+        return 0.0
+
     def rebuild_image(self, renderer):
         """Hook for image-based renderers to rebuild image data
         
@@ -124,7 +134,7 @@ class LineVectorObject(VectorObjectLayer):
     
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency"]
     
-    selection_info_panel = ["Anchor coordinates"]
+    selection_info_panel = ["Anchor coordinates", "Path length"]
 
     corners_from_flat = np.asarray((0, 1, 2, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1),), dtype=np.uint8)
@@ -141,6 +151,9 @@ class LineVectorObject(VectorObjectLayer):
         ((1,1), (0,0), (0.5,0.5)), # anchor point is 1, etc.
         ((1,1), (1,1), (1,1)), # center point acts as rigid move
         ), dtype=np.float32)
+    
+    def calculate_distances(self):
+        return haversine_list(self.points[0:self.num_corners])
 
     def set_opposite_corners(self, p1, p2):
         p = np.concatenate((p1, p2), 0)  # flatten to 1D
@@ -799,6 +812,9 @@ class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
     name = Unicode("Polyline")
     
     type = Str("polyline_obj")
+    
+    def calculate_distances(self):
+        return haversine_list(self.points[self.center_point_index + 1:])
 
     def get_marker_points(self):
         # Markers are only used on the first and last segments of the line

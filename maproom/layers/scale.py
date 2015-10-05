@@ -7,6 +7,7 @@ import numpy as np
 from traits.api import Unicode, Str
 
 from ..library import rect
+from ..library.coordinates import haversine_at_const_lat, km_to_string, ft_to_string
 
 from base import ScreenLayer
 
@@ -56,7 +57,7 @@ class Scale(ScreenLayer):
         z = c.zoom_level
         center = rect.center(world_rect)
         degrees_lon_per_pixel = float(rect.width(world_rect)) / float(rect.width(screen_rect))
-        self.km_per_pixel = self.haversine(degrees_lon_per_pixel, center[1])
+        self.km_per_pixel = haversine_at_const_lat(degrees_lon_per_pixel, center[1])
         self.km_length = self.get_step_size(self.reference_pixel_length * self.km_per_pixel, self.km_steps, self.km_step_count)
         
         self.ft_per_pixel = self.km_per_pixel * 3.28084 * 1000.0
@@ -64,16 +65,6 @@ class Scale(ScreenLayer):
     
     def get_step_size(self, reference_size, steps, count):
         return steps[min(bisect.bisect(steps, abs(reference_size)), count - 1)]
-    
-    def haversine(self, deg_lon, deg_lat):
-        lon = math.radians(deg_lon)
-        lat = math.radians(deg_lat)
-        clat = math.cos(lat)
-        slon = math.sin(lon/2)
-        a = clat * clat * slon * slon
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-        d = 6371.0 * c
-        return d
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         if picker.is_active:
@@ -85,20 +76,14 @@ class Scale(ScreenLayer):
         x = s_r[0][0] + self.x_offset
         y = s_r[1][1] - self.y_offset
 
-        if self.km_length < 1.0:
-            s = "%d m" % (self.km_length * 1000)
-        else:
-            s = "%d km" % self.km_length
+        s = km_to_string(self.km_length)
         length = self.km_length / self.km_per_pixel
         #print "km_length", self.km_length, "length", length
         size = renderer.get_drawn_string_dimensions(s)
         renderer.draw_screen_lines([(x, y - self.tick_length), (x, y), (x + self.tick_spacing + length, y), (x + self.tick_spacing + length, y - self.tick_length)], width=self.line_width)
         renderer.draw_screen_string((x + self.tick_spacing, y - size[1] - 1), s)
     
-        if self.ft_length < 5000:
-            s = "%d ft" % self.ft_length
-        else:
-            s = "%d mi" % (self.ft_length / 5280)
+        s = ft_to_string(self.ft_length)
         length = self.ft_length / self.ft_per_pixel
         #print "ft_length", self.ft_length, "length", length
         size = renderer.get_drawn_string_dimensions(s)
