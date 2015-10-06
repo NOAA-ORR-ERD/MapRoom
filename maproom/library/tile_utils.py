@@ -390,10 +390,11 @@ class TileRequest(UnskippableRequest):
     def get_image_array(self):
         try:
             return get_numpy_from_data(self.data)
-        except (IOError, TypeError):
+        except (IOError, TypeError), e:
+            print "error converting image: %s" % e
             # some TileServeres return HTML data instead of an image on an error
             # (usually see this when outside the bounding box)
-            return get_numpy_from_data(loading_png)
+            return get_numpy_from_data(error_png)
 
 
 if __name__ == "__main__":
