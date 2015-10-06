@@ -1103,13 +1103,13 @@ class MapOverlayField(InfoField):
     
     def fill_data(self, layer):
         downloader = layer.get_downloader(layer.map_server_id)
-        wms = downloader.wms
-        titles = [str(n[1]) for n in wms.get_layer_info()]
+        server = downloader.get_server()
+        titles = [str(n[1]) for n in server.get_layer_info()]
         self.ctrl.SetItems(titles)
-        self.set_selected(layer, wms)
+        self.set_selected(layer, server)
     
-    def set_selected(self, layer, wms):
-        names = [n[0] for n in wms.get_layer_info()]
+    def set_selected(self, layer, server):
+        names = [n[0] for n in server.get_layer_info()]
         selected = []
         if layer.map_layers is not None:
             for i, name in enumerate(names):
@@ -1133,14 +1133,14 @@ class MapOverlayField(InfoField):
         if (layer is None):
             return
         item = event.GetSelection()
-        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
-        wms = downloader.wms
-        name = wms.get_layer_info()[item][0]
+        downloader = layer.get_downloader(layer.map_server_id)
+        server = downloader.get_server()
+        name = server.get_layer_info()[item][0]
         if name in layer.map_layers:
             layer.map_layers.remove(name)
         else:
             layer.map_layers.add(name)
-        self.set_selected(layer, wms)
+        self.set_selected(layer, server)
         layer.wms_rebuild(self.panel.project.layer_canvas)
     
     def on_popup(self, event):
@@ -1153,14 +1153,14 @@ class MapOverlayField(InfoField):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
-        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
-        wms = downloader.wms
+        downloader = layer.get_downloader(layer.map_server_id)
+        server = downloader.get_server()
         if event.GetId() == self.select_id:
-            names = [n[0] for n in wms.get_layer_info()]
+            names = [n[0] for n in server.get_layer_info()]
             layer.map_layers = set(names)
         else:
             layer.map_layers = set()
-        self.set_selected(layer, wms)
+        self.set_selected(layer, server)
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
 
@@ -1187,13 +1187,13 @@ class ServerStatusField(ExpandableErrorField):
     same_line = False
     
     def get_error_text(self, layer):
-        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
-        wms = downloader.wms
+        downloader = layer.get_downloader(layer.map_server_id)
+        server = downloader.get_server()
         color = None
-        if wms.has_error():
-            text = wms.error
+        if server.has_error():
+            text = server.error
             color = "#FF8080"
-        elif wms.is_valid():
+        elif server.is_valid():
             text = "OK"
         else:
             text = "Initializing"
@@ -1204,9 +1204,9 @@ class ServerReloadField(InfoField):
     display_label = False
     
     def fill_data(self, layer):
-        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
-        wms = downloader.wms
-        if wms.has_error():
+        downloader = layer.get_downloader(layer.map_server_id)
+        server = downloader.get_server()
+        if server.has_error():
             self.ctrl.Show(True)
         else:
             self.ctrl.Show(False)

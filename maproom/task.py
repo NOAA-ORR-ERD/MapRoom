@@ -254,6 +254,14 @@ class NewWMSLayerAction(EditorAction):
         cmd = AddLayerCommand("wms")
         self.active_editor.process_command(cmd)
 
+class NewTileLayerAction(EditorAction):
+    name = 'New Tile Layer'
+    tooltip = 'Create new tile background service layer'
+
+    def perform(self, event):
+        cmd = AddLayerCommand("tile")
+        self.active_editor.process_command(cmd)
+
 class DeleteLayerAction(EditorAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
@@ -834,6 +842,7 @@ class MaproomProjectTask(FrameworkTask):
                         NewVectorLayerAction(),
                         NewAnnotationLayerAction(),
                         NewWMSLayerAction(),
+                        NewTileLayerAction(),
                         NewLonLatLayerAction(),
                         ]
                 elif group_name == "SaveGroup":

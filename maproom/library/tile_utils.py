@@ -348,6 +348,9 @@ class BackgroundTileDownloader(BackgroundHttpMultiDownloader):
         self.tile_server = self.tile_host.get_tile_init_request(self.cache_root)
         self.send_request(self.tile_server)
     
+    def get_server(self):
+        return self.tile_server
+    
     def is_valid(self):
         return self.tile_server.is_valid()
     

@@ -4,7 +4,7 @@ from peppy2.framework.errors import ProgressCancelError
 from peppy2.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, EmptyLayer
+from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -108,6 +108,8 @@ class AddLayerCommand(Command):
             layer = AnnotationLayer(manager=lm)
         elif self.type == "wms":
             layer = WMSLayer(manager=lm)
+        elif self.type == "tile":
+            layer = TileLayer(manager=lm)
         else:
             layer = LineLayer(manager=lm)
         

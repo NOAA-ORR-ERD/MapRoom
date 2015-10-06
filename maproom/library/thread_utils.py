@@ -75,6 +75,9 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
         self.wms = WMSInitRequest(self.wmshost)
         self.send_request(self.wms)
     
+    def get_server(self):
+        return self.wms
+    
     def is_valid(self):
         return self.wms.is_valid()
     
