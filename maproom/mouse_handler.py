@@ -729,12 +729,14 @@ class ZoomRectMode(RectSelectMode):
 
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
+        e = c.project
         d_x = x2 - x1
         d_y = y2 - y1
         if (d_x >= 5 and d_y >= 5):
             w_r =  c.get_world_rect_from_screen_rect(((x1, y1), (x2, y2)))
-            c.zoom_to_world_rect(w_r)
-            c.render()
+            center, units_per_pixel = c.calc_zoom_to_world_rect(w_r, False)
+            cmd = ViewportCommand(None, center, units_per_pixel)
+            e.process_command(cmd)
 
 class CropRectMode(RectSelectMode):
     icon = "crop.png"
