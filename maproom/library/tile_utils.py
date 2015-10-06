@@ -69,8 +69,9 @@ class TileServerInitRequest(UnskippableRequest):
                 # at some later time.
                 os.utime(path, None)
                 print "Found %s" % path
-            except:
+            except Exception, e:
                 print "Failed reading %s" % path
+                print "  exception:", e
         return data
     
     def save_cache(self, data, zoom, x, y):
@@ -93,6 +94,7 @@ class URLTileServerInitRequest(TileServerInitRequest):
             data = self.try_cache(zoom, x, y)
             if data is None:
                 url = self.tile_host.get_tile_url(zoom, x, y)
+                print "requesting tile from %s" % url
                 request = urllib2.Request(url)
                 response = urllib2.urlopen(request)
                 data = response.read()
