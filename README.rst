@@ -110,7 +110,13 @@ command to clone my repository::
 
     git clone https://github.com/robmcmullen/OWSLib.git owslib130
 
+Tiles
+-----
 
+On Mac::
+
+    brew install libjpeg
+    pip install pillow
 
 
 
