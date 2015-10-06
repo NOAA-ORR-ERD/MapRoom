@@ -455,6 +455,17 @@ class CircleVectorObject(EllipseVectorObject):
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
     
+    def move_bounding_box_point(self, drag, anchor, dx, dy):
+        m = abs(dx)
+        dx = math.copysign(m, dx)
+        dy = math.copysign(m, dy)
+        EllipseVectorObject.move_bounding_box_point(self, drag, anchor, dx, dy)
+    
+#    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
+#        offset = self.center_point_index + 1
+#        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+#        points = ((p.xy[:offset] - old_origin) / scale) + new_origin
+#        p.xy[:offset] = points
 
 class ScaledImageObject(RectangleVectorObject):
     """Texture mapped image object that scales to the lat/lon view
