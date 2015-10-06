@@ -984,7 +984,8 @@ class MaproomProjectTask(FrameworkTask):
         if tilehost is None:
             tilehost = BackgroundTileDownloader.get_known_tile_server()[0]
         if tilehost not in self.downloaders:
-            ts = BackgroundTileDownloader(tilehost)
+            cache_dir = os.path.join(self.window.application.cache_dir, "tiles")
+            ts = BackgroundTileDownloader(tilehost, cache_dir)
             self.downloaders[tilehost] = ts
         return self.downloaders[tilehost]
 

@@ -1,6 +1,7 @@
 """Thread utilities
 
 """
+import os
 import math
 
 import urllib2 as urllib2
@@ -26,8 +27,9 @@ error_png = '\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x01\x00\x00\x00\x01\x00
 
 
 class TileServerInitRequest(UnskippableRequest):
-    def __init__(self, tile_host):
+    def __init__(self, tile_host, cache_root):
         self.tile_host = tile_host
+        self.cache_root = cache_root
         UnskippableRequest.__init__(self)
         self.current_layer = None
         self.layer_keys = []
@@ -53,15 +55,48 @@ class TileServerInitRequest(UnskippableRequest):
         log.debug("TileServerInitRequest.get_image(%s,%s,%s)" % (zoom, x, y))
         data = loading_png
         return data
+    
+    def try_cache(self, zoom, x, y):
+        print self.cache_root
+        data = None
+        if self.cache_root is not None:
+            filename = self.tile_host.get_tile_cache_file(zoom, x, y)
+            path = os.path.join(self.cache_root, filename)
+            try:
+                with open(path, "rb") as fh:
+                    data = fh.read()
+                # update last modified time so we can implement cache pruning
+                # at some later time.
+                os.utime(path, None)
+                print "Found %s" % path
+            except:
+                print "Failed reading %s" % path
+        return data
+    
+    def save_cache(self, data, zoom, x, y):
+        if self.cache_root is not None:
+            filename = self.tile_host.get_tile_cache_file(zoom, x, y)
+            path = os.path.join(self.cache_root, filename)
+            try:
+                dirname = os.path.dirname(path)
+                if not os.path.exists(dirname):
+                    os.makedirs(dirname)
+                with open(path, "wb") as fh:
+                    fh.write(data)
+            except:
+                print "Failed caching %s" % path
 
 
 class URLTileServerInitRequest(TileServerInitRequest):
     def get_image(self, zoom, x, y):
         if self.is_valid():
-            url = self.tile_host.get_tile_url(zoom, x, y)
-            request = urllib2.Request(url)
-            response = urllib2.urlopen(request)
-            data = response.read()
+            data = self.try_cache(zoom, x, y)
+            if data is None:
+                url = self.tile_host.get_tile_url(zoom, x, y)
+                request = urllib2.Request(url)
+                response = urllib2.urlopen(request)
+                data = response.read()
+                self.save_cache(data, zoom, x, y)
         else:
             data = error_png
         return data
@@ -237,7 +272,7 @@ class TileHost(object):
         lat2 = math.atan(math.sinh(math.pi * (1.0 - (2.0 * y / n)))) * self.rad2deg
         return ((lon1, lat1), (lon2, lat2))
     
-    def get_tile_init_request(self):
+    def get_tile_init_request(self, cache_root):
         raise NotImplementedError
     
     def get_tile_url(self, zoom, x, y):
@@ -247,6 +282,14 @@ class TileHost(object):
         self.url_index = (self.url_index + 1) % self.num_urls
         url = self.urls[self.url_index]
         return "%s/%s/%s/%s.png" % (url, zoom, x, y)
+    
+    def get_tile_cache_file(self, zoom, x, y):
+        # >>> ".".join("http://a.tile.openstreetmap.org/".split("//")[1].split("/")[0].rsplit(".", 2)[-2:])
+        # 'openstreetmap.org'
+        domain = ".".join(self.urls[0].split("//")[1].split("/")[0].rsplit(".", 2)[-2:])
+        name = domain + "--" + "".join(x for x in self.name if x.isalnum())
+        path = "%s/%s/%s/%s.png" % (name, zoom, x, y)
+        return path
 
 
 class LocalTileHost(TileHost):
@@ -256,25 +299,31 @@ class LocalTileHost(TileHost):
     def __hash__(self):
         return hash(self.name)
 
-    def get_tile_init_request(self):
-        return TileServerInitRequest(self)
+    def get_tile_init_request(self, cache_root):
+        return TileServerInitRequest(self, cache_root)
 
 
 class OpenTileHost(TileHost):
-    def get_tile_init_request(self):
-        return URLTileServerInitRequest(self)
+    def get_tile_init_request(self, cache_root):
+        return URLTileServerInitRequest(self, cache_root)
 
 
 class WMTSTileHost(TileHost):
-    def get_tile_init_request(self):
-        return WMTSTileServerInitRequest(self)
+    def get_tile_init_request(self, cache_root):
+        return WMTSTileServerInitRequest(self, cache_root)
 
 
 class BackgroundTileDownloader(BackgroundHttpMultiDownloader):
     cached_known_tile_server = None
     
-    def __init__(self, tile_host):
+    def __init__(self, tile_host, cache_root):
         self.tile_host = tile_host
+        if not os.path.exists(cache_root):
+            try:
+                os.makedirs(cache_root)
+            except os.error:
+                cache_root = None
+        self.cache_root = cache_root
         BackgroundHttpMultiDownloader.__init__(self)
 
     @classmethod
@@ -296,7 +345,7 @@ class BackgroundTileDownloader(BackgroundHttpMultiDownloader):
         return None
 
     def get_server_config(self):
-        self.tile_server = self.tile_host.get_tile_init_request()
+        self.tile_server = self.tile_host.get_tile_init_request(self.cache_root)
         self.send_request(self.tile_server)
     
     def is_valid(self):
