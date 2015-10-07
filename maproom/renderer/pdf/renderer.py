@@ -28,7 +28,7 @@ class PDFImage(object):
 
     def load(self, image_data):
         n = 0
-        for image in image_data.image_list:
+        for image in image_data:
             try:
                 if image.z != image_data.zoom_level:
                     # Skip tiles on background zoom levels
@@ -41,8 +41,8 @@ class PDFImage(object):
     
     def set_projection(self, image_data, projection):
         self.xywh = []
-        for image in image_data.image_list:
-            lb, lt, rt, rb = image.world_rect
+        for image in image_data:
+            lb, rt = image.world_rect
             print "  world:", lb, rt
             x1, y1 = projection(lb[0], lb[1])
             x2, y2 = projection(rt[0], rt[1])
@@ -51,7 +51,7 @@ class PDFImage(object):
     
     def use_screen_rect(self, image_data, r):
         self.xywh = []
-        for image in image_data.image_list:
+        for image in image_data:
             print "  use_screen_rect:", image.origin, image.size
             x = image.origin[0] + r[0][0]
             y = image.origin[1] + r[0][1]
