@@ -84,7 +84,7 @@ class PDFCanvas(BaseCanvas):
         else:
             scale = drawing_area[0] / h
         self.viewport_scale = scale
-        print "viewport:", x1, y1, w, h, ar, pagesize, drawing_area, scale
+        log.debug("viewport: %s" % str([x1, y1, w, h, ar, pagesize, drawing_area, scale]))
         self.pdf.scale(scale, scale)
         self.pdf.translate(-x1, -y1)
         p = self.pdf.beginPath()
@@ -98,11 +98,11 @@ class PDFCanvas(BaseCanvas):
         return rect.intersects(r, self.current_viewport)
     
     def set_screen_viewport(self):
-        print "screen rect!", self.screen_rect
+        log.debug("screen rect: %s" % str(self.screen_rect))
         self.set_viewport_rect(self.screen_rect)
     
     def set_projected_viewport(self):
-        print "proj rect!", self.projected_rect
+        log.debug("proj rect: %s" % str(self.projected_rect))
         self.set_viewport_rect(self.projected_rect)
     
     def debug_boundingbox(self):
@@ -110,7 +110,7 @@ class PDFCanvas(BaseCanvas):
         self.pdf.rect(0, 0, w, h, stroke=1, fill=0)
         self.pdf.drawString(0, 0, "Hello MapRoom!!!!")
         
-        print self.layer_renderers
+        log.debug(str(self.layer_renderers))
     
     def prepare_screen_viewport(self):
         pagesize = self.get_page_size()

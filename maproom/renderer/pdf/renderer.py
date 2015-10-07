@@ -13,6 +13,9 @@ import maproom.library.rect as rect
 from .. import data_types, int_to_color_floats, color_floats_to_int
 from .. import BaseRenderer
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class PDFImage(object):
     static_renderer = True
@@ -32,32 +35,29 @@ class PDFImage(object):
             try:
                 if image.z != image_data.zoom_level:
                     # Skip tiles on background zoom levels
+                    log.debug("skipping image with z=%d when image data has z=%d" % (image.z, image_data.zoom_level))
                     continue
             except AttributeError:
                 pass
             converted = Image.fromarray(image.data, mode='RGBA')
-            print "PIL image:", converted
+            log.debug("PIL image: %s" % converted)
             self.images.append(converted)
     
     def set_projection(self, image_data, projection):
         self.xywh = []
         for image in image_data:
             lb, rt = image.world_rect
-            print "  world:", lb, rt
             x1, y1 = projection(lb[0], lb[1])
             x2, y2 = projection(rt[0], rt[1])
-            print "  projected:", x1, y1, x2, y2
             self.xywh.append((x1, y1, x2 - x1, y2 - y1))
     
     def use_screen_rect(self, image_data, r):
         self.xywh = []
         for image in image_data:
-            print "  use_screen_rect:", image.origin, image.size
             x = image.origin[0] + r[0][0]
             y = image.origin[1] + r[0][1]
             w = image.size[0]
             h = image.size[1]
-            print "  after selected:", x, y, w, h
             self.xywh.append((x, y, w, h))
     
     def center_at_screen_point(self, image_data, point, screen_height):
@@ -123,7 +123,7 @@ class ReportLabRenderer(BaseRenderer):
         c = self.canvas
         points = self.line_xys.reshape(-1, 4)
         for (x1, y1, x2, y2), (rgb, alpha) in zip(points, self.line_colors):
-            print "%f,%f -> %f,%f" % (x1, y1, x2, y2)
+            log.debug("draw_lines: %f,%f -> %f,%f" % (x1, y1, x2, y2))
             c.pdf.setStrokeColor(rgb, alpha)
             c.pdf.line(x1, y1, x2, y2)
 
@@ -139,7 +139,7 @@ class ReportLabRenderer(BaseRenderer):
         c = self.canvas
         r = point_size * self.canvas.projected_units_per_pixel / 2
         for (x, y), (rgb, alpha) in zip(self.point_xys, self.point_colors):
-            print "point %f,%f, r=%f" % (x, y, r)
+            log.debug("point %f,%f, r=%f" % (x, y, r))
             c.pdf.setFillColor(rgb, alpha)
             c.pdf.circle(x, y, r, fill=1, stroke=0)
 
@@ -159,7 +159,7 @@ class ReportLabRenderer(BaseRenderer):
             x -= w / 2
             y -= h
             c.pdf.drawString(x, y, s)
-            print "label %f,%f: %s" % (x, y, s)
+            log.debug("label %f,%f: %s" % (x, y, s))
 
     def set_triangles(self, triangle_point_indexes, triangle_point_colors):
         pass
@@ -178,7 +178,6 @@ class ReportLabRenderer(BaseRenderer):
     
     def set_image_center_at_screen_point(self, image_data, center, screen_rect):
         height = rect.height(screen_rect)
-        print "screen height", height
         self.images.center_at_screen_point(image_data, center, height)
     
     def release_textures(self):
@@ -188,10 +187,10 @@ class ReportLabRenderer(BaseRenderer):
         d = self.canvas.pdf
         for image, x, y, w, h in self.images.foreach():
             if self.canvas.is_onscreen(x, y, w, h):
-                print "draw_image: %s @ %f,%f" % (image, x, y)
+                log.debug("draw_image: %s @ %f,%f" % (image, x, y))
                 d.drawImage(ImageReader(image), x, y, w, h, mask="auto")
             else:
-                print "  skipping draw_image (fully clipped): %s @ %f,%f" % (image, x, y)
+                log.debug("  skipping draw_image (fully clipped): %s @ %f,%f" % (image, x, y))
 
     def set_tiles(self, image_data):
         if self.images is None:
@@ -236,7 +235,7 @@ class ReportLabRenderer(BaseRenderer):
             d.drawPath(p, fill=1, stroke=1)
 
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
-        print "line", point_a[0], point_a[1], point_b[0], point_b[1]
+        log.debug("screen_line %f,%f -> %f,%f" % (point_a[0], point_a[1], point_b[0], point_b[1]))
         c = self.canvas
         h = rect.height(c.screen_rect)
         self.set_stroke((red, green, blue), alpha, width)
@@ -285,7 +284,7 @@ class ReportLabRenderer(BaseRenderer):
             x, y = points[0]
             p.moveTo(x, h - y)
             for x, y in points[1:]:
-                print "%f -> %f" % (x, y)
+                log.debug("%f -> %f" % (x, y))
                 p.lineTo(x, h -y)
             p.close()
             c.pdf.drawPath(p, fill=filled, stroke=1)
@@ -302,7 +301,7 @@ class ReportLabRenderer(BaseRenderer):
     def draw_screen_string(self, point, text):
         c = self.canvas
         h = rect.height(c.screen_rect) - c.font_scale
-        print "text %f,%f -> '%s'" % (point[0], h - point[1], text.encode("utf-8"))
+        log.debug("text %f,%f -> '%s'" % (point[0], h - point[1], text.encode("utf-8")))
         c.pdf.setFillColor((0.0, 0.0, 0.0), 1.0)
         c.pdf.drawString(point[0], h - point[1], text)
         if self.debug_text_bounding_box:
@@ -340,7 +339,7 @@ class ReportLabRenderer(BaseRenderer):
             x, y = self.line_xys[0]
             p.moveTo(x, y)
             for x, y in self.line_xys[1:]:
-                print "%f -> %f" % (x, y)
+                log.debug("fill_object: %f -> %f" % (x, y))
                 p.lineTo(x, y)
             d.drawPath(p, fill=1, stroke=0)
 
@@ -351,6 +350,6 @@ class ReportLabRenderer(BaseRenderer):
             x, y = self.line_xys[0]
             p.moveTo(x, y)
             for x, y in self.line_xys[1:]:
-                print "%f -> %f" % (x, y)
+                log.debug("outline_object: %f -> %f" % (x, y))
                 p.lineTo(x, y)
             d.drawPath(p, fill=0, stroke=1)
