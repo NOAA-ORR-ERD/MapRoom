@@ -225,7 +225,7 @@ class TileImage(Image):
 
 
 class TileImageData(ImageData):
-    def __init__(self, projection, downloader, renderer, texture_size=256):
+    def __init__(self, projection, downloader, texture_size=256):
         ImageData.__init__(self, 0, 0, texture_size)
         self.zoom_level = -1
         self.last_zoom_level = -1
@@ -233,7 +233,6 @@ class TileImageData(ImageData):
         self.downloader = downloader
         self.last_requested = None
         self.requested = dict()  # (x, y): Image
-        renderer.set_tiles(self)
     
     def calc_textures(self, texture_size):
         pass
@@ -310,6 +309,10 @@ class TileImageData(ImageData):
                 self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_rect)
     
     def add_tiles(self, queue, image_textures):
+        if image_textures.static_renderer:
+            # short circuit to skip for PDF renderer or other renderers that
+            # don't dynamically update the screen
+            return
         try:
             while True:
                 tile_request = queue.get_nowait()
@@ -499,6 +502,8 @@ class TileTextures(object):
     """Class to allow sharing of textures between views
     
     """
+    static_renderer = False
+
     def __init__(self, image_data):
         self.blank = np.array([128, 128, 128, 128], 'B')
         self.tiles = []

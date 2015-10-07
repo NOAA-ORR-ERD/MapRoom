@@ -15,6 +15,8 @@ from .. import BaseRenderer
 
 
 class PDFImage(object):
+    static_renderer = True
+    
     def __init__(self, image_data):
         self.images = []
         self.xywh = []
@@ -27,6 +29,12 @@ class PDFImage(object):
     def load(self, image_data):
         n = 0
         for image in image_data.image_list:
+            try:
+                if image.z != image_data.zoom_level:
+                    # Skip tiles on background zoom levels
+                    continue
+            except AttributeError:
+                pass
             converted = Image.fromarray(image.data, mode='RGBA')
             print "PIL image:", converted
             self.images.append(converted)
@@ -61,6 +69,11 @@ class PDFImage(object):
         r = ((left, screen_height - bottom),
              (right, screen_height - top))
         self.use_screen_rect(image_data, r)
+
+    def reorder_tiles(self, image_data):
+        # not needed for PDF rendering; background zoom levels are thrown out
+        # in load()
+        pass
 
 
 class ReportLabRenderer(BaseRenderer):
@@ -179,6 +192,18 @@ class ReportLabRenderer(BaseRenderer):
                 d.drawImage(ImageReader(image), x, y, w, h, mask="auto")
             else:
                 print "  skipping draw_image (fully clipped): %s @ %f,%f" % (image, x, y)
+
+    def set_tiles(self, image_data):
+        if self.images is None:
+            self.images = PDFImage(image_data)
+            self.images.set_projection(image_data, image_data.projection)
+        self.image_tiles = self.images
+        self.canvas.zoom_level = image_data.zoom_level
+    
+    def release_tiles(self):
+        pass
+
+    draw_tiles = draw_image
 
     def set_invalid_polygons(self, polygons, polygon_count):
         pass

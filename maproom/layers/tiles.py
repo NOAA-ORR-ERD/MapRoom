@@ -67,6 +67,7 @@ class TileLayer(ProjectedLayer):
             downloader = self.get_downloader(self.map_server_id)
             self.image_data = TileImageData(projection, downloader, renderer)
         if self.image_data is not None:
+            renderer.set_tiles(self.image_data)
             self.image_data.add_tiles(self.threaded_request_results, renderer.image_tiles)
             renderer.image_tiles.reorder_tiles(self.image_data)
             self.change_count += 1  # Force info panel update
@@ -74,7 +75,7 @@ class TileLayer(ProjectedLayer):
 
     def resize(self, renderer, world_rect, proj_rect, screen_rect):
         zoom_level = renderer.canvas.zoom_level
-        print "RESIZE: zoom=", zoom_level
+        print "RESIZE: zoom=", zoom_level, "image data zoom=", self.image_data.zoom_level
         self.current_proj = ((proj_rect[0][0], proj_rect[0][1]), (proj_rect[1][0], proj_rect[1][1]))
         self.current_world = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
         if zoom_level < 0:
