@@ -102,18 +102,18 @@ pyproj_data = glob(
 full_version = Version.VERSION
 spaceless_version = Version.VERSION.replace(" ", "_")
 
-import peppy2
+import omnimon
 import maproom
 
 data_files = []
-data_files.extend(peppy2.get_py2exe_data_files())
-data_files.extend(peppy2.get_py2exe_data_files(maproom))
+data_files.extend(omnimon.get_py2exe_data_files())
+data_files.extend(omnimon.get_py2exe_data_files(maproom))
 
 import traitsui
-data_files.extend(peppy2.get_py2exe_data_files(traitsui, excludes=["*/qt4/*"]))
+data_files.extend(omnimon.get_py2exe_data_files(traitsui, excludes=["*/qt4/*"]))
 
 import pyface
-data_files.extend(peppy2.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
+data_files.extend(omnimon.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
 
 if sys.platform.startswith('win'):
     # with py2app, we just include the entire package and these files are
@@ -174,8 +174,8 @@ common_includes = [
     "netCDF4_utils",
     "netcdftime",
 ]
-common_includes.extend(peppy2.get_py2exe_toolkit_includes())
-common_includes.extend(peppy2.get_py2exe_toolkit_includes(maproom))
+common_includes.extend(omnimon.get_py2exe_toolkit_includes())
+common_includes.extend(omnimon.get_py2exe_toolkit_includes(maproom))
 print common_includes
 
 py2app_includes = [
@@ -224,7 +224,7 @@ try:
         entry_points = """
 
         [envisage.plugins]
-        peppy2.tasks = maproom.plugin:MaproomPlugin
+        omnimon.tasks = maproom.plugin:MaproomPlugin
 
         """,
         windows=[dict(

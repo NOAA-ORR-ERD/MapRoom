@@ -1,6 +1,6 @@
 import os
 
-from peppy2.utils.runtime import get_all_subclasses
+from omnimon.utils.runtime import get_all_subclasses
 
 
 class UndoStack(list):

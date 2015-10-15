@@ -1,6 +1,6 @@
 from traits.api import HasTraits, provides
 
-from peppy2.file_type.i_file_recognizer import IFileRecognizer
+from omnimon.file_type.i_file_recognizer import IFileRecognizer
 
 ## replaced with the UGRID_Recognizer
 # @provides(IFileRecognizer)

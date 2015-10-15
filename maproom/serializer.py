@@ -2,8 +2,8 @@ import os
 import re
 import shlex
 
-from peppy2.utils.runtime import get_all_subclasses
-from peppy2.utils.file_guess import FileMetadata
+from omnimon.utils.runtime import get_all_subclasses
+from omnimon.utils.file_guess import FileMetadata
 
 import command
 from layers.style import LayerStyle

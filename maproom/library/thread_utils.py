@@ -6,7 +6,7 @@ from requests.exceptions import HTTPError
 from owslib.wms import WebMapService
 from owslib.util import ServiceException
 
-from peppy2.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
+from omnimon.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
 
 from numpy_images import get_numpy_from_data
 

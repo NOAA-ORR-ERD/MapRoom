@@ -7,7 +7,7 @@ from PIL import Image
 
 from reportlab.lib.utils import ImageReader
 
-from peppy2 import get_image_path
+from omnimon import get_image_path
 
 import maproom.library.rect as rect
 from .. import data_types, int_to_color_floats, color_floats_to_int

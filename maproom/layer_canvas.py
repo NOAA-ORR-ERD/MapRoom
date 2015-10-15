@@ -4,7 +4,7 @@ import time
 import wx
 import pyproj
 
-from peppy2 import get_image_path
+from omnimon import get_image_path
 
 import library.coordinates as coordinates
 import renderer

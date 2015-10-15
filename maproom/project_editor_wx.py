@@ -10,8 +10,8 @@ import wx
 from pyface.api import YES, NO
 from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float, Event
 
-from peppy2.framework.editor import FrameworkEditor
-from peppy2.framework.errors import ProgressCancelError
+from omnimon.framework.editor import FrameworkEditor
+from omnimon.framework.errors import ProgressCancelError
 
 # Local imports.
 from i_project_editor import IProjectEditor

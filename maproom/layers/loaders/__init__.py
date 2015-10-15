@@ -12,7 +12,7 @@
 #    cog.py -r __init__.py
 #
 # Note that the cog script works when called from the top directory (.i.e.  at
-# the same level as the peppy2 directory) or this directory.
+# the same level as the omnimon directory) or this directory.
 
 # [[[cog
 #import os
@@ -26,7 +26,7 @@
 #cog.msg("working dir : %s" % cwd)
 #path = os.path.dirname(os.path.join(cwd, cog.inFile))
 #cog.msg("scanning dir: %s" % path)
-#top = os.path.abspath(os.path.join(path, "../../..")) # so absolute imports of peppy2 will work
+#top = os.path.abspath(os.path.join(path, "../../..")) # so absolute imports of omnimon will work
 #sys.path.append(top)
 #cog.msg("top dir     : %s" % top)
 #import glob
@@ -74,7 +74,7 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 def load_layers_from_url(url, mime, manager=None):
-    from peppy2.utils.file_guess import FileGuess
+    from omnimon.utils.file_guess import FileGuess
     
     guess = FileGuess(url)
     guess.metadata.mime = mime

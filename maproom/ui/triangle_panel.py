@@ -5,7 +5,7 @@ import sys
 import traceback
 import wx
 
-from peppy2.framework.errors import ProgressCancelError
+from omnimon.framework.errors import ProgressCancelError
 
 from ..menu_commands import TriangulateLayerCommand
 

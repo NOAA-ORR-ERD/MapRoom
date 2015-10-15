@@ -28,7 +28,7 @@ subpkgs = [
     "traits",
     "traitsui",
     "pyface",
-    "peppy2",
+    "omnimon",
     "maproom",
 ]
 
@@ -40,7 +40,7 @@ for s in subpkgs:
 subpkgs = [
     "traitsui",
     "pyface",
-    "peppy2",
+    "omnimon",
     "maproom",
 ]
 datas = []

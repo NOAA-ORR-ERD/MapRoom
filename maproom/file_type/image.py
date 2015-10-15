@@ -3,7 +3,7 @@ gdal.UseExceptions()
 
 from traits.api import HasTraits, provides
 
-from peppy2.file_type.i_file_recognizer import IFileRecognizer
+from omnimon.file_type.i_file_recognizer import IFileRecognizer
 
 import logging
 log = logging.getLogger(__name__)

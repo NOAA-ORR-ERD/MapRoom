@@ -14,7 +14,7 @@ from mock import *
 
 from maproom.file_type import binary, text, image
 
-from peppy2.utils.file_guess import FileGuess
+from omnimon.utils.file_guess import FileGuess
 
 this_dir = os.path.split(os.path.abspath(__file__))[0]
 test_data_dir = os.path.normpath(os.path.join(this_dir,"../TestData/")) 

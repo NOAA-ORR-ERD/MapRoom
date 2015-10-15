@@ -20,8 +20,8 @@ os.environ["ETS_DEBUG"] = "True"
 os.environ["ETS_AUI_TOOLBAR"] = "True"
 
 # Framework imports.
-from peppy2 import get_image_path
-from peppy2.framework.application import run
+from omnimon import get_image_path
+from omnimon.framework.application import run
 
 # Local imports.
 from maproom.pane_layout import task_id_with_pane_layout

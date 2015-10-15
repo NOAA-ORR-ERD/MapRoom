@@ -1,7 +1,7 @@
 import numpy as np
 
-from peppy2.framework.errors import ProgressCancelError
-from peppy2.utils.file_guess import FileMetadata
+from omnimon.framework.errors import ProgressCancelError
+from omnimon.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
 from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer

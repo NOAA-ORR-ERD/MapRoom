@@ -5,7 +5,7 @@ import numpy as np
 # Enthought library imports.
 from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
 
-from peppy2.utils.runtime import get_all_subclasses
+from omnimon.utils.runtime import get_all_subclasses
 
 # MapRoom imports
 from ..library import rect

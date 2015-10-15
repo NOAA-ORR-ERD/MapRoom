@@ -15,7 +15,7 @@ deps = [
     ['https://github.com/robmcmullen/traitsui.git',],
     ['https://github.com/enthought/apptools.git',],
     ['https://github.com/robmcmullen/envisage.git',],
-    ['https://github.com/robmcmullen/peppy2.git',],
+    ['https://github.com/robmcmullen/omnimon.git',],
     ['https://github.com/robmcmullen/OWSLib.git',],
 ]
 

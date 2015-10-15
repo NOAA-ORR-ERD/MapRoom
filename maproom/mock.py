@@ -1,6 +1,6 @@
 import os
 
-from peppy2.utils.file_guess import FileGuess
+from omnimon.utils.file_guess import FileGuess
 
 from layer_manager import LayerManager
 from layers import loaders, TriangleLayer, Layer

@@ -7,7 +7,7 @@ import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
-from peppy2 import get_image_path
+from omnimon import get_image_path
 
 import maproom.library.rect as rect
 import Picker

@@ -2,7 +2,7 @@ import wx
 
 import numpy as np
 
-from peppy2 import get_image_path
+from omnimon import get_image_path
 
 from font_extents import FONT_EXTENTS
 
