@@ -1,6 +1,7 @@
 import wx
 import wx.lib.sized_controls as sc
 import wx.lib.buttons as buttons
+from wx.lib.expando import ExpandoTextCtrl, EVT_ETC_LAYOUT_NEEDED
 
 from ..library import coordinates
 from ..library.textparse import parse_int_string
@@ -209,3 +210,54 @@ class StyleDialog(wx.Dialog):
 
     def get_style(self):
         return self.layer.style
+
+
+class AddWMSDialog(wx.Dialog):
+    border = 5
+    
+    def __init__(self, parent):
+        wx.Dialog.__init__(self, parent, -1, "Add New WMS Server", size=(500, -1))
+
+        text = wx.StaticText(self, -1, "Enter server URL:")
+
+        self.url = wx.TextCtrl(self, -1, "")
+        self.status = ExpandoTextCtrl(self, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
+        attr = self.GetDefaultAttributes()
+        self.status.SetBackgroundColour(attr.colBg)
+
+        btnsizer = wx.StdDialogButtonSizer()
+        btn = wx.Button(self, wx.ID_OK)
+        btn.SetDefault()
+        btnsizer.AddButton(btn)
+        btn = wx.Button(self, wx.ID_CANCEL)
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+
+        self.Bind(wx.EVT_BUTTON, self.on_button)
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(EVT_ETC_LAYOUT_NEEDED, self.on_resize)
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(text, 0, wx.EXPAND, self.border)
+        sizer.Add(self.url, 0, wx.EXPAND, self.border)
+        sizer.Add(self.status, 1, wx.EXPAND, self.border)
+        sizer.Add(btnsizer, 0, wx.EXPAND, self.border)
+        self.SetSizer(sizer)
+        self.Fit()
+
+    def on_button(self, event):
+        if event.GetId() == wx.ID_OK:
+            print "OK!!!"
+            self.status.AppendText("Ok\n")
+        else:
+            print "Cancel!!!"
+            self.EndModal(wx.ID_CANCEL)
+            event.Skip()
+
+    def on_resize(self, event):
+        print "resized"
+        self.Fit()
+
+    def OnClose(self, event):
+        self.EndModal(wx.ID_CANCEL)
+

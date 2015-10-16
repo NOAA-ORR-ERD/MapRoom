@@ -23,7 +23,7 @@ class WMSLayer(ProjectedLayer):
     
     layer_info_panel = ["Transparency", "Server status", "Server reload", "Map status"]
     
-    selection_info_panel = ["Map server", "Map layer"]
+    selection_info_panel = ["Map server", "Map layer", "New WMS server"]
     
     map_server_id = Int(0)
     

@@ -98,5 +98,6 @@ def debug_objects(lm):
     a.style.icon_marker = 186
     lm.insert_layer([3, 999], a)
     
-    a = layers.TileLayer(manager=lm)
+#    a = layers.TileLayer(manager=lm)
+    a = layers.WMSLayer(manager=lm)
     lm.insert_layer([4], a)

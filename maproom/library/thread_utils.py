@@ -33,6 +33,9 @@ class WMSHost(object):
     def __hash__(self):
         return hash(self.url)
     
+    def __str__(self):
+        return " ".join([self.name, self.url, self.version])
+    
     def convert_title(self, title):
         if self.strip_prefix:
             if title.startswith(self.strip_prefix):
@@ -70,6 +73,15 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
             if h.name == name:
                 return h
         return None
+    
+    @classmethod
+    def add_wms(cls, name, url, version="1.3.0"):
+        host = WMSHost(name, url, version)
+        cls.cached_known_wms.append(host)
+    
+    @classmethod
+    def set_known_wms(cls, wmslist):
+        cls.cached_known_wms = wmslist
 
     def get_server_config(self):
         self.wms = WMSInitRequest(self.wmshost)
@@ -94,7 +106,11 @@ class WMSInitRequest(UnskippableURLRequest):
         self.current_layer = None
         self.layer_keys = []
         self.world_bbox_rect = None
-        
+    
+    def get_wms(self):
+        wms = WebMapService(self.url, self.wmshost.version)
+        return wms
+    
     def get_data_from_server(self):
 #        if True:  # To test error handling, uncomment this
 #            import time
@@ -102,7 +118,7 @@ class WMSInitRequest(UnskippableURLRequest):
 #            self.error = "Test error"
 #            return
         try:
-            wms = WebMapService(self.url, self.wmshost.version)
+            wms = self.get_wms()
             self.setup(wms)
         except ServiceException, e:
             self.error = e
@@ -115,6 +131,7 @@ class WMSInitRequest(UnskippableURLRequest):
         except Exception, e:
             print "Server error", self.url
             self.error = e
+            raise
     
     def is_valid(self):
         return self.current_layer is not None
@@ -286,6 +303,30 @@ if __name__ == "__main__":
 # http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?BBOX=-9151321.3960644,4688981.1460582,-9128122.757984,4705204.9053088&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
     # Capabilities: http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
 # crsoptions ['EPSG:102100']
+    
+    url = "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?"
+    url = "http://webservices.nationalatlas.gov/wms/map_reference?"
+    url = "http://geoint.nrlssc.navy.mil/nrltileserver/wms/fast?"
+    
+    for version in ['1.3.0', '1.1.1']:
+        host = WMSHost("test", url, version)
+        print host
+        server = WMSInitRequest(host)
+        try:
+            wms = server.get_wms()
+            server.setup(wms)
+            break
+        except AttributeError, e:
+            print "usually malformed XML: try with different VERSION?"
+        except ServiceException, e:
+            raise
+        except HTTPError, e:
+            print "Error contacting", self.url, e
+            pass
+        
+    if not server.is_valid():
+        print server.error
+    sys.exit()
     
     h = WMSHost.get_wms_by_name("USACE Inland ENC")
 #    h = WMSHost.get_wms_by_name("NOAA RNC")

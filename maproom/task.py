@@ -962,10 +962,43 @@ class MaproomProjectTask(FrameworkTask):
                  mime == "application/x-nc_particles"
                  )
 
+
+    ##### WMS and Tile processing
+
+    # Traits
     downloaders = Dict
+    
+    # class attributes
+    
+    wms_extra_loaded = False
+    
+    tile_extra_loaded = None
+    
+    @classmethod
+    def init_extra_servers(cls, application):
+        if cls.wms_extra_loaded is False:
+            # try once
+            cls.wms_extra_loaded = True
+            try:
+                wms_list = application.get_json_data("wms_list")
+                BackgroundWMSDownloader.set_known_wms(wms_list)
+            except IOError:
+                # file not found
+                pass
+            except ValueError:
+                # bad JSON format
+                log.error("Invalid format of WMS saved data")
+                raise
+    
+    def remember_wms(self):
+        wms_list = BackgroundWMSDownloader.get_known_wms()
+        self.window.application.save_json_data("wms_list", wms_list)
 
     def init_threaded_processing(self):
-        pass
+        self.init_extra_servers(self.window.application)
+#        if "OpenStreetMap Test" not in self.get_known_wms_names():
+#            BackgroundWMSDownloader.add_wms("OpenStreetMap Test", "http://ows.terrestris.de/osm/service?", "1.1.1")
+#            self.remember_wms()
     
     def stop_threaded_processing(self):
         log.debug("Stopping threaded services...")
