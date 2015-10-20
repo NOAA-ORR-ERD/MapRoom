@@ -1181,7 +1181,9 @@ class NewWMSServerField(InfoField):
         d = dialogs.AddWMSDialog(self.panel.project.control)
         new_id = d.ShowModal()
         if new_id != wx.ID_CANCEL:
-            self.panel.project.refresh()
+            new_wms = d.get_host()
+            self.panel.project.task.remember_wms(new_wms)
+            self.panel.project.refresh(True)
 
 
 class ExpandableErrorField(InfoField):

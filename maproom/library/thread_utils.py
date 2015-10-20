@@ -75,8 +75,8 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
         return None
     
     @classmethod
-    def add_wms(cls, name, url, version="1.3.0"):
-        host = WMSHost(name, url, version)
+    def add_wms_host(cls, host):
+        cls.get_known_wms()  # ensure the list has been created
         cls.cached_known_wms.append(host)
     
     @classmethod

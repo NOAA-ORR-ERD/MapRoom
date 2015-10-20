@@ -990,7 +990,9 @@ class MaproomProjectTask(FrameworkTask):
                 log.error("Invalid format of WMS saved data")
                 raise
     
-    def remember_wms(self):
+    def remember_wms(self, host=None):
+        if host is not None:
+            BackgroundWMSDownloader.add_wms_host(host)
         wms_list = BackgroundWMSDownloader.get_known_wms()
         self.window.application.save_json_data("wms_list", wms_list)
 

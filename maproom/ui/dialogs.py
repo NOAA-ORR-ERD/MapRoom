@@ -273,9 +273,9 @@ class AddWMSDialog(wx.Dialog):
         if event.GetId() == self.id_verify:
             self.check_server(self.url.GetValue())
         elif event.GetId() == wx.ID_OK:
-            self.save_server()
+            self.EndModal(wx.ID_OK)
+            event.Skip()
         else:
-            print "Cancel!!!"
             self.EndModal(wx.ID_CANCEL)
             event.Skip()
     
@@ -284,7 +284,6 @@ class AddWMSDialog(wx.Dialog):
         self.status.SetValue("Checking server...\n")
         for version in ['1.3.0', '1.1.1']:
             host = WMSHost("test", url, version)
-            print host
             downloader = BackgroundWMSDownloader(host)
             wms = downloader.wms
             while True:
@@ -311,8 +310,11 @@ class AddWMSDialog(wx.Dialog):
             self.verified_host = None
         self.verify.Enable(True)
     
-    def save_server(self):
-        print self.verified_host
+    def get_host(self):
+        new_name = self.name.GetValue()
+        if new_name:
+            self.verified_host.name = new_name
+        return self.verified_host
 
     def on_resize(self, event):
         print "resized"
