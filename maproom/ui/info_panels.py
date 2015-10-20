@@ -1316,7 +1316,7 @@ class InfoPanel(PANELTYPE):
             if (layer == self.current_layer_displayed):
                 return
         elif self.current_layer_displayed == layer:
-            if self.current_layer_change_count == layer.change_count:
+            if not selection_changed and self.current_layer_change_count == layer.change_count:
                 return
             if layer.change_count > self.current_layer_change_count + 1:
                 # NOTE: this is using an unobvious side effect to determine if
