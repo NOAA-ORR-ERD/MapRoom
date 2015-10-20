@@ -847,6 +847,8 @@ class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
     
     type = Str("polyline_obj")
     
+    display_center_control_point = True
+
     def calculate_distances(self):
         return haversine_list(self.points[self.center_point_index + 1:])
 
