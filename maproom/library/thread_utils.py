@@ -131,7 +131,6 @@ class WMSInitRequest(UnskippableURLRequest):
         except Exception, e:
             print "Server error", self.url
             self.error = e
-            raise
     
     def is_valid(self):
         return self.current_layer is not None
@@ -156,6 +155,8 @@ class WMSInitRequest(UnskippableURLRequest):
     def debug(self):
         wms = self.wms
         print wms
+        print "identification: Title: ", wms.identification.title
+        print "identification: Abstract: ", wms.identification.abstract
         print "contents", wms.contents
         layer = self.current_layer
         print "layer index", layer
@@ -305,27 +306,23 @@ if __name__ == "__main__":
 # crsoptions ['EPSG:102100']
     
     url = "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?"
-    url = "http://webservices.nationalatlas.gov/wms/map_reference?"
-    url = "http://geoint.nrlssc.navy.mil/nrltileserver/wms/fast?"
+    #url = "http://webservices.nationalatlas.gov/wms/map_reference?"
+    #url = "http://geoint.nrlssc.navy.mil/nrltileserver/wms/fast?"
     
     for version in ['1.3.0', '1.1.1']:
         host = WMSHost("test", url, version)
         print host
-        server = WMSInitRequest(host)
-        try:
-            wms = server.get_wms()
-            server.setup(wms)
+        downloader = BackgroundWMSDownloader(host)
+        while True:
+            if downloader.wms.is_finished:
+                break
+            time.sleep(.1)
+            print "Waiting for server config..."
+        if downloader.wms.is_valid():
             break
-        except AttributeError, e:
-            print "usually malformed XML: try with different VERSION?"
-        except ServiceException, e:
-            raise
-        except HTTPError, e:
-            print "Error contacting", self.url, e
-            pass
         
-    if not server.is_valid():
-        print server.error
+    if not downloader.wms.is_valid():
+        print downloader.wms.error
     sys.exit()
     
     h = WMSHost.get_wms_by_name("USACE Inland ENC")
