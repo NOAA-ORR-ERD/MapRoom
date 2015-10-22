@@ -318,6 +318,17 @@ class TriangulateLayerAction(EditorAction):
         pane = task.window.get_dock_pane('maproom.triangulate_pane')
         pane.visible = True
 
+class ToPolygonLayerAction(EditorAction):
+    name = 'Boundaries to Polygon Layer'
+    tooltip = 'Create new polygon layer from boundaries of current layer'
+    enabled_name = 'layer_has_boundaries'
+
+    def perform(self, event):
+        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            cmd = ToPolygonLayerCommand(sel_layer)
+            self.active_editor.process_command(cmd)
+
 class MergeLayersAction(EditorAction):
     name = 'Merge Layers'
     tooltip = 'Merge two vector layers'
@@ -746,6 +757,7 @@ class MaproomProjectTask(FrameworkTask):
                   LowerToBottomAction(),
                   id="raisegroup", separator=False),
             Group(TriangulateLayerAction(),
+                  ToPolygonLayerAction(),
                   MergeLayersAction(),
                   MergePointsAction(),
                   id="utilgroup"),

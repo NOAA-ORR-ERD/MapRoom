@@ -120,6 +120,28 @@ class PolygonLayer(PointLayer):
             self.points.state = 0
         self.update_bounds()
 
+    def set_data_from_boundaries(self, boundaries):
+        all_points = None
+        starts = []
+        counts = []
+        identifiers = []
+        total_points = 0
+        for i, b in enumerate(boundaries):
+            points = b.get_xy_points()
+            num_points = np.alen(points)
+            if all_points is None:
+                all_points = points
+            else:
+                all_points = np.vstack([all_points, points])
+            starts.append(total_points)
+            counts.append(num_points)
+            total_points += num_points
+            identifiers.append(
+                {'name': "boundary %d" % i,
+                 'feature_code': 1}
+                )
+        print all_points, starts, counts, identifiers
+        self.set_data(all_points, starts, counts, identifiers)
 
     def can_save_as(self):
         return True

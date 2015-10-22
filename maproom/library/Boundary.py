@@ -32,6 +32,11 @@ class Boundary(object):
         points = self.parent.points
         return [(points.x[i], points.y[i]) for i in self.point_indexes]
     
+    def get_xy_points(self):
+        points = self.parent.points
+        view = np.c_[points.x[self.point_indexes], points.y[self.point_indexes]]
+        return view
+    
     def get_xy_point_float64(self):
         points = self.parent.points
         view = np.c_[points.x[self.point_indexes], points.y[self.point_indexes]]

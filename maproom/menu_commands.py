@@ -4,7 +4,8 @@ from omnimon.framework.errors import ProgressCancelError
 from omnimon.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer
+from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer
+from library.Boundary import Boundaries
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -415,6 +416,69 @@ class TriangulateLayerCommand(Command):
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(old_t_layer)
+        lf.select_layer = True
+        return undo
+
+class ToPolygonLayerCommand(Command):
+    short_name = "to_polygon"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ]
+
+    def __init__(self, layer):
+        Command.__init__(self, layer)
+        self.name = layer.name
+
+    def __str__(self):
+        return "Polygon Layer from %s" % self.name
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        saved_invariant = lm.next_invariant
+        self.undo_info = undo = UndoInfo()
+        p = PolygonLayer(manager=lm)
+        try:
+            progress_log.info("START=Boundary to polygon layer %s" % layer.name)
+            layer_bounds = layer.get_all_boundaries()
+        except ProgressCancelError, e:
+            self.undo_info.flags.success = False
+        except Exception as e:
+            import traceback
+            print traceback.format_exc(e)
+            progress_log.info("END")
+            self.undo_info.flags.success = False
+            layer.highlight_exception(e)
+            editor.window.error(e.message, "Boundary Error")
+        finally:
+            progress_log.info("END")
+
+        if self.undo_info.flags.success:
+            p.set_data_from_boundaries(layer_bounds.boundaries)
+            p.name = "Polygons from %s" % layer.name
+            lm.insert_loaded_layer(p, editor, after=layer)
+            
+            undo.flags.layers_changed = True
+            undo.flags.refresh_needed = True
+            lf = undo.flags.add_layer_flags(p)
+            lf.select_layer = True
+            lf.layer_loaded = True
+
+            undo.data = (p, p.invariant, saved_invariant)
+        
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        p, invariant, saved_invariant = self.undo_info.data
+        
+        insertion_index = lm.get_multi_index_of_layer(p)
+        lm.remove_layer_at_multi_index(insertion_index)
+        lm.next_invariant = saved_invariant
+        
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
         lf.select_layer = True
         return undo
 

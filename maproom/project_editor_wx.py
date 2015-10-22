@@ -60,6 +60,8 @@ class ProjectEditor(FrameworkEditor):
     
     layer_has_flagged = Bool
     
+    layer_has_boundaries = Bool
+    
     clickable_object_mouse_is_over = Any
     
     clickable_object_in_layer = Any
@@ -355,10 +357,12 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_points = sel_layer.has_points()
             self.layer_has_selection = sel_layer.has_selection()
             self.layer_has_flagged = sel_layer.has_flagged()
+            self.layer_has_boundaries = sel_layer.has_boundaries()
         else:
             self.layer_has_points = False
             self.layer_has_selection = False
             self.layer_has_flagged = False
+            self.layer_has_boundaries = False
         log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
         self.update_undo_redo()
         self.window._aui_manager.Update()
