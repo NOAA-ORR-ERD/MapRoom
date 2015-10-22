@@ -17,9 +17,9 @@ class Boundary(object):
     # max number of iterations for finding inside/outside hole points
     MAX_SEARCH_COUNT = 10000
 
-    def __init__(self, parent, points, area):
-        self.parent = parent
-        self.point_indexes = points
+    def __init__(self, points, indexes, area):
+        self.points = points
+        self.point_indexes = indexes
         self.area = area
     
     def __len__(self):
@@ -29,16 +29,16 @@ class Boundary(object):
         return self.point_indexes[index]
     
     def get_xy_point_tuples(self):
-        points = self.parent.points
+        points = self.points
         return [(points.x[i], points.y[i]) for i in self.point_indexes]
     
     def get_xy_points(self):
-        points = self.parent.points
+        points = self.points
         view = np.c_[points.x[self.point_indexes], points.y[self.point_indexes]]
         return view
     
     def get_xy_point_float64(self):
-        points = self.parent.points
+        points = self.points
         view = np.c_[points.x[self.point_indexes], points.y[self.point_indexes]]
         return view.astype(np.float64)
         return view
@@ -48,7 +48,7 @@ class Boundary(object):
             bounday = a boundary point index list as returned from find_boundaries() above
             points = a numpy array of points with at least .x and .y fields
         """
-        points = self.parent.points
+        points = self.points
         boundary_size = len(self)
         inside = False
         search_count = 0
@@ -80,7 +80,7 @@ class Boundary(object):
             bounday = a boundary point index list as returned from find_boundaries() above
             points = a numpy array of points with at least .x and .y fields
         """
-        points = self.parent.points
+        points = self.points
         boundary_size = len(self)
         inside = True
         search_count = 0
@@ -112,8 +112,7 @@ class Boundary(object):
         return (candidate_x, candidate_y)
 
     def check_boundary_self_crossing(self):
-        points = self.parent.points
-        lines = self.parent.lines
+        points = self.points
         
         error_points = set()
         
@@ -331,7 +330,7 @@ class Boundaries(object):
                     count = 0
                     progress_log.info("PULSE")
 
-            boundaries.append(Boundary(self, boundary, 0.5 * area))
+            boundaries.append(Boundary(self.points, boundary, 0.5 * area))
 
         # Find the outer boundary that contains all the other boundaries.
         # Determine this by simply selecting the boundary with the biggest

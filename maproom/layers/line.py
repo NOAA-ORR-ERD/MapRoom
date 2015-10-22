@@ -115,7 +115,8 @@ class LineLayer(PointLayer):
         return True
     
     def get_all_boundaries(self):
-        return Boundaries(self, True, True)
+        b = Boundaries(self, True, True)
+        return b.boundaries
     
     def select_outer_boundary(self):
         # determine the boundaries in the parent layer

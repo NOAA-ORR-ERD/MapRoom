@@ -440,7 +440,7 @@ class ToPolygonLayerCommand(Command):
         p = PolygonLayer(manager=lm)
         try:
             progress_log.info("START=Boundary to polygon layer %s" % layer.name)
-            layer_bounds = layer.get_all_boundaries()
+            boundaries = layer.get_all_boundaries()
         except ProgressCancelError, e:
             self.undo_info.flags.success = False
         except Exception as e:
@@ -454,7 +454,7 @@ class ToPolygonLayerCommand(Command):
             progress_log.info("END")
 
         if self.undo_info.flags.success:
-            p.set_data_from_boundaries(layer_bounds.boundaries)
+            p.set_data_from_boundaries(boundaries)
             p.name = "Polygons from %s" % layer.name
             lm.insert_loaded_layer(p, editor, after=layer)
             

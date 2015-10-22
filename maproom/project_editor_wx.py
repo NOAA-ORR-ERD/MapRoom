@@ -363,7 +363,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_selection = False
             self.layer_has_flagged = False
             self.layer_has_boundaries = False
-        log.debug("has_points=%s, has_selection = %s" % (self.layer_has_points, self.layer_has_selection))
+        log.debug("has_points=%s, has_selection = %s, has_flagged=%s, has_boundaries = %s" % (self.layer_has_points, self.layer_has_selection, self.layer_has_flagged, self.layer_has_boundaries))
         self.update_undo_redo()
         self.window._aui_manager.Update()
     

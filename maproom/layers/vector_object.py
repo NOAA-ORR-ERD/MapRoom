@@ -14,6 +14,7 @@ from pyface.api import YES
 
 from ..library import rect
 from ..library.coordinates import haversine_list, km_to_rounded_string, mi_to_rounded_string
+from ..library.Boundary import Boundary
 from ..mouse_commands import MoveControlPointCommand
 from ..menu_commands import DeleteLayerCommand
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
@@ -370,6 +371,13 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
 
     def get_marker_points(self):
         return []
+    
+    def has_boundaries(self):
+        return True
+    
+    def get_all_boundaries(self):
+        b = Boundary(self.points, [0, 1, 2, 3, 0], 0.0)
+        return [b]
 
 
 class EllipseVectorObject(RectangleVectorObject):
@@ -877,3 +885,12 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     def get_marker_points(self):
         # Polygon is closed, so endpoint markers don't make sense
         return []
+    
+    def has_boundaries(self):
+        return True
+    
+    def get_all_boundaries(self):
+        indexes = range(self.center_point_index + 1, np.alen(self.points))
+        indexes.append(self.center_point_index + 1)
+        b = Boundary(self.points, indexes, 0.0)
+        return [b]

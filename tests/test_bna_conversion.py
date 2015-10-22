@@ -33,12 +33,11 @@ class TestVerdatToBNA(object):
 
     def test_hole(self):
         layer = self.project.raw_load_first_layer("../TestData/Verdat/000026pts.verdat", "application/x-maproom-verdat")
-        layer_bounds = layer.get_all_boundaries()
-        eq_(2, len(layer_bounds.boundaries))
-        eq_(10, len(layer_bounds.non_boundary_points))
+        boundaries = layer.get_all_boundaries()
+        eq_(2, len(boundaries))
             
         p = PolygonLayer(manager=self.lm)
-        p.set_data_from_boundaries(layer_bounds.boundaries)
+        p.set_data_from_boundaries(boundaries)
 
 
 
