@@ -123,13 +123,6 @@ class PointLayer(PointBaseLayer):
     def depth_unit_from_json(self, json_data):
         self.depth_unit = json_data['depth_unit']
     
-    
-    def make_points(self, count):
-        return np.repeat(
-            np.array([(np.nan, np.nan, np.nan, 0, 0)], dtype=data_types.POINT_DTYPE),
-            count,
-        ).view(np.recarray)
-
     def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp):
         indexes = self.get_selected_and_dependent_point_indexes()
         cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
