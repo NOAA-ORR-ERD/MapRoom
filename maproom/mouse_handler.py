@@ -296,7 +296,7 @@ class MouseHandler(object):
         if e.clickable_object_mouse_is_over is None or (world_d_x == 0 and world_d_y == 0):
             return
 
-        (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(self.clickable_object_mouse_is_over)
+        (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
         layer = lm.get_layer_by_pick_index(layer_index)
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
         e.process_command(cmd)
