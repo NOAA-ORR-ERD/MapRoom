@@ -118,6 +118,11 @@ class LineLayer(PointLayer):
         b = Boundaries(self, True, True)
         return b.boundaries
     
+    def get_points_lines(self):
+        points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
+        lines = self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points
+        return points, lines
+    
     def select_outer_boundary(self):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(self, allow_branches=True, allow_self_crossing=True)

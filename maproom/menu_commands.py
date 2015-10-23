@@ -479,8 +479,44 @@ class ToPolygonLayerCommand(Command):
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
+        layer = lm.get_layer_by_invariant(self.layer)
+        lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         return undo
+
+class ToVerdatLayerCommand(ToPolygonLayerCommand):
+    short_name = "to_verdat"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ]
+
+    def __init__(self, layer):
+        Command.__init__(self, layer)
+        self.name = layer.name
+
+    def __str__(self):
+        return "Line Layer from %s" % self.name
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        saved_invariant = lm.next_invariant
+        self.undo_info = undo = UndoInfo()
+        p = LineLayer(manager=lm)
+        points, segments = layer.get_points_lines()
+        p.set_data(points, 0, segments)
+        p.name = "Verdat from %s" % layer.name
+        lm.insert_loaded_layer(p, editor, after=layer)
+        
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(p)
+        lf.select_layer = True
+        lf.layer_loaded = True
+
+        undo.data = (p, p.invariant, saved_invariant)
+        
+        return self.undo_info
 
 class SavepointCommand(Command):
     short_name = "savepoint"

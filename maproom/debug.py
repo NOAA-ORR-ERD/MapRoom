@@ -99,5 +99,5 @@ def debug_objects(lm):
     lm.insert_layer([3, 999], a)
     
 #    a = layers.TileLayer(manager=lm)
-    a = layers.WMSLayer(manager=lm)
-    lm.insert_layer([4], a)
+#    a = layers.WMSLayer(manager=lm)
+#    lm.insert_layer([4], a)

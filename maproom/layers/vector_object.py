@@ -378,6 +378,11 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
     def get_all_boundaries(self):
         b = Boundary(self.points, [0, 1, 2, 3, 0], 0.0)
         return [b]
+    
+    def get_points_lines(self):
+        points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:4]
+        lines = [(0, 1), (1, 2), (2, 3), (3, 0)]
+        return points, lines
 
 
 class EllipseVectorObject(RectangleVectorObject):
@@ -894,3 +899,13 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         indexes.append(self.center_point_index + 1)
         b = Boundary(self.points, indexes, 0.0)
         return [b]
+    
+    def get_points_lines(self):
+        start = self.center_point_index + 1
+        count = np.alen(self.points) - start
+        points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:start + count]
+        lines = np.empty((count, 2), dtype=np.uint32)
+        lines[:,0] = np.arange(0, count, dtype=np.uint32)
+        lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
+        lines[count - 1,1] = 0
+        return points, lines

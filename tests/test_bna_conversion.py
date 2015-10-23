@@ -39,6 +39,22 @@ class TestVerdatToBNA(object):
         p = PolygonLayer(manager=self.lm)
         p.set_data_from_boundaries(boundaries)
 
+    def test_to_verdat(self):
+        layer = self.project.raw_load_first_layer("../TestData/Verdat/000026pts.verdat", "application/x-maproom-verdat")
+        boundaries = layer.get_all_boundaries()
+        eq_(2, len(boundaries))
+            
+        p = PolygonLayer(manager=self.lm)
+        p.set_data_from_boundaries(boundaries)
+        
+        v = LineLayer(manager=self.lm)
+        points, lines = p.get_points_lines()
+        print points
+        print lines
+        v.set_data(points, 0.0, lines)
+        eq_(np.alen(points), np.alen(v.points))
+        eq_(np.alen(lines), np.alen(v.line_segment_indexes))
+
 
 
 if __name__ == "__main__":
@@ -49,3 +65,4 @@ if __name__ == "__main__":
     t.setup()
     t.test_sample_shoreline()
     t.test_hole()
+    t.test_to_verdat()

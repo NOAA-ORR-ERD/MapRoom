@@ -11,7 +11,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..library import rect
 from ..library.projection import Projection
-from ..library.Boundary import Boundaries, PointsError
+from ..library.Boundary import Boundary, Boundaries, PointsError
 from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 
@@ -140,8 +140,34 @@ class PolygonLayer(PointLayer):
                 {'name': "boundary %d" % i,
                  'feature_code': 1}
                 )
-        print all_points, starts, counts, identifiers
         self.set_data(all_points, starts, counts, identifiers)
+    
+    def has_boundaries(self):
+        return True
+    
+    def get_all_boundaries(self):
+        boundaries = []
+        points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
+        for index in range(np.alen(self.polygons)):
+            start = self.polygons.start[index]
+            count = self.polygons.count[index]
+            indexes = np.arange(start, start + count, dtype=np.uint32)
+            b = Boundary(points, indexes, 0.0)
+            boundaries.append(b)
+        return boundaries
+    
+    def get_points_lines(self):
+        points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
+        all_lines = np.empty((0, 2), dtype=np.uint32)
+        for index in range(np.alen(self.polygons)):
+            start = self.polygons.start[index]
+            count = self.polygons.count[index]
+            lines = np.empty((count, 2), dtype=np.uint32)
+            lines[:,0] = np.arange(start, start + count, dtype=np.uint32)
+            lines[:,1] = np.arange(start + 1, start + count + 1, dtype=np.uint32)
+            lines[count - 1,1] = start
+            all_lines = np.vstack([all_lines, lines])
+        return points, all_lines
 
     def can_save_as(self):
         return True

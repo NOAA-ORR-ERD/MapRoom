@@ -329,6 +329,17 @@ class ToPolygonLayerAction(EditorAction):
             cmd = ToPolygonLayerCommand(sel_layer)
             self.active_editor.process_command(cmd)
 
+class ToVerdatLayerAction(EditorAction):
+    name = 'Polygons to Editable Layer'
+    tooltip = 'Create new editable layer from polygons of current layer'
+    enabled_name = 'layer_has_boundaries'
+
+    def perform(self, event):
+        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            cmd = ToVerdatLayerCommand(sel_layer)
+            self.active_editor.process_command(cmd)
+
 class MergeLayersAction(EditorAction):
     name = 'Merge Layers'
     tooltip = 'Merge two vector layers'
@@ -758,6 +769,7 @@ class MaproomProjectTask(FrameworkTask):
                   id="raisegroup", separator=False),
             Group(TriangulateLayerAction(),
                   ToPolygonLayerAction(),
+                  ToVerdatLayerAction(),
                   MergeLayersAction(),
                   MergePointsAction(),
                   id="utilgroup"),
