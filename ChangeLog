@@ -1,3 +1,52 @@
+10/25/2015
+---------------------------
+Released 3.1b13
+- RM Renamed menu items for converting to polygon/editable layers
+- RM Fix for PDF rendering: tile textures now use same world_rect format
+- RM Refs #646, #647: added conversion from polygon to line layer
+- RM Fixed incorrect ref to clickable_object_mouse_is_over
+- RM Added boundary interface for vector objects
+- RM Refs #632: initial support for creating polygon layer from verdat
+- RM Removed identical method make_points duplicated from superclass PointBaseLayer
+- RM Fixed #645: center point has to be displayed; too many assumptions about center point being last except for polyline/polygon
+- RM Fixed #635: completed UI for adding WMS servers
+- RM If force_selection_change is True, refresh the info panels even if the layer change count is the same
+- RM Mostly working WMS server dialog
+- RM Work-in-progress of added user-specified WMS
+- RM Changed references of peppy2 framework to omnimon
+- RM Fixed debug prints in pdf renderer
+- RM Fixed PDF rendering of tile layer
+- RM Stubbed out tile functions for PDF rendering
+- RM Fixed zoom to rect on tile layers
+- RM Updated docs to require brew install of libjpeg before pillow
+- RM More error message for tile loading
+- RM Added debug printing for tile requests
+- RM Added new tile layer to menu
+- RM Refs #603: added tile caching on disk
+- RM Attempt at constraining circles to be resized with same aspect ratio
+- RM Changed --debug-objects to put scale in front of tile layer
+- RM Refs #642: added radius to info panel for circle objects
+- RM Refs #642: added path length display for lines and polyline objects
+- RM Added UI for tile server selection
+- RM Fixed mouse wheel zooming; wasn't centered under mouse
+- RM Implemented round-robin multi-threaded tile downloader
+- RM Clamped tile request x,y to within 0..n-1 range
+- RM Fixed intermittent tile request failures by correcting TileRequest superclass
+- RM Added separate tile renderer methods rather than trying to shoehorn it into the image renderer
+- RM Refs #603: reworked threaded responses for tiles into queue
+- RM Fixed swapped rectangle and ellipse in toolbar
+- RM Fixed incorrect rendering of circle while creating the object
+- RM Refs #642: initial support for adding a circle given its center and radius
+- RM Moved get_known_wms into BackgroundWMSDownloader
+- RM Refs #643: updated default style
+- RM Fixed #644: PolylineObject now subclasses from LineVectorObject
+- RM Refs #603: added request algorithm for tiles
+- RM Removed some debug prints
+- RM Refs #603: first skeleton of tile layer
+- RM Start/end markers now available for polyline
+- RM Fixed WMS so doesn't download image from server when layer not visible
+- RM Fixed PDF rendering after change in ImageData object structure
+
 09/24/2015
 ---------------------------
 Released 3.1b12
