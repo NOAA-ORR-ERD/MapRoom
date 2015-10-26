@@ -319,7 +319,7 @@ class TriangulateLayerAction(EditorAction):
         pane.visible = True
 
 class ToPolygonLayerAction(EditorAction):
-    name = 'Boundaries to Polygon Layer'
+    name = 'Convert to Polygon Layer'
     tooltip = 'Create new polygon layer from boundaries of current layer'
     enabled_name = 'layer_has_boundaries'
 
@@ -330,7 +330,7 @@ class ToPolygonLayerAction(EditorAction):
             self.active_editor.process_command(cmd)
 
 class ToVerdatLayerAction(EditorAction):
-    name = 'Polygons to Editable Layer'
+    name = 'Convert to Editable Layer'
     tooltip = 'Create new editable layer from polygons of current layer'
     enabled_name = 'layer_has_boundaries'
 
