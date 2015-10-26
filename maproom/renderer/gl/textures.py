@@ -220,11 +220,14 @@ class RawSubImageLoader(SubImageLoader):
 
 
 class TileImage(Image):
-    def __init__(self, xy, zoom_level, texture_size, world_rect):
+    def __init__(self, xy, zoom_level, texture_size, world_lb_rt):
         Image.__init__(self, None, (texture_size, texture_size))
         self.xy = xy
         self.z = zoom_level
-        self.world_rect = world_rect
+        lb, rt = world_lb_rt
+        lt = (lb[0], rt[1])
+        rb = (rt[0], lb[1])
+        self.world_rect = (lb, lt, rt, rb)
 
 
 class TileImageData(ImageData):
@@ -312,7 +315,7 @@ class TileImageData(ImageData):
             if tile not in self.requested:
                 print "REQUESTING TILE:", tile
                 req = self.downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
-                self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_rect)
+                self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_lb_rt)
     
     def add_tiles(self, queue, image_textures):
         if image_textures.static_renderer:
@@ -331,7 +334,7 @@ class TileImageData(ImageData):
                     # for the same zoom level, let's use it.
                     if tile_request.zoom == self.zoom_level:
                         print "  Using tile received but not requested:", tile
-                        self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, tile_request.world_rect)
+                        self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, tile_request.world_lb_rt)
                     else:
                         print "  Ignoring tile received but not requested:", tile
                 if tile in self.requested:
@@ -590,11 +593,11 @@ class TileTextures(object):
     
     def set_projection(self, tile, image, projection):
         log.debug("  world rect %s: %s" % (tile.xy, str(image.world_rect)))
-        lb, rt = image.world_rect
+        lb, lt, rt, rb = image.world_rect
         lb_projected = projection(lb[0], lb[1])
-        lt_projected = projection(lb[0], rt[1])
+        lt_projected = projection(lt[0], lt[1])
         rt_projected = projection(rt[0], rt[1])
-        rb_projected = projection(rt[0], lb[1])
+        rb_projected = projection(rb[0], rb[1])
 
         log.debug("  projected %s: %s" % (tile.xy, str((lb_projected, lt_projected, rt_projected, rb_projected))))
         raw = tile.vbo_vertexes.data

@@ -263,7 +263,7 @@ class TileHost(object):
     
     rad2deg = 180.0 / math.pi
     
-    def tile_num_to_world_rect(self, zoom, x, y):
+    def tile_num_to_world_lb_rt(self, zoom, x, y):
         zoom = int(zoom)
         if zoom == 0:
             return ((-180.0, -85.0511287798066), (180.0, 85.0511287798066))
@@ -369,8 +369,8 @@ class TileRequest(UnskippableRequest):
         self.zoom = zoom
         self.x = x
         self.y = y
-        self.world_rect = self.tile_server.tile_host.tile_num_to_world_rect(self.zoom, self.x, self.y)
-        self.url = "tile (%s,%s,z=%s)@%s from %s" % (x, y, zoom, self.world_rect, tile_server.url)
+        self.world_lb_rt = self.tile_server.tile_host.tile_num_to_world_lb_rt(self.zoom, self.x, self.y)
+        self.url = "tile (%s,%s,z=%s)@%s from %s" % (x, y, zoom, self.world_lb_rt, tile_server.url)
         self.manager = manager
         self.event_data = event_data
     
