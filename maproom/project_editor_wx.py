@@ -77,11 +77,6 @@ class ProjectEditor(FrameworkEditor):
     
     mouse_mode = Any(PanMode)
 
-    #### property getters
-
-    def _get_name(self):
-        return os.path.basename(self.path) or 'Untitled Project'
-
     ###########################################################################
     # 'FrameworkEditor' interface.
     ###########################################################################
@@ -98,15 +93,12 @@ class ProjectEditor(FrameworkEditor):
     def load(self, guess=None, layer=False, **kwargs):
         """ Loads the contents of the editor.
         """
-        if guess is None:
-            path = self.path
-        else:
+        if guess is not None:
             metadata = guess.get_metadata()
             loader = loaders.get_loader(metadata)
             if hasattr(loader, "load_project"):
                 batch_flags = BatchStatus()
                 print "FIXME: Add load project command that clears all layers"
-                self.path = metadata.uri
                 extra = loader.load_project(metadata, self.layer_manager, batch_flags)
                 if extra is not None:
                     self.parse_extra_json(extra, batch_flags)
@@ -151,8 +143,6 @@ class ProjectEditor(FrameworkEditor):
                     center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
                     cmd = ViewportCommand(None, center, units_per_pixel)
                 self.process_command(cmd)
-
-        self.dirty = False
     
     def parse_extra_json(self, json, batch_flags):
         for serialized_data in json:
@@ -164,17 +154,16 @@ class ProjectEditor(FrameworkEditor):
     def view_of(self, editor):
         """ Copy the view of the supplied editor.
         """
-        self.layer_manager = editor.layer_manager
+        self.document = self.layer_manager = editor.layer_manager
         self.layer_visibility = self.layer_manager.get_default_visibility()
         self.layer_canvas.change_view(self.layer_manager)
         self.layer_canvas.zoom_to_fit()
-        self.dirty = editor.dirty
 
     def save(self, path=None):
         """ Saves the contents of the editor in a maproom project file
         """
         if path is None:
-            path = self.path
+            path = self.document.uri
         if not path:
             path = "%s.maproom" % self.name
         
@@ -194,7 +183,6 @@ class ProjectEditor(FrameworkEditor):
         if error:
             self.window.error(error)
         else:
-            self.path = path
             self.layer_manager.undo_stack.set_save_point()
             self.dirty = self.layer_manager.undo_stack.is_dirty()
     
@@ -285,7 +273,7 @@ class ProjectEditor(FrameworkEditor):
     def most_recent_path(self):
         cmd = self.layer_manager.undo_stack.find_most_recent(LoadLayersCommand)
         if cmd is None:
-            return self.path
+            return os.path.dirname(self.layer_manager.metadata.uri)
         return os.path.dirname(cmd.metadata.uri)
 
     ###########################################################################
@@ -295,7 +283,7 @@ class ProjectEditor(FrameworkEditor):
     def _create_control(self, parent):
         """ Creates the toolkit-specific control for the widget. """
 
-        self.layer_manager = LayerManager.create(self)
+        self.document = self.layer_manager = LayerManager.create(self)
         self.layer_visibility = self.layer_manager.get_default_visibility()
 
         # Base-class constructor.
@@ -439,35 +427,6 @@ class ProjectEditor(FrameworkEditor):
     
     
     # New Command processor
-    
-    def update_undo_redo(self):
-        command = self.layer_manager.undo_stack.get_undo_command()
-        if command is None:
-            self.undo_label = "Undo"
-            self.can_undo = False
-        else:
-            text = str(command).replace("&", "&&")
-            self.undo_label = "Undo: %s" % text
-            self.can_undo = True
-            
-        command = self.layer_manager.undo_stack.get_redo_command()
-        if command is None:
-            self.redo_label = "Redo"
-            self.can_redo = False
-        else:
-            text = str(command).replace("&", "&&")
-            self.redo_label = "Redo: %s" % text
-            self.can_redo = True
-            
-        self.dirty = self.layer_manager.undo_stack.is_dirty()
-    
-    def undo(self):
-        undo = self.layer_manager.undo_stack.undo(self)
-        self.process_flags(undo.flags)
-    
-    def redo(self):
-        undo = self.layer_manager.undo_stack.redo(self)
-        self.process_flags(undo.flags)
     
     def process_command(self, command, new_mouse_mode=None, override_editable_properties_changed=None):
         """Process a single command and immediately update the UI to reflect

@@ -17,12 +17,14 @@ from renderer import color_floats_to_int, int_to_color_floats
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set
 from pyface.api import YES, NO, GUI
 
+from omnimon.framework.document import Document
+
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class LayerManager(HasTraits):
+class LayerManager(Document):
 
     """
     Manages the layers (a tree of Layer).
@@ -36,8 +38,6 @@ class LayerManager(HasTraits):
     purpose at present is to hold the folder name.
     """
     project = Any
-    
-    undo_stack = Any
     
     layers = List(Any)
     
@@ -71,6 +71,9 @@ class LayerManager(HasTraits):
     # Linked control points are slaves of a truth layer: a dict that maps the
     # dependent layer/control point to the truth layer/control point
     control_point_links = Dict(Any)
+    
+    def _undo_stack_default(self):
+        return UndoStack()
 
     @classmethod
     def create(cls, project):
@@ -84,7 +87,6 @@ class LayerManager(HasTraits):
         """
         self = cls()
         self.project = project
-        self.undo_stack = UndoStack()
         self.next_invariant = -1  # preset so first user added layer will use 1
         self.default_style = LayerStyle()
         layer = RootLayer(manager=self)
