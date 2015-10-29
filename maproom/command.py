@@ -164,8 +164,11 @@ class BatchStatus(object):
         
         self.fast_viewport_refresh_needed = False
         
-        # Any (error) messages will be added to this list
+        # Any info messages will be added to this list
         self.messages = []
+        
+        # Any error messages will be added to this list
+        self.errors = []
 
 
 class CommandStatus(object):

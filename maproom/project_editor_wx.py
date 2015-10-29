@@ -447,7 +447,7 @@ class ProjectEditor(FrameworkEditor):
     
     def process_flags(self, flags):
         b = BatchStatus()
-        self.add_batch_flags(flags, b)
+        self.add_batch_flags(None, flags, b)
         self.perform_batch_flags(b)
         
     def process_batch_command(self, command, b):
@@ -457,10 +457,10 @@ class ProjectEditor(FrameworkEditor):
         
         """
         undo = self.layer_manager.undo_stack.perform(command, self)
-        self.add_batch_flags(undo.flags, b)
+        self.add_batch_flags(command, undo.flags, b)
         return undo
     
-    def add_batch_flags(self, f, b):
+    def add_batch_flags(self, cmd, f, b):
         """Make additions to the batch flags as a result of the passed-in flags
         
         """
@@ -471,6 +471,11 @@ class ProjectEditor(FrameworkEditor):
             b.refresh_needed = True
         if f.fast_viewport_refresh_needed:
             b.fast_viewport_refresh_needed = True
+        if f.errors:
+            b.errors.append("In %s:" % str(cmd))
+            for e in f.errors:
+                b.errors.append("  %s" % e)
+            b.errors.append("")
         for lf in f.layer_flags:
             layer = lf.layer
             b.layers.append(layer)
@@ -524,6 +529,9 @@ class ProjectEditor(FrameworkEditor):
             self.layer_canvas.render()
         if b.select_layer:
             self.layer_tree_control.select_layer(b.select_layer)
+        
+        if b.errors:
+            self.window.error("\n".join(b.errors))
         
         self.undo_history.update_history()
 

@@ -376,8 +376,8 @@ class TriangulateLayerCommand(Command):
             print traceback.format_exc(e)
             progress_log.info("END")
             self.undo_info.flags.success = False
+            self.undo_info.flags.errors = [e.message]
             layer.highlight_exception(e)
-            editor.window.error(e.message, "Triangulate Error")
         finally:
             progress_log.info("END")
 
