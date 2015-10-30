@@ -890,6 +890,8 @@ class MaproomProjectTask(FrameworkTask):
                         ClearFlaggedAction(),
                         FlaggedToSelectionAction(),
                         ]
+                elif group_name == "CopyPasteGroup":
+                    return []
                 elif group_name == "PrefGroup":
                     return [
                         Group(
