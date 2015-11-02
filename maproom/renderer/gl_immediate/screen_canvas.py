@@ -201,16 +201,16 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         """
         if menu is not None:
             popup = wx.Menu()
-            self.context_menu_data = dict()
+            popup.context_menu_data = dict()
             for name, cmd in menu:
                 i = wx.NewId()
                 popup.Append(i, name)
-                self.context_menu_data[i] = cmd
+                popup.context_menu_data[i] = cmd
             self.PopupMenu(popup, event.GetPosition())
-            self.context_menu_data = None
     
     def on_popup_menu(self, event):
-        cmd = self.context_menu_data[event.GetId()]
+        popup = event.GetEventObject()
+        cmd = popup.context_menu_data[event.GetId()]
         self.project.process_command(cmd)
     
     def on_timer(self, event):
