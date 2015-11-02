@@ -768,7 +768,8 @@ class ControlPointSelectionMode(ObjectSelectionMode):
                     ]
         except AttributeError:
             pass
-        self.layer_canvas.popup_context_menu(event, menu)
+        if menu is not None:
+            self.layer_canvas.project.popup_context_menu_from_commands(self.layer_canvas, menu)
 
     def is_snappable_to_layer(self, layer):
         return hasattr(layer, "center_point_index")

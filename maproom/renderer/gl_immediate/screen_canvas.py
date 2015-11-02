@@ -92,7 +92,6 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.Bind(wx.EVT_CHAR, self.on_key_char)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
-        self.Bind(wx.EVT_MENU, self.on_popup_menu)
         self.Bind(wx.EVT_TIMER, self.on_timer)
         
         # Prevent flashing on Windows by doing nothing on an erase background event.
@@ -191,27 +190,6 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.set_cursor(mode)
         
         mode.process_key_char(event)
-    
-    def popup_context_menu(self, event, menu):
-        """Popup a simple context menu with menu items defined by the entries
-        in the menu array.
-        
-        Each entry is a 2-tuple contining the string name and the command to
-        process if the menu entry is selected.
-        """
-        if menu is not None:
-            popup = wx.Menu()
-            popup.context_menu_data = dict()
-            for name, cmd in menu:
-                i = wx.NewId()
-                popup.Append(i, name)
-                popup.context_menu_data[i] = cmd
-            self.PopupMenu(popup, event.GetPosition())
-    
-    def on_popup_menu(self, event):
-        popup = event.GetEventObject()
-        cmd = popup.context_menu_data[event.GetId()]
-        self.project.process_command(cmd)
     
     def on_timer(self, event):
         id = event.GetTimer().GetId()
