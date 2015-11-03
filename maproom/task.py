@@ -853,6 +853,11 @@ class MaproomProjectTask(FrameworkTask):
                 pane.visible = visible[pane.id]
         
         self.init_threaded_processing()
+        
+        # This trait can't be set as a decorator on the method because
+        # active_editor can be None during the initialization process.  Set
+        # here because it's guaranteed not to be None
+        self.on_trait_change(self.mode_toolbar_changed, 'active_editor.mouse_mode_toolbar')
 
     def prepare_destroy(self):
         self.stop_threaded_processing()
@@ -950,8 +955,9 @@ class MaproomProjectTask(FrameworkTask):
 
     def allow_different_task(self, guess, other_task):
         return self.window.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
-    
-    @on_trait_change('active_editor.mouse_mode_toolbar')
+
+# This trait change is set in activated() rather than as a decorator (see above)
+#    @on_trait_change('active_editor.mouse_mode_toolbar')
     def mode_toolbar_changed(self, changed_to):
         for toolbar in self.window.tool_bar_managers:
             name = toolbar.id
