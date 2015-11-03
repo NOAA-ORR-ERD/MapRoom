@@ -151,10 +151,8 @@ class ProjectEditor(FrameworkEditor):
             for cmd in self.layer_manager.undo_stack.unserialize_text(serialized_data, self.layer_manager):
                 self.process_batch_command(cmd, batch_flags)
 
-    def view_of(self, editor):
-        """ Copy the view of the supplied editor.
-        """
-        self.document = self.layer_manager = editor.layer_manager
+    def rebuild_document_properties(self):
+        self.layer_manager = self.document
         self.layer_visibility = self.layer_manager.get_default_visibility()
         self.layer_canvas.change_view(self.layer_manager)
         self.layer_canvas.zoom_to_fit()
