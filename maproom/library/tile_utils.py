@@ -245,6 +245,9 @@ class TileHost(object):
     def __hash__(self):
         return hash(self.urls[0])
     
+    # Reference for tile number calculations:
+    # http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
+    
     def world_to_tile_num(self, zoom, lon, lat, clamp=True):
         zoom = int(zoom)
         if zoom == 0:
