@@ -2,6 +2,7 @@ import os
 import numpy as np
 import re
 
+from fs.opener import opener
 from pyugrid.ugrid import UGrid, DataSet
 
 from common import BaseLayerLoader
@@ -28,7 +29,11 @@ class UGridLoader(BaseLayerLoader):
     def load_layers(self, metadata, manager):
         layers = []
         
-        ug = UGrid.from_ncfile(metadata.uri, load_data=True)
+        fs, relpath = opener.parse(metadata.uri)
+        if not fs.hassyspath(relpath):
+            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % metadata.uri)
+        path = fs.getsyspath(relpath)
+        ug = UGrid.from_ncfile(path, load_data=True)
         dataset = self.find_depths(ug)
         if dataset:
             depths = dataset.data

@@ -8,6 +8,8 @@ import os
 import numpy as np
 #import re
 
+from fs.opener import opener
+
 from common import BaseLayerLoader
 from maproom.layers.particles import ParticleLayer, ParticleFolder
 
@@ -23,8 +25,12 @@ class nc_particles_file_loader():
     note: this should probably be in the nc_particles lib...
 
     """
-    def __init__(self, file_path):
-        self.reader = nc_particles.Reader(file_path)
+    def __init__(self, uri):
+        fs, relpath = opener.parse(uri)
+        if not fs.hassyspath(relpath):
+            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % metadata.uri)
+        path = fs.getsyspath(relpath)
+        self.reader = nc_particles.Reader(path)
         self.current_timestep = 0 # fixme## hard coded limit!!!!!
 
     def __iter__(self):

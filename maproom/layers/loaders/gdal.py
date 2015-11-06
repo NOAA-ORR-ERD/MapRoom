@@ -1,6 +1,8 @@
 import os
 import math
 import time
+
+from fs.opener import opener
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
@@ -96,7 +98,7 @@ class ImageDataBlocks(GDALImageData):
         self.load_texture_data(loader)
 
 
-def load_image_file(file_path):
+def load_image_file(uri):
     """
     Load data from a raster file. Returns:
     
@@ -126,6 +128,14 @@ def load_image_file(file_path):
     # disable the default error handler so errors don't end up on stderr
     gdal.PushErrorHandler("CPLQuietErrorHandler")
 
+    fs, relpath = opener.parse(uri)
+    print "GDAL:", relpath
+    print "GDAL:", fs
+    if not fs.hassyspath(relpath):
+        raise RuntimeError("Only file URIs are supported for GDAL: %s" % metadata.uri)
+    file_path = fs.getsyspath(relpath)
+    if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
+        file_path = file_path[4:]
     dataset = gdal.Open(str(file_path))
 
     if (dataset is None):

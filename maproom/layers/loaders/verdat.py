@@ -1,6 +1,9 @@
 import os
 import numpy as np
 import re
+
+from fs.opener import fsopen
+
 from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import Boundaries, PointsError
 
@@ -45,7 +48,7 @@ class VerdatLoader(BaseLayerLoader):
         return write_layer_as_verdat(fh, layer)
 
 
-def load_verdat_file(file_path):
+def load_verdat_file(uri):
     """
     Load data from a DOGS-style verdat file. Returns:
     
@@ -63,7 +66,7 @@ def load_verdat_file(file_path):
     depths = accumulator(dtype=np.float32)
     line_segment_indexes = accumulator(block_shape=(2,), dtype = np.uint32)
 
-    in_file = file(file_path, "rU")
+    in_file = fsopen(uri, "r")
 
     header_line = in_file.readline().strip()
     header = WHITESPACE_PATTERN.split(header_line)

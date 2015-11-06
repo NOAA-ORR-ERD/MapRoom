@@ -1,3 +1,4 @@
+from fs.opener import opener
 from osgeo import gdal
 gdal.UseExceptions()
 
@@ -21,7 +22,13 @@ class GDALRecognizer(HasTraits):
     
     def identify(self, guess):
         try:
-            dataset = gdal.Open(guess.metadata.uri)
+            fs, relpath = opener.parse(guess.metadata.uri)
+            if not fs.hassyspath(relpath):
+                return None
+            file_path = fs.getsyspath(relpath)
+            if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
+                file_path = file_path[4:]
+            dataset = gdal.Open(file_path)
         except RuntimeError:
             log.debug("GDAL can't open %s; not an image")
             return None

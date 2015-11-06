@@ -1,11 +1,13 @@
 import os
 import math
 import time
+
+from fs.opener import fsopen
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
-from maproom.library.accumulator import accumulator
 
+from maproom.library.accumulator import accumulator
 from maproom.layers import PolygonLayer
 
 from common import BaseLayerLoader
@@ -44,7 +46,7 @@ class BNALoader(BaseLayerLoader):
         save_bna_file(fh, layer)
 
 
-def load_bna_file(file_path):
+def load_bna_file(uri):
     """
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
@@ -62,7 +64,7 @@ def load_bna_file(file_path):
 
     log.debug("******** START")
     t0 = time.clock()
-    f = file(file_path)
+    f = fsopen(uri, "r")
     s = f.read()
     f.close()
     t = time.clock() - t0  # t is wall seconds elapsed (floating point)
