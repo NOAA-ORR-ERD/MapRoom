@@ -17,10 +17,18 @@ from setuptools import setup, find_packages, Extension
 
 from glob import *
 import os
-import pyproj
 import shutil
 import subprocess
 import sys
+
+requires = [
+    'numpy',
+    'pyopengl',
+    'pyopengl_accelerate',
+    'pyproj',
+    'cython',
+    'shapely',
+]
 
 is_64bit = sys.maxsize > 2**32
 
@@ -41,10 +49,6 @@ elif sys.platform == "darwin":
     gl_library_dirs.append(
         "/System/Library/Frameworks/OpenGL.framework/Libraries",
     )
-
-print gl_include_dirs
-print gl_library_dirs
-print gl_libraries
 
 # Definintion of compiled extension code:
 bitmap = Extension("maproom.library.Bitmap",
@@ -79,7 +83,18 @@ render = Extension("maproom.renderer.gl.Render",
 ext_modules = [bitmap, shape, tree, tessellator, render]
 #ext_modules = [tessellator]
 
+full_version = Version.VERSION
+spaceless_version = Version.VERSION.replace(" ", "_")
+
+import omnimon
+import maproom
+
+BUILD_APP = False
+APP_TARGET = None
+
 if sys.platform.startswith("win") and "py2exe" in sys.argv:
+    BUILD_APP = True
+    APP_TARGET = "win"
     import py2exe
     if is_64bit:
         # Help py2exe find MSVCP90.DLL
@@ -88,158 +103,150 @@ if sys.platform.startswith("win") and "py2exe" in sys.argv:
         # Help py2exe find MSVCP90.DLL
         sys.path.append("c:/Program Files (x86)/Microsoft Visual Studio 9.0/VC/redist/x86/Microsoft.VC90.CRT")
 
-# Make pyproj's data into a resource instead of including it in the zip file
-# so pyproj can actually find it. (Note: It's actually still included in the zip
-# file.)
-pyproj_data = glob(
-    os.path.join(
-        os.path.dirname(pyproj.__file__),
-        "data", "*",
-    )
-)
+elif sys.platform.startswith("darwin") and "py2app" in sys.argv:
+    BUILD_APP = True
+    APP_TARGET = "mac"
 
-
-full_version = Version.VERSION
-spaceless_version = Version.VERSION.replace(" ", "_")
-
-import omnimon
-import maproom
 
 data_files = []
-data_files.extend(omnimon.get_py2exe_data_files())
-data_files.extend(omnimon.get_py2exe_data_files(maproom))
-
-import traitsui
-data_files.extend(omnimon.get_py2exe_data_files(traitsui, excludes=["*/qt4/*"]))
-
-import pyface
-data_files.extend(omnimon.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
-
-if sys.platform.startswith('win'):
-    # with py2app, we just include the entire package and these files are
-    # copied over
-    import shapely
-    libgeos = os.path.join(os.path.dirname(shapely.__file__), "geos_c.dll")
-    data_files.extend([
-        ("maproom/renderer/gl",
-            glob("maproom/renderer/gl/*.pyd")
-         ),
-        ("maproom/library",
-            glob("maproom/library/*.pyd")
-         ),
-        ("pyproj/data", pyproj_data),
-        ("shapely", [libgeos]),
-    ])
-
-    # Add missing DLL files that py2exe doesn't pull in automatically.
-    # data_files.append(
-    #    ( ".", [ "..\..\PROJ.4\workspace\src\proj.dll" ] ),
-    #)
-
-
-common_includes = [
-    "ctypes",
-    "ctypes.util",
-    "wx.lib.pubsub.*",
-    "wx.lib.pubsub.core.*",
-    "wx.lib.pubsub.core.kwargs.*",
-    "multiprocessing",
-    "pkg_resources",
-    "configobj",
+options = {}
+if BUILD_APP:
+    includes = []
+    excludes = []
     
-    "traits",
-    
-    "traitsui",
-    "traitsui.editors",
-    "traitsui.editors.*",
-    "traitsui.extras",
-    "traitsui.extras.*",
-    "traitsui.wx",
-    "traitsui.wx.*",
- 
-    "pyface",
-    "pyface.*",
-    "pyface.wx",
- 
-    "pyface.ui.wx",
-    "pyface.ui.wx.init",
-    "pyface.ui.wx.*",
-    "pyface.ui.wx.grid.*",
-    "pyface.ui.wx.action.*",
-    "pyface.ui.wx.timer.*",
-    "pyface.ui.wx.tasks.*",
-    "pyface.ui.wx.workbench.*",
-    
-    "netCDF4",
-    "netCDF4_utils",
-    "netcdftime",
-]
-common_includes.extend(omnimon.get_py2exe_toolkit_includes())
-common_includes.extend(omnimon.get_py2exe_toolkit_includes(maproom))
-print common_includes
+    data_files.extend(omnimon.get_py2exe_data_files())
+    data_files.extend(omnimon.get_py2exe_data_files(maproom))
 
-py2app_includes = [
-    "OpenGL_accelerate",
-    "OpenGL_accelerate.formathandler",
-]
+    import traitsui
+    data_files.extend(omnimon.get_py2exe_data_files(traitsui, excludes=["*/qt4/*"]))
 
-common_excludes = [
-    "test",
-#    "unittest", # needed for numpy
-    "pydoc_data",
-    "pyface.ui.qt4",
-    "traitsui.qt4",
-     "Tkconstants",
-    "Tkinter", 
-    "tcl", 
-    "_imagingtk",
-    "PIL._imagingtk",
-    "ImageTk",
-    "PIL.ImageTk",
-    "FixTk",
+    import pyface
+    data_files.extend(omnimon.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
+
+    includes = [
+        "ctypes",
+        "ctypes.util",
+        "wx.lib.pubsub.*",
+        "wx.lib.pubsub.core.*",
+        "wx.lib.pubsub.core.kwargs.*",
+        "multiprocessing",
+        "pkg_resources",
+        "configobj",
+        
+        "traits",
+        
+        "traitsui",
+        "traitsui.editors",
+        "traitsui.editors.*",
+        "traitsui.extras",
+        "traitsui.extras.*",
+        "traitsui.wx",
+        "traitsui.wx.*",
+     
+        "pyface",
+        "pyface.*",
+        "pyface.wx",
+     
+        "pyface.ui.wx",
+        "pyface.ui.wx.init",
+        "pyface.ui.wx.*",
+        "pyface.ui.wx.grid.*",
+        "pyface.ui.wx.action.*",
+        "pyface.ui.wx.timer.*",
+        "pyface.ui.wx.tasks.*",
+        "pyface.ui.wx.workbench.*",
+        
+        "netCDF4",
+        "netCDF4_utils",
+        "netcdftime",
     ]
 
-py2exe_excludes = [
-    "OpenGL",
-    ]
+    excludes = [
+        "test",
+    #    "unittest", # needed for numpy
+        "pydoc_data",
+        "pyface.ui.qt4",
+        "traitsui.qt4",
+         "Tkconstants",
+        "Tkinter", 
+        "tcl", 
+        "_imagingtk",
+        "PIL._imagingtk",
+        "ImageTk",
+        "PIL.ImageTk",
+        "FixTk",
+        ]
 
-base_dist_dir = "dist-%s" % spaceless_version
-win_dist_dir = os.path.join(base_dist_dir, "win")
-mac_dist_dir = os.path.join(base_dist_dir, "mac")
+    if APP_TARGET == "win":
+        # Make pyproj's data into a resource instead of including it in the zip file
+        # so pyproj can actually find it. (Note: It's actually still included in the zip
+        # file.)
+        import pyproj
+        pyproj_data = glob(
+            os.path.join(
+                os.path.dirname(pyproj.__file__),
+                "data", "*",
+            )
+        )
 
-try:
-    if sys.platform.startswith("win"):
-        shutil.rmtree(win_dist_dir, ignore_errors=True)
-    elif sys.platform.startswith('darwin'):
-        shutil.rmtree(mac_dist_dir, ignore_errors=True)
+        # with py2app, we just include the entire package and these files are
+        # copied over
+        import shapely
+        libgeos = os.path.join(os.path.dirname(shapely.__file__), "geos_c.dll")
+        data_files.extend([
+            ("maproom/renderer/gl",
+                glob("maproom/renderer/gl/*.pyd")
+             ),
+            ("maproom/library",
+                glob("maproom/library/*.pyd")
+             ),
+            ("pyproj/data", pyproj_data),
+            ("shapely", [libgeos]),
+        ])
 
-    setup(
-        name="Maproom",
-        version=full_version,
-        description="High-performance 2d mapping",
-        author="NOAA",
-        data_files=data_files,
-        packages=find_packages(),
-        app=["maproom.py"],
-        entry_points = """
+        # Add missing DLL files that py2exe doesn't pull in automatically.
+        # data_files.append(
+        #    ( ".", [ "..\..\PROJ.4\workspace\src\proj.dll" ] ),
+        #)
 
-        [envisage.plugins]
-        omnimon.tasks = maproom.plugin:MaproomPlugin
+        includes.extend(omnimon.get_py2exe_toolkit_includes())
+        includes.extend(omnimon.get_py2exe_toolkit_includes(maproom))
+        excludes.extend([
+            "OpenGL",
+            ])
 
-        """,
-        windows=[dict(
-            script="maproom.py",
-            icon_resources=[(1, "maproom/icons/maproom.ico")],
-        )],
-        options=dict(
+        options = dict(
+            py2exe=dict(
+                dist_dir=win_dist_dir,
+                optimize=2,
+                skip_archive=True,
+                compressed=False,
+                packages=['maproom.renderer', 'maproom.library'],
+                # See http://www.py2exe.org/index.cgi/PyOpenGL
+                # and http://www.py2exe.org/index.cgi/TkInter
+                includes=includes,
+                excludes=excludes,
+            ),
+            build=dict(
+                compiler="msvc",
+            ),
+            )
+
+    elif APP_TARGET == "mac":
+        includes.extend([
+            "OpenGL_accelerate",
+            "OpenGL_accelerate.formathandler",
+            ])
+
+        options = dict(
             py2app=dict(
                 dist_dir=mac_dist_dir,
                 argv_emulation=True,
                 packages=['pyproj'],
                 optimize=2,  # Equivalent to running "python -OO".
                 semi_standalone=False,
-                includes=common_includes + py2app_includes,
-                excludes=common_excludes,
+                includes=includes,
+                excludes=excludes,
                 frameworks=['libgeos_c.dylib'],
                 iconfile="maproom/icons/maproom.icns",
                 plist=dict(
@@ -253,25 +260,37 @@ try:
                     CFBUndleIdentifier="gov.noaa.maproom",
                 )
             ),
-            py2exe=dict(
-                dist_dir=win_dist_dir,
-                optimize=2,
-                skip_archive=True,
-                compressed=False,
-                packages=['maproom.renderer', 'maproom.library'],
-                # See http://www.py2exe.org/index.cgi/PyOpenGL
-                # and http://www.py2exe.org/index.cgi/TkInter
-                includes=common_includes,
-                excludes=common_excludes + py2exe_excludes,
-            ),
-            build=dict(
-                #compiler = "mingw32",
-                compiler="msvc",
-            ) if sys.platform.startswith("win") else {},
-        )
+            )
+
+base_dist_dir = "dist-%s" % spaceless_version
+win_dist_dir = os.path.join(base_dist_dir, "win")
+mac_dist_dir = os.path.join(base_dist_dir, "mac")
+
+try:
+    setup(
+        name="Maproom",
+        version=full_version,
+        description="High-performance 2d mapping",
+        author="NOAA",
+        install_requires = requires,
+        data_files=data_files,
+        packages=find_packages(),
+        app=["maproom.py"],
+        entry_points = """
+
+        [envisage.plugins]
+        omnimon.tasks = maproom.plugin:MaproomPlugin
+
+        """,
+        windows=[dict(
+            script="maproom.py",
+            icon_resources=[(1, "maproom/icons/maproom.ico")],
+        )],
+        options=options,
     )
 
-    if 'py2exe' in sys.argv and sys.platform.startswith("win"):
+    if APP_TARGET == "win":
+        shutil.rmtree(win_dist_dir, ignore_errors=True)
         try:
             import triangle
             import shutil
@@ -362,7 +381,8 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
         os.system(
             '"C:\Program Files (x86)\Inno Setup 5\ISCC.exe" %s' % iss_filename,
         )
-    elif 'py2app' in sys.argv and sys.platform.startswith('darwin'):
+    elif APP_TARGET == "mac":
+        shutil.rmtree(mac_dist_dir, ignore_errors=True)
         app_name = "%s/Maproom.app" % mac_dist_dir
         
         # Strip out useless binary stuff from the site packages zip file.
