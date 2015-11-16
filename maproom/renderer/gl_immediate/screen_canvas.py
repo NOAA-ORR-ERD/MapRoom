@@ -12,6 +12,14 @@ import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
+# Thanks to Mike Fletcher's comment on the PyOpenGL mailing list,
+# pyopengl_accelerate now works by registering a plugin handler for recarrays.
+from OpenGL.plugins import FormatHandler
+FormatHandler('recarray',
+              'OpenGL.arrays.numpymodule.NumpyHandler',
+              ['numpy.recarray',],
+              )
+     
 from renderer import ImmediateModeRenderer
 from picker import Picker
 import maproom.library.rect as rect
