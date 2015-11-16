@@ -9,7 +9,7 @@ import pyproj
 import OpenGL
 import OpenGL.GL as gl
 
-import library.coordinates as coordinates
+from library.coordinates import haversine, distance_bearing, format_coords_for_display
 import library.rect as rect
 from mouse_commands import *
 from vector_object_commands import *
@@ -81,7 +81,7 @@ class MouseHandler(object):
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
         prefs = c.project.task.get_preferences()
-        status_text = "%s  Zoom level=%.2f" % (coordinates.format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
+        status_text = "%s  Zoom level=%.2f" % (format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
 
         c.release_mouse()
         # print "mouse is not down"
@@ -235,7 +235,7 @@ class MouseHandler(object):
         
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
-        status_text = "%s  Zoom level=%.2f" % (coordinates.format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
+        status_text = "%s  Zoom level=%.2f" % (format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
         c.project.task.status_bar.message = status_text
 
     def process_mouse_leave(self, event):
@@ -860,12 +860,15 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
     def render_overlay(self, renderer):
         c = self.layer_canvas
         if c.mouse_is_down:
-            x1, y1 = c.get_world_point_from_screen_point(c.mouse_down_position)
-            x2, y2 = c.get_world_point_from_screen_point(c.mouse_move_position)
-            dx = x2 - x1
-            dy = y2 - y1
-            r = math.sqrt(dx * dx + dy * dy)
-            w = [(x1 - r, y1 - r), (x1 + r, y1 - r), (x1 + r, y1 + r), (x1 - r, y1 + r), (x1 - r, y1 - r)]
+            lon1, lat1 = c.get_world_point_from_screen_point(c.mouse_down_position)
+            lon2, lat2 = c.get_world_point_from_screen_point(c.mouse_move_position)
+            rkm = haversine(lon1, lat1, lon2, lat2)
+            bearing = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), math.cos(lat1)*math.sin(lat2)-math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1))
+            _, lat2 = distance_bearing(lon1, lat1, 0.0, rkm)
+            lon2, _ = distance_bearing(lon1, lat1, 90.0, rkm)
+            rx = lon2 - lon1
+            ry = lat2 - lat1
+            w = [(lon1 - rx, lat1 - ry), (lon1 + rx, lat1 - ry), (lon1 + rx, lat1 + ry), (lon1 - rx, lat1 + ry), (lon1 - rx, lat1 - ry)]
             
             sp = [c.get_screen_point_from_world_point(p) for p in w]
             renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)

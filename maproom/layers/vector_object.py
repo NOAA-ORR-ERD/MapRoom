@@ -13,7 +13,7 @@ from traits.api import on_trait_change, Unicode, Str, Any, Float, Bool, Int
 from pyface.api import YES
 
 from ..library import rect
-from ..library.coordinates import haversine_list, km_to_rounded_string, mi_to_rounded_string
+from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, mi_to_rounded_string
 from ..library.Boundary import Boundary
 from ..mouse_commands import MoveControlPointCommand
 from ..menu_commands import DeleteLayerCommand
@@ -444,27 +444,32 @@ class CircleVectorObject(EllipseVectorObject):
 
     def get_info_panel_text(self, prop):
         if prop == "Radius":
-            km = self.calculate_distances()
+            dlon = self.points[7].x - self.points[5].x
+            km = haversine_at_const_lat(dlon, self.points[7].y) / 2.0
             return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
         return EllipseVectorObject.get_info_panel_text(self, prop)
 
     def get_radius(self):
-        dx = (self.points[2].x - self.points[0].x) / 2.0
-        dy = (self.points[2].x - self.points[0].x) / 2.0
+        dx = (self.points[7].x - self.points[0].x) / 2.0
+        dy = (self.points[7].y - self.points[0].y) / 2.0
         return math.sqrt(dx*dx + dy*dy)
 
     def set_center_and_radius(self, p1, p2):
-        x = p1[0]
-        y = p1[1]
-        dx = x - p2[0]
-        dy = y - p2[1]
-        r = math.sqrt(dx * dx + dy * dy)
+        lon1, lat1 = p1
+        lon2, lat2 = p2
+        rkm = haversine(lon1, lat1, lon2, lat2)
+        bearing = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), math.cos(lat1)*math.sin(lat2)-math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1))
+        _, lat2 = distance_bearing(lon1, lat1, 0.0, rkm)
+        lon2, _ = distance_bearing(lon1, lat1, 90.0, rkm)
+        rx = lon2 - lon1
+        ry = lat2 - lat1
+        print "rkm, dlon, dlat", rkm, rx, ry
         
         c = np.empty((4,2), dtype=np.float32)
-        c[0] = (x - r, y - r)
-        c[1] = (x + r, y - r)
-        c[2] = (x + r, y + r)
-        c[3] = (x - r, y + r)
+        c[0] = (lon1 - rx, lat1 - ry)
+        c[1] = (lon1 + rx, lat1 - ry)
+        c[2] = (lon1 + rx, lat1 + ry)
+        c[3] = (lon1 - rx, lat1 + ry)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
     

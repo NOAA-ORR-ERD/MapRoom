@@ -5,6 +5,28 @@ import math
 import unittest
 
 
+def haversine(lon1, lat1, lon2, lat2, r=6371.0):
+    lon1 = math.radians(lon1)
+    lat1 = math.radians(lat1)
+    lon2 = math.radians(lon2)
+    lat2 = math.radians(lat2)
+    
+    # haversine formula 
+    sdlon = math.sin((lon2 - lon1) / 2.0)
+    sdlat = math.sin((lat2 - lat1) / 2.0)
+    a = sdlat * sdlat + math.cos(lat1) * math.cos(lat2) * sdlon * sdlon
+    c = 2 * math.asin(math.sqrt(a))
+    d = r * c
+    return d
+
+def distance_bearing(lon1, lat1, bearing, d, r=6371.0):
+    lon1 = math.radians(lon1)
+    lat1 = math.radians(lat1)
+    bearing = math.radians(bearing)
+    lat2 = math.asin(math.sin(lat1)*math.cos(d/r) + math.cos(lat1)*math.sin(d/r)*math.cos(bearing))
+    lon2 = lon1 + math.atan2(math.sin(bearing)*math.sin(d/r)*math.cos(lat1), math.cos(d/r)-math.sin(lat1)*math.sin(lat2))
+    return math.degrees(lon2), math.degrees(lat2)
+
 def haversine_at_const_lat(delta_deg_lon, deg_lat, r=6371.0):
     lon = math.radians(delta_deg_lon)
     lat = math.radians(deg_lat)
