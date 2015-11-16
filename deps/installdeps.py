@@ -3,19 +3,11 @@ import subprocess
 import os
 
 deps = [
-    # py2exe on Win 64 doesn't handle configobj when
-    # installed by pip, so install it here.  See
-    # http://www.py2exe.org/index.cgi/WorkingWithVariousPackagesAndModules
-    ['https://github.com/DiffSK/configobj.git'],
-    
+    [".", 'pytriangle-1.6.1', 'python setup.py install'],
+    ['https://github.com/MacPython/gattai.git',],
+    ['https://github.com/robmcmullen/mac-builds.git', 'packages/netCDF4', 'gattai netcdf.gattai'],
     ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
     ['https://github.com/robmcmullen/pyugrid.git',],
-    ['https://github.com/robmcmullen/traits.git',],
-    ['https://github.com/robmcmullen/pyface.git',],
-    ['https://github.com/robmcmullen/traitsui.git',],
-    ['https://github.com/enthought/apptools.git',],
-    ['https://github.com/robmcmullen/envisage.git',],
-    ['https://github.com/robmcmullen/omnimon.git',],
     ['https://github.com/robmcmullen/OWSLib.git',],
 ]
 
@@ -24,19 +16,27 @@ topdir = os.getcwd()
 for dep in deps:
     os.chdir(topdir)
     repourl = dep[0]
-    print "UPDATING %s" % repourl
-    _, repo = os.path.split(repourl)
-    repodir, _ = os.path.splitext(repo)
-    subdirs = dep[1:]
-    if not subdirs:
-        subdirs = ['.']
-    if os.path.exists(repodir):
-        os.chdir(repodir)
-        subprocess.call(['git', 'pull'])
+    if repourl.startswith("http"):
+        print "UPDATING %s" % repourl
+        _, repo = os.path.split(repourl)
+        repodir, _ = os.path.splitext(repo)
+        if os.path.exists(repodir):
+            os.chdir(repodir)
+            subprocess.call(['git', 'pull'])
+        else:
+            subprocess.call(['git', 'clone', repourl])
     else:
-        subprocess.call(['git', 'clone', repourl])
-    for subdir in subdirs:
-        os.chdir(topdir)
-        os.chdir(repodir)
-        os.chdir(subdir)
-        subprocess.call(['python', 'setup.py', 'develop'])
+        repodir = repourl
+    if len(dep) == 1:
+        subdir = "."
+        command = "python setup.py develop"
+    elif len(dep) == 2:
+        subdir = dep[1]
+        command = "python setup.py develop"
+    else:
+        subdir = dep[1]
+        command = dep[2]
+    os.chdir(topdir)
+    os.chdir(repodir)
+    os.chdir(subdir)
+    subprocess.call(command.split())
