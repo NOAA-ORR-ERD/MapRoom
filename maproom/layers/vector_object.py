@@ -394,15 +394,19 @@ class EllipseVectorObject(RectangleVectorObject):
     
     type = Str("ellipse_obj")
 
+    def get_semimajor_axes(self, p):
+        width = p[1][0] - p[0][0]
+        height = p[2][1] - p[1][1]
+        sx = width / 2
+        sy = height / 2
+        return sx, sy
+
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
         p = projected_point_data
         
         # FIXME: this only supports axis aligned ellipses
-        width = p[1][0] - p[0][0]
-        height = p[2][1] - p[1][1]
-        sx = width / 2
-        sy = height / 2
+        sx, sy = self.get_semimajor_axes(p)
         cx = p[self.center_point_index][0]
         cy = p[self.center_point_index][1]
          
@@ -444,15 +448,13 @@ class CircleVectorObject(EllipseVectorObject):
 
     def get_info_panel_text(self, prop):
         if prop == "Radius":
-            dlon = self.points[7].x - self.points[5].x
-            km = haversine_at_const_lat(dlon, self.points[7].y) / 2.0
+            p = self.points
+            dlon = p[7].x - p[5].x
+            wkm = haversine_at_const_lat(dlon, p[7].y)
+            hkm = haversine(p[4].x, p[4].y, p[6].x, p[6].y)
+            km = min(wkm, hkm) / 2.0
             return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
         return EllipseVectorObject.get_info_panel_text(self, prop)
-
-    def get_radius(self):
-        dx = (self.points[7].x - self.points[0].x) / 2.0
-        dy = (self.points[7].y - self.points[0].y) / 2.0
-        return math.sqrt(dx*dx + dy*dy)
 
     def set_center_and_radius(self, p1, p2):
         lon1, lat1 = p1
@@ -473,17 +475,12 @@ class CircleVectorObject(EllipseVectorObject):
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
     
-    def move_bounding_box_point(self, drag, anchor, dx, dy):
-        m = abs(dx)
-        dx = math.copysign(m, dx)
-        dy = math.copysign(m, dy)
-        EllipseVectorObject.move_bounding_box_point(self, drag, anchor, dx, dy)
-    
-#    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
-#        offset = self.center_point_index + 1
-#        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
-#        points = ((p.xy[:offset] - old_origin) / scale) + new_origin
-#        p.xy[:offset] = points
+    def get_semimajor_axes(self, p):
+        width = p[1][0] - p[0][0]
+        height = p[2][1] - p[1][1]
+        sx = sy = min(width, height) / 2.0
+        return sx, sy
+
 
 class ScaledImageObject(RectangleVectorObject):
     """Texture mapped image object that scales to the lat/lon view
