@@ -482,6 +482,12 @@ class PanModeAction(MouseHandlerBaseAction):
     tooltip = handler.menu_item_tooltip
     image = ImageResource(handler.icon)
 
+class RulerModeAction(MouseHandlerBaseAction):
+    handler = RulerMode
+    name = handler.menu_item_name
+    tooltip = handler.menu_item_tooltip
+    image = ImageResource(handler.icon)
+
 class AddPointsAction(MouseHandlerBaseAction):
     handler = PointSelectionMode
     name = handler.menu_item_name
@@ -708,23 +714,27 @@ class MaproomProjectTask(FrameworkTask):
     def _tool_bars_default(self):
         toolbars = [
             SToolBar(Group(ZoomModeAction(),
-                           PanModeAction()),
+                           PanModeAction(),
+                           RulerModeAction()),
                      show_tool_names=False,
 #                     image_size=(22,22),
                      id="BaseLayerToolBar",),
             SToolBar(Group(ZoomModeAction(),
                            PanModeAction(),
+                           RulerModeAction(),
                            AddPointsAction(),
                            AddLinesAction()),
                      show_tool_names=False,
                      id="VectorLayerToolBar",),
             SToolBar(Group(ZoomModeAction(),
                            PanModeAction(),
+                           RulerModeAction(),
                            CropAction()),
                      show_tool_names=False,
                      id="PolygonLayerToolBar",),
             SToolBar(Group(ZoomModeAction(),
                            PanModeAction(),
+                           RulerModeAction(),
                            ControlPointAction(),
                            AddLineObjectAction(),
                            AddPolylineObjectAction(),

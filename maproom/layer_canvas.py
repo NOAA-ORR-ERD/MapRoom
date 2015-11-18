@@ -25,10 +25,10 @@ class LayerCanvas(renderer.ScreenCanvas):
     """
 
     valid_mouse_modes = {
-        'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
-        'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
-        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode],
-        'default': [PanMode, ZoomRectMode],
+        'VectorLayerToolBar': [PanMode, ZoomRectMode, RulerMode, PointSelectionMode, LineSelectionMode],
+        'PolygonLayerToolBar': [PanMode, ZoomRectMode, RulerMode, CropRectMode],
+        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode],
+        'default': [PanMode, ZoomRectMode, RulerMode],
         }
 
     mouse_is_down = False

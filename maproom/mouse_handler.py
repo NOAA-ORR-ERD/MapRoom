@@ -745,6 +745,25 @@ class RectSelectMode(MouseHandler):
         self.render_snapped_point(renderer)
 
 
+class RulerMode(RectSelectMode):
+    icon = "ruler.png"
+    menu_item_name = "Measure Distance"
+    menu_item_tooltip = "Measure the great-circle distance between two points"
+
+    def render_overlay(self, renderer):
+        c = self.layer_canvas
+        if c.mouse_is_down:
+            x1, y1 = c.mouse_down_position
+            x2, y2 = c.mouse_move_position
+            renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
+            self.show_distance_between_screen_points("Path length", c.mouse_down_position, c.mouse_move_position)
+    
+    def process_rect_select(self, x1, y1, x2, y2):
+        # Clear ruler line by redrawing screen.  The ruler won't be drawn in
+        # render_overlay because the mouse will not be down.
+        self.layer_canvas.render()
+
+
 class ZoomRectMode(RectSelectMode):
     icon = "zoom_box.png"
     menu_item_name = "Zoom Mode"
