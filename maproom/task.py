@@ -21,6 +21,7 @@ import pane_layout
 from preferences import MaproomPreferences
 from library.mem_use import get_mem_use
 from mouse_handler import *
+import toolbar
 from menu_commands import *
 from vector_object_commands import *
 from ui.dialogs import StyleDialog
@@ -444,124 +445,6 @@ class BoundaryToSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.select_boundary)
 
-class MouseHandlerBaseAction(EditorAction):
-    """Save a bit of boilerplate with a base class for toolbar mouse mode buttons
-    
-    Note that the traits for name, tooltip, and image must be repeated
-    in subclasses because the trait initialization appears to reference
-    the handler in the class that is named, not superclasses.  E.g.:
-    handler.menu_item_name in this base class doesn't appear to look at the
-    handler class attribute of subclasses.
-    """
-    handler = MouseHandler # Not a trait
-    
-    # Traits
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-    style = 'radio'
-
-    def perform(self, event):
-        self.active_editor.mouse_mode = self.__class__.handler
-        self.active_editor.update_layer_selection_ui()
-
-    @on_trait_change('active_editor.mouse_mode')
-    def _update_checked(self):
-        if self.active_editor:
-            self.checked = self.active_editor.mouse_mode == self.__class__.handler
-
-class ZoomModeAction(MouseHandlerBaseAction):
-    handler = ZoomRectMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class PanModeAction(MouseHandlerBaseAction):
-    handler = PanMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class RulerModeAction(MouseHandlerBaseAction):
-    handler = RulerMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddPointsAction(MouseHandlerBaseAction):
-    handler = PointSelectionMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-    enabled_name = handler.editor_trait_for_enabled
-
-class AddLinesAction(MouseHandlerBaseAction):
-    handler = LineSelectionMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-    enabled_name = handler.editor_trait_for_enabled
-
-class CropAction(MouseHandlerBaseAction):
-    handler = CropRectMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class ControlPointAction(MouseHandlerBaseAction):
-    handler = ControlPointSelectionMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddRectangleObjectAction(MouseHandlerBaseAction):
-    handler = AddRectangleMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddEllipseObjectAction(MouseHandlerBaseAction):
-    handler = AddEllipseMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddCircleObjectAction(MouseHandlerBaseAction):
-    handler = AddCircleMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddLineObjectAction(MouseHandlerBaseAction):
-    handler = AddLineMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddPolylineObjectAction(MouseHandlerBaseAction):
-    handler = AddPolylineMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddPolygonObjectAction(MouseHandlerBaseAction):
-    handler = AddPolygonMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddOverlayTextAction(MouseHandlerBaseAction):
-    handler = AddOverlayTextMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
-class AddOverlayIconAction(MouseHandlerBaseAction):
-    handler = AddOverlayIconMode
-    name = handler.menu_item_name
-    tooltip = handler.menu_item_tooltip
-    image = ImageResource(handler.icon)
-
 
 class FindPointsAction(EditorAction):
     name = 'Find Points'
@@ -712,42 +595,7 @@ class MaproomProjectTask(FrameworkTask):
         return pane_layout.pane_create()
 
     def _tool_bars_default(self):
-        toolbars = [
-            SToolBar(Group(ZoomModeAction(),
-                           PanModeAction(),
-                           RulerModeAction()),
-                     show_tool_names=False,
-#                     image_size=(22,22),
-                     id="BaseLayerToolBar",),
-            SToolBar(Group(ZoomModeAction(),
-                           PanModeAction(),
-                           RulerModeAction(),
-                           AddPointsAction(),
-                           AddLinesAction()),
-                     show_tool_names=False,
-                     id="VectorLayerToolBar",),
-            SToolBar(Group(ZoomModeAction(),
-                           PanModeAction(),
-                           RulerModeAction(),
-                           CropAction()),
-                     show_tool_names=False,
-                     id="PolygonLayerToolBar",),
-            SToolBar(Group(ZoomModeAction(),
-                           PanModeAction(),
-                           RulerModeAction(),
-                           ControlPointAction(),
-                           AddLineObjectAction(),
-                           AddPolylineObjectAction(),
-                           AddPolygonObjectAction(),
-                           AddRectangleObjectAction(),
-                           AddEllipseObjectAction(),
-                           AddCircleObjectAction(),
-                           AddOverlayTextAction(),
-                           AddOverlayIconAction(),
-                           ),
-                     show_tool_names=False,
-                     id="AnnotationLayerToolBar",),
-            ]
+        toolbars = toolbar.get_all_toolbars()
         toolbars.extend(FrameworkTask._tool_bars_default(self))
         return toolbars
 
@@ -785,11 +633,6 @@ class MaproomProjectTask(FrameworkTask):
                   id="utilgroup"),
             Group(DeleteLayerAction(),
                   id="deletegroup"),
-            Group(ZoomModeAction(),
-                  PanModeAction(),
-                  AddPointsAction(),
-                  AddLinesAction(),
-                  id="modegroup"),
             Group(CheckLayerErrorAction(),
                   id="checkgroup"),
             id="layermenu")

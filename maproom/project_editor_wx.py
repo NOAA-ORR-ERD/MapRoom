@@ -24,6 +24,7 @@ from command import UndoStack, BatchStatus
 from mouse_handler import *
 from menu_commands import *
 from serializer import UnknownCommandError
+import toolbar
 
 import logging
 log = logging.getLogger(__name__)
@@ -321,7 +322,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
             # leave mouse_mode set to current setting
             self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
-            self.mouse_mode = LayerCanvas.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
+            self.mouse_mode = toolbar.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
         else:
             self.layer_can_save = False
             self.layer_can_save_as = False

@@ -10,6 +10,7 @@ import library.coordinates as coordinates
 import renderer
 import library.rect as rect
 from mouse_handler import *
+import toolbar
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.
@@ -24,30 +25,11 @@ class LayerCanvas(renderer.ScreenCanvas):
     The core rendering class for MapRoom app.
     """
 
-    valid_mouse_modes = {
-        'VectorLayerToolBar': [PanMode, ZoomRectMode, RulerMode, PointSelectionMode, LineSelectionMode],
-        'PolygonLayerToolBar': [PanMode, ZoomRectMode, RulerMode, CropRectMode],
-        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode],
-        'default': [PanMode, ZoomRectMode, RulerMode],
-        }
-
     mouse_is_down = False
     is_alt_key_down = False
     selection_box_is_being_defined = False
     mouse_down_position = (0, 0)
     mouse_move_position = (0, 0)
-
-    @classmethod
-    def get_valid_mouse_mode(cls, mouse_mode, mode_mode_toolbar_name):
-        """
-        Return a valid mouse mode for the specified toolbar
-        
-        Used when switching modes to guarantee a valid mouse mode.
-        """
-        valid = cls.valid_mouse_modes.get(mode_mode_toolbar_name, cls.valid_mouse_modes['default'])
-        if mouse_mode not in valid:
-            return valid[0]
-        return mouse_mode
     
     def __init__(self, *args, **kwargs):
         renderer.ScreenCanvas.__init__(self, *args, **kwargs)

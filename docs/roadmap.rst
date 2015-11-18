@@ -90,12 +90,12 @@ Mouse Mode Toolbar
 Each layer type can specify toolbar items that can be used to edit the data
 within the layer.  The :data:`maproom.layer.Layer.mouse_mode_toolbar` attribute
 specifies the name of the toolbar item collection, which is in turn defined in
-:attribute:`maproom.LayerCanvas.valid_mouse_modes` dictionary.  For example::
+:attribute:`maproom.toolbar.valid_mouse_modes` dictionary.  For example::
 
     valid_mouse_modes = {
         'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
         'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
-        'default': [PanMode, ZoomRectMode],
+        'BaseLayerToolBar': [PanMode, ZoomRectMode],
         }
 
 shows two special toolbar collections and the default collection.  Multiple
@@ -107,70 +107,10 @@ The mouse modes in the list (e.g.  :class:`maproom.MouseHandler.PanMode`,
 through methods like :meth:`maproom.MouseHandler.process_mouse_motion_down`
 and :meth:`maproom.MouseHandler.process_mouse_down`.
 
-Adding a New Mouse Mode
-~~~~~~~~~~~~~~~~~~~~~~~
-
-Adding a new mouse mode requires a new text string identifier that ends in
-"ToolBar".  This text string is used to refer to the toolbar type in several
-places.
-
-First, this text string must be added as a key to the
-:attribute:`maproom.LayerCanvas.valid_mouse_modes` dictionary.
-The value refered to by this key must be a list of mouse mode
-classes.  Note that :class:`maproom.MouseHandler.PanMode` and
-:class:`maproom.MouseHandler.ZoomRectMode` are common to most modes, and
-should be included as the first two items unless there is some layer-specific
-reason not to.
-
-Second, the text string must also be added as the id
-keyword to a new :class:`SToolBar` Enthought object in the
-:meth:`maproom.MaproomProjectTask._tool_bars_default` method.  This SToolBar
-instance specifies a set of Enthought :class:`Action`s that correspond one-to-
-one to the MouseHandler objects for the layer.  E.g.  the SToolBar object for
-the `VectorLayerToolBar` is::
-
-    SToolBar(Group(ZoomModeAction(),
-                   PanModeAction(),
-                   AddPointsAction(),
-                   AddLinesAction()),
-             show_tool_names=False,
-             id="VectorLayerToolBar",),
-
-where the actions correspond to the mouse handlers as so:
-
-.. csv-table:: Action to Mouse Handle Mapping
-   :header: "Action", "MouseHandler"
-
-   ZoomModeAction, ZoomRectMode
-   PanModeAction, PanMode
-   AddPointsAction, PointSelectionMode
-   AddLinesAction, LineSelectionMode
-
-The Action classes provide the Enthought code framework with the the icon and
-menu item name for the user interface, and the code to track which mouse mode
-is active at the moment.
-
-So, adding a new mode would proceed like this:
-
-The vector object layers need to have modes to move, create and group objects. The first task is to create a new text id for the mode, which will be called `AnnotationLayerToolBar`. This text id is placed in the LayerCanvas::
-
-    valid_mouse_modes = {
-        'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
-        'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
-        'AnnotationLayerToolBar': [PanMode, ZoomRectMode],
-        'default': [PanMode, ZoomRectMode],
-        }
-
-For testing purposes, only the existing PanMode and ZoomRectModes are listed in the AnnotationLayerToolBar. We'll define a new mouse handler in the next section.
-
-Finally, the :data:`maproom.layer.Layer.mouse_mode_toolbar` attribute must be
-set in the :class:`maproom.layers.VectorObjectLayer` to tell MapRoom when to
-display this toolbar::
-
-    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
-
-
-
+Adding a new mouse mode to the applicable dict entry (or entries if the mode can
+work with multiple toolbars) of :attribute:`maproom.toolbar.valid_mouse_modes`
+is all that is required for it to appear in the UI.  The toolbar is now
+automatically generated from the list of mouse modes.
 
 Adding New Toolbar Items
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -182,39 +122,43 @@ the :attribute:`maproom.LayerCanvas.valid_mouse_modes` dictionary.
 If you are creating a new mouse handler, see the :ref:`Mouse Handler` section
 that describes the process of extending a :class:`maproom.MouseHandler` class
 to perform additional functions.  The new mouse handler must be added to the
-toolbar definition, so for this example, `ControlPointSelectionMode` is added
-to the `AnnotationLayerToolBar`::
+toolbar definition, so for this example, `RulerMode` is added
+to the all the layers::
 
     valid_mouse_modes = {
-        'VectorLayerToolBar': [PanMode, ZoomRectMode, PointSelectionMode, LineSelectionMode],
-        'PolygonLayerToolBar': [PanMode, ZoomRectMode, CropRectMode],
-        'AnnotationLayerToolBar': [PanMode, ZoomRectMode, ControlPointSelectionMode],
-        'default': [PanMode, ZoomRectMode],
+        'VectorLayerToolBar': [PanMode, ZoomRectMode, RulerMode, PointSelectionMode, LineSelectionMode],
+        'PolygonLayerToolBar': [PanMode, ZoomRectMode, RulerMode, CropRectMode],
+        'BaseLayerToolBar': [PanMode, ZoomRectMode, RulerMode],
         }
 
-To get the toolbar item to appear, an action must be defined in task.py::
+There is glue code that takes mouse modes and turns them into toolbar items.
+The function :attribute:`maproom.toolbar.get_all_toolbars` does this
+automatically it task creation time, so no additional code must we written for
+the toolbar itself.
 
-    class ControlPointAction(MouseHandlerBaseAction):
-        handler = ControlPointSelectionMode
-        name = handler.menu_item_name
-        tooltip = handler.menu_item_tooltip
-        image = ImageResource(handler.icon)
 
-This class references the new handler ControlPointSelectionMode and the rest
-of the boilerplate stuff in this class essentially just supplies defaults to
-the MouseHandlerBaseClass, which in turn provides all the glue code to the
-Enthought framework for the UI stuff.  More than likely this action class won't
-have to be modified any more than the above for any action that you create.
+Adding a New Toolbar
+~~~~~~~~~~~~~~~~~~~~
 
-In the toolbar creation code in :meth:`maproom.MaproomProjectTask._tool_bars_default`, the Action needs to be referenced::
+Adding a new toolbar requires a new text string identifier that ends in
+"ToolBar".  This text string is used to refer to the toolbar type in the
+layers that support this toolbar.  This text string must be added as a key to
+the :attribute:`maproom.toolbar.valid_mouse_modes` dictionary.
 
-    SToolBar(Group(ZoomModeAction(),
-                   PanModeAction(),
-                   ControlPointAction()),
-             show_tool_names=False,
-             id="AnnotationLayerToolBar",),
+In this key/value pair, the value is a list of mouse mode
+classes.  (See the above section on adding a new mouse
+mode.) Note that :class:`maproom.MouseHandler.PanMode` and
+:class:`maproom.MouseHandler.ZoomRectMode` are common to most modes and so
+they should be included as the first two items unless there is some layer-
+specific reason not to.
 
-Note that the order in which the actions are defined is the order that they will appear in the UI.
+You must also add the toolbar string identifier to the
+:data:`maproom.layer.Layer.mouse_mode_toolbar` attribute in all the layers
+that use this toolbar.  E.g.  if you were adding the ``AnnotationLayerToolBar``
+toolbar to the :class:`maproom.layers.VectorObjectLayer` class, you would use
+this code::
+
+    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
 
 Mouse Handler
@@ -234,7 +178,6 @@ Mouse handlers have limited lifetime: an instance is created every time the
 user clicks on a different mouse mode in the UI.  So, the mouse mode should
 not be used to store any state information because it will be lost when
 switching to a new mode.
-
 
 
 MapRoom Layers
