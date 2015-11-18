@@ -5,7 +5,10 @@ import math
 import unittest
 
 
-def haversine(lon1, lat1, lon2, lat2, r=6371.0):
+def haversine(lon1, lat1, lon2=None, lat2=None, r=6371.0):
+    if lon2 is None:
+        lon2, lat2 = lat1[0], lat1[1]
+        lon1, lat1 = lon1[0], lon1[1]
     lon1 = math.radians(lon1)
     lat1 = math.radians(lat1)
     lon2 = math.radians(lon2)

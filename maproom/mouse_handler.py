@@ -9,7 +9,7 @@ import pyproj
 import OpenGL
 import OpenGL.GL as gl
 
-from library.coordinates import haversine, distance_bearing, format_coords_for_display
+from library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
 import library.rect as rect
 from mouse_commands import *
 from vector_object_commands import *
@@ -315,6 +315,28 @@ class MouseHandler(object):
             (x1, y1, x2, y2) = rect.get_normalized_coordinates((x-5, y-5), (x+5, y+5))
             r = ((x1, y1), (x2, y2))
             renderer.draw_screen_box(r, 0.0, 0.0, 0.0, 1.0)
+
+    def show_distance_between_screen_points(self, text, sp1, sp2):
+        c = self.layer_canvas
+        p1 = c.get_world_point_from_screen_point(sp1)
+        p2 = c.get_world_point_from_screen_point(sp2)
+        km = haversine(p1, p2)
+        self.show_distance(text, km)
+
+    def show_distance(self, text, km):
+        c = self.layer_canvas
+        s = "%s: %s, %s" % (text, km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
+        c.project.task.status_bar.message = s
+
+    def show_width_height(self, sp, spx, spy):
+        c = self.layer_canvas
+        p1 = c.get_world_point_from_screen_point(sp)
+        p2 = c.get_world_point_from_screen_point(spx)
+        wkm = haversine(p1, p2)
+        p3 = c.get_world_point_from_screen_point(spy)
+        hkm = haversine(p1, p3)
+        s = "Width: %s, %s  Height: %s, %s" % (km_to_rounded_string(wkm), mi_to_rounded_string(wkm * .621371), km_to_rounded_string(hkm), mi_to_rounded_string(hkm * .621371))
+        c.project.task.status_bar.message = s
 
 class PanMode(MouseHandler):
     """Mouse mode to pan the viewport
@@ -719,6 +741,7 @@ class RectSelectMode(MouseHandler):
                 x2 += 1
             sp = [(x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)]
             renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+            self.show_width_height((x1, y1), (x2, y1), (x1, y2))
         self.render_snapped_point(renderer)
 
 
@@ -876,11 +899,7 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
             (x1, y1) = c.mouse_down_position
             (x2, y2) = c.mouse_move_position
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
-#            dx = x2 - x1
-#            dy = y2 - y1
-#            r = math.sqrt(dx * dx + dy * dy)
-#            sp = [(x1 - r, y1 - r), (x1 + r, y1 - r), (x1 + r, y1 + r), (x1 - r, y1 + r), (x1 - r, y1 - r)]
-#            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+            self.show_distance("Radius", rkm)
         self.render_snapped_point(renderer)
 
 
@@ -899,6 +918,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
             x1, y1 = c.mouse_down_position
             x2, y2 = c.mouse_move_position
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
+            self.show_distance_between_screen_points("Path length", c.mouse_down_position, c.mouse_move_position)
         self.render_snapped_point(renderer)
     
     def get_vector_object_command(self, layer, cp1, cp2, style):
@@ -968,6 +988,7 @@ class AddPolylineMode(MouseHandler):
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
             renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
+            self.show_distance_between_screen_points("Segment length", sp[-1], cp)
         self.render_snapped_point(renderer)
 
 
@@ -984,6 +1005,7 @@ class AddPolygonMode(AddPolylineMode):
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
             renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
+            self.show_distance_between_screen_points("Segment length", sp[-1], cp)
             if len(sp) > 2:
                 renderer.draw_screen_line(sp[0], sp[-1], 1.0, 1.0, 0, 1.0, xor=True, stipple_pattern=0xf0f0)
         self.render_snapped_point(renderer)
