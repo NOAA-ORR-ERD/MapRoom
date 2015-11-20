@@ -513,6 +513,8 @@ class MaproomProjectTask(FrameworkTask):
     id = pane_layout.task_id_with_pane_layout
     
     new_file_text = 'MapRoom Project'
+    
+    about_application = ""
 
     #### Task interface #######################################################
 
