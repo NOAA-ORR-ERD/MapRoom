@@ -367,7 +367,27 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
     
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
     
-    selection_info_panel = ["Anchor coordinates"]
+    selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
+
+    def get_width_height(self):
+        p = self.points
+        dlon = p[7].x - p[5].x
+        wkm = haversine_at_const_lat(dlon, p[7].y)
+        hkm = haversine(p[4].x, p[4].y, p[6].x, p[6].y)
+        return wkm, hkm
+
+    def get_info_panel_text(self, prop):
+        if prop == "Width":
+            wkm, hkm = self.get_width_height()
+            return "%s, %s" % (km_to_rounded_string(wkm), mi_to_rounded_string(wkm * .621371))
+        elif prop == "Height":
+            wkm, hkm = self.get_width_height()
+            return "%s, %s" % (km_to_rounded_string(hkm), mi_to_rounded_string(hkm * .621371))
+        elif prop == "Area":
+            wkm, hkm = self.get_width_height()
+            km = wkm * hkm
+            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
+        return FillableVectorObject.get_info_panel_text(self, prop)
 
     def get_marker_points(self):
         return []
@@ -393,6 +413,13 @@ class EllipseVectorObject(RectangleVectorObject):
     name = Unicode("Ellipse")
     
     type = Str("ellipse_obj")
+
+    def get_info_panel_text(self, prop):
+        if prop == "Area":
+            wkm, hkm = self.get_width_height()
+            km = wkm * hkm * math.pi / 4.0
+            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
+        return RectangleVectorObject.get_info_panel_text(self, prop)
 
     def get_semimajor_axes(self, p):
         width = p[1][0] - p[0][0]
@@ -444,16 +471,27 @@ class CircleVectorObject(EllipseVectorObject):
     
     type = Str("circle_obj")
     
-    selection_info_panel = ["Anchor coordinates", "Radius"]
+    selection_info_panel = ["Anchor coordinates", "Radius", "Circumference", "Area"]
+
+    def get_radius(self):
+        p = self.points
+        dlon = p[7].x - p[5].x
+        wkm = haversine_at_const_lat(dlon, p[7].y)
+        hkm = haversine(p[4].x, p[4].y, p[6].x, p[6].y)
+        km = min(wkm, hkm) / 2.0
+        return km
 
     def get_info_panel_text(self, prop):
         if prop == "Radius":
-            p = self.points
-            dlon = p[7].x - p[5].x
-            wkm = haversine_at_const_lat(dlon, p[7].y)
-            hkm = haversine(p[4].x, p[4].y, p[6].x, p[6].y)
-            km = min(wkm, hkm) / 2.0
+            km = self.get_radius()
             return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
+        elif prop == "Circumference":
+            km = self.get_radius() * math.pi * 2.0
+            return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
+        elif prop == "Area":
+            r = self.get_radius()
+            km = r * r * math.pi
+            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
         return EllipseVectorObject.get_info_panel_text(self, prop)
 
     def set_center_and_radius(self, p1, p2):
@@ -882,6 +920,36 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     type = Str("polygon_obj")
     
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    
+    selection_info_panel = ["Anchor coordinates", "Area"]
+
+    def get_area(self):
+        """Adapted from http://stackoverflow.com/questions/4681737
+        
+        Assumes spherical earth so there will be an inaccuracy, but it's good
+        enough for this purpose for now.
+        """
+        r = 6371.
+        lat_dist = math.pi * r / 180.0
+        area = 0.0
+        indexes = range(self.center_point_index + 1, np.alen(self.points))
+        indexes.append(self.center_point_index + 1)
+        x = []
+        y = []
+        for i in indexes:
+            lon = self.points[i].x
+            lat = self.points[i].y
+            y.append(lat * lat_dist)
+            x.append(lon * lat_dist * math.cos(math.radians(lat)))
+        for i in range(-1, len(indexes) - 1):
+            area += x[i] * (y[i+1] - y[i-1])
+        return abs(area) / 2.0
+
+    def get_info_panel_text(self, prop):
+        if prop == "Area":
+            km = self.get_area()
+            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
+        return FillableVectorObject.get_info_panel_text(self, prop)
     
     def get_polylines(self, num_points):
         offset = self.center_point_index + 1

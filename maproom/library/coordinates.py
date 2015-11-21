@@ -67,15 +67,17 @@ def km_to_string(km):
         s = "%d km" % km
     return s
 
-def km_to_rounded_string(val, sigfigs=5):
+def km_to_rounded_string(val, sigfigs=5, area=False):
     if val < 1.0:
         val *= 1000
-        unit = "m"
+        unit = u"m"
     else:
-        unit = "km"
+        unit = u"km"
+    if area:
+        unit += u"\u00b2"
     format = "%%.%dg" % (sigfigs)
     val = float(format % val)
-    return "%s %s" % (val, unit)
+    return u"%s %s" % (val, unit)
 
 def ft_to_string(ft):
     if ft < 5000:
@@ -84,15 +86,17 @@ def ft_to_string(ft):
         s = "%d mi" % (ft / 5280)
     return s
 
-def mi_to_rounded_string(val, sigfigs=5):
+def mi_to_rounded_string(val, sigfigs=5, area=False):
     if val < 1.0:
         val *= 5280
-        unit = "ft"
+        unit = u"ft"
     else:
-        unit = "mi"
+        unit = u"mi"
+    if area:
+        unit += u"\u00b2"
     format = "%%.%dg" % (sigfigs)
     val = float(format % val)
-    return "%s %s" % (val, unit)
+    return u"%s %s" % (val, unit)
 
 
 def float_to_degrees_minutes_seconds(value, directions=None):
