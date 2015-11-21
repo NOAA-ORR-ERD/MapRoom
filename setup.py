@@ -110,6 +110,11 @@ elif sys.platform.startswith("darwin") and "py2app" in sys.argv:
 
 data_files = []
 options = {}
+
+base_dist_dir = "dist-%s" % spaceless_version
+win_dist_dir = os.path.join(base_dist_dir, "win")
+mac_dist_dir = os.path.join(base_dist_dir, "mac")
+
 if BUILD_APP:
     includes = []
     excludes = []
@@ -178,6 +183,8 @@ if BUILD_APP:
         ]
 
     if APP_TARGET == "win":
+        shutil.rmtree(win_dist_dir, ignore_errors=True)
+
         # Make pyproj's data into a resource instead of including it in the zip file
         # so pyproj can actually find it. (Note: It's actually still included in the zip
         # file.)
@@ -233,6 +240,8 @@ if BUILD_APP:
             )
 
     elif APP_TARGET == "mac":
+        shutil.rmtree(mac_dist_dir, ignore_errors=True)
+        
         includes.extend([
             "OpenGL_accelerate",
             "OpenGL_accelerate.formathandler",
@@ -262,9 +271,22 @@ if BUILD_APP:
             ),
             )
 
-base_dist_dir = "dist-%s" % spaceless_version
-win_dist_dir = os.path.join(base_dist_dir, "win")
-mac_dist_dir = os.path.join(base_dist_dir, "mac")
+
+def remove_pyc(basedir):
+    for curdir, dirlist, filelist in os.walk(basedir):
+        print curdir
+        for name in filelist:
+            if name.endswith(".pyo"):
+                c = name[:-1] + "c"
+                cpath = os.path.join(curdir, c)
+                print "  " + name
+                # remove .pyc if .pyo exists
+                if os.path.exists(cpath):
+                    os.remove(cpath)
+                # remove .py if not in numpy because numpy is crazy
+                path = cpath[:-1]
+                if os.path.exists(path) and "numpy" not in path:
+                    os.remove(path)
 
 try:
     setup(
@@ -290,7 +312,7 @@ try:
     )
 
     if APP_TARGET == "win":
-        shutil.rmtree(win_dist_dir, ignore_errors=True)
+        remove_pyc(win_dist_dir)
         try:
             import triangle
             import shutil
@@ -382,13 +404,13 @@ Filename: "{app}\maproom.exe"; Description: "{cm:LaunchProgram,Maproom}"; Flags:
             '"C:\Program Files (x86)\Inno Setup 5\ISCC.exe" %s' % iss_filename,
         )
     elif APP_TARGET == "mac":
-        shutil.rmtree(mac_dist_dir, ignore_errors=True)
+        remove_pyc(mac_dist_dir)
         app_name = "%s/Maproom.app" % mac_dist_dir
         
         # Strip out useless binary stuff from the site packages zip file.
         # Saves 3MB or so
         site_packages = "%s/Contents/Resources/lib/python2.7/site-packages.zip" % app_name
-        subprocess.call(['/usr/bin/zip', '-d', site_packages, "distutils/command/*", "wx/locale/*", "*.c", "*.pyx", "*.png", "*.jpg", "*.ico", ])
+        subprocess.call(['/usr/bin/zip', '-d', site_packages, "distutils/command/*", "wx/locale/*", "*.c", "*.pyx", "*.png", "*.jpg", "*.ico", "*.xcf", "*.icns", "reportlab/fonts/*"])
 
         fat_app_name = "%s/Maproom.fat.app" % mac_dist_dir
         os.rename(app_name, fat_app_name)
