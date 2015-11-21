@@ -15,10 +15,6 @@ import os
 # Debugging turned on for readable exceptions on Enthought ui module import
 os.environ["ETS_DEBUG"] = "True"
 
-# Use the agw.aui toolbar because the standard toolbar in AUI doesn't refresh
-# properly on Mac
-os.environ["ETS_AUI_TOOLBAR"] = "True"
-
 # Framework imports.
 from omnimon import get_image_path
 from omnimon.framework.application import run
