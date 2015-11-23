@@ -285,7 +285,7 @@ def remove_pyc(basedir):
                     os.remove(cpath)
                 # also remove .py if .pyo exists
                 path = cpath[:-1]
-                if os.path.exists(path):
+                if os.path.exists(path) and "numpy" not in path:
                     os.remove(path)
 
 
