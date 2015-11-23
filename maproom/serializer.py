@@ -119,8 +119,7 @@ class FileMetadataConverter(ArgumentConverter):
     stype = "file_metadata"
     
     def get_args(self, instance):
-        # Force forward slashes on windows so to prevent backslash escape chars
-        return os.path.normpath(instance.uri).replace('\\', '/'), instance.mime
+        return instance.uri, instance.mime
     
     def instance_from_args(self, args, manager, deserializer):
         uri = args.pop(0)

@@ -1,7 +1,9 @@
 import os
-import numpy as np
 import re
 import json
+
+from fs.opener import fsopen
+import numpy as np
 
 from common import BaseLoader
 from maproom.layers import Layer
@@ -19,7 +21,7 @@ class CommandLogLoader(BaseLoader):
     
     def iter_log(self, metadata, manager):
         project = []
-        with open(metadata.uri, "r") as fh:
+        with fsopen(metadata.uri, "r") as fh:
             text = fh.read()
             for cmd in manager.undo_stack.unserialize_text(text, manager):
                 yield cmd
