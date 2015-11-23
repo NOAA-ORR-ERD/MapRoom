@@ -87,7 +87,13 @@ class LayerManager(Document):
         """
         self = cls()
         self.project = project
-        self.next_invariant = -1  # preset so first user added layer will use 1
+        
+        # In order for the serializer to correcly map the layer invariant to
+        # the actual layer, the next_invariant must be preset so first user
+        # added layer will use 1.  If the number of default layers added below
+        # changes, modify next_invariant to match! next_invariant = 1 - (# of
+        # calls to insert_layer)
+        self.next_invariant = -2
         self.default_style = LayerStyle()
         layer = RootLayer(manager=self)
         self.insert_layer([0], layer)
@@ -106,6 +112,12 @@ class LayerManager(Document):
         root = self.get_layer_by_multi_index([0])
         layers = self.get_children(root)
         return str(layers)
+    
+    def debug_invariant(self):
+        layers = self.flatten()
+        print "next invariant: %d" % self.next_invariant
+        for layer in layers:
+            print "  %s: invariant=%d" % (layer, layer.invariant)
     
     def update_default_style(self, style):
         self.default_style.copy_from(style)
