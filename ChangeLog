@@ -1,3 +1,36 @@
+11/23/2015
+---------------------------
+Released 3.1b14
+- RM Fixed coalesce bug in ParticleColorCommand
+- RM Merged change to setup.py to allow numpy tests to be removed from py2app
+- RM Fixed #652: added ability to change all dots of a trajectory (or range of trajectories) to a single color
+- RM Fixed next_invariant so deserialization works again
+- RM Fixed logfile loader to use pyfilesystem and corrected file_metadata serializer to use raw URIs as output
+- RM Removed numpy tests and allowed .py to be removed from numpy
+- RM Defaults changed in pyface, no need for env var ETS_AUI_TOOLBAR any more
+- RM Added circumference, width, height, area to vector object calculations
+- RM Significant reduction of py2app size by removing .py and .pyc if .pyo exists
+- RM Got rid of UI agnostic code, because there's no way we're ever going to QT so why make it harder?
+- RM Added about_application as blank URL so it will still load a blank maproom project on startup
+- RM Adding ruler icon that should have been committed with d73306cd
+- RM Simplified toolbar creation
+- RM Fixed #642: added ruler tool to measure great-circle distance between 2 points
+- RM Refs #642: added distance display in mouse_handler when creating vector objects
+- RM Fixed #651: fixed rasterization of circle
+- RM Fixed #650: corrected circle display (computes distance on earth for radius rather than inscribing circle in lat/lon square
+- RM setup.py cleanup to prevent importing of stuff not needed until py2exe/py2app time
+- RM Fixed usage of PyOpenGL_accelerate thanks to post by Mike Fletcher on pyopengl mailing list
+- RM Updated docs for more streamlined install procedure
+- RM Initial support for pyfilesystem for layer loading/saving
+- RM Added reference to tile number calculations
+- RM Replaced view_of with rebuild_document_properties
+- RM Fixed trait change error by moving active_editor.mouse_mode_toolbar change event into activated()
+- RM Use Omnimon's popup menu framework
+- RM Moved popup context menu data into popup menu itself
+- RM Added emply list for actions in CopyPasteGroup now that Omnimon defaults to including them
+- RM Added error message dialog resulting from errors in command processing
+- RM Subclassed LayerManager from Document
+
 10/25/2015
 ---------------------------
 Released 3.1b13
