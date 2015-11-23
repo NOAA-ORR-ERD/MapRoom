@@ -35,7 +35,7 @@ class ParticleFolder(Folder):
     
     end_index = Int(sys.maxint)
     
-    layer_info_panel = ["Start time", "End time"]
+    layer_info_panel = ["Start time", "End time", "Particle Color"]
     
     def get_particle_layers(self):
         timesteps = []
@@ -44,6 +44,14 @@ class ParticleFolder(Folder):
             if layer.type == "particle":
                 timesteps.append(layer)
         return timesteps
+    
+    def get_selected_particle_layers(self, project):
+        steps = self.get_particle_layers()
+        layers = []
+        for layer in steps:
+            if project.layer_visibility[layer]["layer"]:
+                layers.append(layer)
+        return layers
     
     def clamp_index(self, index):
         if index < 0:
@@ -75,6 +83,18 @@ class ParticleFolder(Folder):
             project.layer_visibility[layer]["layer"] = checked
         project.layer_metadata_changed(self)
         project.refresh()
+    
+    def get_particle_color(self, project):
+        for layer in self.get_selected_particle_layers(project):
+            color = layer.points[0].color
+            return color
+        return color_floats_to_int(0, 0, 0, 1.0)
+    
+    def update_particle_color(self, project, int_color):
+        for layer in self.get_selected_particle_layers(project):
+            layer.points.color = int_color
+            layer.change_count += 1
+        self.change_count += 1
 
 class ParticleLayer(PointBaseLayer):
     """Layer for particle files from GNOME, etc.
@@ -85,6 +105,8 @@ class ParticleLayer(PointBaseLayer):
     
     type = Str("particle")
     
+    layer_info_panel = ["Particle Color"]
+
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_to_color = np.array([color_floats_to_int(0, 0, 0, 1.0),
                                      color_floats_to_int(1.0, 0, 0, 1.0),
@@ -102,3 +124,13 @@ class ParticleLayer(PointBaseLayer):
         status_codes = np.clip(status_codes, 0, np.alen(self.status_code_to_color))
         colors = self.status_code_to_color[status_codes]
         self.points.color = colors
+        
+    def get_selected_particle_layers(self, project):
+        return [self]
+    
+    def get_particle_color(self, project):
+        return self.points[0].color
+    
+    def update_particle_color(self, project, int_color):
+        self.points.color = int_color
+        self.change_count += 1

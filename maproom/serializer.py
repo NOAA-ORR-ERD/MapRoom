@@ -247,6 +247,9 @@ class ListIntConverter(ArgumentConverter):
         text = ",".join([str(i) for i in instance])
         return "[%s]" % text,
     
+    def get_values_from_list(self, vals, manager, deserializer):
+        return [int(i) for i in vals]
+    
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text.startswith("["):
@@ -255,8 +258,21 @@ class ListIntConverter(ArgumentConverter):
             text = text[:-1]
         if text:
             vals = text.split(",")
-            return [int(i) for i in vals]
+            return self.get_values_from_list(vals, manager, deserializer)
         return []
+
+
+class LayersConverter(ListIntConverter):
+    stype = "layers"
+    
+    def get_values_from_list(self, vals, manager, deserializer):
+        layers = []
+        for i in vals:
+            invariant = int(i) + deserializer.layer_offset
+            layer = manager.get_layer_by_invariant(invariant)
+            print "invariant=%d, layer=%s" % (invariant, layer)
+            layers.append(layer)
+        return layers
 
 
 class StyleConverter(ArgumentConverter):

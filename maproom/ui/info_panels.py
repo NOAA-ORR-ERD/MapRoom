@@ -1075,6 +1075,30 @@ class ParticleEndField(ParticleField):
         layer.set_end_index(index)
         layer.update_timestep_visibility(self.panel.project)
 
+class ParticleColorField(ColorField):
+    same_line = True
+    
+    def get_value(self, layer):
+        return layer.get_particle_color(self.panel.project)
+        
+    def create_control(self):
+        import wx.lib.colourselect as csel
+        color = (0, 0, 0)
+        c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width,-1))
+        c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
+        return c
+        
+    def color_changed(self, event):
+        color = [float(c/255.0) for c in event.GetValue()]
+        color.append(1.0)
+        int_color = color_floats_to_int(*color)
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        layers = layer.get_selected_particle_layers(self.panel.project)
+        cmd = ParticleColorCommand(layers, int_color)
+        self.process_command(cmd)
+
 
 class MapServerField(InfoField):
     same_line = False
@@ -1385,6 +1409,7 @@ class InfoPanel(PANELTYPE):
         "Marplot icon": MarplotIconField,
         "Start time": ParticleStartField,
         "End time": ParticleEndField,
+        "Particle Color": ParticleColorField,
         "Anchor coordinates": AnchorCoordinatesField,
         "Anchor point": AnchorPointField,
         "Map server": MapServerField,
