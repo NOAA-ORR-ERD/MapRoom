@@ -605,7 +605,7 @@ class ParticleColorCommand(Command):
     
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
-            if next_command.layer == self.layer:
+            if set(next_command.layers) == set(self.layers):
                 self.color = next_command.color
                 return True
     
