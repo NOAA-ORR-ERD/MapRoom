@@ -216,8 +216,6 @@ if BUILD_APP:
         #    ( ".", [ "..\..\PROJ.4\workspace\src\proj.dll" ] ),
         #)
 
-        includes.extend(omnimon.get_py2exe_toolkit_includes())
-        includes.extend(omnimon.get_py2exe_toolkit_includes(maproom))
         excludes.extend([
             "OpenGL",
             ])
