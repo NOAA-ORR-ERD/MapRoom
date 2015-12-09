@@ -44,6 +44,10 @@ class MouseHandler(object):
         self.after_first_mouse_up = False
         self.mouse_up_too_close = False
         self.can_snap = False
+        
+        # Optional (only OS X at this point) mouse wheel event filter
+        self.wheel_scroll_count = 0
+        self.use_every_nth_wheel_scroll = 5
     
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
@@ -183,11 +187,26 @@ class MouseHandler(object):
         delta = event.GetWheelDelta()
         window = event.GetEventObject()
         mouselog.debug("on_mouse_wheel_scroll. rot=%s delta=%d win=%s" % (rotation, delta, window))
-        if (delta == 0):
+        if rotation == 0 or delta == 0:
             return
 
         if sys.platform == "darwin":
-            amount = 1 if rotation > 0 else -1
+            # OS X mouse wheel handling is not the same as other platform.
+            # The delta value is 10 while the other platforms are 120,
+            # and the rotation amount varies, seemingly due to the speed at
+            # which the wheel is rotated (or how fast the trackpad is swiped)
+            # while other platforms are either 120 or -120.  When mouse wheel
+            # handling is performed in the usual manner on OS X it produces a
+            # strange back-and-forth zooming in/zooming out.  So, this extra
+            # hack is needed to operate like the other platforms.
+            
+            # add extra to the rotation so the minimum amount is 1 or -1
+            extra = delta if rotation > 0 else -delta
+            amount = (rotation + extra) / delta
+            self.wheel_scroll_count -= abs(amount)
+            if self.wheel_scroll_count > 0:
+                return
+            self.wheel_scroll_count = self.use_every_nth_wheel_scroll
         else:
             amount = rotation / delta
 
