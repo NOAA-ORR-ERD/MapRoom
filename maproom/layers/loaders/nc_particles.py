@@ -77,7 +77,8 @@ class ParticleLoader(BaseLayerLoader):
         parent.file_path = metadata.uri
         parent.mime = self.mime ## fixme: tricky here, as one file has multiple layers
         parent.name = os.path.split(parent.file_path)[1]
-        layers = [parent]
+        
+        layers = []
         ## loop through all the time steps in the file.
         for (points, status_codes, time) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
@@ -88,4 +89,6 @@ class ParticleLoader(BaseLayerLoader):
             layer.set_data(points, status_codes)
             layers.append(layer)
         progress_log.info("Finished loading %s" % metadata.uri)
+        layers.reverse()
+        layers[0:0] = [parent]
         return layers
