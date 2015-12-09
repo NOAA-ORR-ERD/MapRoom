@@ -182,11 +182,15 @@ class MouseHandler(object):
         rotation = event.GetWheelRotation()
         delta = event.GetWheelDelta()
         window = event.GetEventObject()
-        mouselog.debug("on_mouse_wheel_scroll. delta=%d win=%s" % (delta, window))
+        mouselog.debug("on_mouse_wheel_scroll. rot=%s delta=%d win=%s" % (rotation, delta, window))
         if (delta == 0):
             return
 
-        amount = rotation / delta
+        if sys.platform == "darwin":
+            amount = 1 if rotation > 0 else -1
+        else:
+            amount = rotation / delta
+        e = self.editor
 
         screen_point = event.GetPosition()
         
