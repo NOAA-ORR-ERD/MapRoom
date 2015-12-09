@@ -190,7 +190,6 @@ class MouseHandler(object):
             amount = 1 if rotation > 0 else -1
         else:
             amount = rotation / delta
-        e = self.editor
 
         screen_point = event.GetPosition()
         
