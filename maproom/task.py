@@ -717,66 +717,65 @@ class MaproomProjectTask(FrameworkTask):
     def prepare_destroy(self):
         self.stop_threaded_processing()
     
-    def get_actions(self, location, menu_name, group_name):
-        if location == "Menu":
-            if menu_name == "File":
-                if group_name == "NewGroup":
-                    return [
-                        NewProjectAction(),
-                        NewVectorLayerAction(),
-                        NewAnnotationLayerAction(),
-                        NewWMSLayerAction(),
-                        NewTileLayerAction(),
-                        NewLonLatLayerAction(),
-                        ]
-                elif group_name == "SaveGroup":
-                    return [
-                        SaveProjectAction(),
-                        SaveProjectAsAction(),
-                        SaveCommandLogAction(),
-                        SaveLayerAction(),
-                        SMenu(SaveLayerGroup(),
-                            id='SaveLayerAsSubmenu', name="Save Layer As"),
-                        SaveImageAction(),
-                        ]
-            if menu_name == "Edit":
-                if group_name == "SelectGroup":
-                    return [
-                        ClearSelectionAction(),
-                        DeleteSelectionAction(),
-                        Separator(),
-                        BoundaryToSelectionAction(),
-                        Separator(),
-                        ClearFlaggedAction(),
-                        FlaggedToSelectionAction(),
-                        ]
-                elif group_name == "CopyPasteGroup":
-                    return []
-                elif group_name == "PrefGroup":
-                    return [
-                        Group(
-                            DefaultStyleAction(),
-                            PreferencesAction(),
-                            absolute_position="last"),
-                        ]
-                elif group_name == "FindGroup":
-                    return [
-                        FindPointsAction(),
-                        ]
-            if menu_name == "Help":
-                if group_name == "BugReportGroup":
-                    return [
-                        OpenLogDirectoryAction(),
-                        OpenLogAction(),
-                        ]
-
-        if location.startswith("Tool"):
-            if menu_name == "File":
-                if group_name == "SaveGroup":
-                    return [
-                        SaveProjectAction(),
-                        SaveProjectAsAction(),
-                        ]
+    def get_actions_Menu_File_NewGroup(self):
+        return [
+            NewProjectAction(),
+            NewVectorLayerAction(),
+            NewAnnotationLayerAction(),
+            NewWMSLayerAction(),
+            NewTileLayerAction(),
+            NewLonLatLayerAction(),
+            ]
+    
+    def get_actions_Menu_File_SaveGroup(self):
+        return [
+            SaveProjectAction(),
+            SaveProjectAsAction(),
+            SaveCommandLogAction(),
+            SaveLayerAction(),
+            SMenu(SaveLayerGroup(),
+                  id='SaveLayerAsSubmenu', name="Save Layer As"),
+            SaveImageAction(),
+            ]
+    
+    def get_actions_Menu_Edit_SelectGroup(self):
+        return [
+            ClearSelectionAction(),
+            DeleteSelectionAction(),
+            Separator(),
+            BoundaryToSelectionAction(),
+            Separator(),
+            ClearFlaggedAction(),
+            FlaggedToSelectionAction(),
+            ]
+    
+    def get_actions_Menu_Edit_CopyPasteGroup(self):
+        return []
+    
+    def get_actions_Menu_Edit_PrefGroup(self):
+        return [
+            Group(
+                DefaultStyleAction(),
+                PreferencesAction(),
+                absolute_position="last"),
+            ]
+    
+    def get_actions_Menu_Edit_FindGroup(self):
+        return [
+            FindPointsAction(),
+            ]
+    
+    def get_actions_Menu_Help_BugReportGroup(self):
+        return [
+            OpenLogDirectoryAction(),
+            OpenLogAction(),
+            ]
+    
+    def get_actions_Tool_File_SaveGroup(self):
+        return [
+            SaveProjectAction(),
+            SaveProjectAsAction(),
+            ]
 
     def get_editor(self, guess=None):
         """ Opens a new empty window
