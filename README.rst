@@ -75,6 +75,11 @@ On OS X, GEOS can be installed using brew::
 
     brew install geos
 
+and the dynamic library search path must be added to the environment (which can
+be added automatically if you add this to a bash login file)::
+
+    export DYLD_LIBRARY_PATH=/usr/local/Cellar/geos/<GEOS_VERSION>/lib
+
 Other platforms need the appropriate libgeos_c file installed in a library
 directory.  Then, install Shapely::
 
