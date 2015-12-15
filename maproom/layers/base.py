@@ -220,7 +220,7 @@ class Layer(HasTraits):
             from maproom.layers import loaders
             
             log.debug("Loading layers from url %s" % json_data['url'])
-            loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'])
+            loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
         else:
             log.debug("Loading layers from json encoded data")
             layer = kls(manager=manager)
