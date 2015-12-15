@@ -1,3 +1,18 @@
+12/15/2015
+---------------------------
+Released 3.1b15
+- RM Fixed missing layer manager reference when loading image layers from json save file
+- RM Omnimon framework renamed to omnivore
+- RM updated docs for GEOS shared library
+- RM Changed from monolithic get_actions to modular
+- RM Fixed #653: added mouse wheel filtering so that it takes multiple wheel events to zoom in/out on OS X
+- RM Refs #653: corrected mistake in commit
+- RM Refs #653: working fix for mouse wheel, but not optimal. Still too fast.
+- RM Reversed order of particle layers so most recent shows up on top
+- RM Removed py2exe toolkit dynamic load hack because omnimon doesn't use toolkit abstraction any more
+- RM Moved maproom.png out of the way of maproom.ico for search path compatibility in ImageResource on windows
+- RM Changed setup.py yet again to exclude reaping numpy .py files during py2app
+
 11/23/2015
 ---------------------------
 Released 3.1b14
