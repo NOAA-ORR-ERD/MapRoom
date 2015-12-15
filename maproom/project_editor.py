@@ -142,6 +142,7 @@ class ProjectEditor(FrameworkEditor):
                     center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
                     cmd = ViewportCommand(None, center, units_per_pixel)
                 self.process_command(cmd)
+            self.view_document(self.document)
     
     def parse_extra_json(self, json, batch_flags):
         for serialized_data in json:
