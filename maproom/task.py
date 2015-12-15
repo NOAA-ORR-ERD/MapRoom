@@ -13,8 +13,8 @@ from pyface.tasks.action.api import DockPaneToggleGroup, SMenuBar, \
     SMenu, SToolBar, TaskAction, EditorAction, SchemaAddition
 from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
 
-from omnimon.framework.task import FrameworkTask
-from omnimon.framework.i_about import IAbout
+from omnivore.framework.task import FrameworkTask
+from omnivore.framework.i_about import IAbout
 
 from project_editor import ProjectEditor
 import pane_layout
@@ -27,7 +27,7 @@ from vector_object_commands import *
 from ui.dialogs import StyleDialog
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
-from omnimon.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup
+from omnivore.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup
 
 import logging
 log = logging.getLogger(__name__)
@@ -470,7 +470,7 @@ class OpenLogAction(Action):
     def perform(self, event):
         app = event.task.window.application
         filename = app.get_log_file_name("command_log", ".mrc")
-        app.load_file(filename, task_id="omnimon.framework.text_edit_task")
+        app.load_file(filename, task_id="omnivore.framework.text_edit_task")
 
 class OpenLogDirectoryAction(Action):
     name = 'Open Log Directory in File Manager'

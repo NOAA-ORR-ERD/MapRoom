@@ -8,7 +8,7 @@ from vispy.gloo import gl, Program, VertexBuffer, IndexBuffer
 from vispy.util.transforms import ortho, translate, rotate
 from vispy.geometry import create_cube
 
-from omnimon import get_image_path
+from omnivore import get_image_path
 
 import maproom.library.rect as rect
 import Picker

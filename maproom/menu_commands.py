@@ -1,7 +1,7 @@
 import numpy as np
 
-from omnimon.framework.errors import ProgressCancelError
-from omnimon.utils.file_guess import FileMetadata
+from omnivore.framework.errors import ProgressCancelError
+from omnivore.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
 from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer

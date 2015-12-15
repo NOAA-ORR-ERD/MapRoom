@@ -5,7 +5,7 @@ import sys
 import traceback
 import wx
 
-from omnimon.framework.errors import ProgressCancelError
+from omnivore.framework.errors import ProgressCancelError
 
 from ..menu_commands import TriangulateLayerCommand
 

@@ -16,8 +16,8 @@ import os
 os.environ["ETS_DEBUG"] = "True"
 
 # Framework imports.
-from omnimon import get_image_path
-from omnimon.framework.application import run
+from omnivore import get_image_path
+from omnivore.framework.application import run
 
 # Local imports.
 from maproom.pane_layout import task_id_with_pane_layout

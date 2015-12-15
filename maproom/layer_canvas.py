@@ -4,7 +4,7 @@ import time
 import wx
 import pyproj
 
-from omnimon import get_image_path
+from omnivore import get_image_path
 
 import library.coordinates as coordinates
 import renderer

@@ -2,8 +2,8 @@ import os
 import re
 import shlex
 
-from omnimon.utils.runtime import get_all_subclasses
-from omnimon.utils.file_guess import FileMetadata
+from omnivore.utils.runtime import get_all_subclasses
+from omnivore.utils.file_guess import FileMetadata
 
 import command
 from layers.style import LayerStyle

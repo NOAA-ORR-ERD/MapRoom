@@ -12,7 +12,7 @@
 #    cog.py -r __init__.py
 #
 # Note that the cog script works when called from the top directory (.i.e.  at
-# the same level as the omnimon directory) or this directory.
+# the same level as the omnivore directory) or this directory.
 
 # [[[cog
 #import os
@@ -67,7 +67,7 @@ from envisage.api import Plugin
 from traits.api import List
 
 class MaproomFileRecognizerPlugin(Plugin):
-    """ A plugin that contributes to the omnimon.file_type.recognizer extension point. """
+    """ A plugin that contributes to the omnivore.file_type.recognizer extension point. """
 
     #### 'IPlugin' interface ##################################################
 
@@ -79,6 +79,6 @@ class MaproomFileRecognizerPlugin(Plugin):
 
     # This tells us that the plugin contributes the value of this trait to the
     # 'greetings' extension point.
-    recognizer = List(recognizers, contributes_to='omnimon.file_recognizer')
+    recognizer = List(recognizers, contributes_to='omnivore.file_recognizer')
 
 plugins = [MaproomFileRecognizerPlugin()]

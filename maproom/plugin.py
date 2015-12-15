@@ -6,7 +6,7 @@ from envisage.api import ExtensionPoint
 from envisage.ui.tasks.api import TaskFactory
 from traits.api import List
 
-from omnimon.framework.plugin import FrameworkPlugin
+from omnivore.framework.plugin import FrameworkPlugin
 
 from preferences import MaproomPreferencesPane
 
@@ -21,7 +21,7 @@ class MaproomPlugin(FrameworkPlugin):
     #### 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
-    id = 'omnimon.tasks'
+    id = 'omnivore.tasks'
 
     # The plugin's name (suitable for displaying to the user).
     name = 'MapRoom'

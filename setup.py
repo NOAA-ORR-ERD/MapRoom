@@ -86,7 +86,7 @@ ext_modules = [bitmap, shape, tree, tessellator, render]
 full_version = Version.VERSION
 spaceless_version = Version.VERSION.replace(" ", "_")
 
-import omnimon
+import omnivore
 import maproom
 
 BUILD_APP = False
@@ -119,14 +119,14 @@ if BUILD_APP:
     includes = []
     excludes = []
     
-    data_files.extend(omnimon.get_py2exe_data_files())
-    data_files.extend(omnimon.get_py2exe_data_files(maproom))
+    data_files.extend(omnivore.get_py2exe_data_files())
+    data_files.extend(omnivore.get_py2exe_data_files(maproom))
 
     import traitsui
-    data_files.extend(omnimon.get_py2exe_data_files(traitsui, excludes=["*/qt4/*"]))
+    data_files.extend(omnivore.get_py2exe_data_files(traitsui, excludes=["*/qt4/*"]))
 
     import pyface
-    data_files.extend(omnimon.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
+    data_files.extend(omnivore.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
 
     includes = [
         "ctypes",
@@ -323,7 +323,7 @@ try:
         entry_points = """
 
         [envisage.plugins]
-        omnimon.tasks = maproom.plugin:MaproomPlugin
+        omnivore.tasks = maproom.plugin:MaproomPlugin
 
         """,
         windows=[dict(

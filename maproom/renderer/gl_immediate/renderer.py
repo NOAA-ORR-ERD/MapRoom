@@ -8,7 +8,7 @@ import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
-from omnimon import get_image_path
+from omnivore import get_image_path
 
 import maproom.library.rect as rect
 from .. import data_types, int_to_color_floats

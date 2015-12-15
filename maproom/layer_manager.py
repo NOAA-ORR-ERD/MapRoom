@@ -17,7 +17,7 @@ from renderer import color_floats_to_int, int_to_color_floats
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set
 from pyface.api import YES, NO, GUI
 
-from omnimon.framework.document import Document
+from omnivore.framework.document import Document
 
 
 import logging

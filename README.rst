@@ -32,7 +32,7 @@ Note that on Mac, libjpeg must be installed before pillow using the `Homebrew pa
 Other platforms do not need this dependency.  This combination of library
 versions is known to work::
 
-    pip install numpy==1.10.1 PyOpenGL==3.1.1a1 PyOpenGL_accelerate==3.1.1a1 pyproj==1.9.4 Cython==0.23.4 Pillow=3.0.0 reportlab=3.2.0 omnimon
+    pip install numpy==1.10.1 PyOpenGL==3.1.1a1 PyOpenGL_accelerate==3.1.1a1 pyproj==1.9.4 Cython==0.23.4 Pillow=3.0.0 reportlab=3.2.0 omnivore
 
 PyOpenGL_accelerate is currently not used on all platforms because a paint
 event is apparently being triggered before the window is realized on screen,
@@ -124,7 +124,7 @@ If a manual build of netcdf4-python is needed::
 Usage
 =====
 
-To run, maproom must be installed as it is a plugin to the omnimon framework::
+To run, maproom must be installed as it is a plugin to the omnivore framework::
 
     python setup.py develop
 

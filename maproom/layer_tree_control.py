@@ -1,7 +1,7 @@
 import os
 import sys
 import wx
-import omnimon.utils.wx.customtreectrl as treectrl
+import omnivore.utils.wx.customtreectrl as treectrl
 
 from layers import Layer, EmptyLayer
 from menu_commands import MoveLayerCommand

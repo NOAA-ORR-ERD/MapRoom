@@ -10,8 +10,8 @@ import wx
 from pyface.api import YES, NO
 from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float, Event
 
-from omnimon.framework.editor import FrameworkEditor
-from omnimon.framework.errors import ProgressCancelError
+from omnivore.framework.editor import FrameworkEditor
+from omnivore.framework.errors import ProgressCancelError
 
 # Local imports.
 from layer_canvas import LayerCanvas

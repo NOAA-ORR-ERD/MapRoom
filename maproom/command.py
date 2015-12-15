@@ -1,6 +1,6 @@
 import os
 
-from omnimon.utils.runtime import get_all_subclasses
+from omnivore.utils.runtime import get_all_subclasses
 
 
 class UndoStack(list):
