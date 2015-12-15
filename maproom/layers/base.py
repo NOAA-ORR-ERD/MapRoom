@@ -143,7 +143,7 @@ class Layer(HasTraits):
             'style': str(self.style),
             }
         if self.file_path:
-            json['url'] = os.path.abspath(self.file_path)
+            json['url'] = self.file_path
             json['mime'] = self.mime
         
         update = {}
