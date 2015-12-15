@@ -597,6 +597,12 @@ class OverlayImageObject(RectangleVectorObject):
         ((-0.5,0.5), (0.5,0.5), (0.5,-0.5), (-0.5,-0.5), (0,0.5), (0.5,0), (0,-0.5), (-0.5,0), (0,0)),
         dtype=np.float32)
     
+    def anchor_point_index_to_json(self):
+        return self.anchor_point_index
+
+    def anchor_point_index_from_json(self, json_data):
+        self.anchor_point_index = json_data['anchor_point_index']
+    
     def can_anchor_point_move(self):
         return True
 
