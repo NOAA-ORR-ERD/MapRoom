@@ -264,7 +264,7 @@ class LayerManager(Document):
                     raise
         return None
     
-    def load_all_from_json(self, json):
+    def load_all_from_json(self, json, batch_flags=None):
         order = []
         if json[0] == "extra json data":
             extra_json = json[1]
@@ -272,7 +272,7 @@ class LayerManager(Document):
         else:
             extra_json = None
         for serialized_data in json:
-            loaded = Layer.load_from_json(serialized_data, self)
+            loaded = Layer.load_from_json(serialized_data, self, batch_flags)
             index = serialized_data['index']
             order.append((index, loaded))
             print "processed json from layer", loaded

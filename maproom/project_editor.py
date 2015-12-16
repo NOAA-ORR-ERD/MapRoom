@@ -544,6 +544,8 @@ class ProjectEditor(FrameworkEditor):
         
         if b.errors:
             self.window.error("\n".join(b.errors))
+        if b.messages:
+            self.window.information("\n".join(b.messages), "Messages")
         
         self.undo_history.update_history()
 

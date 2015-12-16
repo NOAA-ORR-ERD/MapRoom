@@ -160,7 +160,7 @@ class Layer(HasTraits):
     def get_attrs_with_json(self):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
     
-    def unserialize_json(self, json_data):
+    def unserialize_json(self, json_data, batch_flags):
         """Restore layer from json representation.
         
         The json data passed to this function will be the subset of the json
@@ -175,12 +175,13 @@ class Layer(HasTraits):
         try:
             method = getattr(self, name)
         except AttributeEror:
+            batch_flags.errors.append("Unsupported MapRoom save file version %s" % str(json_data['version']))
             raise
         log.debug("Restoring JSON data using %s" % name)
-        method(json_data)
+        method(json_data, batch_flags)
         self.update_bounds()
     
-    def unserialize_json_version1(self, json_data):
+    def unserialize_json_version1(self, json_data, batch_flags):
         """Restore layer from json representation.
         
         The json data passed to this function will be the subset of the json
@@ -194,8 +195,13 @@ class Layer(HasTraits):
             self.file_path = json_data['url']
             self.mime = json_data['mime']
         for attr, to_json in self.get_attrs_with_json():
-            from_json = getattr(self, attr + "_from_json")
-            from_json(json_data)
+            try:
+                from_json = getattr(self, attr + "_from_json")
+                from_json(json_data)
+            except KeyError:
+                message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
+                log.warning(message)
+                batch_flags.messages.append("WARNING: %s" % message)
     
     type_to_class_defs = {}
     
@@ -215,7 +221,7 @@ class Layer(HasTraits):
         return cls.type_to_class_defs[type_string]
     
     @classmethod
-    def load_from_json(cls, json_data, manager):
+    def load_from_json(cls, json_data, manager, batch_flags=None):
         t = json_data['type']
         kls = cls.type_to_class(t)
         log.debug("load_from_json: found type %s, class=%s" % (t, kls))
@@ -227,7 +233,7 @@ class Layer(HasTraits):
         else:
             log.debug("Loading layers from json encoded data")
             layer = kls(manager=manager)
-            layer.unserialize_json(json_data)
+            layer.unserialize_json(json_data, batch_flags)
             layers = [layer]
         log.debug("returning layers: %s" % str(layers))
         return layers
