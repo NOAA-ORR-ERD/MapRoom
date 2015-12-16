@@ -319,7 +319,7 @@ class LayerManager(Document):
                 project.append(data)
         
         try:
-            with fsopen(self.metadata.uri, "wb") as fh:
+            with fsopen(file_path, "wb") as fh:
                 fh.write("# -*- MapRoom project file -*-\n")
                 json.dump(project, fh)
         except Exception, e:
