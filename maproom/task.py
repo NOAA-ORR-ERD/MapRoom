@@ -749,9 +749,6 @@ class MaproomProjectTask(FrameworkTask):
             FlaggedToSelectionAction(),
             ]
     
-    def get_actions_Menu_Edit_CopyPasteGroup(self):
-        return []
-    
     def get_actions_Menu_Edit_PrefGroup(self):
         return [
             Group(

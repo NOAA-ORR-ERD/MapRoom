@@ -53,6 +53,9 @@ class VectorObjectLayer(LineLayer):
     
     control_point_color = color_floats_to_int(0, 0, 0, 1.0)
 
+    def can_copy(self):
+        return True
+
     def get_info_panel_text(self, prop):
         if prop == "Path length":
             km = self.calculate_distances()

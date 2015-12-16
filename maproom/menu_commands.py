@@ -1,10 +1,12 @@
+import json
+
 import numpy as np
 
 from omnivore.framework.errors import ProgressCancelError
 from omnivore.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import loaders, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer
+from layers import loaders, Layer, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer
 from library.Boundary import Boundaries
 
 import logging
@@ -116,6 +118,56 @@ class AddLayerCommand(Command):
         
         layer.new()
         lm.insert_loaded_layer(layer, editor, self.before, self.after)
+        
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+        lf.layer_loaded = True
+        undo.data = (layer.invariant, saved_invariant)
+        
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        invariant, saved_invariant = self.undo_info.data
+        layer = editor.layer_manager.get_layer_by_invariant(invariant)
+        insertion_index = lm.get_multi_index_of_layer(layer)
+        
+        # Only remove the reference to the layer in the layer manager, leave
+        # all the layer info around so that it can be undone
+        lm.remove_layer_at_multi_index(insertion_index)
+        lm.next_invariant = saved_invariant
+        
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        return undo
+
+class PasteLayerCommand(Command):
+    short_name = "paste_layer"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ('json_text', 'string'),
+            ]
+    
+    def __init__(self, layer, json_text):
+        Command.__init__(self, layer)
+        self.json_text = json_text
+    
+    def __str__(self):
+        return "Paste Layer"
+    
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        lm = editor.layer_manager
+        before = lm.get_layer_by_invariant(self.layer)
+        saved_invariant = lm.next_invariant
+        json_data = json.loads(self.json_text)
+        loaded = Layer.load_from_json(json_data, lm)
+        layer = loaded[0]
+        print "loaded layer:", layer
+        lm.insert_loaded_layer(layer, editor, before=before)
         
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True

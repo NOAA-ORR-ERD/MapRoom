@@ -2,6 +2,7 @@
 import sys
 import os.path
 import time
+import json
 
 # Major package imports.
 import wx
@@ -321,6 +322,8 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
+            self.can_copy = sel_layer.can_copy()
+            self.can_paste = True
             self.layer_can_save = sel_layer.can_save()
             self.layer_can_save_as = sel_layer.can_save_as()
             self.layer_selected = not sel_layer.is_root()
@@ -331,6 +334,8 @@ class ProjectEditor(FrameworkEditor):
             self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
             self.mouse_mode = toolbar.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
         else:
+            self.can_copy = False
+            self.can_paste = False
             self.layer_can_save = False
             self.layer_can_save_as = False
             self.layer_selected = False
@@ -615,6 +620,28 @@ class ProjectEditor(FrameworkEditor):
 #        - rename layer
 #        - triangulate
 
+    def get_supported_clipboard_data_objects(self):
+        return [wx.CustomDataObject("maproom")]
+    
+    def create_clipboard_data_object(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            json_data = sel_layer.serialize_json(-999)
+            text = json.dumps(json_data)
+            print "clipboard object: json data", text
+            data_obj = wx.CustomDataObject("maproom")
+            data_obj.SetData(text)
+            return data_obj
+
+    def process_paste_data_object(self, data_obj):
+        print "Found data object %s" % data_obj
+        text = data_obj.GetData()
+        print "value:", text
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            cmd = PasteLayerCommand(sel_layer, text)
+            self.process_command(cmd)
+        
     def clear_selection(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:

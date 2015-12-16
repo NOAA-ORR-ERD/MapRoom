@@ -117,6 +117,9 @@ class Layer(HasTraits):
     def is_root(self):
         return False
     
+    def can_copy(self):
+        return False
+    
     def can_save(self):
         """Can the layer be saved using the current filename?"""
         return False
