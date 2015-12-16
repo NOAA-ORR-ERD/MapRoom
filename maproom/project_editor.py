@@ -634,8 +634,7 @@ class ProjectEditor(FrameworkEditor):
 #        - rename layer
 #        - triangulate
 
-    def get_supported_clipboard_data_objects(self):
-        return [wx.CustomDataObject("maproom")]
+    supported_clipboard_data_objects = [wx.CustomDataObject("maproom")]
     
     def create_clipboard_data_object(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
