@@ -103,6 +103,8 @@ class ProjectEditor(FrameworkEditor):
                 print "FIXME: Add load project command that clears all layers"
                 extra = loader.load_project(metadata, document, batch_flags)
                 self.document = self.layer_manager = document
+                self.layer_visibility = self.layer_manager.get_default_visibility()
+                self.layer_tree_control.rebuild()
                 if extra is not None:
                     self.parse_extra_json(extra, batch_flags)
                 self.perform_batch_flags(batch_flags)
@@ -162,7 +164,6 @@ class ProjectEditor(FrameworkEditor):
     def rebuild_document_properties(self):
         self.layer_manager = self.document
         self.layer_visibility = self.layer_manager.get_default_visibility()
-        self.layer_canvas.change_view(self.layer_manager)
         self.layer_canvas.zoom_to_fit()
 
     def save(self, path=None):

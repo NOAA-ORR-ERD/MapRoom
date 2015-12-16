@@ -19,7 +19,6 @@ class BaseCanvas(object):
     """
 
     def __init__(self, layer_manager, project):
-        self.layer_manager = layer_manager
         self.project = project
         
         self.layer_renderers = {}
@@ -56,14 +55,11 @@ class BaseCanvas(object):
     def new_renderer(self, layer):
         return NullRenderer(self, layer)
 
-    def change_view(self, layer_manager):
-        self.layer_manager = layer_manager
-
     def get_renderer(self, layer):
         return self.layer_renderers[layer]
 
     def update_renderers(self):
-        for layer in self.layer_manager.flatten():
+        for layer in self.project.layer_manager.flatten():
             if not layer in self.layer_renderers:
                 r = self.new_renderer(layer)
                 layer.rebuild_renderer(r)
@@ -75,7 +71,7 @@ class BaseCanvas(object):
         pass
 
     def rebuild_renderers(self):
-        for layer in self.layer_manager.flatten():
+        for layer in self.project.layer_manager.flatten():
             self.remove_renderer_for_layer(layer)
         self.update_renderers()
 
@@ -165,7 +161,7 @@ class BaseCanvas(object):
             return
 
         selected = self.get_selected_layer()
-        layer_draw_order = list(enumerate(self.layer_manager.flatten()))
+        layer_draw_order = list(enumerate(self.project.layer_manager.flatten()))
         layer_draw_order.reverse()
 
         # Update any linked control points by first looping through all layers
@@ -174,14 +170,14 @@ class BaseCanvas(object):
             vis = self.project.layer_visibility[layer]
             renderer = self.layer_renderers[layer]
             layer.pre_render(renderer, w_r, p_r, s_r, vis)
-        affected_layers = self.layer_manager.update_linked_control_points()
+        affected_layers = self.project.layer_manager.update_linked_control_points()
         for layer in affected_layers:
             renderer = self.layer_renderers[layer]
             layer.rebuild_renderer(renderer, True)
 
         null_picker = NullPicker()
         def render_layers(layer_order, picker=null_picker):
-            self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
+            self.project.layer_manager.pick_layer_index_map = {} # make sure it's cleared
             pick_layer_index = -1
             delayed_pick_layer = None
             control_points_layer = None
@@ -194,7 +190,7 @@ class BaseCanvas(object):
                 if picker.is_active:
                     if layer.pickable:
                         pick_layer_index += 1
-                        self.layer_manager.pick_layer_index_map[pick_layer_index] = i
+                        self.project.layer_manager.pick_layer_index_map[pick_layer_index] = i
                         layer_index_base = picker.get_picker_index_base(pick_layer_index)
                         if layer == self.hide_picker_layer:
                             log.debug("Hiding picker layer %s from picking itself" % pick_layer_index)
@@ -351,14 +347,14 @@ class BaseCanvas(object):
         self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_fit()
 
     def calc_zoom_to_fit(self):
-        layers = self.layer_manager.get_visible_layers(self.project.layer_visibility)
+        layers = self.project.layer_manager.get_visible_layers(self.project.layer_visibility)
         return self.calc_zoom_to_layers(layers)
 
     def zoom_to_layers(self, layers):
         self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_layers(layers)
 
     def calc_zoom_to_layers(self, layers):
-        w_r = self.layer_manager.accumulate_layer_bounds(layers)
+        w_r = self.project.layer_manager.accumulate_layer_bounds(layers)
         return self.calc_zoom_to_world_rect(w_r)
 
     def zoom_to_world_rect(self, w_r, border=True):
