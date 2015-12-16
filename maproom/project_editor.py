@@ -191,8 +191,16 @@ class ProjectEditor(FrameworkEditor):
             self.window.error(error)
         else:
             self.layer_manager.undo_stack.set_save_point()
-            self.dirty = self.layer_manager.undo_stack.is_dirty()
+            
+            # Update tab name.  Note that dirty must be changed in order for
+            # the trait to be updated, so force a change if needed.  Also,
+            # update the URI first because trait callbacks happen immediately
+            # and because properties are used for the editor name, no trait
+            # event gets called on updating the metadata URI.
             self.layer_manager.metadata.uri = path
+            if not self.dirty:
+                self.dirty = True
+            self.dirty = self.layer_manager.undo_stack.is_dirty()
     
     def get_savepoint(self):
         layer = self.layer_tree_control.get_selected_layer()
