@@ -6,6 +6,8 @@ import traceback
 import json
 
 import numpy as np
+from fs.opener import opener, fsopen
+
 import library.rect as rect
 from library.accumulator import flatten
 
@@ -317,7 +319,7 @@ class LayerManager(Document):
                 project.append(data)
         
         try:
-            with open(file_path, "w") as fh:
+            with fsopen(self.metadata.uri, "wb") as fh:
                 fh.write("# -*- MapRoom project file -*-\n")
                 json.dump(project, fh)
         except Exception, e:
