@@ -201,6 +201,9 @@ class ProjectEditor(FrameworkEditor):
             if not self.dirty:
                 self.dirty = True
             self.dirty = self.layer_manager.undo_stack.is_dirty()
+            
+            # Push URL to top of recent files list
+            self.window.application.successfully_loaded_event = self.layer_manager.metadata.uri
     
     def get_savepoint(self):
         layer = self.layer_tree_control.get_selected_layer()
