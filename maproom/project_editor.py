@@ -155,10 +155,16 @@ class ProjectEditor(FrameworkEditor):
             self.view_document(self.document)
     
     def parse_extra_json(self, json, batch_flags):
-        for serialized_data in json:
-            if serialized_data == "commands":
-                continue
-            for cmd in self.layer_manager.undo_stack.unserialize_text(serialized_data, self.layer_manager):
+        # handle old version which was a two element list
+        try:
+            if len(json) == 2 and json[0] == "commands":
+                json = {json[0]: json[1]}
+        except KeyError:
+            # a two element dict won't have a key of zero
+            pass
+        
+        if "commands" in json:
+            for cmd in self.layer_manager.undo_stack.unserialize_text(json["commands"], self.layer_manager):
                 self.process_batch_command(cmd, batch_flags)
 
     def rebuild_document_properties(self):
@@ -181,7 +187,7 @@ class ProjectEditor(FrameworkEditor):
             u = UndoStack()
             u.add_command(cmd)
             text = str(u.serialize())
-            error = self.layer_manager.save_all(path, ["commands", text])
+            error = self.layer_manager.save_all(path, {"commands": text})
         except ProgressCancelError, e:
             error = e.message
         finally:
