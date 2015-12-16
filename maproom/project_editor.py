@@ -96,15 +96,22 @@ class ProjectEditor(FrameworkEditor):
             metadata = guess.get_metadata()
             loader = loaders.get_loader(metadata)
             if hasattr(loader, "load_project"):
+                document = LayerManager.create(self)
+                document.metadata = metadata.clone_traits()
                 batch_flags = BatchStatus()
                 print "FIXME: Add load project command that clears all layers"
-                extra = loader.load_project(metadata, self.layer_manager, batch_flags)
+                extra = loader.load_project(metadata, document, batch_flags)
+                self.document = self.layer_manager = document
                 if extra is not None:
                     self.parse_extra_json(extra, batch_flags)
                 self.perform_batch_flags(batch_flags)
                 center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
                 cmd = ViewportCommand(None, center, units_per_pixel)
                 self.process_command(cmd)
+                
+                # Clear modified flag
+                self.layer_manager.undo_stack.set_save_point()
+                self.dirty = self.layer_manager.undo_stack.is_dirty()
             elif hasattr(loader, "iter_log"):
                 line = 0
                 batch_flags = BatchStatus()
@@ -183,6 +190,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             self.layer_manager.undo_stack.set_save_point()
             self.dirty = self.layer_manager.undo_stack.is_dirty()
+            self.layer_manager.metadata.uri = path
     
     def get_savepoint(self):
         layer = self.layer_tree_control.get_selected_layer()
