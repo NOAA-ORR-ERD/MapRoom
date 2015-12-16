@@ -139,6 +139,7 @@ class Layer(HasTraits):
         """
         json = {
             'index': index,
+            'invariant': self.invariant,
             'type': self.type,
             'version': 1,
             'has encoded data': False,
@@ -189,6 +190,10 @@ class Layer(HasTraits):
         anything other than what's necessary to restore itself.
         """
         self.name = json_data['name']
+        if 'invariant' in json_data:
+            # handle legacy case where invariant wasn't saved.  Restore of any
+            # linked control points will be broken in cases like this
+            self.invariant = json_data['invariant']
         self.style = LayerStyle()
         self.style.parse(json_data['style'])
         if 'url' in json_data:

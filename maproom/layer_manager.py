@@ -118,6 +118,12 @@ class LayerManager(Document):
     def get_attrs_with_json(self):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
     
+    def next_invariant_to_json(self):
+        return self.next_invariant
+
+    def next_invariant_from_json(self, json_data):
+        self.next_invariant = json_data['next_invariant']
+
     def debug_invariant(self):
         layers = self.flatten()
         print "next invariant: %d" % self.next_invariant
@@ -311,7 +317,11 @@ class LayerManager(Document):
                     # On insert, this barfs, so strip it off.
                     if mi[-1] == 0:
                         mi = mi[:-1]
-                self.insert_loaded_layer(layer, mi=mi)
+                # LEGACY:
+                if layer.invariant == 0:
+                    log.warning("old json format: invariant not set for %s" % layer)
+                    layer.invariant = self.get_next_invariant()
+                self.insert_loaded_layer(layer, mi=mi, invariant=False)
                 layers.append(layer)
         return layers
     
