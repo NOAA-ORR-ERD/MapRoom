@@ -115,6 +115,9 @@ class LayerManager(Document):
         layers = self.get_children(root)
         return str(layers)
     
+    def get_attrs_with_json(self):
+        return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
+    
     def debug_invariant(self):
         layers = self.flatten()
         print "next invariant: %d" % self.next_invariant
@@ -278,6 +281,16 @@ class LayerManager(Document):
             print "processed json from layer", loaded
         order.sort()
         print "load_all_from_json: order", order
+        
+        for attr, to_json in self.get_attrs_with_json():
+            try:
+                from_json = getattr(self, attr + "_from_json")
+                from_json(extra_json)
+            except KeyError:
+                message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
+                log.warning(message)
+                batch_flags.messages.append("WARNING: %s" % message)
+        
         return order, extra_json
     
     def add_all(self, layer_order, editor=None):
@@ -309,9 +322,12 @@ class LayerManager(Document):
         log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
         log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t,s  in Layer.get_subclasses().iteritems()]))
         project = []
-        if extra_json_data is not None:
-            project.append("extra json data")
-            project.append(extra_json_data)
+        if extra_json_data is None:
+            extra_json_data = {}
+        for attr, to_json in self.get_attrs_with_json():
+            extra_json_data[attr] = to_json()
+        project.append("extra json data")
+        project.append(extra_json_data)
         for index, layer in layer_info:
             print "index=%s, layer=%s, path=%s" % (index, layer, layer.file_path)
             data = layer.serialize_json(index)
@@ -665,6 +681,21 @@ class LayerManager(Document):
         return layers
 
 
+    def control_point_links_to_json(self):
+        # json can't handle dictionaries with tuples as their keys, so have
+        # to compress
+        cplist = []
+        for entry, truth in self.control_point_links.iteritems():
+            cplist.append((entry, truth))
+        return cplist
+
+    def control_point_links_from_json(self, json_data):
+        cplist = json_data['control_point_links']
+        cpdict = {}
+        for entry, truth in cplist:
+            cpdict[tuple(entry)] = tuple(truth)
+        self.control_point_links = cpdict
+        
     def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None):
         """Links a control point to a truth (master) layer
         
