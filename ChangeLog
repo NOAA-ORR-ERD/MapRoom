@@ -1,3 +1,19 @@
+12/16/2015
+---------------------------
+Released 3.1b16
+- RM Fix for tab name not getting updated when saving as new name
+- RM Fixed more layer_manager stale references
+- RM Added warnings when loading json save files with missing attributes (e.g. the anchor_point_index recently include in the text vector objects)
+- RM Fixed visibility flags when loading new project
+- RM Fixed #655: added copy/paste of vector objects
+- RM Fixed save that was always overwriting the initial maproom project
+- RM Fixed tab name not updating for URI
+- RM Use pyfilesystem to open project files
+- RM Fixed json serialization error of url for image layers
+- RM Fixed anchor point serialization to json
+- RM Removed default debug level from textures
+- RM Fixed document switching
+
 12/15/2015
 ---------------------------
 Released 3.1b15
