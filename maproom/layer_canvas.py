@@ -45,7 +45,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
 
     def rebuild_renderers(self):
-        for layer in self.layer_manager.flatten():
+        for layer in self.project.layer_manager.flatten():
             # Don't rebuild image layers because their numpy data has been
             # thrown away.  If editing of image data is allowed at some future
             # point, we'll have to rethink this.

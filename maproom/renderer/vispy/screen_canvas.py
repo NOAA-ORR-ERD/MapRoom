@@ -223,15 +223,15 @@ class ScreenCanvas(app.Canvas):
         ##   so that it can be called with and without pick-mode turned on
         ##   but it seems to be in the wrong place -- make it a regular  method?
         def render_layers(pick_mode=False):
-            list = self.layer_manager.flatten()
+            list = self.project.layer_manager.flatten()
             length = len(list)
-            self.layer_manager.pick_layer_index_map = {} # make sure it's cleared
+            self.project.layer_manager.pick_layer_index_map = {} # make sure it's cleared
             pick_layer_index = -1
             for i, layer in enumerate(reversed(list)):
                 if pick_mode:
                     if layer.pickable:
                         pick_layer_index += 1
-                        self.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
+                        self.project.layer_manager.pick_layer_index_map[pick_layer_index] = (length - 1 - i) # looping reversed...
                         layer.render(self,
                                      w_r, p_r, s_r,
                                      self.project.layer_visibility[layer], ##fixme couldn't this be a property of the layer???

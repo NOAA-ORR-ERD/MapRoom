@@ -18,7 +18,7 @@ class BaseCanvas(object):
 
     """
 
-    def __init__(self, layer_manager, project):
+    def __init__(self, project):
         self.project = project
         
         self.layer_renderers = {}

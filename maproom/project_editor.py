@@ -272,7 +272,7 @@ class ProjectEditor(FrameworkEditor):
         self.print_preview()
     
     def save_as_pdf(self, path=None):
-        pdf_canvas = renderer.PDFCanvas(layer_manager=self.layer_manager, project=self, path=path)
+        pdf_canvas = renderer.PDFCanvas(project=self, path=path)
         pdf_canvas.copy_viewport_from(self.layer_canvas)
         pdf_canvas.update_renderers()
         pdf_canvas.render()
@@ -295,7 +295,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_visibility = self.layer_manager.get_default_visibility()
 
         # Base-class constructor.
-        self.layer_canvas = LayerCanvas(parent, layer_manager=self.layer_manager, project=self)
+        self.layer_canvas = LayerCanvas(parent, project=self)
         
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
