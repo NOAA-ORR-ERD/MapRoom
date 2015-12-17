@@ -37,6 +37,11 @@ class VectorObjectLayer(LineLayer):
     computed from those control points.
     
     The self.points array contains the control points
+    
+    NOTE: Each subclass of VectorObjectLayer must have a unique string used for
+    the class attribute 'type'.  This string is what's used when deserializing
+    from a saved project file, and if multiple objects use the same string,
+    the class used for deserializing will be randomly chosen, which is bad.
     """
     name = Unicode("Vector Object Layer")
 
@@ -294,6 +299,10 @@ class LineVectorObject(VectorObjectLayer):
 
 
 class FillableVectorObject(LineVectorObject):
+    name = Unicode("Fillable")
+    
+    type = Str("fillable_obj")
+    
     # Fillable objects should (in general) display their center control point
     display_center_control_point = True
     
