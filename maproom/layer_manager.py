@@ -284,9 +284,9 @@ class LayerManager(Document):
             loaded = Layer.load_from_json(serialized_data, self, batch_flags)
             index = serialized_data['index']
             order.append((index, loaded))
-            print "processed json from layer", loaded
+            log.debug("processed json from layer %s" % loaded)
         order.sort()
-        print "load_all_from_json: order", order
+        log.debug("load_all_from_json: order: %s" % str(order))
         
         for attr, to_json in self.get_attrs_with_json():
             try:
@@ -305,10 +305,10 @@ class LayerManager(Document):
             if not layer.is_root():
                 self.remove_layer(layer)
         layers = []
-        print "layer order", layer_order
+        log.debug("layer order: %s" % str(layer_order))
         for mi, layer_list in layer_order:
             for layer in layer_list:
-                print "adding ", layer, "at", mi
+                log.debug("adding %s at %s" % (str(layer), str(mi)))
                 if editor is not None:
                     layer.check_projection(editor.window)
                 if len(mi) > 1:
@@ -339,7 +339,7 @@ class LayerManager(Document):
         project.append("extra json data")
         project.append(extra_json_data)
         for index, layer in layer_info:
-            print "index=%s, layer=%s, path=%s" % (index, layer, layer.file_path)
+            log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
             data = layer.serialize_json(index)
             if data is not None:
                 project.append(data)
@@ -726,7 +726,7 @@ class LayerManager(Document):
         else:
             entry = (dep_or_layer.invariant, truth_or_cp)
             truth = (truth_layer.invariant, truth_cp)
-        log.debug("control_point_links: adding %s from %s" % (entry, truth))
+        log.debug("control_point_links: adding %s child of %s" % (entry, truth))
         self.control_point_links[entry] = truth
     
     def remove_control_point_links(self, layer, remove_cp=-1):
@@ -739,7 +739,7 @@ class LayerManager(Document):
         """
         to_remove = []
         for dep, truth in self.control_point_links.iteritems():
-            #print "checking", self.control_point_links[dep]
+            log.debug("control_point_links: %s child of %s" % (dep, truth))
             dep_layer_invariant, dep_cp = dep[0], dep[1]
             if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp):
                 to_remove.append((dep, truth))

@@ -867,7 +867,7 @@ class ControlPointSelectionMode(ObjectSelectionMode):
     def clicked_on_polygon_fill(self, event, layer, ignored_index, world_point):
         # Clicking on filled portion of polygon corresponds to clicking on the
         # center point: rigid body translation
-        print "center point", layer.center_point_index
+        log.debug("center point: %s" % layer.center_point_index)
         self.clicked_on_point(event, layer, layer.center_point_index)
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):

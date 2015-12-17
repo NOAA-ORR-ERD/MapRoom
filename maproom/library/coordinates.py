@@ -41,7 +41,6 @@ def haversine_at_const_lat(delta_deg_lon, deg_lat, r=6371.0):
     return d
 
 def haversine_list(points, r=6371.0):
-    print points
     lon1 = math.radians(points[0]['x'])
     lat1 = math.radians(points[0]['y'])
     

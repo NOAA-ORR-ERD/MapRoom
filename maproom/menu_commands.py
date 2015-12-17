@@ -166,7 +166,6 @@ class PasteLayerCommand(Command):
         json_data = json.loads(self.json_text)
         loaded = Layer.load_from_json(json_data, lm)
         layer = loaded[0]
-        print "loaded layer:", layer
         lm.insert_loaded_layer(layer, editor, before=before)
         
         undo.flags.layers_changed = True
