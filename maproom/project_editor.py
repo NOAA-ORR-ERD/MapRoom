@@ -68,6 +68,13 @@ class ProjectEditor(FrameworkEditor):
     
     last_refresh = Float(0.0)
     
+    # can_paste_style is set by copy_style if there's a style that can be
+    # applied
+    can_paste_style = Bool(False)
+    
+    # NOTE: Class attribute!
+    clipboard_style = None
+    
     # Force mouse mode toolbar to be blank so that the initial trait change
     # that occurs during initialization of this class doesn't match a real
     # mouse mode.  If it does match, the toolbar won't be properly adjusted
@@ -342,6 +349,7 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is not None:
             self.can_copy = sel_layer.can_copy()
             self.can_paste = True
+            self.can_paste_style = self.clipboard_style is not None
             self.layer_can_save = sel_layer.can_save()
             self.layer_can_save_as = sel_layer.can_save_as()
             self.layer_selected = not sel_layer.is_root()
@@ -354,6 +362,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             self.can_copy = False
             self.can_paste = False
+            self.can_paste_style = False
             self.layer_can_save = False
             self.layer_can_save_as = False
             self.layer_selected = False
@@ -660,6 +669,20 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is not None:
             cmd = PasteLayerCommand(sel_layer, text)
             self.process_command(cmd)
+    
+    def copy_style(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            self.__class__.clipboard_style = sel_layer.style.get_copy()
+            self.can_paste_style = True
+        
+    def paste_style(self):
+        sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            style = self.clipboard_style
+            if style is not None:
+                cmd = StyleChangeCommand(sel_layer, style)
+                self.process_command(cmd)
         
     def clear_selection(self):
         sel_layer = self.layer_tree_control.get_selected_layer()

@@ -27,7 +27,7 @@ from vector_object_commands import *
 from ui.dialogs import StyleDialog
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
-from omnivore.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup
+from omnivore.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup, CutAction, CopyAction, PasteAction
 
 import logging
 log = logging.getLogger(__name__)
@@ -504,6 +504,24 @@ class DebugAnnotationLayersAction(EditorAction):
         project.layer_metadata_changed(None)
         project.layer_canvas.zoom_to_fit()
 
+class CopyStyleAction(EditorAction):
+    name = 'Copy Style'
+    accelerator = 'Alt+Ctrl+C'
+    tooltip = 'Copy the style of the current selection'
+    enabled_name = 'can_copy'
+
+    def perform(self, event):
+        self.active_editor.copy_style()
+
+class PasteStyleAction(EditorAction):
+    name = 'Paste Style'
+    accelerator = 'Alt+Ctrl+V'
+    tooltip = 'Apply the style from the clipboard'
+    enabled_name = 'can_paste_style'
+
+    def perform(self, event):
+        self.active_editor.paste_style()
+
 
 @provides(IAbout)
 class MaproomProjectTask(FrameworkTask):
@@ -736,6 +754,16 @@ class MaproomProjectTask(FrameworkTask):
             SMenu(SaveLayerGroup(),
                   id='SaveLayerAsSubmenu', name="Save Layer As"),
             SaveImageAction(),
+            ]
+    
+    def get_actions_Menu_Edit_CopyPasteGroup(self):
+        return [
+            CutAction(),
+            CopyAction(),
+            PasteAction(),
+            Separator(),
+            CopyStyleAction(),
+            PasteStyleAction(),
             ]
     
     def get_actions_Menu_Edit_SelectGroup(self):
