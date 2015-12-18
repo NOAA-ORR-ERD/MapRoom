@@ -429,6 +429,10 @@ class BaseCanvas(object):
         log.debug("get_units_per_pixel_from_zoom: units_per_pixel", units_per_pixel, "num_tiles", num_tiles, "zoom level", zoom_level)
         return units_per_pixel
     
+    @property
+    def world_center(self):
+        return self.get_world_point_from_projected_point(self.projected_point_center)
+    
     def set_viewport(self, center, units_per_pixel):
         self.projected_point_center = center
         self.projected_units_per_pixel = units_per_pixel

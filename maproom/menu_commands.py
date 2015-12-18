@@ -149,11 +149,13 @@ class PasteLayerCommand(Command):
     serialize_order =  [
             ('layer', 'layer'),
             ('json_text', 'string'),
+            ('center', 'point'),
             ]
     
-    def __init__(self, layer, json_text):
+    def __init__(self, layer, json_text, center):
         Command.__init__(self, layer)
         self.json_text = json_text
+        self.center = center
     
     def __str__(self):
         return "Paste Layer"
@@ -168,6 +170,11 @@ class PasteLayerCommand(Command):
         layer = loaded[0]
         lm.insert_loaded_layer(layer, editor, before=before)
         
+        drag = layer.center_point_index
+        x = layer.points.x[drag]
+        y = layer.points.y[drag]
+        layer.move_control_point(drag, drag, self.center[0] - x, self.center[1] - y)
+
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)

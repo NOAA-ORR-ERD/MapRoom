@@ -667,7 +667,7 @@ class ProjectEditor(FrameworkEditor):
         print "value:", text
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
-            cmd = PasteLayerCommand(sel_layer, text)
+            cmd = PasteLayerCommand(sel_layer, text, self.layer_canvas.world_center)
             self.process_command(cmd)
     
     def copy_style(self):
