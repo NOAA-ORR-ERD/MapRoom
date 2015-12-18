@@ -1,3 +1,22 @@
+12/18/2015
+---------------------------
+Released 3.1b17
+- RM Fixed paste/duplicate to put new object in center of screen
+- RM Added Duplicate Layer command
+- RM Fixed position of DefaultStyleAction & preferences to be at end of menu
+- RM Added Copy Style/Paste Style menu items
+- RM Fix for blank tree control after undocking/redocking.
+- RM Added sample particles file with some layers that have zero points
+- RM Added minimum size for panes so when undocked they will not be tiny
+- RM Handle particle layers with zero points
+- RM Updated some debug printing
+- RM Fix for bug in control point linking
+- RM Fixed save/restore of linked control points
+- RM serialize/unserialize control point links with json_extra_data for project save
+- RM Fixed extra json data for project file to be dictionary
+- RM Updated supported_clipboard_data_objects
+- RM Saved files are now added to the recent files list
+
 12/16/2015
 ---------------------------
 Released 3.1b16
