@@ -129,7 +129,9 @@ class ParticleLayer(PointBaseLayer):
         return [self]
     
     def get_particle_color(self, project):
-        return self.points[0].color
+        if np.alen(self.points) > 0:
+            return self.points[0].color
+        return color_floats_to_int(0, 0, 0, 1.0)
     
     def update_particle_color(self, project, int_color):
         self.points.color = int_color
