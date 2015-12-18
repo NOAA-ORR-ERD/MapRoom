@@ -130,7 +130,7 @@ class SaveImageAction(EditorAction):
             self.active_editor.save_image(dialog.path)
 
 class DefaultStyleAction(EditorAction):
-    name = 'Set Style...'
+    name = 'Default Style...'
     tooltip = 'Choose the line, fill and font styles'
 
     def perform(self, event):
@@ -779,10 +779,8 @@ class MaproomProjectTask(FrameworkTask):
     
     def get_actions_Menu_Edit_PrefGroup(self):
         return [
-            Group(
-                DefaultStyleAction(),
-                PreferencesAction(),
-                absolute_position="last"),
+            DefaultStyleAction(),
+            PreferencesAction(),
             ]
     
     def get_actions_Menu_Edit_FindGroup(self):
