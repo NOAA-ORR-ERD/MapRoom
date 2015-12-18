@@ -522,6 +522,20 @@ class PasteStyleAction(EditorAction):
     def perform(self, event):
         self.active_editor.paste_style()
 
+class DuplicateLayerAction(EditorAction):
+    name = 'Duplicate'
+    accelerator = 'Ctrl+D'
+    tooltip = 'Duplicate the current layer'
+    enabled_name = 'can_copy'
+
+    def perform(self, event):
+        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            json_data = sel_layer.serialize_json(-999)
+            text = json.dumps(json_data)
+            cmd = PasteLayerCommand(sel_layer, text)
+            self.active_editor.process_command(cmd)
+
 
 @provides(IAbout)
 class MaproomProjectTask(FrameworkTask):
@@ -760,6 +774,7 @@ class MaproomProjectTask(FrameworkTask):
         return [
             CutAction(),
             CopyAction(),
+            DuplicateLayerAction(),
             PasteAction(),
             Separator(),
             CopyStyleAction(),
