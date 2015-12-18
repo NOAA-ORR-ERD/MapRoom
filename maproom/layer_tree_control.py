@@ -10,22 +10,21 @@ from menu_commands import MoveLayerCommand
 import logging
 log = logging.getLogger(__name__)
 
-class LayerTreeControl(treectrl.CustomTreeCtrl):
+class LayerTreeControl(wx.Panel):
 
     dragged_item = None
 
-    def __init__(self, parent_window, project, size=(-1,-1)):
-        treectrl.CustomTreeCtrl.__init__(
-            self, parent_window, wx.ID_ANY, size=size,
-            style=treectrl.TR_DEFAULT_STYLE,
-            agwStyle=treectrl.TR_HIDE_ROOT|treectrl.TR_NO_LINES|treectrl.TR_HAS_BUTTONS,
-        )
+    def __init__(self, parent, project, size=(-1,-1)):
+        wx.Panel.__init__(self, parent, wx.ID_ANY, size=size)
+        
+        self.tree = treectrl.CustomTreeCtrl(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE,
+ agwStyle=treectrl.TR_HIDE_ROOT|treectrl.TR_NO_LINES|treectrl.TR_HAS_BUTTONS)
         self.project = project
         
-        self.Bind(treectrl.EVT_TREE_ITEM_CHECKED, self.handle_item_checked)
-        self.Bind(treectrl.EVT_TREE_BEGIN_DRAG, self.handle_begin_drag)
-        self.Bind(treectrl.EVT_TREE_END_DRAG, self.handle_end_drag)
-        self.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
+        self.tree.Bind(treectrl.EVT_TREE_ITEM_CHECKED, self.handle_item_checked)
+        self.tree.Bind(treectrl.EVT_TREE_BEGIN_DRAG, self.handle_begin_drag)
+        self.tree.Bind(treectrl.EVT_TREE_END_DRAG, self.handle_end_drag)
+        self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
 
         """
         self.state_image_list = wx.ImageList( self.IMAGE_SIZE, self.IMAGE_SIZE )
@@ -33,29 +32,35 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         #self.SetImageList( self.state_image_list )
         """
 
-        self.Bind(wx.EVT_LEFT_DOWN, self.mouse_pressed)
-        self.Bind(wx.EVT_RIGHT_DOWN, self.mouse_pressed)
+        self.tree.Bind(wx.EVT_LEFT_DOWN, self.mouse_pressed)
+        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.mouse_pressed)
         # self.Bind( wx.EVT_RIGHT_UP, self.mouse_right_released )
         if sys.platform.startswith("win"):
-            self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
+            self.tree.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
+            
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.Add(self.tree, 1, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.sizer.Layout()
+        self.Fit()
     
     def set_project(self, project):
         self.project = project
         self.rebuild()
 
     def get_selected_layer(self):
-        item = self.GetSelection()
+        item = self.tree.GetSelection()
         if (item is None):
             return None
-        (layer, ) = self.GetItemPyData(item).Data
+        (layer, ) = self.tree.GetItemPyData(item).Data
 
         return layer
 
     def is_selected_layer(self, layer):
-        item = self.GetSelection()
+        item = self.tree.GetSelection()
         if (item is None):
             return False
-        (selected, ) = self.GetItemPyData(item).Data
+        (selected, ) = self.tree.GetItemPyData(item).Data
         return layer == selected
 
     def select_layer(self, layer):
@@ -64,55 +69,55 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         self.project.clear_all_selections(False)
 
         if (layer is None):
-            self.UnselectAll()
+            self.tree.UnselectAll()
         else:
-            self.select_layer_recursive(layer, self.GetRootItem())
+            self.select_layer_recursive(layer, self.tree.GetRootItem())
 
     def select_layer_recursive(self, layer, item):
-        (item_layer, ) = self.GetItemPyData(item).Data
+        (item_layer, ) = self.tree.GetItemPyData(item).Data
 
         if (item_layer == layer):
-            self.SelectItem(item, True)
+            self.tree.SelectItem(item, True)
             # also make sure the layer's name is up-to-date
-            self.SetItemText(item, layer.name)
+            self.tree.SetItemText(item, layer.name)
             layer.set_visibility_when_selected(self.project.layer_visibility[layer])
 
             return True
 
-        if (not self.ItemHasChildren(item)):
+        if (not self.tree.ItemHasChildren(item)):
             return False
 
-        n = self.GetChildrenCount(item, False)
-        child, cookie = self.GetFirstChild(item)
+        n = self.tree.GetChildrenCount(item, False)
+        child, cookie = self.tree.GetFirstChild(item)
 
         while (n > 0):
             if (self.select_layer_recursive(layer, child)):
                 return True
 
-            child = self.GetNextSibling(child)
+            child = self.tree.GetNextSibling(child)
             n -= 1
 
         return False
 
     def get_expanded_state(self):
         state = dict()
-        self.get_expanded_state_recursive(self.GetRootItem(), state)
+        self.get_expanded_state_recursive(self.tree.GetRootItem(), state)
         return state
 
     def get_expanded_state_recursive(self, item, state):
         if item is None:
             return
-        (item_layer, ) = self.GetItemPyData(item).Data
+        (item_layer, ) = self.tree.GetItemPyData(item).Data
         state[item_layer] = item.IsExpanded()
-        if (not self.ItemHasChildren(item)):
+        if (not self.tree.ItemHasChildren(item)):
             return
 
-        n = self.GetChildrenCount(item, False)
-        child, cookie = self.GetFirstChild(item)
+        n = self.tree.GetChildrenCount(item, False)
+        child, cookie = self.tree.GetFirstChild(item)
 
         while (n > 0):
             self.get_expanded_state_recursive(child, state)
-            child = self.GetNextSibling(child)
+            child = self.tree.GetNextSibling(child)
             n -= 1
 
     def rebuild(self):
@@ -123,7 +128,7 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         selected = self.get_selected_layer()
         expanded_state = self.get_expanded_state()
         lm = self.project.layer_manager
-        self.DeleteAllItems()
+        self.tree.DeleteAllItems()
         # self.Freeze()
         log.debug("LAYER_TREE: rebuiding layers = " + str(lm.layers))
         self.add_layers_recursive(lm.layers, None, expanded_state)
@@ -150,11 +155,11 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         data = wx.TreeItemData()
         data.SetData((layer, ))
         if (parent is None):
-            return self.AddRoot(layer.name, data=data)
+            return self.tree.AddRoot(layer.name, data=data)
 
         vis = self.project.layer_visibility[layer]
-        item = self.AppendItem(parent, layer.name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
-        self.CheckItem2(item, vis["layer"])
+        item = self.tree.AppendItem(parent, layer.name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
+        self.tree.CheckItem2(item, vis["layer"])
         if layer.is_folder():
             # Force the appearance of expand button on folders to be used as
             # drop target for dropping inside a folder
@@ -177,40 +182,40 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         if item is None:
             return
 
-        self.Freeze()
-        self.Delete(item)
+        self.tree.Freeze()
+        self.tree.Delete(item)
 
-        if self.GetChildrenCount(self.root) == 0:
-            self.none_item = self.AppendItem(self.root, "None")
+        if self.tree.GetChildrenCount(self.root) == 0:
+            self.none_item = self.tree.AppendItem(self.root, "None")
 
-        self.Thaw()
+        self.tree.Thaw()
 
         self.layer_to_item.pop(layer, None)
 
     def update_checked_from_visibility(self):
-        self.update_checked_from_visibility_recursive(self.GetRootItem())
+        self.update_checked_from_visibility_recursive(self.tree.GetRootItem())
 
     def update_checked_from_visibility_recursive(self, item):
         if item is None:
             return
-        (layer, ) = self.GetItemPyData(item).Data
+        (layer, ) = self.tree.GetItemPyData(item).Data
         checked = self.project.layer_visibility[layer]["layer"]
-        self.CheckItem2(item, checked, True)
-        if (not self.ItemHasChildren(item)):
+        self.tree.CheckItem2(item, checked, True)
+        if (not self.tree.ItemHasChildren(item)):
             return
 
-        n = self.GetChildrenCount(item, False)
-        child, cookie = self.GetFirstChild(item)
+        n = self.tree.GetChildrenCount(item, False)
+        child, cookie = self.tree.GetFirstChild(item)
 
         while (n > 0):
             self.update_checked_from_visibility_recursive(child)
-            child = self.GetNextSibling(child)
+            child = self.tree.GetNextSibling(child)
             n -= 1
 
     def handle_item_checked(self, event):
-        (layer, ) = self.GetItemPyData(event.GetItem()).Data
+        (layer, ) = self.tree.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
-        checked = self.IsItemChecked(item)
+        checked = self.tree.IsItemChecked(item)
         vis = self.project.layer_visibility[layer]
         vis["layer"] = checked
         layer.set_visibility_when_checked(checked, self.project.layer_visibility)
@@ -219,9 +224,9 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         event.Skip()
 
     def handle_begin_drag(self, event):
-        (layer, ) = self.GetItemPyData(event.GetItem()).Data
+        (layer, ) = self.tree.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
-        checked = self.IsItemChecked(item)
+        checked = self.tree.IsItemChecked(item)
         if not layer.is_root():
             event.Allow()
             self.dragged_item = item
@@ -235,15 +240,15 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         if item is None or not item.IsOk():
             return
 
-        (target_layer, ) = self.GetItemPyData(item).Data
-        (source_layer, ) = self.GetItemPyData(local_dragged_item).Data
+        (target_layer, ) = self.tree.GetItemPyData(item).Data
+        (source_layer, ) = self.tree.GetItemPyData(local_dragged_item).Data
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(source_layer)
         mi_target = lm.get_multi_index_of_layer(target_layer)
 
         if (len(mi_target) > len(mi_source) and mi_target[0: len(mi_source)] == mi_source):
             self.project.window.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
-            self.Refresh()
+            self.tree.Refresh()
             return
 
         before = event.IsDroppedBeforeItem()
@@ -271,8 +276,8 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         self.move_selected_layer(1)
 
     def move_selected_layer(self, delta, to_extreme=False):
-        item = self.GetSelection()
-        (layer, ) = self.GetItemPyData(item).Data
+        item = self.tree.GetSelection()
+        (layer, ) = self.tree.GetItemPyData(item).Data
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(layer)
         mi_target = mi_source[: len(mi_source) - 1]
@@ -301,17 +306,17 @@ class LayerTreeControl(treectrl.CustomTreeCtrl):
         # selected again. This allows the user to click on an
         # already-selected layer to display its properties, for instance.
         event.Skip()
-        selected_item = self.GetSelection()
+        selected_item = self.tree.GetSelection()
         if selected_item is None:
             return
 
-        (clicked_item, flags) = self.HitTest(event.GetPosition())
+        (clicked_item, flags) = self.tree.HitTest(event.GetPosition())
 
         if clicked_item != selected_item or \
            flags & wx.TREE_HITTEST_ONITEMLABEL == 0:
             return
 
-        self.ToggleItemSelection(selected_item)
+        self.tree.ToggleItemSelection(selected_item)
 
     def on_mouse_wheel_scroll(self, event):
         screen_point = event.GetPosition()
