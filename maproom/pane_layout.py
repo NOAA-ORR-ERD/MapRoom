@@ -18,7 +18,7 @@ from panes import *
 # is only updated when quitting the application; if the application is killed
 # (or crashes!) the saved state is not updated.
 
-task_id_with_pane_layout = 'maproom.project.v5'
+task_id_with_pane_layout = 'maproom.project.v6'
 
 def pane_layout():
     """ Create the default task layout, which is overridded by the user's save

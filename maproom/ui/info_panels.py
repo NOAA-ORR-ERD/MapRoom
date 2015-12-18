@@ -1305,7 +1305,7 @@ class InfoPanel(PANELTYPE):
     VALUE_SPACING = 3
     SIDE_SPACING = 5
 
-    def __init__(self, parent, project):
+    def __init__(self, parent, project, size=(-1,-1)):
         self.project = project
         
         self.layer_name_control = None
@@ -1319,7 +1319,7 @@ class InfoPanel(PANELTYPE):
         self.current_fields = []
         self.field_map = {}
 
-        PANELTYPE.__init__(self, parent)
+        PANELTYPE.__init__(self, parent, size=size)
         
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()

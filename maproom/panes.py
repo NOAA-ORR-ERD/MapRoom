@@ -21,7 +21,7 @@ class LayerSelectionPane(DockPane):
     name = 'Layers'
     
     def create_contents(self, parent):
-        control = LayerTreeControl(parent, self.task.active_editor, size=(200,-1))
+        control = LayerTreeControl(parent, self.task.active_editor, size=(200,300))
         return control
     
     #### trait change handlers
@@ -47,7 +47,7 @@ class LayerInfoPane(DockPane):
     name = 'Current Layer'
     
     def create_contents(self, parent):
-        control = LayerInfoPanel(parent, self.task.active_editor)
+        control = LayerInfoPanel(parent, self.task.active_editor, size=(200,200))
         return control
 
 
@@ -58,7 +58,7 @@ class SelectionInfoPane(DockPane):
     name = 'Current Selection'
     
     def create_contents(self, parent):
-        control = SelectionInfoPanel(parent, self.task.active_editor)
+        control = SelectionInfoPanel(parent, self.task.active_editor, size=(200,200))
         return control
 
 
