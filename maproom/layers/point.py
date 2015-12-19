@@ -105,12 +105,6 @@ class PointLayer(PointBaseLayer):
     
     ##### JSON Serialization
     
-    def points_to_json(self):
-        return self.points.tolist()
-    
-    def points_from_json(self, json_data):
-        self.points = np.array([tuple(i) for i in json_data['points']], data_types.POINT_DTYPE).view(np.recarray)
-    
     def default_depth_to_json(self):
         return self.default_depth
     

@@ -37,6 +37,18 @@ class ParticleFolder(Folder):
     
     layer_info_panel = ["Start time", "End time", "Particle Color"]
     
+    def start_index_to_json(self):
+        return self.start_index
+    
+    def start_index_from_json(self, json_data):
+        self.start_index = json_data['start_index']
+    
+    def end_index_to_json(self):
+        return self.end_index
+    
+    def end_index_from_json(self, json_data):
+        self.end_index = json_data['end_index']
+    
     def get_particle_layers(self):
         timesteps = []
         children = self.manager.get_layer_children(self)
