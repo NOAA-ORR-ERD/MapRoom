@@ -9,7 +9,7 @@ import wx
 
 # Enthought library imports.
 from pyface.api import YES, NO
-from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float, Event
+from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float, Event, Dict
 
 from omnivore.framework.editor import FrameworkEditor
 from omnivore.framework.errors import ProgressCancelError
@@ -68,6 +68,8 @@ class ProjectEditor(FrameworkEditor):
     
     last_refresh = Float(0.0)
     
+    layer_visibility = Dict()
+    
     # can_paste_style is set by copy_style if there's a style that can be
     # applied
     can_paste_style = Bool(False)
@@ -110,11 +112,10 @@ class ProjectEditor(FrameworkEditor):
                 print "FIXME: Add load project command that clears all layers"
                 extra = loader.load_project(metadata, document, batch_flags)
                 self.document = self.layer_manager = document
-                self.layer_visibility = self.layer_manager.get_default_visibility()
-                self.layer_tree_control.rebuild()
                 if extra is not None:
                     self.parse_extra_json(extra, batch_flags)
                 self.perform_batch_flags(batch_flags)
+                self.layer_tree_control.rebuild()
                 center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
                 cmd = ViewportCommand(None, center, units_per_pixel)
                 self.process_command(cmd)
@@ -170,13 +171,42 @@ class ProjectEditor(FrameworkEditor):
             # a two element dict won't have a key of zero
             pass
         
+        if "layer_visibility" in json:
+            self.layer_visibility_from_json(json["layer_visibility"])
+        else:
+            self.layer_visibility = self.get_default_visibility()
         if "commands" in json:
             for cmd in self.layer_manager.undo_stack.unserialize_text(json["commands"], self.layer_manager):
                 self.process_batch_command(cmd, batch_flags)
+    
+    def layer_visibility_to_json(self):
+        v = dict()
+        for layer, vis in self.layer_visibility.iteritems():
+            v[layer.invariant] = vis
+        return v
+    
+    def layer_visibility_from_json(self, json_data):
+        lm = self.layer_manager
+        v = dict()
+        for invariant, vis in json_data.iteritems():
+            layer = lm.get_layer_by_invariant(int(invariant))
+            v[layer] = vis
+        self.layer_visibility = v
+
+    def get_default_visibility(self):
+        layer_visibility = dict()
+        for layer in self.layer_manager.flatten():
+            layer_visibility[layer] = layer.get_visibility_dict()
+        return layer_visibility
+    
+    def update_default_visibility(self):
+        for layer in self.layer_manager.flatten():
+            if layer not in self.layer_visibility:
+                self.layer_visibility[layer] = layer.get_visibility_dict()
 
     def rebuild_document_properties(self):
         self.layer_manager = self.document
-        self.layer_visibility = self.layer_manager.get_default_visibility()
+        self.update_default_visibility()
         self.layer_canvas.zoom_to_fit()
 
     def save(self, path=None):
@@ -194,7 +224,8 @@ class ProjectEditor(FrameworkEditor):
             u = UndoStack()
             u.add_command(cmd)
             text = str(u.serialize())
-            error = self.layer_manager.save_all(path, {"commands": text})
+            error = self.layer_manager.save_all(path, {"commands": text,
+                                                       "layer_visibility": self.layer_visibility_to_json()})
         except ProgressCancelError, e:
             error = e.message
         finally:
@@ -316,7 +347,7 @@ class ProjectEditor(FrameworkEditor):
         """ Creates the toolkit-specific control for the widget. """
 
         self.document = self.layer_manager = LayerManager.create(self)
-        self.layer_visibility = self.layer_manager.get_default_visibility()
+        self.layer_visibility = self.get_default_visibility()
 
         # Base-class constructor.
         self.layer_canvas = LayerCanvas(parent, project=self)

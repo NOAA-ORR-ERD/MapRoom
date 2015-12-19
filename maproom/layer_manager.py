@@ -209,17 +209,6 @@ class LayerManager(Document):
                 return True
         return False
     
-    def get_default_visibility(self):
-        layer_visibility = dict()
-        for layer in self.flatten():
-            layer_visibility[layer] = layer.get_visibility_dict()
-        return layer_visibility
-    
-    def update_default_visibility(self, layer_visibility):
-        for layer in self.flatten():
-            if layer not in layer_visibility:
-                layer_visibility[layer] = layer.get_visibility_dict()
-
     def destroy(self):
         ## fixme: why do layers need a destroy() method???
         for layer in self.flatten():

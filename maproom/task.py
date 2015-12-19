@@ -500,7 +500,7 @@ class DebugAnnotationLayersAction(EditorAction):
         import debug
         lm = project.layer_manager
         debug.debug_objects(lm)
-        lm.update_default_visibility(project.layer_visibility)
+        project.update_default_visibility()
         project.layer_metadata_changed(None)
         project.layer_canvas.zoom_to_fit()
 
