@@ -1,3 +1,27 @@
+12/21/2015
+---------------------------
+Released 3.1b18
+- RM Fixed polygon vector object drawing to handle convex shapes
+- RM Fixed bug that wouldn't restore scale layer because it typically has the invariant 0
+- RM Fixed release script to run unit tests and barf if any tests fail
+- RM Added hack for merge panel and triangle panel for default buttons responding to Return key even when hidden
+- RM Added better check for points layer in merge panel
+- RM Fixed reference to MockProject
+- RM Fixed old method name in test_tile
+- RM Added sample demos for tiles and wms server checking
+- RM Added layer name to info panel for WMS, Tile layers
+- RM Fixed test_layers because MockProject no longer generates fake layer
+- RM Fixed more np.where casts
+- RM Fixed MockProject to only supply dummy layer_tree_control when requested
+- RM Fixed test_project_save
+- RM Fixed import error in test_file_type
+- RM Fixed test_zoom and debug prints in base_canvas
+- RM Fixed test_layers
+- RM Updated test verdat1.mrc to use layer invariants
+- RM Fixed np.where cast that is not the same after upgrading to numpy 1.10
+- RM Layer visibility now persisted in project file
+- RM Fixed particle layer json save/restore
+
 12/18/2015
 ---------------------------
 Released 3.1b17
