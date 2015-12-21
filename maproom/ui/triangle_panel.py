@@ -88,6 +88,12 @@ class TrianglePanel(wx.Panel):
         self.task = task
 
     def triangulate(self, event):
+        if not self.IsShown():
+            # Hack for OS X: default buttons can still get Return key presses
+            # even when the panel is hidden, which is not what we want.
+            event.Skip()
+            return
+        
         self.triangulate_button.Enable(False)
         self.triangulate_button.SetLabel("Triangulating...")
         self.sizer.Layout()
