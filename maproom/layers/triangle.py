@@ -106,13 +106,13 @@ class TriangleLayer(PointLayer):
         # update point indexes in the triangles to account for the inserted point
         if (self.triangles is not None):
             offsets = np.zeros(np.alen(self.triangles))
-            offsets += np.where(self.triangles.point1 >= point_index, 1, 0)
+            offsets += np.where(self.triangles.point1 >= point_index, 1, 0).astype(np.uint32)
             self.triangles.point1 += offsets
             offsets[: np.alen(offsets)] = 0
-            offsets += np.where(self.triangles.point2 >= point_index, 1, 0)
+            offsets += np.where(self.triangles.point2 >= point_index, 1, 0).astype(np.uint32)
             self.triangles.point2 += offsets
             offsets[: np.alen(offsets)] = 0
-            offsets += np.where(self.triangles.point3 >= point_index, 1, 0)
+            offsets += np.where(self.triangles.point3 >= point_index, 1, 0).astype(np.uint32)
             self.triangles.point3 += offsets
 
     def insert_triangle(self, point_index_1, point_index_2, point_index_3):
@@ -141,13 +141,13 @@ class TriangleLayer(PointLayer):
         # update point indexes in the triangles to account for the inserted point
         if (self.triangles is not None):
             offsets = np.zeros(np.alen(self.triangles))
-            offsets += np.where(self.triangles.point1 >= point_index, 1, 0)
+            offsets += np.where(self.triangles.point1 >= point_index, 1, 0).astype(np.uint32)
             self.triangles.point1 -= offsets
             offsets[: np.alen(offsets)] = 0
-            offsets += np.where(self.triangles.point2 >= point_index, 1, 0)
+            offsets += np.where(self.triangles.point2 >= point_index, 1, 0).astype(np.uint32)
             self.triangles.point2 -= offsets
             offsets[: np.alen(offsets)] = 0
-            offsets += np.where(self.triangles.point3 >= point_index, 1, 0)
+            offsets += np.where(self.triangles.point3 >= point_index, 1, 0).astype(np.uint32)
             self.triangles.point3 -= offsets
 
     def delete_points_and_triangles(self, point_indexes):
@@ -170,15 +170,15 @@ class TriangleLayer(PointLayer):
             # adjust the point indexes of the remaining triangles
             offsets = np.zeros(np.alen(self.triangles))
             for index in point_indexes:
-                offsets += np.where(self.triangles.point1 > index, 1, 0)
+                offsets += np.where(self.triangles.point1 > index, 1, 0).astype(np.uint32)
             self.triangles.point1 -= offsets
             offsets[: np.alen(offsets)] = 0
             for index in point_indexes:
-                offsets += np.where(self.triangles.point2 > index, 1, 0)
+                offsets += np.where(self.triangles.point2 > index, 1, 0).astype(np.uint32)
             self.triangles.point2 -= offsets
             offsets[: np.alen(offsets)] = 0
             for index in point_indexes:
-                offsets += np.where(self.triangles.point3 > index, 1, 0)
+                offsets += np.where(self.triangles.point3 > index, 1, 0).astype(np.uint32)
             self.triangles.point3 -= offsets
 
         # FIXME: change to Command class for undo

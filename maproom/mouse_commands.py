@@ -418,8 +418,8 @@ class DeleteLinesCommand(Command):
         offsets2 = np.zeros(np.alen(layer.line_segment_indexes))
         insertion_space = 0
         for index in indexes:
-            offsets1 += np.where(layer.line_segment_indexes.point1 >= index, 1, 0)
-            offsets2 += np.where(layer.line_segment_indexes.point2 >= index, 1, 0)
+            offsets1 += np.where(layer.line_segment_indexes.point1 >= index, 1, 0).astype(np.uint32)
+            offsets2 += np.where(layer.line_segment_indexes.point2 >= index, 1, 0).astype(np.uint32)
         layer.line_segment_indexes.point1 += offsets1
         layer.line_segment_indexes.point2 += offsets2
 

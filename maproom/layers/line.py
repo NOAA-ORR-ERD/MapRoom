@@ -305,17 +305,17 @@ class LineLayer(PointLayer):
         attached = np.where(np.in1d(self.line_segment_indexes.point1, point_indexes))
         attached = np.append(attached, np.where(np.in1d(self.line_segment_indexes.point2, point_indexes)))
         attached = np.unique(attached)
-        return attached
+        return attached.astype(np.uint32)
 
     def remove_points_and_lines(self, point_indexes, line_segment_indexes_to_be_deleted):
         # adjust the point indexes of the remaining line segments
         offsets = np.zeros(np.alen(self.line_segment_indexes))
         for index in point_indexes:
-            offsets += np.where(self.line_segment_indexes.point1 > index, 1, 0)
+            offsets += np.where(self.line_segment_indexes.point1 > index, 1, 0).astype(np.uint32)
         self.line_segment_indexes.point1 -= offsets
         offsets[: np.alen(offsets)] = 0
         for index in point_indexes:
-            offsets += np.where(self.line_segment_indexes.point2 > index, 1, 0)
+            offsets += np.where(self.line_segment_indexes.point2 > index, 1, 0).astype(np.uint32)
         self.line_segment_indexes.point2 -= offsets
 
         # delete them from the layer
@@ -327,11 +327,11 @@ class LineLayer(PointLayer):
     def update_after_insert_point_at_index(self, point_index):
         # update point indexes in the line segements to account for the inserted point
         if (self.line_segment_indexes is not None):
-            offsets = np.zeros(np.alen(self.line_segment_indexes))
-            offsets += np.where(self.line_segment_indexes.point1 >= point_index, 1, 0)
+            offsets = np.zeros(np.alen(self.line_segment_indexes), dtype=np.uint32)
+            offsets += np.where(self.line_segment_indexes.point1 >= point_index, 1, 0).astype(np.uint32)
             self.line_segment_indexes.point1 += offsets
             offsets[: np.alen(offsets)] = 0
-            offsets += np.where(self.line_segment_indexes.point2 >= point_index, 1, 0)
+            offsets += np.where(self.line_segment_indexes.point2 >= point_index, 1, 0).astype(np.uint32)
             self.line_segment_indexes.point2 += offsets
     
     def insert_point_in_line(self, world_point, line_segment_index):
@@ -381,10 +381,10 @@ class LineLayer(PointLayer):
     def update_after_delete_point(self, point_index):
         if (self.line_segment_indexes is not None):
             offsets = np.zeros(np.alen(self.line_segment_indexes))
-            offsets += np.where(self.line_segment_indexes.point1 > point_index, 1, 0)
+            offsets += np.where(self.line_segment_indexes.point1 > point_index, 1, 0).astype(np.uint32)
             self.line_segment_indexes.point1 -= offsets
             offsets[: np.alen(offsets)] = 0
-            offsets += np.where(self.line_segment_indexes.point2 > point_index, 1, 0)
+            offsets += np.where(self.line_segment_indexes.point2 > point_index, 1, 0).astype(np.uint32)
             self.line_segment_indexes.point2 -= offsets
 
     def delete_line_segment(self, l_s_i):
