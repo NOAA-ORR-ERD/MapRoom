@@ -31,8 +31,9 @@ class Layer(HasTraits):
     # invariant is sort of a serial number of the layer in a LayerManager: an
     # id that doesn't change when the layer is renamed or reordered.  It is
     # unique within a particular instance of a LayerManager, and gets created
-    # when the layer is added to a LayerManager
-    invariant = Int(0)
+    # when the layer is added to a LayerManager.  Initial value of -999 is a
+    # flag to indicate that the invariant hasn't been initialized.
+    invariant = Int(-999)
     
     # the invariant of the parent layer (used in triangulation so that a
     # retriangulation will replace the older triangulation.

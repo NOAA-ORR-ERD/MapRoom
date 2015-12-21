@@ -307,7 +307,7 @@ class LayerManager(Document):
                     if mi[-1] == 0:
                         mi = mi[:-1]
                 # LEGACY:
-                if layer.invariant == 0:
+                if layer.invariant == -999:
                     log.warning("old json format: invariant not set for %s" % layer)
                     layer.invariant = self.get_next_invariant()
                 self.insert_loaded_layer(layer, mi=mi, skip_invariant=True)
