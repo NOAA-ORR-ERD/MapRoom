@@ -414,7 +414,7 @@ class BaseCanvas(object):
         zoom_level = math.log(num_tiles, 2)
         if round > 0.0:
             zoom_level = int(zoom_level / round) * round
-        log.debug("get_zoom_level: units_per_pixel", units_per_pixel, "num_tiles", num_tiles, "zoom level", zoom_level)
+        log.debug("get_zoom_level: units_per_pixel %s, num_tiles %s, zoom level %s" % (units_per_pixel, num_tiles, zoom_level))
         return zoom_level
     
     def get_delta_lon_per_pixel(self, num_pixels, units_per_pixel=None):
@@ -426,7 +426,7 @@ class BaseCanvas(object):
         num_tiles = math.pow(2.0, zoom_level)
         delta_lon_per_tile = 360.0 / num_tiles
         units_per_pixel = self.get_projected_point_from_world_point((delta_lon_per_tile / 256.0, 0.0))[0]
-        log.debug("get_units_per_pixel_from_zoom: units_per_pixel", units_per_pixel, "num_tiles", num_tiles, "zoom level", zoom_level)
+        log.debug("get_units_per_pixel_from_zoom: units_per_pixel %s, num_tiles %s, zoom level %s" % (units_per_pixel, num_tiles, zoom_level))
         return units_per_pixel
     
     @property

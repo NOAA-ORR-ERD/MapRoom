@@ -14,7 +14,7 @@ from maproom.renderer import BaseCanvas
 class TestZoom(object):
     def setup(self):
         self.project = MockProject()
-        self.canvas = BaseCanvas(self.project.layer_manager, self.project)
+        self.canvas = BaseCanvas(self.project)
 
     def test_zoom_int(self):
         c = self.canvas
@@ -36,7 +36,7 @@ class TestZoom(object):
         zoom = c.get_zoom_level(3459, round=.25)
         assert_almost_equals(zoom, 5.5, places=5)
         upp = c.get_units_per_pixel_from_zoom(zoom)
-        assert_almost_equals(3460, upp, places=3)
+        assert_almost_equals(3459.145, upp, places=3)
 
 
 
