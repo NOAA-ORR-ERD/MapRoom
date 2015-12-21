@@ -310,7 +310,7 @@ class LayerManager(Document):
                 if layer.invariant == 0:
                     log.warning("old json format: invariant not set for %s" % layer)
                     layer.invariant = self.get_next_invariant()
-                self.insert_loaded_layer(layer, mi=mi, invariant=False)
+                self.insert_loaded_layer(layer, mi=mi, skip_invariant=True)
                 layers.append(layer)
         return layers
     
@@ -405,14 +405,16 @@ class LayerManager(Document):
             mi[-1] += 1
         log.debug("after: layers are " + str(self.layers))
 
-    def insert_layer(self, at_multi_index, layer, invariant=None):
+    def insert_layer(self, at_multi_index, layer, invariant=None, skip_invariant=False):
         if (at_multi_index is None or at_multi_index == []):
             at_multi_index = self.find_default_insert_layer()
 
         log.debug("before: layers are " + str(self.layers))
         log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
         if (not isinstance(layer, list)):
-            if invariant is None:
+            # Layers being loaded from a project file will have their
+            # invariants already saved, so don't mess with them.
+            if not skip_invariant:
                 layer.invariant = self.get_next_invariant(invariant)
             if layer.is_folder() and not layer.is_root():
                 layer = [layer]
