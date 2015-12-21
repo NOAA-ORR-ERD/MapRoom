@@ -309,7 +309,7 @@ class LineLayer(PointLayer):
 
     def remove_points_and_lines(self, point_indexes, line_segment_indexes_to_be_deleted):
         # adjust the point indexes of the remaining line segments
-        offsets = np.zeros(np.alen(self.line_segment_indexes))
+        offsets = np.zeros(np.alen(self.line_segment_indexes)).astype(np.uint32)
         for index in point_indexes:
             offsets += np.where(self.line_segment_indexes.point1 > index, 1, 0).astype(np.uint32)
         self.line_segment_indexes.point1 -= offsets
@@ -380,7 +380,7 @@ class LineLayer(PointLayer):
 
     def update_after_delete_point(self, point_index):
         if (self.line_segment_indexes is not None):
-            offsets = np.zeros(np.alen(self.line_segment_indexes))
+            offsets = np.zeros(np.alen(self.line_segment_indexes)).astype(np.uint32)
             offsets += np.where(self.line_segment_indexes.point1 > point_index, 1, 0).astype(np.uint32)
             self.line_segment_indexes.point1 -= offsets
             offsets[: np.alen(offsets)] = 0
