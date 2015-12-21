@@ -419,7 +419,29 @@ class DeleteSelectionAction(EditorAction):
     image = ImageResource('delete_selection.png')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.delete_selection)
+        # FIXME: OS X hack! DELETE key in the menu overrides any text field
+        # usage, so we have to catch it here and force the textctrl to do the
+        # delete programmatically
+        active = wx.Window.FindFocus()
+        if hasattr(active, "EmulateKeyPress"):
+            if False:
+                # FIXME: Simulating the event doesn't work
+                print "Simulating!!!"
+                evt = wx.KeyEvent(wx.EVT_KEY_DOWN.typeId)
+                evt.SetUnicodeKey(wx.WXK_DELETE)
+                evt.SetEventObject(active)
+                evt.SetId(active.GetId())
+                #active.GetEventHandler().ProcessEvent(evt)
+                active.EmulateKeyPress(evt)
+            else:
+                # workaround: simulate what the delete key should do
+                start, end = active.GetSelection()
+                if start == end:
+                    active.Remove(start, end + 1)
+                else:
+                    active.Remove(start, end)
+        else:
+            GUI.invoke_later(self.active_editor.delete_selection)
 
 class ClearFlaggedAction(EditorAction):
     name = 'Clear Flagged'
