@@ -31,12 +31,13 @@ class MockTree(object):
         return self.layer
 
 class MockProject(object):
-    def __init__(self):
+    def __init__(self, add_tree_control=False):
         self.window = MockWindow()
         self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager.create(self)
-        self.layer_tree_control = MockTree()
-        self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
+        if add_tree_control:
+            self.layer_tree_control = MockTree()
+            self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
 
     def raw_load_all_layers(self, uri, mime):
         guess = FileGuess(uri)
