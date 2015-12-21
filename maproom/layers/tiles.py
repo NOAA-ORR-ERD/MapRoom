@@ -22,7 +22,7 @@ class TileLayer(ProjectedLayer):
     
     type = Str("tiles")
     
-    layer_info_panel = ["Transparency", "Server status", "Server reload"]
+    layer_info_panel = ["Layer Name", "Transparency", "Server status", "Server reload"]
     
     selection_info_panel = ["Tile server"]
     
