@@ -65,3 +65,15 @@ TEXTURE_COORDINATE_DTYPE = np.dtype(
      ("u_rb", np.float32), ("v_rb", np.float32)]
 )
 
+
+def make_polygons(count):
+    return np.repeat(
+        np.array([(0, 0, 0, 0, 0)], dtype=POLYGON_DTYPE),
+        count,
+    ).view(np.recarray)
+
+def make_polygon_adjacency_array(count):
+    return np.repeat(
+        np.array([(0, 0)], dtype=POLYGON_ADJACENCY_DTYPE),
+        count,
+    ).view(np.recarray)

@@ -463,7 +463,7 @@ class ImmediateModeRenderer():
         self.set_invalid_polygons(self.polygons, self.polygon_count)
 
     def draw_polygons(self, layer_index_base, picker,
-                      polygon_colors, line_color, line_width,
+                      polygon_colors, line_color, line_width, style=None,
                       broken_polygon_index=None):
         if self.triangle_vertex_buffers is None or self.polygon_count == 0:
             return
@@ -477,6 +477,12 @@ class ImmediateModeRenderer():
         else:
             active_colors = polygon_colors
 
+        if style is not None and not picker.is_active:
+            fill_stipple = style.get_fill_stipple()
+            if fill_stipple is not None:
+                gl.glEnable(gl.GL_POLYGON_STIPPLE)
+                gl.glPolygonStipple(fill_stipple)
+
         render_buffers_with_colors(
             self.triangle_vertex_buffers[: self.polygon_count],
             active_colors,
@@ -484,6 +490,7 @@ class ImmediateModeRenderer():
             gl.GL_TRIANGLES,
             gl
         )
+        gl.glDisable(gl.GL_POLYGON_STIPPLE)
 
         # the lines
 
@@ -500,7 +507,12 @@ class ImmediateModeRenderer():
                 gl
             )
         else:
-            gl.glLineWidth(line_width)
+            if style is not None:
+                gl.glLineWidth(style.line_width)
+                gl.glLineStipple(style.line_stipple_factor, style.line_stipple)
+                gl.glEnable(gl.GL_LINE_STIPPLE)
+            else:
+                gl.glLineWidth(line_width)
             render_buffers_with_one_color(
                 self.line_vertex_buffers[: self.polygon_count],
                 line_color,
@@ -511,6 +523,7 @@ class ImmediateModeRenderer():
                 # If needed, render with one polygon border popped open.
                 gl.GL_LINE_LOOP if broken_polygon_index is None else gl.GL_LINE_STRIP
             )
+        gl.glDisable(gl.GL_LINE_STIPPLE)
 
         # TODO: drawt the points if the polygon is selected for editing
 

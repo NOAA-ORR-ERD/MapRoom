@@ -17,7 +17,7 @@ from ..library.coordinates import haversine, distance_bearing, haversine_at_cons
 from ..library.Boundary import Boundary
 from ..mouse_commands import MoveControlPointCommand
 from ..menu_commands import DeleteLayerCommand
-from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
+from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData, data_types
 
 from line import LineLayer
 from constants import *
@@ -997,3 +997,41 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
         lines[count - 1,1] = 0
         return points, lines
+        
+    def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
+        self.rasterize_points(renderer, projected_point_data, z, cp_color)
+        colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
+        colors.fill(line_color)
+        start = self.center_point_index + 1
+        last = np.alen(self.points)
+        count = last - start
+        color = renderer.get_fill_properties(self.style)
+        if color is None:
+            return
+        polygons = data_types.make_polygons(1)
+        polygons.start[0] = self.center_point_index + 1
+        polygons.count[0] = count
+        polygons.group[0] = 0
+        polygons.color[0] = color
+        adjacency = data_types.make_polygon_adjacency_array(np.alen(self.points))
+        adjacency.polygon[0:start] = 99999
+        adjacency.polygon[start:last] = 0
+        adjacency.next[start:last] = np.arange(start + 1, last + 1)
+        adjacency.next[last - 1] = start
+        renderer.set_polygons(polygons, adjacency)
+        self.rasterized_polygons = polygons
+        #renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
+        if self.rebuild_needed:
+            self.rebuild_renderer(renderer)
+#        renderer.fill_object(layer_index_base, picker, self.style)
+#        renderer.outline_object(layer_index_base, picker, self.style)
+        color = renderer.get_fill_properties(self.style)
+        if color is None:
+            return
+        renderer.draw_polygons(layer_index_base, picker,
+                               self.rasterized_polygons.color,
+                               self.style.line_color,
+                               1, self.style)

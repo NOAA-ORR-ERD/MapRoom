@@ -90,7 +90,7 @@ class PolygonLayer(PointLayer):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                 0: n_points
             ] = f_polygon_points
-            self.polygons = self.make_polygons(n_polygons)
+            self.polygons = data_types.make_polygons(n_polygons)
             self.polygons.start[
                 0: n_polygons
             ] = f_polygon_starts
@@ -99,7 +99,7 @@ class PolygonLayer(PointLayer):
             ] = f_polygon_counts
             # TODO: for now we assume each polygon is its own group
             self.polygons.group = np.arange(n_polygons)
-            self.polygon_adjacency_array = self.make_polygon_adjacency_array(n_points)
+            self.polygon_adjacency_array = data_types.make_polygon_adjacency_array(n_points)
             
             # set up feature code to color map
             green = color_floats_to_int(0.25, 0.5, 0, 0.75)
@@ -214,18 +214,6 @@ class PolygonLayer(PointLayer):
         buf.flush()
         errors = buf.getvalue()
         raise PointsError(errors)
-    
-    def make_polygons(self, count):
-        return np.repeat(
-            np.array([(0, 0, 0, 0, 0)], dtype=data_types.POLYGON_DTYPE),
-            count,
-        ).view(np.recarray)
-
-    def make_polygon_adjacency_array(self, count):
-        return np.repeat(
-            np.array([(0, 0)], dtype=data_types.POLYGON_ADJACENCY_DTYPE),
-            count,
-        ).view(np.recarray)
 
     def clear_all_polygon_selections(self, mark_type=STATE_SELECTED):
         if (self.polygons is not None):
