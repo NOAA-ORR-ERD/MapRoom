@@ -58,7 +58,7 @@ class TestBasic(object):
         mi = lm.get_multi_index_of_layer(a1)
         print "mi", mi
         
-        eq_(8, lm.next_invariant)
+        eq_(7, lm.next_invariant)
         print lm
         
         cmd = DeleteLayerCommand(a1)
@@ -66,9 +66,9 @@ class TestBasic(object):
         assert undo.flags.success
         
         print lm
-        eq_(8, lm.next_invariant)
+        eq_(7, lm.next_invariant)
         self.project.undo()
-        eq_(8, lm.next_invariant)
+        eq_(7, lm.next_invariant)
         print lm
         
         # remove last layer and see if invariant changes
@@ -77,9 +77,9 @@ class TestBasic(object):
         assert undo.flags.success
         
         print lm
-        eq_(7, lm.next_invariant)
+        eq_(6, lm.next_invariant)
         self.project.undo()
-        eq_(8, lm.next_invariant)
+        eq_(7, lm.next_invariant)
         print lm
 
 
