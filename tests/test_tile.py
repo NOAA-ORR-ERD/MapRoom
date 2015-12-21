@@ -20,13 +20,13 @@ class TestTileCoordinates(object):
         eq_((x, y), (0, 0))
 
     def test_tile_to_coord(self):
-        wr = self.host.tile_num_to_world_rect(0, 0, 0)
+        wr = self.host.tile_num_to_world_lb_rt(0, 0, 0)
         print wr
-        wr = self.host.tile_num_to_world_rect(1, 0, 0)
+        wr = self.host.tile_num_to_world_lb_rt(1, 0, 0)
         print wr
-        wr = self.host.tile_num_to_world_rect(1, 0, 1)
+        wr = self.host.tile_num_to_world_lb_rt(1, 0, 1)
         print wr
-        wr = self.host.tile_num_to_world_rect(2, 0, 0)
+        wr = self.host.tile_num_to_world_lb_rt(2, 0, 0)
         print wr
 
 
