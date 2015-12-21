@@ -181,7 +181,7 @@ class StyleDialog(wx.Dialog):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300,-1))
         self.lm = project.layer_manager
         
-        self.mock_project = MockProject()
+        self.mock_project = MockProject(add_tree_control=True)
         self.mock_project.control = None
         self.layer = self.mock_project.layer_tree_control.get_selected_layer()
         self.layer.style.copy_from(self.lm.default_style)
