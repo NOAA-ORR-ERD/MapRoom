@@ -349,11 +349,11 @@ class LayerManager(Document):
             return error
         return "No selected layer."
     
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None):
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
         self.dispatch_event('layer_loaded', layer)
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
-        self.insert_layer(mi, layer, invariant=invariant)
+        self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
     
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
