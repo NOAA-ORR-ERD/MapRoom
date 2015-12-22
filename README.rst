@@ -2,6 +2,13 @@
 Maproom 3
 =========
 
+A product of the Emergency Response Division of the NOAA `Office of
+Response and Restoration <http://response.restoration.noaa.gov/>`_.
+Visit the `Response And Restoration Blog
+<https://usresponserestoration.wordpress.com/>`_ to see some `examples of
+MapRoom <https://usresponserestoration.wordpress.com/2015/12/16/on-the-hunt-for-shipping-containers-lost-off-california-coast/>`_
+in use.
+
 
 Overview
 ========
