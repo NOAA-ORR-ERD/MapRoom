@@ -28,6 +28,8 @@ requires = [
     'pyproj',
     'cython',
     'shapely',
+    'nose',
+    'pytest',
 ]
 
 is_64bit = sys.maxsize > 2**32
