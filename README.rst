@@ -1,8 +1,8 @@
 =========
-Maproom 3
+MapRoom 3
 =========
 
-A product of the Emergency Response Division of the NOAA `Office of
+A product of the Emergency Response Division of the `NOAA <http://www.noaa.gov/>`_ Office of
 Response and Restoration <http://response.restoration.noaa.gov/>`_.
 Visit the `Response And Restoration Blog
 <https://usresponserestoration.wordpress.com/>`_ to see some `examples of
