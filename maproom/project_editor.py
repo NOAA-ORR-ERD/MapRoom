@@ -93,74 +93,72 @@ class ProjectEditor(FrameworkEditor):
     def create(self, parent):
         self.control = self._create_control(parent)
     
-    def load_in_new_tab(self, guess):
-        metadata = guess.get_metadata()
+    def load_in_new_tab(self, metadata):
         if metadata.mime == "application/x-maproom-project-json":
             return self.layer_manager.has_user_created_layers()
         return False
 
-    def load(self, guess=None, layer=False, **kwargs):
-        """ Loads the contents of the editor.
+    def load_omnivore_document(self, document, layer=False, **kwargs):
+        """ Loads the data from the Omnivore document
         """
-        if guess is not None:
-            metadata = guess.get_metadata()
-            loader = loaders.get_loader(metadata)
-            if hasattr(loader, "load_project"):
-                document = LayerManager.create(self)
-                document.metadata = metadata.clone_traits()
-                batch_flags = BatchStatus()
-                print "FIXME: Add load project command that clears all layers"
-                extra = loader.load_project(metadata, document, batch_flags)
-                self.document = self.layer_manager = document
-                if extra is not None:
-                    self.parse_extra_json(extra, batch_flags)
-                self.perform_batch_flags(batch_flags)
-                self.layer_tree_control.rebuild()
-                center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
-                cmd = ViewportCommand(None, center, units_per_pixel)
-                self.process_command(cmd)
-                
-                # Clear modified flag
-                self.layer_manager.undo_stack.set_save_point()
-                self.dirty = self.layer_manager.undo_stack.is_dirty()
-            elif hasattr(loader, "iter_log"):
-                line = 0
-                batch_flags = BatchStatus()
-                for cmd in loader.iter_log(metadata, self.layer_manager):
-                    line += 1
-                    errors = None
-                    try:
-                        undo = self.process_batch_command(cmd, batch_flags)
-                        if not undo.flags.success:
-                            errors = undo.errors
-                            break
-                    except Exception, e:
-                        errors = [str(e)]
-                        import traceback
-                        print traceback.format_exc(e)
+        metadata = document.metadata
+        loader = loaders.get_loader(metadata)
+        if hasattr(loader, "load_project"):
+            document = LayerManager.create(self)
+            document.metadata = metadata.clone_traits()
+            batch_flags = BatchStatus()
+            print "FIXME: Add load project command that clears all layers"
+            extra = loader.load_project(metadata, document, batch_flags)
+            self.document = self.layer_manager = document
+            if extra is not None:
+                self.parse_extra_json(extra, batch_flags)
+            self.perform_batch_flags(batch_flags)
+            self.layer_tree_control.rebuild()
+            center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
+            cmd = ViewportCommand(None, center, units_per_pixel)
+            self.process_command(cmd)
+            
+            # Clear modified flag
+            self.layer_manager.undo_stack.set_save_point()
+            self.dirty = self.layer_manager.undo_stack.is_dirty()
+        elif hasattr(loader, "iter_log"):
+            line = 0
+            batch_flags = BatchStatus()
+            for cmd in loader.iter_log(metadata, self.layer_manager):
+                line += 1
+                errors = None
+                try:
+                    undo = self.process_batch_command(cmd, batch_flags)
+                    if not undo.flags.success:
+                        errors = undo.errors
                         break
-                if errors is not None:
-                    header = [
-                        "While restoring from the command log file:\n\n%s\n" % metadata.uri,
-                        "an error occurred on line %d while processing" % line,
-                        "the command '%s':" % cmd.short_name,
-                        ""
-                        ]
-                    header.extend(errors)
-                    text = "\n".join(header)
-                    self.window.error(text, "Error restoring from command log")
-                self.perform_batch_flags(batch_flags)
+                except Exception, e:
+                    errors = [str(e)]
+                    import traceback
+                    print traceback.format_exc(e)
+                    break
+            if errors is not None:
+                header = [
+                    "While restoring from the command log file:\n\n%s\n" % metadata.uri,
+                    "an error occurred on line %d while processing" % line,
+                    "the command '%s':" % cmd.short_name,
+                    ""
+                    ]
+                header.extend(errors)
+                text = "\n".join(header)
+                self.window.error(text, "Error restoring from command log")
+            self.perform_batch_flags(batch_flags)
+        else:
+            cmd = LoadLayersCommand(metadata)
+            self.process_command(cmd)
+            layers = cmd.undo_info.affected_layers()
+            if len(layers) == 1:
+                cmd = ViewportCommand(layers[0])
             else:
-                cmd = LoadLayersCommand(metadata)
-                self.process_command(cmd)
-                layers = cmd.undo_info.affected_layers()
-                if len(layers) == 1:
-                    cmd = ViewportCommand(layers[0])
-                else:
-                    center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
-                    cmd = ViewportCommand(None, center, units_per_pixel)
-                self.process_command(cmd)
-            self.view_document(self.document)
+                center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
+                cmd = ViewportCommand(None, center, units_per_pixel)
+            self.process_command(cmd)
+        self.view_document(self.document)
     
     def parse_extra_json(self, json, batch_flags):
         # handle old version which was a two element list

@@ -769,6 +769,7 @@ class MaproomProjectTask(FrameworkTask):
         self.on_trait_change(self.mode_toolbar_changed, 'active_editor.mouse_mode_toolbar')
 
     def prepare_destroy(self):
+        self.window.application.remember_perspectives(self.window)
         self.stop_threaded_processing()
     
     def get_actions_Menu_File_NewGroup(self):
@@ -858,12 +859,19 @@ class MaproomProjectTask(FrameworkTask):
         """
         log.debug("In new...")
         log.debug(" active editor is: %s"%self.active_editor)
-        if self.active_editor and hasattr(source, 'get_metadata') and not self.active_editor.load_in_new_tab(source):
-            editor = self.active_editor
-            editor.load(source, **kwargs)
-            self._active_editor_changed()
+        if hasattr(source, 'document_id'):
+            if self.active_editor and not self.active_editor.load_in_new_tab(source.metadata):
+                editor = self.active_editor
+                editor.load_omnivore_document(source, **kwargs)
+                self._active_editor_changed()
+            else:
+                editor = self.get_editor()
+                self.editor_area.add_editor(editor)
+                self.editor_area.activate_editor(editor)
+                editor.load_omnivore_document(source, **kwargs)
             self.activated()
             self.window.application.successfully_loaded_event = source.metadata.uri
+            self.window.application.restore_perspective(self.window, self)
         else:
             FrameworkTask.new(self, source, **kwargs)
 
@@ -901,12 +909,19 @@ class MaproomProjectTask(FrameworkTask):
 
     ###
     @classmethod
-    def can_edit(cls, mime):
+    def can_edit(cls, document):
+        mime = document.metadata.mime
         return ( mime.startswith("image") or
                  mime.startswith("application/x-maproom-") or
                  mime == "application/x-nc_ugrid" or
                  mime == "application/x-nc_particles"
                  )
+    
+    @classmethod
+    def get_match_score(cls, document):
+        if cls.can_edit(document):
+            return 10
+        return 0
 
 
     ##### WMS and Tile processing
