@@ -17,7 +17,7 @@ os.environ["ETS_DEBUG"] = "True"
 
 # Framework imports.
 from omnivore import get_image_path
-from omnivore.framework.application import run
+from omnivore.framework.application import run, setup_frozen_logging
 
 # Local imports.
 from maproom.pane_layout import task_id_with_pane_layout
@@ -67,4 +67,5 @@ def main(argv):
 if __name__ == '__main__':
     import sys
     
+    setup_frozen_logging()
     main(sys.argv)
