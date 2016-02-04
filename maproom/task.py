@@ -27,7 +27,7 @@ from vector_object_commands import *
 from ui.dialogs import StyleDialog
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
-from omnivore.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup, CutAction, CopyAction, PasteAction
+from omnivore.framework.actions import PreferencesAction, TaskDynamicSubmenuGroup, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction
 
 import logging
 log = logging.getLogger(__name__)
@@ -493,23 +493,6 @@ class OpenLogAction(Action):
         app = event.task.window.application
         filename = app.get_log_file_name("command_log", ".mrc")
         app.load_file(filename, task_id="omnivore.framework.text_edit_task")
-
-class OpenLogDirectoryAction(Action):
-    name = 'Open Log Directory in File Manager'
-    tooltip = 'Open the log directory in the desktop file manager program'
-
-    def perform(self, event):
-        app = event.task.window.application
-        filename = app.get_log_file_name("dummy")
-        dirname = os.path.dirname(filename)
-        import subprocess
-        if sys.platform.startswith("win"):
-            file_manager = 'explorer'
-        elif sys.platform == "darwin":
-            file_manager = '/usr/bin/open'
-        else:
-            file_manager = 'xdg-open'
-        subprocess.call([file_manager, dirname])
 
 class DebugAnnotationLayersAction(EditorAction):
     name = 'Sample Annotation Layer'
