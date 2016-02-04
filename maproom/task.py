@@ -878,6 +878,20 @@ class MaproomProjectTask(FrameworkTask):
     def allow_different_task(self, guess, other_task):
         return self.window.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
 
+    def restore_toolbars(self, window):
+        # Omnivore framework calls this after every file load, normally to
+        # restore the single toolbar per task.  But because MapRoom uses
+        # dynamic toolbars based on layer, have to make sure that only the
+        # correct layer toolbar is shown
+        active_toolbar = self.active_editor.mouse_mode_toolbar
+        for toolbar in window.tool_bar_managers:
+            name = toolbar.id
+            state = (name == "ToolBar" or name == active_toolbar)
+            toolbar.visible = state
+            info = window._aui_manager.GetPane(name)
+            info.Show(state)
+        window._aui_manager.Update()
+    
 # This trait change is set in activated() rather than as a decorator (see above)
 #    @on_trait_change('active_editor.mouse_mode_toolbar')
     def mode_toolbar_changed(self, changed_to):
