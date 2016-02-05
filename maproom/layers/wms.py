@@ -114,6 +114,8 @@ class WMSLayer(ProjectedLayer):
             if self.checkerboard_when_loading:
                 self.rebuild_needed = True
                 canvas.render()
+            self.name = downloader.wmshost.name
+            canvas.project.layer_metadata_changed(self)
         else:
             self.download_status_text = None
             # Try again, waiting till we get a successful contact
