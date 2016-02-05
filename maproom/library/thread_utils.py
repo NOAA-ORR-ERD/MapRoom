@@ -21,7 +21,7 @@ blank_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00@\x00\x00\x00@\x08\x
 
 
 class WMSHost(object):
-    def __init__(self, name, url, version, strip_prefix=""):
+    def __init__(self, name, url, version, strip_prefix="", default_layer_indexes=None):
         self.name = name
         if url.endswith("?"):
             url = url[:-1]
@@ -29,6 +29,7 @@ class WMSHost(object):
         self.version = version
         self.strip_prefix = strip_prefix
         self.strip_prefix_len = len(strip_prefix)
+        self.default_layer_indexes = default_layer_indexes
     
     def __hash__(self):
         return hash(self.url)
@@ -41,6 +42,11 @@ class WMSHost(object):
             if title.startswith(self.strip_prefix):
                 return title[self.strip_prefix_len:]
         return title
+    
+    def get_default_layer_indexes(self):
+        if self.default_layer_indexes is not None:
+            return self.default_layer_indexes
+        return [0]
 
 
 class BackgroundWMSDownloader(BackgroundHttpDownloader):
@@ -57,7 +63,7 @@ class BackgroundWMSDownloader(BackgroundHttpDownloader):
 #                WMSHost("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
                 WMSHost("NOAA RNC", "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
                 WMSHost("NOAA Maritime Charts", "http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
-                WMSHost("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0"),
+                WMSHost("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0", default_layer_indexes=[1]),
                 WMSHost("OpenStreetMap WMS Deutschland", "http://ows.terrestris.de/osm/service?", "1.1.1"),
                 WMSHost("USGS Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSTopoLarge/MapServer/WMSServer?", "1.3.0"),
                 WMSHost("USGS Imagery Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSImageryTopoLarge/MapServer/WMSServer?", "1.3.0"),
@@ -200,8 +206,8 @@ class WMSInitRequest(UnskippableURLRequest):
         return layer_info
     
     def get_default_layers(self):
-        print self.layer_keys
-        return [self.layer_keys[0],]
+        host_default = self.wmshost.get_default_layer_indexes()
+        return [self.layer_keys[i] for i in host_default if i < len(self.layer_keys)]
     
     def get_bbox(self, layers, wr, pr):
         types = [("102100", "p"),
