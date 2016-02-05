@@ -229,7 +229,7 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
         return data
 
 class TileHost(object):
-    def __init__(self, name, url_list, strip_prefix="", tile_size=256):
+    def __init__(self, name, url_list, strip_prefix="", tile_size=256, suffix=".png"):
         self.name = name
         self.urls = []
         for url in url_list:
@@ -241,6 +241,7 @@ class TileHost(object):
         self.strip_prefix = strip_prefix
         self.strip_prefix_len = len(strip_prefix)
         self.tile_size = tile_size
+        self.suffix = suffix
     
     def __hash__(self):
         return hash(self.urls[0])
@@ -286,7 +287,7 @@ class TileHost(object):
         # thread locking
         self.url_index = (self.url_index + 1) % self.num_urls
         url = self.urls[self.url_index]
-        return "%s/%s/%s/%s.png" % (url, zoom, x, y)
+        return "%s/%s/%s/%s%s" % (url, zoom, x, y, self.suffix)
     
     def get_tile_cache_file(self, zoom, x, y):
         # >>> ".".join("http://a.tile.openstreetmap.org/".split("//")[1].split("/")[0].rsplit(".", 2)[-2:])
@@ -339,6 +340,7 @@ class BackgroundTileDownloader(BackgroundHttpMultiDownloader):
                 OpenTileHost("MapQuest", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/", "http://otile2.mqcdn.com/tiles/1.0.0/osm/", "http://otile3.mqcdn.com/tiles/1.0.0/osm/", "http://otile4.mqcdn.com/tiles/1.0.0/osm/"]),
                 OpenTileHost("MapQuest Satellite", ["http://otile1.mqcdn.com/tiles/1.0.0/sat/", "http://otile2.mqcdn.com/tiles/1.0.0/sat/", "http://otile3.mqcdn.com/tiles/1.0.0/sat/", "http://otile4.mqcdn.com/tiles/1.0.0/sat/"]),
                 OpenTileHost("OpenStreetMap", ["http://a.tile.openstreetmap.org/", "http://b.tile.openstreetmap.org/", "http://c.tile.openstreetmap.org/"]),
+                OpenTileHost("Navionics", ["http://backend.navionics.io/tile/"], suffix="?LAYERS=config_2_20.00_0&TRANSPARENT=FALSE&UGC=TRUE&navtoken=TmF2aW9uaWNzX2ludGVybmFscHVycG9zZV8wMDAwMSt3ZWJhcHAubmF2aW9uaWNzLmNvbQ%3D%3D"),
                 ]
         return cls.cached_known_tile_server
     
