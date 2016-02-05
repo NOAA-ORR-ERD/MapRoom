@@ -90,13 +90,13 @@ class OffScreenHTML(object):
     Works on OS-X, may need an explicite alpha bitmap on other platforms
     """
     
-    def __init__(self):
+    def __init__(self, bg=(255, 255, 255)):
         self.height = 100
         
         self.hr = wx.html.HtmlDCRenderer()
         
-        # White background will be transformed into transparent in get_numpy
-        self.bg = (255, 255, 255)
+        # background will be transformed into transparent in get_numpy
+        self.bg = tuple(bg[0:3])  # throw away alpha value, if any
     
     def setup(self, text, bitmap, face, size):
         DC = wx.MemoryDC()
@@ -153,7 +153,8 @@ class OffScreenHTML(object):
             sub.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
             # Turn background transparent
             red, green, blue = arr[:,:,0], arr[:,:,1], arr[:,:,2]
-            mask = (red == 255) & (green == 255) & (blue == 255)
+            bg = self.bg
+            mask = (red == bg[0]) & (green == bg[1]) & (blue == bg[2])
             arr[:,:,3][mask] = 0
             
             # Compute bounding box of text by looking at the mask.  The mask
@@ -161,8 +162,13 @@ class OffScreenHTML(object):
             # so the bounding box can be computed by using the idea from
             # http://stackoverflow.com/questions/4808221
             fg = np.argwhere(np.logical_not(mask))
-            (ystart, xstart), (ystop, xstop) = fg.min(0), fg.max(0) + 1
-            bb = arr[ystart:ystop, xstart:xstop]
+            if np.alen(fg) > 0:
+                (ystart, xstart), (ystop, xstop) = fg.min(0), fg.max(0) + 1
+                bb = arr[ystart:ystop, xstart:xstop]
+            else:
+                # background and text color must have been the same because it
+                # didn't find any bounding box
+                bb = self.get_blank()
         else:
             # he HTML renderer doesn't render anything when the input is empty
             # or only whitespace, so need to return a fake (blank) image

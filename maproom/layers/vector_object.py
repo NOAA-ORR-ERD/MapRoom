@@ -17,7 +17,7 @@ from ..library.coordinates import haversine, distance_bearing, haversine_at_cons
 from ..library.Boundary import Boundary
 from ..mouse_commands import MoveControlPointCommand
 from ..menu_commands import DeleteLayerCommand
-from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData, data_types
+from ..renderer import color_floats_to_int, int_to_color_floats, int_to_color_uint8, int_to_html_color_string, alpha_from_int, ImageData, data_types
 
 from line import LineLayer
 from constants import *
@@ -740,7 +740,8 @@ class OverlayTextObject(OverlayImageObject):
     
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
-        h = OffScreenHTML()
+        bg = int_to_color_uint8(self.style.fill_color)
+        h = OffScreenHTML(bg)
         c = int_to_html_color_string(self.style.text_color)
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
         return arr
