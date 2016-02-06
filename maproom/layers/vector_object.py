@@ -670,11 +670,14 @@ class OverlayImageObject(RectangleVectorObject):
         It doesn't scale with the image, it scales with the line size on screen
         """
         log.log(5, "Rendering overlay image %s!!! pick=%s" % (self.name, picker))
+        self.set_overlay_position(renderer)
+        self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker)
+    
+    def set_overlay_position(self, renderer):
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
-        renderer.set_image_center_at_screen_point(self.image_data, center, c.screen_rect)
-        self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker)
+        renderer.set_image_center_at_screen_point(self.image_data, center, c.screen_rect, 1.0)
     
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         alpha = alpha_from_int(self.style.line_color)
@@ -692,7 +695,8 @@ class OverlayImageObject(RectangleVectorObject):
             flagged = []
         renderer.draw_points(layer_index_base, picker, self.point_size, flagged_point_indexes=flagged)
 
-class OverlayTextObject(OverlayImageObject):
+
+class OverlayScalableImageObject(OverlayImageObject):
     """Texture mapped image object that is fixed in size relative to the screen
     
     Image uses 4 control points like the rectangle, but uses a texture
@@ -700,27 +704,15 @@ class OverlayTextObject(OverlayImageObject):
     trasparent pixels.
     
     """
-    name = Unicode("Text")
+    name = Unicode("Scalable Image")
     
-    type = Str("overlay_text_obj")
-    
-    user_text = Unicode("<b>New Label</b>")
+    type = Str("overlay_scalable_image_obj")
     
     text_width = Float(-1)
     
     text_height = Float(-1)
     
-    border_width = Int(10)
-    
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
-    
-    selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
-    
-    def user_text_to_json(self):
-        return self.user_text.encode("utf-8")
-
-    def user_text_from_json(self, json_data):
-        self.user_text = json_data['user_text'].decode('utf-8')
+    border_width = Int(0)
     
     def text_width_to_json(self):
         return self.text_width
@@ -734,17 +726,15 @@ class OverlayTextObject(OverlayImageObject):
     def text_height_from_json(self, json_data):
         self.text_height = json_data['text_height']
     
+    def border_width_to_json(self):
+        return self.border_width
+
+    def border_width_from_json(self, json_data):
+        self.border_width = json_data['border_width']
+    
     def set_style(self, style):
         OverlayImageObject.set_style(self, style)
         self.rebuild_needed = True  # Force rebuild to change image color
-    
-    def get_image_array(self):
-        from maproom.library.numpy_images import OffScreenHTML
-        bg = int_to_color_uint8(self.style.fill_color)
-        h = OffScreenHTML(bg)
-        c = int_to_html_color_string(self.style.text_color)
-        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
-        return arr
 
     def set_location_and_size(self, p1, w, h):
         self.text_width = w
@@ -812,6 +802,41 @@ class OverlayTextObject(OverlayImageObject):
             print " AFTER: move_cp: text w,h", self.text_width, self.text_height
 
         self.move_bounding_box_point(drag, anchor, dx, dy)
+
+
+class OverlayTextObject(OverlayScalableImageObject):
+    """Texture mapped image object that is fixed in size relative to the screen
+    
+    Image uses 4 control points like the rectangle, but uses a texture
+    object as the foreground.  The background color will show through in
+    trasparent pixels.
+    
+    """
+    name = Unicode("Text")
+    
+    type = Str("overlay_text_obj")
+    
+    user_text = Unicode("<b>New Label</b>")
+    
+    border_width = Int(10)
+    
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    
+    selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
+    
+    def user_text_to_json(self):
+        return self.user_text.encode("utf-8")
+
+    def user_text_from_json(self, json_data):
+        self.user_text = json_data['user_text'].decode('utf-8')
+    
+    def get_image_array(self):
+        from maproom.library.numpy_images import OffScreenHTML
+        bg = int_to_color_uint8(self.style.fill_color)
+        h = OffScreenHTML(bg)
+        c = int_to_html_color_string(self.style.text_color)
+        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
+        return arr
     
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         renderer.prepare_to_render_projected_objects()
@@ -821,7 +846,8 @@ class OverlayTextObject(OverlayImageObject):
         alpha = alpha_from_int(self.style.text_color)
         renderer.draw_image(layer_index_base, picker, alpha)
 
-class OverlayIconObject(OverlayImageObject):
+
+class OverlayIconObject(OverlayScalableImageObject):
     """Texture mapped Marplot icon object that is fixed in size relative to the screen
     
     Uses the Marplot category icons.
@@ -834,15 +860,30 @@ class OverlayIconObject(OverlayImageObject):
     
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
     
-    def can_anchor_point_move(self):
-        return False
+    text_width = Float(32)
+    
+    text_height = Float(32)
+    
+    border_width = Int(5)
+    
+    min_size = Int(10)
     
     def get_image_array(self):
         return self.style.get_numpy_image_from_icon()
     
-    def set_style(self, style):
-        OverlayImageObject.set_style(self, style)
-        self.rebuild_needed = True  # Force rebuild to change image color
+    def set_overlay_position(self, renderer):
+        c = renderer.canvas
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
+        if self.text_width < self.text_height:
+            w1 = self.text_width
+            w2 = self.image_data.x
+        else:
+            w1 = self.text_height
+            w2 = self.image_data.y
+        w1 = max(w1, self.min_size)
+        scale = w1 * 1.0 / w2
+        renderer.set_image_center_at_screen_point(self.image_data, center, c.screen_rect, scale)
 
 
 class PolylineMixin(object):

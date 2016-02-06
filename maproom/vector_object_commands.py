@@ -228,6 +228,6 @@ class AddIconCommand(DrawVectorObjectCommand):
     
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
-        layer.set_location(self.point)
+        layer.set_location_and_size(self.point, 32, 32)
         layer.set_style(self.style)
         return layer

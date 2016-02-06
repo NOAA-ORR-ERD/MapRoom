@@ -297,9 +297,9 @@ class ImmediateModeRenderer():
             # Release the raw image data to free up memory.
             image_data.release_images()
 
-    def set_image_center_at_screen_point(self, image_data, center, screen_rect):
+    def set_image_center_at_screen_point(self, image_data, center, screen_rect, scale=1.0):
         height = rect.height(screen_rect)
-        self.image_textures.center_at_screen_point(image_data, center, height)
+        self.image_textures.center_at_screen_point(image_data, center, height, scale)
     
     def set_image_to_screen_rect(self, image_data, screen_rect):
         self.image_textures.use_screen_rect(image_data, screen_rect)

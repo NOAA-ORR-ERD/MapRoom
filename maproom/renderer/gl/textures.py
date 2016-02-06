@@ -463,12 +463,12 @@ class ImageTextures(object):
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
     
-    def use_screen_rect(self, image_data, r):
+    def use_screen_rect(self, image_data, r, scale=1.0):
         for i, image in enumerate(image_data):
-            x = image.origin[0]
-            y = image.origin[1]
-            w = image.size[0]
-            h = image.size[1]
+            x = image.origin[0] * scale
+            y = image.origin[1] * scale
+            w = image.size[0] * scale
+            h = image.size[1] * scale
             raw = self.vbo_vertexes[i].data
             vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = x + r[0][0]
@@ -482,15 +482,15 @@ class ImageTextures(object):
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
     
-    def center_at_screen_point(self, image_data, point, screen_height):
-        left = int(point[0] - image_data.x/2)
-        bottom = int(point[1] + image_data.y/2)
-        right = left + image_data.x
-        top = bottom + image_data.y
+    def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
+        left = int(point[0] - (image_data.x/2) * scale)
+        bottom = int(point[1] + (image_data.y/2) * scale)
+        right = left + (image_data.x * scale)
+        top = bottom + (image_data.y * scale)
         # flip y to treat rect as normal opengl coordinates
         r = ((left, screen_height - bottom),
              (right, screen_height - top))
-        self.use_screen_rect(image_data, r)
+        self.use_screen_rect(image_data, r, scale)
 
     def destroy(self):
         for texture in self.textures:
