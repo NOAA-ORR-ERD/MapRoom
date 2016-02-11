@@ -28,7 +28,6 @@ requires = [
     'pyproj',
     'cython',
     'shapely',
-    'nose',
     'pytest',
 ]
 

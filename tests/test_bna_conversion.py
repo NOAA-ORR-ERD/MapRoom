@@ -1,9 +1,5 @@
 import os
 
-import unittest
-from nose.tools import *
-from nose.plugins.attrib import attr
-
 import numpy as np
 
 from mock import *
@@ -21,8 +17,8 @@ class TestVerdatToBNA(object):
         layer = self.project.raw_load_first_layer("../TestData/Verdat/sample shoreline.verdat", "application/x-maproom-verdat")
         layer_bounds = Boundaries(layer, True, True)
         print layer_bounds.boundaries
-        eq_(1, len(layer_bounds.boundaries))
-        eq_(0, len(layer_bounds.non_boundary_points))
+        assert 1 == len(layer_bounds.boundaries)
+        assert 0 == len(layer_bounds.non_boundary_points)
         for b in layer_bounds.boundaries:
             print b.point_indexes
             print b.area
@@ -34,7 +30,7 @@ class TestVerdatToBNA(object):
     def test_hole(self):
         layer = self.project.raw_load_first_layer("../TestData/Verdat/000026pts.verdat", "application/x-maproom-verdat")
         boundaries = layer.get_all_boundaries()
-        eq_(2, len(boundaries))
+        assert 2 == len(boundaries)
             
         p = PolygonLayer(manager=self.lm)
         p.set_data_from_boundaries(boundaries)
@@ -42,7 +38,7 @@ class TestVerdatToBNA(object):
     def test_to_verdat(self):
         layer = self.project.raw_load_first_layer("../TestData/Verdat/000026pts.verdat", "application/x-maproom-verdat")
         boundaries = layer.get_all_boundaries()
-        eq_(2, len(boundaries))
+        assert 2 == len(boundaries)
             
         p = PolygonLayer(manager=self.lm)
         p.set_data_from_boundaries(boundaries)
@@ -52,13 +48,12 @@ class TestVerdatToBNA(object):
         print points
         print lines
         v.set_data(points, 0.0, lines)
-        eq_(np.alen(points), np.alen(v.points))
-        eq_(np.alen(lines), np.alen(v.line_segment_indexes))
+        assert np.alen(points) == np.alen(v.points)
+        assert np.alen(lines) == np.alen(v.line_segment_indexes)
 
 
 
 if __name__ == "__main__":
-    #unittest.main()
     import time
     
     t = TestVerdatToBNA()

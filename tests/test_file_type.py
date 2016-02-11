@@ -1,14 +1,7 @@
-#!/usr/bin/env python
-
 """
 Tests for the binary file types
-
-Designed to be run with nose
-
 """
 import os
-
-from nose.tools import *
 
 from mock import *
 

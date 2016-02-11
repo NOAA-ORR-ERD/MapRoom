@@ -1,7 +1,5 @@
 import os
 
-from nose.tools import *
-
 import numpy as np
 
 from pyugrid.ugrid import UGrid
@@ -19,7 +17,7 @@ class TestVerdatConversion(object):
 
     def test_simple(self):
         print self.verdat
-        eq_(23, np.alen(self.verdat.points))
+        assert 23 == np.alen(self.verdat.points)
         print self.verdat.points
         
         tris = TriangleLayer(manager=self.project.layer_manager)
@@ -30,15 +28,15 @@ class TestVerdatConversion(object):
         t2 = self.project.raw_load_first_layer("negative-depth-triangles.nc", "application/x-nc_ugrid")
         print t2.points
 
-    @raises(PointsError)
     def test_jetty(self):
         layer = self.verdat
-        eq_(16, np.alen(layer.line_segment_indexes))
+        assert 16 == np.alen(layer.line_segment_indexes)
         layer.insert_line_segment(2, 17)
-        eq_(17, np.alen(layer.line_segment_indexes))
+        assert 17 == np.alen(layer.line_segment_indexes)
         
         b = Boundaries(layer, allow_branches=False)
-        b.check_errors(True)
+        with pytest.raises(PointsError):
+            b.check_errors(True)
 
 class TestJetty(object):
     def setup(self):
@@ -62,22 +60,22 @@ class TestJetty(object):
         for segment in segments:
             self.add_segments(segment)
 
-    @raises(PointsError)
     def test_jetty(self):
         layer = self.verdat
-        eq_(5, np.alen(layer.line_segment_indexes))
+        assert 5 == np.alen(layer.line_segment_indexes)
         self.create_jetty()
-        eq_(16, np.alen(layer.line_segment_indexes))
+        assert 16 == np.alen(layer.line_segment_indexes)
         
         b = Boundaries(layer, allow_branches=False)
-        b.check_errors(True)
+        with pytest.raises(PointsError):
+            b.check_errors(True)
 
     def test_jetty_save_as_ugrid(self):
         self.create_jetty()
         uri = "tmp.jetty.nc"
         loaders.save_layer(self.verdat, uri)
         layer = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
-        eq_(16, np.alen(layer.line_segment_indexes))
+        assert 16 == np.alen(layer.line_segment_indexes)
 
     def create_channel(self):
         layer = self.verdat
@@ -89,22 +87,22 @@ class TestJetty(object):
         for segment in segments:
             self.add_segments(segment)
 
-    @raises(PointsError)
     def test_channel(self):
         layer = self.verdat
-        eq_(5, np.alen(layer.line_segment_indexes))
+        assert 5 == np.alen(layer.line_segment_indexes)
         self.create_channel()
-        eq_(15, np.alen(layer.line_segment_indexes))
+        assert 15 == np.alen(layer.line_segment_indexes)
         
         b = Boundaries(layer, allow_branches=False)
-        b.check_errors(True)
+        with pytest.raises(PointsError):
+            b.check_errors(True)
 
     def test_channel_save_as_ugrid(self):
         self.create_channel()
         uri = "tmp.channel.nc"
         loaders.save_layer(self.verdat, uri)
         layer = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
-        eq_(15, np.alen(layer.line_segment_indexes))
+        assert 15 == np.alen(layer.line_segment_indexes)
 
 
 class TestUGrid(object):
@@ -113,11 +111,11 @@ class TestUGrid(object):
         self.layers = self.project.raw_load_all_layers("../TestData/UGrid/2_triangles.nc", "application/x-nc_ugrid")
     
     def test_load(self):
-        eq_(2, len(self.layers))
+        assert 2 == len(self.layers)
         layer = self.layers[0]
-        eq_('line', layer.type)
+        assert 'line' == layer.type
         layer = self.layers[1]
-        eq_('triangle', layer.type)
+        assert 'triangle' == layer.type
 
 if __name__ == "__main__":
     t = TestVerdatConversion()

@@ -1,8 +1,5 @@
 import os
 
-import unittest
-from nose.tools import *
-
 import numpy as np
 
 from mock import *
@@ -68,7 +65,6 @@ class TestBasicLoad(object):
 
 
 if __name__ == "__main__":
-    #unittest.main()
     import time
     
     t = TestBasic()

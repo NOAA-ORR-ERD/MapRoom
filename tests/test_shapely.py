@@ -1,7 +1,5 @@
 import os
 
-from nose.tools import *
-
 import numpy as np
 
 from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString

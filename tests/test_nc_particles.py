@@ -4,8 +4,6 @@ test for various nc_particles functionality
 
 import os
 
-from nose.tools import *
-
 import numpy as np
 
 from mock import maproom_dir
@@ -20,4 +18,3 @@ def test_iterator():
         points, status_codes, time = data
         assert points.shape == (1000, 2)
     assert i == 24
-

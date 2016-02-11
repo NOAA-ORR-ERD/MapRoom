@@ -1,8 +1,5 @@
 import os
 
-import unittest
-from nose.tools import *
-
 import numpy as np
 
 from mock import *
@@ -19,14 +16,14 @@ class TestVerdatUndo(object):
     def test_add_points(self):
         world_point = (-118.0, 33.0)
         orig_points = np.copy(self.layer.points)
-        eq_(689, np.alen(self.layer.points))
+        assert 689 == np.alen(self.layer.points)
         
         cmd = InsertPointCommand(self.layer, world_point)
         self.project.process_command(cmd)
-        eq_(690, np.alen(self.layer.points))
+        assert 690 == np.alen(self.layer.points)
         
         self.project.undo()
-        eq_(689, np.alen(self.layer.points))
+        assert 689 == np.alen(self.layer.points)
         assert np.array_equal(orig_points, self.layer.points)
 
     def test_move_points(self):
@@ -41,7 +38,7 @@ class TestVerdatUndo(object):
         assert np.allclose(self.layer.points.y[indexes], orig_points.y[indexes] + dy)
 
         self.project.undo()
-        eq_(689, np.alen(self.layer.points))
+        assert 689 == np.alen(self.layer.points)
         assert np.array_equal(orig_points, self.layer.points)
 
     def test_move_points_coelesce(self):
@@ -64,7 +61,7 @@ class TestVerdatUndo(object):
 
         # single undo should return to original state
         self.project.undo()
-        eq_(689, np.alen(self.layer.points))
+        assert 689 == np.alen(self.layer.points)
         assert np.array_equal(orig_points, self.layer.points)
 
 class TestVerdatDelete(object):
@@ -82,10 +79,9 @@ class TestVerdatDelete(object):
         print self.layer.line_segment_indexes
         
         self.project.undo()
-        eq_(orig_lsi[-1], self.layer.line_segment_indexes[-1])
+        assert orig_lsi[-1] == self.layer.line_segment_indexes[-1]
 
 if __name__ == "__main__":
-    #unittest.main()
     import time
     
 #    t = TestVerdatUndo()

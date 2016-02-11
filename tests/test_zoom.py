@@ -1,9 +1,5 @@
 import os
 
-import unittest
-from nose.tools import *
-from nose.plugins.attrib import attr
-
 import numpy as np
 
 from mock import *
@@ -21,27 +17,26 @@ class TestZoom(object):
         for n in range(16):
             upp = c.get_units_per_pixel_from_zoom(n)
             zoom1 = c.get_zoom_level(upp)
-            assert_almost_equals(n, zoom1, places=5)
+            assert_almost_equal(n, zoom1, decimal=5)
 
     def test_zoom1(self):
         c = self.canvas
         zoom1 = c.get_zoom_level(c.projected_units_per_pixel)
         upp = c.get_units_per_pixel_from_zoom(zoom1)
-        assert_almost_equals(c.projected_units_per_pixel, upp, places=5)
+        assert_almost_equal(c.projected_units_per_pixel, upp, decimal=5)
         zoom2 = c.get_zoom_level(upp)
-        assert_almost_equals(zoom1, zoom2, places=5)
+        assert_almost_equal(zoom1, zoom2, decimal=5)
 
     def test_zoom2(self):
         c = self.canvas
         zoom = c.get_zoom_level(3459, round=.25)
-        assert_almost_equals(zoom, 5.5, places=5)
+        assert_almost_equal(zoom, 5.5, decimal=5)
         upp = c.get_units_per_pixel_from_zoom(zoom)
-        assert_almost_equals(3459.145, upp, places=3)
+        assert_almost_equal(3459.145, upp, decimal=3)
 
 
 
 if __name__ == "__main__":
-    #unittest.main()
     import time
     
     t = TestZoom()

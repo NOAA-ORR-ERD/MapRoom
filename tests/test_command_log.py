@@ -1,8 +1,5 @@
 import os
 
-import unittest
-from nose.tools import *
-
 import numpy as np
 
 from mock import *
@@ -24,14 +21,14 @@ class TestBasic(TestLogBase):
 
     def test_points(self):
         layer = self.manager.get_layer_by_invariant(1)
-        eq_(692, np.alen(layer.points))
+        assert 692 == np.alen(layer.points)
 
 class TestPoints(TestLogBase):
     logfile = "../TestData/CommandLog/pt-line-del-line_to.mrc"
 
     def test_points(self):
         layer = self.manager.get_layer_by_invariant(1)
-        eq_(698, np.alen(layer.points))
+        assert 698 == np.alen(layer.points)
 
 class TestTwoLayers(TestLogBase):
     logfile = "../TestData/CommandLog/two_layers.mrc"
@@ -39,19 +36,19 @@ class TestTwoLayers(TestLogBase):
     def test_points(self):
         lm = self.manager
         layer1 = lm.get_layer_by_invariant(1)
-        eq_(693, np.alen(layer1.points))
+        assert 693 == np.alen(layer1.points)
         layer2 = lm.get_layer_by_invariant(2)
-        eq_(26, np.alen(layer2.points))
+        assert 26 == np.alen(layer2.points)
 
     def test_rename(self):
         lm = self.manager
         layer1 = lm.get_layer_by_invariant(1)
         layer2 = lm.get_layer_by_invariant(2)
-        eq_("26 points", layer2.name)
+        assert "26 points" == layer2.name
         self.project.undo(8)
-        eq_("000026pts.verdat", layer2.name)
+        assert "000026pts.verdat" == layer2.name
         self.project.redo()
-        eq_("26 points", layer2.name)
+        assert "26 points" == layer2.name
 
     def test_delete(self):
         lm = self.manager
@@ -60,9 +57,9 @@ class TestTwoLayers(TestLogBase):
         cmd = DeleteLayerCommand(layer2)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
-        eq_(2, lm.next_invariant)
+        assert 2 == lm.next_invariant
         self.project.undo()
-        eq_(3, lm.next_invariant)
+        assert 3 == lm.next_invariant
         
     def test_merge(self):
         lm = self.manager
@@ -71,13 +68,13 @@ class TestTwoLayers(TestLogBase):
         cmd = MergeLayersCommand(layer1, layer2)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
-        eq_(4, lm.next_invariant)
+        assert 4 == lm.next_invariant
         self.project.undo()
-        eq_(3, lm.next_invariant)
+        assert 3 == lm.next_invariant
         self.project.redo()
-        eq_(4, lm.next_invariant)
+        assert 4 == lm.next_invariant
         layer3 = lm.get_layer_by_invariant(3)
-        eq_(719, np.alen(layer3.points))
+        assert 719 == np.alen(layer3.points)
     
     def test_triangulate1(self):
         lm = self.manager
@@ -92,11 +89,11 @@ class TestTwoLayers(TestLogBase):
         cmd = TriangulateLayerCommand(layer2, None, None)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
-        eq_(4, lm.next_invariant)
+        assert 4 == lm.next_invariant
         self.project.undo()
-        eq_(3, lm.next_invariant)
+        assert 3 == lm.next_invariant
         self.project.redo()
-        eq_(4, lm.next_invariant)
+        assert 4 == lm.next_invariant
 
 class TestInvariantOffset(object):
     def setup(self):
@@ -108,32 +105,31 @@ class TestInvariantOffset(object):
         self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
         lm = self.manager
         layer = lm.get_layer_by_invariant(1)
-        eq_(11, np.alen(layer.points))
+        assert 11 == np.alen(layer.points)
         layer = lm.get_layer_by_invariant(2)
-        eq_(693, np.alen(layer.points))
+        assert 693 == np.alen(layer.points)
         layer = lm.get_layer_by_invariant(3)
-        eq_(26, np.alen(layer.points))
+        assert 26 == np.alen(layer.points)
 
     def test_offset2(self):
         self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
         self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
         lm = self.manager
         layer = lm.get_layer_by_invariant(1)
-        eq_(11, np.alen(layer.points))
+        assert 11 == np.alen(layer.points)
         layer = lm.get_layer_by_invariant(2)
-        eq_(693, np.alen(layer.points))
+        assert 693 == np.alen(layer.points)
         layer = lm.get_layer_by_invariant(3)
-        eq_(26, np.alen(layer.points))
+        assert 26 == np.alen(layer.points)
         cmd = DeleteLayerCommand(layer)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
         layer = lm.get_layer_by_invariant(4)
-        eq_(693, np.alen(layer.points))
+        assert 693 == np.alen(layer.points)
         layer = lm.get_layer_by_invariant(5)
-        eq_(26, np.alen(layer.points))
+        assert 26 == np.alen(layer.points)
 
 if __name__ == "__main__":
-    #unittest.main()
     import time
     
     t = TestInvariantOffset()

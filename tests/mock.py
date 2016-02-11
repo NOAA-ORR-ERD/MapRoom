@@ -6,7 +6,11 @@ maproom_dir = os.path.realpath(os.path.abspath(".."))
 if maproom_dir not in sys.path:
     sys.path.insert(0, maproom_dir)
 
-from nose.tools import *
+import pytest
+slow = pytest.mark.skipif(
+    not pytest.config.getoption("--runslow"),
+    reason="need --runslow option to run"
+)
 
 # Turn logging on by default at the DEBUG level for tests
 import logging
@@ -15,6 +19,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
 import numpy as np
+from numpy.testing import assert_almost_equal
 
 from pyugrid.ugrid import UGrid
 
