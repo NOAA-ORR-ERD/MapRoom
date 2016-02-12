@@ -565,6 +565,8 @@ class LayerManager(Document):
     # returns a list of the child layers of a root or folder layer
     def get_layer_children(self, layer):
         mi = self.get_multi_index_of_layer(layer)
+        if mi is None:
+            return []
         l = self.get_layer_by_multi_index(mi)
 
         ret = []
