@@ -278,8 +278,14 @@ class Layer(HasTraits):
             return self.points is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def update_bounds(self):
-        self.bounds = self.compute_bounding_rect()
+    def update_bounds(self, parents=False):
+        if parents:
+            parent = self
+            while not parent.is_root():
+                parent.update_bounds()
+                parent = self.manager.get_folder_of_layer(parent)
+        else:
+            self.bounds = self.compute_bounding_rect()
     
     def is_zoomable(self):
         return self.bounds != rect.NONE_RECT
@@ -465,6 +471,15 @@ class Folder(Layer):
         children = self.manager.get_layer_children(self)
         for layer in children:
             project_layer_visibility[layer]["layer"] = checked
+
+    def compute_bounding_rect(self, mark_type=STATE_NONE):
+        bounds = rect.NONE_RECT
+
+        children = self.manager.get_layer_children(self)
+        for layer in children:
+            bounds = rect.accumulate_rect(bounds, layer.bounds)
+
+        return bounds
 
 
 class RootLayer(Folder):

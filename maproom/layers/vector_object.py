@@ -645,7 +645,7 @@ class OverlayImageObject(RectangleVectorObject):
     def update_world_control_points(self, renderer):
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, None, None)
-        self.update_bounds()
+        self.update_bounds(True)
 
     def rebuild_image(self, renderer):
         """Update renderer
@@ -767,7 +767,7 @@ class OverlayScalableImageObject(OverlayImageObject):
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, None, None)
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
-        self.update_bounds()
+        self.update_bounds(True)
     
     def move_control_point(self, drag, anchor, dx, dy):
         # Note: center point drag is rigid body move so text box size is only
