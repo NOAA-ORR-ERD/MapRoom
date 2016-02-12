@@ -112,6 +112,7 @@ class ProjectEditor(FrameworkEditor):
             self.document = self.layer_manager = document
             if extra is not None:
                 self.parse_extra_json(extra, batch_flags)
+            self.layer_tree_control.clear_all_items()
             self.perform_batch_flags(batch_flags)
             self.layer_tree_control.rebuild()
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)

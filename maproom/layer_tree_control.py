@@ -120,6 +120,9 @@ class LayerTreeControl(wx.Panel):
             child = self.tree.GetNextSibling(child)
             n -= 1
 
+    def clear_all_items(self):
+        self.tree.DeleteAllItems()
+
     def rebuild(self):
         # rebuild the tree from the layer manager's data
         if self.project is None:
