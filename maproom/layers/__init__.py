@@ -1,7 +1,8 @@
-from base import Layer, EmptyLayer, RootLayer, Folder, AnnotationLayer
+from base import Layer, EmptyLayer
+from line import LineLayer
+from folder import RootLayer, Folder
 from grid import Grid
 from scale import Scale
-from line import LineLayer
 from triangle import TriangleLayer
 from polygon import PolygonLayer
 from raster import RasterLayer

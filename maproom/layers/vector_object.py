@@ -15,11 +15,10 @@ from pyface.api import YES
 from ..library import rect
 from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, mi_to_rounded_string
 from ..library.Boundary import Boundary
-from ..mouse_commands import MoveControlPointCommand
-from ..menu_commands import DeleteLayerCommand
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_color_uint8, int_to_html_color_string, alpha_from_int, ImageData, data_types
 
 from line import LineLayer
+from folder import BoundedFolder
 from constants import *
 
 import logging
@@ -87,6 +86,7 @@ class VectorObjectLayer(LineLayer):
         return True
     
     def delete_all_selected_objects(self):
+        from ..menu_commands import DeleteLayerCommand
         return DeleteLayerCommand(self)
     
     def calculate_distances(self, cp):
@@ -164,11 +164,11 @@ class LineVectorObject(VectorObjectLayer):
     def calculate_distances(self):
         return haversine_list(self.points[0:self.num_corners])
 
-    def set_opposite_corners(self, p1, p2):
+    def set_opposite_corners(self, p1, p2, update_bounds=True):
         p = np.concatenate((p1, p2), 0)  # flatten to 1D
         c = p[self.corners_from_flat].reshape(-1,2)
         cp = self.get_control_points_from_corners(c)
-        self.set_data(cp, 0.0, self.lines)
+        self.set_data(cp, 0.0, self.lines, update_bounds)
     
     def copy_control_point_from(self, cp, other_layer, other_cp):
         log.log(5, "copy control point from %s %s to %s %s" % (other_layer.name, other_cp, self.name, cp))
@@ -202,8 +202,16 @@ class LineVectorObject(VectorObjectLayer):
         self.find_anchor_of(point_index)
         
     def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp):
+        from ..mouse_commands import MoveControlPointCommand
         cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy, snapped_layer, snapped_cp)
         return cmd
+    
+    def layers_affected_by_move(self):
+        """ Returns a list of layers that will be affected by moving a control
+        point.  This is used for layer groups; moving a control point of a
+        group will affect all the layers in the group.
+        """
+        return [self]
     
     def move_control_point(self, drag, anchor, dx, dy):
         """Moving the control point changes the size of the bounding rectangle.
@@ -232,6 +240,11 @@ class LineVectorObject(VectorObjectLayer):
         return self.manager.remove_control_point_links(self, remove)
     
     def move_bounding_box_point(self, drag, anchor, dx, dy):
+        """ Adjust points within object after bounding box has been resized
+        
+        Returns a list of affected layers (child layers can be resized as a
+        side effect!)
+        """
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         old_origin = np.copy(p.xy[0])  # without copy it will be changed below
         orig_wh = p.xy[self.anchor_of[0]] - old_origin
@@ -772,7 +785,7 @@ class OverlayScalableImageObject(OverlayImageObject):
     def move_control_point(self, drag, anchor, dx, dy):
         # Note: center point drag is rigid body move so text box size is only
         # recalculated if dragging some other control point
-        print "BEFORE: move_cp: text w,h", self.text_width, self.text_height
+#        print "BEFORE: move_cp: text w,h", self.text_width, self.text_height
         if drag < self.center_point_index:
             c = self.manager.project.layer_canvas
             p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
@@ -801,7 +814,7 @@ class OverlayScalableImageObject(OverlayImageObject):
             if self.text_height < min_border:
                 self.text_height = min_border
                 dy = 0
-            print " AFTER: move_cp: text w,h", self.text_width, self.text_height
+#            print " AFTER: move_cp: text w,h", self.text_width, self.text_height
 
         self.move_bounding_box_point(drag, anchor, dx, dy)
 
@@ -1079,3 +1092,61 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
                                self.rasterized_polygons.color,
                                self.style.line_color,
                                1, self.style)
+
+
+class AnnotationLayer(BoundedFolder, RectangleVectorObject):
+    """Layer for vector annotation image
+    
+    """
+    name = Unicode("Annotation Layer")
+
+    type = Str("annotation")
+    
+    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
+    
+    layer_info_panel = ["Layer name"]
+    
+    selection_info_panel = ["Anchor coordinates", "Area"]
+    
+    def set_layer_style_defaults(self):
+        self.style.line_stipple = 0xaaaa
+        self.style.line_width = 1
+        self.style.fill_style = 0
+    
+    def set_data_from_bounds(self, bounds):
+        if bounds[0][0] is None:
+            self.points = self.make_points(0)
+            
+        else:
+            points = np.asarray(bounds, dtype=np.float32)
+            self.set_opposite_corners(points[0], points[1], update_bounds=False)
+    
+    def layers_affected_by_move(self):
+        affected = []
+        for layer in self.manager.get_layer_children(self):
+            affected.extend(layer.layers_affected_by_move())
+        affected.append(self)
+        return affected
+    
+    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
+        layers = self.manager.get_layer_children(self)
+        print "SCALING SUB-OBJECTS!!!", layers
+        anchor = 0
+        for layer in layers:
+            drag = layer.anchor_of[anchor]
+            p = layer.points.view(data_types.POINT_XY_VIEW_DTYPE)
+            p_anchor = ((p.xy[0] - old_origin) * scale) + new_origin
+            p_drag = ((p.xy[drag] - old_origin) * scale) + new_origin
+#            print "p", p
+#            print "p_ancor", p_anchor
+#            print "p_drag", p_drag
+            dx = p_drag[0] - p.xy[drag][0]
+            dy = p_drag[1] - p.xy[drag][1]
+            layer.move_control_point(drag, anchor, dx, dy)
+            dx = p_anchor[0] - p.xy[0][0]
+            dy = p_anchor[1] - p.xy[0][1]
+            layer.move_control_point(anchor, drag, dx, dy)
+#        offset = self.center_point_index + 1
+#        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+#        points = ((p.xy[offset:] - old_origin) * scale) + new_origin
+#        p.xy[offset:] = points

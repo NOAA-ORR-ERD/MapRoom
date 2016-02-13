@@ -58,12 +58,16 @@ class BaseCanvas(object):
     def get_renderer(self, layer):
         return self.layer_renderers[layer]
 
+    def update_renderer(self, layer):
+        if layer.is_renderable and not layer in self.layer_renderers:
+            log.debug("update_renderers: rebuilding layer %s" % layer)
+            r = self.new_renderer(layer)
+            layer.rebuild_renderer(r)
+            self.layer_renderers[layer] = r
+
     def update_renderers(self):
         for layer in self.project.layer_manager.flatten():
-            if not layer in self.layer_renderers:
-                r = self.new_renderer(layer)
-                layer.rebuild_renderer(r)
-                self.layer_renderers[layer] = r
+            self.update_renderer(layer)
     
     def remove_renderer_for_layer(self, layer):
         if layer in self.layer_renderers:
@@ -161,15 +165,25 @@ class BaseCanvas(object):
             return
 
         selected = self.get_selected_layer()
-        layer_draw_order = list(enumerate(self.project.layer_manager.flatten()))
-        layer_draw_order.reverse()
+        all_layers = list(enumerate(self.project.layer_manager.flatten()))
+        all_layers.reverse()
 
         # Update any linked control points by first looping through all layers
         # to update the world position, then updating the links.
-        for i, layer in layer_draw_order:
+        layer_draw_order = []
+        for i, layer in all_layers:
             vis = self.project.layer_visibility[layer]
-            renderer = self.layer_renderers[layer]
-            layer.pre_render(renderer, w_r, p_r, s_r, vis)
+            if layer.is_renderable:
+                if layer not in self.layer_renderers:
+                    # renderer may not yet exist on BoundedFolder layers the
+                    # first time through because dependent layers just fed
+                    # their info up to the parent in update_renderers above,
+                    # but at the time the BoundedFolder went through the list
+                    # it wasn't renderable.
+                    self.update_renderer(layer)
+                renderer = self.layer_renderers[layer]
+                layer.pre_render(renderer, w_r, p_r, s_r, vis)
+                layer_draw_order.append((i, layer))
         affected_layers = self.project.layer_manager.update_linked_control_points()
         for layer in affected_layers:
             renderer = self.layer_renderers[layer]

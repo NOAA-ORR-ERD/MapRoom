@@ -67,7 +67,7 @@ class LineLayer(PointLayer):
         else:
             raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def set_data(self, f_points, f_depths, f_line_segment_indexes):
+    def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True):
         n = np.alen(f_points)
         self.set_layer_style_defaults()
         self.points = self.make_points(n)
@@ -90,7 +90,8 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0
         
-        self.update_bounds()
+        if update_bounds:
+            self.update_bounds()
     
     def set_color(self, color):
         self.style.line_color = color

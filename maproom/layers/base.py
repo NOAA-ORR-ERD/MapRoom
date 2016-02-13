@@ -82,7 +82,7 @@ class Layer(HasTraits):
         return LayerStyle()
 
     def __repr__(self):
-        return self.name
+        return "%s (%x)" % (self.name, id(self))
     
     def get_info_panel_text(self, prop):
         # Subclasses should define this to return values for any properties in
@@ -117,6 +117,10 @@ class Layer(HasTraits):
     
     def is_root(self):
         return False
+    
+    @property
+    def is_renderable(self):
+        return True
     
     def can_copy(self):
         return False
@@ -453,63 +457,6 @@ class EmptyLayer(Layer):
     name = Unicode("<empty folder>")
     
     type = Str("empty")
-
-
-class Folder(Layer):
-    """Layer that contains other layers.
-    """
-    name = Unicode("Folder")
-    
-    type = Str("folder")
-    
-    def is_folder(self):
-        return True
-    
-    def set_visibility_when_checked(self, checked, project_layer_visibility):
-        # Folders will automatically set their children's visiblity state to
-        # the parent state
-        children = self.manager.get_layer_children(self)
-        for layer in children:
-            project_layer_visibility[layer]["layer"] = checked
-
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
-        bounds = rect.NONE_RECT
-
-        children = self.manager.get_layer_children(self)
-        for layer in children:
-            bounds = rect.accumulate_rect(bounds, layer.bounds)
-
-        return bounds
-
-
-class RootLayer(Folder):
-    """Root layer
-    
-    Only one root layer per project.
-    """
-    name = Unicode("Root Layer")
-    
-    type = Str("root")
-    
-    skip_on_insert = True
-    
-    def is_root(self):
-        return True
-    
-    def serialize_json(self, index):
-        # Root layer is never serialized
-        pass
-
-
-class AnnotationLayer(Folder):
-    """Layer for vector annotation image
-    
-    """
-    name = Unicode("Annotation Layer")
-
-    type = Str("annotation")
-    
-    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
 
 class ProjectedLayer(Layer):

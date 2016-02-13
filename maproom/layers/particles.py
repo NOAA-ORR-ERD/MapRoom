@@ -15,7 +15,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 
 from ..renderer import color_floats_to_int
 
-from base import Folder
+from folder import Folder
 from point_base import PointBaseLayer
 
 # import logging

@@ -161,15 +161,25 @@ class MoveControlPointCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        old_x = np.copy(layer.points.x)
-        old_y = np.copy(layer.points.y)
         old_links = layer.remove_from_master_control_points(self.drag, self.anchor)
-        undo.data = (old_x, old_y, old_links)
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
         lf.layer_contents_added = True
+        affected = layer.layers_affected_by_move()
+        old_layer_data = []
+        for la in affected:
+            lf = undo.flags.add_layer_flags(la)
+            lf.layer_items_moved = True
+            old_x = np.copy(la.points.x)
+            old_y = np.copy(la.points.y)
+            ((l, b), (r, t)) = la.bounds
+            old_bounds = ((l, b), (r, t))
+            old_layer_data.append((la.invariant, old_x, old_y, old_bounds))
+        undo.data = (old_links, old_layer_data)
+        
         layer.move_control_point(self.drag, self.anchor, self.dx, self.dy)
+        
         if self.snapped_layer is not None:
             sl = lm.get_layer_by_invariant(self.snapped_layer)
             #print "sl", sl
@@ -178,10 +188,13 @@ class MoveControlPointCommand(Command):
         return undo
 
     def undo(self, editor):
-        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
-        (old_x, old_y, old_links) = self.undo_info.data
-        layer.points.x = old_x
-        layer.points.y = old_y
+        (old_links, old_layer_data) = self.undo_info.data
+        old_layer_data.reverse()
+        for invariant, old_x, old_y, old_bounds in old_layer_data:
+            layer = editor.layer_manager.get_layer_by_invariant(invariant)
+            layer.points.x = old_x
+            layer.points.y = old_y
+            layer.bounds = old_bounds
         links = layer.remove_from_master_control_points(self.drag, self.anchor)
         for dep, master in old_links:
             editor.layer_manager.set_control_point_link(dep, master)
