@@ -8,6 +8,7 @@ from omnivore.utils.file_guess import FileMetadata
 from command import Command, UndoInfo
 from layers import loaders, Layer, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer
 from library.Boundary import Boundaries
+from vector_object_commands import get_parent_layer_data, restore_layers
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -256,8 +257,8 @@ class DeleteLayerCommand(Command):
         self.undo_info = undo = UndoInfo()
         insertion_index = lm.get_multi_index_of_layer(layer)
         children = lm.get_children(layer)
+        parents = layer.parents_affected_by_move()
         links = lm.remove_all_links_to_layer(layer)
-        undo.data = (layer, insertion_index, layer.invariant, children, links)
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         
@@ -266,14 +267,19 @@ class DeleteLayerCommand(Command):
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = lm.roll_back_invariant(layer.invariant)
         
+        parent_layer_data = get_parent_layer_data(parents, undo)
+
+        undo.data = (layer, insertion_index, layer.invariant, children, links, parent_layer_data)
+
         return self.undo_info
 
     def undo(self, editor):
         lm = editor.layer_manager
-        layer, insertion_index, saved_invariant, children, links = self.undo_info.data
+        layer, insertion_index, saved_invariant, children, links, parent_layer_data = self.undo_info.data
         lm.insert_layer(insertion_index, layer, invariant=saved_invariant)
         lm.insert_children(layer, children)
         lm.restore_all_links_to_layer(layer, links)
+        restore_layers(editor, parent_layer_data)
         return self.undo_info
 
 class MergeLayersCommand(Command):

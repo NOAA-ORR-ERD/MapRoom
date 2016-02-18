@@ -6,6 +6,11 @@ from layers.vector_object import *
 
 def update_parent_bounds(layer, undo):
     affected = layer.parents_affected_by_move()
+    parent_layer_data = get_parent_layer_data(affected, undo)
+    layer.update_bounds()
+    return parent_layer_data
+
+def get_parent_layer_data(affected, undo):
     parent_layer_data = []
     for la in affected:
         lf = undo.flags.add_layer_flags(la)
@@ -15,7 +20,6 @@ def update_parent_bounds(layer, undo):
         ((l, b), (r, t)) = la.bounds
         parent_bounds = ((l, b), (r, t))
         parent_layer_data.append((la.invariant, parent_x, parent_y, parent_bounds))
-    layer.update_bounds()
     return parent_layer_data
 
 def restore_layers(editor, old_layer_data, undo=None):
