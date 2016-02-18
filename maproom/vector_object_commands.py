@@ -18,13 +18,16 @@ def update_parent_bounds(layer, undo):
     layer.update_bounds()
     return parent_layer_data
 
-def restore_layers(editor, old_layer_data):
+def restore_layers(editor, old_layer_data, undo=None):
     lm = editor.layer_manager
     for invariant, old_x, old_y, old_bounds in old_layer_data:
         layer = lm.get_layer_by_invariant(invariant)
         layer.points.x = old_x
         layer.points.y = old_y
         layer.bounds = old_bounds
+        if undo:
+            lf = undo.flags.add_layer_flags(layer)
+            lf.layer_items_moved = True
 
 
 class MoveControlPointCommand(Command):
@@ -152,7 +155,10 @@ class DrawVectorObjectCommand(Command):
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         lf.layer_loaded = True
-        undo.data = (layer.invariant, saved_invariant)
+        
+        parent_layer_data = update_parent_bounds(layer, undo)
+        
+        undo.data = (layer.invariant, saved_invariant, parent_layer_data)
         
         self.perform_post(editor, lm, layer, undo)
         
@@ -169,7 +175,7 @@ class DrawVectorObjectCommand(Command):
 
     def undo(self, editor):
         lm = editor.layer_manager
-        invariant, saved_invariant = self.undo_info.data
+        invariant, saved_invariant, parent_layer_data = self.undo_info.data
         layer = editor.layer_manager.get_layer_by_invariant(invariant)
         insertion_index = lm.get_multi_index_of_layer(layer)
         
@@ -184,6 +190,8 @@ class DrawVectorObjectCommand(Command):
         
         self.undo_post(editor, lm, layer, undo)
         
+        restore_layers(editor, parent_layer_data, undo)
+
         return undo
 
     def undo_post(self, editor, lm, layer, undo):
