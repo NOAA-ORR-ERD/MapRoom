@@ -12,22 +12,18 @@ def update_parent_bounds(layer, undo):
 
 def get_parent_layer_data(affected, undo):
     parent_layer_data = []
-    for la in affected:
-        lf = undo.flags.add_layer_flags(la)
+    for layer in affected:
+        lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
-        parent_x = np.copy(la.points.x)
-        parent_y = np.copy(la.points.y)
-        ((l, b), (r, t)) = la.bounds
-        parent_bounds = ((l, b), (r, t))
-        parent_layer_data.append((la.invariant, parent_x, parent_y, parent_bounds))
+        points = layer.copy_points()
+        parent_layer_data.append((layer.invariant, points, layer.copy_bounds()))
     return parent_layer_data
 
 def restore_layers(editor, old_layer_data, undo=None):
     lm = editor.layer_manager
-    for invariant, old_x, old_y, old_bounds in old_layer_data:
+    for invariant, old_points, old_bounds in old_layer_data:
         layer = lm.get_layer_by_invariant(invariant)
-        layer.points.x = old_x
-        layer.points.y = old_y
+        layer.points = old_points
         layer.bounds = old_bounds
         if undo:
             lf = undo.flags.add_layer_flags(layer)
@@ -84,11 +80,7 @@ class MoveControlPointCommand(Command):
         for la in affected:
             lf = undo.flags.add_layer_flags(la)
             lf.layer_items_moved = True
-            child_x = np.copy(la.points.x)
-            child_y = np.copy(la.points.y)
-            ((l, b), (r, t)) = la.bounds
-            child_bounds = ((l, b), (r, t))
-            child_layer_data.append((la.invariant, child_x, child_y, child_bounds))
+            child_layer_data.append((la.invariant, la.copy_points(), la.copy_bounds()))
         
         layer.move_control_point(self.drag, self.anchor, self.dx, self.dy)
         

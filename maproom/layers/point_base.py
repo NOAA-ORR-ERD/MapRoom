@@ -115,6 +115,13 @@ class PointBaseLayer(ProjectedLayer):
             count,
         ).view(np.recarray)
     
+    def copy_points(self):
+        return self.points.copy().view(np.recarray)
+    
+    def copy_bounds(self):
+        ((l, b), (r, t)) = self.bounds
+        return ((l, b), (r, t))
+    
     ##### JSON Serialization
     
     def points_to_json(self):
