@@ -194,7 +194,12 @@ class TextEditField(InfoField):
         return c
     
     def fill_data(self, layer):
-        text = self.get_value(layer)
+        try:
+            text = self.get_value(layer)
+            self.ctrl.Enable(True)
+        except IndexError:
+            text = ""
+            self.ctrl.Enable(False)
         self.ctrl.ChangeValue(text)
         self.is_valid()
     

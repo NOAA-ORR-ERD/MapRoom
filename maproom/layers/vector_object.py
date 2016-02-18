@@ -395,10 +395,13 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
     selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
 
     def get_width_height(self):
-        p = self.points
-        dlon = p[7].x - p[5].x
-        wkm = haversine_at_const_lat(dlon, p[7].y)
-        hkm = haversine(p[4].x, p[4].y, p[6].x, p[6].y)
+        if self.empty():
+            wkm, hkm = 0.0, 0.0
+        else:
+            p = self.points
+            dlon = p[7].x - p[5].x
+            wkm = haversine_at_const_lat(dlon, p[7].y)
+            hkm = haversine(p[4].x, p[4].y, p[6].x, p[6].y)
         return wkm, hkm
 
     def get_info_panel_text(self, prop):
@@ -1106,7 +1109,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     
     layer_info_panel = ["Layer name"]
     
-    selection_info_panel = ["Anchor coordinates", "Area"]
+    selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
     
     def set_layer_style_defaults(self):
         self.style.line_stipple = 0xaaaa
