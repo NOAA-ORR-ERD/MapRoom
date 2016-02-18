@@ -91,6 +91,20 @@ class VectorObjectLayer(LineLayer):
     
     def calculate_distances(self, cp):
         return 0.0
+    
+    def children_affected_by_move(self):
+        """ Returns a list of layers that will be affected by moving a control
+        point.  This is used for layer groups; moving a control point of a
+        group will affect all the layers in the group.
+        """
+        return [self]
+    
+    def parents_affected_by_move(self):
+        """ Returns a list of layers that might need to have boundaries
+        recalculated after moving this layer.
+        """
+        affected = self.manager.get_layer_parents(self)
+        return affected
 
     def rebuild_image(self, renderer):
         """Hook for image-based renderers to rebuild image data
@@ -202,16 +216,9 @@ class LineVectorObject(VectorObjectLayer):
         self.find_anchor_of(point_index)
         
     def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp):
-        from ..mouse_commands import MoveControlPointCommand
+        from ..vector_object_commands import MoveControlPointCommand
         cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy, snapped_layer, snapped_cp)
         return cmd
-    
-    def layers_affected_by_move(self):
-        """ Returns a list of layers that will be affected by moving a control
-        point.  This is used for layer groups; moving a control point of a
-        group will affect all the layers in the group.
-        """
-        return [self]
     
     def move_control_point(self, drag, anchor, dx, dy):
         """Moving the control point changes the size of the bounding rectangle.
@@ -1124,10 +1131,10 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
             points = np.asarray(bounds, dtype=np.float32)
             self.set_opposite_corners(points[0], points[1], update_bounds=False)
     
-    def layers_affected_by_move(self):
+    def children_affected_by_move(self):
         affected = []
         for layer in self.manager.get_layer_children(self):
-            affected.extend(layer.layers_affected_by_move())
+            affected.extend(layer.children_affected_by_move())
         affected.append(self)
         return affected
     

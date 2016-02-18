@@ -579,6 +579,20 @@ class LayerManager(Document):
 
         return ret
 
+    def get_layer_parents(self, layer):
+        """Return a list of parent layers, starting from the immediate parent
+        and continuing to older ancestors but ignoring the root layer
+        """
+        parents = []
+        mi = self.get_multi_index_of_layer(layer)
+        if mi is not None:
+            while len(mi) > 1:
+                mi[-1] = 0
+                l = self.get_layer_by_multi_index(mi)
+                parents.append(l)
+                mi.pop()
+        return parents
+
     def get_children(self, layer):
         """Return a list containing the hierarchy starting at the specified
         layer and containing any children and descendents.

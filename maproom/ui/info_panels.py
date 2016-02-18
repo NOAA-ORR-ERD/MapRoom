@@ -13,6 +13,7 @@ from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
 from ..menu_commands import *
+from ..vector_object_commands import MoveControlPointCommand
 from ..renderer import color_floats_to_int, int_to_color_floats
 
 import logging

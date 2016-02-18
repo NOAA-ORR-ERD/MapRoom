@@ -4,6 +4,113 @@ from command import Command, UndoInfo
 from layers.vector_object import *
 
 
+def update_parent_bounds(layer, undo):
+    affected = layer.parents_affected_by_move()
+    parent_layer_data = []
+    for la in affected:
+        lf = undo.flags.add_layer_flags(la)
+        lf.layer_items_moved = True
+        parent_x = np.copy(la.points.x)
+        parent_y = np.copy(la.points.y)
+        ((l, b), (r, t)) = la.bounds
+        parent_bounds = ((l, b), (r, t))
+        parent_layer_data.append((la.invariant, parent_x, parent_y, parent_bounds))
+    layer.update_bounds()
+    return parent_layer_data
+
+def restore_layers(editor, old_layer_data):
+    lm = editor.layer_manager
+    for invariant, old_x, old_y, old_bounds in old_layer_data:
+        layer = lm.get_layer_by_invariant(invariant)
+        layer.points.x = old_x
+        layer.points.y = old_y
+        layer.bounds = old_bounds
+
+
+class MoveControlPointCommand(Command):
+    short_name = "move_cpt"
+    serialize_order =  [
+        ('layer', 'layer'),
+        ('drag', 'int'),
+        ('anchor', 'int'),
+        ('dx', 'float'),
+        ('dy', 'float'),
+        ('snapped_layer', 'layer'),
+        ('snapped_cp', 'int'),
+        ]
+    
+    def __init__(self, layer, drag, anchor, dx, dy, snapped_layer, snapped_cp):
+        Command.__init__(self, layer)
+        self.drag = drag
+        self.anchor = anchor
+        self.dx = dx
+        self.dy = dy
+        if snapped_layer is not None:
+            self.snapped_layer = snapped_layer.invariant
+        else:
+            self.snapped_layer = None
+        self.snapped_cp = snapped_cp
+    
+    def __str__(self):
+        return "Move Control Point #%d" % self.drag
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer and next_command.drag == self.drag and next_command.anchor == self.anchor:
+                self.dx += next_command.dx
+                self.dy += next_command.dy
+                self.snapped_layer = next_command.snapped_layer
+                self.snapped_cp = next_command.snapped_cp
+                return True
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        old_links = layer.remove_from_master_control_points(self.drag, self.anchor)
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
+        affected = layer.children_affected_by_move()
+        child_layer_data = []
+        for la in affected:
+            lf = undo.flags.add_layer_flags(la)
+            lf.layer_items_moved = True
+            child_x = np.copy(la.points.x)
+            child_y = np.copy(la.points.y)
+            ((l, b), (r, t)) = la.bounds
+            child_bounds = ((l, b), (r, t))
+            child_layer_data.append((la.invariant, child_x, child_y, child_bounds))
+        
+        layer.move_control_point(self.drag, self.anchor, self.dx, self.dy)
+        
+        parent_layer_data = update_parent_bounds(layer, undo)
+
+        undo.data = (old_links, child_layer_data, parent_layer_data)
+
+        if self.snapped_layer is not None:
+            sl = lm.get_layer_by_invariant(self.snapped_layer)
+            #print "sl", sl
+            #print "snapped_cp", self.snapped_cp
+            lm.set_control_point_link(layer, self.drag, sl, self.snapped_cp)
+        return undo
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        (old_links, child_layer_data, parent_layer_data) = self.undo_info.data
+        child_layer_data.reverse()
+        
+        restore_layers(editor, child_layer_data)
+        restore_layers(editor, parent_layer_data)
+        
+        layer = lm.get_layer_by_invariant(self.layer)
+        links = layer.remove_from_master_control_points(self.drag, self.anchor)
+        for dep, master in old_links:
+            lm.set_control_point_link(dep, master)
+        return self.undo_info
+
+
 class DrawVectorObjectCommand(Command):
     short_name = "vector_object"
     ui_name = None
