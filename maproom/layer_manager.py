@@ -10,6 +10,7 @@ from fs.opener import opener, fsopen
 
 import library.rect as rect
 from library.accumulator import flatten
+from library.jsonutil import collapse_json
 
 from layers import Layer, RootLayer, Grid, Scale, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
 from command import UndoStack
@@ -336,7 +337,10 @@ class LayerManager(Document):
         try:
             with fsopen(file_path, "wb") as fh:
                 fh.write("# -*- MapRoom project file -*-\n")
-                json.dump(project, fh)
+                text = json.dumps(project, indent=4)
+                processed = collapse_json(text, 12)
+                fh.write(processed)
+                fh.write("\n")
         except Exception, e:
             return "Failed saving %s: %s" % (file_path, e)
         return ""
