@@ -7,10 +7,15 @@ if maproom_dir not in sys.path:
     sys.path.insert(0, maproom_dir)
 
 import pytest
-slow = pytest.mark.skipif(
-    not pytest.config.getoption("--runslow"),
-    reason="need --runslow option to run"
-)
+try:
+    slow = pytest.mark.skipif(
+        not pytest.config.getoption("--runslow"),
+        reason="need --runslow option to run"
+        )
+except AttributeError:
+    # pytest doesn't load the config module when not run using py.test
+    # skip this check when running a test_*.py from the command line
+    pass
 
 # Turn logging on by default at the DEBUG level for tests
 import logging
