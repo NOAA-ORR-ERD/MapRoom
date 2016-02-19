@@ -189,7 +189,10 @@ class ProjectEditor(FrameworkEditor):
         v = dict()
         for invariant, vis in json_data.iteritems():
             layer = lm.get_layer_by_invariant(int(invariant))
-            v[layer] = vis
+            if layer is not None:
+                # Some layer visibility data from deleted layers may have been
+                # saved, so only restore visibility for layers that are known
+                v[layer] = vis
         self.layer_visibility = v
 
     def get_default_visibility(self):
@@ -223,8 +226,8 @@ class ProjectEditor(FrameworkEditor):
             u = UndoStack()
             u.add_command(cmd)
             text = str(u.serialize())
-            error = self.layer_manager.save_all(path, {"commands": text,
-                                                       "layer_visibility": self.layer_visibility_to_json()})
+            vis = self.layer_visibility_to_json()
+            error = self.layer_manager.save_all(path, {"commands": text, "layer_visibility": vis})
         except ProgressCancelError, e:
             error = e.message
         finally:
