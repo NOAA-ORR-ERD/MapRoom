@@ -113,8 +113,8 @@ class ProjectEditor(FrameworkEditor):
             if extra is not None:
                 self.parse_extra_json(extra, batch_flags)
             self.layer_tree_control.clear_all_items()
-            self.perform_batch_flags(batch_flags)
             self.layer_tree_control.rebuild()
+            self.perform_batch_flags(batch_flags)
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
             cmd = ViewportCommand(None, center, units_per_pixel)
             self.process_command(cmd)
