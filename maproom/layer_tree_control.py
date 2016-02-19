@@ -136,8 +136,9 @@ class LayerTreeControl(wx.Panel):
         log.debug("LAYER_TREE: rebuiding layers = " + str(lm.layers))
         self.add_layers_recursive(lm.layers, None, expanded_state)
         # self.Thaw()
-        self.select_layer(selected)
-        self.project.update_layer_selection_ui(selected)
+        if selected:
+            self.select_layer(selected)
+            self.project.update_layer_selection_ui(selected)
 
     def add_layers_recursive(self, layer_tree, parent, expanded_state):
         if (len(layer_tree) == 0):
