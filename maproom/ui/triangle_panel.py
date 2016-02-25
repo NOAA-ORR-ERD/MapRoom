@@ -124,6 +124,12 @@ class TrianglePanel(wx.Panel):
                 return
 
         layer = project.layer_tree_control.get_selected_layer()
+        if layer.type == "triangle":
+            # If attempting to triangulate a triangle layer, check if it is an
+            # already-triangulated layer, and if so, use its parent
+            parent = layer.manager.find_parent_of_dependent_layer(layer, layer.type)
+            if parent is not None:
+                layer = parent
         if (layer is None or not layer.has_points()):
                 project.window.error("To triangulate, use the Layers tree to select a layer that contains points.", "Triangulate")
 

@@ -546,6 +546,12 @@ class LayerManager(Document):
                 return child
         return None
     
+    def find_parent_of_dependent_layer(self, child, dependent_type):
+        for layer in self.flatten():
+            if child.dependent_of == layer.invariant:
+                return layer
+        return None
+    
     ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???    
     def is_raisable(self, layer):
         if not layer.is_root():
