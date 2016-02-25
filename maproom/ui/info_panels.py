@@ -243,6 +243,7 @@ class LayerNameField(TextEditField):
         name = self.ctrl.GetValue()
         cmd = RenameLayerCommand(layer, name)
         self.process_command(cmd)
+        self.ctrl.SetFocus()
         
 class DefaultDepthField(TextEditField):
     same_line = True
