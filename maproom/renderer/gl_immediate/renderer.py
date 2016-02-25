@@ -142,15 +142,6 @@ class ImmediateModeRenderer():
         #log.debug("in Point_and_line_set_renderer.render_points, layer_index_base:%s, picker:%s"%(layer_index_base, picker) )
 
         if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
-            if (not picker.is_active and len(flagged_point_indexes) != 0):
-                gl.glPointSize(point_size + 15)
-                gl.glColor(0.2, 0, 1, 0.75)
-                gl.glBegin(gl.GL_POINTS)
-                for i in flagged_point_indexes:
-                    gl.glVertex(self.vbo_point_xys.data[i, 0], self.vbo_point_xys.data[i, 1], 0)
-                gl.glEnd()
-                gl.glColor(1, 1, 1, 1)
-
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
             self.vbo_point_xys.bind()
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
@@ -183,6 +174,18 @@ class ImmediateModeRenderer():
                 gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
 
             self.vbo_point_xys.unbind()
+
+            # draw flagged points last so they will be visible over top of
+            # points, otherwise in areas of high point concentration they
+            # could be hidden in the masses of points
+            if (not picker.is_active and len(flagged_point_indexes) != 0):
+                gl.glPointSize(point_size + 15)
+                gl.glColor(0.2, 0, 1, 0.75)
+                gl.glBegin(gl.GL_POINTS)
+                for i in flagged_point_indexes:
+                    gl.glVertex(self.vbo_point_xys.data[i, 0], self.vbo_point_xys.data[i, 1], 0)
+                gl.glEnd()
+                gl.glColor(1, 1, 1, 1)
 
     def draw_selected_points(self, point_size, selected_point_indexes=[]):
         if (len(selected_point_indexes) != 0):
