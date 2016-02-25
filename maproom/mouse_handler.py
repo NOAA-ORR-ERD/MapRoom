@@ -101,11 +101,17 @@ class MouseHandler(object):
             else:
                 c.project.clickable_object_mouse_is_over = None
             if c.picker.is_ugrid_point(o):
-                status_text += "  Point %s on %s" % (object_index + 1, str(layer))
+                obj_text = "Point %s on %s" % (object_index + 1, layer.name)
+            elif c.picker.is_ugrid_line(o):
+                obj_text = "Line %s on %s" % (object_index + 1, layer.name)
+            else:
+                obj_text = ""
+            c.project.task.status_bar.debug = obj_text
 
         else:
             c.project.clickable_object_mouse_is_over = None
             c.project.clickable_object_in_layer = None
+            c.project.task.status_bar.debug = ""
         mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.project.clickable_object_mouse_is_over is not None))
 
         c.project.task.status_bar.message = status_text
