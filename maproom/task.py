@@ -262,6 +262,11 @@ class MaproomProjectTask(FrameworkTask):
             SaveImageAction(),
             ]
     
+    def get_actions_Menu_File_RevertGroup(self):
+        return [
+            RevertProjectAction(),
+            ]
+    
     def get_actions_Menu_Edit_CopyPasteGroup(self):
         return [
             CutAction(),

@@ -2,7 +2,7 @@ import os
 import sys
 
 # Enthought library imports.
-from pyface.api import ImageResource, GUI, FileDialog, YES, OK, CANCEL
+from pyface.api import ImageResource, GUI, FileDialog, YES, NO, OK, CANCEL
 from pyface.action.api import Action, ActionItem
 from pyface.tasks.action.api import TaskAction, EditorAction
 from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
@@ -111,6 +111,19 @@ class SaveImageAction(EditorAction):
         dialog = FileDialog(parent=event.task.window.control, action='save as')
         if dialog.open() == OK:
             self.active_editor.save_image(dialog.path)
+
+class RevertProjectAction(EditorAction):
+    name = 'Revert Project'
+    tooltip = 'Revert project to last saved version'
+    enabled_name = 'document.can_revert'
+
+    def perform(self, event):
+        message = "Revert project from\n\n%s?" % self.active_editor.document.metadata.uri
+        result = event.task.window.confirm(message=message, default=NO, title='Revert Project?')
+        if result == CANCEL:
+            return
+        elif result == YES:
+            self.active_editor.load_omnivore_document(self.active_editor.document)
 
 class DefaultStyleAction(EditorAction):
     name = 'Default Style...'
