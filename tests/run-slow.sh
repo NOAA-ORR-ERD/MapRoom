@@ -1,3 +1,3 @@
 #!/bin/bash
 
-py.test --runslow
+py.test --cov=maproom --runslow

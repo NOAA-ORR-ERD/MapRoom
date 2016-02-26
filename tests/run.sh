@@ -1,5 +1,5 @@
 #!/bin/bash
 
-py.test
+py.test --cov=maproom
 RESULT=$?
 exit $RESULT
