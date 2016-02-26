@@ -172,6 +172,11 @@ class ProjectEditor(FrameworkEditor):
         
         if "layer_visibility" in json:
             self.layer_visibility_from_json(json["layer_visibility"])
+            
+            # Just as a sanity check, make sure all layers have visibility
+            # info. Very old json formats may not include visibility info for
+            # all layers
+            self.update_default_visibility(warn=True)
         else:
             self.layer_visibility = self.get_default_visibility()
         if "commands" in json:
@@ -201,9 +206,11 @@ class ProjectEditor(FrameworkEditor):
             layer_visibility[layer] = layer.get_visibility_dict()
         return layer_visibility
     
-    def update_default_visibility(self):
+    def update_default_visibility(self, warn=False):
         for layer in self.layer_manager.flatten():
             if layer not in self.layer_visibility:
+                if warn:
+                    log.warning("adding default visibility for layer %s" % layer)
                 self.layer_visibility[layer] = layer.get_visibility_dict()
 
     def rebuild_document_properties(self):
