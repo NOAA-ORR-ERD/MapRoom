@@ -16,13 +16,13 @@ class TestBasic(object):
         self.project = MockProject()
         self.manager = self.project.layer_manager
 
-    def test_save(self):
+    def save_setup(self):
         lm = self.manager
         
         self.project.load_file(self.logfile, "application/x-maproom-command-log")
 
-        a = AnnotationLayer(manager=lm)
-        lm.insert_layer([3], a)
+        a1 = AnnotationLayer(manager=lm)
+        lm.insert_layer([3], a1)
         
         a = OverlayTextObject(manager=lm)
         a.set_location((6.6637485204,-1.40163099748))
@@ -48,10 +48,19 @@ class TestBasic(object):
         a.style.fill_style = 0
         lm.insert_layer([3, 3], a)
         
-        a = AnnotationLayer(manager=lm)
-        lm.insert_layer([4], a)
-        
-        lm.save_all("test.mrp")
+        a2 = AnnotationLayer(manager=lm)
+        lm.insert_layer([4], a2)
+        return a1, a2
+
+    def test_save_without_bounds(self):
+        a1, a2 = self.save_setup()
+        self.manager.save_all("test.mrp")
+
+    def test_save_with_bounds(self):
+        a1, a2 = self.save_setup()
+        a1.update_bounds()
+        a2.update_bounds()
+        self.manager.save_all("test.mrp")
 
 class TestBasicLoad(object):
     logfile = "test.mrp"

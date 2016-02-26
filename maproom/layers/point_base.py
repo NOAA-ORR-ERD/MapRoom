@@ -125,11 +125,15 @@ class PointBaseLayer(ProjectedLayer):
     ##### JSON Serialization
     
     def points_to_json(self):
-        return self.points.tolist()
+        if self.points is not None:
+            return self.points.tolist()
     
     def points_from_json(self, json_data):
-        self.points = np.array([tuple(i) for i in json_data['points']], data_types.POINT_DTYPE).view(np.recarray)
-
+        jd = json_data['points']
+        if jd is not None:
+            self.points = np.array([tuple(i) for i in jd], data_types.POINT_DTYPE).view(np.recarray)
+        else:
+            self.points = jd
 
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT

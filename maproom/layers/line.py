@@ -102,10 +102,15 @@ class LineLayer(PointLayer):
         return True
     
     def lines_to_json(self):
-        return self.line_segment_indexes.tolist()
+        if self.line_segment_indexes is not None:
+            return self.line_segment_indexes.tolist()
 
     def lines_from_json(self, json_data):
-        self.line_segment_indexes = np.array([tuple(i) for i in json_data['lines']], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
+        jd = json_data['lines']
+        if jd is not None:
+            self.line_segment_indexes = np.array([tuple(i) for i in jd], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
+        else:
+            self.line_segment_indexes = jd
     
     def check_for_problems(self, window):
         # determine the boundaries in the parent layer
