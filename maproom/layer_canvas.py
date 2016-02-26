@@ -105,6 +105,12 @@ class LayerCanvas(renderer.ScreenCanvas):
             self.project.refresh()
         dialog.Destroy()
     
+    def do_center_on_point_index(self, layer, index):
+        if layer.has_points():
+            lat_lon = layer.points[index].x, layer.points[index].y
+            self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)
+            self.project.refresh()
+    
     def do_select_points(self, layer, indexes):
         if len(indexes) > 0 and layer.has_points():
             layer.clear_all_point_selections()

@@ -196,11 +196,14 @@ class PointBaseLayer(ProjectedLayer):
         self.increment_change_count()
     
     def select_flagged(self, refresh=False):
-        indexes = self.get_selected_point_indexes(STATE_FLAGGED)
+        indexes = self.get_flagged_point_indexes()
         self.deselect_points(indexes, STATE_FLAGGED)
         self.select_points(indexes, STATE_SELECTED)
         if refresh:
             self.manager.dispatch_event('refresh_needed')
+    
+    def get_flagged_point_indexes(self):
+        return self.get_selected_point_indexes(STATE_FLAGGED)
 
     def select_points_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
         if (not is_toggle_mode and not is_add_mode):

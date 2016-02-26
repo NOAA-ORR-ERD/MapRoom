@@ -359,6 +359,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_info = self.window.get_dock_pane('maproom.layer_info_pane').control
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
         self.undo_history = self.window.get_dock_pane('maproom.undo_history_pane').control
+        self.sidebar = self.window.get_dock_pane('maproom.sidebar')
         
         log.debug("LayerEditor: task=%s" % self.task)
 
@@ -849,3 +850,5 @@ class ProjectEditor(FrameworkEditor):
         else:
             sel_layer.clear_flagged(refresh=True)
             self.window.information("Layer %s OK" % sel_layer.name, "No Problems Found")
+        # display list of flagged points here
+        self.sidebar.refresh_active()

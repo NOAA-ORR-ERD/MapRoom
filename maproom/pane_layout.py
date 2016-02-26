@@ -18,7 +18,7 @@ from panes import *
 # is only updated when quitting the application; if the application is killed
 # (or crashes!) the saved state is not updated.
 
-task_id_with_pane_layout = 'maproom.project.v6'
+task_id_with_pane_layout = 'maproom.project.v7'
 
 def pane_layout():
     """ Create the default task layout, which is overridded by the user's save
@@ -34,6 +34,7 @@ def pane_layout():
             PaneItem('maproom.triangulate_pane'),
             PaneItem('maproom.merge_points_pane'),
             PaneItem('maproom.undo_history_pane'),
+            PaneItem('maproom.sidebar'),
             ),
         )
 
@@ -48,6 +49,7 @@ def pane_initially_visible():
         'maproom.selection_info_pane': True,
         'maproom.triangulate_pane': False,
         'maproom.merge_points_pane': False,
+        'maproom.sidebar': True,
         }
 
 def pane_create():
@@ -55,5 +57,12 @@ def pane_create():
     of visibility -- visibility is handled in the task activation method
     MaproomTask.activated)
     """
-    return [ LayerSelectionPane(), LayerInfoPane(), SelectionInfoPane(),
-             TriangulatePane(), MergePointsPane(), UndoHistoryPane()]
+    return [
+        LayerSelectionPane(),
+        LayerInfoPane(),
+        SelectionInfoPane(),
+        TriangulatePane(),
+        MergePointsPane(),
+        UndoHistoryPane(),
+        SidebarPane()
+        ]
