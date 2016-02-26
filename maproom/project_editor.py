@@ -425,6 +425,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_boundaries = False
         log.debug("has_points=%s, has_selection = %s, has_flagged=%s, has_boundaries = %s" % (self.layer_has_points, self.layer_has_selection, self.layer_has_flagged, self.layer_has_boundaries))
         self.update_undo_redo()
+        self.sidebar.refresh_active()
         self.window._aui_manager.Update()
     
     def update_info_panels(self, layer, force=False):
@@ -847,8 +848,7 @@ class ProjectEditor(FrameworkEditor):
         elif error is not None:
             sel_layer.highlight_exception(error)
             self.window.error(error.message, "Layer Contains Problems")
+            self.update_layer_contents_ui()
         else:
             sel_layer.clear_flagged(refresh=True)
             self.window.information("Layer %s OK" % sel_layer.name, "No Problems Found")
-        # display list of flagged points here
-        self.sidebar.refresh_active()

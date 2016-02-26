@@ -183,6 +183,11 @@ class FlaggedPointPanel(wx.ListBox):
         
     def activateSpringTab(self):
         self.recalc_view()
+    
+    def get_notification_count(self):
+        self.recalc_view()
+        return len(self.point_indexes)
+
 
 class SidebarPane(FrameworkPane):
     #### TaskPane interface ###################################################
@@ -203,6 +208,7 @@ class SidebarPane(FrameworkPane):
         return control
     
     def refresh_active(self):
+        self.control.update_notifications()
         active = self.control._radio
         if active is not None and active.is_shown:
             active.managed_window.refresh_view()
