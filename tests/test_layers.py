@@ -51,6 +51,11 @@ class TestBasic(object):
         a.style.fill_style = 0
         lm.insert_layer([3, 3, 1], a)
         
+        # Calculate bounds of the annotation layers to set up their
+        # points/lines arrays
+        a2.update_bounds()
+        a1.update_bounds()
+        
         print lm
         mi = lm.get_multi_index_of_layer(a1)
         print "mi", mi
