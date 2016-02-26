@@ -136,6 +136,19 @@ class Layer(HasTraits):
     def save_to_file(self, file_path):
         raise NotImplementedError
     
+    def children_affected_by_move(self):
+        """ Returns a list of layers that will be affected by moving a control
+        point.  This is used for layer groups; moving a control point of a
+        group will affect all the layers in the group.
+        """
+        return []
+    
+    def parents_affected_by_move(self):
+        """ Returns a list of layers that might need to have boundaries
+        recalculated after moving this layer.
+        """
+        return []
+
     def serialize_json(self, index):
         """Create json representation that can restore layer.
         
