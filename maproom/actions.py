@@ -475,6 +475,7 @@ class FindPointsAction(EditorAction):
 
 class CheckLayerErrorAction(EditorAction):
     name = 'Check For Errors'
+    accelerator = 'Ctrl+E'
     enabled_name = 'layer_selected'
     tooltip = 'Check for valid layer construction'
 
