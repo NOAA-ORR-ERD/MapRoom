@@ -9,6 +9,7 @@ from traits.api import provides, on_trait_change, Property, Instance, Str, Unico
 
 from menu_commands import *
 from vector_object_commands import *
+from mouse_commands import *
 from ui.dialogs import StyleDialog
 from omnivore.framework.actions import TaskDynamicSubmenuGroup
 
