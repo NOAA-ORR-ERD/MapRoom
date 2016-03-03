@@ -6,64 +6,72 @@ from ..layers import constants
 import sliders
 
 
-class Distance_slider(wx.Panel):
+class DistanceCtrl(wx.Panel):
     SPACING = 5
-    MINIMUM = 0.0
-    MAXIMUM = 60.0
-    INITIAL_VALUE = 0.6
-    SLIDER_STEPS = 1000.0
-    LOG_BASE = 10000.0
     SECONDS_TO_METERS = 1852 / 60.0
-
-    def __init__(self, parent):
-        self.value = self.INITIAL_VALUE
-
+    
+    def __init__(self, parent, initial_value=0.6):
         wx.Panel.__init__(self, parent, -1)
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
-        label = wx.StaticText(
-            self, wx.ID_ANY, "Distance Tolerance for Duplicate Points (seconds latitude)",
-        )
-        self.Sizer.Add(label, 0, wx.ALL, self.SPACING)
+        label = wx.StaticText(self, wx.ID_ANY, "Distance Tolerance for Duplicate Points")
+        self.Sizer.Add(label, 0, wx.ALL, 0)
+        label = wx.StaticText(self, wx.ID_ANY, "(add m for meters, otherwise interpreted as \" lat)")
+        self.Sizer.Add(label, 0, wx.ALL, 2)
+        
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.distance_ctrl = wx.TextCtrl(self, -1)
+        hbox.Add(self.distance_ctrl, 1, wx.EXPAND, self.SPACING)
+        self.other_distance = wx.StaticText(self, wx.ID_ANY, " =")
+        hbox.Add(self.other_distance, 3, wx.ALIGN_CENTER_VERTICAL, self.SPACING)
+        
+        self.Sizer.Add(hbox, 0, wx.EXPAND, self.SPACING)
 
-        self.slider = sliders.TextSlider(
-            self,
-            wx.ID_ANY,
-            value=self.INITIAL_VALUE,
-            minValue=self.MINIMUM,
-            maxValue=self.MAXIMUM,
-            steps=self.SLIDER_STEPS,
-            valueUnit="''",
-            style=wx.SL_HORIZONTAL | wx.SL_LABELS
-        )
+        self.is_valid(str(initial_value))
+        self.distance_ctrl.Bind(wx.EVT_TEXT, self.on_text_changed)
+        self.distance_ctrl.SetValue(str(initial_value))
+    
+    def is_valid(self, text):
+        c = self.distance_ctrl
+        c.SetBackgroundColour("#FFFFFF")
+        try:
+            is_m = self.parse_from_string(text)
+            valid = True
+        except Exception as e:
+            c.SetBackgroundColour("#FF8080")
+            valid = False
+        c.Refresh()
+        label = ""
+        if valid:
+            if is_m:
+                label = " = %f\"" % (self.degrees * 3600.0)
+            else:
+                label = " = %fm" % self.meters
+        self.other_distance.SetLabel(label)
+        return valid
+    
+    def parse_from_string(self, text):
+        text = text.strip()
+        if not text:
+            meters = 0.0
+        elif text.endswith("m"):
+            meters = float(text[:-1])
+            is_m = True
+        else:
+            text.strip("\"")
+            meters = float(text) * self.SECONDS_TO_METERS
+            is_m = False
+        self.meters = meters
+        self.degrees = meters / self.SECONDS_TO_METERS / 60.0 / 60.0
+        return is_m
 
-        self.Sizer.Add(
-            self.slider,
-            0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT,
-            border=self.SPACING
-        )
-
-        self.meters_label = sliders.SliderLabel(self, -1, self.seconds_to_meters(self.slider.GetValue()), self.seconds_to_meters(self.MINIMUM), self.seconds_to_meters(self.MAXIMUM), " m")
-        self.Sizer.Add(
-            self.meters_label,
-            0, wx.EXPAND | wx.LEFT | wx.RIGHT,
-            border=12
-        )
-
-        self.slider.Bind(wx.EVT_SLIDER, self.slider_moved)
-        self.slider.textCtrl.Bind(wx.EVT_TEXT, self.OnTextChanged)
-
-    def OnTextChanged(self, event):
-        event.Skip()
-        self.meters_label.SetValue("%s" % self.seconds_to_meters(float(event.String)))
-
-    def slider_moved(self, event):
-        self.value = self.slider.GetValue()
-        self.meters_label.SetValue("%s" % self.seconds_to_meters(self.slider.GetValue()))
-
-    @staticmethod
-    def seconds_to_meters(value):
-        return int(value * Distance_slider.SECONDS_TO_METERS)
-
+    def on_text_changed(self, evt):
+        evt.Skip()
+        if self.is_valid(evt.String):
+            self.GetParent().find_button.Enable(True)
+        else:
+            self.meters = -1
+            self.degrees = -1
+            self.GetParent().find_button.Enable(False)
 
 
 class MergePointsPanel(wx.Panel):
@@ -86,12 +94,8 @@ class MergePointsPanel(wx.Panel):
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
 
-        self.distance_slider = Distance_slider(self)
-        self.distance_slider.SetMinSize((self.SLIDER_MIN_WIDTH, -1))
-        self.sizer.Add(
-            self.distance_slider,
-            0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, border=self.SPACING
-        )
+        self.distance_ctrl = DistanceCtrl(self)
+        self.sizer.Add(self.distance_ctrl, 0, wx.EXPAND | wx.TOP | wx.LEFT | wx.RIGHT, self.SPACING)
 
         self.depth_check = wx.CheckBox(self, -1, "Enable Depth Tolerance Check for Duplicate Points")
         self.sizer.Add(self.depth_check, 0, wx.TOP | wx.LEFT | wx.RIGHT, border=self.SPACING)
@@ -201,7 +205,7 @@ class MergePointsPanel(wx.Panel):
         if self.depth_check.IsChecked():
             depth_value = self.depth_slider.GetValue()
 
-        self.duplicates = self.layer.find_duplicates(self.distance_slider.value / (60 * 60), depth_value)
+        self.duplicates = self.layer.find_duplicates(self.distance_ctrl.degrees, depth_value)
         # print self.duplicates
 #        self.create_results_area()
         self.display_results()
