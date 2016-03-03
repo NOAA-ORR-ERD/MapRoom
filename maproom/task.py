@@ -125,96 +125,12 @@ class MaproomProjectTask(FrameworkTask):
         return toolbars
 
     def _extra_actions_default(self):
-        # FIXME: Is there no way to add an item to an existing group?
-        zoomgroup = lambda : Group(ZoomInAction(),
-                                   ZoomOutAction(),
-                                   ZoomToFit(),
-                                   ZoomToLayer(),
-                                   id="zoomgroup")
-        layer = lambda: SMenu(
-            Separator(id="LayerMenuStart", separator=False),
-            id= 'Layer', name="Layer"
-        )
-        layertools = lambda : Group(
-            RaiseToTopAction(),
-            RaiseLayerAction(),
-            LowerLayerAction(),
-            LowerToBottomAction(),
-            TriangulateLayerAction(),
-            DeleteLayerAction(),
-            id="layertools")
-        layermenu = lambda : Group(
-            Separator(id="LayerMainMenuStart", separator=False),
-            Group(RaiseToTopAction(),
-                  RaiseLayerAction(),
-                  LowerLayerAction(),
-                  LowerToBottomAction(),
-                  id="raisegroup", separator=False),
-            Group(TriangulateLayerAction(),
-                  ToPolygonLayerAction(),
-                  ToVerdatLayerAction(),
-                  MergeLayersAction(),
-                  MergePointsAction(),
-                  id="utilgroup"),
-            Group(DeleteLayerAction(),
-                  id="deletegroup"),
-            Group(CheckLayerErrorAction(),
-                  id="checkgroup"),
-            id="layermenu")
-        edittools = lambda : Group(
-            ClearSelectionAction(),
-            DeleteSelectionAction(),
-            id="edittools")
+        layer_menu = self.create_menu("Menu", "Layer", "LayerStackGroup", "LayerUtilGroup", "LayerDeleteGroup", "LayerCheckGroup")
         actions = [
             # Menubar additions
-            SchemaAddition(id='bb',
-                           factory=BoundingBoxAction,
-                           path='MenuBar/View',
-                           after="TaskGroupEnd",
-                           ),
-            SchemaAddition(id='pfb',
-                           factory=PickerFramebufferAction,
-                           path='MenuBar/View',
-                           after="TaskGroupEnd",
-                           ),
-            SchemaAddition(id='jump',
-                           factory=JumpToCoordsAction,
-                           path='MenuBar/View',
-                           after="TaskGroupEnd",
-                           ),
-            SchemaAddition(factory=layer,
+            SchemaAddition(factory=lambda: layer_menu,
                            path='MenuBar',
                            after="Edit",
-                           ),
-            SchemaAddition(factory=layermenu,
-                           path='MenuBar/Layer',
-                           after='New',
-                           ),
-            SchemaAddition(factory=zoomgroup,
-                           path='MenuBar/View',
-                           absolute_position="first",
-                           ),
-            SchemaAddition(id='dal',
-                           factory=DebugAnnotationLayersAction,
-                           path='MenuBar/Help/Debug',
-                           ),
-            
-            # Toolbar additions
-            SchemaAddition(id="layer",
-                           factory=layertools,
-                           path='ToolBar',
-                           after="Undo",
-                           ),
-            SchemaAddition(id="edit",
-                           factory=edittools,
-                           path='ToolBar',
-                           before="layer",
-                           after="Undo",
-                           ),
-            SchemaAddition(id="zoom",
-                           factory=zoomgroup,
-                           path='ToolBar',
-                           after="layer",
                            ),
             ]
         return actions
@@ -306,10 +222,80 @@ class MaproomProjectTask(FrameworkTask):
             OpenLogAction(),
             ]
     
+    def get_actions_Menu_View_ViewZoomGroup(self):
+        return [
+            ZoomInAction(),
+            ZoomOutAction(),
+            ZoomToFit(),
+            ZoomToLayer(),
+            ]
+    
+    def get_actions_Menu_View_ViewChangeGroup(self):
+        return [
+            JumpToCoordsAction(),
+            ]
+    
+    def get_actions_Menu_View_ViewDebugGroup(self):
+        return [
+            BoundingBoxAction(),
+            PickerFramebufferAction(),
+            ]
+
+    def get_actions_Menu_Layer_LayerStackGroup(self):
+        return [
+            RaiseToTopAction(),
+            RaiseLayerAction(),
+            LowerLayerAction(),
+            LowerToBottomAction(),
+            ]
+    
+    def get_actions_Menu_Layer_LayerUtilGroup(self):
+        return [
+            TriangulateLayerAction(),
+            ToPolygonLayerAction(),
+            ToVerdatLayerAction(),
+            MergeLayersAction(),
+            MergePointsAction(),
+            ]
+    
+    def get_actions_Menu_Layer_LayerDeleteGroup(self):
+        return [
+            DeleteLayerAction(),
+            ]
+    
+    def get_actions_Menu_Layer_LayerCheckGroup(self):
+        return [
+            CheckLayerErrorAction(),
+            ]
+                  
     def get_actions_Tool_File_SaveGroup(self):
         return [
             SaveProjectAction(),
             SaveProjectAsAction(),
+            ]
+
+    def get_actions_Tool_Edit_SelectGroup(self):
+        return [
+            ClearSelectionAction(),
+            DeleteSelectionAction(),
+            ]
+
+    def get_actions_Tool_View_ViewConfigGroup(self):
+        return [
+            ZoomInAction(),
+            ZoomOutAction(),
+            ZoomToFit(),
+            ZoomToLayer(),
+            ]
+    
+    def get_actions_Tool_View_ViewChangeGroup(self):
+        return [
+            RaiseToTopAction(),
+            RaiseLayerAction(),
+            LowerLayerAction(),
+            LowerToBottomAction(),
+            TriangulateLayerAction(),
+            DeleteLayerAction(),
             ]
 
     def get_editor(self, guess=None):
