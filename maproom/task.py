@@ -265,7 +265,8 @@ class MaproomProjectTask(FrameworkTask):
     
     def get_actions_Menu_Layer_LayerCheckGroup(self):
         return [
-            CheckLayerErrorAction(),
+            CheckSelectedLayerAction(),
+            CheckAllLayersAction(),
             ]
                   
     def get_actions_Tool_File_SaveGroup(self):
@@ -336,7 +337,7 @@ class MaproomProjectTask(FrameworkTask):
             FrameworkTask.new(self, source, **kwargs)
 
     def allow_different_task(self, guess, other_task):
-        return self.window.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
+        return self.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
 
     def restore_toolbars(self, window):
         # Omnivore framework calls this after every file load, normally to

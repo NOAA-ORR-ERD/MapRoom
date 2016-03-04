@@ -40,6 +40,9 @@ class MaproomPreferences(PreferencesHelper):
     # display scale legend by default
     show_scale = Bool(True)
 
+    # check for layer errors on file save
+    check_errors_on_save = Bool(True)
+
 
 class MaproomPreferencesPane(PreferencesPane):
     """ The preferences pane for the Framework application.
@@ -63,6 +66,9 @@ class MaproomPreferencesPane(PreferencesPane):
                       show_labels = False),
                HGroup(Item('show_scale'),
                       Label('Show Scale Layer'),
+                      show_labels = False),
+               HGroup(Item('check_errors_on_save'),
+                      Label('Check for layer errors on save'),
                       show_labels = False),
                label='MapRoom'),
         resizable=True)

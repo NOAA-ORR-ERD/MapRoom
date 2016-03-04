@@ -147,7 +147,7 @@ class ProjectEditor(FrameworkEditor):
                     ]
                 header.extend(errors)
                 text = "\n".join(header)
-                self.window.error(text, "Error restoring from command log")
+                self.task.error(text, "Error restoring from command log")
             self.perform_batch_flags(batch_flags)
         else:
             cmd = LoadLayersCommand(metadata)
@@ -226,6 +226,11 @@ class ProjectEditor(FrameworkEditor):
         if not path:
             path = "%s.maproom" % self.name
         
+        prefs = self.task.get_preferences()
+        if prefs.check_errors_on_save:
+            if not self.check_all_layers_for_errors(True):
+                return
+        
         try:
             progress_log.info("START=Saving %s" % path)
             
@@ -241,7 +246,7 @@ class ProjectEditor(FrameworkEditor):
             progress_log.info("END")
         
         if error:
-            self.window.error(error)
+            self.task.error(error)
         else:
             self.layer_manager.undo_stack.set_save_point()
             
@@ -277,7 +282,7 @@ class ProjectEditor(FrameworkEditor):
             fh.write(str(serializer))
             fh.close()
         except IOError, e:
-            self.window.error(str(e))
+            self.task.error(str(e))
         self.layer_manager.undo_stack.pop_command()
 
     def save_layer(self, path, loader=None):
@@ -286,6 +291,12 @@ class ProjectEditor(FrameworkEditor):
         layer = self.layer_tree_control.get_selected_layer()
         if layer is None:
             return
+        
+        prefs = self.task.get_preferences()
+        if prefs.check_errors_on_save:
+            if not self.check_all_layers_for_errors(True):
+                return
+
         try:
             progress_log.info("START")
             error = self.layer_manager.save_layer(layer, path, loader)
@@ -294,7 +305,7 @@ class ProjectEditor(FrameworkEditor):
         finally:
             progress_log.info("END")
         if error:
-            self.window.error(error)
+            self.task.error(error)
         else:
             self.window.application.successfully_loaded_event = path
         self.layer_metadata_changed(layer)
@@ -316,7 +327,7 @@ class ProjectEditor(FrameworkEditor):
             # file, so just write the file here
             image.SaveFile(path, t)
         else:
-            self.window.error("Unsupported image type %s" % ext)
+            self.task.error("Unsupported image type %s" % ext)
     
     def print_preview(self):
         import os
@@ -611,9 +622,9 @@ class ProjectEditor(FrameworkEditor):
             self.layer_tree_control.select_layer(b.select_layer)
         
         if b.errors:
-            self.window.error("\n".join(b.errors))
+            self.task.error("\n".join(b.errors))
         if b.messages:
-            self.window.information("\n".join(b.messages), "Messages")
+            self.task.information("\n".join(b.messages), "Messages")
         
         self.undo_history.update_history()
 
@@ -772,9 +783,9 @@ class ProjectEditor(FrameworkEditor):
         if error == "cancel":
             return
         elif error is not None:
-            self.window.error(error, sel_layer.name)
+            self.task.error(error, sel_layer.name)
         elif status is None:
-            self.window.error("No complete boundary", sel_layer.name)
+            self.task.error("No complete boundary", sel_layer.name)
         else:
             self.update_layer_contents_ui()
             self.refresh()
@@ -830,13 +841,13 @@ class ProjectEditor(FrameworkEditor):
         else:
             m = None
 
-        if m is not None and self.window.confirm(m, default=YES) != YES:
+        if m is not None and self.task.confirm(m, default=YES) != YES:
             return
 
         cmd = DeleteLayerCommand(layer)
         self.process_command(cmd)
 
-    def check_for_errors(self):
+    def check_for_errors(self, save_message=False):
         error = None
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is None:
@@ -850,12 +861,54 @@ class ProjectEditor(FrameworkEditor):
         finally:
             progress_log.info("END")
         
+        self.update_layer_contents_ui()
+        all_ok = True
         if error == "cancel":
-            return
+            all_ok = False
         elif error is not None:
             sel_layer.highlight_exception(error)
-            self.window.error(error.message, "Layer Contains Problems")
-            self.update_layer_contents_ui()
+            if save_message:
+                answer = self.task.confirm(error.message, "Layer Contains Problems; Save Anyway?")
+                all_ok = (answer == YES)
+            else:
+                self.task.error(error.message, "Layer Contains Problems")
         else:
             sel_layer.clear_flagged(refresh=True)
-            self.window.information("Layer %s OK" % sel_layer.name, "No Problems Found")
+            self.task.information("Layer %s OK" % sel_layer.name, "No Problems Found")
+        return all_ok
+
+    def check_all_layers_for_errors(self, save_message=False):
+        messages = []
+        error = None
+        try:
+            progress_log.info("START=Checking all layers for errors")
+            for layer in self.layer_manager.flatten():
+                progress_log.info("TITLE=Checking layer %s" % layer.name)
+                error = self.layer_manager.check_layer(layer, self.window)
+                if error is not None:
+                    messages.append("%s: %s" % (layer.name, error.message))
+                    layer.highlight_exception(error)
+                    self.control.Refresh()
+                    error = None
+        except ProgressCancelError, e:
+            error = "cancel"
+        finally:
+            progress_log.info("END")
+        
+        self.update_layer_contents_ui()
+        all_ok = True
+        if error == "cancel":
+            all_ok = False
+        elif messages or True:
+            if save_message:
+                msg = "Layers Contains Problems; Save Anyway?"
+                answer = self.task.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
+                all_ok = (answer == YES)
+            else:
+                msg = "Layers With Problems"
+                self.task.information("\n\n".join(messages), msg)
+        else:
+            sel_layer.clear_flagged(refresh=True)
+            if not save_message:
+                self.task.information("Layers OK", "No Problems Found")
+        return all_ok

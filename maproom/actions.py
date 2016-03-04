@@ -120,7 +120,7 @@ class RevertProjectAction(EditorAction):
 
     def perform(self, event):
         message = "Revert project from\n\n%s?" % self.active_editor.document.metadata.uri
-        result = event.task.window.confirm(message=message, default=NO, title='Revert Project?')
+        result = event.task.confirm(message=message, default=NO, title='Revert Project?')
         if result == CANCEL:
             return
         elif result == YES:
@@ -474,14 +474,22 @@ class FindPointsAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_canvas.do_find_points)
 
-class CheckLayerErrorAction(EditorAction):
-    name = 'Check For Errors'
+class CheckSelectedLayerAction(EditorAction):
+    name = 'Check Layer For Errors'
     accelerator = 'Ctrl+E'
     enabled_name = 'layer_selected'
     tooltip = 'Check for valid layer construction'
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.check_for_errors)
+
+class CheckAllLayersAction(EditorAction):
+    name = 'Check All Layers For Errors'
+    accelerator = 'Shift+Ctrl+E'
+    tooltip = 'Check for valid layer construction'
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.check_all_layers_for_errors)
 
 class OpenLogAction(Action):
     name = 'View Command History Log'

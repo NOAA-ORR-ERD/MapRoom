@@ -54,7 +54,7 @@ class RasterLayer(ProjectedLayer):
         if label == "images":
             return self.image_data is not None
 
-    def check_projection(self, window):
+    def check_projection(self, task):
         # change the app projection to latlong if this image is latlong projection
         # and we don't currently have a mercator image loaded;
         # alternatively, if we are in latlong and we don't currently have
@@ -86,7 +86,7 @@ class RasterLayer(ProjectedLayer):
                 message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
 
             if message is not None:
-                if (window.confirm(message) != YES):
+                if (task.confirm(message) != YES):
                     self.load_error_string = "Projection conflict"
                     return
 

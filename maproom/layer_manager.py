@@ -247,7 +247,7 @@ class LayerManager(Document):
                 self.insert_loaded_layer(parent, editor)
         
         for layer in layers:
-            layer.check_projection(editor.window)
+            layer.check_projection(editor.task)
             if not layer.load_error_string:
                 self.insert_loaded_layer(layer, editor, last_child_of=parent)
         return layers
@@ -300,7 +300,7 @@ class LayerManager(Document):
             for layer in layer_list:
                 log.debug("adding %s at %s" % (str(layer), str(mi)))
                 if editor is not None:
-                    layer.check_projection(editor.window)
+                    layer.check_projection(editor.task)
                 if len(mi) > 1:
                     # check to see if it's a folder layer, and if so it would
                     # have been serialized with a 0 as the last multi index.

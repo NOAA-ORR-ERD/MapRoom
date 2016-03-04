@@ -267,7 +267,7 @@ class Layer(HasTraits):
     def check_for_problems(self, window):
         pass
     
-    def check_projection(self, window):
+    def check_projection(self, task):
         pass
 
     def get_visibility_dict(self):
