@@ -899,7 +899,7 @@ class ProjectEditor(FrameworkEditor):
         all_ok = True
         if error == "cancel":
             all_ok = False
-        elif messages or True:
+        elif messages:
             if save_message:
                 msg = "Layers Contains Problems; Save Anyway?"
                 answer = self.task.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
@@ -908,7 +908,9 @@ class ProjectEditor(FrameworkEditor):
                 msg = "Layers With Problems"
                 self.task.information("\n\n".join(messages), msg)
         else:
-            sel_layer.clear_flagged(refresh=True)
+            for layer in self.layer_manager.flatten():
+                layer.clear_flagged()
+            self.layer_manager.dispatch_event('refresh_needed')
             if not save_message:
                 self.task.information("Layers OK", "No Problems Found")
         return all_ok
