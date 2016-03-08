@@ -117,7 +117,7 @@ class PointLayer(PointBaseLayer):
     def depth_unit_from_json(self, json_data):
         self.depth_unit = json_data['depth_unit']
     
-    def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp):
+    def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp, about_center=False):
         indexes = self.get_selected_and_dependent_point_indexes()
         cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
         return cmd

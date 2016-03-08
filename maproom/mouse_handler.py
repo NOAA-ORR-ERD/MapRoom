@@ -307,7 +307,7 @@ class MouseHandler(object):
         """
         self.render_snapped_point(renderer)
 
-    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp):
+    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
         c = self.layer_canvas
         e = c.project
         lm = e.layer_manager
@@ -316,7 +316,7 @@ class MouseHandler(object):
 
         (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
         layer = lm.get_layer_by_pick_index(layer_index)
-        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
         e.process_command(cmd)
 
     def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
@@ -464,7 +464,7 @@ class ObjectSelectionMode(MouseHandler):
             w_p1 = c.get_world_point_from_screen_point(p)
             if not c.HasCapture():
                 c.CaptureMouse()
-            self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+            self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point, about_center=event.ShiftDown())
             c.mouse_down_position = p
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
@@ -881,7 +881,6 @@ class ControlPointSelectionMode(ObjectSelectionMode):
         e = c.project
         lm = e.layer_manager
         vis = e.layer_visibility[layer]['layer']
-
         layer.set_anchor_point(layer.center_point_index, maintain_aspect=True)
 
     def select_objects_in_rect(self, event, rect, layer):

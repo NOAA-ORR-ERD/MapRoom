@@ -218,12 +218,12 @@ class LineVectorObject(VectorObjectLayer):
         self.drag_point = point_index
         self.find_anchor_of(point_index)
         
-    def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp):
+    def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp, about_center=False):
         from ..vector_object_commands import MoveControlPointCommand
-        cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy, snapped_layer, snapped_cp)
+        cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy, snapped_layer, snapped_cp, about_center)
         return cmd
     
-    def move_control_point(self, drag, anchor, dx, dy):
+    def move_control_point(self, drag, anchor, dx, dy, about_center=False):
         """Moving the control point changes the size of the bounding rectangle.
         
         Assuming the drag point is one of the corners and the anchor is the
@@ -234,7 +234,7 @@ class LineVectorObject(VectorObjectLayer):
         if drag == anchor and drag != self.center_point_index:
             self.move_polyline_point(anchor, dx, dy)
         else:
-            self.move_bounding_box_point(drag, anchor, dx, dy)
+            self.move_bounding_box_point(drag, anchor, dx, dy, about_center)
     
     def move_polyline_point(self, anchor, dx, dy):
         pass
@@ -249,15 +249,21 @@ class LineVectorObject(VectorObjectLayer):
             remove = -1
         return self.manager.remove_control_point_links(self, remove)
     
-    def move_bounding_box_point(self, drag, anchor, dx, dy):
+    def move_bounding_box_point(self, drag, anchor, dx, dy, about_center=False):
         """ Adjust points within object after bounding box has been resized
         
         Returns a list of affected layers (child layers can be resized as a
         side effect!)
         """
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        # find lower left coords & width/height to determine scale change
         old_origin = np.copy(p.xy[0])  # without copy it will be changed below
         orig_wh = p.xy[self.anchor_of[0]] - old_origin
+
+        if about_center:
+            dx *= 2
+            dy *= 2
+            orig_center = np.copy(p.xy[self.center_point_index])
 
         scale = self.anchor_dxdy[anchor]
         xoffset = scale.T[0] * dx
@@ -271,6 +277,10 @@ class LineVectorObject(VectorObjectLayer):
         # element? Have to use the dict notation for a single element.
         self.points[0:offset].x += xoffset
         self.points[0:offset].y += yoffset
+        if about_center:
+            new_center = np.copy(p.xy[self.center_point_index])
+            self.points[0:offset].x -= new_center[0] - orig_center[0]
+            self.points[0:offset].y -= new_center[1] - orig_center[1]
         
         new_origin = np.copy(p.xy[0])  # see above re use of copy
         scaled_wh = p.xy[self.anchor_of[0]] - new_origin
@@ -578,8 +588,8 @@ class ScaledImageObject(RectangleVectorObject):
         from maproom.library.numpy_images import get_square
         return get_square(100)
     
-    def move_control_point(self, drag, anchor, dx, dy):
-        RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
+    def move_control_point(self, drag, anchor, dx, dy, about_center=False):
+        RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy, about_center)
         if self.image_data is not None:
             c = self.manager.project.layer_canvas
             renderer = c.get_renderer(self)
@@ -659,8 +669,8 @@ class OverlayImageObject(RectangleVectorObject):
             return
         self.anchor_point_index = index
     
-    def move_control_point(self, drag, anchor, dx, dy):
-        RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy)
+    def move_control_point(self, drag, anchor, dx, dy, about_center=False):
+        RectangleVectorObject.move_control_point(self, drag, anchor, dx, dy, about_center)
         if self.image_data is not None:
             c = self.manager.project.layer_canvas
             renderer = c.get_renderer(self)
@@ -795,7 +805,7 @@ class OverlayScalableImageObject(OverlayImageObject):
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
         self.update_bounds(True)
     
-    def move_control_point(self, drag, anchor, dx, dy):
+    def move_control_point(self, drag, anchor, dx, dy, about_center=False):
         # Note: center point drag is rigid body move so text box size is only
         # recalculated if dragging some other control point
 #        print "BEFORE: move_cp: text w,h", self.text_width, self.text_height
@@ -829,7 +839,7 @@ class OverlayScalableImageObject(OverlayImageObject):
                 dy = 0
 #            print " AFTER: move_cp: text w,h", self.text_width, self.text_height
 
-        self.move_bounding_box_point(drag, anchor, dx, dy)
+        self.move_bounding_box_point(drag, anchor, dx, dy, about_center)
 
 
 class OverlayTextObject(OverlayScalableImageObject):

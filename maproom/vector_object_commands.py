@@ -42,7 +42,7 @@ class MoveControlPointCommand(Command):
         ('snapped_cp', 'int'),
         ]
     
-    def __init__(self, layer, drag, anchor, dx, dy, snapped_layer, snapped_cp):
+    def __init__(self, layer, drag, anchor, dx, dy, snapped_layer, snapped_cp, about_center=False):
         Command.__init__(self, layer)
         self.drag = drag
         self.anchor = anchor
@@ -53,6 +53,7 @@ class MoveControlPointCommand(Command):
         else:
             self.snapped_layer = None
         self.snapped_cp = snapped_cp
+        self.about_center = about_center
     
     def __str__(self):
         return "Move Control Point #%d" % self.drag
@@ -82,7 +83,7 @@ class MoveControlPointCommand(Command):
             lf.layer_items_moved = True
             child_layer_data.append((la.invariant, la.copy_points(), la.copy_bounds()))
         
-        layer.move_control_point(self.drag, self.anchor, self.dx, self.dy)
+        layer.move_control_point(self.drag, self.anchor, self.dx, self.dy, self.about_center)
         
         parent_layer_data = update_parent_bounds(layer, undo)
 
