@@ -59,6 +59,9 @@ class VectorObjectLayer(LineLayer):
 
     def can_copy(self):
         return True
+    
+    def check_for_problems(self, window):
+        pass
 
     def get_info_panel_text(self, prop):
         if prop == "Path length":
