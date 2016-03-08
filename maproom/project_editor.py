@@ -353,11 +353,11 @@ class ProjectEditor(FrameworkEditor):
         pdf_canvas.render()
 
     @property
-    def most_recent_path(self):
+    def most_recent_uri(self):
         cmd = self.layer_manager.undo_stack.find_most_recent(LoadLayersCommand)
         if cmd is None:
-            return os.path.dirname(self.layer_manager.metadata.uri)
-        return os.path.dirname(cmd.metadata.uri)
+            return self.layer_manager.metadata.uri
+        return cmd.metadata.uri
 
     ###########################################################################
     # Private interface.
