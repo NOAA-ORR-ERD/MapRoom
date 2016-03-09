@@ -575,8 +575,9 @@ def general_intersection_check(points, boundary_min_max):
         if index not in open_segments:
             # Segment start point
             for open_start, open_end, open_index, open_id in open_segments.values():
-                # ignore adjacent edges
-                if (((seg_id != open_id) or (boundary_min_max[seg_id][1] > abs(index - open_index) > 1))
+                # ignore adjacent edges (note that the index number wraps
+                # around within each closed-loop boundary)
+                if (((seg_id != open_id) or ((boundary_min_max[seg_id][1] - boundary_min_max[seg_id][0]) > abs(index - open_index) > 1))
                     and segments_intersect(seg_start, seg_end, open_start, open_end)):
                     seg_prev_index = index-1
                     if seg_prev_index < boundary_min_max[seg_id][0]:
