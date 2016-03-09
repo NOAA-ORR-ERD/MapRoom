@@ -112,12 +112,10 @@ class Boundary(object):
         return (candidate_x, candidate_y)
 
     def check_boundary_self_crossing(self):
-        points = self.points
-        
         error_points = set()
         
         # test for boundary self-crossings (i.e. making a non-simple polygon)
-        boundary_points = [(points.x[i], points.y[i]) for i in self]
+        boundary_points = self.get_points_list()
         intersecting_segments = self_intersection_check(boundary_points)
         if len(intersecting_segments) > 0:
             # Get all the point indexes in the boundary point array:
@@ -134,6 +132,11 @@ class Boundary(object):
             error_points.update({self[point] for segment in intersecting_segments for item in segment for point in item[2:]})
 
         return tuple(error_points)
+    
+    def get_points_list(self):
+        points = self.points
+        return [(points.x[i], points.y[i]) for i in self]
+
 
 class Boundaries(object):
     def __init__(self, layer, allow_branches=True, allow_self_crossing=True):
@@ -352,11 +355,46 @@ class Boundaries(object):
         self.boundaries = boundaries
         self.non_boundary_points = non_boundary_points
 
-    def check_boundary_self_crossing(self):
+    def check_boundary_crossings(self):
         error_points = set()
         
-        for boundary in self.boundaries:
-            error_points.update(boundary.check_boundary_self_crossing())
+        point_indexes = []
+        boundary_points = []
+        start_index = 0
+        boundary_min_max = []
+        for boundary_id, boundary in enumerate(self.boundaries):
+            points = boundary.get_points_list()
+            point_indexes.extend(boundary.point_indexes)
+            num_points = len(points)
+            
+            # points must be set up for each closed-loop boundary so they don't
+            # point into another boundary. The special case for i==0 exists
+            # because indexes for each boundary must wrap around only within
+            # that boundary.
+            points = (
+                [(tuple(points[num_points - 1]), tuple(points[0]), start_index, boundary_id),
+                 (tuple(points[0]), tuple(points[num_points - 1]), start_index, boundary_id)]
+                + [(tuple(points[i - 1]), tuple(points[i]), i + start_index, boundary_id) for i in range(1, num_points)] 
+                + [(tuple(points[i]), tuple(points[i - 1]), i + start_index, boundary_id) for i in range(1, num_points)]
+                )
+            boundary_points.extend(points)
+            boundary_min_max.append((start_index, start_index + num_points - 1))
+            start_index += num_points
+        
+        intersecting_segments = general_intersection_check(boundary_points, boundary_min_max)
+        if len(intersecting_segments) > 0:
+            # Get all the point indexes in the boundary point array:
+            #>>> s = [(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))]
+            #>>> {segment for segment in s}
+            #set([(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))])
+            #>>> {item for segment in s for item in segment}
+            #set([((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13)])
+            #>>> {point for segment in s for item in segment for point in item}
+            #set([(2.1, 3.2), (1.1, 2.2), 13, 14, 15, 16, (2.2, 3.3), (1.3, 2.3)])
+            #>>> {point for segment in s for item in segment for point in item[2:]}
+            #set([16, 13, 14, 15])
+
+            error_points.update({point_indexes[index] for segment in intersecting_segments for item in segment for index in item[2:]})
 
         return tuple(error_points)
     
@@ -405,11 +443,11 @@ class Boundaries(object):
         t0 = time.clock()
         
         if not self.allow_self_crossing:
-            progress_log.info("Checking for boundary crossing itself...")
+            progress_log.info("Checking for boundary crossings...")
             
-            point_indexes = self.check_boundary_self_crossing()
+            point_indexes = self.check_boundary_crossings()
             if len(point_indexes) > 0:
-                errors.add("Boundary crosses itself.")
+                errors.add("Boundary crossings.")
                 error_points.update(point_indexes)
     
         t = time.clock() - t0
@@ -485,18 +523,37 @@ def self_intersection_check(points):
     coordinates of the endpoint of the segment, and the indexes into :point:
     for both the start and end point in the segment.
     """
-    last_index = len(points) - 1
     indices = range(len(points))
-    points = ([(tuple(points[i - 1]), tuple(points[i]), i) for i in indices] 
-        + [(tuple(points[i]), tuple(points[i - 1]), i) for i in indices])
-#    points = ([(tuple(points.x[i - 1], points.y[i-1]),
-#                tuple(points.x[i], points.y[i]),
-#                i) for i in indices] +
-#              [(tuple(points.x[i], points.y[i]),
-#                tuple(points.x[i - 1], points.y[i-1]),
-#                i) for i in indices])
-#    points = ([(tuple(self[i - 1]), tuple(self[i]), i) for i in indices] 
-#        + [(tuple(self[i]), tuple(self[i - 1]), i) for i in indices])
+    points = ([(tuple(points[i - 1]), tuple(points[i]), i, 0) for i in indices] 
+        + [(tuple(points[i]), tuple(points[i - 1]), i, 0) for i in indices])
+    return general_intersection_check(points, [(0, len(indices) - 1)])
+
+def general_intersection_check(points, boundary_min_max):
+    """Check the list of polygons for intersecting lines
+
+    We use a simplified plane sweep algorithm. Worst case, it still takes
+    O(n^2) time like a brute force intersection test, but it will typically
+    be O(n log n) for common simple non-convex polygons. It should
+    also quickly identify self-intersecting polygons in most cases,
+    although it is slower for severely self-intersecting cases due to
+    its startup cost.
+    
+    :param points: list of points and line segment numbers set up in 4-tuple
+    form: tuple of first coord in line, tuple of second coord of line, index
+    number, and boundary id number. The boundary id number is an index into
+    the boundary_min_max array below.
+    
+    :param boundary_min_max: list of tuples defining a closed-loop boundary,
+    each tuple contains the min and max index for each boundary.
+    
+    :returns: list of intersecting segments, where each entry contains
+    two tuples each representing one of the intersecting segments.  Each
+    tuple contains 4 items representingthe intersecting segment: a tuple
+    of coordinates for the start point of the segment, a tuple containing
+    coordinates of the endpoint of the segment, and the indexes into :point:
+    for both the start and end point in the segment.
+    """
+    print points
     progress_log.info("PULSE")
     points.sort() # lexicographical sort
     open_segments = {}
@@ -505,14 +562,20 @@ def self_intersection_check(points):
 
     count = 0
     for point in points:
-        seg_start, seg_end, index = point
+        seg_start, seg_end, index, seg_id = point
         if index not in open_segments:
             # Segment start point
-            for open_start, open_end, open_index in open_segments.values():
+            for open_start, open_end, open_index, open_id in open_segments.values():
                 # ignore adjacent edges
-                if (last_index > abs(index - open_index) > 1
+                if (((seg_id != open_id) or (boundary_min_max[seg_id][1] > abs(index - open_index) > 1))
                     and segments_intersect(seg_start, seg_end, open_start, open_end)):
-                    intersecting_segments.append(((seg_start, seg_end, index-1, index), (open_start, open_end, open_index, open_index-1)))
+                    seg_prev_index = index-1
+                    if seg_prev_index < boundary_min_max[seg_id][0]:
+                        seg_prev_index = boundary_min_max[seg_id][1]
+                    open_prev_index = open_index-1
+                    if open_prev_index < boundary_min_max[open_id][0]:
+                        open_prev_index = boundary_min_max[open_id][1]
+                    intersecting_segments.append(((seg_start, seg_end, seg_prev_index, index), (open_start, open_end, open_index, open_prev_index)))
             open_segments[index] = point
         else:
             # Segment end point
