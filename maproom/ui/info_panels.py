@@ -230,6 +230,10 @@ class TextEditField(InfoField):
         self.panel.ignore_next_update = True
         # a side effect of select_layer() is to make sure the layer name is up-to-date
         self.panel.project.layer_tree_control.select_layer(layer)
+    
+    def initial_text_input(self, text):
+        self.ctrl.SetValue(text)
+        self.ctrl.SetInsertionPointEnd()#(self.ctrl.GetLastPosition())
         
 class LayerNameField(TextEditField):
     def get_value(self, layer):
@@ -1325,6 +1329,7 @@ class InfoPanel(PANELTYPE):
         self.current_layer_change_count = -1
         self.current_fields = []
         self.field_map = {}
+        self.focus_on_input = None
 
         PANELTYPE.__init__(self, parent, size=size)
         
@@ -1502,10 +1507,21 @@ class InfoPanel(PANELTYPE):
     
     def constrain_size(self, focus=None):
         self.sizer.Layout()
+        self.focus_on_input = focus
         if focus is not None:
-            focus.set_focus()
             self.ScrollChildIntoView(focus.ctrl)
         self.SetupScrolling(scroll_x=False, scrollToTop=False, scrollIntoView=True)
+    
+    def process_initial_key(self, event, text):
+        """ Uses keyboard input from another control to set the focus to the
+        previously noted info field and process the text there.
+        """
+        if self.focus_on_input is not None:
+            self.focus_on_input.set_focus()
+            self.ScrollChildIntoView(self.focus_on_input.ctrl)
+            self.focus_on_input.initial_text_input(text)
+            return True
+        return False
 
 
 class LayerInfoPanel(InfoPanel):

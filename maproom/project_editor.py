@@ -454,6 +454,12 @@ class ProjectEditor(FrameworkEditor):
         else:
             log.debug("Attempting to update panel for layer %s that isn't current", layer)
     
+    def process_info_panel_keystroke(self, event, text):
+        if self.layer_info.process_initial_key(event, text):
+            return
+        if self.selection_info.process_initial_key(event, text):
+            return
+    
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
         log.debug("undo_stack_changed called!!!")

@@ -280,25 +280,34 @@ class MouseHandler(object):
         pass
 
     def process_key_char(self, event):
+        keycode = event.GetKeyCode()
+        text = event.GetUniChar()
+        log.debug("process_key_char: char=%s, key=%s, modifiers=%s" % (text, keycode, bin(event.GetModifiers())))
         c = self.layer_canvas
         if c.mouse_is_down:
             effective_mode = c.get_effective_tool_mode(event)
             if isinstance(effective_mode, RectSelectMode):
-                if (event.GetKeyCode() == wx.WXK_ESCAPE):
+                if (keycode == wx.WXK_ESCAPE):
                     c.mouse_is_down = False
                     c.ReleaseMouse()
                     c.render()
         else:
-            if (event.GetKeyCode() == wx.WXK_ESCAPE):
+            text = unichr(text)
+            if keycode == wx.WXK_ESCAPE:
                 self.esc_key_pressed()
-            if (event.GetKeyCode() == wx.WXK_BACK):
+            elif keycode == wx.WXK_DELETE or keycode == wx.WXK_BACK:
                 self.delete_key_pressed()
+            elif text in u".0123456789":
+                self.process_number_keys(event, text)
     
     def esc_key_pressed(self):
         self.layer_canvas.project.clear_all_selections()
     
     def delete_key_pressed(self):
         pass
+
+    def process_number_keys(self, event, text):
+        self.layer_canvas.project.process_info_panel_keystroke(event, text)
 
     def render_overlay(self, renderer):
         """Render additional graphics on canvas

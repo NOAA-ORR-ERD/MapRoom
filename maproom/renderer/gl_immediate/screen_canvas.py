@@ -129,7 +129,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.render(event)
 
     def on_mouse_down(self, event):
-        # self.SetFocus() # why would it not be focused?
+        self.SetFocus() # why would it not be focused?
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         self.mouse_is_down = True
