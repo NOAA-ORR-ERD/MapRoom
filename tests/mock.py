@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 
 # Include maproom directory so that maproom modules can be imported normally
@@ -15,7 +17,8 @@ try:
 except AttributeError:
     # pytest doesn't load the config module when not run using py.test
     # skip this check when running a test_*.py from the command line
-    pass
+    import functools
+    slow = lambda a: functools.partial(print, "skipping slow test %s" % repr(a))
 
 # Turn logging on by default at the DEBUG level for tests
 import logging
