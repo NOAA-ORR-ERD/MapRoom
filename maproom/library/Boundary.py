@@ -112,6 +112,9 @@ class Boundary(object):
         return (candidate_x, candidate_y)
 
     def check_boundary_self_crossing(self):
+        t0 = time.clock()
+        progress_log.info("Checking for boundary self-crossing...")
+        
         error_points = set()
         
         # test for boundary self-crossings (i.e. making a non-simple polygon)
@@ -130,7 +133,10 @@ class Boundary(object):
             #set([16, 13, 14, 15])
 
             error_points.update({self[point] for segment in intersecting_segments for item in segment for point in item[2:]})
-
+        
+        t = time.clock() - t0
+        print "DONE WITH BOUNDARY SELF-CROSSING CHECK! %f" % t
+        
         return tuple(error_points)
     
     def get_points_list(self):
@@ -196,6 +202,8 @@ class Boundaries(object):
                               area = the area of the boundary (in coordinate space)
                           non_boundary_points = a python set of the points non included in a boundary
         """
+        t0 = time.clock()
+        
         progress_log.info("Determining boundaries...")
         points = self.points
         lines = self.lines
@@ -354,8 +362,15 @@ class Boundaries(object):
 
         self.boundaries = boundaries
         self.non_boundary_points = non_boundary_points
+        
+        t = time.clock() - t0
+        print "DONE WITH BOUNDARY GENERATION! %f" % t
+        progress_log.info("TIME_DELTA=Boundary generation")
 
     def check_boundary_crossings(self):
+        t0 = time.clock()
+        progress_log.info("Checking for boundary crossings...")
+        
         error_points = set()
         
         point_indexes = []
@@ -395,10 +410,17 @@ class Boundaries(object):
             #set([16, 13, 14, 15])
 
             error_points.update({point_indexes[index] for segment in intersecting_segments for item in segment for index in item[2:]})
-
+        
+        t = time.clock() - t0
+        print "DONE WITH BOUNDARY CROSSING CHECK! %f" % t
+        progress_log.info("TIME_DELTA=Boundary crossing")
+        
         return tuple(error_points)
     
     def check_outside_outer_boundary(self):
+        t0 = time.clock()
+        progress_log.info("Checking for points outside outer boundary...")
+        
         if len(self) == 0:
             return []
         
@@ -413,6 +435,9 @@ class Boundaries(object):
             polygon=np.array(outer_boundary, np.uint32)
         )
         
+        t = time.clock() - t0
+        print "DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t
+        progress_log.info("TIME_DELTA=Points outside boundary")
         return outside_point_indices
 
     def check_errors(self, throw_exception=False):
@@ -426,33 +451,17 @@ class Boundaries(object):
         if len(self.branch_points) > 0 and self.allow_branches == False:
             errors.add("Branching boundaries.")
             error_points.update(self.branch_points)
-    
-        t = time.clock() - t0
-        print "DONE WITH BRANCH CHECK! %f" % t
-        t0 = time.clock()
-        
-        progress_log.info("Checking for points outside outer boundary...")
         
         point_indexes = self.check_outside_outer_boundary()
         if len(point_indexes) > 0:
             errors.add("Points occur outside the outer boundary.")
             error_points.update(point_indexes)
-    
-        t = time.clock() - t0
-        print "DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t
-        t0 = time.clock()
         
         if not self.allow_self_crossing:
-            progress_log.info("Checking for boundary crossings...")
-            
             point_indexes = self.check_boundary_crossings()
             if len(point_indexes) > 0:
                 errors.add("Boundary crossings.")
                 error_points.update(point_indexes)
-    
-        t = time.clock() - t0
-        print "DONE WITH BOUNDARY CROSSING CHECK! %f" % t
-        t0 = time.clock()
 
         if errors and throw_exception:
             print "error points: %s" % sorted(list(error_points))
@@ -553,7 +562,7 @@ def general_intersection_check(points, boundary_min_max):
     coordinates of the endpoint of the segment, and the indexes into :point:
     for both the start and end point in the segment.
     """
-    print points
+    print len(points)
     progress_log.info("PULSE")
     points.sort() # lexicographical sort
     open_segments = {}
