@@ -33,6 +33,7 @@ class MockTree(object):
 class MockProject(object):
     def __init__(self, add_tree_control=False):
         self.window = MockWindow()
+        self.task = None
         self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager.create(self)
         if add_tree_control:
