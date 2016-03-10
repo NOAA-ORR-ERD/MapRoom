@@ -647,7 +647,7 @@ class ProjectEditor(FrameworkEditor):
             data_obj.SetData(text)
             return data_obj
 
-    def process_paste_data_object(self, data_obj):
+    def process_paste_data_object(self, data_obj, cmd_cls=None):
         print "Found data object %s" % data_obj
         text = data_obj.GetData()
         print "value:", text
