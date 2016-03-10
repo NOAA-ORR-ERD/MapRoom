@@ -497,6 +497,7 @@ class ProjectEditor(FrameworkEditor):
         
         sel_layer = self.layer_tree_control.get_selected_layer()
         self.update_layer_contents_ui(sel_layer)
+        self.update_layer_selection_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
         self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
         self.last_refresh = time.clock()
