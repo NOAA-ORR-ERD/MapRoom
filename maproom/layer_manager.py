@@ -358,6 +358,19 @@ class LayerManager(Document):
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
+        return mi
+    
+    def insert_json(self, json_data, editor, mi):
+        layer = Layer.load_from_json(json_data, self)[0]
+        self.dispatch_event('layer_loaded', layer)
+        self.insert_layer(mi, layer)
+        if json_data['children']:
+            mi.append(1)
+            for c in json_data['children']:
+                self.insert_json(c, editor, mi)
+                mi[-1] = mi[-1] + 1
+        layer.update_bounds()
+        return layer
     
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
@@ -578,6 +591,8 @@ class LayerManager(Document):
         if mi is None:
             return []
         l = self.get_layer_by_multi_index(mi)
+        if not isinstance(l, list):
+            return []
 
         ret = []
         for item in l[1:]:

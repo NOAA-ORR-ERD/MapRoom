@@ -520,7 +520,7 @@ class DuplicateLayerAction(EditorAction):
     def perform(self, event):
         sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
-            json_data = sel_layer.serialize_json(-999)
+            json_data = sel_layer.serialize_json(-999, True)
             if json_data:
                 text = json.dumps(json_data)
                 cmd = PasteLayerCommand(sel_layer, text, self.active_editor.layer_canvas.world_center)

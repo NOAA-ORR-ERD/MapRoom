@@ -167,9 +167,8 @@ class PasteLayerCommand(Command):
         before = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         json_data = json.loads(self.json_text)
-        loaded = Layer.load_from_json(json_data, lm)
-        layer = loaded[0]
-        lm.insert_loaded_layer(layer, editor, before=before)
+        mi = lm.get_insertion_multi_index(before)
+        layer = lm.insert_json(json_data, editor, mi)
         
         drag = layer.center_point_index
         x = layer.points.x[drag]

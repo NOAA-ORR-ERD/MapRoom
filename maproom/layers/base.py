@@ -149,7 +149,7 @@ class Layer(HasTraits):
         """
         return []
 
-    def serialize_json(self, index):
+    def serialize_json(self, index, children=False):
         """Create json representation that can restore layer.
         
         Layers don't know their own indexes, so the manager must pass the index
@@ -163,6 +163,7 @@ class Layer(HasTraits):
             'has encoded data': False,
             'name': self.name,
             'style': str(self.style),
+            'children': [],
             }
         if self.file_path:
             json['url'] = self.file_path
@@ -174,6 +175,10 @@ class Layer(HasTraits):
         if update:
             json['has encoded data'] = True
             json.update(update)
+        if children:
+            print "CHILDREN"
+            for c in self.manager.get_layer_children(self):
+                json['children'].append(c.serialize_json(-999, True))
         return json
     
     def get_attrs_with_json(self):
