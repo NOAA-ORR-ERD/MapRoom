@@ -283,6 +283,7 @@ class MouseHandler(object):
         keycode = event.GetKeyCode()
         text = event.GetUniChar()
         log.debug("process_key_char: char=%s, key=%s, modifiers=%s" % (text, keycode, bin(event.GetModifiers())))
+        handled = False
         c = self.layer_canvas
         if c.mouse_is_down:
             effective_mode = c.get_effective_tool_mode(event)
@@ -291,14 +292,19 @@ class MouseHandler(object):
                     c.mouse_is_down = False
                     c.ReleaseMouse()
                     c.render()
-        else:
+                    handled = True
+        if not handled:
             text = unichr(text)
             if keycode == wx.WXK_ESCAPE:
                 self.esc_key_pressed()
+                handled = True
             elif keycode == wx.WXK_DELETE or keycode == wx.WXK_BACK:
                 self.delete_key_pressed()
+                handled = True
             elif text in u".0123456789":
                 self.process_number_keys(event, text)
+                handled = True
+        return handled
     
     def esc_key_pressed(self):
         self.layer_canvas.project.clear_all_selections()

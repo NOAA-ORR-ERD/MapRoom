@@ -196,7 +196,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         mode = self.get_effective_tool_mode(event)
         self.set_cursor(mode)
         
-        mode.process_key_char(event)
+        if not mode.process_key_char(event):
+            event.Skip()
     
     def on_timer(self, event):
         id = event.GetTimer().GetId()
