@@ -395,9 +395,7 @@ class ProjectEditor(FrameworkEditor):
         log.debug("layers_changed called!!!")
         self.layer_tree_control.rebuild()
     
-    def update_layer_selection_ui(self, sel_layer=None):
-        if sel_layer is None:
-            sel_layer = self.layer_tree_control.get_selected_layer()
+    def update_layer_menu_ui(self, sel_layer):
         if sel_layer is not None:
             self.can_copy = sel_layer.can_copy()
             self.can_paste = True
@@ -408,9 +406,6 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = sel_layer.is_zoomable()
             self.layer_above = self.layer_manager.is_raisable(sel_layer)
             self.layer_below = self.layer_manager.is_lowerable(sel_layer)
-            # leave mouse_mode set to current setting
-            self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
-            self.mouse_mode = toolbar.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
         else:
             self.can_copy = False
             self.can_paste = False
@@ -421,7 +416,17 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
+    
+    def update_layer_selection_ui(self, sel_layer=None):
+        if sel_layer is None:
+            sel_layer = self.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            # leave mouse_mode set to current setting
+            self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
+            self.mouse_mode = toolbar.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
+        else:
             self.mouse_mode = PanMode
+        self.update_layer_menu_ui(sel_layer)
         self.layer_canvas.set_mouse_handler(self.mouse_mode)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_info_panels(sel_layer)
@@ -497,7 +502,7 @@ class ProjectEditor(FrameworkEditor):
         
         sel_layer = self.layer_tree_control.get_selected_layer()
         self.update_layer_contents_ui(sel_layer)
-        self.update_layer_selection_ui(sel_layer)
+        self.update_layer_menu_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
         self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
         self.last_refresh = time.clock()
