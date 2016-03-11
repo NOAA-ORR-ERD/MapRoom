@@ -577,7 +577,7 @@ class ProjectEditor(FrameworkEditor):
         if f.errors:
             b.errors.append("In %s:" % str(cmd))
             for e in f.errors:
-                b.errors.append("  %s" % e)
+                b.errors.append("- %s" % e)
             b.errors.append("")
         for lf in f.layer_flags:
             layer = lf.layer
