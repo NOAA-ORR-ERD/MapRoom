@@ -219,6 +219,55 @@ class DrawCircleCommand(DrawVectorObjectCommand):
         return layer
 
 
+class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
+    short_name = "arrow_text_obj"
+    ui_name = "Arrow Text Box"
+    vector_object_class = AnnotationLayer
+
+    def get_vector_object_layer(self, lm):
+        layer = self.vector_object_class(manager=lm)
+        return layer
+
+    def perform_post(self, editor, lm, layer, undo):
+        halfway = ((self.cp1[0] + self.cp2[0])/2.0, (self.cp1[1] + self.cp2[1])/2.0)
+        line = LineVectorObject(manager=lm)
+        line.set_opposite_corners(self.cp1, halfway)
+        self.style.line_start_marker = 2
+        line.set_style(self.style)
+        kwargs = {'first_child_of': layer}
+        lm.insert_loaded_layer(line, editor, **kwargs)
+        lf = undo.flags.add_layer_flags(line)
+        lf.layer_loaded = True
+        
+        #text = RectangleVectorObject(manager=lm)
+        text = OverlayTextObject(manager=lm)
+        text.set_opposite_corners(halfway, self.cp2)
+        text.set_style(self.style)
+        c = editor.layer_canvas
+        sp1 = c.get_screen_point_from_world_point(halfway)
+        sp2 = c.get_screen_point_from_world_point(self.cp2)
+        text.text_width = abs(sp2[0] - sp1[0]) - (2 * text.border_width)
+        text.text_height = abs(sp2[1] - sp1[1]) - (2 * text.border_width)
+        lm.insert_loaded_layer(text, editor, **kwargs)
+        lf = undo.flags.add_layer_flags(text)
+        lf.layer_loaded = True
+        lf.select_layer = True
+        
+        # The line's control point is always 1 because it's the endpoint,
+        # and the text box's control point is zero because it's the one
+        # corresponding to the first control point at layer creation time
+        text.normalize_world_control_points(c)
+        cp = text.find_nearest_corner(self.cp1)
+        lm.set_control_point_link(line, 1, text, cp)
+        self.save_line = line
+
+    def undo_post(self, editor, lm, layer, undo):
+        # Control point removal is specified using the line's control points.
+        # The drag point is always at the end and therefore control point 1;
+        # the anchor point is always the beginning, i.e. control point 0
+        self.save_line.remove_from_master_control_points(1, 0)
+
+
 class DrawLineCommand(DrawVectorObjectCommand):
     short_name = "line_obj"
     ui_name = "Line"

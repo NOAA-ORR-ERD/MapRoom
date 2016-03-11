@@ -205,6 +205,14 @@ class LineVectorObject(VectorObjectLayer):
     
     def compute_constrained_control_points(self, cp):
         pass
+    
+    def find_nearest_corner(self, world_pt):
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        x = np.copy(self.points.x[0:self.num_corners]) - world_pt[0]
+        y = np.copy(self.points.y[0:self.num_corners]) - world_pt[1]
+        d = (x * x) + (y * y)
+        cp = np.argmin(d)
+        return cp
 
     def find_anchor_of(self, point_index):
         if point_index > self.center_point_index:
@@ -781,11 +789,10 @@ class OverlayScalableImageObject(OverlayImageObject):
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
 
-    def update_world_control_points(self, renderer):
+    def normalize_world_control_points(self, canvas):
         h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # array indexes of numpy images are reversed
-        c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
-        anchor = c.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
+        anchor = canvas.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
         #print "anchor (center):", anchor, "text w,h", self.text_width, self.text_height
         anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
         
@@ -794,12 +801,14 @@ class OverlayScalableImageObject(OverlayImageObject):
         yoffset = (scale[1] - anchor_to_center[1]) * h + anchor[1]
         
         for i in range(self.center_point_index + 1):
-            w = c.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
+            w = canvas.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
             #print "world point for anchor %d" % i, w
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
             self.points.y[i] = w[1]
-        
+
+    def update_world_control_points(self, renderer):
+        self.normalize_world_control_points(renderer.canvas)
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, None, None)
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)

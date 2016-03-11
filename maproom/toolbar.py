@@ -8,7 +8,7 @@ from mouse_handler import *
 valid_mouse_modes = {
     'VectorLayerToolBar': [PanMode, ZoomRectMode, RulerMode, PointSelectionMode, LineSelectionMode],
     'PolygonLayerToolBar': [PanMode, ZoomRectMode, RulerMode, CropRectMode],
-    'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode],
+    'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode, AddArrowTextMode],
     'BaseLayerToolBar': [PanMode, ZoomRectMode, RulerMode],
     }
 

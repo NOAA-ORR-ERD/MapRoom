@@ -1008,6 +1008,13 @@ class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
     vector_object_command = DrawEllipseCommand
 
 
+class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
+    icon = "shape_square.png"
+    menu_item_name = "Add Arrow/Text Box"
+    menu_item_tooltip = "Add a new arrow and text box combo object"
+    vector_object_command = DrawArrowTextBoxCommand
+
+
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_circle.png"
     menu_item_name = "Add Circle"
