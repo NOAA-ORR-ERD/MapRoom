@@ -167,6 +167,12 @@ class LayerManager(Document):
 
         return result
     
+    def recalc_all_bounds(self):
+        # calculate bound starting at leaf layers and working back up to folder
+        # layers
+        for layer in reversed(self.flatten()):
+            layer.update_bounds()
+    
     # Invariant handling: invariants are unique identifiers for each layer that
     # don't change when the layer is renamed or reordered
     
@@ -313,6 +319,7 @@ class LayerManager(Document):
                     layer.invariant = self.get_next_invariant()
                 self.insert_loaded_layer(layer, mi=mi, skip_invariant=True)
                 layers.append(layer)
+        self.recalc_all_bounds()
         return layers
     
     def save_all(self, file_path, extra_json_data=None):
