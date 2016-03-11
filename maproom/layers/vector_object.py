@@ -332,6 +332,10 @@ class LineVectorObject(VectorObjectLayer):
         It doesn't scale with the image, it scales with the line size on screen
         """
         log.log(5, "Rendering markers!!! pick=%s" % (picker))
+        if picker.is_active:
+            # don't render markers on the pick screen: these points don't have
+            # a corresponding entry into the pick_layer_index_map
+            return
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         markers = []
         for start, end, marker in self.get_marker_points():
