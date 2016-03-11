@@ -394,6 +394,24 @@ class LayerManager(Document):
                 break
         return [pos]
     
+    def find_vector_object_insert_layer(self, event_layer):
+        """Find the appropriate layer to insert a vector object, given the
+        layer on which the event occurred.
+        
+        If the event_layer is an annotation layer it will typically be used,
+        *unless* the layer is grouped, in which case it will look
+        upwards in the hierarchy to find the first parent annotation layer
+        that is not grouped.
+        
+        None is returned if the top-level annotation layer is also grouped.
+        """
+        while not event_layer.is_root():
+            if event_layer.type == "annotation":
+                if not event_layer.grouped:
+                    return event_layer
+            event_layer = self.get_folder_of_layer(event_layer)
+        return None
+    
     def get_insertion_multi_index(self, before=None, after=None, first_child_of=None, last_child_of=None):
         if first_child_of is not None:
             mi = self.get_multi_index_of_layer(first_child_of)

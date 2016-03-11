@@ -137,14 +137,14 @@ class DrawVectorObjectCommand(Command):
         saved_invariant = lm.next_invariant
         layer = self.get_vector_object_layer(lm)
         event_layer = lm.get_layer_by_invariant(self.layer)
-        if event_layer.type == "annotation":
-            kwargs = {'first_child_of': event_layer}
-        else:
-            parent_layer = lm.get_folder_of_layer(event_layer)
-            if parent_layer is not None:
-                kwargs = {'first_child_of': parent_layer}
-            else:
-                kwargs = {'first_child_of': event_layer}
+        parent_layer = lm.find_vector_object_insert_layer(event_layer)
+        if parent_layer is None:
+            undo.flags.refresh_needed = True
+            undo.flags.success = False
+            undo.flags.errors = ["All annotation layers are grouped. Objects can't be added to grouped layers"]
+            return undo
+            
+        kwargs = {'first_child_of': parent_layer}
         lm.insert_loaded_layer(layer, editor, **kwargs)
         
         undo.flags.layers_changed = True
@@ -229,6 +229,9 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         return layer
 
     def perform_post(self, editor, lm, layer, undo):
+        layer.grouped = True
+        layer.name = self.ui_name
+        
         halfway = ((self.cp1[0] + self.cp2[0])/2.0, (self.cp1[1] + self.cp2[1])/2.0)
         line = LineVectorObject(manager=lm)
         line.set_opposite_corners(self.cp1, halfway)
