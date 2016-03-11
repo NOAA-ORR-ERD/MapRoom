@@ -368,6 +368,7 @@ class LayerManager(Document):
         return mi
     
     def insert_json(self, json_data, editor, mi):
+        mi = list(mi)  # operate on a copy, otherwise changes get returned
         layer = Layer.load_from_json(json_data, self)[0]
         self.dispatch_event('layer_loaded', layer)
         self.insert_layer(mi, layer)
