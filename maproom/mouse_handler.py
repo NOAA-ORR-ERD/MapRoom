@@ -1009,10 +1009,21 @@ class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_square.png"
+    icon = "shape_arrow_text.png"
     menu_item_name = "Add Arrow/Text Box"
     menu_item_tooltip = "Add a new arrow and text box combo object"
     vector_object_command = DrawArrowTextBoxCommand
+
+    def render_overlay(self, renderer):
+        c = self.layer_canvas
+        if c.mouse_is_down:
+            (x1, y1) = c.mouse_down_position
+            (x2, y2) = c.mouse_move_position
+            (xh, yh) = ((x1 + x2) / 2.0, (y1 + y2) / 2.0)
+            sp = [(x1, y1), (xh, yh), (x2, yh), (x2, y2), (xh, y2), (xh, yh)]
+            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+            self.show_width_height((x1, y1), (x2, y1), (x1, y2))
+        self.render_snapped_point(renderer)
 
 
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
