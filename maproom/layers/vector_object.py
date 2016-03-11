@@ -1180,4 +1180,5 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         log.log(5, "Rendering annotation layer group %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-        renderer.outline_object(layer_index_base, picker, self.style)
+        if self.manager.project.layer_tree_control.get_selected_layer() == self:
+            renderer.outline_object(layer_index_base, picker, self.style)
