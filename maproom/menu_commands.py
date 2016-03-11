@@ -8,7 +8,7 @@ from omnivore.utils.file_guess import FileMetadata
 from command import Command, UndoInfo
 from layers import loaders, Layer, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer
 from library.Boundary import Boundaries
-from vector_object_commands import get_parent_layer_data, restore_layers
+from vector_object_commands import update_parent_bounds, get_parent_layer_data, restore_layers
 
 import logging
 progress_log = logging.getLogger("progress")
@@ -169,17 +169,25 @@ class PasteLayerCommand(Command):
         json_data = json.loads(self.json_text)
         mi = lm.get_insertion_multi_index(before)
         layer = lm.insert_json(json_data, editor, mi)
+        layer.name = "Copy of %s" % layer.name
         
         drag = layer.center_point_index
         x = layer.points.x[drag]
         y = layer.points.y[drag]
         layer.move_control_point(drag, drag, self.center[0] - x, self.center[1] - y)
+        print "AFTER NEW LAYER POSITION"
+        layer.update_bounds()
 
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
-        lf.layer_loaded = True
+        
+        affected = layer.parents_affected_by_move()
+        for parent in affected:
+            print "AFFECTED!", parent
+            lf = undo.flags.add_layer_flags(parent)
+            lf.layer_items_moved = True
         undo.data = (layer.invariant, saved_invariant)
         
         return self.undo_info

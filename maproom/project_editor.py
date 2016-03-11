@@ -649,7 +649,6 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is not None:
             json_data = sel_layer.serialize_json(-999, children=True)
             text = json.dumps(json_data, indent=4)
-            text = collapse_json(text, 12)
             print "clipboard object: json data", text
             data_obj = wx.CustomDataObject("maproom")
             data_obj.SetData(text)

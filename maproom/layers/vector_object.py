@@ -1137,6 +1137,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         self.style.fill_style = 0
     
     def set_data_from_bounds(self, bounds):
+        print "SETTING BOUNDARY BOX!!!", self, bounds
         if bounds[0][0] is None:
             self.points = self.make_points(0)
             
@@ -1153,7 +1154,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         layers = self.manager.get_layer_children(self)
-        print "SCALING SUB-OBJECTS!!!", layers
+        print "SCALING SUB-OBJECTS!!!", self, layers
         anchor = 0
         for layer in layers:
             drag = layer.anchor_of[anchor]
@@ -1169,6 +1170,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
             dx = p_anchor[0] - p.xy[0][0]
             dy = p_anchor[1] - p.xy[0][1]
             layer.move_control_point(anchor, drag, dx, dy)
+            layer.update_bounds()
 #        offset = self.center_point_index + 1
 #        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
 #        points = ((p.xy[offset:] - old_origin) * scale) + new_origin

@@ -96,10 +96,13 @@ class BoundedFolder(LineLayer, Folder):
 
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
+        print "COMPUTE_BOUNDING_RECT:before", self, self.bounds
 
         children = self.manager.get_layer_children(self)
         for layer in children:
+            print "  CHILD", layer, layer.bounds
             bounds = rect.accumulate_rect(bounds, layer.bounds)
 
+        print "COMPUTE_BOUNDING_RECT:after", self, bounds
         self.set_data_from_bounds(bounds)
         return bounds

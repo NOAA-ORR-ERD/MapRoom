@@ -304,6 +304,7 @@ class Layer(HasTraits):
         if parents:
             parent = self
             while not parent.is_root():
+                print "updating bounds for %s" % parent
                 parent.update_bounds()
                 parent = self.manager.get_folder_of_layer(parent)
         else:
