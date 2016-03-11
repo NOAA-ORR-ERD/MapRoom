@@ -372,8 +372,8 @@ class MouseHandler(object):
             elif keycode == wx.WXK_DELETE or keycode == wx.WXK_BACK:
                 self.delete_key_pressed()
                 handled = True
-            elif text:
-                self.process_number_keys(event, text)
+            elif text in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~': # string.printable minus whitespace
+                self.process_text_input(event, text)
                 handled = True
         return handled
     
@@ -383,7 +383,7 @@ class MouseHandler(object):
     def delete_key_pressed(self):
         pass
 
-    def process_number_keys(self, event, text):
+    def process_text_input(self, event, text):
         self.layer_canvas.project.process_info_panel_keystroke(event, text)
 
     def render_overlay(self, renderer):
