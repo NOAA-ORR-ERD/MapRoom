@@ -116,8 +116,11 @@ class LayerManager(Document):
         layers = self.get_children(root)
         return str(layers)
     
-    def get_attrs_with_json(self):
-        return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
+    def get_to_json_attrs(self):
+        return [(m[0:-8], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-8]) and m.endswith("_to_json")]
+    
+    def get_from_json_attrs(self):
+        return [(m[0:-10], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-10]) and m.endswith("_from_json")]
     
     def next_invariant_to_json(self):
         return self.next_invariant
@@ -284,9 +287,8 @@ class LayerManager(Document):
         order.sort()
         log.debug("load_all_from_json: order: %s" % str(order))
         
-        for attr, to_json in self.get_attrs_with_json():
+        for attr, from_json in self.get_from_json_attrs():
             try:
-                from_json = getattr(self, attr + "_from_json")
                 from_json(extra_json)
             except KeyError:
                 message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
@@ -331,7 +333,7 @@ class LayerManager(Document):
         project = []
         if extra_json_data is None:
             extra_json_data = {}
-        for attr, to_json in self.get_attrs_with_json():
+        for attr, to_json in self.get_to_json_attrs():
             extra_json_data[attr] = to_json()
         project.append("extra json data")
         project.append(extra_json_data)
@@ -367,15 +369,17 @@ class LayerManager(Document):
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
         return mi
     
-    def insert_json(self, json_data, editor, mi):
+    def insert_json(self, json_data, editor, mi, old_invariant_map=None):
         mi = list(mi)  # operate on a copy, otherwise changes get returned
         layer = Layer.load_from_json(json_data, self)[0]
+        if old_invariant_map is not None:
+            old_invariant_map[json_data['invariant']] = layer
         self.dispatch_event('layer_loaded', layer)
         self.insert_layer(mi, layer)
         if json_data['children']:
             mi.append(1)
             for c in json_data['children']:
-                self.insert_json(c, editor, mi)
+                self.insert_json(c, editor, mi, old_invariant_map)
                 mi[-1] = mi[-1] + 1
         layer.update_bounds()
         return layer
@@ -786,6 +790,18 @@ class LayerManager(Document):
             truth = (truth_layer.invariant, truth_cp)
         log.debug("control_point_links: adding %s child of %s" % (entry, truth))
         self.control_point_links[entry] = truth
+        
+    def get_control_point_links(self, layer):
+        """Returns the list of control points that the specified layer links to
+        
+        """
+        links = []
+        for dep, truth in self.control_point_links.iteritems():
+            dep_invariant, dep_cp = dep[0], dep[1]
+            if dep_invariant == layer.invariant:
+                truth_invariant, truth_cp = truth[0], truth[1]
+                links.append((dep_cp, truth_invariant, truth_cp))
+        return links
     
     def remove_control_point_links(self, layer, remove_cp=-1):
         """Remove links to truth layer control points from the specified

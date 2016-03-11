@@ -62,6 +62,15 @@ class VectorObjectLayer(LineLayer):
     
     def check_for_problems(self, window):
         pass
+    
+#    def control_point_links_to_json(self):
+#        return self.control_point_links
+
+    def control_point_links_from_json(self, json_data):
+        try:
+            self.control_point_links = json_data['control_point_links']
+        except KeyError:
+            raise TypeError("optional control_point_links data not present; skipping")
 
     def get_info_panel_text(self, prop):
         if prop == "Path length":

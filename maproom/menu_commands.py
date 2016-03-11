@@ -168,7 +168,8 @@ class PasteLayerCommand(Command):
         saved_invariant = lm.next_invariant
         json_data = json.loads(self.json_text)
         mi = lm.get_insertion_multi_index(before)
-        layer = lm.insert_json(json_data, editor, mi)
+        old_invariant_map = {}
+        layer = lm.insert_json(json_data, editor, mi, old_invariant_map)
         layer.name = "Copy of %s" % layer.name
         
         drag = layer.center_point_index
@@ -177,6 +178,16 @@ class PasteLayerCommand(Command):
         layer.move_control_point(drag, drag, self.center[0] - x, self.center[1] - y)
         print "AFTER NEW LAYER POSITION"
         layer.update_bounds()
+        
+        new_links = []
+        for old_invariant, new_layer in old_invariant_map.iteritems():
+            for dep_cp, truth_invariant, truth_cp in new_layer.control_point_links:
+                # see if new truth layer has changed because it's also in the
+                # copied group
+                if truth_invariant in old_invariant_map:
+                    truth_invariant = old_invariant_map[truth_invariant].invariant
+                new_links.append((new_layer, dep_cp))
+                lm.set_control_point_link((new_layer.invariant, dep_cp), (truth_invariant, truth_cp))
 
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
@@ -188,13 +199,13 @@ class PasteLayerCommand(Command):
             print "AFFECTED!", parent
             lf = undo.flags.add_layer_flags(parent)
             lf.layer_items_moved = True
-        undo.data = (layer.invariant, saved_invariant)
+        undo.data = (layer.invariant, saved_invariant, new_links)
         
         return self.undo_info
 
     def undo(self, editor):
         lm = editor.layer_manager
-        invariant, saved_invariant = self.undo_info.data
+        invariant, saved_invariant, cp_links = self.undo_info.data
         layer = editor.layer_manager.get_layer_by_invariant(invariant)
         insertion_index = lm.get_multi_index_of_layer(layer)
         
@@ -202,6 +213,9 @@ class PasteLayerCommand(Command):
         # all the layer info around so that it can be undone
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = saved_invariant
+        
+        for layer, cp in cp_links:
+            lm.remove_control_point_links(layer, cp)
         
         undo = UndoInfo()
         undo.flags.layers_changed = True

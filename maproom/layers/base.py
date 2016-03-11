@@ -166,13 +166,14 @@ class Layer(HasTraits):
             'name': self.name,
             'style': str(self.style),
             'children': [],
+            'control_point_links': self.manager.get_control_point_links(self),
             }
         if self.file_path:
             json['url'] = self.file_path
             json['mime'] = self.mime
         
         update = {}
-        for attr, to_json in self.get_attrs_with_json():
+        for attr, to_json in self.get_to_json_attrs():
             update[attr] = to_json()
         if update:
             json['has encoded data'] = True
@@ -183,8 +184,11 @@ class Layer(HasTraits):
                 json['children'].append(c.serialize_json(-999, True))
         return json
     
-    def get_attrs_with_json(self):
+    def get_to_json_attrs(self):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
+    
+    def get_from_json_attrs(self):
+        return [(m[0:-10], getattr(self, m)) for m in dir(self) if m.endswith("_from_json")]
     
     def unserialize_json(self, json_data, batch_flags):
         """Restore layer from json representation.
@@ -224,14 +228,15 @@ class Layer(HasTraits):
         if 'url' in json_data:
             self.file_path = json_data['url']
             self.mime = json_data['mime']
-        for attr, to_json in self.get_attrs_with_json():
+        for attr, from_json in self.get_from_json_attrs():
             try:
-                from_json = getattr(self, attr + "_from_json")
                 from_json(json_data)
             except KeyError:
                 message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
                 log.warning(message)
                 batch_flags.messages.append("WARNING: %s" % message)
+            except TypeError:
+                log.warning("Skipping from_json function %s", from_json)
     
     type_to_class_defs = {}
     
