@@ -1195,3 +1195,8 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
             self.rebuild_renderer(renderer)
         if self.manager.project.layer_tree_control.get_selected_layer() == self:
             renderer.outline_object(layer_index_base, picker, self.style)
+
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+        log.log(5, "Rendering vector object control points %s!!!" % (self.name))
+        if self.manager.project.layer_tree_control.get_selected_layer() == self:
+            renderer.draw_points(layer_index_base, picker, self.point_size)
