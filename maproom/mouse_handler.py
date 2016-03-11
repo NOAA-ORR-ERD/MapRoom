@@ -372,7 +372,7 @@ class MouseHandler(object):
             elif keycode == wx.WXK_DELETE or keycode == wx.WXK_BACK:
                 self.delete_key_pressed()
                 handled = True
-            elif text in u".0123456789":
+            elif text:
                 self.process_number_keys(event, text)
                 handled = True
         return handled

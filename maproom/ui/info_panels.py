@@ -751,6 +751,10 @@ class MultiLineTextField(InfoField):
     def process_text_change(self, layer):
         pass
         
+    def initial_text_input(self, text):
+        self.ctrl.SetValue(text)
+        self.ctrl.SetInsertionPointEnd()
+
 class OverlayTextField(MultiLineTextField):
     vertical_proportion = 1
     
