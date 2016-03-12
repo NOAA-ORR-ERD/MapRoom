@@ -262,6 +262,9 @@ class ProjectEditor(FrameworkEditor):
             
             # Push URL to top of recent files list
             self.window.application.successfully_loaded_event = self.layer_manager.metadata.uri
+            
+            # refresh window name in case filename has changed
+            self.task._active_editor_tab_change(None)
     
     def get_savepoint(self):
         layer = self.layer_tree_control.get_selected_layer()
