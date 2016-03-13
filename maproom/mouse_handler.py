@@ -1026,6 +1026,13 @@ class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
         self.render_snapped_point(renderer)
 
 
+class AddArrowTextIconMode(AddArrowTextMode):
+    icon = "shape_arrow_text_icon.png"
+    menu_item_name = "Add Arrow/Text/Icon Box"
+    menu_item_tooltip = "Add a new arrow/text box/icon combo object"
+    vector_object_command = DrawArrowTextIconCommand
+
+
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_circle.png"
     menu_item_name = "Add Circle"

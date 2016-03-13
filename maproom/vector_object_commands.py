@@ -271,6 +271,27 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         self.save_line.remove_from_master_control_points(1, 0)
 
 
+class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
+    short_name = "arrow_text_icon_obj"
+    ui_name = "Arrow Text Icon"
+
+    def perform_post(self, editor, lm, layer, undo):
+        DrawArrowTextBoxCommand.perform_post(self, editor, lm, layer, undo)
+        icon = OverlayIconObject(manager=lm)
+        icon.set_location_and_size(self.cp1, 32, 32)
+        icon.set_style(self.style)
+        kwargs = {'first_child_of': layer}
+        lm.insert_loaded_layer(icon, editor, **kwargs)
+        lf = undo.flags.add_layer_flags(icon)
+        lf.layer_loaded = True
+        lm.set_control_point_link(self.save_line, 0, icon, icon.center_point_index)
+
+    def undo_post(self, editor, lm, layer, undo):
+        DrawArrowTextBoxCommand.undo_post(self, editor, lm, layer, undo)
+        # remove point linked to the icon object
+        self.save_line.remove_from_master_control_points(0, 1)
+
+
 class DrawLineCommand(DrawVectorObjectCommand):
     short_name = "line_obj"
     ui_name = "Line"
