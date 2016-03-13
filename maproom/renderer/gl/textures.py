@@ -1,5 +1,6 @@
 import os
 import Queue
+import weakref
 
 import wx
 import numpy as np
@@ -235,7 +236,7 @@ class TileImageData(ImageData):
         self.zoom_level = -1
         self.last_zoom_level = -1
         self.projection = projection
-        self.downloader = downloader
+        self.downloader_ref = weakref.ref(downloader)
         self.last_requested = None
         self.requested = dict()  # (x, y): Image
     
@@ -246,7 +247,11 @@ class TileImageData(ImageData):
         pass
 
     def update_tiles(self, zoom, w_r, manager, event_data):
-        tile_host = self.downloader.tile_host
+        downloader = self.downloader_ref()
+        if downloader is None:
+            log.warning("Download thread has been stopped")
+            return
+        tile_host = downloader.tile_host
         if self.zoom_level != zoom:
             self.set_zoom_level(zoom)
         top_left = tile_host.world_to_tile_num(self.zoom_level, w_r[0][0], w_r[1][1])
@@ -310,10 +315,14 @@ class TileImageData(ImageData):
         return needed
     
     def request_tiles(self, tiles, manager, event_data):
+        downloader = self.downloader_ref()
+        if downloader is None:
+            log.warning("Download thread has been stopped")
+            return
         for tile in tiles:
             if tile not in self.requested:
                 print "REQUESTING TILE:", tile
-                req = self.downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
+                req = downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
                 self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_lb_rt)
     
     def add_tiles(self, queue, image_textures):

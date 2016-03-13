@@ -405,8 +405,8 @@ class TileRequest(UnskippableRequest):
 if __name__ == "__main__":
     import time
     
-    h = TileHost.get_tile_server_by_name("OpenStreetMap")
-    downloader = BackgroundTileDownloader(h)
+    h = BackgroundTileDownloader.get_tile_server_by_name("OpenStreetMap")
+    downloader = BackgroundTileDownloader(h, "tile_servertest")
 
     test = downloader.request_tile(0, 0, 0)
     test = downloader.request_tile(1, 0, 0)
