@@ -1,3 +1,98 @@
+03/13/2016
+---------------------------
+Released 3.1b20
+- RM Added coverage and pytest-cov to install_requires
+- RM Fixed tile downloading to use weakref to store downloader in TileImageData, allowing proper shutdown
+- RM Updated version number to 3.1b20
+- RM Fixed #656: added arrow/text/icon compound object
+- RM Fixed tab/window label when saving with new filename
+- RM Fixed #657: fixed resizing of overlay text objects in groups by adding offset for anchor move as well, replacing two calls to adjust bounding box points with one
+- RM Fixed #672: Added control point linking on pasted layers
+- RM Fixed process_key_char to only hit process_text_input when it's a printable character
+- RM Turn off control point rendering when annotation layer isn't selected
+- RM Fix for invalid points in pick layer: don't render arrowheads on picking screen
+- RM Added bullet list symbol for errors in batch flags to make it clearer when there are multiple errors with lines of text that wrap to the next line
+- RM Refs #656: added grouped state to folders to prevent vector objects from being inserted in the middle of groups
+- RM Refs #656: Added overlay rendering of arrow text combo object
+- RM Refs #656: added compound text/arrow box
+- RM Only show annotation layer bounding box if it's the selected layer
+- RM Fixed text entry for text vector objects
+- RM Fixed insert_json to correctly paste nested folders
+- RM Refs #666: added boundary calculation for pasted layers
+- RM Added boundary calculation on add_all
+- RM Fixed mistake in a9075c7d where mouse mode was getting reset and not allowing control point move
+- RM Refs #666: initial support for recursive json generation
+- RM Fixed method signature of process_paste_data_object
+- RM Moved mouse/ui rule descriptions into mouse_handler
+- RM Fixed duplicate layer action attempting to duplicate the root layer
+- RM Fixed keypress handling on gl canvas to propagate event if not handled
+- RM Fixed #671: Added keypress handling and focus to ScreenCanvas
+- RM Added task attribute to MockProject to satisfy test suite
+- RM Fixed #669: (again). fixed calculation closed-loop boundary indexes
+- RM Added timed messages to progress dialog
+- RM Fixed #669: modified boundary checking algorithm to handle multiple closed-loop polygons
+- RM Added dummy slow decorator that skips the test when run outside pytest
+- RM Changed most_recent_path to most_recent_uri
+- RM Refs #662: added shift + move control point to resize about center
+- RM vector object layers don't need to check for problems
+- RM Updated README to point to download page
+
+03/07/2016
+---------------------------
+Released 3.1b19
+- RM Fixed layer error checking to clear flagged points
+- RM Fixed #665: added layer check on save
+- RM Fixed #664: reworked control used to enter distance in Merge Points dialog
+- RM Simplified menu/toolbar creation using omnivore helper functions
+- RM Fixed missing import
+- RM Fixed json load/save of layers with null values for points and lines
+- RM Fixed layer delete test by calculating bounds on annotation layers
+- RM Added children_affected_by_move, parents_affected_by_move stubs to base layer class
+- RM Added coverage report to py.test scripts
+- RM Fixed missing visibility info when loading project file
+- RM Added notification count display for flagged points
+- RM Added sidebar to display list of flagged points
+- RM Added accelerator for layer error check menu item
+- RM Fixed #663: set focus back to layer name field after update
+- RM Fixed #667: added Revert Project action
+- RM Separated actions out from task.py
+- RM Added point/line identification in debug status bar area when mousing over
+- RM Allow retriangulation of triangle layer without selecting parent verdat layer first
+- RM Added check for layer with find_duplicates before allowing triangulation
+- RM Changed flagged point drawing so the highlight are drawn above points, thereby being visible in a large mass of dense points
+- RM Only attempt to select layer on rebuild if there is a selected layer (may not be on initial load)
+- RM Added pretty printing for maproom json using new collapse_json function
+- RM Fixed test mock so that tests in this directory can be run individually from the command line with their __main__ blocks
+- RM Fixed project load batch flags error because tree control wasn't properly populated and a layer was selected somehow during load
+- RM Fixed incorrect restoring of layer visibility data
+- RM Refs #657: added convenience functions to copy points and bounds; saving all points layer data instead of just x & y info in commands to han
+- RM Refs #657: Fixed delete layer command to handle bounding box of parents
+- RM Refs #657: fixed annotation layer boundary box calculation when adding vector objects
+- RM Refs #657: fixed annotation layer bounding box after child object resize
+- RM Fixed annotation layer width/height/area display with no objects inside layer
+- RM Turned off fill for annotation layer
+- RM Refs #656, #657: added first support for grouping and operations on groups of objects
+- RM Fixed tree control bug where old root layer could still be returned as the selected tree item after the entire tree had been replaced in reb
+- RM Added boundary box computation for folders as accumulation of bounding boxes of immediate children
+- RM Added fix in get_layer_children to handle layer with no children
+- RM Fixed bounding rect calculation for overlay objects
+- RM Converted to py.test; removed nose as a dependency
+- RM Fixed #648: added resize handles to icons
+- RM Fixed #660: added default layers in WMS host specification
+- RM Fixed #658: handle bounding box check when text and background the same color
+- RM Added support for navionics tile server
+- RM Refs #659: automatically set name of tile layer in tree
+- RM Fixed #659: update WMS layer name in layer tree based on selected WMS
+- RM Moved OpenLogDirectoryAction to omnivore framework
+- RM Fixed toolbar restoration due to the new perspective handling in Omnivore
+- RM Updated file loading to sync with new omnivore framework changes
+- RM Fixed py2exe error log popup using new routine in omnivore framework
+- RM doc fixes
+- RM Added nose, pytest to dependent packages
+- RM Doc updates
+- RM Added some web links in the README
+- RM OS X hack to catch DELETE key from menu item when the cursor is in a textctrl
+
 12/21/2015
 ---------------------------
 Released 3.1b18
