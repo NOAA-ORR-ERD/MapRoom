@@ -21,16 +21,6 @@ import shutil
 import subprocess
 import sys
 
-requires = [
-    'numpy',
-    'pyopengl',
-    'pyopengl_accelerate',
-    'pyproj',
-    'cython',
-    'shapely',
-    'pytest',
-]
-
 is_64bit = sys.maxsize > 2**32
 
 import maproom.Version as Version
@@ -317,7 +307,17 @@ try:
         version=full_version,
         description="High-performance 2d mapping",
         author="NOAA",
-        install_requires = requires,
+        install_requires = [
+            'numpy',
+            'pyopengl',
+            'pyopengl_accelerate',
+            'pyproj',
+            'cython',
+            'shapely',
+            'pytest',
+            'coverage',
+            'pytest-cov',
+            ],
         data_files=data_files,
         packages=find_packages(),
         app=["maproom.py"],
