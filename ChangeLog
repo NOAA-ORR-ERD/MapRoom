@@ -1,3 +1,9 @@
+03/14/2016
+---------------------------
+Released 3.1b21
+- RM Fixed #674: default to saving as PNG if extension unrecognized
+- RM Fixed #673: added slightly more distinguishable icon for arrow/text/icon combo
+
 03/13/2016
 ---------------------------
 Released 3.1b20
