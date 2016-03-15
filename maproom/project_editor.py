@@ -321,16 +321,19 @@ class ProjectEditor(FrameworkEditor):
             '.png': wx.BITMAP_TYPE_PNG,
             '.tif': wx.BITMAP_TYPE_TIFF,
             '.tiff': wx.BITMAP_TYPE_TIFF,
+            '.jpg': wx.BITMAP_TYPE_JPEG,
+            '.jpeg': wx.BITMAP_TYPE_JPEG,
             }
         _, ext = os.path.splitext(path)
-        t = valid.get(ext.lower(), None)
-        if t is not None:
-            image = self.layer_canvas.get_canvas_as_image()
-            # "save as" dialog contains confirmation for overwriting existing
-            # file, so just write the file here
-            image.SaveFile(path, t)
+        if ext not in valid:
+            path += ".png"
+            t = wx.BITMAP_TYPE_PNG
         else:
-            self.task.error("Unsupported image type %s" % ext)
+            t = valid[ext]
+        image = self.layer_canvas.get_canvas_as_image()
+        # "save as" dialog contains confirmation for overwriting existing
+        # file, so just write the file here
+        image.SaveFile(path, t)
     
     def print_preview(self):
         import os
