@@ -52,24 +52,24 @@ class PDFImage(object):
             x2, y2 = projection(rt[0], rt[1])
             self.xywh.append((x1, y1, x2 - x1, y2 - y1))
     
-    def use_screen_rect(self, image_data, r):
+    def use_screen_rect(self, image_data, r, scale=1.0):
         self.xywh = []
         for image in image_data:
-            x = image.origin[0] + r[0][0]
-            y = image.origin[1] + r[0][1]
-            w = image.size[0]
-            h = image.size[1]
+            x = (image.origin[0] * scale) + r[0][0]
+            y = (image.origin[1] * scale) + r[0][1]
+            w = image.size[0] * scale
+            h = image.size[1] * scale
             self.xywh.append((x, y, w, h))
     
-    def center_at_screen_point(self, image_data, point, screen_height):
-        left = int(point[0] - image_data.x/2)
-        bottom = int(point[1] + image_data.y/2)
-        right = left + image_data.x
-        top = bottom + image_data.y
+    def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
+        left = int(point[0] - (image_data.x/2) * scale)
+        bottom = int(point[1] + (image_data.y/2) * scale)
+        right = left + (image_data.x * scale)
+        top = bottom + (image_data.y * scale)
         # flip y to treat rect as normal opengl coordinates
         r = ((left, screen_height - bottom),
              (right, screen_height - top))
-        self.use_screen_rect(image_data, r)
+        self.use_screen_rect(image_data, r, scale)
 
     def reorder_tiles(self, image_data):
         # not needed for PDF rendering; background zoom levels are thrown out
@@ -177,9 +177,9 @@ class ReportLabRenderer(BaseRenderer):
         if self.images is None:
             self.images = PDFImage(image_data)
     
-    def set_image_center_at_screen_point(self, image_data, center, screen_rect):
+    def set_image_center_at_screen_point(self, image_data, center, screen_rect, scale=1.0):
         height = rect.height(screen_rect)
-        self.images.center_at_screen_point(image_data, center, height)
+        self.images.center_at_screen_point(image_data, center, height, scale)
     
     def release_textures(self):
         pass
