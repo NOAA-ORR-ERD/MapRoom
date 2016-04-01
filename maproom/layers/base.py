@@ -368,7 +368,7 @@ class Layer(HasTraits):
         has elements that should be visibile only when it it selected.
         
         """
-        pass
+        project_layer_visibility[self]["layer"] = checked
 
     def has_points(self):
         return False

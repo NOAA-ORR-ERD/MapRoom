@@ -34,9 +34,10 @@ class Folder(Layer):
     def set_visibility_when_checked(self, checked, project_layer_visibility):
         # Folders will automatically set their children's visiblity state to
         # the parent state
+        project_layer_visibility[self]["layer"] = checked
         children = self.manager.get_layer_children(self)
         for layer in children:
-            project_layer_visibility[layer]["layer"] = checked
+            layer.set_visibility_when_checked(checked, project_layer_visibility)
 
 
 class RootLayer(Folder):

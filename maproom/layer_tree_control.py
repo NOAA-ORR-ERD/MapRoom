@@ -220,8 +220,6 @@ class LayerTreeControl(wx.Panel):
         (layer, ) = self.tree.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
         checked = self.tree.IsItemChecked(item)
-        vis = self.project.layer_visibility[layer]
-        vis["layer"] = checked
         layer.set_visibility_when_checked(checked, self.project.layer_visibility)
         self.update_checked_from_visibility_recursive(item)
         self.project.refresh()
