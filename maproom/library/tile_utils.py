@@ -313,6 +313,15 @@ class OpenTileHost(TileHost):
     def get_tile_init_request(self, cache_root):
         return URLTileServerInitRequest(self, cache_root)
 
+class OpenTileHostYX(OpenTileHost):
+    def get_tile_url(self, zoom, x, y):
+        # mostly round robin URL index.  If multiple threads hit this at the
+        # same time the same URLs might be used in each thread, but not worth
+        # thread locking
+        self.url_index = (self.url_index + 1) % self.num_urls
+        url = self.urls[self.url_index]
+        return "%s/%s/%s/%s%s" % (url, zoom, y, x, self.suffix)
+
 
 class WMTSTileHost(TileHost):
     def get_tile_init_request(self, cache_root):
@@ -337,6 +346,10 @@ class BackgroundTileDownloader(BackgroundHttpMultiDownloader):
         if cls.cached_known_tile_server is None:
             cls.cached_known_tile_server = [
 #                LocalTileHost("Blank"),
+                OpenTileHostYX("ESRI Topographic", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/"], suffix=""),
+                OpenTileHostYX("ESRI Imagery", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/"], suffix=""),
+                OpenTileHostYX("ESRI Street Map", ["http://server.arcgisonline.com/ArcGIS/rest/services/ESRI_StreetMap_World_2D/MapServer/tile/"], suffix=""),
+                OpenTileHostYX("ESRI Ocean", ["http://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/"], suffix=""),
                 OpenTileHost("MapQuest", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/", "http://otile2.mqcdn.com/tiles/1.0.0/osm/", "http://otile3.mqcdn.com/tiles/1.0.0/osm/", "http://otile4.mqcdn.com/tiles/1.0.0/osm/"]),
                 OpenTileHost("MapQuest Satellite", ["http://otile1.mqcdn.com/tiles/1.0.0/sat/", "http://otile2.mqcdn.com/tiles/1.0.0/sat/", "http://otile3.mqcdn.com/tiles/1.0.0/sat/", "http://otile4.mqcdn.com/tiles/1.0.0/sat/"]),
                 OpenTileHost("OpenStreetMap", ["http://a.tile.openstreetmap.org/", "http://b.tile.openstreetmap.org/", "http://c.tile.openstreetmap.org/"]),
