@@ -649,8 +649,6 @@ class ProjectEditor(FrameworkEditor):
     supported_clipboard_data_objects = [wx.CustomDataObject("maproom")]
     
     def create_clipboard_data_object(self):
-        from library.jsonutil import collapse_json
-        
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             json_data = sel_layer.serialize_json(-999, children=True)

@@ -10,7 +10,6 @@ from fs.opener import opener, fsopen
 
 import library.rect as rect
 from library.accumulator import flatten
-from library.jsonutil import collapse_json
 
 from layers import Layer, RootLayer, Grid, Scale, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
 from command import UndoStack
@@ -21,6 +20,7 @@ from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set
 from pyface.api import YES, NO, GUI
 
 from omnivore.framework.document import Document
+from omnivore.utils.jsonutil import collapse_json
 
 
 import logging
