@@ -21,7 +21,7 @@ blank_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00@\x00\x00\x00@\x08\x
 
 
 class WMSHost(object):
-    def __init__(self, name, url, version, strip_prefix="", default_layer_indexes=None):
+    def __init__(self, name="", url="", version="1.3.0", strip_prefix="", default_layer_indexes=None):
         self.name = name
         if url.endswith("?"):
             url = url[:-1]

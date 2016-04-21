@@ -1203,28 +1203,6 @@ class MapOverlayField(InfoField):
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
 
-class NewWMSServerField(InfoField):
-    display_label = False
-    same_line = False
-    
-    def fill_data(self, layer):
-        pass
-    
-    def create_control(self):
-        names = []
-        c = wx.Button(self.parent, -1, "New WMS Server", size=(self.default_width, -1))
-        c.Bind(wx.EVT_BUTTON, self.on_button)
-        return c
-    
-    def on_button(self, event):
-        d = dialogs.AddWMSDialog(self.panel.project.control)
-        new_id = d.ShowModal()
-        if new_id != wx.ID_CANCEL:
-            new_wms = d.get_host()
-            self.panel.project.task.remember_wms(new_wms)
-            self.panel.project.refresh(True)
-
-
 class ExpandableErrorField(InfoField):
     same_line = False
     
@@ -1431,7 +1409,6 @@ class InfoPanel(PANELTYPE):
         "Map server": MapServerField,
         "Tile server": MapServerField,
         "Map layer": MapOverlayField,
-        "New WMS server": NewWMSServerField,
         "Server status": ServerStatusField,
         "Server reload": ServerReloadField,
         "Map status": DownloadStatusField,

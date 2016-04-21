@@ -5,6 +5,8 @@ import wx.lib.sized_controls as sc
 import wx.lib.buttons as buttons
 from wx.lib.expando import ExpandoTextCtrl, EVT_ETC_LAYOUT_NEEDED
 
+from omnivore.utils.wx.dialogs import ObjectEditDialog
+
 from ..library import coordinates
 from ..library.textparse import parse_int_string
 from ..library.marplot_icons import *
@@ -216,72 +218,36 @@ class StyleDialog(wx.Dialog):
         return self.layer.style
 
 
-class AddWMSDialog(wx.Dialog):
+class WMSDialog(ObjectEditDialog):
     border = 5
     
-    def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, "Add New WMS Server", size=(500, -1), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+    def __init__(self, parent, title, default=None):
+        fields = [
+            ('verify', 'url', 'URL: '),
+            ('gauge', 'gauge', None),
+            ('expando', 'status', ""),
+            ('text', 'name', 'Server Name: '),
+            ]
+        self.verified_host = False
+        ObjectEditDialog.__init__(self, parent, title, "Enter WMS Server Information:", fields, WMSHost, default)
         
-        self.verified_host = None
-        
-        sizer = wx.BoxSizer(wx.VERTICAL)
-
-        text = wx.StaticText(self, -1, "Enter server URL:")
-        sizer.Add(text, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, self.border)
-
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        self.url = wx.TextCtrl(self, -1, "", size=(500,-1))
-        hbox.Add(self.url, 0, wx.ALL|wx.EXPAND, self.border)
-        self.id_verify = wx.NewId()
-        self.verify = wx.Button(self, self.id_verify, "Verify")
-        hbox.Add(self.verify, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, self.border)
-        sizer.Add(hbox, 0, wx.ALL|wx.EXPAND, self.border)
-
-        self.gauge = wx.Gauge(self, -1, 50, size=(500, 5))
-        sizer.Add(self.gauge, 0, wx.ALL|wx.EXPAND, self.border)
-
-        self.status = ExpandoTextCtrl(self, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
-        attr = self.GetDefaultAttributes()
-        self.status.SetBackgroundColour(attr.colBg)
-        sizer.Add(self.status, 1, wx.ALL|wx.EXPAND, self.border)
-
-        hbox = wx.BoxSizer(wx.HORIZONTAL)
-        label = wx.StaticText(self, -1, "Server Name")
-        hbox.Add(label, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, self.border)
-        self.name = wx.TextCtrl(self, -1, "", size=(500,-1))
-        hbox.Add(self.name, 0, wx.EXPAND, self.border)
-        sizer.Add(hbox, 0, wx.ALL|wx.EXPAND, self.border)
-
-        btnsizer = wx.StdDialogButtonSizer()
-        self.ok_btn = wx.Button(self, wx.ID_OK)
-        self.ok_btn.SetDefault()
-        self.ok_btn.Enable(False)
-        btnsizer.AddButton(self.ok_btn)
-        btn = wx.Button(self, wx.ID_CANCEL)
-        btnsizer.AddButton(btn)
-        btnsizer.Realize()
-        sizer.Add(btnsizer, 0, wx.ALL|wx.EXPAND, self.border)
-
-        self.Bind(wx.EVT_BUTTON, self.on_button)
-        self.Bind(wx.EVT_CLOSE, self.OnClose)
-        self.Bind(EVT_ETC_LAYOUT_NEEDED, self.on_resize)
-
-        self.SetSizer(sizer)
-        self.Fit()
-
-    def on_button(self, event):
-        if event.GetId() == self.id_verify:
-            self.check_server(self.url.GetValue())
-        elif event.GetId() == wx.ID_OK:
-            self.EndModal(wx.ID_OK)
-            event.Skip()
-        else:
-            self.EndModal(wx.ID_CANCEL)
-            event.Skip()
+        # Assume the host has been verified if there is a default URL
+        control = self.controls['url']
+        url = control.GetValue()
+        self.verified_host = bool(url)
+        self.check_enable()
     
+    def on_verify(self, evt):
+        control = self.controls['url']
+        url = control.GetValue()
+        self.check_server(url)
+
     def check_server(self, url):
-        self.verify.Enable(False)
-        self.status.SetValue("Checking server...\n")
+        verify = self.buttons['url']
+        verify.Enable(False)
+        status = self.controls['status']
+        status.SetValue("Checking server...\n")
+        gauge = self.controls['gauge']
         for version in ['1.3.0', '1.1.1']:
             host = WMSHost("test", url, version)
             downloader = BackgroundWMSDownloader(host)
@@ -290,36 +256,29 @@ class AddWMSDialog(wx.Dialog):
                 if wms.is_finished:
                     break
                 time.sleep(.05)
-                self.gauge.Pulse()
+                gauge.Pulse()
                 wx.Yield()
             if wms.is_valid():
                 break
             
-        self.gauge.SetValue(0)
+        gauge.SetValue(0)
         wx.Yield()
+        name = self.controls['name']
         if wms.is_valid():
             host.name = wms.wms.identification.title
-            self.status.AppendText("Found WMS server: %s\n" % host.name)
-            self.name.SetValue(host.name)
-            self.ok_btn.Enable(True)
-            self.verified_host = host
+            status.AppendText("Found WMS server: %s\n" % host.name)
+            name.SetValue(host.name)
+            self.verified_host = host.version
         else:
-            self.status.AppendText("Failed: %s\n" % wms.error)
-            self.name.SetValue("")
-            self.ok_btn.Enable(False)
+            status.AppendText("Failed: %s\n" % wms.error)
+            name.SetValue("")
             self.verified_host = None
-        self.verify.Enable(True)
-    
-    def get_host(self):
-        new_name = self.name.GetValue()
-        if new_name:
-            self.verified_host.name = new_name
-        return self.verified_host
+        verify.Enable(True)
+        self.check_enable()
+        
+    def can_submit(self):
+        return bool(self.verified_host)
 
-    def on_resize(self, event):
-        print "resized"
-        self.Fit()
-
-    def OnClose(self, event):
-        self.EndModal(wx.ID_CANCEL)
-
+def prompt_for_wms(parent, title, default=None):
+    d = WMSDialog(parent, title, default)
+    return d.show_and_get_value()

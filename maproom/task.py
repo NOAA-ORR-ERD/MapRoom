@@ -126,9 +126,14 @@ class MaproomProjectTask(FrameworkTask):
 
     def _extra_actions_default(self):
         layer_menu = self.create_menu("Menu", "Layer", "LayerStackGroup", "LayerUtilGroup", "LayerDeleteGroup", "LayerCheckGroup")
+        tools_menu = self.create_menu("Menu", "Tools", "ToolsManageGroup")
         actions = [
             # Menubar additions
             SchemaAddition(factory=lambda: layer_menu,
+                           path='MenuBar',
+                           after="Edit",
+                           ),
+            SchemaAddition(factory=lambda: tools_menu,
                            path='MenuBar',
                            after="Edit",
                            ),
@@ -268,7 +273,12 @@ class MaproomProjectTask(FrameworkTask):
             CheckSelectedLayerAction(),
             CheckAllLayersAction(),
             ]
-                  
+    
+    def get_actions_Menu_Tools_ToolsManageGroup(self):
+        return [
+            ManageWMSAction(),
+            ]
+    
     def get_actions_Tool_File_SaveGroup(self):
         return [
             SaveProjectAction(),

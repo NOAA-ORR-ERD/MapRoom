@@ -7,11 +7,14 @@ from pyface.action.api import Action, ActionItem
 from pyface.tasks.action.api import TaskAction, EditorAction
 from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
 
+from omnivore.framework.actions import TaskDynamicSubmenuGroup
+from omnivore.utils.wx.dropscroller import ListReorderDialog
+
 from menu_commands import *
 from vector_object_commands import *
 from mouse_commands import *
-from ui.dialogs import StyleDialog
-from omnivore.framework.actions import TaskDynamicSubmenuGroup
+from ui.dialogs import StyleDialog, prompt_for_wms
+from library.thread_utils import BackgroundWMSDownloader
 
 import logging
 log = logging.getLogger(__name__)
@@ -525,3 +528,15 @@ class DuplicateLayerAction(EditorAction):
                 text = json.dumps(json_data)
                 cmd = PasteLayerCommand(sel_layer, text, self.active_editor.layer_canvas.world_center)
                 self.active_editor.process_command(cmd)
+
+class ManageWMSAction(EditorAction):
+    name = 'Manage WMS Servers...'
+    
+    def perform(self, event):
+        dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_wms(), lambda a:getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
+        if dlg.ShowModal() == wx.ID_OK:
+            items = dlg.get_items()
+            BackgroundWMSDownloader.set_known_wms(items)
+            event.task.remember_wms()
+            self.active_editor.refresh(True)
+        dlg.Destroy()
