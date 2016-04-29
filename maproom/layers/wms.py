@@ -107,19 +107,19 @@ class WMSLayer(ProjectedLayer):
         downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
         if downloader.is_valid():
             if self.map_layers is None:
-                self.map_layers = set(downloader.wms.get_default_layers())
+                self.map_layers = set(downloader.server.get_default_layers())
             layers = list(self.map_layers)
             self.download_status_text = (None, "Downloading...")
             downloader.request_map(self.current_world, self.current_proj, self.current_size, layers, self.manager, (self, self.map_server_id))
             if self.checkerboard_when_loading:
                 self.rebuild_needed = True
                 canvas.render()
-            self.name = downloader.wmshost.name
+            self.name = downloader.host.name
             canvas.project.layer_metadata_changed(self)
         else:
             self.download_status_text = None
             # Try again, waiting till we get a successful contact
-            if not downloader.wms.has_error():
+            if not downloader.server.has_error():
                 log.debug("WMS not initialized yet, waiting...")
                 canvas.set_minimum_delay_callback(self.wms_rebuild, 200)
             else:

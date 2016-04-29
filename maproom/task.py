@@ -20,6 +20,7 @@ from library.mem_use import get_mem_use
 import toolbar
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
+from library.known_hosts import default_wms_hosts, default_tile_hosts
 
 from actions import *
 from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction
@@ -418,29 +419,22 @@ class MaproomProjectTask(FrameworkTask):
     
     wms_extra_loaded = False
     
-    tile_extra_loaded = None
-    
     @classmethod
     def init_extra_servers(cls, application):
         if cls.wms_extra_loaded is False:
             # try once
             cls.wms_extra_loaded = True
-            try:
-                wms_list = application.get_json_data("wms_list")
-                BackgroundWMSDownloader.set_known_wms(wms_list)
-            except IOError:
-                # file not found
-                pass
-            except ValueError:
-                # bad JSON format
-                log.error("Invalid format of WMS saved data")
-                raise
+            
+            hosts = application.get_json_data("wms_servers")
+            if hosts is None:
+                hosts = default_wms_hosts
+            BackgroundWMSDownloader.set_known_hosts(hosts)
     
     def remember_wms(self, host=None):
         if host is not None:
             BackgroundWMSDownloader.add_wms_host(host)
-        wms_list = BackgroundWMSDownloader.get_known_wms()
-        self.window.application.save_json_data("wms_list", wms_list)
+        hosts = BackgroundWMSDownloader.get_known_hosts()
+        self.window.application.save_json_data("wms_servers", hosts)
 
     def init_threaded_processing(self):
         self.init_extra_servers(self.window.application)
@@ -455,33 +449,33 @@ class MaproomProjectTask(FrameworkTask):
             log.debug("Stopping threaded downloader %s" % wms)
             wms = None
 
-    def get_threaded_wms(self, wmshost=None):
-        if wmshost is None:
-            wmshost = BackgroundWMSDownloader.get_known_wms()[0]
-        if wmshost.url not in self.downloaders:
-            wms = BackgroundWMSDownloader(wmshost)
-            self.downloaders[wmshost.url] = wms
-        return self.downloaders[wmshost.url]
+    def get_threaded_wms(self, host=None):
+        if host is None:
+            host = BackgroundWMSDownloader.get_known_hosts()[0]
+        if host.url not in self.downloaders:
+            wms = BackgroundWMSDownloader(host)
+            self.downloaders[host.url] = wms
+        return self.downloaders[host.url]
 
     def get_threaded_wms_by_id(self, id):
-        wmshost = BackgroundWMSDownloader.get_known_wms()[id]
-        return self.get_threaded_wms(wmshost)
+        host = BackgroundWMSDownloader.get_known_hosts()[id]
+        return self.get_threaded_wms(host)
 
     def get_known_wms_names(self):
-        return [s.name for s in BackgroundWMSDownloader.get_known_wms()]
+        return [s.name for s in BackgroundWMSDownloader.get_known_hosts()]
 
-    def get_threaded_tile_server(self, tilehost=None):
-        if tilehost is None:
-            tilehost = BackgroundTileDownloader.get_known_tile_server()[0]
-        if tilehost not in self.downloaders:
+    def get_threaded_tile_server(self, host=None):
+        if host is None:
+            host = BackgroundTileDownloader.get_known_hosts()[0]
+        if host not in self.downloaders:
             cache_dir = os.path.join(self.window.application.cache_dir, "tiles")
-            ts = BackgroundTileDownloader(tilehost, cache_dir)
-            self.downloaders[tilehost] = ts
-        return self.downloaders[tilehost]
+            ts = BackgroundTileDownloader(host, cache_dir)
+            self.downloaders[host] = ts
+        return self.downloaders[host]
 
     def get_threaded_tile_server_by_id(self, id):
-        tilehost = BackgroundTileDownloader.get_known_tile_server()[id]
-        return self.get_threaded_tile_server(tilehost)
+        host = BackgroundTileDownloader.get_known_hosts()[id]
+        return self.get_threaded_tile_server(host)
 
     def get_known_tile_server_names(self):
-        return [s.name for s in BackgroundTileDownloader.get_known_tile_server()]
+        return [s.name for s in BackgroundTileDownloader.get_known_hosts()]

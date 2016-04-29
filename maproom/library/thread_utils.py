@@ -11,6 +11,8 @@ from omnivore.utils.background_http import BackgroundHttpDownloader, BaseRequest
 from numpy_images import get_numpy_from_data
 
 import rect
+import known_hosts
+from host_utils import HostCache
 
 import logging
 log = logging.getLogger(__name__)
@@ -20,92 +22,24 @@ log.setLevel(logging.DEBUG)
 blank_png = "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00@\x00\x00\x00@\x08\x06\x00\x00\x00\xaaiq\xde\x00\x00\x00\x06bKGD\x00\xff\x00\xff\x00\xff\xa0\xbd\xa7\x93\x00\x00\x00\tpHYs\x00\x00\x0b\x13\x00\x00\x0b\x13\x01\x00\x9a\x9c\x18\x00\x00\x00\x07tIME\x07\xdf\t\x02\x10/\x0b\x11M\xec5\x00\x00\x00\x1diTXtComment\x00\x00\x00\x00\x00Created with GIMPd.e\x07\x00\x00\x00mIDATx\xda\xed\xdb\xb1\x01\x00 \x08\xc4@\xb1\xfa\xfdg\xa5\xc7=\xe42\xc2\xf5\xa9N\xe6ln3@'s\xcf\xf2\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0G\xb5}\x9f\x7f\x96\x0b\x08\x89\xb7w\x1e\xe3\x00\x00\x00\x00IEND\xaeB`\x82"
 
 
-class WMSHost(object):
-    def __init__(self, name="", url="", version="1.3.0", strip_prefix="", default_layer_indexes=None):
-        self.name = name
-        if url.endswith("?"):
-            url = url[:-1]
-        self.url = url
-        self.version = version
-        self.strip_prefix = strip_prefix
-        self.strip_prefix_len = len(strip_prefix)
-        self.default_layer_indexes = default_layer_indexes
-    
-    def __hash__(self):
-        return hash(self.url)
-    
-    def __str__(self):
-        return " ".join([self.name, self.url, self.version])
-    
-    def convert_title(self, title):
-        if self.strip_prefix:
-            if title.startswith(self.strip_prefix):
-                return title[self.strip_prefix_len:]
-        return title
-    
-    def get_default_layer_indexes(self):
-        if self.default_layer_indexes is not None:
-            return self.default_layer_indexes
-        return [0]
 
 
-class BackgroundWMSDownloader(BackgroundHttpDownloader):
-    cached_known_wms = None
-    
+class BackgroundWMSDownloader(BackgroundHttpDownloader, HostCache):
     def __init__(self, wmshost):
-        self.wmshost = wmshost
+        HostCache.__init__(self, wmshost)
         BackgroundHttpDownloader.__init__(self)
 
-    @classmethod
-    def get_known_wms(cls):
-        if cls.cached_known_wms is None:
-            cls.cached_known_wms = [
-#                WMSHost("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
-                WMSHost("NOAA RNC", "http://seamlessrnc.nauticalcharts.noaa.gov/arcgis/services/RNC/NOAA_RNC/ImageServer/WMSServer?", "1.3.0"),
-                WMSHost("NOAA Maritime Charts", "http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?", "1.3.0"),
-                WMSHost("USACE Inland ENC", "http://maps8.arcgisonline.com/arcgis/rest/services/USACE_InlandENC/MapServer/exts/Maritime%20Chart%20Service/WMSServer?", "1.3.0", default_layer_indexes=[1]),
-                WMSHost("OpenStreetMap WMS Deutschland", "http://ows.terrestris.de/osm/service?", "1.1.1"),
-                WMSHost("USGS Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSTopoLarge/MapServer/WMSServer?", "1.3.0"),
-                WMSHost("USGS Imagery Topo Large", "http://services.nationalmap.gov/arcgis/services/USGSImageryTopoLarge/MapServer/WMSServer?", "1.3.0"),
-                WMSHost("USGS National Atlas Map Reference", "http://webservices.nationalatlas.gov/wms/map_reference?", "1.3.0", "Map Reference - "),
-                WMSHost("USGS National Atlas 1 Million", "http://webservices.nationalatlas.gov/wms/1million?", "1.3.0", "1 Million Scale - "),
-                WMSHost("NRL", "http://geoint.nrlssc.navy.mil/nrltileserver/wms/fast?", "1.1.1"),
-                ]
-        return cls.cached_known_wms
-    
-    @classmethod
-    def get_wms_by_name(cls, name):
-        for h in cls.get_known_wms():
-            if h.name == name:
-                return h
-        return None
-    
-    @classmethod
-    def add_wms_host(cls, host):
-        cls.get_known_wms()  # ensure the list has been created
-        cls.cached_known_wms.append(host)
-    
-    @classmethod
-    def set_known_wms(cls, wmslist):
-        cls.cached_known_wms = wmslist
-
     def get_server_config(self):
-        self.wms = WMSInitRequest(self.wmshost)
-        self.send_request(self.wms)
-    
-    def get_server(self):
-        return self.wms
-    
-    def is_valid(self):
-        return self.wms.is_valid()
+        self.server = WMSRequestServer(self.host)
+        self.send_request(self.server)
     
     def request_map(self, world_rect, proj_rect, image_size, layer=None, event=None, event_data=None):
-        req = WMSRequest(self.wms, world_rect, proj_rect, image_size, layer, event, event_data)
+        req = WMSRequest(self.server, world_rect, proj_rect, image_size, layer, event, event_data)
         self.send_request(req)
         return req
 
 
-class WMSInitRequest(UnskippableURLRequest):
+class WMSRequestServer(UnskippableURLRequest):
     def __init__(self, wmshost):
         self.wmshost = wmshost
         UnskippableURLRequest.__init__(self, wmshost.url)
@@ -257,10 +191,10 @@ class WMSInitRequest(UnskippableURLRequest):
 
 
 class WMSRequest(BaseRequest):
-    def __init__(self, wms, world_rect, proj_rect, image_size, layers=None, manager=None, event_data=None):
+    def __init__(self, server, world_rect, proj_rect, image_size, layers=None, manager=None, event_data=None):
         BaseRequest.__init__(self)
-        self.url = "%s image @%s from %s" % (image_size, world_rect, wms.url)
-        self.wms = wms
+        self.url = "%s image @%s from %s" % (image_size, world_rect, server.url)
+        self.server = server
         self.world_rect = world_rect
         self.proj_rect = proj_rect
         self.image_size = image_size
@@ -270,10 +204,10 @@ class WMSRequest(BaseRequest):
     
     def get_data_from_server(self):
         try:
-            self.data = self.wms.get_image(self.world_rect, self.proj_rect, self.image_size, self.layers)
+            self.data = self.server.get_image(self.world_rect, self.proj_rect, self.image_size, self.layers)
             
-            if not rect.intersects(self.world_rect, self.wms.world_bbox_rect):
-                self.error = "Outside WMS boundary of %s" % rect.pretty_format(self.wms.world_bbox_rect)
+            if not rect.intersects(self.world_rect, self.server.world_bbox_rect):
+                self.error = "Outside WMS boundary of %s" % rect.pretty_format(self.server.world_bbox_rect)
         except ServiceException, e:
             self.error = e
         except Exception, e:
@@ -320,15 +254,15 @@ if __name__ == "__main__":
         print host
         downloader = BackgroundWMSDownloader(host)
         while True:
-            if downloader.wms.is_finished:
+            if downloader.server.is_finished:
                 break
             time.sleep(.1)
             print "Waiting for server config..."
-        if downloader.wms.is_valid():
+        if downloader.server.is_valid():
             break
         
-    if not downloader.wms.is_valid():
-        print downloader.wms.error
+    if not downloader.server.is_valid():
+        print downloader.server.error
     sys.exit()
     
     h = WMSHost.get_wms_by_name("USACE Inland ENC")
@@ -349,7 +283,7 @@ if __name__ == "__main__":
     if test.error:
         print "Error!", test.error
     else:
-        print "world bbox", downloader.wms.world_bbox_rect
+        print "world bbox", downloader.server.world_bbox_rect
         outfile = 'wmstest.png'
         out = open(outfile, 'wb')
         out.write(test.data)

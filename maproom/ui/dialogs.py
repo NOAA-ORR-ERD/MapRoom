@@ -11,7 +11,8 @@ from ..library import coordinates
 from ..library.textparse import parse_int_string
 from ..library.marplot_icons import *
 from ..mock import MockProject
-from ..library.thread_utils import BackgroundWMSDownloader, WMSHost
+from ..library.thread_utils import BackgroundWMSDownloader
+from ..library.host_utils import WMSHost
 
 
 class FindPointDialog(sc.SizedDialog):
@@ -251,26 +252,26 @@ class WMSDialog(ObjectEditDialog):
         for version in ['1.3.0', '1.1.1']:
             host = WMSHost("test", url, version)
             downloader = BackgroundWMSDownloader(host)
-            wms = downloader.wms
+            server = downloader.server
             while True:
-                if wms.is_finished:
+                if server.is_finished:
                     break
                 time.sleep(.05)
                 gauge.Pulse()
                 wx.Yield()
-            if wms.is_valid():
+            if server.is_valid():
                 break
             
         gauge.SetValue(0)
         wx.Yield()
         name = self.controls['name']
-        if wms.is_valid():
-            host.name = wms.wms.identification.title
+        if server.is_valid():
+            host.name = server.wms.identification.title
             status.AppendText("Found WMS server: %s\n" % host.name)
             name.SetValue(host.name)
             self.verified_host = host.version
         else:
-            status.AppendText("Failed: %s\n" % wms.error)
+            status.AppendText("Failed: %s\n" % server.error)
             name.SetValue("")
             self.verified_host = None
         verify.Enable(True)

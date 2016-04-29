@@ -2,8 +2,6 @@
 
 """
 import os
-import math
-
 import urllib2 as urllib2
 from requests.exceptions import HTTPError
 
@@ -14,6 +12,8 @@ from omnivore.utils.background_http import BackgroundHttpMultiDownloader, BaseRe
 from numpy_images import get_numpy_from_data
 
 import rect
+import known_hosts
+from host_utils import HostCache
 
 import logging
 log = logging.getLogger(__name__)
@@ -228,162 +228,26 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
             data = loading_png
         return data
 
-class TileHost(object):
-    def __init__(self, name, url_list, strip_prefix="", tile_size=256, suffix=".png"):
-        self.name = name
-        self.urls = []
-        for url in url_list:
-            if url.endswith("?"):
-                url = url[:-1]
-            self.urls.append(url)
-        self.url_index = 0
-        self.num_urls = len(self.urls)
-        self.strip_prefix = strip_prefix
-        self.strip_prefix_len = len(strip_prefix)
-        self.tile_size = tile_size
-        self.suffix = suffix
-    
-    def __hash__(self):
-        return hash(self.urls[0])
-    
-    # Reference for tile number calculations:
-    # http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
-    
-    def world_to_tile_num(self, zoom, lon, lat, clamp=True):
-        zoom = int(zoom)
-        if zoom == 0:
-            return (0, 0)
-        lat_rad = lat * math.pi / 180.0
-        n = 2 << (zoom - 1)
-        xtile = int((lon + 180.0) / 360.0 * n)
-        ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
-        if clamp:
-            xtile = max(xtile, 0)
-            ytile = max(ytile, 0)
-            xtile = min(xtile, n - 1)
-            ytile = min(ytile, n - 1)
-            
-        return (xtile, ytile)
-    
-    rad2deg = 180.0 / math.pi
-    
-    def tile_num_to_world_lb_rt(self, zoom, x, y):
-        zoom = int(zoom)
-        if zoom == 0:
-            return ((-180.0, -85.0511287798066), (180.0, 85.0511287798066))
-        n = 2 << (zoom - 1)
-        lon1 = (x * 360.0 / n) - 180.0
-        lon2 = ((x + 1) * 360.0 / n) - 180.0
-        lat1 = math.atan(math.sinh(math.pi * (1.0 - (2.0 * (y + 1) / n)))) * self.rad2deg
-        lat2 = math.atan(math.sinh(math.pi * (1.0 - (2.0 * y / n)))) * self.rad2deg
-        return ((lon1, lat1), (lon2, lat2))
-    
-    def get_tile_init_request(self, cache_root):
-        raise NotImplementedError
-    
-    def get_tile_url(self, zoom, x, y):
-        # mostly round robin URL index.  If multiple threads hit this at the
-        # same time the same URLs might be used in each thread, but not worth
-        # thread locking
-        self.url_index = (self.url_index + 1) % self.num_urls
-        url = self.urls[self.url_index]
-        return "%s/%s/%s/%s%s" % (url, zoom, x, y, self.suffix)
-    
-    def get_tile_cache_file(self, zoom, x, y):
-        # >>> ".".join("http://a.tile.openstreetmap.org/".split("//")[1].split("/")[0].rsplit(".", 2)[-2:])
-        # 'openstreetmap.org'
-        domain = ".".join(self.urls[0].split("//")[1].split("/")[0].rsplit(".", 2)[-2:])
-        name = domain + "--" + "".join(x for x in self.name if x.isalnum())
-        path = "%s/%s/%s/%s.png" % (name, zoom, x, y)
-        return path
 
-
-class LocalTileHost(TileHost):
-    def __init__(self, name, tile_size=256):
-        TileHost.__init__(self, name, [""], tile_size=tile_size)
+class BackgroundTileDownloader(BackgroundHttpMultiDownloader, HostCache):
+    cached_known_hosts = None
+    request_type_lookup = {
+        "local": TileServerInitRequest,
+        "url": URLTileServerInitRequest,
+        "wmts": WMTSTileServerInitRequest,
+        }
     
-    def __hash__(self):
-        return hash(self.name)
-
-    def get_tile_init_request(self, cache_root):
-        return TileServerInitRequest(self, cache_root)
-
-
-class OpenTileHost(TileHost):
-    def get_tile_init_request(self, cache_root):
-        return URLTileServerInitRequest(self, cache_root)
-
-class OpenTileHostYX(OpenTileHost):
-    def get_tile_url(self, zoom, x, y):
-        # mostly round robin URL index.  If multiple threads hit this at the
-        # same time the same URLs might be used in each thread, but not worth
-        # thread locking
-        self.url_index = (self.url_index + 1) % self.num_urls
-        url = self.urls[self.url_index]
-        return "%s/%s/%s/%s%s" % (url, zoom, y, x, self.suffix)
-
-
-class WMTSTileHost(TileHost):
-    def get_tile_init_request(self, cache_root):
-        return WMTSTileServerInitRequest(self, cache_root)
-
-
-class BackgroundTileDownloader(BackgroundHttpMultiDownloader):
-    cached_known_tile_server = None
-    
-    def __init__(self, tile_host, cache_root):
-        self.tile_host = tile_host
-        if not os.path.exists(cache_root):
-            try:
-                os.makedirs(cache_root)
-            except os.error:
-                cache_root = None
-        self.cache_root = cache_root
+    def __init__(self, host, cache_root):
+        HostCache.__init__(self, host, cache_root)
         BackgroundHttpMultiDownloader.__init__(self)
 
-    @classmethod
-    def get_known_tile_server(cls):
-        if cls.cached_known_tile_server is None:
-            cls.cached_known_tile_server = [
-#                LocalTileHost("Blank"),
-                
-                # ESRI services listed here: http://server.arcgisonline.com/ArcGIS/rest/services/
-                OpenTileHostYX("ESRI Topographic", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI USA Topographic", ["http://server.arcgisonline.com/ArcGIS/rest/services/USA_Topo_Maps/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI Ocean Base", ["http://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI Ocean Reference", ["http://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Reference/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI Terrain Base", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI Satellite Imagery", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI Street Map", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI NatGeo Topographic", ["http://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/"], suffix=""),
-                OpenTileHostYX("ESRI Shaded Relief", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/"], suffix=""),
-                
-                OpenTileHost("MapQuest", ["http://otile1.mqcdn.com/tiles/1.0.0/osm/", "http://otile2.mqcdn.com/tiles/1.0.0/osm/", "http://otile3.mqcdn.com/tiles/1.0.0/osm/", "http://otile4.mqcdn.com/tiles/1.0.0/osm/"]),
-                OpenTileHost("MapQuest Satellite", ["http://otile1.mqcdn.com/tiles/1.0.0/sat/", "http://otile2.mqcdn.com/tiles/1.0.0/sat/", "http://otile3.mqcdn.com/tiles/1.0.0/sat/", "http://otile4.mqcdn.com/tiles/1.0.0/sat/"]),
-                OpenTileHost("OpenStreetMap", ["http://a.tile.openstreetmap.org/", "http://b.tile.openstreetmap.org/", "http://c.tile.openstreetmap.org/"]),
-                OpenTileHost("Navionics", ["http://backend.navionics.io/tile/"], suffix="?LAYERS=config_2_20.00_0&TRANSPARENT=FALSE&UGC=TRUE&navtoken=TmF2aW9uaWNzX2ludGVybmFscHVycG9zZV8wMDAwMSt3ZWJhcHAubmF2aW9uaWNzLmNvbQ%3D%3D"),
-                ]
-        return cls.cached_known_tile_server
-    
-    @classmethod
-    def get_tile_server_by_name(cls, name):
-        for h in cls.get_known_tile_server():
-            if h.name == name:
-                return h
-        return None
-
     def get_server_config(self):
-        self.tile_server = self.tile_host.get_tile_init_request(self.cache_root)
-        self.send_request(self.tile_server)
-    
-    def get_server(self):
-        return self.tile_server
-    
-    def is_valid(self):
-        return self.tile_server.is_valid()
+        req = self.request_type_lookup[self.host.request_type]
+        self.server = req(self.host, self.cache_root)
+        self.send_request(self.server)
     
     def request_tile(self, zoom, x, y, event=None, event_data=None):
-        req = TileRequest(self.tile_server, zoom, x, y, event, event_data)
+        req = TileRequest(self.server, zoom, x, y, event, event_data)
         self.send_request(req)
         return req
 

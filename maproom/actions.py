@@ -533,10 +533,10 @@ class ManageWMSAction(EditorAction):
     name = 'Manage WMS Servers...'
     
     def perform(self, event):
-        dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_wms(), lambda a:getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
+        dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_hosts(), lambda a:getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
-            BackgroundWMSDownloader.set_known_wms(items)
+            BackgroundWMSDownloader.set_known_hosts(items)
             event.task.remember_wms()
             self.active_editor.refresh(True)
         dlg.Destroy()

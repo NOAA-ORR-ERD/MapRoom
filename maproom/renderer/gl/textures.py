@@ -251,11 +251,11 @@ class TileImageData(ImageData):
         if downloader is None:
             log.warning("Download thread has been stopped")
             return
-        tile_host = downloader.tile_host
+        host = downloader.host
         if self.zoom_level != zoom:
             self.set_zoom_level(zoom)
-        top_left = tile_host.world_to_tile_num(self.zoom_level, w_r[0][0], w_r[1][1])
-        bot_right = tile_host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
+        top_left = host.world_to_tile_num(self.zoom_level, w_r[0][0], w_r[1][1])
+        bot_right = host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
         print "UPDATE_TILES:", top_left, bot_right
         tile_list = self.calc_center_tiles(top_left, bot_right)
         print "CENTER TILES:", tile_list
