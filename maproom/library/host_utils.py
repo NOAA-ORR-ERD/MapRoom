@@ -84,11 +84,13 @@ class WMSHost(object):
 
 
 class TileHost(object):
-    def __init__(self, name, url_list, strip_prefix="", tile_size=256, suffix=".png"):
+    def __init__(self, name, url_list, strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False):
         self.name = name
         self.urls = []
         for url in url_list:
             if url.endswith("?"):
+                url = url[:-1]
+            if url.endswith("/"):
                 url = url[:-1]
             self.urls.append(url)
         self.url_index = 0
@@ -97,6 +99,7 @@ class TileHost(object):
         self.strip_prefix_len = len(strip_prefix)
         self.tile_size = tile_size
         self.suffix = suffix
+        self.reverse_coords = reverse_coords
     
     def __hash__(self):
         return hash(self.urls[0])
@@ -142,6 +145,8 @@ class TileHost(object):
         # thread locking
         self.url_index = (self.url_index + 1) % self.num_urls
         url = self.urls[self.url_index]
+        if self.reverse_coords:
+            x, y = y, x
         return "%s/%s/%s/%s%s" % (url, zoom, x, y, self.suffix)
     
     def get_tile_cache_file(self, zoom, x, y):
@@ -165,16 +170,6 @@ class LocalTileHost(TileHost):
 
 class OpenTileHost(TileHost):
     request_type = "url"
-
-
-class OpenTileHostYX(OpenTileHost):
-    def get_tile_url(self, zoom, x, y):
-        # mostly round robin URL index.  If multiple threads hit this at the
-        # same time the same URLs might be used in each thread, but not worth
-        # thread locking
-        self.url_index = (self.url_index + 1) % self.num_urls
-        url = self.urls[self.url_index]
-        return "%s/%s/%s/%s%s" % (url, zoom, y, x, self.suffix)
 
 
 class WMTSTileHost(TileHost):

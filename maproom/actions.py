@@ -13,8 +13,9 @@ from omnivore.utils.wx.dropscroller import ListReorderDialog
 from menu_commands import *
 from vector_object_commands import *
 from mouse_commands import *
-from ui.dialogs import StyleDialog, prompt_for_wms
+from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
+from library.tile_utils import BackgroundTileDownloader
 
 import logging
 log = logging.getLogger(__name__)
@@ -538,5 +539,18 @@ class ManageWMSAction(EditorAction):
             items = dlg.get_items()
             BackgroundWMSDownloader.set_known_hosts(items)
             event.task.remember_wms()
+            self.active_editor.refresh(True)
+        dlg.Destroy()
+
+class ManageTileServersAction(EditorAction):
+    name = 'Manage Tile Servers...'
+    
+    def perform(self, event):
+        hosts = BackgroundTileDownloader.get_known_hosts()
+        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), prompt_for_tile, "Manage Tile Servers")
+        if dlg.ShowModal() == wx.ID_OK:
+            items = dlg.get_items()
+            BackgroundTileDownloader.set_known_hosts(items)
+            event.task.remember_tile_servers()
             self.active_editor.refresh(True)
         dlg.Destroy()

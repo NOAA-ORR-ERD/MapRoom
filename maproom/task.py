@@ -278,6 +278,7 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions_Menu_Tools_ToolsManageGroup(self):
         return [
             ManageWMSAction(),
+            ManageTileServersAction(),
             ]
     
     def get_actions_Tool_File_SaveGroup(self):
@@ -429,6 +430,11 @@ class MaproomProjectTask(FrameworkTask):
             if hosts is None:
                 hosts = default_wms_hosts
             BackgroundWMSDownloader.set_known_hosts(hosts)
+            
+            hosts = application.get_json_data("tile_servers")
+            if hosts is None:
+                hosts = default_tile_hosts
+            BackgroundTileDownloader.set_known_hosts(hosts)
     
     def remember_wms(self, host=None):
         if host is not None:
@@ -463,6 +469,12 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_known_wms_names(self):
         return [s.name for s in BackgroundWMSDownloader.get_known_hosts()]
+    
+    def remember_tile_servers(self, host=None):
+        if host is not None:
+            BackgroundTileDownloader.add_wms_host(host)
+        hosts = BackgroundTileDownloader.get_known_hosts()
+        self.window.application.save_json_data("tile_servers", hosts)
 
     def get_threaded_tile_server(self, host=None):
         if host is None:

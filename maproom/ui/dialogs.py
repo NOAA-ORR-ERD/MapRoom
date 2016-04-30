@@ -12,7 +12,8 @@ from ..library.textparse import parse_int_string
 from ..library.marplot_icons import *
 from ..mock import MockProject
 from ..library.thread_utils import BackgroundWMSDownloader
-from ..library.host_utils import WMSHost
+from ..library.tile_utils import BackgroundTileDownloader
+from ..library.host_utils import WMSHost, OpenTileHost
 
 
 class FindPointDialog(sc.SizedDialog):
@@ -282,4 +283,80 @@ class WMSDialog(ObjectEditDialog):
 
 def prompt_for_wms(parent, title, default=None):
     d = WMSDialog(parent, title, default)
+    return d.show_and_get_value()
+
+
+class TileServerDialog(ObjectEditDialog):
+    border = 5
+    
+    def __init__(self, parent, title, default=None):
+        fields = [
+            ('verify list', 'urls', 'URLs: '),
+            ('boolean', 'reverse_coords', 'Reverse X/Y: '),
+            ('gauge', 'gauge', None),
+            ('expando', 'status', ""),
+            ('text', 'name', 'Server Name: '),
+            ]
+        self.verified_urls = False
+        ObjectEditDialog.__init__(self, parent, title, "Enter Tile Server Information:", fields, OpenTileHost, default)
+        
+        # Assume the host has been verified if there is a default URL
+        control = self.controls['urls']
+        urls = control.GetValue()
+        self.verified_urls = urls
+        self.check_enable()
+    
+    def on_verify(self, evt):
+        control = self.controls['urls']
+        urls = control.GetValue()
+        self.check_server(urls)
+
+    def check_server(self, urls):
+        verify = self.buttons['urls']
+        verify.Enable(False)
+        status = self.controls['status']
+        status.SetValue("Checking all round-robin URLs...\n")
+        gauge = self.controls['gauge']
+        success = False
+        verified_urls = []
+        for url in urls.splitlines():
+            if not url:
+                continue
+            status.AppendText("Trying: %s..." % url)
+            host = OpenTileHost("test", [url])
+            downloader = BackgroundTileDownloader(host, None)
+            req = downloader.request_tile(4, 3, 2)
+            while True:
+                found = False
+                for r in downloader.get_finished():
+                    found = found or r == req
+                if found:
+                    break
+                time.sleep(.05)
+                gauge.Pulse()
+                wx.Yield()
+            if req.is_finished and not req.error:
+                status.AppendText("OK!\n")
+                success = True
+                verified_urls.append(url)
+            else:
+                status.AppendText("Failed! (%s)" % req.error)
+                success = False
+                break
+            
+        gauge.SetValue(0)
+        wx.Yield()
+        if success:
+            self.verified_urls = verified_urls
+        else:
+            self.verified_urls = None
+        verify.Enable(True)
+        self.check_enable()
+        
+    def can_submit(self):
+        name = self.controls['name']
+        return bool(self.verified_urls) and bool(name.GetValue())
+
+def prompt_for_tile(parent, title, default=None):
+    d = TileServerDialog(parent, title, default)
     return d.show_and_get_value()

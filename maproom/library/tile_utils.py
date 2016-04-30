@@ -31,6 +31,7 @@ class TileServerInitRequest(UnskippableRequest):
         self.tile_host = tile_host
         self.cache_root = cache_root
         UnskippableRequest.__init__(self)
+        self.url = str(tile_host.urls)
         self.current_layer = None
         self.layer_keys = []
         self.world_bbox_rect = None
@@ -263,6 +264,9 @@ class TileRequest(UnskippableRequest):
         self.url = "tile (%s,%s,z=%s)@%s from %s" % (x, y, zoom, self.world_lb_rt, tile_server.url)
         self.manager = manager
         self.event_data = event_data
+#
+#    def __eq__(self, other):
+#        return self.zoom == other.zoom and self.x == other.x and self.y == other.y
     
     def get_data_from_server(self):
         try:
