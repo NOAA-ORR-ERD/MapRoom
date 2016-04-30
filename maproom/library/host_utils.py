@@ -3,6 +3,7 @@
 """
 import os
 import math
+from copy import deepcopy
 
 import logging
 log = logging.getLogger(__name__)
@@ -84,7 +85,7 @@ class WMSHost(object):
 
 
 class TileHost(object):
-    def __init__(self, name, url_list, strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False):
+    def __init__(self, name="host", url_list=[], strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False):
         self.name = name
         self.urls = []
         for url in url_list:
@@ -103,6 +104,12 @@ class TileHost(object):
     
     def __hash__(self):
         return hash(self.urls[0])
+    
+    @classmethod
+    def copy_helper(cls, src):
+        dest = deepcopy(src)
+        dest.name = "Copy of %s" % src.name
+        return dest
     
     # Reference for tile number calculations:
     # http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
