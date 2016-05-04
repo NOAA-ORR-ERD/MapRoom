@@ -8,7 +8,7 @@ from pyface.tasks.action.api import TaskAction, EditorAction
 from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
 
 from omnivore.framework.actions import TaskDynamicSubmenuGroup
-from omnivore.utils.wx.dropscroller import ListReorderDialog
+from omnivore.utils.wx.dialogs import ListReorderDialog
 
 from menu_commands import *
 from vector_object_commands import *
