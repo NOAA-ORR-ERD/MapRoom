@@ -116,6 +116,13 @@ class TestUGrid(object):
         assert 'line' == layer.type
         layer = self.layers[1]
         assert 'triangle' == layer.type
+    
+    def test_problems(self):
+        layer = self.layers[0]
+        with pytest.raises(PointsError):
+            layer.check_for_problems(None)
+        layer = self.layers[1]
+        layer.check_for_problems(None)
 
 if __name__ == "__main__":
     t = TestVerdatConversion()
@@ -130,3 +137,4 @@ if __name__ == "__main__":
     t = TestUGrid()
     t.setup()
     t.test_load()
+    t.test_problems()

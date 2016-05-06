@@ -3,6 +3,7 @@ import os.path
 import time
 import sys
 import numpy as np
+from cStringIO import StringIO
 
 from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
 
