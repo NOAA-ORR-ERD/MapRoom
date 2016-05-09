@@ -61,8 +61,7 @@ class TileServerInitRequest(UnskippableRequest):
         print self.cache_root
         data = None
         if self.cache_root is not None:
-            filename = self.tile_host.get_tile_cache_file(zoom, x, y)
-            path = os.path.join(self.cache_root, filename)
+            path = self.tile_host.get_tile_cache_file(self.cache_root, zoom, x, y)
             try:
                 with open(path, "rb") as fh:
                     data = fh.read()
@@ -77,8 +76,7 @@ class TileServerInitRequest(UnskippableRequest):
     
     def save_cache(self, data, zoom, x, y):
         if self.cache_root is not None:
-            filename = self.tile_host.get_tile_cache_file(zoom, x, y)
-            path = os.path.join(self.cache_root, filename)
+            path = self.tile_host.get_tile_cache_file(self.cache_root, zoom, x, y)
             try:
                 dirname = os.path.dirname(path)
                 if not os.path.exists(dirname):

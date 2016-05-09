@@ -278,7 +278,9 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions_Menu_Tools_ToolsManageGroup(self):
         return [
             ManageWMSAction(),
+            Separator(),
             ManageTileServersAction(),
+            ClearTileCacheAction(),
             ]
     
     def get_actions_Tool_File_SaveGroup(self):
@@ -475,19 +477,30 @@ class MaproomProjectTask(FrameworkTask):
             BackgroundTileDownloader.add_wms_host(host)
         hosts = BackgroundTileDownloader.get_known_hosts()
         self.window.application.save_json_data("tile_servers", hosts)
+    
+    def get_tile_cache_root(self):
+        return os.path.join(self.window.application.cache_dir, "tiles")
 
-    def get_threaded_tile_server(self, host=None):
+    def get_tile_downloader(self, host=None):
         if host is None:
             host = BackgroundTileDownloader.get_known_hosts()[0]
         if host not in self.downloaders:
-            cache_dir = os.path.join(self.window.application.cache_dir, "tiles")
+            cache_dir = self.get_tile_cache_root()
             ts = BackgroundTileDownloader(host, cache_dir)
             self.downloaders[host] = ts
         return self.downloaders[host]
 
-    def get_threaded_tile_server_by_id(self, id):
+    def get_tile_downloader_by_id(self, id):
+        host = self.get_tile_server_by_id(id)
+        return self.get_tile_downloader(host)
+
+    def get_tile_server_by_id(self, id):
         host = BackgroundTileDownloader.get_known_hosts()[id]
-        return self.get_threaded_tile_server(host)
+        return host
+
+    def get_tile_server_id_from_url(self, url):
+        index, host = BackgroundTileDownloader.get_host_by_url(url)
+        return index
 
     def get_known_tile_server_names(self):
         return [s.name for s in BackgroundTileDownloader.get_known_hosts()]

@@ -3,6 +3,7 @@
 """
 import os
 import math
+import glob
 from copy import deepcopy
 
 import logging
@@ -35,6 +36,13 @@ class HostCache(object):
             if h.name == name:
                 return h
         return None
+    
+    @classmethod
+    def get_host_by_url(cls, url):
+        for i, h in enumerate(cls.get_known_hosts()):
+            if h.is_in_url_list(url):
+                return i, h
+        return None, None
     
     @classmethod
     def add_host(cls, host):
@@ -105,6 +113,9 @@ class TileHost(object):
     def __hash__(self):
         return hash(self.urls[0])
     
+    def is_in_url_list(self, url):
+        return url in self.urls
+    
     @classmethod
     def copy_helper(cls, src):
         dest = deepcopy(src)
@@ -146,23 +157,44 @@ class TileHost(object):
     def get_tile_init_request(self, cache_root):
         raise NotImplementedError
     
-    def get_tile_url(self, zoom, x, y):
+    def get_next_url(self):
         # mostly round robin URL index.  If multiple threads hit this at the
         # same time the same URLs might be used in each thread, but not worth
         # thread locking
         self.url_index = (self.url_index + 1) % self.num_urls
         url = self.urls[self.url_index]
+        return url
+    
+    def get_tile_url(self, zoom, x, y):
+        url = self.get_next_url()
         if self.reverse_coords:
             x, y = y, x
         return "%s/%s/%s/%s%s" % (url, zoom, x, y, self.suffix)
     
-    def get_tile_cache_file(self, zoom, x, y):
+    def get_tile_cache_dir(self, cache_root):
         # >>> ".".join("http://a.tile.openstreetmap.org/".split("//")[1].split("/")[0].rsplit(".", 2)[-2:])
         # 'openstreetmap.org'
         domain = ".".join(self.urls[0].split("//")[1].split("/")[0].rsplit(".", 2)[-2:])
         name = domain + "--" + "".join(x for x in self.name if x.isalnum())
-        path = "%s/%s/%s/%s.png" % (name, zoom, x, y)
+        return "%s/%s" % (cache_root, name)
+    
+    def get_tile_cache_file_template(self, cache_root):
+        name = self.get_tile_cache_dir(cache_root)
+        template = "%s/%%s/%%s/%%s%s" % (name, self.suffix)
+        return template
+    
+    def get_tile_cache_file(self, cache_root, zoom, x, y):
+        template = self.get_tile_cache_file_template(cache_root)
+        path = template % (zoom, x, y)
         return path
+    
+    def clear_cache(self, cache_root):
+        template = self.get_tile_cache_file_template(cache_root)
+        path = template % ("*", "*", "*")
+        # delete each file individually so there's no possibility of some wild
+        # recursive delete running out of control due to some bad cache path
+        for image in glob.glob(path):
+            os.unlink(image)  # throws exception to calling function and let them handle it
 
 
 class LocalTileHost(TileHost):

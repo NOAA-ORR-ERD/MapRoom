@@ -72,6 +72,25 @@ class TestBasicLoad(object):
     def test_load(self):
         self.project.load_file(self.logfile, "application/x-maproom-project-json")
 
+class TestTileLayer(object):
+    project_file = "a.mrp"
+    
+    def setup(self):
+        self.project = MockProject()
+        self.manager = self.project.layer_manager
+    
+    def test_save(self):
+        lm = self.manager
+        t = TileLayer(manager=lm)
+        t.map_server_id = 5  # arbitrary
+        lm.insert_layer([3], t)
+        lm.save_all(self.project_file)
+    
+    def test_load(self):
+        self.project.load_file(self.project_file, "application/x-maproom-project-json")
+        t = self.project.layer_manager.get_layer_by_invariant(1)
+        assert t.map_server_id == 5
+
 
 if __name__ == "__main__":
     import time

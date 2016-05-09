@@ -46,6 +46,19 @@ class TileLayer(ProjectedLayer):
     
     checkerboard_when_loading = False
     
+    def map_server_id_to_json(self):
+        # get a representative URL to use as the reference in the project file
+        # so we can restore the correct tile server
+        tile_host = self.manager.project.task.get_tile_server_by_id(self.map_server_id)
+        url = tile_host.get_next_url()
+        return url
+
+    def map_server_id_from_json(self, json_data):
+        url = json_data['map_server_id']
+        index = self.manager.project.task.get_tile_server_id_from_url(url)
+        if index is not None:
+            self.map_server_id = index
+    
     def _threaded_request_results_default(self):
         return Queue.Queue()
     
@@ -121,7 +134,7 @@ class TileLayer(ProjectedLayer):
     # Utility routines used by info_panels to abstract the server info
     
     def get_downloader(self, server_id):
-        return self.manager.project.task.get_threaded_tile_server_by_id(server_id)
+        return self.manager.project.task.get_tile_downloader_by_id(server_id)
     
     def get_server_names(self):
         return self.manager.project.task.get_known_tile_server_names()

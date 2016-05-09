@@ -8,7 +8,7 @@ from pyface.tasks.action.api import TaskAction, EditorAction
 from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
 
 from omnivore.framework.actions import TaskDynamicSubmenuGroup
-from omnivore.utils.wx.dialogs import ListReorderDialog
+from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 from menu_commands import *
 from vector_object_commands import *
@@ -553,4 +553,19 @@ class ManageTileServersAction(EditorAction):
             BackgroundTileDownloader.set_known_hosts(items)
             event.task.remember_tile_servers()
             self.active_editor.refresh(True)
+        dlg.Destroy()
+
+class ClearTileCacheAction(EditorAction):
+    name = 'Clear Tile Cache...'
+    
+    def perform(self, event):
+        hosts = BackgroundTileDownloader.get_known_hosts()
+        dlg = CheckItemDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                for host in dlg.get_checked_items():
+                    host.clear_cache(event.task.get_tile_cache_root())
+            except OSError, e:
+                event.task.window.window.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
+                
         dlg.Destroy()

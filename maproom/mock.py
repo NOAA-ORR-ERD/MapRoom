@@ -6,6 +6,8 @@ from layer_manager import LayerManager
 from layers import loaders, TriangleLayer, Layer
 from library.Boundary import Boundaries
 from library.projection import NullProjection
+from library.host_utils import HostCache
+from library.known_hosts import default_tile_hosts
 from command import UndoStack, BatchStatus
 from menu_commands import *
 
@@ -23,6 +25,18 @@ class MockWindow(object):
     def error(self, *args, **kwargs):
         pass
 
+class MockTask(object):
+    def __init__(self, window):
+        self.window = window
+        HostCache.set_known_hosts(default_tile_hosts)
+
+    def get_tile_server_id_from_url(self, url):
+        index, host = HostCache.get_host_by_url(url)
+        return index
+
+    def get_tile_server_by_id(self, id):
+        return HostCache.get_known_hosts()[id]
+
 class MockTree(object):
     def __init__(self):
         self.layer = Layer()
@@ -33,7 +47,7 @@ class MockTree(object):
 class MockProject(object):
     def __init__(self, add_tree_control=False):
         self.window = MockWindow()
-        self.task = None
+        self.task = MockTask(self.window)
         self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager.create(self)
         if add_tree_control:
