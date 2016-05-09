@@ -5,7 +5,7 @@ import numpy as np
 
 from mock import *
 
-from maproom.library.jsonutil import collapse_json
+from omnivore.utils.jsonutil import collapse_json
 
 
 class TestBasic(object):

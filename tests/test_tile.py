@@ -5,6 +5,7 @@ import numpy as np
 from mock import *
 
 from maproom.library.tile_utils import *
+from maproom.library.host_utils import *
 
 
 class TestTileCoordinates(object):
