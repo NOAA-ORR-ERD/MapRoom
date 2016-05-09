@@ -1,3 +1,23 @@
+05/09/2016
+---------------------------
+Released 3.1b22
+- RM Updated version to 3.1b22 in preparation for release
+- RM Fixed some imports in unit tests
+- RM Fixed #679: ignore projection changes if only vector layers present
+- RM Fixed #678: added tile server URL to project file
+- RM Refs #680: added simple unit test for layer problem checking
+- RM Fixed #680: fixed missing reference to StringIO, added unit test
+- RM Updated location of ListReorderDialog for change in omnivore
+- RM Added copy support for tile server manager
+- RM Added tile server management dialog
+- RM Refactored tile and WMS downloaders to use common cache routines
+- RM Added management dialog for WMS servers
+- RM Moved jsonutil into omnivore
+- RM Added more ESRI tile services
+- RM Added support for ESRI tile map services
+- RM Fixed #675: recursively set visibility when changed
+- RM Fixed #676: added missing scale arguments from pdf rendering
+
 03/14/2016
 ---------------------------
 Released 3.1b21
