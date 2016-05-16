@@ -80,7 +80,7 @@ class BoundedFolder(LineLayer, Folder):
         n = np.alen(f_points)
         self.set_layer_style_defaults()
         self.points = self.make_points(n)
-        print "SET_DATA_FROM_BOUNDS:start", self
+        log.debug("SET_DATA_FROM_BOUNDS:start %s" % self)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points
             self.points.z = 0.0
@@ -93,17 +93,17 @@ class BoundedFolder(LineLayer, Folder):
             self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[0: n] = lines
             self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0
-        print "SET_DATA_FROM_BOUNDS:end", self
+        log.debug("SET_DATA_FROM_BOUNDS:end %s" % self)
 
     def compute_bounding_rect(self, mark_type=STATE_NONE):
         bounds = rect.NONE_RECT
-        print "COMPUTE_BOUNDING_RECT:before", self, self.bounds
+        log.debug("COMPUTE_BOUNDING_RECT:before %s %s" % (self, self.bounds))
 
         children = self.manager.get_layer_children(self)
         for layer in children:
-            print "  CHILD", layer, layer.bounds
+            log.debug("  CHILD %s %s" % (layer, layer.bounds))
             bounds = rect.accumulate_rect(bounds, layer.bounds)
 
-        print "COMPUTE_BOUNDING_RECT:after", self, bounds
+        log.debug("COMPUTE_BOUNDING_RECT:after %s %s" % (self, bounds))
         self.set_data_from_bounds(bounds)
         return bounds

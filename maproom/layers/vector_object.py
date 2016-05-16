@@ -1159,7 +1159,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         self.style.fill_style = 0
     
     def set_data_from_bounds(self, bounds):
-        print "SETTING BOUNDARY BOX!!!", self, bounds
+        log.debug("SETTING BOUNDARY BOX!!! %s %s" % (self, bounds))
         if bounds[0][0] is None:
             self.points = self.make_points(0)
             
