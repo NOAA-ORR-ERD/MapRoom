@@ -472,7 +472,8 @@ class ImmediateModeRenderer():
             return
 
         # the fill triangles
-
+        is_filled = style.fill_style != 0
+        
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         if (picker.is_active):
@@ -480,20 +481,21 @@ class ImmediateModeRenderer():
         else:
             active_colors = polygon_colors
 
-        if style is not None and not picker.is_active:
-            fill_stipple = style.get_fill_stipple()
-            if fill_stipple is not None:
-                gl.glEnable(gl.GL_POLYGON_STIPPLE)
-                gl.glPolygonStipple(fill_stipple)
+        if is_filled:
+            if style is not None and not picker.is_active:
+                fill_stipple = style.get_fill_stipple()
+                if fill_stipple is not None:
+                    gl.glEnable(gl.GL_POLYGON_STIPPLE)
+                    gl.glPolygonStipple(fill_stipple)
 
-        render_buffers_with_colors(
-            self.triangle_vertex_buffers[: self.polygon_count],
-            active_colors,
-            self.triangle_vertex_counts[: self.polygon_count],
-            gl.GL_TRIANGLES,
-            gl
-        )
-        gl.glDisable(gl.GL_POLYGON_STIPPLE)
+            render_buffers_with_colors(
+                self.triangle_vertex_buffers[: self.polygon_count],
+                active_colors,
+                self.triangle_vertex_counts[: self.polygon_count],
+                gl.GL_TRIANGLES,
+                gl
+            )
+            gl.glDisable(gl.GL_POLYGON_STIPPLE)
 
         # the lines
 

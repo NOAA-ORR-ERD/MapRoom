@@ -1116,14 +1116,11 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         start = self.center_point_index + 1
         last = np.alen(self.points)
         count = last - start
-        color = renderer.get_fill_properties(self.style)
-        if color is None:
-            return
         polygons = data_types.make_polygons(1)
         polygons.start[0] = self.center_point_index + 1
         polygons.count[0] = count
         polygons.group[0] = 0
-        polygons.color[0] = color
+        polygons.color[0] = self.style.fill_color
         adjacency = data_types.make_polygon_adjacency_array(np.alen(self.points))
         adjacency.polygon[0:start] = 99999
         adjacency.polygon[start:last] = 0
@@ -1131,17 +1128,11 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         adjacency.next[last - 1] = start
         renderer.set_polygons(polygons, adjacency)
         self.rasterized_polygons = polygons
-        #renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
         log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-#        renderer.fill_object(layer_index_base, picker, self.style)
-#        renderer.outline_object(layer_index_base, picker, self.style)
-        color = renderer.get_fill_properties(self.style)
-        if color is None:
-            return
         renderer.draw_polygons(layer_index_base, picker,
                                self.rasterized_polygons.color,
                                self.style.line_color,
