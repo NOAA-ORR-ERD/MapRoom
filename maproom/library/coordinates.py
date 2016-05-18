@@ -146,6 +146,14 @@ def float_to_degrees(value, directions=None):
     return (degrees, direction)
 
 
+def check_degrees(degrees):
+    if degrees < -360 or degrees > 360:
+        raise ValueError("Degrees out of range")
+
+def check_min_sec(value):
+    if value < 0 or value > 60:
+        raise ValueError("Value not in minutes or seconds range")
+
 def degrees_minutes_seconds_to_float(degrees):
     # handle with spaces or without
     values = re.split(u"[°′″]", degrees.strip().replace(" ",""))
@@ -154,10 +162,15 @@ def degrees_minutes_seconds_to_float(degrees):
         degrees, minutes, seconds = values
     else:
         degrees, minutes, seconds, dir = values
+    m = float(minutes.strip())
+    check_min_sec(m)
+    s = float(seconds.strip())
+    check_min_sec(s)
 
     result = float(degrees.strip())
-    result += float(minutes.strip()) / 60.0
-    result += float(seconds.strip()) / 3600.0
+    result += m / 60.0
+    result += s / 3600.0
+    check_degrees(result)
 
     if dir in ["W", "S"]:
         result *= -1
@@ -167,9 +180,12 @@ def degrees_minutes_seconds_to_float(degrees):
 
 def degrees_minutes_to_float(degrees):
     degrees, minutes, dir = degrees.strip().split(" ")
+    m = float(minutes.strip())
+    check_min_sec(m)
 
     result = float(degrees.strip())
-    result += float(minutes.strip()) / 60.0
+    result += m / 60.0
+    check_degrees(result)
 
     if dir.upper() in ["W", "S"]:
         result *= -1
@@ -184,6 +200,7 @@ def degrees_to_float(degrees):
         dir = values[1]
     degrees = values[0]
     result = float(degrees.strip())
+    check_degrees(result)
     dir = dir.strip()
     if dir.upper() in ["W", "S"]:
         result *= -1

@@ -498,9 +498,16 @@ class ProjectEditor(FrameworkEditor):
     
     @on_trait_change('layer_manager:refresh_needed')
     def refresh(self, editable_properties_changed=False):
-        log.debug("refresh called")
+        log.debug("refresh called; editable_properties_changed=%s" % editable_properties_changed)
         if self.control is None:
             return
+        
+        # current control with focus is used to prevent usability issues with
+        # text field editing in the calls to the info panel displays below.
+        # Without checking for the current text field it is reformatted every
+        # time, moving the cursor position to the beginning and generally
+        # being annoying
+        current = self.window.control.FindFocus()
         
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
@@ -509,8 +516,8 @@ class ProjectEditor(FrameworkEditor):
         sel_layer = self.layer_tree_control.get_selected_layer()
         self.update_layer_contents_ui(sel_layer)
         self.update_layer_menu_ui(sel_layer)
-        self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
-        self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed)
+        self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
+        self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
         self.last_refresh = time.clock()
         self.control.Refresh()
     

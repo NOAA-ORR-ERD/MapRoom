@@ -80,6 +80,9 @@ class InfoField(object):
             self.ctrl.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
         self.extra_ctrls = self.create_extra_controls()
     
+    def is_editable_control(self, ctrl):
+        return ctrl == self.ctrl
+    
     def create_extra_controls(self):
         return []
 
@@ -1322,7 +1325,7 @@ class InfoPanel(PANELTYPE):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
     
-    def display_panel_for_layer(self, project, layer, force_selection_change=False):
+    def display_panel_for_layer(self, project, layer, force_selection_change=False, has_focus=None):
         self.project = project
 
         if (self.ignore_next_update):
@@ -1362,12 +1365,12 @@ class InfoPanel(PANELTYPE):
             self.current_layer_change_count = layer.change_count
 
         fields = self.get_visible_fields(layer)
-        self.display_fields(layer, fields, different_layer, selection_changed)
+        self.display_fields(layer, fields, different_layer, selection_changed, has_focus)
 
-    def display_fields(self, layer, fields, different_layer, selection_changed):
+    def display_fields(self, layer, fields, different_layer, selection_changed, has_focus):
         if self.current_fields == fields:
             log.debug("reusing current fields")
-            self.set_fields(layer, fields, different_layer, selection_changed)
+            self.set_fields(layer, fields, different_layer, selection_changed, has_focus)
         else:
             log.debug("creating fields")
             self.create_fields(layer, fields)
@@ -1471,14 +1474,17 @@ class InfoPanel(PANELTYPE):
         self.Refresh()
         self.current_fields = list(fields)
     
-    def set_fields(self, layer, fields, different_layer, selection_changed):
+    def set_fields(self, layer, fields, different_layer, selection_changed, has_focus):
         focus = None
         for field_name in fields:
             if field_name in self.field_map:
                 field = self.field_map[field_name]
                 if field.is_displayed(layer):
                     if different_layer or selection_changed:
-                        field.fill_data(layer)
+                        if field.is_editable_control(has_focus):
+                            field.is_valid()
+                        else:
+                            field.fill_data(layer)
                         if field.wants_focus():
                             focus = field
                     field.show()
