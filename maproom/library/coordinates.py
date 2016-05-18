@@ -79,7 +79,7 @@ def ft_to_string(ft):
     if ft < 5000:
         s = "%d ft" % ft
     else:
-        s = "%d mi" % (ft / 5280)
+        s = "%d mi" % ((ft + 280) / 5280)
     return s
 
 def mi_to_rounded_string(val, sigfigs=5, area=False):
