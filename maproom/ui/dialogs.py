@@ -78,13 +78,14 @@ class JumpCoordsDialog(sc.SizedDialog):
         self.coords_text.SetSizerProps(expand=True)
         self.coords_text.Bind(wx.EVT_TEXT, self.OnText)
 
-        center_lat_lon = layer_canvas.get_world_point_from_projected_point(layer_canvas.projected_point_center)
-        self.coords_text.Value = coordinates.format_coords_for_display(center_lat_lon[0], center_lat_lon[1], display_format)
-
         btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
+        self.ok_btn = self.FindWindowById(wx.ID_OK)
         self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())
 
         self.Bind(wx.EVT_CLOSE, self.OnClose)
+
+        self.lat_lon = layer_canvas.get_world_point_from_projected_point(layer_canvas.projected_point_center)
+        self.coords_text.Value = coordinates.format_coords_for_display(self.lat_lon[0], self.lat_lon[1], display_format)
 
         self.Fit()
     
@@ -99,13 +100,14 @@ class JumpCoordsDialog(sc.SizedDialog):
         lat_lon_string = event.String
 
         try:
-            lat_lon = coordinates.lat_lon_from_format_string(lat_lon_string)
-            if lat_lon == (-1, -1):
-                self.coords_text.SetBackgroundColour("#FF8080")
-            else:
-                self.coords_text.SetBackgroundColour("#FFFFFF")
+            self.lat_lon = coordinates.lat_lon_from_format_string(lat_lon_string)
+            self.coords_text.SetBackgroundColour("#FFFFFF")
+            valid = True
         except:
+            self.lat_lon = None
             self.coords_text.SetBackgroundColour("#FF8080")
+            valid = False
+        self.ok_btn.Enable(valid)
 
 class IconDialog(wx.Dialog):
     def __init__(self, parent, iid):

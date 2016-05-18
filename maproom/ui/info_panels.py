@@ -339,8 +339,6 @@ class PointCoordinatesField(TextEditField):
     def parse_from_string(self):
         text = self.ctrl.GetValue()
         c = coordinates.lat_lon_from_format_string(text)
-        if c == (-1, -1):
-            raise ValueError("Invalid coordinates %s" % text)
         return c
 
     def get_command(self, layer, index, dx, dy):
