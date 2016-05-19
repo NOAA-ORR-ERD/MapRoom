@@ -472,8 +472,6 @@ class ImmediateModeRenderer():
             return
 
         # the fill triangles
-        is_filled = style.fill_style != 0
-        
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         if (picker.is_active):
@@ -481,7 +479,7 @@ class ImmediateModeRenderer():
         else:
             active_colors = polygon_colors
 
-        if is_filled:
+        if style is None or style.fill_style != 0:
             if style is not None and not picker.is_active:
                 fill_stipple = style.get_fill_stipple()
                 if fill_stipple is not None:
