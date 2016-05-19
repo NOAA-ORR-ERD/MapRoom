@@ -18,6 +18,14 @@ class TestVerdat(object):
         assert 23 == np.alen(layer.points)
         print layer.points
         layer.check_for_problems(None)
+    
+    def test_save(self):
+        loaders.save_layer(self.verdat, "test.verdat")
+        self.project.load_file("test.verdat", "application/x-maproom-verdat")
+        self.orig = self.verdat
+        self.verdat = self.project.layer_manager.get_layer_by_invariant(2)
+        assert self.orig != self.verdat
+        self.test_simple()
 
 if __name__ == "__main__":
     t = TestVerdat()

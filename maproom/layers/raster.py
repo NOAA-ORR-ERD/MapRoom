@@ -43,7 +43,7 @@ class RasterLayer(ProjectedLayer):
         We shouldn't allow saving of a layer with no content, so we use this method
         to determine if we can save this layer.
         """
-        return self.image_data is not None
+        return self.image_data is None
     
     def get_allowable_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer

@@ -214,7 +214,8 @@ class PolygonLayer(PointLayer):
         handler.flush()
         buf.flush()
         errors = buf.getvalue()
-        raise PointsError(errors)
+        if errors:
+            raise PointsError(errors)
 
     def clear_all_polygon_selections(self, mark_type=STATE_SELECTED):
         if (self.polygons is not None):
