@@ -1,3 +1,15 @@
+05/19/2016
+---------------------------
+Released 3.1b23
+- RM Updated version to 3.1b23
+- RM Added some unit tests for BNA, GDAL & Verdat files
+- RM Fixed regression in polygon rendering due to change for #682
+- RM Increased unit test coverage for coordinates.py
+- RM changed coordinates conversion to raise exceptions; let caller handle it
+- RM Fixed #681: added check for currently control so info panel doesn't overwrite user input with validated text
+- RM Changed debug prints into log calls
+- RM Fixed #682: stopped short-circuiting all drawing when fill type was "no fill"
+
 05/09/2016
 ---------------------------
 Released 3.1b22
