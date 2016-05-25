@@ -894,10 +894,10 @@ class OverlayTextObject(OverlayScalableImageObject):
     selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
     
     def user_text_to_json(self):
-        return self.user_text.encode("utf-8")
+        return self.user_text
 
     def user_text_from_json(self, json_data):
-        self.user_text = json_data['user_text'].decode('utf-8')
+        self.user_text = json_data['user_text']
     
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
