@@ -92,7 +92,6 @@ class WMSLayer(ProjectedLayer):
             self.image_data = None
         if self.image_data is None and self.current_size is not None:
             world_rect, raw, error = self.get_image_array()
-            self.download_status_text = ("error", error)
             
             # Need to use an image even on an error condition, otherwise when
             # the screen is redrawn from some external event (window unhidden,
@@ -107,6 +106,11 @@ class WMSLayer(ProjectedLayer):
             flipped = ((world_rect[0][0], world_rect[1][1]),
                        (world_rect[1][0], world_rect[0][1]))
             self.image_data.set_rect(flipped, None)
+
+            if error is None and self.image_data.is_blank:
+                error = "Blank Image"
+            self.download_status_text = ("error", error)
+
             self.change_count += 1  # Force info panel update
             self.manager.project.layer_canvas.project.update_info_panels(self, True)
         if self.image_data is not None:

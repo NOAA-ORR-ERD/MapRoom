@@ -200,6 +200,14 @@ class ImageData(object):
         loader = RawSubImageLoader(array)
         self.load_texture_data(loader)
 
+    @property
+    def is_blank(self):
+        for entry in self.image_list:
+            # check alpha channel for each block
+            blank = not entry.data[:,:,3].any()
+            if not blank:
+                return False
+        return True
 
 class SubImageLoader(object):
     def prepare(self, num_sub_images):
