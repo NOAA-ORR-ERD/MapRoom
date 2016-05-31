@@ -80,6 +80,9 @@ class WMSHost(object):
     def __str__(self):
         return " ".join([self.name, self.url, self.version])
     
+    def is_in_url_list(self, url):
+        return url == self.url
+    
     def convert_title(self, title):
         if self.strip_prefix:
             if title.startswith(self.strip_prefix):

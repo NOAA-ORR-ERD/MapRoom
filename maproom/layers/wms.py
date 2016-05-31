@@ -45,6 +45,30 @@ class WMSLayer(ProjectedLayer):
     
     checkerboard_when_loading = False
     
+    def map_server_id_to_json(self):
+        # get a representative URL to use as the reference in the project file
+        # so we can restore the correct tile server
+        wms_host = self.manager.project.task.get_wms_server_by_id(self.map_server_id)
+        return wms_host.url
+
+    def map_server_id_from_json(self, json_data):
+        url = json_data['map_server_id']
+        index = self.manager.project.task.get_wms_server_id_from_url(url)
+        if index is not None:
+            self.map_server_id = index
+    
+    def map_layers_to_json(self):
+        # get a representative URL to use as the reference in the project file
+        # so we can restore the correct tile server
+        if self.map_layers is not None:
+            return list(self.map_layers)
+
+    def map_layers_from_json(self, json_data):
+        layers = json_data['map_layers']
+        if layers is not None:
+            layers = set(layers)
+        self.map_layers = layers
+    
     def is_valid_threaded_result(self, map_server_id, wms_request):
         if map_server_id == self.map_server_id:
             self.rebuild_needed = True

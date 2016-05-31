@@ -465,8 +465,16 @@ class MaproomProjectTask(FrameworkTask):
             self.downloaders[host.url] = wms
         return self.downloaders[host.url]
 
-    def get_threaded_wms_by_id(self, id):
+    def get_wms_server_by_id(self, id):
         host = BackgroundWMSDownloader.get_known_hosts()[id]
+        return host
+
+    def get_wms_server_id_from_url(self, url):
+        index, host = BackgroundWMSDownloader.get_host_by_url(url)
+        return index
+
+    def get_threaded_wms_by_id(self, id):
+        host = self.get_wms_server_by_id(id)
         return self.get_threaded_wms(host)
 
     def get_known_wms_names(self):
