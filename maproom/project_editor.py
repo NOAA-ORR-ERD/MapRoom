@@ -84,7 +84,7 @@ class ProjectEditor(FrameworkEditor):
     # and there will be an empty between named toolbars
     mouse_mode_toolbar = Str("")
     
-    mouse_mode = Any(PanMode)
+    mouse_mode_factory = Any(PanMode)
 
     ###########################################################################
     # 'FrameworkEditor' interface.
@@ -429,11 +429,11 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is not None:
             # leave mouse_mode set to current setting
             self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
-            self.mouse_mode = toolbar.get_valid_mouse_mode(self.mouse_mode, self.mouse_mode_toolbar)
+            self.mouse_mode_factory = toolbar.get_valid_mouse_mode(self.mouse_mode_factory, self.mouse_mode_toolbar)
         else:
-            self.mouse_mode = PanMode
+            self.mouse_mode_factory = PanMode
         self.update_layer_menu_ui(sel_layer)
-        self.layer_canvas.set_mouse_handler(self.mouse_mode)
+        self.layer_canvas.set_mouse_handler(self.mouse_mode_factory)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_info_panels(sel_layer)
         self.update_layer_contents_ui(sel_layer)
@@ -556,7 +556,7 @@ class ProjectEditor(FrameworkEditor):
         history = self.layer_manager.undo_stack.serialize()
         self.window.application.save_log(str(history), "command_log", ".mrc")
         if new_mouse_mode is not None:
-            self.mouse_mode = new_mouse_mode
+            self.mouse_mode_factory = new_mouse_mode
             self.update_layer_selection_ui()
 
         return undo

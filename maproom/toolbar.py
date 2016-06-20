@@ -48,13 +48,13 @@ class MouseHandlerBaseAction(EditorAction):
         return ImageResource(self.handler.icon)
 
     def perform(self, event):
-        self.active_editor.mouse_mode = self.handler
+        self.active_editor.mouse_mode_factory = self.handler
         self.active_editor.update_layer_selection_ui()
 
-    @on_trait_change('active_editor.mouse_mode')
+    @on_trait_change('active_editor.mouse_mode_factory')
     def _update_checked(self):
         if self.active_editor:
-            self.checked = self.active_editor.mouse_mode == self.handler
+            self.checked = self.active_editor.mouse_mode_factory == self.handler
 
 def get_toolbar_group(toolbar_name):
     """Create the toolbar groups with buttons in the order specified in the
