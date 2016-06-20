@@ -10,6 +10,7 @@ from traits.api import provides, on_trait_change, Property, Instance, Str, Unico
 from omnivore.framework.actions import TaskDynamicSubmenuGroup
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
+import pane_layout
 from menu_commands import *
 from vector_object_commands import *
 from mouse_commands import *
