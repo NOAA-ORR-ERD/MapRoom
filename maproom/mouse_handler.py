@@ -142,14 +142,13 @@ class MouseHandler(object):
             o = c.get_object_at_mouse_position(position)
             self.snapped_point = None, 0
             if (o is not None):
-                (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
-                layer = e.layer_manager.get_layer_by_pick_index(layer_index)
+                (layer, object_type, object_index) = o
                 before = tuple(position)
-                if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(type):
+                if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(object_type):
                     wp = (layer.points.x[object_index], layer.points.y[object_index])
                     position = c.get_screen_point_from_world_point(wp)
                     self.snapped_point = layer, object_index
-                    log.debug("snapping to layer_index %s type %s oi %s %s %s" % (layer_index, type, object_index, before, position))
+                    log.debug("snapping to layer %s type %s oi %s %s %s" % (layer, object_type, object_index, before, position))
         return position
 
     def process_mouse_motion_up(self, event):
@@ -164,16 +163,15 @@ class MouseHandler(object):
         # print "mouse is not down"
         o = c.get_object_at_mouse_position(event.GetPosition())
         if (o is not None):
-            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(o)
-            layer = e.layer_manager.get_layer_by_pick_index(layer_index)
+            (layer, object_type, object_index) = o
             c.project.clickable_object_in_layer = layer
             if (c.project.layer_tree_control.is_selected_layer(layer)):
                 c.project.clickable_object_mouse_is_over = o
             else:
                 c.project.clickable_object_mouse_is_over = None
-            if c.picker.is_ugrid_point(o):
+            if c.picker.is_ugrid_point_type(object_type):
                 obj_text = "Point %s on %s" % (object_index + 1, layer.name)
-            elif c.picker.is_ugrid_line(o):
+            elif c.picker.is_ugrid_line_type(object_type):
                 obj_text = "Line %s on %s" % (object_index + 1, layer.name)
             else:
                 obj_text = ""
@@ -221,8 +219,7 @@ class MouseHandler(object):
         lm = e.layer_manager
 
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
-            layer = lm.get_layer_by_pick_index(layer_index)
+            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
             if (e.clickable_object_is_ugrid_point()):
                 self.right_clicked_on_point(event, layer, object_index)
             elif (e.clickable_object_is_ugrid_line()):
@@ -400,8 +397,7 @@ class MouseHandler(object):
         if (e.clickable_object_mouse_is_over is None):
             return
 
-        (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
-        layer = lm.get_layer_by_pick_index(layer_index)
+        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
         e.process_command(cmd)
 
@@ -412,8 +408,7 @@ class MouseHandler(object):
         if e.clickable_object_mouse_is_over is None or (world_d_x == 0 and world_d_y == 0):
             return
 
-        (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
-        layer = lm.get_layer_by_pick_index(layer_index)
+        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
         e.process_command(cmd)
 
@@ -513,8 +508,7 @@ class ObjectSelectionMode(MouseHandler):
         lm = e.layer_manager
 
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            (layer_index, type, subtype, object_index) = c.picker.parse_clickable_object(e.clickable_object_mouse_is_over)
-            layer = lm.get_layer_by_pick_index(layer_index)
+            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
             if (e.clickable_object_is_ugrid_point()):
                 self.clicked_on_point(event, layer, object_index)
             elif (e.clickable_object_is_ugrid_line()):

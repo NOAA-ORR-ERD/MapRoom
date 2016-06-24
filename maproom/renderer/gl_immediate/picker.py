@@ -1,4 +1,6 @@
 import sys
+import bisect
+
 import numpy as np
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
@@ -9,7 +11,8 @@ import maproom.library.rect as rect
 
 from ..gl.color import *
 
-MAX_PICKER_OFFSET = 4
+import logging
+log = logging.getLogger(__name__)
 
 POINTS_PICKER_OFFSET = 0
 LINES_PICKER_OFFSET = 1
@@ -30,13 +33,10 @@ class Picker(object):
     
     is_active = True
     
-    @classmethod
-    def get_picker_index_base(cls, layer_index):
-        return layer_index * MAX_PICKER_OFFSET
-
     def __init__(self):
         # self.colored_objects = {} # renderer -> ( index, original color )
         gl_fbo.glInitFramebufferObjectEXT()
+        self.picker_map = None
 
     def destroy(self):
         self.vbo_colors = None
@@ -77,6 +77,9 @@ class Picker(object):
             self.bind_frame_buffer()
 
         self.screen_rect = screen_rect
+        self.picker_map = []
+        self.picker_blocks = []
+        self.picker_block_start = 1
 
     def done_rendering(self):
         self.unbind_frame_buffer()
@@ -99,34 +102,32 @@ class Picker(object):
         gl.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
         gl_fbo.glBindFramebufferEXT(gl.GL_READ_FRAMEBUFFER, 0)
 
-    def bind_picker_colors_for_lines(self, layer_index, object_count):
-        self.bind_picker_colors(layer_index + LINES_PICKER_OFFSET,
-                                object_count, True)
+    def bind_picker_colors_for_lines(self, layer, object_count):
+        self.bind_picker_colors(layer, LINES_PICKER_OFFSET, object_count, True)
 
-    def bind_picker_colors_for_points(self, layer_index, object_count):
-        self.bind_picker_colors(layer_index + POINTS_PICKER_OFFSET,
-                                object_count, False)
+    def bind_picker_colors_for_points(self, layer, object_count):
+        self.bind_picker_colors(layer, POINTS_PICKER_OFFSET, object_count, False)
 
-    def bind_picker_colors(self, layer_index, object_count, doubled=False):
+    def bind_picker_colors(self, layer, object_type, object_count, doubled=False):
         """
         bind the colors in the OpenGL context (right word?)
 
         for a bunch of object in a layer
 
-        :param layer_index: the first index to use -- this will be pick-layer index plus the sublayer index
+        :param layer: the first index to use -- this will be pick-layer index plus the sublayer index
+
+        :param object_type: flag indicating the type of object
 
         :param object_count: how many objects need colors
 
-        :param doubled = False: whether to double the array (not sure why you would!) 
+        :param doubled = False: whether to double the array (used for drawing line segments) 
         """
-        if (layer_index > 255):
-            raise ValueError("invalid layer_index: %s"%layer_index)
+        # Get range of picker colors for this layer and object type
+        color_data = self.get_next_color_block(layer, object_type, object_count)
 
-        # fill the color buffer with a different color for each object
-        start_color = layer_index << 24
-        color_data = np.arange(start_color, start_color+object_count, dtype=np.uint32)
-
-        ## fix me: why would you want it doubled?
+        # NOTE: the color data array is doubled for lines because there are two
+        # copies of each endpoint in the line data. See set_lines in
+        # renderer/gl_immediate/renderer.py for more info
         if doubled:
             color_data = np.c_[color_data, color_data].reshape(-1)
 
@@ -140,15 +141,24 @@ class Picker(object):
         self.vbo_colors.unbind()
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
 
-    def get_polygon_picker_colors(self, layer_index, object_count):
-        start_color = (layer_index + FILL_PICKER_OFFSET) << 24
-        active_colors = np.arange(start_color, start_color + object_count, dtype=np.uint32)
+    def get_next_color_block(self, layer, object_type, object_count):
+        start_range = self.picker_block_start
+        end_range = self.picker_block_start + object_count
+        self.picker_block_start = end_range
+        color_data = np.arange(start_range, end_range, dtype=np.uint32)
+        self.picker_map.append((layer, object_type, start_range))
+        self.picker_blocks.append(start_range)
+        log.debug("Generating color block for [%s] type=%d, #%d: %d-%d" % (layer, object_type, object_count, start_range, end_range))
+        return color_data
+
+    def get_polygon_picker_colors(self, layer, object_count):
+        active_colors = self.get_next_color_block(layer, FILL_PICKER_OFFSET, object_count)
         return active_colors
 
     def get_object_at_mouse_position(self, screen_point):
         """
 
-            returns ( layer_index, object_index ) or None
+            returns ( layer, object_index ) or None
 
         """
 
@@ -185,56 +195,40 @@ class Picker(object):
         if color_string is None or color_string[0: 3] == self.BACKGROUND_COLOR_STRING:
             return None
 
-        # im = Image.fromstring( "RGBA", ( rect.width( self.screen_rect ), rect.height( self.screen_rect ) ), full_string )
-        # im.save( "x.png" )
-        # print color_string.__repr__()
         if (sys.byteorder == "big"):
-            # most-significant byte first
-            b = np.frombuffer(color_string, dtype=np.uint8)
-            layer_index = b[0]
-            object_index = (b[1] << 16) + (b[2] << 8) + b[3]
+            picked_color = np.frombuffer(color_string, dtype='>i4')
         else:
-            # least-significant byte first
-            b = np.frombuffer(color_string, dtype=np.uint8)
-            layer_index = b[3]
-            object_index = (b[2] << 16) + (b[1] << 8) + b[0]
+            picked_color = np.frombuffer(color_string, dtype='<i4')
 
-        return (layer_index, object_index)
+        # bisect returns where to insert a value, but we want the index right
+        # before that since that points to the starting color
+        index = bisect.bisect(self.picker_blocks, picked_color) - 1
+        if index < 0:
+            return None
+        layer, object_type, start_color = self.picker_map[index]
+        object_index = int(picked_color - start_color)
+
+        return (layer, object_type, object_index)
     
     @staticmethod
     def is_ugrid_point(obj):
-        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
-        #
-        return type == POINTS_PICKER_OFFSET
+        (layer, object_type, object_index) = obj
+        return object_type == POINTS_PICKER_OFFSET
     
     @staticmethod
-    def is_ugrid_point_type(type):
-        return type == POINTS_PICKER_OFFSET
+    def is_ugrid_point_type(object_type):
+        return object_type == POINTS_PICKER_OFFSET
 
     @staticmethod
     def is_ugrid_line(obj):
-        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
-        #
-        return type == LINES_PICKER_OFFSET
+        (layer, object_type, object_index) = obj
+        return object_type == LINES_PICKER_OFFSET
+
+    @staticmethod
+    def is_ugrid_line_type(object_type):
+        return object_type == LINES_PICKER_OFFSET
 
     @staticmethod
     def is_polygon_fill(obj):
-        (layer_index, type, subtype, object_index) = Picker.parse_clickable_object(obj)
-        #
+        (layer, object_type, object_index) = obj
         return type == FILL_PICKER_OFFSET
-
-    @staticmethod
-    def parse_clickable_object(o):
-        if (o is None):
-            return (None, None, None, None)
-
-        # see Layer.py for layer types
-        # see Point_and_line_set_renderer.py and Polygon_set_renderer.py for subtypes
-        ## fixme: OMG! I can't believe how hard-coded this is!!!
-        (layer_pick_index, object_index) = o
-        type = layer_pick_index % MAX_PICKER_OFFSET
-        subtype = None
-        layer_pick_index = layer_pick_index // MAX_PICKER_OFFSET
-        # print str( obj ) + "," + str( ( layer_index, type, subtype ) )
-        #
-        return (layer_pick_index, type, subtype, object_index)

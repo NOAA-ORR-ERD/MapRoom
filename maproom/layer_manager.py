@@ -69,8 +69,6 @@ class LayerManager(Document):
     
     threaded_image_loaded = Event
 
-    pick_layer_index_map = {} # fixme: managed by the layer_convas -- horrible coupling!
-    
     # Linked control points are slaves of a truth layer: a dict that maps the
     # dependent layer/control point to the truth layer/control point
     control_point_links = Dict(Any)
@@ -547,14 +545,6 @@ class LayerManager(Document):
 
     def get_multi_index_of_layer(self, layer):
         return self.get_multi_index_of_layer_recursive(layer, self.layers)
-
-    def get_layer_by_pick_index(self, pick_index):
-        try:
-            layer = self.get_layer_by_flattened_index(self.pick_layer_index_map[pick_index])
-        except:
-            log.error("Invalid pick_index: %s" % pick_index)
-            layer = None
-        return layer
 
     def get_layer_by_name(self, name):
         layers = self.flatten()
