@@ -353,21 +353,24 @@ class BaseCanvas(object):
         return self.constrain_zoom(units_per_pixel)
 
     def zoom_to_fit(self):
-        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_fit()
+        center, units_per_pixel = self.calc_zoom_to_fit()
+        self.set_viewport(center, units_per_pixel)
 
     def calc_zoom_to_fit(self):
         layers = self.project.layer_manager.get_visible_layers(self.project.layer_visibility)
         return self.calc_zoom_to_layers(layers)
 
     def zoom_to_layers(self, layers):
-        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_layers(layers)
+        center, units_per_pixel = self.calc_zoom_to_layers(layers)
+        self.set_viewport(center, units_per_pixel)
 
     def calc_zoom_to_layers(self, layers):
         w_r = self.project.layer_manager.accumulate_layer_bounds(layers)
         return self.calc_zoom_to_world_rect(w_r)
 
     def zoom_to_world_rect(self, w_r, border=True):
-        self.projected_point_center, self.projected_units_per_pixel = self.calc_zoom_to_world_rect(w_r, border)
+        center, units_per_pixel = self.calc_zoom_to_world_rect(w_r, border)
+        self.set_viewport(center, units_per_pixel)
 
     def calc_zoom_to_world_rect(self, w_r, border=True):
         if (w_r == rect.NONE_RECT):
