@@ -1,3 +1,17 @@
+06/27/2016
+---------------------------
+Released 3.1b24
+- RM Fixed #689: need to set zoom_level in canvas after layer load
+- RM Removed layer_index_base from renderer calls
+- RM Removed outdated barely-started experiment with vispy renderer
+- RM Fixed #688: changed picker to build a range of colors for objects, generated on the fly
+- RM Removed outdated gl_old renderer, untouched for more than a year
+- RM Fixed missing import when using New Project
+- RM Renamed mouse_mode to mouse_mode_factory in ProjectEditor to keep up with Omnivore
+- RM Added check & status display for blank image returned by WMS server
+- RM Fixed #684: added save/restore for WMS server
+- RM Fixed #685: removed unnecessary encoding of text for json conversion; json expects unicode!
+
 05/19/2016
 ---------------------------
 Released 3.1b23
