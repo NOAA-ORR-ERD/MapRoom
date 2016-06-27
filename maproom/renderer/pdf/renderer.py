@@ -116,7 +116,7 @@ class ReportLabRenderer(BaseRenderer):
         self.line_colors = self.convert_colors(color, np.alen(self.line_xys) / 2)
     
     def draw_lines(self,
-                   layer_index_base,
+                   layer,
                    picker,
                    style,
                    selected_line_segment_indexes=[],
@@ -132,7 +132,7 @@ class ReportLabRenderer(BaseRenderer):
         pass
 
     def draw_points(self,
-                    layer_index_base,
+                    layer,
                     picker,
                     point_size,
                     selected_point_indexes=[],
@@ -184,7 +184,7 @@ class ReportLabRenderer(BaseRenderer):
     def release_textures(self):
         pass
 
-    def draw_image(self, layer_index_base, picker, alpha=1.0):
+    def draw_image(self, layer, picker, alpha=1.0):
         d = self.canvas.pdf
         for image, x, y, w, h in self.images.foreach():
             if self.canvas.is_onscreen(x, y, w, h):
@@ -212,7 +212,7 @@ class ReportLabRenderer(BaseRenderer):
         self.point_adjacency_array = point_adjacency_array.copy()
         self.polygons = polygons.copy()
 
-    def draw_polygons(self, layer_index_base, picker,
+    def draw_polygons(self, layer, picker,
                       polygon_colors, line_color, line_width,
                       broken_polygon_index=None):
         d = self.canvas.pdf
@@ -333,7 +333,7 @@ class ReportLabRenderer(BaseRenderer):
         self.canvas.pdf.setFillColor(rgb, a)
         return style.fill_style > 0
 
-    def fill_object(self, layer_index_base, picker, style):
+    def fill_object(self, layer, picker, style):
         d = self.canvas.pdf
         if self.set_fill_style(style):
             p = d.beginPath()
@@ -344,7 +344,7 @@ class ReportLabRenderer(BaseRenderer):
                 p.lineTo(x, y)
             d.drawPath(p, fill=1, stroke=0)
 
-    def outline_object(self, layer_index_base, picker, style):
+    def outline_object(self, layer, picker, style):
         d = self.canvas.pdf
         if self.set_stroke_style(style):
             p = d.beginPath()

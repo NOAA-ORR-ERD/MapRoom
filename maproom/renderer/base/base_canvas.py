@@ -207,19 +207,19 @@ class BaseCanvas(object):
                         elif layer == selected:
                             delayed_pick_layer = (layer, vis)
                         else:
-                            layer.render(renderer, w_r, p_r, s_r, vis, layer, picker)
+                            layer.render(renderer, w_r, p_r, s_r, vis, picker)
                 else: # not in pick-mode
                     if layer == selected:
                         control_points_layer = (layer, vis)
-                    layer.render(renderer, w_r, p_r, s_r, vis, layer, picker)
+                    layer.render(renderer, w_r, p_r, s_r, vis, picker)
             if delayed_pick_layer is not None:
                 layer, vis = delayed_pick_layer
                 renderer = self.layer_renderers[layer]
-                layer.render(renderer, w_r, p_r, s_r, vis, layer, picker)
+                layer.render(renderer, w_r, p_r, s_r, vis, picker)
             if control_points_layer is not None:
                 layer, vis = control_points_layer
                 renderer = self.layer_renderers[layer]
-                layer.render(renderer, w_r, p_r, s_r, vis, None, picker, control_points_only=True)
+                layer.render(renderer, w_r, p_r, s_r, vis, picker, control_points_only=True)
 
         render_layers(layer_draw_order)
 

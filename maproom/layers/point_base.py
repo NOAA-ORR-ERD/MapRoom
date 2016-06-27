@@ -279,11 +279,11 @@ class PointBaseLayer(ProjectedLayer):
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering line layer!!! pick=%s" % (picker))
 
         if layer_visibility["points"]:
-            renderer.draw_points(layer_index_base, picker, self.point_size,
+            renderer.draw_points(self, picker, self.point_size,
                                       self.get_selected_point_indexes(),
                                       self.get_selected_point_indexes(STATE_FLAGGED))
 

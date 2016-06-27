@@ -87,7 +87,7 @@ class ImmediateModeRenderer():
             self.vbo_line_segment_colors = gl_vbo.VBO(segment_colors.view(dtype=np.uint8))
     
     def draw_lines(self,
-                   layer_index_base,
+                   layer,
                    picker,
                    style,
                    selected_line_segment_indexes=[],
@@ -98,7 +98,7 @@ class ImmediateModeRenderer():
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             if (picker.is_active):
-                picker.bind_picker_colors_for_lines(layer_index_base,
+                picker.bind_picker_colors_for_lines(layer,
                                           len(self.world_line_segment_points))
                 gl.glLineWidth(6)
             else:
@@ -134,12 +134,12 @@ class ImmediateModeRenderer():
             gl.glColor(1, 1, 1, 1)
 
     def draw_points(self,
-                    layer_index_base,
+                    layer,
                     picker,
                     point_size,
                     selected_point_indexes=[],
                     flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
-        #log.debug("in Point_and_line_set_renderer.render_points, layer_index_base:%s, picker:%s"%(layer_index_base, picker) )
+        #log.debug("in Point_and_line_set_renderer.render_points, layer:%s, picker:%s"%(layer, picker) )
 
         if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
@@ -147,7 +147,7 @@ class ImmediateModeRenderer():
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             if (picker.is_active):
-                picker.bind_picker_colors_for_points(layer_index_base,
+                picker.bind_picker_colors_for_points(layer,
                                                      len(self.vbo_point_xys.data))
                 gl.glPointSize(point_size + 8)
             else:
@@ -312,7 +312,7 @@ class ImmediateModeRenderer():
             self.image_textures.destroy()
             self.image_textures = None
 
-    def draw_image(self, layer_index_base, picker, alpha=1.0):
+    def draw_image(self, layer, picker, alpha=1.0):
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         texture = not picker.is_active
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
@@ -321,7 +321,7 @@ class ImmediateModeRenderer():
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
             gl.glColor(1.0, 1.0, 1.0, alpha)
         else:
-            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
+            fill_color = picker.get_polygon_picker_colors(layer, 1)[0]
             r, g, b, a = int_to_color_floats(fill_color)
             gl.glColor(r, g, b, a)
         for i, vbo in enumerate(self.image_textures.vbo_vertexes):
@@ -356,7 +356,7 @@ class ImmediateModeRenderer():
             self.image_tiles.destroy()
             self.image_tiles = None
 
-    def draw_tiles(self, layer_index_base, picker, alpha=1.0):
+    def draw_tiles(self, layer, picker, alpha=1.0):
         if picker.is_active:
             return
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -367,7 +367,7 @@ class ImmediateModeRenderer():
             gl.glEnableClientState(gl.GL_TEXTURE_COORD_ARRAY)
             gl.glColor(1.0, 1.0, 1.0, alpha)
         else:
-            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
+            fill_color = picker.get_polygon_picker_colors(layer, 1)[0]
             r, g, b, a = int_to_color_floats(fill_color)
             gl.glColor(r, g, b, a)
         for tile in self.image_tiles.tiles:
@@ -465,7 +465,7 @@ class ImmediateModeRenderer():
         # print "total line_nan_counts = " + str( self.line_nan_counts.sum() )
         self.set_invalid_polygons(self.polygons, self.polygon_count)
 
-    def draw_polygons(self, layer_index_base, picker,
+    def draw_polygons(self, layer, picker,
                       polygon_colors, line_color, line_width, style=None,
                       broken_polygon_index=None):
         if self.triangle_vertex_buffers is None or self.polygon_count == 0:
@@ -475,7 +475,7 @@ class ImmediateModeRenderer():
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
         if (picker.is_active):
-            active_colors = picker.get_polygon_picker_colors(layer_index_base, self.polygon_count)
+            active_colors = picker.get_polygon_picker_colors(layer, self.polygon_count)
         else:
             active_colors = polygon_colors
 
@@ -722,12 +722,12 @@ class ImmediateModeRenderer():
             return None
         return style.fill_color
 
-    def fill_object(self, layer_index_base, picker, style):
+    def fill_object(self, layer, picker, style):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
         
         if (picker.is_active):
-            fill_color = picker.get_polygon_picker_colors(layer_index_base, 1)[0]
+            fill_color = picker.get_polygon_picker_colors(layer, 1)[0]
         else:
             fill_color = self.get_fill_properties(style)
         if fill_color is None:
@@ -755,7 +755,7 @@ class ImmediateModeRenderer():
 
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
-    def outline_object(self, layer_index_base, picker, style):
+    def outline_object(self, layer, picker, style):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
         
@@ -764,7 +764,7 @@ class ImmediateModeRenderer():
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
         if (picker.is_active):
-            picker.bind_picker_colors_for_lines(layer_index_base,
+            picker.bind_picker_colors_for_lines(layer,
                                       len(self.world_line_segment_points))
             gl.glLineWidth(6)
         else:

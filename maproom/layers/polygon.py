@@ -360,11 +360,11 @@ class PolygonLayer(PointLayer):
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_polygons(self.polygons, self.polygon_adjacency_array)
     
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering polygon layer!!! pick=%s" % (picker))
         # the polygons
         if layer_visibility["polygons"]:
-            renderer.draw_polygons(layer_index_base, picker,
+            renderer.draw_polygons(self, picker,
                                         self.polygons.color,
                                         color_floats_to_int(0, 0, 0, 1.0),
                                         1)

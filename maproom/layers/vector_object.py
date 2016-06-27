@@ -136,7 +136,7 @@ class VectorObjectLayer(LineLayer):
         self.rebuild_image(renderer)
         self.rebuild_needed = False
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Renders the outline of the vector object.
         
         If the vector object subclass is fillable, subclass from
@@ -145,16 +145,16 @@ class VectorObjectLayer(LineLayer):
         log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-        renderer.outline_object(layer_index_base, picker, self.style)
+        renderer.outline_object(self, picker, self.style)
 
-    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Renders the outline of the vector object.
         
         If the vector object subclass is fillable, subclass from
         FillableVectorObject instead of this base class.
         """
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
-        renderer.draw_points(layer_index_base, picker, self.point_size)
+        renderer.draw_points(self, picker, self.point_size)
 
 
 class LineVectorObject(VectorObjectLayer):
@@ -343,7 +343,7 @@ class LineVectorObject(VectorObjectLayer):
         return ((0, 1, self.style.line_start_marker),
                 (1, 0, self.style.line_end_marker))
 
-    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Marker rendering occurs in screen coordinates
         
         It doesn't scale with the image, it scales with the line size on screen
@@ -377,12 +377,12 @@ class FillableVectorObject(LineVectorObject):
         # save time
         return []
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-        renderer.fill_object(layer_index_base, picker, self.style)
-        renderer.outline_object(layer_index_base, picker, self.style)
+        renderer.fill_object(self, picker, self.style)
+        renderer.outline_object(self, picker, self.style)
 
 
 class RectangleMixin(object):
@@ -637,7 +637,7 @@ class ScaledImageObject(RectangleVectorObject):
             self.image_data.load_numpy_array(self.points, raw, projection)
         renderer.set_image_projection(self.image_data, projection)
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Renders the outline of the vector object.
         
         If the vector object subclass is fillable, subclass from
@@ -647,7 +647,7 @@ class ScaledImageObject(RectangleVectorObject):
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         alpha = alpha_from_int(self.style.line_color)
-        renderer.draw_image(layer_index_base, picker, alpha)
+        renderer.draw_image(self, picker, alpha)
 
 
 class OverlayImageObject(RectangleVectorObject):
@@ -730,14 +730,14 @@ class OverlayImageObject(RectangleVectorObject):
             self.rebuild_renderer(renderer)
         self.update_world_control_points(renderer)
 
-    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Marker rendering occurs in screen coordinates
         
         It doesn't scale with the image, it scales with the line size on screen
         """
         log.log(5, "Rendering overlay image %s!!! pick=%s" % (self.name, picker))
         self.set_overlay_position(renderer)
-        self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker)
+        self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, picker)
     
     def set_overlay_position(self, renderer):
         c = renderer.canvas
@@ -745,21 +745,21 @@ class OverlayImageObject(RectangleVectorObject):
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
         renderer.set_image_center_at_screen_point(self.image_data, center, c.screen_rect, 1.0)
     
-    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         alpha = alpha_from_int(self.style.line_color)
-        renderer.draw_image(layer_index_base, picker, alpha)
+        renderer.draw_image(self, picker, alpha)
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         # without this, the superclass method from VectorObjectLayer will get
         # called too
         pass
 
-    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if self.anchor_point_index != self.center_point_index:
             flagged = [self.anchor_point_index]
         else:
             flagged = []
-        renderer.draw_points(layer_index_base, picker, self.point_size, flagged_point_indexes=flagged)
+        renderer.draw_points(self, picker, self.point_size, flagged_point_indexes=flagged)
 
 
 class OverlayScalableImageObject(OverlayImageObject):
@@ -907,13 +907,13 @@ class OverlayTextObject(OverlayScalableImageObject):
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
         return arr
     
-    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         renderer.prepare_to_render_projected_objects()
-        renderer.fill_object(layer_index_base, picker, self.style)
-        renderer.outline_object(layer_index_base, picker, self.style)
+        renderer.fill_object(self, picker, self.style)
+        renderer.outline_object(self, picker, self.style)
         renderer.prepare_to_render_screen_objects()
         alpha = alpha_from_int(self.style.text_color)
-        renderer.draw_image(layer_index_base, picker, alpha)
+        renderer.draw_image(self, picker, alpha)
 
 
 class OverlayIconObject(OverlayScalableImageObject):
@@ -1129,11 +1129,11 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         renderer.set_polygons(polygons, adjacency)
         self.rasterized_polygons = polygons
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-        renderer.draw_polygons(layer_index_base, picker,
+        renderer.draw_polygons(self, picker,
                                self.rasterized_polygons.color,
                                self.style.line_color,
                                1, self.style)
@@ -1197,14 +1197,14 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 #        points = ((p.xy[offset:] - old_origin) * scale) + new_origin
 #        p.xy[offset:] = points
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering annotation layer group %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         if self.manager.project.layer_tree_control.get_selected_layer() == self:
-            renderer.outline_object(layer_index_base, picker, self.style)
+            renderer.outline_object(self, picker, self.style)
 
-    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
         if self.manager.project.layer_tree_control.get_selected_layer() == self:
-            renderer.draw_points(layer_index_base, picker, self.point_size)
+            renderer.draw_points(self, picker, self.point_size)

@@ -122,14 +122,14 @@ class TileLayer(ProjectedLayer):
         self.rebuild_renderer(renderer)
         self.resize(renderer, world_rect, projected_rect, screen_rect)
 
-    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
         if picker.is_active:
             return
         log.log(5, "Rendering tiles!!! pick=%s" % (picker))
         if self.image_data is not None:
             alpha = alpha_from_int(self.style.line_color)
             print "DRAW TILES HERE!!!"
-            renderer.draw_tiles(layer_index_base, picker, alpha)
+            renderer.draw_tiles(self, picker, alpha)
     
     # Utility routines used by info_panels to abstract the server info
     

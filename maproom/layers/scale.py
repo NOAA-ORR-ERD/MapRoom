@@ -66,7 +66,7 @@ class Scale(ScreenLayer):
     def get_step_size(self, reference_size, steps, count):
         return steps[min(bisect.bisect(steps, abs(reference_size)), count - 1)]
 
-    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if picker.is_active:
             return
         log.log(5, "Rendering scale!!! pick=%s" % (picker))

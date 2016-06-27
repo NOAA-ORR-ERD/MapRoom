@@ -170,13 +170,13 @@ class WMSLayer(ProjectedLayer):
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
 
-    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
         if picker.is_active:
             return
         log.log(5, "Rendering wms!!! pick=%s" % (picker))
         if self.image_data is not None:
             alpha = alpha_from_int(self.style.line_color)
-            renderer.draw_image(layer_index_base, picker, alpha)
+            renderer.draw_image(self, picker, alpha)
     
     # Utility routines used by info_panels to abstract the server info
     

@@ -111,7 +111,7 @@ class RasterLayer(ProjectedLayer):
         projection = self.manager.project.layer_canvas.projection
         renderer.set_image_projection(self.image_data, projection)
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering line layer!!! pick=%s" % (picker))
         if picker.is_active:
             return
@@ -120,4 +120,4 @@ class RasterLayer(ProjectedLayer):
         null_picker = NullPicker()
         if (layer_visibility["images"]):
             alpha = alpha_from_int(self.style.line_color)
-            renderer.draw_image(layer_index_base, null_picker, alpha)
+            renderer.draw_image(self, null_picker, alpha)

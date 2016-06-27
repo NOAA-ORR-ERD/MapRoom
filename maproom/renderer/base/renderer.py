@@ -28,7 +28,7 @@ class BaseRenderer():
         pass
     
     def draw_lines(self,
-                   layer_index_base,
+                   layer,
                    picker,
                    style,
                    selected_line_segment_indexes=[],
@@ -39,7 +39,7 @@ class BaseRenderer():
         pass
 
     def draw_points(self,
-                    layer_index_base,
+                    layer,
                     picker,
                     point_size,
                     selected_point_indexes=[],
@@ -67,7 +67,7 @@ class BaseRenderer():
     def release_textures(self):
         pass
 
-    def draw_image(self, layer_index_base, picker, alpha=1.0):
+    def draw_image(self, layer, picker, alpha=1.0):
         pass
 
     def set_invalid_polygons(self, polygons, polygon_count):
@@ -76,7 +76,7 @@ class BaseRenderer():
     def set_polygons(self, polygons, point_adjacency_array):
         pass
 
-    def draw_polygons(self, layer_index_base, picker,
+    def draw_polygons(self, layer, picker,
                       polygon_colors, line_color, line_width,
                       broken_polygon_index=None):
         pass
@@ -109,8 +109,8 @@ class BaseRenderer():
             return None
         return style.fill_color
 
-    def fill_object(self, layer_index_base, picker, style):
+    def fill_object(self, layer, picker, style):
         pass
 
-    def outline_object(self, layer_index_base, picker, style):
+    def outline_object(self, layer, picker, style):
         pass

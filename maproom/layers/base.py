@@ -453,27 +453,26 @@ class Layer(HasTraits):
                projected_rect,
                screen_rect,
                layer_visibility,
-               layer_index_base,
                picker,
                control_points_only=False):
         if control_points_only:
             renderer.prepare_to_render_projected_objects()
-            self.render_control_points_only(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+            self.render_control_points_only(renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker)
         else:
             if hasattr(self, "render_projected"):
                 renderer.prepare_to_render_projected_objects()
-                self.render_projected(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+                self.render_projected(renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker)
             if hasattr(self, "render_screen"):
                 renderer.prepare_to_render_screen_objects()
-                self.render_screen(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+                self.render_screen(renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker)
             if picker.is_active:
                 # Control points should always be clickable, so render them
                 # on top of everything else in this layer when creating the
                 # picker framebuffer
                 renderer.prepare_to_render_projected_objects()
-                self.render_control_points_only(renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker)
+                self.render_control_points_only(renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker)
     
-    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         pass
 
 
@@ -486,10 +485,10 @@ class EmptyLayer(Layer):
 
 
 class ProjectedLayer(Layer):
-    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
         print "Layer %s doesn't have projected objects to render" % self.name
 
 
 class ScreenLayer(Layer):
-    def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, layer_index_base, picker):
+    def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
         print "Layer %s doesn't have screen objects to render" % self.name

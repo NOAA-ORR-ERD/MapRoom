@@ -526,7 +526,7 @@ class LineLayer(PointLayer):
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, layer_index_base, picker):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Actually draw the screen using the current display canvas renderer
         
         """
@@ -536,12 +536,12 @@ class LineLayer(PointLayer):
 
         # the points and line segments
         if layer_visibility["lines"]:
-            renderer.draw_lines(layer_index_base, picker, self.style,
+            renderer.draw_lines(self, picker, self.style,
                             self.get_selected_line_segment_indexes(),
                             self.get_selected_line_segment_indexes(STATE_FLAGGED))
 
         if layer_visibility["points"]:
-            renderer.draw_points(layer_index_base, picker, self.point_size,
+            renderer.draw_points(self, picker, self.point_size,
                              self.get_selected_point_indexes(),
                              self.get_selected_point_indexes(STATE_FLAGGED))
 
