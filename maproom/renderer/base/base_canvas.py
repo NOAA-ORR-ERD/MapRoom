@@ -202,7 +202,7 @@ class BaseCanvas(object):
                 if picker.is_active:
                     if layer.pickable:
                         if layer == self.hide_picker_layer:
-                            log.debug("Hiding picker layer %s from picking itself" % pick_layer_index)
+                            log.debug("Hiding picker layer %s from picking itself" % layer)
                             continue
                         elif layer == selected:
                             delayed_pick_layer = (layer, vis)
