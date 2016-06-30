@@ -121,6 +121,21 @@ class PointBaseLayer(ProjectedLayer):
     def copy_bounds(self):
         ((l, b), (r, t)) = self.bounds
         return ((l, b), (r, t))
+
+    def get_undo_info(self):
+        """ Return a copy of any data needed to restore the state of the layer
+
+        It must be a copy, not a referece, so that it can be stored unchanged
+        even if the layer has further changes by commands in the future.
+        """
+        return (self.copy_points(), self.copy_bounds())
+
+    def restore_undo_info(self, info):
+        """ Restore the state of the layer given the data previously generated
+        by get_undo_info
+        """
+        self.points = info[0]
+        self.bounds = info[1]
     
     ##### JSON Serialization
     

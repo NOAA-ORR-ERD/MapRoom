@@ -15,16 +15,28 @@ def get_parent_layer_data(affected, undo):
     for layer in affected:
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
-        points = layer.copy_points()
-        parent_layer_data.append((layer.invariant, points, layer.copy_bounds()))
+        parent_layer_data.append((layer.invariant, layer.get_undo_info()))
+    return parent_layer_data
+
+def update_linked_layers(lm, layer, undo):
+    """Update truth layer control point in response to dependent layer control
+    point being moved by the user
+    """
+    parent_layer_data = []
+    for dep_cp, truth_inv, truth_cp in lm.get_control_point_links(layer):
+        truth = lm.get_layer_by_invariant(truth_inv)
+        lf = undo.flags.add_layer_flags(truth)
+        lf.layer_items_moved = True
+        parent_layer_data.append((truth_inv, truth.get_undo_info()))
+        truth.copy_control_point_from(truth_cp, layer, dep_cp)
+        truth.update_bounds()
     return parent_layer_data
 
 def restore_layers(editor, old_layer_data, undo=None):
     lm = editor.layer_manager
-    for invariant, old_points, old_bounds in old_layer_data:
+    for invariant, undo_info in old_layer_data:
         layer = lm.get_layer_by_invariant(invariant)
-        layer.points = old_points
-        layer.bounds = old_bounds
+        layer.restore_undo_info(undo_info)
         if undo:
             lf = undo.flags.add_layer_flags(layer)
             lf.layer_items_moved = True
@@ -81,13 +93,14 @@ class MoveControlPointCommand(Command):
         for la in affected:
             lf = undo.flags.add_layer_flags(la)
             lf.layer_items_moved = True
-            child_layer_data.append((la.invariant, la.copy_points(), la.copy_bounds()))
+            child_layer_data.append((la.invariant, la.get_undo_info()))
         
         layer.move_control_point(self.drag, self.anchor, self.dx, self.dy, self.about_center)
+        linked_layer_data = update_linked_layers(lm, layer, undo)
         
         parent_layer_data = update_parent_bounds(layer, undo)
 
-        undo.data = (old_links, child_layer_data, parent_layer_data)
+        undo.data = (old_links, child_layer_data, linked_layer_data, parent_layer_data)
 
         if self.snapped_layer is not None:
             sl = lm.get_layer_by_invariant(self.snapped_layer)
@@ -98,11 +111,11 @@ class MoveControlPointCommand(Command):
 
     def undo(self, editor):
         lm = editor.layer_manager
-        (old_links, child_layer_data, parent_layer_data) = self.undo_info.data
-        child_layer_data.reverse()
-        
-        restore_layers(editor, child_layer_data)
+        (old_links, child_layer_data, linked_layer_data, parent_layer_data) = self.undo_info.data
         restore_layers(editor, parent_layer_data)
+        restore_layers(editor, linked_layer_data)
+        child_layer_data.reverse()
+        restore_layers(editor, child_layer_data)
         
         layer = lm.get_layer_by_invariant(self.layer)
         links = layer.remove_from_master_control_points(self.drag, self.anchor)
@@ -233,7 +246,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         layer.name = self.ui_name
         
         halfway = ((self.cp1[0] + self.cp2[0])/2.0, (self.cp1[1] + self.cp2[1])/2.0)
-        line = LineVectorObject(manager=lm)
+        line = OverlayLineObject(manager=lm)
         line.set_opposite_corners(self.cp1, halfway)
         self.style.line_start_marker = 2
         line.set_style(self.style)
@@ -259,9 +272,13 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         # The line's control point is always 1 because it's the endpoint,
         # and the text box's control point is zero because it's the one
         # corresponding to the first control point at layer creation time
-        text.normalize_world_control_points(c)
+        text.calc_control_points_from_screen(c)
         cp = text.find_nearest_corner(self.cp1)
-        lm.set_control_point_link(line, 1, text, cp)
+        text.anchor_point_index = cp
+        
+        # line is now the truth layer; its changes will be forced to the text
+        # box
+        lm.set_control_point_link(text, cp, line, 1)
         self.save_line = line
 
     def undo_post(self, editor, lm, layer, undo):

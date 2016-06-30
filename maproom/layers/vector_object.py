@@ -650,7 +650,132 @@ class ScaledImageObject(RectangleVectorObject):
         renderer.draw_image(self, picker, alpha)
 
 
-class OverlayImageObject(RectangleVectorObject):
+class OverlayMixin(object):
+    """An overlay is an object that is fixed in size relative to the screen, so
+    zooming in and out doesn't change its size.
+    """
+
+    def calc_control_points_from_screen(self, canvas):
+        pass
+    
+    def update_world_control_points(self, renderer):
+        self.calc_control_points_from_screen(renderer.canvas)
+        projected_point_data = self.compute_projected_point_data()
+        renderer.set_points(projected_point_data, None, None)
+        renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
+        self.update_bounds(True)
+
+    def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
+        if self.rebuild_needed:
+            self.rebuild_renderer(renderer)
+        self.update_world_control_points(renderer)
+
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        """Marker rendering occurs in screen coordinates
+        
+        It doesn't scale with the image, it scales with the line size on screen
+        """
+        log.log(5, "Rendering overlay image %s!!! pick=%s" % (self.name, picker))
+        self.set_overlay_position(renderer)
+        self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, picker)
+    
+    def set_overlay_position(self, renderer):
+        pass
+    
+    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        """Draw the overlay on screen.
+
+        Must be implemented by subclass
+        """
+        raise NotImplementedError
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        # without this, the superclass method from VectorObjectLayer will get
+        # called too
+        pass
+
+
+class OverlayLineObject(OverlayMixin, LineVectorObject):
+    """OverlayLine uses the first control point as the fixed point in world
+    coordinate space, and the 2nd point as the offset in screen space so that
+    the resulting line is always the same length regardless of zoom
+    
+    """
+    name = Unicode("OverlayLine")
+    
+    type = Str("overlay_line_obj")
+    
+    screen_dx = Float(-1)
+    
+    screen_dy = Float(-1)
+
+    def get_undo_info(self):
+        return (self.copy_points(), self.copy_bounds(), self.screen_dx, self.screen_dy)
+
+    def restore_undo_info(self, info):
+        self.points = info[0]
+        self.bounds = info[1]
+        self.screen_dx = info[2]
+        self.screen_dy = info[3]
+    
+    def screen_dx_to_json(self):
+        return self.screen_dx
+
+    def screen_dx_from_json(self, json_data):
+        self.screen_dx = json_data['screen_dx']
+    
+    def screen_dy_to_json(self):
+        return self.screen_dy
+
+    def screen_dy_from_json(self, json_data):
+        self.screen_dy = json_data['screen_dy']
+
+    def set_opposite_corners(self, p1, p2, update_bounds=True):
+        LineVectorObject.set_opposite_corners(self, p1, p2, update_bounds)
+        c = self.manager.project.layer_canvas
+        s1 = c.get_numpy_screen_point_from_world_point(p1)
+        s2 = c.get_numpy_screen_point_from_world_point(p2)
+        s = s2 - s1
+        print "Screen point", s
+        self.screen_dx, self.screen_dy = list(s)
+
+    def move_bounding_box_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
+        if drag == 1:
+            # special case if dragging the screen-space point!
+            c = self.manager.project.layer_canvas
+            p = self.points
+            sx = p.x[1] + dx
+            sy = p.y[1] + dy
+            s1 = c.get_numpy_screen_point_from_world_point((p.x[0], p.y[0]))
+            s2 = c.get_numpy_screen_point_from_world_point((sx, sy))
+            s = s2 - s1
+            print "Moving screen point to", s
+            self.screen_dx, self.screen_dy = list(s)
+            pass
+        else:
+            LineVectorObject.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
+
+    def calc_control_points_from_screen(self, canvas):
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        anchor = canvas.get_numpy_screen_point_from_world_point(p[0]['xy'])
+        xs = anchor[0] + self.screen_dx
+        ys = anchor[1] + self.screen_dy
+        w = canvas.get_numpy_world_point_from_screen_point((xs, ys))
+        #print "world point for anchor %d" % i, w
+        # p[i]['xy'] = w  # Doesn't work!
+        self.points.x[1] = w[0]
+        self.points.y[1] = w[1]
+        self.points.x[2] = (self.points[0].x + self.points[1].x) / 2
+        self.points.y[2] = (self.points[0].y + self.points[1].y) / 2
+    
+    def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        pass
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        LineVectorObject.render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker)
+
+
+class OverlayImageObject(OverlayMixin, RectangleVectorObject):
     """Texture mapped image object that is fixed in size relative to the screen
     
     Image uses the same control points as the rectangle, but uses a texture
@@ -698,6 +823,24 @@ class OverlayImageObject(RectangleVectorObject):
             return
         self.anchor_point_index = index
     
+    def copy_control_point_from(self, cp, other_layer, other_cp):
+        log.debug("copy control point from %s %s to %s %s" % (other_layer.name, other_cp, self.name, cp))
+        x = self.points.x[cp]
+        y = self.points.y[cp]
+        x1 = other_layer.points.x[other_cp]
+        y1 = other_layer.points.y[other_cp]
+        dx = x1 - x
+        dy = y1 - y
+        offset = self.center_point_index + 1
+        self.points[0:offset].x += dx
+        self.points[0:offset].y += dy
+        if self.image_data is not None:
+            c = self.manager.project.layer_canvas
+            renderer = c.get_renderer(self)
+            projection = c.projection
+            self.image_data.set_control_points(self.points, projection)
+            renderer.set_image_projection(self.image_data, projection)
+    
     def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         self.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
         if self.image_data is not None:
@@ -706,11 +849,6 @@ class OverlayImageObject(RectangleVectorObject):
             projection = c.projection
             self.image_data.set_control_points(self.points, projection)
             renderer.set_image_projection(self.image_data, projection)
-    
-    def update_world_control_points(self, renderer):
-        projected_point_data = self.compute_projected_point_data()
-        renderer.set_points(projected_point_data, None, None)
-        self.update_bounds(True)
 
     def rebuild_image(self, renderer):
         """Update renderer
@@ -724,20 +862,6 @@ class OverlayImageObject(RectangleVectorObject):
             self.image_data = ImageData(raw.shape[1], raw.shape[0])
             self.image_data.load_numpy_array(self.points, raw)
         renderer.set_image_screen(self.image_data)
-
-    def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
-        if self.rebuild_needed:
-            self.rebuild_renderer(renderer)
-        self.update_world_control_points(renderer)
-
-    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
-        """Marker rendering occurs in screen coordinates
-        
-        It doesn't scale with the image, it scales with the line size on screen
-        """
-        log.log(5, "Rendering overlay image %s!!! pick=%s" % (self.name, picker))
-        self.set_overlay_position(renderer)
-        self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, picker)
     
     def set_overlay_position(self, renderer):
         c = renderer.canvas
@@ -748,11 +872,6 @@ class OverlayImageObject(RectangleVectorObject):
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         alpha = alpha_from_int(self.style.line_color)
         renderer.draw_image(self, picker, alpha)
-
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
-        # without this, the superclass method from VectorObjectLayer will get
-        # called too
-        pass
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if self.anchor_point_index != self.center_point_index:
@@ -779,6 +898,16 @@ class OverlayScalableImageObject(OverlayImageObject):
     text_height = Float(-1)
     
     border_width = Int(0)
+
+    def get_undo_info(self):
+        return (self.copy_points(), self.copy_bounds(), self.text_width, self.text_height, self.border_width)
+
+    def restore_undo_info(self, info):
+        self.points = info[0]
+        self.bounds = info[1]
+        self.text_width = info[2]
+        self.text_height = info[3]
+        self.border_width = info[4]
     
     def text_width_to_json(self):
         return self.text_width
@@ -810,7 +939,7 @@ class OverlayScalableImageObject(OverlayImageObject):
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
 
-    def normalize_world_control_points(self, canvas):
+    def calc_control_points_from_screen(self, canvas):
         h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # array indexes of numpy images are reversed
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         anchor = canvas.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
@@ -827,13 +956,6 @@ class OverlayScalableImageObject(OverlayImageObject):
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
             self.points.y[i] = w[1]
-
-    def update_world_control_points(self, renderer):
-        self.normalize_world_control_points(renderer.canvas)
-        projected_point_data = self.compute_projected_point_data()
-        renderer.set_points(projected_point_data, None, None)
-        renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
-        self.update_bounds(True)
     
     def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         # Note: center point drag is rigid body move so text box size is only
