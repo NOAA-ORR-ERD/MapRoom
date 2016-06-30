@@ -279,13 +279,12 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         # line is now the truth layer; its changes will be forced to the text
         # box
         lm.set_control_point_link(text, cp, line, 1)
+        self.undo_post_data = (text, cp)
         self.save_line = line
 
     def undo_post(self, editor, lm, layer, undo):
-        # Control point removal is specified using the line's control points.
-        # The drag point is always at the end and therefore control point 1;
-        # the anchor point is always the beginning, i.e. control point 0
-        self.save_line.remove_from_master_control_points(1, 0)
+        layer, cp = self.undo_post_data
+        lm.remove_control_point_links(layer, cp)
 
 
 class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
@@ -301,12 +300,15 @@ class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
         lm.insert_loaded_layer(icon, editor, **kwargs)
         lf = undo.flags.add_layer_flags(icon)
         lf.layer_loaded = True
+        # Set the control point link to the icon. The fixed (anchor) point of
+        # the line is control point 0 and the end attached to the text box is
+        # control point 1
         lm.set_control_point_link(self.save_line, 0, icon, icon.center_point_index)
 
     def undo_post(self, editor, lm, layer, undo):
         DrawArrowTextBoxCommand.undo_post(self, editor, lm, layer, undo)
-        # remove point linked to the icon object
-        self.save_line.remove_from_master_control_points(0, 1)
+        # remove point linked to the icon object.
+        lm.remove_control_point_links(self.save_line, 0)
 
 
 class DrawLineCommand(DrawVectorObjectCommand):
