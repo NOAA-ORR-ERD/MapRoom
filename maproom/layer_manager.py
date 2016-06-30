@@ -119,12 +119,6 @@ class LayerManager(Document):
     
     def get_from_json_attrs(self):
         return [(m[0:-10], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-10]) and m.endswith("_from_json")]
-    
-    def next_invariant_to_json(self):
-        return self.next_invariant
-
-    def next_invariant_from_json(self, json_data):
-        self.next_invariant = json_data['next_invariant']
 
     def debug_invariant(self):
         layers = self.flatten()
@@ -319,6 +313,11 @@ class LayerManager(Document):
                     layer.invariant = self.get_next_invariant()
                 self.insert_loaded_layer(layer, mi=mi, skip_invariant=True)
                 layers.append(layer)
+
+                # Automatically adjust next_invariant to reflect highest
+                # invariant seen
+                if layer.invariant >= self.next_invariant:
+                    self.next_invariant = layer.invariant + 1
         self.recalc_all_bounds()
         return layers
     
