@@ -50,7 +50,7 @@ class VectorObjectLayer(LineLayer):
     
     rebuild_needed = Bool(False)
 
-    rotation = Float(25.0)
+    rotation = Float(0.0)
     
     # class attributes
     center_point_index = 0
@@ -236,6 +236,10 @@ class LineVectorObject(VectorObjectLayer):
         self.select_point(point_index)
         self.drag_point = point_index
         self.find_anchor_of(point_index)
+        self.set_initial_rotation()
+
+    def set_initial_rotation(self):
+        self.initial_rotation = self.rotation
         
     def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp, about_center=False):
         from ..vector_object_commands import MoveControlPointCommand
@@ -332,8 +336,8 @@ class LineVectorObject(VectorObjectLayer):
         a1 = np.arctan2(*p1)
         p2 = p1 + (dx, dy)
         a2 = np.arctan2(*p2)
-        self.rotation = (a2 - a1) * 180.0 / np.pi
-        print p1, p2, self.rotation
+        delta = (a2 - a1) * 180.0 / np.pi
+        self.rotation = self.initial_rotation + delta
 
     def rasterize_points(self, renderer, projected_point_data, z, cp_color):
         n = np.alen(self.points)

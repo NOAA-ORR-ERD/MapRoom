@@ -14,6 +14,11 @@ import library.rect as rect
 from mouse_commands import *
 from vector_object_commands import *
 
+
+class NoObjectError(RuntimeError):
+    pass
+
+
 """ MouseHandler: all the UI interaction goes through here.
 
 These are the original editing rules from version 1.x of maproom:
@@ -113,6 +118,7 @@ class MouseHandler(object):
         self.snapped_point = None, 0
         self.first_mouse_down_position = 0, 0
         self.after_first_mouse_up = False
+        self.last_modifier_state = None
         self.mouse_up_too_close = False
         self.can_snap = False
         
@@ -390,31 +396,39 @@ class MouseHandler(object):
         """
         self.render_snapped_point(renderer)
 
-    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False, rotate=False):
+    def get_current_object_info(self):
         c = self.layer_canvas
         e = c.project
         lm = e.layer_manager
         if (e.clickable_object_mouse_is_over is None):
-            return
+            raise NoObjectError
 
         (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-        if rotate:
-            cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
-        else:
-            cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
-        if cmd is not None:
-            e.process_command(cmd)
+        return layer, object_type, object_index
+
+    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
+        return cmd
 
     def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
-        c = self.layer_canvas
-        e = c.project
-        lm = e.layer_manager
-        if e.clickable_object_mouse_is_over is None or (world_d_x == 0 and world_d_y == 0):
+        if world_d_x == 0 and world_d_y == 0:
             return
-
-        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+        (layer, object_type, object_index) = self.get_current_object_info()
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
-        e.process_command(cmd)
+        return cmd
+
+    def rotated(self, world_d_x, world_d_y):
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
+        return cmd
+
+    def finished_rotate(self, world_d_x, world_d_y):
+        if world_d_x == 0 and world_d_y == 0:
+            return
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
+        return cmd
 
     def render_snapped_point(self, renderer):
         """Highlight snapped point when applicable
@@ -511,6 +525,7 @@ class ObjectSelectionMode(MouseHandler):
         e = c.project
         lm = e.layer_manager
 
+        self.last_modifier_state = None
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
             if (e.clickable_object_is_ugrid_point()):
@@ -538,23 +553,45 @@ class ObjectSelectionMode(MouseHandler):
 
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
-        p = self.get_position(event)
-        proj_p = c.get_world_point_from_screen_point(p)
-        d_x = p[0] - c.mouse_down_position[0]
-        d_y = c.mouse_down_position[1] - p[1]
-        #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
-        if (d_x != 0 or d_y != 0):
-            rotate = event.ControlDown()
-            w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
-            w_p1 = c.get_world_point_from_screen_point(p)
-            if not c.HasCapture():
-                c.CaptureMouse()
-            self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point, about_center=event.ShiftDown(), rotate=rotate)
-            if not rotate:
-                c.mouse_down_position = p
-            #print "move: %s" % str(c.mouse_move_position)
-            #print "down: %s" % str(c.mouse_down_position)
-            c.render(event)
+        e = c.project
+        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
+            p = self.get_position(event)
+            proj_p = c.get_world_point_from_screen_point(p)
+            d_x = p[0] - c.mouse_down_position[0]
+            d_y = c.mouse_down_position[1] - p[1]
+            #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+            if (d_x != 0 or d_y != 0):
+                modifiers = event.GetModifiers()
+                rotate = modifiers & wx.MOD_CMD
+                last = self.last_modifier_state
+                if last is None:
+                    self.last_modifier_state = modifiers
+                elif last != modifiers:
+                    if last & wx.MOD_CMD and not modifiers & wx.MOD_CMD:
+                        # stopped rotation, pick up with dragging next time
+                        c.mouse_down_position = p
+                        self.last_modifier_state = modifiers
+                        return
+                    else:
+                        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+                        layer.set_initial_rotation()  # reset rotation when control is pressed again
+                        c.mouse_down_position = p
+                        self.last_modifier_state = modifiers
+                        return
+                       
+                self.last_modifier_state = modifiers
+                w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
+                w_p1 = c.get_world_point_from_screen_point(p)
+                if not c.HasCapture():
+                    c.CaptureMouse()
+                if rotate:
+                    cmd = self.rotated(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
+                else:
+                    cmd = self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point, about_center=modifiers & wx.MOD_SHIFT)
+                    c.mouse_down_position = p
+                if cmd is not None:
+                    c.project.process_command(cmd)
+                    c.render(event)
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
@@ -563,6 +600,7 @@ class ObjectSelectionMode(MouseHandler):
             c.selection_box_is_being_defined = False
             return
 
+        e = c.project
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
 
@@ -576,13 +614,23 @@ class ObjectSelectionMode(MouseHandler):
             if (layer is not None):
                 self.select_objects_in_rect(event, w_r, layer)
             c.selection_box_is_being_defined = False
-        else:
+        elif (e.clickable_object_mouse_is_over is not None):
+            modifiers = event.GetModifiers()
+            last = self.last_modifier_state
+            if last is not None and last != modifiers:
+                modifiers = last
+            rotate = modifiers & wx.MOD_CMD
             p = self.get_position(event)
             w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
             w_p1 = c.get_world_point_from_screen_point(p)
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
-            self.finished_drag(c.mouse_down_position, p, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+            if rotate:
+                cmd = self.finished_rotate(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
+            else:
+                cmd = self.finished_drag(c.mouse_down_position, p, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+            if cmd is not None:
+                e.process_command(cmd)
         c.selection_box_is_being_defined = False
         
         # This render is needed to update the picker buffer because the
