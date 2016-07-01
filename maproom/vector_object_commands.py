@@ -124,6 +124,62 @@ class MoveControlPointCommand(Command):
         return self.undo_info
 
 
+class RotateObjectCommand(Command):
+    short_name = "rotate_obj"
+    serialize_order =  [
+        ('layer', 'layer'),
+        ('drag', 'int'),
+        ('dx', 'float'),
+        ('dy', 'float'),
+        ]
+    
+    def __init__(self, layer, drag, dx, dy):
+        Command.__init__(self, layer)
+        self.drag = drag
+        self.dx = dx
+        self.dy = dy
+    
+    def __str__(self):
+        return "Rotate Object"
+    
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer and next_command.drag == self.drag:
+                self.dx += next_command.dx
+                self.dy += next_command.dy
+                return True
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
+        affected = layer.children_affected_by_move()
+        child_layer_data = []
+        for la in affected:
+            lf = undo.flags.add_layer_flags(la)
+            lf.layer_items_moved = True
+            child_layer_data.append((la.invariant, la.get_undo_info()))
+        
+        layer.rotate_point(self.drag, self.dx, self.dy)
+        
+        parent_layer_data = update_parent_bounds(layer, undo)
+
+        undo.data = (child_layer_data, parent_layer_data)
+        return undo
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        (child_layer_data, parent_layer_data) = self.undo_info.data
+        restore_layers(editor, parent_layer_data)
+        child_layer_data.reverse()
+        restore_layers(editor, child_layer_data)
+        return self.undo_info
+
+
 class DrawVectorObjectCommand(Command):
     short_name = "vector_object"
     ui_name = None

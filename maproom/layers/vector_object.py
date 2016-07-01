@@ -49,6 +49,8 @@ class VectorObjectLayer(LineLayer):
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
     
     rebuild_needed = Bool(False)
+
+    rotation = Float(25.0)
     
     # class attributes
     center_point_index = 0
@@ -315,6 +317,24 @@ class LineVectorObject(VectorObjectLayer):
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         pass
     
+    def rotating_selected_objects(self, world_dx, world_dy):
+        from ..vector_object_commands import RotateObjectCommand
+        cmd = RotateObjectCommand(self, self.drag_point, world_dx, world_dy)
+        return cmd
+
+    def rotate_point(self, drag, dx, dy):
+        """Rotate the object (about the center) using the x & y offset from the
+        dragged point to calculate the angle of rotation
+        """
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        c = p[self.center_point_index]
+        p1 = p.xy[drag] - c.xy
+        a1 = np.arctan2(*p1)
+        p2 = p1 + (dx, dy)
+        a2 = np.arctan2(*p2)
+        self.rotation = (a2 - a1) * 180.0 / np.pi
+        print p1, p2, self.rotation
+
     def rasterize_points(self, renderer, projected_point_data, z, cp_color):
         n = np.alen(self.points)
         if not self.display_center_control_point:
@@ -326,12 +346,24 @@ class LineVectorObject(VectorObjectLayer):
             num_cp += 1
         colors[0:num_cp] = self.control_point_color
         renderer.set_points(projected_point_data, z, colors, num_points=n)
-    
+
+    def rotate_points(self, projected_point_data, center=None):
+        if center is None:
+            center = projected_point_data[self.center_point_index]
+        r = self.rotation / 180.0 * np.pi
+        rot = np.array(((np.cos(r), -np.sin(r)), (np.sin(r), np.cos(r))), dtype=np.float32)
+        p = np.dot(projected_point_data - center, rot) + center
+        return p
+
+    def rasterize_lines(self, renderer, projected_point_data, colors):
+        points = self.rotate_points(projected_point_data)
+        renderer.set_lines(points, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
+
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
-        renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
+        self.rasterize_lines(renderer, projected_point_data, colors)
 
     def get_marker_points(self):
         """Return a tuple of point indexes for each marker.
@@ -536,7 +568,9 @@ class EllipseVectorObject(RectangleVectorObject):
         # set_lines expects a color list for each point, not a single color
         colors = np.empty(num_segments, dtype=np.uint32)
         colors.fill(line_color)
-        renderer.set_lines(xy, lsi, colors)
+
+        points = self.rotate_points(xy, p[self.center_point_index])
+        renderer.set_lines(points, lsi, colors)
 
 
 class CircleVectorObject(EllipseVectorObject):

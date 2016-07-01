@@ -390,7 +390,7 @@ class MouseHandler(object):
         """
         self.render_snapped_point(renderer)
 
-    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
+    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False, rotate=False):
         c = self.layer_canvas
         e = c.project
         lm = e.layer_manager
@@ -398,8 +398,12 @@ class MouseHandler(object):
             return
 
         (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
-        e.process_command(cmd)
+        if rotate:
+            cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
+        else:
+            cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
+        if cmd is not None:
+            e.process_command(cmd)
 
     def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
         c = self.layer_canvas
@@ -540,12 +544,14 @@ class ObjectSelectionMode(MouseHandler):
         d_y = c.mouse_down_position[1] - p[1]
         #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
         if (d_x != 0 or d_y != 0):
+            rotate = event.ControlDown()
             w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
             w_p1 = c.get_world_point_from_screen_point(p)
             if not c.HasCapture():
                 c.CaptureMouse()
-            self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point, about_center=event.ShiftDown())
-            c.mouse_down_position = p
+            self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point, about_center=event.ShiftDown(), rotate=rotate)
+            if not rotate:
+                c.mouse_down_position = p
             #print "move: %s" % str(c.mouse_move_position)
             #print "down: %s" % str(c.mouse_down_position)
             c.render(event)
