@@ -129,6 +129,9 @@ class MouseHandler(object):
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
 
+    def get_help_text(self):
+        return ""
+
     def process_mouse_down(self, event):
         return
 
@@ -157,13 +160,36 @@ class MouseHandler(object):
                     log.debug("snapping to layer %s type %s oi %s %s %s" % (layer, object_type, object_index, before, position))
         return position
 
+    def update_status_text(self, proj_p=None, obj=True, zoom=False, instructions=""):
+        c = self.layer_canvas
+        e = c.project
+        prefs = e.task.get_preferences()
+        items = []
+        if proj_p is not None:
+            items.append(format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format))
+        if zoom:
+            items.append("Zoom level=%.2f" % c.zoom_level)
+        if instructions:
+            items.append(instructions)
+        e.task.status_bar.message = " ".join(items)
+
+        obj_text = ""
+        if obj:
+            try:
+                (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+                if c.picker.is_ugrid_point_type(object_type):
+                    obj_text = "Point %s on %s" % (object_index + 1, layer.name)
+                elif c.picker.is_ugrid_line_type(object_type):
+                    obj_text = "Line %s on %s" % (object_index + 1, layer.name)
+            except TypeError:
+                pass
+        e.task.status_bar.debug = obj_text
+
     def process_mouse_motion_up(self, event):
         c = self.layer_canvas
         e = c.project
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
-        prefs = c.project.task.get_preferences()
-        status_text = "%s  Zoom level=%.2f" % (format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
 
         c.release_mouse()
         # print "mouse is not down"
@@ -175,21 +201,13 @@ class MouseHandler(object):
                 c.project.clickable_object_mouse_is_over = o
             else:
                 c.project.clickable_object_mouse_is_over = None
-            if c.picker.is_ugrid_point_type(object_type):
-                obj_text = "Point %s on %s" % (object_index + 1, layer.name)
-            elif c.picker.is_ugrid_line_type(object_type):
-                obj_text = "Line %s on %s" % (object_index + 1, layer.name)
-            else:
-                obj_text = ""
-            c.project.task.status_bar.debug = obj_text
 
         else:
             c.project.clickable_object_mouse_is_over = None
             c.project.clickable_object_in_layer = None
-            c.project.task.status_bar.debug = ""
         mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.project.clickable_object_mouse_is_over is not None))
 
-        c.project.task.status_bar.message = status_text
+        self.update_status_text(proj_p, True, True, self.get_help_text())
 
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
@@ -339,8 +357,7 @@ class MouseHandler(object):
         
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
-        status_text = "%s  Zoom level=%.2f" % (format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format), c.zoom_level)
-        c.project.task.status_bar.message = status_text
+        self.update_status_text(proj_p, True, True)
 
     def process_mouse_leave(self, event):
         # this messes up object dragging when the mouse goes outside the window
@@ -520,13 +537,26 @@ class ObjectSelectionMode(MouseHandler):
     
     This is a precursor to an object-based control system of mouse modes
     """
+
+    def get_help_text(self):
+        text = "Click & drag to move, press Shift to resize about center"
+        if sys.platform == "darwin":
+            text += ", Cmd for rotate"
+        else:
+            text += ", Ctrl for rotate"
+        return text
+
     def process_mouse_down(self, event):
         c = self.layer_canvas
         e = c.project
         lm = e.layer_manager
+        proj_p = None
 
         self.last_modifier_state = None
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
+            p = self.get_position(event)
+            proj_p = c.get_world_point_from_screen_point(p)
+
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
             if (e.clickable_object_is_ugrid_point()):
                 self.clicked_on_point(event, layer, object_index)
@@ -550,6 +580,8 @@ class ObjectSelectionMode(MouseHandler):
                 else:
                     world_point = c.get_world_point_from_screen_point(event.GetPosition())
                     self.clicked_on_empty_space(event, layer, world_point)
+
+        self.update_status_text(proj_p, True, False, self.get_help_text())
 
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
@@ -592,6 +624,8 @@ class ObjectSelectionMode(MouseHandler):
                 if cmd is not None:
                     c.project.process_command(cmd)
                     c.render(event)
+
+            self.update_status_text(proj_p, True, False, self.get_help_text())
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
