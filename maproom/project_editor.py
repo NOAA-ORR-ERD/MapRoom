@@ -330,6 +330,11 @@ class ProjectEditor(FrameworkEditor):
             t = wx.BITMAP_TYPE_PNG
         else:
             t = valid[ext]
+
+        # Deselect all layers because it's designed to be used as post-
+        # processing image
+        self.layer_tree_control.select_layer(None)
+        self.layer_canvas.render()  # force update including deselected layer
         image = self.layer_canvas.get_canvas_as_image()
         # "save as" dialog contains confirmation for overwriting existing
         # file, so just write the file here
@@ -353,6 +358,7 @@ class ProjectEditor(FrameworkEditor):
         self.print_preview()
     
     def save_as_pdf(self, path=None):
+        self.layer_tree_control.select_layer(None)
         pdf_canvas = renderer.PDFCanvas(project=self, path=path)
         pdf_canvas.copy_viewport_from(self.layer_canvas)
         pdf_canvas.update_renderers()
