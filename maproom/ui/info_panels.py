@@ -1355,14 +1355,14 @@ class InfoPanel(PANELTYPE):
                 selection_changed = True
             different_layer = False
 
-        log.debug("%s: change count=%s, old count=%s, diff layer=%s, sel_changed=%s" % (layer.name, layer.change_count, self.current_layer_change_count, different_layer, selection_changed))
-
         self.current_layer_displayed = layer
         self.current_layer_change_count = -1
         if (layer is not None):
             self.current_layer_change_count = layer.change_count
-
-        fields = self.get_visible_fields(layer)
+            log.debug("%s: change count=%s, old count=%s, diff layer=%s, sel_changed=%s" % (layer.name, layer.change_count, self.current_layer_change_count, different_layer, selection_changed))
+            fields = self.get_visible_fields(layer)
+        else:
+            fields = []
         self.display_fields(layer, fields, different_layer, selection_changed, has_focus)
 
     def display_fields(self, layer, fields, different_layer, selection_changed, has_focus):
