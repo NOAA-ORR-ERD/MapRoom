@@ -70,9 +70,6 @@ class LayerStyle(object):
         ("HTML", None),
         ]
     
-    icon_styles = [(cat, name) for cat, icons in marplot_icons for name, index in icons]
-    icon_id_to_name = [name for cat, icons in marplot_icons for name, index in icons]
-    
     fonts = None  # Will be initialized in call to get_font_names
     
     standard_font_sizes = [4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72, 144]

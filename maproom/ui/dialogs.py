@@ -116,8 +116,6 @@ class IconDialog(wx.Dialog):
 
         self.icon_list = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.VSCROLL)
         self.grid = wx.FlexGridSizer(cols=self.num_cols, hgap=2, vgap=2)
-        self.icon_id_to_name = [name for cat, icons in marplot_icons for name, index in icons]
-        self.icon_id_to_cat = [cat for cat, icons in marplot_icons for name, index in icons]
 
         self.Bind(wx.EVT_BUTTON, self.OnButton)
         self.Bind(wx.EVT_ENTER_WINDOW, self.on_enter)
@@ -127,7 +125,7 @@ class IconDialog(wx.Dialog):
         icon_cats = [cat for cat, icons in marplot_icons]
         cat = wx.ListBox(self, -1, choices=icon_cats)
         cat.Bind(wx.EVT_LISTBOX, self.on_category)
-        cat_id = icon_cats.index(self.icon_id_to_cat[iid])
+        cat_id = icon_cats.index(marplot_icon_id_to_category[iid])
         cat.SetSelection(cat_id)
         self.repopulate_grid(cat_id)
 
@@ -175,7 +173,7 @@ class IconDialog(wx.Dialog):
         wid = event.GetId()
         if wid in self.id_map:
             iid = self.id_map[wid]
-            name = self.icon_id_to_name[iid]
+            name = marplot_icon_id_to_name[iid]
             self.name.SetLabel(name)
     
     def on_leave(self, event):

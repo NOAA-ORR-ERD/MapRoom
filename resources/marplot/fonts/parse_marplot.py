@@ -145,17 +145,51 @@ if __name__ == "__main__":
         "marplot_icons = [",
         ]
 
-    for category in sorted(mm.icon_list.keys()):
-        lines.append("  ('%s', [" % category)
+    # Set up different creation and output orders so that the old icon ids
+    # remain the same and new icon ids are added at the end.
+    category_creation_order = sorted(mm.icon_list.keys())
+    category_creation_order.append("Simple")
+    category_output_order = sorted(mm.icon_list.keys())
+    category_output_order[0:0] = ["Simple"]
+
+    # For now, the simple icons are just copies of a select few shapes
+    simple_icons = []
+    for icon in mm.icon_list["Shapes"]:
+        if icon.name in ["Cross", "Dot", "Small dot", "Circle"]:
+            simple_icons.append(icon)
+        # png = icon.get_png()
+        # with open("%s.png" % icon.name, 'wb') as fh:
+        #     fh.write(png)
+    mm.icon_list["Simple"] = simple_icons
+
+    category_lines = {}
+    id_to_name = {}
+    id_to_cat = {}
+    for category in category_creation_order:
+        c = []
+        c.append("  ('%s', [" % category)
         for icon in sorted(mm.icon_list[category]):
-            lines.append("    ('%s', %d)," % (icon.name, icon_count))
+            c.append("    ('%s', %d)," % (icon.name, icon_count))
+            id_to_name[icon_count] = icon.name
+            id_to_cat[icon_count] = category
             icon_count += 1
             png_data.append(repr(icon.get_png()))
-        lines.append("  ]),")
+        c.append("  ]),")
+        category_lines[category] = c
+    for category in category_output_order:
+        lines.extend(category_lines[category])
     lines.append("]")
     lines.append("marplot_icon_data = [")
     lines.append(",\n".join(png_data))
     lines.append("]")
+
+    # Precompute these id mappings so they don't have to be calculated on the
+    # fly elsewhere.
+    lines.append("")
+    lines.append("marplot_icon_id_to_name = %s" % repr(id_to_name))
+
+    lines.append("")
+    lines.append("marplot_icon_id_to_category = %s" % repr(id_to_cat))
     
     header = """# Automatically generated file, DO NOT EDIT!",
 # Generated from resources/marplot/fonts/parse_marplot.py",

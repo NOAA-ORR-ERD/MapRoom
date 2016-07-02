@@ -15,6 +15,7 @@ from ..mouse_commands import *
 from ..menu_commands import *
 from ..vector_object_commands import MoveControlPointCommand
 from ..renderer import color_floats_to_int, int_to_color_floats
+from ..library.marplot_icons import marplot_icon_id_to_name
 
 import logging
 log = logging.getLogger(__name__)
@@ -943,7 +944,7 @@ class MarplotIconField(InfoField):
     
     def fill_data(self, layer):
         marker = self.get_marker(layer)
-        self.ctrl.SetLabel(LayerStyle.icon_id_to_name[marker])
+        self.ctrl.SetLabel(marplot_icon_id_to_name[marker])
     
     def create_control(self):
         c = wx.Button(self.parent, -1, "none", size=(self.default_width, -1))
