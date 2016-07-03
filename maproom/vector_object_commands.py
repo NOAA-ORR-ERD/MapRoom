@@ -124,6 +124,38 @@ class MoveControlPointCommand(Command):
         return self.undo_info
 
 
+class UnlinkControlPointCommand(Command):
+    short_name = "unlink_cpt"
+    serialize_order =  [
+        ('layer', 'layer'),
+        ('anchor', 'int'),
+        ]
+    
+    def __init__(self, layer, anchor):
+        Command.__init__(self, layer)
+        self.anchor = anchor
+    
+    def __str__(self):
+        return "Unlink Control Point #%d" % self.anchor
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        old_links = layer.remove_from_master_control_points(self.anchor, -1)
+        undo.data = (old_links,)
+        return undo
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        (old_links,) = self.undo_info.data
+        for dep, master in old_links:
+            lm.set_control_point_link(dep, master)
+        return self.undo_info
+
+
 class RotateObjectCommand(Command):
     short_name = "rotate_obj"
     serialize_order =  [

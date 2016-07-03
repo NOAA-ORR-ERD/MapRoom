@@ -1000,15 +1000,16 @@ class ControlPointSelectionMode(ObjectSelectionMode):
     menu_item_tooltip = "Select objects and move control points in the current layer"
     
     def right_clicked_on_point(self, event, layer, point_index):
-        menu = None
+        menu = []
         try:
             if layer.can_anchor_point_move():
-                menu = [
-                    ("Set Anchor to Control Point %d" % point_index, SetAnchorCommand(layer, point_index)),
-                    ]
+                menu.append(("Set Anchor to Control Point %d" % point_index, SetAnchorCommand(layer, point_index)))
         except AttributeError:
             pass
-        if menu is not None:
+        truth, truth_cp = layer.get_control_point_link(point_index)
+        if truth is not None:
+            menu.append(("Remove Control Point Link to %s" % truth.name, UnlinkControlPointCommand(layer, point_index)))
+        if menu:
             self.layer_canvas.project.popup_context_menu_from_commands(self.layer_canvas, menu)
 
     def is_snappable_to_layer(self, layer):

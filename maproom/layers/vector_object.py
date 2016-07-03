@@ -74,6 +74,13 @@ class VectorObjectLayer(LineLayer):
         except KeyError:
             raise TypeError("optional control_point_links data not present; skipping")
 
+    def get_control_point_link(self, point_index):
+        links = self.manager.get_control_point_links(self)
+        for dep_cp, truth_inv, truth_cp in links:
+            if point_index == dep_cp:
+                return self.manager.get_layer_by_invariant(truth_inv), truth_cp
+        return None, None
+
     def get_info_panel_text(self, prop):
         if prop == "Path length":
             km = self.calculate_distances()
