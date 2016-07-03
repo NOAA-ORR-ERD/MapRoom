@@ -746,18 +746,28 @@ class LayerManager(Document):
         # json can't handle dictionaries with tuples as their keys, so have
         # to compress
         cplist = []
-        for entry, truth in self.control_point_links.iteritems():
-            cplist.append((entry, truth))
+        for entry, (truth, locked) in self.control_point_links.iteritems():
+            # retain compatibility with old versions, only add locked flag if
+            # present
+            if locked:
+                cplist.append((entry, truth, locked))
+            else:
+                cplist.append((entry, truth))
         return cplist
 
     def control_point_links_from_json(self, json_data):
         cplist = json_data['control_point_links']
         cpdict = {}
-        for entry, truth in cplist:
-            cpdict[tuple(entry)] = tuple(truth)
+        for item in cplist:
+            try:
+                entry, truth, locked = item
+            except ValueError:
+                entry, truth = item
+                locked = False
+            cpdict[tuple(entry)] = (tuple(truth), locked)
         self.control_point_links = cpdict
         
-    def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None):
+    def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None, locked=False):
         """Links a control point to a truth (master) layer
         
         Parameters can be passed two ways: if only two parameters
@@ -778,21 +788,21 @@ class LayerManager(Document):
             entry = (dep_or_layer.invariant, truth_or_cp)
             truth = (truth_layer.invariant, truth_cp)
         log.debug("control_point_links: adding %s child of %s" % (entry, truth))
-        self.control_point_links[entry] = truth
+        self.control_point_links[entry] = (truth, locked)
         
     def get_control_point_links(self, layer):
         """Returns the list of control points that the specified layer links to
         
         """
         links = []
-        for dep, truth in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.iteritems():
             dep_invariant, dep_cp = dep[0], dep[1]
             if dep_invariant == layer.invariant:
                 truth_invariant, truth_cp = truth[0], truth[1]
-                links.append((dep_cp, truth_invariant, truth_cp))
+                links.append((dep_cp, truth_invariant, truth_cp, locked))
         return links
     
-    def remove_control_point_links(self, layer, remove_cp=-1):
+    def remove_control_point_links(self, layer, remove_cp=-1, force=False):
         """Remove links to truth layer control points from the specified
         dependent layer.
         
@@ -801,12 +811,12 @@ class LayerManager(Document):
         dependent layer.
         """
         to_remove = []
-        for dep, truth in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.iteritems():
             log.debug("control_point_links: %s child of %s" % (dep, truth))
             dep_layer_invariant, dep_cp = dep[0], dep[1]
-            if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp):
-                to_remove.append((dep, truth))
-        for dep, truth in to_remove:
+            if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp) and (not locked or force):
+                to_remove.append((dep, truth, locked))
+        for dep, truth, locked in to_remove:
             log.debug("control_point_links: removing %s from %s" % (dep, truth))
             del self.control_point_links[dep]
         return to_remove
@@ -818,7 +828,7 @@ class LayerManager(Document):
         and propagated to the dependent layer
         """
         layers = []
-        for dep, truth in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.iteritems():
             truth_layer, truth_cp = self.get_layer_by_invariant(truth[0]), truth[1]
             dep_layer, dep_cp = self.get_layer_by_invariant(dep[0]), dep[1]
             dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
@@ -832,23 +842,23 @@ class LayerManager(Document):
         Used when deleting a layer.
         """
         to_remove = []
-        for dep, truth in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.iteritems():
             invariant, _ = dep[0], dep[1]
             if invariant == layer.invariant:
-                to_remove.append((dep, truth))
+                to_remove.append((dep, truth, locked))
             else:
                 invariant, _ = truth[0], truth[1]
                 if invariant == layer.invariant:
-                    to_remove.append((dep, truth))
-        for dep, truth in to_remove:
+                    to_remove.append((dep, truth, locked))
+        for dep, truth, locked in to_remove:
             log.debug("control_point_links: removing %s from %s" % (dep, truth))
             del self.control_point_links[dep]
         return to_remove
     
     def restore_all_links_to_layer(self, layer, links):
-        for dep, truth in links:
+        for dep, truth, locked in links:
             log.debug("control_point_links: restoring %s from %s" % (dep, truth))
-            self.control_point_links[dep] = truth
+            self.control_point_links[dep] = (truth, locked)
 
     def destroy_recursive(self, layer):
         if (layer.is_folder()):

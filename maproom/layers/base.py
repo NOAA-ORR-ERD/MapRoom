@@ -180,6 +180,9 @@ class Layer(HasTraits):
             'name': self.name,
             'style': str(self.style),
             'children': [],
+
+            # control point links only used for copy/paste of layers, not for
+            # restoring from project files
             'control_point_links': self.manager.get_control_point_links(self),
             }
         if self.file_path:

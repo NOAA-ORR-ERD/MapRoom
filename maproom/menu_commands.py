@@ -181,13 +181,13 @@ class PasteLayerCommand(Command):
         
         new_links = []
         for old_invariant, new_layer in old_invariant_map.iteritems():
-            for dep_cp, truth_invariant, truth_cp in new_layer.control_point_links:
+            for dep_cp, truth_invariant, truth_cp, locked in new_layer.control_point_links:
                 # see if new truth layer has changed because it's also in the
                 # copied group
                 if truth_invariant in old_invariant_map:
                     truth_invariant = old_invariant_map[truth_invariant].invariant
                 new_links.append((new_layer, dep_cp))
-                lm.set_control_point_link((new_layer.invariant, dep_cp), (truth_invariant, truth_cp))
+                lm.set_control_point_link((new_layer.invariant, dep_cp), (truth_invariant, truth_cp), locked=locked)
 
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
@@ -215,7 +215,7 @@ class PasteLayerCommand(Command):
         lm.next_invariant = saved_invariant
         
         for layer, cp in cp_links:
-            lm.remove_control_point_links(layer, cp)
+            lm.remove_control_point_links(layer, cp, force=True)
         
         undo = UndoInfo()
         undo.flags.layers_changed = True

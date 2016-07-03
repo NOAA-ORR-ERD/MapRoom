@@ -64,7 +64,10 @@ class VectorObjectLayer(LineLayer):
     
     def check_for_problems(self, window):
         pass
-    
+
+# control point links are not used when restoring from disk, only on copied
+# layers when pasting them back.
+
 #    def control_point_links_to_json(self):
 #        return self.control_point_links
 
@@ -75,8 +78,7 @@ class VectorObjectLayer(LineLayer):
             raise TypeError("optional control_point_links data not present; skipping")
 
     def get_control_point_link(self, point_index):
-        links = self.manager.get_control_point_links(self)
-        for dep_cp, truth_inv, truth_cp in links:
+        for dep_cp, truth_inv, truth_cp, locked in self.manager.get_control_point_links(self):
             if point_index == dep_cp:
                 return self.manager.get_layer_by_invariant(truth_inv), truth_cp
         return None, None
@@ -269,7 +271,7 @@ class LineVectorObject(VectorObjectLayer):
     def move_polyline_point(self, anchor, dx, dy):
         pass
     
-    def remove_from_master_control_points(self, drag, anchor):
+    def remove_from_master_control_points(self, drag, anchor, force=False):
         # if the item is moved and it's linked to a master control point,
         # detatch it.  Moving dependent points will not update the master
         # point.
@@ -277,7 +279,7 @@ class LineVectorObject(VectorObjectLayer):
             remove = drag
         else:
             remove = -1
-        return self.manager.remove_control_point_links(self, remove)
+        return self.manager.remove_control_point_links(self, remove, force)
     
     def move_bounding_box_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         """ Adjust points within object after bounding box has been resized

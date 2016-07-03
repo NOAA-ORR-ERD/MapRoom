@@ -23,7 +23,7 @@ def update_linked_layers(lm, layer, undo):
     point being moved by the user
     """
     parent_layer_data = []
-    for dep_cp, truth_inv, truth_cp in lm.get_control_point_links(layer):
+    for dep_cp, truth_inv, truth_cp, locked in lm.get_control_point_links(layer):
         truth = lm.get_layer_by_invariant(truth_inv)
         lf = undo.flags.add_layer_flags(truth)
         lf.layer_items_moved = True
@@ -144,7 +144,7 @@ class UnlinkControlPointCommand(Command):
         self.undo_info = undo = UndoInfo()
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
-        old_links = layer.remove_from_master_control_points(self.anchor, -1)
+        old_links = layer.remove_from_master_control_points(self.anchor, -1, force=True)
         undo.data = (old_links,)
         return undo
 
@@ -363,7 +363,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         text.calc_control_points_from_screen(c)
         cp = text.find_nearest_corner(self.cp1)
         text.anchor_point_index = cp
-        
+
         # line is now the truth layer; its changes will be forced to the text
         # box
         lm.set_control_point_link(text, cp, line, 1)
@@ -391,7 +391,7 @@ class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
         # Set the control point link to the icon. The fixed (anchor) point of
         # the line is control point 0 and the end attached to the text box is
         # control point 1
-        lm.set_control_point_link(self.save_line, 0, icon, icon.center_point_index)
+        lm.set_control_point_link(self.save_line, 0, icon, icon.center_point_index, locked=True)
 
     def undo_post(self, editor, lm, layer, undo):
         DrawArrowTextBoxCommand.undo_post(self, editor, lm, layer, undo)
