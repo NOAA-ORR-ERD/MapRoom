@@ -126,7 +126,7 @@ class MaproomProjectTask(FrameworkTask):
         return toolbars
 
     def _extra_actions_default(self):
-        layer_menu = self.create_menu("Menu", "Layer", "LayerStackGroup", "LayerUtilGroup", "LayerDeleteGroup", "LayerCheckGroup")
+        layer_menu = self.create_menu("Menu", "Layer", "LayerCreateGroup", "LayerStackGroup", "LayerUtilGroup", "LayerDeleteGroup", "LayerCheckGroup")
         tools_menu = self.create_menu("Menu", "Tools", "ToolsManageGroup")
         actions = [
             # Menubar additions
@@ -166,11 +166,6 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions_Menu_File_NewGroup(self):
         return [
             NewProjectAction(),
-            NewVectorLayerAction(),
-            NewAnnotationLayerAction(),
-            NewWMSLayerAction(),
-            NewTileLayerAction(),
-            NewLonLatLayerAction(),
             ]
     
     def get_actions_Menu_File_SaveGroup(self):
@@ -245,6 +240,15 @@ class MaproomProjectTask(FrameworkTask):
         return [
             BoundingBoxAction(),
             PickerFramebufferAction(),
+            ]
+    
+    def get_actions_Menu_Layer_LayerCreateGroup(self):
+        return [
+            NewVectorLayerAction(),
+            NewAnnotationLayerAction(),
+            NewWMSLayerAction(),
+            NewTileLayerAction(),
+            NewLonLatLayerAction(),
             ]
 
     def get_actions_Menu_Layer_LayerStackGroup(self):
