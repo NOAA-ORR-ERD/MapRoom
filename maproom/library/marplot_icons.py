@@ -16,7 +16,13 @@ def get_numpy_bitmap(icon_num):
     import cStringIO
     
     data = marplot_icon_data[icon_num]
-    image = Image.open(cStringIO.StringIO(data))
+    size = list(marplot_icon_max_size)
+    size[1] += 1  # hack to fix vertical centering
+    image = Image.new("RGBA", size)
+    overlay = Image.open(cStringIO.StringIO(data))
+    x = (image.size[0] - overlay.size[0]) / 2
+    y = (image.size[1] - overlay.size[1]) / 2 + 1
+    image.paste(overlay, (x, y))
     return np.array(image)
 
 marplot_icon_max_size = (41, 36)
