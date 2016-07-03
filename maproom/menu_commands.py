@@ -280,6 +280,8 @@ class DeleteLayerCommand(Command):
         children = lm.get_children(layer)
         parents = layer.parents_affected_by_move()
         links = lm.remove_all_links_to_layer(layer)
+        for child in children:
+            links.extend(lm.remove_all_links_to_layer(child))
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         
