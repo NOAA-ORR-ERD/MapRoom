@@ -1,3 +1,25 @@
+07/05/2016
+---------------------------
+Released 3.1b25
+- RM Clarified help text for object rotation
+- RM Fixed #697: added lon lines through +360
+- RM Refs #687: added experimental code to rotate bounding box after rotation, but needs yet-to-be-written method to inscribe rotated rectangle in another to work correctly
+- RM Fixed delete layer bug that didn't remove control point links for deleted layers
+- RM Fixed #695: added concept of "locked" control point links that won't be removed during ordinary control point movement
+- RM Added context menu to unlink control points
+- RM Fixed #694: moved new layer menu items to Layer menu
+- RM Fixed #692: fixed off-center and incorrectly scaled marplot icons
+- RM Refs #692: added new placeholder category for simple shape icons
+- RM Fixed #691: deselect layer before creating image or pdf
+- RM Refs #691: fix info panels to handle no selected layer
+- RM Fixed #693: added status bar for mouse mode help text
+- RM Refs #687: Fixed handling of press/release of Ctrl during rotation or dragging
+- RM Refs #687: initial linear transformation support for object rotation
+- RM Fixed #690: added calculation for next_invariant on project load
+- RM Refs #677: fixed undo/redo for text boxes that wasn't handling the control point links correctly
+- RM Refs #677: added OverlayLine object that stays fixed in screen space
+- RM Refs #688: removed old reference to pick layer index
+
 06/27/2016
 ---------------------------
 Released 3.1b24
