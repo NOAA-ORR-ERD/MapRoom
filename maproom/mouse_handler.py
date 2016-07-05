@@ -539,7 +539,7 @@ class ObjectSelectionMode(MouseHandler):
     """
 
     def get_help_text(self):
-        text = "Click & drag to move, press Shift to resize about center"
+        text = "Click & drag to move control point, press Shift to resize about object center"
         if sys.platform == "darwin":
             text += ", Cmd for rotate"
         else:
