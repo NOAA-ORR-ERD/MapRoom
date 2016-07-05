@@ -347,6 +347,10 @@ class LineVectorObject(VectorObjectLayer):
         a2 = np.arctan2(*p2)
         delta = (a2 - a1) * 180.0 / np.pi
         self.rotation = self.initial_rotation + delta
+        self.update_bounds_after_rotation()
+
+    def update_bounds_after_rotation(self):
+        pass
 
     def rasterize_points(self, renderer, projected_point_data, z, cp_color):
         n = np.alen(self.points)
@@ -549,6 +553,26 @@ class EllipseVectorObject(RectangleVectorObject):
         sx = width / 2
         sy = height / 2
         return sx, sy
+
+    def update_bounds_after_rotation(self):
+        # FIXME: Experimental routine to adjust bounding box points after a
+        # rotation; doesn't work yet because it needs a way to calculate the
+        # semi-major axes from the rotated square, not the axis-aligned square.
+        if True:
+            return
+        # rotated ellipse bbox from http://stackoverflow.com/questions/87734/how-do-you-calculate-the-axis-aligned-bounding-box-of-an-ellipse
+        print self.initial_rotation, self.rotation
+        phi = self.rotation * np.pi / 180.0
+        sx, sy = self.get_semimajor_axes(self.points)
+        ux = sx * math.cos(phi)
+        uy = sx * math.sin(phi)
+        vx = sy * math.cos(phi+np.pi/2)
+        vy = sy * math.sin(phi+np.pi/2)
+        bbox_halfwidth = math.sqrt(ux*ux + vx*vx)
+        bbox_halfheight = math.sqrt(uy*uy + vy*vy)
+        dx = bbox_halfwidth - sx
+        dy = bbox_halfheight - sy
+        self.move_bounding_box_point(2, 0, dx, dy, about_center=True)
 
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
