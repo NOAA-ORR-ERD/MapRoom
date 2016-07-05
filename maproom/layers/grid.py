@@ -70,7 +70,7 @@ class Grid(ScreenLayer):
         for longitude in self.lon_steps:
 
 #            print "  longitude = " + str(longitude)
-            if (longitude < -180 or longitude > 180):
+            if (longitude < -180 or longitude > 360):
                 continue
             w_p = (longitude, world_rect[0][1])
             s_p = render_window.get_screen_point_from_world_point(w_p)
