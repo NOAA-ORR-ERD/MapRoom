@@ -64,6 +64,12 @@ class VectorObjectLayer(LineLayer):
     
     def check_for_problems(self, window):
         pass
+    
+    def rotation_to_json(self):
+        return self.rotation
+
+    def rotation_from_json(self, json_data):
+        self.rotation = json_data['rotation']
 
 # control point links are not used when restoring from disk, only on copied
 # layers when pasting them back.
