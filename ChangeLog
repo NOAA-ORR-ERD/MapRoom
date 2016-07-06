@@ -1,3 +1,9 @@
+07/06/2016
+---------------------------
+Released 3.1b26
+- RM Refs #700: added quieter rotation restore; set to 0 if not present to avoid triggering warning message
+- RM Fixed #700: added rotation to list of attributes saved via json
+
 07/05/2016
 ---------------------------
 Released 3.1b25
