@@ -365,7 +365,7 @@ class MaproomProjectTask(FrameworkTask):
         active_toolbar = self.active_editor.mouse_mode_toolbar
         for toolbar in window.tool_bar_managers:
             name = toolbar.id
-            state = (name == "ToolBar" or name == active_toolbar)
+            state = (name == "%s:ToolBar" % self.id or name == active_toolbar)
             toolbar.visible = state
             info = window._aui_manager.GetPane(name)
             info.Show(state)
@@ -376,7 +376,7 @@ class MaproomProjectTask(FrameworkTask):
     def mode_toolbar_changed(self, changed_to):
         for toolbar in self.window.tool_bar_managers:
             name = toolbar.id
-            if name == "ToolBar" or name == changed_to:
+            if name == "%s:ToolBar" % self.id or name == changed_to:
                 state = True
             else:
                 state = False
