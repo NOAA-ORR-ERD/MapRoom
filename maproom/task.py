@@ -141,16 +141,15 @@ class MaproomProjectTask(FrameworkTask):
             ]
         return actions
 
+    def pane_layout_initial_visibility(self):
+        return pane_layout.pane_initially_visible()
+
     ###########################################################################
     # 'FrameworkTask' interface.
     ###########################################################################
     
     def activated(self):
         FrameworkTask.activated(self)
-        visible = pane_layout.pane_initially_visible()
-        for pane in self.window.dock_panes:
-            if pane.id in visible:
-                pane.visible = visible[pane.id]
         
         self.init_threaded_processing()
         
