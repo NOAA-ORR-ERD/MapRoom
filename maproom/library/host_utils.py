@@ -128,7 +128,7 @@ class TileHost(object):
     # Reference for tile number calculations:
     # http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames
     
-    def world_to_tile_num(self, zoom, lon, lat, clamp=True):
+    def world_to_tile_num(self, zoom, lon, lat):
         zoom = int(zoom)
         if zoom == 0:
             return (0, 0)
@@ -136,11 +136,10 @@ class TileHost(object):
         n = 2 << (zoom - 1)
         xtile = int((lon + 180.0) / 360.0 * n)
         ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
-        if clamp:
-            xtile = max(xtile, 0)
-            ytile = max(ytile, 0)
-            xtile = min(xtile, n - 1)
-            ytile = min(ytile, n - 1)
+
+        # x values not clamped to allow wrapping across the dateline
+        ytile = max(ytile, 0)
+        ytile = min(ytile, n - 1)
             
         return (xtile, ytile)
     
@@ -172,6 +171,8 @@ class TileHost(object):
         url = self.get_next_url()
         if self.reverse_coords:
             x, y = y, x
+        n = 2 << (zoom - 1)
+        x = x % n  # use modulo to wrap around
         return "%s/%s/%s/%s%s" % (url, zoom, x, y, self.suffix)
     
     def get_tile_cache_dir(self, cache_root):
@@ -188,6 +189,8 @@ class TileHost(object):
     
     def get_tile_cache_file(self, cache_root, zoom, x, y):
         template = self.get_tile_cache_file_template(cache_root)
+        n = 2 << (zoom - 1)
+        x = x % n  # use modulo to wrap around
         path = template % (zoom, x, y)
         return path
     
