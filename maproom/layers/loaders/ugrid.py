@@ -3,7 +3,7 @@ import numpy as np
 import re
 
 from fs.opener import opener
-from pyugrid.ugrid import UGrid, DataSet
+from pyugrid.ugrid import UGrid, UVar
 
 from common import BaseLayerLoader
 from maproom.layers import LineLayer, TriangleLayer
@@ -21,7 +21,7 @@ class UGridLoader(BaseLayerLoader):
     name = "UGrid"
 
     def find_depths(self, grid):
-        found = grid.find_data_sets('sea_floor_depth_below_geoid', 'node')
+        found = grid.find_uvars('sea_floor_depth_below_geoid', 'node')
         if found:
             return found.pop()
         return None
@@ -71,7 +71,7 @@ class UGridLoader(BaseLayerLoader):
             lines = layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points
 
         grid = UGrid(points, faces, lines)
-        dataset = DataSet('depth', location='node', data=depths)
+        dataset = UVar('depth', location='node', data=depths)
         dataset.attributes['units'] = layer.depth_unit
         dataset.attributes['standard_name'] = "sea_floor_depth_below_geoid"
         dataset.attributes['positive'] = "down"
