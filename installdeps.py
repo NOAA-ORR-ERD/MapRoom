@@ -19,7 +19,7 @@ if not using_conda:
         ['https://github.com/robmcmullen/mac-builds.git', 'packages/netCDF4', 'gattai netcdf.gattai'],
         ])
 
-topdir = os.getcwd()
+topdir = os.path.join(os.getcwd(), "deps")
 
 for dep in deps:
     os.chdir(topdir)
