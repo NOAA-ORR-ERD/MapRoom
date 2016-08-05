@@ -1,15 +1,23 @@
 #!/usr/bin/env python
 import subprocess
 import os
+import sys
 
 deps = [
     [".", 'pytriangle-1.6.1', 'python setup.py install'],
-    ['https://github.com/MacPython/gattai.git',],
-    ['https://github.com/robmcmullen/mac-builds.git', 'packages/netCDF4', 'gattai netcdf.gattai'],
     ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
-    ['https://github.com/robmcmullen/pyugrid.git',],
     ['https://github.com/robmcmullen/OWSLib.git',],
 ]
+
+using_conda = "Continuum Analytics" in sys.version
+
+if not using_conda:
+    # extra stuff isn't available through pypi or not easily built by hand
+    deps.extend([
+        ['https://github.com/robmcmullen/pyugrid.git',],
+        ['https://github.com/MacPython/gattai.git',],
+        ['https://github.com/robmcmullen/mac-builds.git', 'packages/netCDF4', 'gattai netcdf.gattai'],
+        ])
 
 topdir = os.getcwd()
 
