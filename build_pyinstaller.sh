@@ -7,9 +7,11 @@ echo $PATH
 TARGET=MapRoom27
 cp maproom.py $TARGET.py
 rm -rf build/$TARGET dist/$TARGET dist/$TARGET.app
-pyinstaller -y --debug --additional-hooks-dir=pyinstaller --windowed $TARGET.py
+pyinstaller -y -i maproom/icons/maproom.icns --osx-bundle-identifier gov.noaa.maproom --debug --additional-hooks-dir=pyinstaller --windowed $TARGET.py
 
 # Manual fixes
+cp pyinstaller/Info.plist dist/$TARGET.app/Contents
+
 cd dist/$TARGET.app/Contents/MacOS/
 
 # fixup the duplicate wxPython libs
