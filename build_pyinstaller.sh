@@ -1,12 +1,9 @@
 #!/bin/bash -x
 set -v
 
-echo $CONDA_DEFAULT_ENV
-echo $PATH
-
 # can't use MapRoom because maproom is a directory name and the filesystem is
 # case-insensitive
-BUILD_TARGET=MapRoom_app
+BUILD_TARGET=staging_MapRoom
 
 # Use the old py2app name in case users have symlinks or something and they are
 # updating in place
@@ -33,8 +30,30 @@ ln -s libwx_osx_cocoau-3.0.0.2.0.dylib libwx_osx_cocoau-3.0.dylib
 ln -s libgeos_c.1.dylib libgeos_c.dylib
 
 #### CLEANUP
+
+# remove unnecessary stuff
+cd ../Resources
+# rm -rf tcl tk
+rm maproom/library/*.c
+rm maproom/library/*.pyx
+rm maproom/renderer/gl/*.c
+rm maproom/renderer/gl/*.pyx
+rm maproom/renderer/gl/*.h
+
 cd ../../../..
 rm $BUILD_TARGET.py
 
-# Make it the same application name as the old py2app name
-mv dist/$BUILD_TARGET.app dist/$FINAL_TARGET.app
+#### BUNDLE
+
+VERSION=`python -c "import maproom.Version; print maproom.Version.VERSION"`
+mkdir -p dist-$VERSION
+rm -f dist-$VERSION/$FINAL_TARGET.app dist-$VERSION/$FINAL_TARGET-$VERSION-darwin.zip
+
+# Make it the same application name as the old py2app name, and do it in one
+# step by removing any arch except 64 bit
+/usr/bin/ditto -arch x86_64 dist/$BUILD_TARGET.app dist-$VERSION/$FINAL_TARGET.app
+
+# create zip file
+cd dist-$VERSION
+/usr/bin/zip -r -9 -q $FINAL_TARGET-$VERSION-darwin.zip $FINAL_TARGET.app
+cd ..
