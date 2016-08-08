@@ -33,7 +33,6 @@ ln -s libgeos_c.1.dylib libgeos_c.dylib
 
 # remove unnecessary stuff
 cd ../Resources
-# rm -rf tcl tk
 rm maproom/library/*.c
 rm maproom/library/*.pyx
 rm maproom/renderer/gl/*.c
@@ -47,7 +46,7 @@ rm $BUILD_TARGET.py
 
 VERSION=`python -c "import maproom.Version; print maproom.Version.VERSION"`
 mkdir -p dist-$VERSION
-rm -f dist-$VERSION/$FINAL_TARGET.app dist-$VERSION/$FINAL_TARGET-$VERSION-darwin.zip
+rm -rf dist-$VERSION/$FINAL_TARGET.app dist-$VERSION/$FINAL_TARGET-$VERSION-darwin.zip
 
 # Make it the same application name as the old py2app name, and do it in one
 # step by removing any arch except 64 bit
@@ -55,5 +54,5 @@ rm -f dist-$VERSION/$FINAL_TARGET.app dist-$VERSION/$FINAL_TARGET-$VERSION-darwi
 
 # create zip file
 cd dist-$VERSION
-/usr/bin/zip -r -9 -q $FINAL_TARGET-$VERSION-darwin.zip $FINAL_TARGET.app
+tar cfj $FINAL_TARGET-$VERSION-darwin.tbz $FINAL_TARGET.app
 cd ..
