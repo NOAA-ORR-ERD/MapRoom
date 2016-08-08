@@ -1,0 +1,100 @@
+name: maproom
+channels:
+- NOAA-ORR-ERD
+- conda-forge
+- defaults
+dependencies:
+- NOAA-ORR-ERD::pyproj=1.9.4=py27_1
+- NOAA-ORR-ERD::pytest-cov=2.2.1=py_0
+- NOAA-ORR-ERD::pyugrid=0.2.2=py27_0
+- NOAA-ORR-ERD::wxpython=3.0.2.0=py27_0
+- conda-forge::ca-certificates=2016.8.2=3
+- conda-forge::certifi=2016.8.2=py27_0
+- conda-forge::curl=7.49.1=0
+- conda-forge::cython=0.24.1=py27_0
+- conda-forge::expat=2.1.0=1
+- conda-forge::freetype=2.6.3=1
+- conda-forge::freexl=1.0.2=1
+- conda-forge::gdal=2.1.1=np111py27_1
+- conda-forge::geos=3.4.2=2
+- conda-forge::giflib=5.1.2=1
+- conda-forge::hdf4=4.2.11=4
+- conda-forge::hdf5=1.8.17=2
+- conda-forge::icu=56.1=4
+- conda-forge::jpeg=9b=0
+- conda-forge::json-c=0.12=0
+- conda-forge::kealib=1.4.6=3
+- conda-forge::libdap4=3.18.0=2
+- conda-forge::libiconv=1.14=3
+- conda-forge::libnetcdf=4.4.0=2
+- conda-forge::libpng=1.6.23=0
+- conda-forge::libspatialite=4.3.0a=9
+- conda-forge::libtiff=4.0.6=6
+- conda-forge::libuuid=1.0.3=1
+- conda-forge::libxml2=2.9.3=9
+- conda-forge::ncurses=5.9=8
+- conda-forge::netcdf4=1.2.4=np111py27_2
+- conda-forge::openjpeg=2.1.0=6
+- conda-forge::openssl=1.0.2h=2
+- conda-forge::pillow=3.3.0=py27_0
+- conda-forge::pip=8.1.2=py27_0
+- conda-forge::postgresql=9.5.3=2
+- conda-forge::proj.4=4.9.2=0
+- conda-forge::pycrypto=2.6.1=py27_0
+- conda-forge::pyinstaller=3.2=py27_2
+- conda-forge::pyparsing=2.1.1=py27_0
+- conda-forge::pytest=2.9.2=py27_0
+- conda-forge::pytz=2016.6.1=py27_0
+- conda-forge::readline=6.2=0
+- conda-forge::requests=2.10.0=py27_0
+- conda-forge::shapely=1.5.16=np111py27_1
+- conda-forge::six=1.10.0=py27_0
+- conda-forge::sqlite=3.13.0=1
+- conda-forge::wheel=0.29.0=py27_0
+- conda-forge::xerces-c=3.1.4=2
+- conda-forge::xz=5.2.2=0
+- conda-forge::zlib=1.2.8=3
+- configobj=5.0.6=py27_0
+- coverage=4.2=py27_0
+- nomkl=1.0=0
+- numpy=1.11.1=py27_nomkl_0
+- py=1.4.31=py27_0
+- pyopengl=3.1.1a1=np111py27_0
+- pyopengl-accelerate=3.1.1a1=np111py27_0
+- python=2.7.12=1
+- python.app=1.2=py27_4
+- reportlab=3.3.0=py27_0
+- setuptools=19.2=py27_0
+- tk=8.5.18=0
+- pip:
+  - atrcopy==3.1.0
+  - bson==0.4.3
+  - certifi==2016.8.2
+  - cython==0.24.1
+  - gdal==2.1.1
+  - jsonpickle==0.9.3
+  - maproom (/Users/chris.barker/HAZMAT/ERD-PythonPackages/MapRoom)==3.1b27
+  - netcdf4==1.2.4
+  - omnivore==0.13.2
+  - owslib (/Users/chris.barker/HAZMAT/ERD-PythonPackages/MapRoom/deps/OWSLib)==0.9.dev0
+  - pillow==3.3.0
+  - pip==8.1.2
+  - post-gnome (/Users/chris.barker/HAZMAT/ERD-PythonPackages/MapRoom/deps/GnomeTools/post_gnome)==0.1.0
+  - pycrypto==2.6.1
+  - pyinstaller==3.2
+  - pyparsing==2.1.1
+  - pyproj==1.9.4
+  - pytest==2.9.2
+  - pytest-cov==2.2.1
+  - python-dateutil==2.5.3
+  - pytriangle==1.6.1
+  - pytz==2016.6.1
+  - pyugrid==0.2.2
+  - requests==2.10.0
+  - shapely==1.5.16
+  - six==1.10.0
+  - wheel==0.29.0
+  - wxpython==3.0.2.0
+  - wxpython-common==3.0.2.0
+prefix: /Users/chris.barker/miniconda2/envs/maproom
+
