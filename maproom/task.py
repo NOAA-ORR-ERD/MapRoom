@@ -247,6 +247,7 @@ class MaproomProjectTask(FrameworkTask):
             NewAnnotationLayerAction(),
             NewWMSLayerAction(),
             NewTileLayerAction(),
+            NewCompassRoseLayerAction(),
             NewLonLatLayerAction(),
             ]
 

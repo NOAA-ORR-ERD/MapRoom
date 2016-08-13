@@ -3,6 +3,7 @@ from line import LineLayer
 from folder import RootLayer, Folder
 from grid import Grid
 from scale import Scale
+from compass_rose import CompassRose
 from triangle import TriangleLayer
 from polygon import PolygonLayer
 from raster import RasterLayer

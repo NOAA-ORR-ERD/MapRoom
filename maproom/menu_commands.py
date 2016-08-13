@@ -6,7 +6,7 @@ from omnivore.framework.errors import ProgressCancelError
 from omnivore.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import loaders, Layer, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer
+from layers import loaders, Layer, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer, CompassRose
 from library.Boundary import Boundaries
 from vector_object_commands import update_parent_bounds, get_parent_layer_data, restore_layers
 
@@ -106,6 +106,8 @@ class AddLayerCommand(Command):
         saved_invariant = lm.next_invariant
         if self.type == "grid":
             layer = Grid(manager=lm)
+        elif self.type == "compass_rose":
+            layer = CompassRose(manager=lm)
         elif self.type == "triangle":
             layer = TriangleLayer(manager=lm)
         elif self.type == "annotation":

@@ -241,6 +241,14 @@ class NewLonLatLayerAction(EditorAction):
         cmd = AddLayerCommand("grid")
         self.active_editor.process_command(cmd)
 
+class NewCompassRoseLayerAction(EditorAction):
+    name = 'New Compass Rose Layer'
+    tooltip = 'Create new compass rose or north-up arrow layer'
+
+    def perform(self, event):
+        cmd = AddLayerCommand("compass_rose")
+        self.active_editor.process_command(cmd)
+
 class NewAnnotationLayerAction(EditorAction):
     name = 'New Annotation Layer'
     tooltip = 'Create new annotation layer'
