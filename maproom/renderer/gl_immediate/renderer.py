@@ -788,3 +788,19 @@ class ImmediateModeRenderer():
         self.vbo_line_segment_point_xys.unbind()
         
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
+
+    def draw_screen_svg(self, r, svg):
+        """Draw SVG to be centered in rect.
+
+        """
+        gl.glDisable(gl.GL_TEXTURE_2D)
+        c = self.canvas
+        x = (r[0][0] + r[1][0]) / 2
+        y = (r[0][1] + r[1][1]) / 2
+        w = rect.width(r)
+        h = rect.height(r)
+        scale = min(w / svg.width, h / svg.height)
+        x_origin = x - (scale * svg.width)/2
+        y_origin = y - (scale * svg.height)/2
+        svg.draw(x_origin, y_origin, scale=scale, angle=0)
+        gl.glEnable(gl.GL_TEXTURE_2D)
