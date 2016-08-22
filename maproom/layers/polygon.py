@@ -106,7 +106,9 @@ class PolygonLayer(PointLayer):
             green = color_floats_to_int(0.25, 0.5, 0, 0.75)
             blue = color_floats_to_int(0.0, 0.0, 0.5, 0.75)
             gray = color_floats_to_int(0.5, 0.5, 0.5, 0.75)
-            color_array = np.array((0, green, blue, gray), dtype=np.uint32)
+            mapbounds = color_floats_to_int(0.9, 0.9, 0.9, 0.15)
+            spillable = color_floats_to_int(0.0, 0.2, 0.5, 0.15)
+            color_array = np.array((0, green, blue, gray, mapbounds, spillable), dtype=np.uint32)
             
             total = 0
             for p in xrange(n_polygons):
@@ -115,7 +117,7 @@ class PolygonLayer(PointLayer):
                 self.polygon_adjacency_array.next[total: total + c] = np.arange(total + 1, total + c + 1)
                 self.polygon_adjacency_array.next[total + c - 1] = total
                 total += c
-                self.polygons.color[p] = color_array[np.clip(f_polygon_identifiers[p]['feature_code'], 1, 3)]
+                self.polygons.color[p] = color_array[np.clip(f_polygon_identifiers[p]['feature_code'], 1, len(color_array))]
 
             self.polygon_identifiers = list(f_polygon_identifiers)
             self.points.state = 0

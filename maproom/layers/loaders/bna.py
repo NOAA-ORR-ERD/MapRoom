@@ -140,11 +140,16 @@ def load_bna_file(uri):
             feature_code = int(pieces[1].strip('"'))
         except ValueError:
             feature_code = 0
+        name = pieces[0].strip('"')
+        if name.lower() in ['map bounds', 'mapbounds']:
+            feature_code = 4
+        elif name.lower() in ['spillable area', 'spillablearea']:
+            feature_code = 5
         polygon_identifiers.append(
-            {'name': pieces[0].strip('"'),
+            {'name': name,
              'feature_code': feature_code}
             )
-            
+
         num_points = int(pieces[2])
         original_num_points = num_points
 
