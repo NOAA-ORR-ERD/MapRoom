@@ -317,6 +317,8 @@ try:
             'pytest',
             'coverage',
             'pytest-cov',
+            'docutils',
+            'markdown',
             ],
         data_files=data_files,
         packages=find_packages(),

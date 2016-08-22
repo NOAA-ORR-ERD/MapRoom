@@ -68,6 +68,8 @@ class LayerStyle(object):
     text_format_styles = [
         ("Plain Text", None),
         ("HTML", None),
+        ("RST Markup", None),
+        ("Markdown", None),
         ]
     
     fonts = None  # Will be initialized in call to get_font_names

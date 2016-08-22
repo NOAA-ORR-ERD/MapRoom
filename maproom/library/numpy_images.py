@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import cStringIO
+from docutils.core import publish_parts
 
 import wx
 import wx.html
 
 import numpy as np
 from PIL import Image
+import markdown
 
 import cgi
 
@@ -81,6 +83,24 @@ def simple_text_formatter(text):
     return text
 
 
+def rst_text_formatter(text):
+    # rst creates a document class for the first section heading, so force a
+    # document header which puts all other section headings into section divs.
+    # But of course that means removing the fake header and div from the
+    # output.
+    wrap = "======\rREMOVE\n======\n\nREMOVETHIS\n\n" + text
+    text = publish_parts(wrap, writer_name='html')['html_body']
+    _, wrapped = text.split("REMOVETHIS</p>", 1)
+    if "</div>" in wrapped:
+        wrapped, _ = wrapped.rsplit("</div>", 1)
+    return wrapped
+
+
+def markdown_text_formatter(text):
+    text = markdown.markdown(text)
+    return text
+
+
 class OffScreenHTML(object):
     """
     test of rendering HTML to an off-screen bitmap
@@ -144,6 +164,10 @@ class OffScreenHTML(object):
         
         if text_format == 0:
             text = simple_text_formatter(text)
+        elif text_format == 2:
+            text = rst_text_formatter(text)
+        elif text_format == 3:
+            text = markdown_text_formatter(text)
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
         w, h, bitmap = self.render(text, face, size, width_in_pixels)

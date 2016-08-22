@@ -20,3 +20,5 @@ pyinstaller
 shapely
 pytz
 setuptools==19.2
+docutils
+markdown
