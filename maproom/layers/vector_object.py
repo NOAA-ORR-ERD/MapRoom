@@ -1072,6 +1072,7 @@ class OverlayScalableImageObject(OverlayImageObject):
                 self.text_height = min_border
                 dy = 0
 #            print " AFTER: move_cp: text w,h", self.text_width, self.text_height
+            self.rebuild_needed = True  # Force rebuild to re-flow text
 
         self.move_bounding_box_point(drag, anchor, dx, dy, about_center, ax, ay)
 
