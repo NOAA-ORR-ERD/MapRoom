@@ -1,7 +1,10 @@
 """Sample panes for Skeleton
 
 """
+import cgi
+
 import wx
+from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 
 # Enthought library imports.
 from traits.api import on_trait_change
@@ -212,3 +215,70 @@ class SidebarPane(FrameworkPane):
         active = self.control._radio
         if active is not None and active.is_shown:
             active.managed_window.refresh_view()
+
+
+class HtmlHelpPane(FrameworkPane):
+    #### TaskPane interface ###################################################
+
+    id = 'maproom.html_help_pane'
+    name = 'HTML Help'
+    code_header = "Markup"
+    desc_header = "Appearance"
+    help_text = """<h1>Title</h1>|<h1>Title</h1>
+    <h2>Section</h2>|<h2>Section</h2>
+    <h3>Subsection</h3>|<h3>Subsection</h3>
+    <p>|start new paragraph
+    <i>italics</i>|<i>italics</i>
+    <b>bold</b>|<b>bold</b>
+    <ul>|start list
+    <li>list item|<ul><li>list item</li></ul>
+    </ul>|end list
+    """
+
+    def create_contents(self, parent):
+        control = PyClickableHtmlWindow(parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE, size=(400,300))
+        control.SetPage(self.get_help_text())
+        return control
+
+    def get_help_text(self):
+        lines = ["<table><tr><th>%s</th><th>%s</th>" % (self.code_header, self.desc_header)]
+        print self.help_text
+        for line in self.help_text.splitlines():
+            if "|" in line:
+                code, desc = line.split("|", 1)
+                code = cgi.escape(code).replace("[RET]", "<br>")
+                lines.append("<tr><td><tt>%s</tt></td><td>%s</td></tr>\n" % (code, desc))
+            else:
+                lines.append("<tr><td colspan=2>%s</td></tr>" % line)
+        lines.append("</table>")
+        print lines
+        return "\n".join(lines)
+
+
+class RSTHelpPane(HtmlHelpPane):
+    #### TaskPane interface ###################################################
+
+    id = 'maproom.rst_markup_help_pane'
+    name = 'RST Help'
+    help_text = """#*****[RET]Title[RET]*****|<h1>Title</h1>
+    Section[RET]=======|<h2>Section</h2>
+    Subsection[RET]----------|<h3>Subsection</h3>Separate paragraphs or new lists by blank lines.
+    *italic*|<i>italic</i>
+    **bold**|<b>bold</b>
+    * list item[RET]* list item|<ul><li>list item</li><li>list item</li></ul>
+    """
+
+
+class MarkdownHelpPane(HtmlHelpPane):
+    #### TaskPane interface ###################################################
+
+    id = 'maproom.markdown_help_pane'
+    name = 'Markdown Help'
+    help_text = """# Title|<h1>Title</h1>
+    ## Section|<h2>Section</h2>
+    ### Subsection|<h3>Subsection</h3>
+    Separate paragraphs or new lists by blank lines.
+    *italic*|<i>italic</i>
+    **bold**|<b>bold</b>
+    * list item[RET]* list item|<ul><li>list item</li><li>list item</li></ul>
+    """

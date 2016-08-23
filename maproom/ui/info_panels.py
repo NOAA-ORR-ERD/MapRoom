@@ -792,7 +792,23 @@ class TextFormatField(InfoField):
                         style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
+    def create_extra_controls(self):
+        b = wx.Button(self.parent, -1, "?", style=wx.BU_EXACTFIT)
+        b.Bind(wx.EVT_BUTTON, self.on_help)
+        return [b]
+
+    def on_help(self, event):
+        item = self.ctrl.GetSelection()
+        help_panes = [s[0].lower().replace(" ", "_") for s in LayerStyle.text_format_styles]
+        task = self.panel.project.task
+
+        # Show only the help text pane matching the current selection
+        for index, name in enumerate(help_panes):
+            pane = task.window.get_dock_pane('maproom.%s_help_pane' % name)
+            if pane is not None:
+                pane.visible = (index == item)
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
