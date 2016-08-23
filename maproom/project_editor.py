@@ -662,14 +662,32 @@ class ProjectEditor(FrameworkEditor):
     supported_clipboard_data_objects = [wx.CustomDataObject("maproom")]
     
     def create_clipboard_data_object(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            json_data = sel_layer.serialize_json(-999, children=True)
-            text = json.dumps(json_data, indent=4)
-            print "clipboard object: json data", text
-            data_obj = wx.CustomDataObject("maproom")
-            data_obj.SetData(text)
-            return data_obj
+        focused = self.control.FindFocus()
+        if hasattr(focused, "AppendText"):
+            try:
+                text = focused.GetValue()
+            except AttributeError:
+                try:
+                    text = focused.GetText()
+                except AttributeError:
+                    text = None
+        else:
+            text = None
+
+        if text is not None:
+            data_obj = wx.TextDataObject()
+            data_obj.SetText(text)
+        else:
+            sel_layer = self.layer_tree_control.get_selected_layer()
+            if sel_layer is not None:
+                json_data = sel_layer.serialize_json(-999, children=True)
+                text = json.dumps(json_data, indent=4)
+                print "clipboard object: json data", text
+                data_obj = wx.CustomDataObject("maproom")
+                data_obj.SetData(text)
+            else:
+                data_obj = None
+        return data_obj
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
         print "Found data object %s" % data_obj
