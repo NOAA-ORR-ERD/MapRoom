@@ -27,8 +27,8 @@ class DistanceCtrl(wx.Panel):
         self.Sizer.Add(hbox, 0, wx.EXPAND, self.SPACING)
 
         self.is_valid(str(initial_value))
-        self.distance_ctrl.Bind(wx.EVT_TEXT, self.on_text_changed)
         self.distance_ctrl.SetValue(str(initial_value))
+        self.distance_ctrl.Bind(wx.EVT_TEXT, self.on_text_changed)
     
     def is_valid(self, text):
         c = self.distance_ctrl
