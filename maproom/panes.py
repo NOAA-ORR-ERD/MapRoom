@@ -242,7 +242,6 @@ class HtmlHelpPane(FrameworkPane):
 
     def get_help_text(self):
         lines = ["<table><tr><th>%s</th><th>%s</th>" % (self.code_header, self.desc_header)]
-        print self.help_text
         for line in self.help_text.splitlines():
             if "|" in line:
                 code, desc = line.split("|", 1)
@@ -251,7 +250,6 @@ class HtmlHelpPane(FrameworkPane):
             else:
                 lines.append("<tr><td colspan=2>%s</td></tr>" % line)
         lines.append("</table>")
-        print lines
         return "\n".join(lines)
 
 
