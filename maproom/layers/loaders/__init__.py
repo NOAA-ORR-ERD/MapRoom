@@ -53,6 +53,8 @@
 loaders = []
 from bna import BNALoader
 loaders.append(BNALoader())
+from bsb import BSBLoader
+loaders.append(BSBLoader())
 from gdal import GDALLoader
 loaders.append(GDALLoader())
 from logfile import CommandLogLoader

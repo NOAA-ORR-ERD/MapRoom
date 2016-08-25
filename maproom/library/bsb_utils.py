@@ -4,6 +4,8 @@ import os
 import sys
 import re
 
+from fs.opener import fsopen
+
 class KAPImage(object):
     tag_map = {
         "FN": "filename",
@@ -73,7 +75,7 @@ class BSBParser(object):
         items = {}
         tag = None
         current = ""
-        with open(self.filename) as fh:
+        with fsopen(self.filename) as fh:
             for text in fh:
                 text = text.rstrip()
                 if text.startswith(" "):

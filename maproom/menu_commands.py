@@ -32,6 +32,8 @@ class LoadLayersCommand(Command):
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
         loader = loaders.get_loader(self.metadata)
+        if hasattr(loader, "load_query"):
+            loader.load_query(self.metadata, lm)
         try:
             progress_log.info("START=Loading %s" % self.metadata.uri)
             layers = loader.load_layers(self.metadata, manager=lm)

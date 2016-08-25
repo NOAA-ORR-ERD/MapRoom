@@ -58,3 +58,16 @@ class BNARecognizer(HasTraits):
     def identify(self, guess):
         if guess.metadata.uri.lower().endswith(".bna"):
             return "application/x-maproom-bna"
+
+@provides(IFileRecognizer)
+class BSBRecognizer(HasTraits):
+    """Finds BSB files -- simply looks for extension
+    
+    """
+    id = "application/x-maproom-bsb"
+    
+    before = "text/plain"
+    
+    def identify(self, guess):
+        if guess.metadata.uri.lower().endswith(".bsb"):
+            return "application/x-maproom-bsb"
