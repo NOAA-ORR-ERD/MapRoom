@@ -12,6 +12,12 @@ import logging
 # libraries are loaded, because some are only used at module load time.
 import os
 
+# Workaround for unknown locale bug on OS X; importing docutils here prevents
+# the failure when loading docutils.core in the markup support for the text
+# vector objects
+import docutils
+from docutils.core import publish_parts
+
 # Debugging turned on for readable exceptions on Enthought ui module import
 os.environ["ETS_DEBUG"] = "True"
 
