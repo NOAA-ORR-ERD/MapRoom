@@ -113,7 +113,7 @@ class MockProject(object):
             self.process_flags(undo.flags)
             count -= 1
     
-    def process_command(self, command):
+    def process_command(self, command, new_mouse_mode=None, override_editable_properties_changed=None):
         print "processing command %s" % command.short_name
         undo = self.layer_manager.undo_stack.perform(command, self)
         self.process_flags(undo.flags)
