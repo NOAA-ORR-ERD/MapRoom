@@ -7,6 +7,7 @@ deps = [
     [".", 'pytriangle-1.6.1', 'python setup.py install'],
     ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
     ['https://github.com/robmcmullen/OWSLib.git',],
+    ['https://github.com/fathat/glsvg.git',],
 ]
 
 using_conda = "Continuum Analytics" in sys.version
