@@ -6,6 +6,7 @@ dependencies:
 - coverage=4.2=py27_0
 - curl=7.49.1=0
 - cython=0.24.1=py27_0
+- docutils=0.12=py27_0
 - expat=2.1.0=1
 - freetype=2.6.3=1
 - freexl=1.0.2=1
@@ -26,6 +27,7 @@ dependencies:
 - libtiff=4.0.6=6
 - libuuid=1.0.3=1
 - libxml2=2.9.3=9
+- markdown=2.6.6=py27_0
 - netcdf4=1.2.4=np111py27_2
 - nomkl=1.0=0
 - numpy=1.11.1=py27_nomkl_0
