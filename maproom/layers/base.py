@@ -405,7 +405,7 @@ class Layer(HasTraits):
     def get_display_property(self, prop):
         return ""
 
-    def merge_layer_into_new(self, other_layer):
+    def merge_layer_into_new(self, other_layer, depth_unit=""):
         targets = []
         if self.is_mergeable_with(other_layer):
             targets.append(self.find_merge_layer_class(other_layer))
@@ -426,7 +426,7 @@ class Layer(HasTraits):
         
         layer = new_layer_cls(manager=self.manager)
         layer.name = "Merged"
-        layer.merge_from_source_layers(self, other_layer)
+        layer.merge_from_source_layers(self, other_layer, depth_unit)
         return layer
     
     def is_mergeable_with(self, other_layer):
@@ -435,7 +435,7 @@ class Layer(HasTraits):
     def find_merge_layer_class(self, other_layer):
         return None
 
-    def merge_from_source_layers(self, layer_a, layer_b):
+    def merge_from_source_layers(self, layer_a, layer_b, depth_unit=""):
         raise NotImplementedError
 
     def increment_change_count(self):

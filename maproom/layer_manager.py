@@ -102,7 +102,7 @@ class LayerManager(Document):
         self.insert_layer([1], grid)
         scale = Scale(manager=self)
         self.insert_layer([2], scale)
-        
+
         # Add hook to create layer instances for debugging purposes
         if "--debug-objects" in self.project.window.application.command_line_args:
             import debug
@@ -737,7 +737,7 @@ class LayerManager(Document):
         return layer
 
     def get_mergeable_layers(self):
-        layers = [layer for layer in self.flatten() if layer.has_points()]
+        layers = [layer for layer in self.flatten() if layer.find_merge_layer_class(layer) is not None]
         layers.reverse()
         return layers
 

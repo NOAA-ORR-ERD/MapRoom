@@ -372,7 +372,7 @@ class MergeLayersAction(EditorAction):
         import wx
         dialog = wx.MultiChoiceDialog(
             project.window.control,
-            "Please select two or more vector layers to merge together into one layer.\n\nOnly those layers that support merging are listed.",
+            "Please select two vector layers to merge together into one layer.\n\nOnly those layers that support merging are listed.",
             "Merge Layers",
             layer_names
         )
@@ -385,12 +385,30 @@ class MergeLayersAction(EditorAction):
         result = dialog.ShowModal()
         if result == wx.ID_OK:
             selections = dialog.GetSelections()
-            if len(selections) != 2:
-                project.window.error("You must select exactly two layers to merge.")
-            else:
-                cmd = MergeLayersCommand(layers[selections[0]], layers[selections[1]])
-                project.process_command(cmd)
+        else:
+            selections = []
         dialog.Destroy()
+        if len(selections) != 2:
+            project.window.error("You must select exactly two layers to merge.")
+        else:
+            layer_a = layers[selections[0]]
+            layer_b = layers[selections[1]]
+            if hasattr(layer_a, "depth_unit") and hasattr(layer_b, "depth_unit"):
+                da = layer_a.depth_unit
+                db = layer_b.depth_unit
+                if da != db:
+                    dialog = wx.SingleChoiceDialog(project.window.control, "Choose units for merged layer", "Depth Units", [da, db])
+                    result = dialog.ShowModal()
+                    if result == wx.ID_OK:
+                        depth_unit = dialog.GetStringSelection()
+                    else:
+                        depth_unit = None
+                    dialog.Destroy()
+                else:
+                    depth_unit = da
+            if depth_unit is not None:
+                cmd = MergeLayersCommand(layer_a, layer_b, depth_unit)
+                project.process_command(cmd)
 
 class MergePointsAction(EditorAction):
     name = 'Merge Duplicate Points'

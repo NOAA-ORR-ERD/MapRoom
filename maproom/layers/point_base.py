@@ -20,6 +20,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.accumulator import flatten
 from ..library.Boundary import Boundaries, PointsError
+from ..library.depth_utils import convert_units
 from ..renderer import color_floats_to_int, data_types
 
 from base import ProjectedLayer
@@ -261,7 +262,7 @@ class PointBaseLayer(ProjectedLayer):
     def find_merge_layer_class(self, other_layer):
         return type(self)
 
-    def merge_from_source_layers(self, layer_a, layer_b):
+    def merge_from_source_layers(self, layer_a, layer_b, depth_unit=""):
         # for now we only handle merging of points and lines
         self.new()
         
@@ -269,13 +270,17 @@ class PointBaseLayer(ProjectedLayer):
 
         n = len(layer_a.points) + len(layer_b.points)
         self.points = self.make_points(n)
-        self.points[
-            0: len(layer_a.points)
-        ] = layer_a.points.copy()
-        self.points[
-            len(layer_a.points): n
-        ] = layer_b.points.copy()
-        # self.points.state = 0
+        self.points[0: self.merged_points_index] = layer_a.points.copy()
+        if depth_unit and layer_a.depth_unit != depth_unit:
+            convert_units(self.points[0: self.merged_points_index].z, layer_a.depth_unit, depth_unit)
+
+        self.points[self.merged_points_index: n] = layer_b.points.copy()
+        if depth_unit and layer_b.depth_unit != depth_unit:
+            convert_units(self.points[self.merged_points_index: n].z, layer_b.depth_unit, depth_unit)
+
+        if depth_unit:
+            self.depth_unit = depth_unit
+       # self.points.state = 0
     
     def compute_projected_point_data(self):
         projection = self.manager.project.layer_canvas.projection

@@ -314,14 +314,16 @@ class MergeLayersCommand(Command):
     serialize_order =  [
             ('layer_a', 'layer'),
             ('layer_b', 'layer'),
+            ('depth_unit', 'string'),
             ]
     
-    def __init__(self, layer_a, layer_b):
+    def __init__(self, layer_a, layer_b, depth_unit):
         Command.__init__(self)
         self.layer_a = layer_a.invariant
         self.name_a = str(layer_a.name)
         self.layer_b = layer_b.invariant
         self.name_b = str(layer_b.name)
+        self.depth_unit = depth_unit
     
     def __str__(self):
         return "Merge Layers %s & %s" % (self.name_a, self.name_b)
@@ -335,13 +337,17 @@ class MergeLayersCommand(Command):
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         
-        layer = layer_a.merge_layer_into_new(layer_b)
-        lm.insert_layer(None, layer)
-        lf = undo.flags.add_layer_flags(layer)
-        lf.select_layer = True
-        lf.layer_loaded = True
+        layer = layer_a.merge_layer_into_new(layer_b, self.depth_unit)
+        if layer is None:
+            undo_info.flags.success = False
+            undo_info.flags.errors = ["Incompatible layer types for merge"]
+        else:
+            lm.insert_layer(None, layer)
+            lf = undo.flags.add_layer_flags(layer)
+            lf.select_layer = True
+            lf.layer_loaded = True
 
-        undo.data = (layer.invariant, saved_invariant)
+            undo.data = (layer.invariant, saved_invariant)
         
         return self.undo_info
 
