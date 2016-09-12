@@ -117,7 +117,13 @@ class ParticleLayer(PointBaseLayer):
     
     type = Str("particle")
     
-    layer_info_panel = ["Particle Color"]
+    layer_info_panel = ["Particle Color", "Status Code Color"]
+
+    status_codes = Any  # numpy list matching array size of points
+
+    status_code_names = Any
+
+    status_code_colors = Any
 
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_to_color = np.array([color_floats_to_int(0, 0, 0, 1.0),
@@ -126,16 +132,60 @@ class ParticleLayer(PointBaseLayer):
                                      color_floats_to_int(0, 0, 1.0, 1.0),
                                      color_floats_to_int(0, 1.0, 1.0, 1.0),
                                      ], dtype=np.uint32)
+
+    status_code_color_map = {
+        7: color_floats_to_int(1.0, 0, 0, 1.0),
+        12: color_floats_to_int(1.0, 1.0, 1.0, 1.0),
+        0: color_floats_to_int(0, 0, 0, 1.0),
+        10: color_floats_to_int(1.0, 1.0, 0, 1.0),
+        2: color_floats_to_int(0, 1.0, 0, 1.0),
+        3: color_floats_to_int(0, 0, 1.0, 1.0),
+    }
+    
+    ##### JSON Serialization
+    
+    def status_codes_to_json(self):
+        if self.status_codes is not None:
+            return self.status_codes.tolist()
+    
+    def status_codes_from_json(self, json_data):
+        jd = json_data['status_codes']
+        if jd is not None:
+            self.status_codes = np.asarray(jd, np.uint32)
+        else:
+            p = json_data['points']
+            if p is not None:
+                self.status_codes = np.zeros(len(p), np.uint32)
+            else:
+                self.status_codes = np.zeros(0, np.uint32)
+    
+    def status_code_names_to_json(self):
+        if self.status_code_names is not None:
+            return [(str(k), v) for k,v in self.status_code_names.iteritems()]
+    
+    def status_code_names_from_json(self, json_data):
+        jd = json_data['status_code_names']
+        if jd is not None:
+            self.status_code_names = dict((int(k), v) for k,v in jd)
+        else:
+            self.status_code_names = None
     
     # def set_layer_style_defaults(self):
     #     ## this should do something different for particles
     
-    def set_data(self, f_points, status_codes):
+    def set_data(self, f_points, status_codes, status_code_names):
         PointBaseLayer.set_data(self, f_points)
         # force status codes to fall into range of valid colors
-        status_codes = np.clip(status_codes, 0, np.alen(self.status_code_to_color) - 1)
-        colors = self.status_code_to_color[status_codes]
+        self.status_codes = status_codes
+        self.status_code_names = status_code_names
+        self.status_code_colors = {}
+        for k, v in status_code_names.iteritems():
+            self.status_code_colors[k] = self.status_code_color_map.get(k, color_floats_to_int(1.0, 0, 0, 1.0))
+        s = np.clip(status_codes, 0, np.alen(self.status_code_to_color) - 1)
+        colors = self.status_code_to_color[s]
         self.points.color = colors
+        print "status_code_names", self.status_code_names
+        print "status_code_colors", self.status_code_colors
         
     def get_selected_particle_layers(self, project):
         return [self]
@@ -148,3 +198,12 @@ class ParticleLayer(PointBaseLayer):
     def update_particle_color(self, project, int_color):
         self.points.color = int_color
         self.change_count += 1
+
+
+    def set_status_code_color(self, code, color):
+        print self.status_codes
+        print code
+        index = np.where(self.status_codes == code)
+        print index
+        self.points.color[index] = color
+        self.status_code_colors[code] = color

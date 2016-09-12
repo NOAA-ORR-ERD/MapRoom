@@ -3,6 +3,7 @@ import wx
 import wx.combo
 import wx.lib.buttons as buttons
 from wx.lib.expando import ExpandoTextCtrl
+import wx.lib.colourselect as csel
 
 from pyface.api import ImageResource
 
@@ -556,7 +557,6 @@ class ColorPickerField(InfoField):
         self.ctrl.SetColour(color)
     
     def create_control(self):
-        import wx.lib.colourselect as csel
         color = (0, 0, 0)
         c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width,-1))
         c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
@@ -1115,7 +1115,6 @@ class ParticleColorField(ColorField):
         return layer.get_particle_color(self.panel.project)
         
     def create_control(self):
-        import wx.lib.colourselect as csel
         color = (0, 0, 0)
         c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width,-1))
         c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
@@ -1130,6 +1129,53 @@ class ParticleColorField(ColorField):
             return
         layers = layer.get_selected_particle_layers(self.panel.project)
         cmd = ParticleColorCommand(layers, int_color)
+        self.process_command(cmd)
+
+class StatusCodeColorField(InfoField):
+    same_line = False
+
+    default_width = 40
+    
+    def get_value(self, layer):
+        return layer.get_particle_color(self.panel.project)
+    
+    def fill_data(self, layer):
+        ctrls = {}
+        code_map = layer.status_code_names
+        codes = sorted(code_map.keys())
+        sizer = self.ctrl.GetSizer()
+        sizer.Clear(True)
+        for code in codes:
+            hbox = wx.BoxSizer(wx.HORIZONTAL)
+            label = wx.StaticText(self.ctrl, label=code_map[code], style=wx.ST_ELLIPSIZE_END)
+            hbox.Add(label, 99, wx.ALIGN_CENTER)
+            hbox.AddStretchSpacer(1)
+            color = tuple(int(255 * c) for c in int_to_color_floats(layer.status_code_colors[code])[0:3])
+            c = csel.ColourSelect(self.ctrl, -1, "", color, size=(self.default_width,-1))
+            c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
+            hbox.Add(c, 0, wx.ALIGN_CENTER)
+            sizer.Add(hbox, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
+            ctrls[id(c)] = code
+        self.color_ctrls = ctrls
+        self.ctrl.Fit()
+        
+    def create_control(self):
+        panel = wx.Panel(self.parent)
+        vbox =  wx.BoxSizer(wx.VERTICAL)
+        panel.SetSizer(vbox)
+        return panel
+        
+    def color_changed(self, event):
+        ctrl = event.GetEventObject()
+        code = self.color_ctrls[id(ctrl)]
+        color = [float(c/255.0) for c in event.GetValue()]
+        color.append(1.0)
+        int_color = color_floats_to_int(*color)
+        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        if (layer is None):
+            return
+        layers = layer.get_selected_particle_layers(self.panel.project)
+        cmd = StatusCodeColorCommand(layers, code, int_color)
         self.process_command(cmd)
 
 
@@ -1422,6 +1468,7 @@ class InfoPanel(PANELTYPE):
         "Start time": ParticleStartField,
         "End time": ParticleEndField,
         "Particle Color": ParticleColorField,
+        "Status Code Color": StatusCodeColorField,
         "Anchor coordinates": AnchorCoordinatesField,
         "Anchor point": AnchorPointField,
         "Map server": MapServerField,
