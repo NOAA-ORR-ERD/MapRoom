@@ -32,6 +32,17 @@ class nc_particles_file_loader():
         path = fs.getsyspath(relpath)
         self.reader = nc_particles.Reader(path)
         self.current_timestep = 0 # fixme## hard coded limit!!!!!
+        attributes = self.reader.get_attributes("status_codes")
+        meanings = attributes['flag_meanings']
+        self.status_code_map = dict()
+        if "," in meanings:
+            splitchar = ","
+        else:
+            splitchar = " "
+        for code in meanings.split(splitchar):
+            if code and ":" in code:
+                k, v = code.split(":", 1)
+                self.status_code_map[int(k.strip())] = v.strip()
 
     def __iter__(self):
         return self
@@ -50,7 +61,7 @@ class nc_particles_file_loader():
 
         self.current_timestep += 1
 
-        return (points, status_codes, time) # error_string, points, time
+        return (points, status_codes, self.status_code_map, time)
 
 class ParticleLoader(BaseLayerLoader):
     """
@@ -80,7 +91,7 @@ class ParticleLoader(BaseLayerLoader):
         
         layers = []
         ## loop through all the time steps in the file.
-        for (points, status_codes, time) in nc_particles_file_loader(metadata.uri):
+        for (points, status_codes, code_map, time) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
             layer.mime = self.mime ## fixme: tricky here, as one file has multiple layers
