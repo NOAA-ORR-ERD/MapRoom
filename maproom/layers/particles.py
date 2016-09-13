@@ -44,7 +44,12 @@ class ParticleFolder(Folder):
             names = children[0].status_code_names
         else:
             names = dict()
-        return names
+        summary_names = dict()
+        for k, name in names.iteritems():
+            if " (" in name and name .endswith(")"):
+                name, _ = name.rsplit(" (", 1)
+            summary_names[k] = name
+        return summary_names
 
     @property
     def status_code_colors(self):
@@ -193,10 +198,14 @@ class ParticleLayer(PointBaseLayer):
         PointBaseLayer.set_data(self, f_points)
         # force status codes to fall into range of valid colors
         self.status_codes = status_codes
-        self.status_code_names = status_code_names
+        self.status_code_names = dict(status_code_names)
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
-        s = np.clip(status_codes, 0, np.alen(self.status_code_to_color) - 1)
-        colors = self.status_code_to_color[s]
+        colors = np.zeros(np.alen(f_points), dtype=np.uint32)
+        for code, color in self.status_code_colors.iteritems():
+            index = np.where(self.status_codes == code)
+            colors[index] = color
+            num = len(index[0])
+            self.status_code_names[code] += " (%d)" % num
         self.points.color = colors
         
     def get_selected_particle_layers(self, project):
