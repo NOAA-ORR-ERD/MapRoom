@@ -29,6 +29,8 @@ class TriangleLayer(PointLayer):
     """
     type = Str("triangle")
     
+    mouse_mode_toolbar = Str("BaseLayerToolBar")
+    
     triangles = Any
 
     visibility_items = ["points", "triangles", "labels"]
