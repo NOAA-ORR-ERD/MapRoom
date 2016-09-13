@@ -338,6 +338,12 @@ class LayerManager(Document):
             log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
             data = layer.serialize_json(index)
             if data is not None:
+                try:
+                    text = json.dumps(data)
+                except Exception, e:
+                    log.error("JSON failure, layer %s: %s" % (layer.name, repr(data)))
+                    return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
+
                 project.append(data)
         
         try:
