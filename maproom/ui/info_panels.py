@@ -1108,40 +1108,18 @@ class ParticleEndField(ParticleField):
         layer.set_end_index(index)
         layer.update_timestep_visibility(self.panel.project)
 
-class ParticleColorField(ColorField):
-    same_line = True
-    
-    def get_value(self, layer):
-        return layer.get_particle_color(self.panel.project)
-        
-    def create_control(self):
-        color = (0, 0, 0)
-        c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width,-1))
-        c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
-        return c
-        
-    def color_changed(self, event):
-        color = [float(c/255.0) for c in event.GetValue()]
-        color.append(1.0)
-        int_color = color_floats_to_int(*color)
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
-        if (layer is None):
-            return
-        layers = layer.get_selected_particle_layers(self.panel.project)
-        cmd = ParticleColorCommand(layers, int_color)
-        self.process_command(cmd)
-
 class StatusCodeColorField(InfoField):
     same_line = False
 
     default_width = 40
     
     def get_value(self, layer):
-        return layer.get_particle_color(self.panel.project)
+        pass
     
     def fill_data(self, layer):
         ctrls = {}
         code_map = layer.status_code_names
+        code_colors = layer.status_code_colors
         codes = sorted(code_map.keys())
         sizer = self.ctrl.GetSizer()
         sizer.Clear(True)
@@ -1150,7 +1128,7 @@ class StatusCodeColorField(InfoField):
             label = wx.StaticText(self.ctrl, label=code_map[code], style=wx.ST_ELLIPSIZE_END)
             hbox.Add(label, 99, wx.ALIGN_CENTER)
             hbox.AddStretchSpacer(1)
-            color = tuple(int(255 * c) for c in int_to_color_floats(layer.status_code_colors[code])[0:3])
+            color = tuple(int(255 * c) for c in int_to_color_floats(code_colors[code])[0:3])
             c = csel.ColourSelect(self.ctrl, -1, "", color, size=(self.default_width,-1))
             c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
             hbox.Add(c, 0, wx.ALIGN_CENTER)
@@ -1467,7 +1445,6 @@ class InfoPanel(PANELTYPE):
         "Marplot icon": MarplotIconField,
         "Start time": ParticleStartField,
         "End time": ParticleEndField,
-        "Particle Color": ParticleColorField,
         "Status Code Color": StatusCodeColorField,
         "Anchor coordinates": AnchorCoordinatesField,
         "Anchor point": AnchorPointField,

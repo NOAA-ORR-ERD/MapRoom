@@ -522,46 +522,6 @@ class SetAnchorCommand(Command):
         layer.rebuild_needed = True
         return self.undo_info
 
-class ParticleColorCommand(Command):
-    short_name = "particle_color"
-    serialize_order =  [
-            ('layers', 'layers'),
-            ('color', 'int'),
-            ]
-    
-    def __init__(self, layers, color):
-        Command.__init__(self)
-        self.layers = [layer.invariant for layer in layers]
-        self.color = color
-    
-    def __str__(self):
-        return "Particle Color"
-    
-    def coalesce(self, next_command):
-        if next_command.__class__ == self.__class__:
-            if set(next_command.layers) == set(self.layers):
-                self.color = next_command.color
-                return True
-    
-    def perform(self, editor):
-        lm = editor.layer_manager
-        self.undo_info = undo = UndoInfo()
-        undo.data = []
-        for invariant in self.layers:
-            layer = lm.get_layer_by_invariant(invariant)
-            lf = undo.flags.add_layer_flags(layer)
-            lf.layer_display_properties_changed = True
-            undo.data.append((layer.invariant, np.copy(layer.points.color)))
-            layer.points.color = self.color
-        return undo
-
-    def undo(self, editor):
-        lm = editor.layer_manager
-        for invariant, colors in self.undo_info.data:
-            layer = lm.get_layer_by_invariant(invariant)
-            layer.points.color = colors
-        return self.undo_info
-
 class StatusCodeColorCommand(Command):
     short_name = "status_code_color"
     serialize_order =  [
