@@ -191,6 +191,18 @@ class DepthVisibilityField(VisibilityField):
     def fill_data(self, layer):
         self.ctrl.SetLabel("")
 
+class TriangleShadingVisibilityField(VisibilityField):
+    visibility_name = 'triangles'
+    
+    def fill_data(self, layer):
+        self.ctrl.SetLabel("")
+        vis = self.get_visibility(layer)
+        self.toggle.SetToggle(vis)
+    
+    def set_visibility(self, layer, state):
+        self.panel.project.layer_visibility[layer][self.visibility_name] = state
+        self.panel.project.refresh()
+
 
 class TextEditField(InfoField):
     def create_control(self):
@@ -1424,6 +1436,7 @@ class InfoPanel(PANELTYPE):
         "Point count": PointVisibilityField,
         "Line segment count": LineVisibilityField,
         "Show depth": DepthVisibilityField,
+        "Show depth shading": TriangleShadingVisibilityField,
         "Flagged points": FlaggedPointsField,
         "Transparency": LineAlphaField,
         "Line transparency": LineAlphaField,

@@ -252,7 +252,7 @@ class ImmediateModeRenderer():
         )
         self.vbo_triangle_point_colors = gl_vbo.VBO(triangle_point_colors)
 
-    def draw_triangles(self, line_width):
+    def draw_triangles(self, line_width, filled=True):
         # the line segments
         if (self.vbo_triangle_point_indexes is not None and len(self.vbo_triangle_point_indexes.data) > 0):
             gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
@@ -263,16 +263,17 @@ class ImmediateModeRenderer():
             self.vbo_triangle_point_indexes.bind()
 
             gl.glColor(0.5, 0.5, 0.5, 0.75)
-            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
-            gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
-            self.vbo_triangle_point_colors.bind()
-            gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
-            gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-            gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
-            gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
-            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
 
-            gl.glColor(0.5, 0.5, 0.5, 0.75)
+            if filled:
+                gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+                gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+                self.vbo_triangle_point_colors.bind()
+                gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
+                gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
+                gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
+                gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
+                gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+
             gl.glLineWidth(line_width)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
             gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)

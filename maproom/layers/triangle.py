@@ -35,7 +35,7 @@ class TriangleLayer(PointLayer):
 
     visibility_items = ["points", "triangles", "labels"]
     
-    layer_info_panel = ["Layer name", "Triangle count"]
+    layer_info_panel = ["Layer name", "Triangle count", "Show depth shading"]
 
     def __str__(self):
         try:
@@ -339,8 +339,7 @@ class TriangleLayer(PointLayer):
         if picker.is_active:
             return
 
-        if layer_visibility["triangles"]:
-            renderer.draw_triangles(self.style.line_width)
+        renderer.draw_triangles(self.style.line_width, layer_visibility["triangles"])
 
         if layer_visibility["labels"]:
             renderer.draw_labels_at_points(self.points.z, s_r, p_r)
