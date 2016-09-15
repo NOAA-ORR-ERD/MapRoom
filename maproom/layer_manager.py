@@ -272,10 +272,13 @@ class LayerManager(Document):
         else:
             extra_json = None
         for serialized_data in json:
-            loaded = Layer.load_from_json(serialized_data, self, batch_flags)
-            index = serialized_data['index']
-            order.append((index, loaded))
-            log.debug("processed json from layer %s" % loaded)
+            try:
+                loaded = Layer.load_from_json(serialized_data, self, batch_flags)
+                index = serialized_data['index']
+                order.append((index, loaded))
+                log.debug("processed json from layer %s" % loaded)
+            except RuntimeError, e:
+                batch_flags.messages.append("ERROR: %s" % str(e))
         order.sort()
         log.debug("load_all_from_json: order: %s" % str(order))
         

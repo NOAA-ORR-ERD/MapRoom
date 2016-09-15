@@ -2,6 +2,8 @@ import os
 import sys
 import numpy as np
 
+from fs.errors import ResourceNotFoundError
+
 # Enthought library imports.
 from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
 
@@ -281,7 +283,10 @@ class Layer(HasTraits):
             from maproom.layers import loaders
             
             log.debug("Loading layers from url %s" % json_data['url'])
-            loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
+            try:
+                loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
+            except ResourceNotFoundError, e:
+                raise RuntimeError("Failed loading from %s" % json_data['url'])
         else:
             log.debug("Loading layers from json encoded data")
             layer = kls(manager=manager)
