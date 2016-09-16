@@ -155,6 +155,8 @@ if BUILD_APP:
         "netCDF4",
         "netCDF4_utils",
         "netcdftime",
+
+        "markdown"
     ]
 
     excludes = [
