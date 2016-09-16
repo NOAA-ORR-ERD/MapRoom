@@ -1,5 +1,14 @@
 #!/usr/bin/env python
 import cStringIO
+
+# FIXME: really weird error on macos when using py.test. The import of
+# docutils.core raises an exception about an invalid locale. Somehow,
+# the locale get reset to just plain "UTF-8", even though the
+# environmental variable for LC_CTYPE, LC_ALL, LC_TIME, LANG are all
+# set to "en_US.UTF-8".
+import _locale
+if _locale.setlocale(_locale.LC_CTYPE) == "UTF-8":
+    _locale.setlocale(_locale.LC_CTYPE, "en_US.UTF-8")
 from docutils.core import publish_parts
 
 import wx
