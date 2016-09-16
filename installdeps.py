@@ -10,7 +10,7 @@ deps = [
     ['https://github.com/fathat/glsvg.git',],
 ]
 
-using_conda = "Continuum Analytics" in sys.version
+using_conda = "Continuum Analytics" in sys.version or "conda" in sys.version
 
 if not using_conda:
     # extra stuff isn't available through pypi or not easily built by hand
