@@ -33,7 +33,7 @@ dependencies:
 - numpy=1.11.1=py27_nomkl_0
 - openjpeg=2.1.0=6
 - openssl=1.0.2h=2
-- pillow=3.3.0=py27_0
+- pillow=3.3.1=py27_0
 - pip=8.1.2=py27_0
 - postgresql=9.5.3=2
 - proj.4=4.9.2=0
@@ -66,7 +66,7 @@ dependencies:
   - atrcopy==3.1.0
   - bson==0.4.3
   - jsonpickle==0.9.3
-  - omnivore==0.13.2
+  - omnivore==0.13.7
   - python-dateutil==2.5.3
   - pytz==2016.6.1
   - wxpython-common==3.0.2.0
