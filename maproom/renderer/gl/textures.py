@@ -166,22 +166,14 @@ class ImageData(object):
         
         return left_bottom_world, left_top_world, right_top_world, right_bottom_world
     
-    def get_dateline_offset(self):
-        """ Simple check to see if image should be moved to the US-centric side
-        of the dateline. If it crosses 180E, subtract 360
-        """
-        world_rect = self.calc_world_rect((0, 0), (self.x, self.y))
-        if world_rect[0][0] < 180.0 and world_rect[2][0] > 180.0:
-            offset = -360.0
-        else:
-            offset = 0.0
-        return offset
-
     def calc_image_world_rects(self):
-        offset = self.get_dateline_offset()
+        """ Includes a simple dateline check to move images that cross the
+        dateline or are in far east latitudes to move to the west latitude (US
+        Centric) side of the map.
+        """
         for entry in self.image_list:
             wr = self.calc_world_rect(entry.origin, entry.size)
-            world_rect = ((wr[0][0] + offset, wr[0][1]), (wr[1][0] + offset, wr[1][1]), (wr[2][0] + offset, wr[2][1]), (wr[3][0] + offset, wr[3][1]))
+            world_rect = (((wr[0][0] % 360) - 360, wr[0][1]), ((wr[1][0] % 360) - 360, wr[1][1]), ((wr[2][0] % 360) - 360, wr[2][1]), ((wr[3][0] % 360) - 360, wr[3][1]))
             log.debug("image size: %s" % str(entry))
             log.debug("world rect: %s" % str(world_rect))
             entry.world_rect = world_rect
