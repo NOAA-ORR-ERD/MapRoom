@@ -117,7 +117,7 @@ class PolygonLayer(PointLayer):
                 self.polygon_adjacency_array.next[total: total + c] = np.arange(total + 1, total + c + 1)
                 self.polygon_adjacency_array.next[total + c - 1] = total
                 total += c
-                self.polygons.color[p] = color_array[np.clip(f_polygon_identifiers[p]['feature_code'], 1, len(color_array))]
+                self.polygons.color[p] = color_array[np.clip(f_polygon_identifiers[p]['feature_code'], 1, len(color_array) - 1)]
 
             self.polygon_identifiers = list(f_polygon_identifiers)
             self.points.state = 0

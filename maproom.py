@@ -33,6 +33,7 @@ from maproom.plugin import MaproomPlugin
 import wx
 import multiprocessing
 multiprocessing.freeze_support()
+import markdown.util as markdown_utils
 
 def main(argv):
     """ Run the application.
