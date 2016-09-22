@@ -65,7 +65,7 @@ class TestTwoLayers(TestLogBase):
         lm = self.manager
         layer1 = lm.get_layer_by_invariant(1)
         layer2 = lm.get_layer_by_invariant(2)
-        cmd = MergeLayersCommand(layer1, layer2)
+        cmd = MergeLayersCommand(layer1, layer2, layer1.depth_unit)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
         assert 4 == lm.next_invariant
