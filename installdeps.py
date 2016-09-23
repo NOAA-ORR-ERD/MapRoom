@@ -8,6 +8,7 @@ deps = [
     ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
     ['https://github.com/robmcmullen/OWSLib.git',],
     ['https://github.com/fathat/glsvg.git',],
+    ['https://github.com/robmcmullen/pyugrid.git',],
 ]
 
 using_conda = "Continuum Analytics" in sys.version or "conda" in sys.version
@@ -15,7 +16,6 @@ using_conda = "Continuum Analytics" in sys.version or "conda" in sys.version
 if not using_conda:
     # extra stuff isn't available through pypi or not easily built by hand
     deps.extend([
-        ['https://github.com/robmcmullen/pyugrid.git',],
         ['https://github.com/MacPython/gattai.git',],
         ['https://github.com/robmcmullen/mac-builds.git', 'packages/netCDF4', 'gattai netcdf.gattai'],
         ])

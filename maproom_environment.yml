@@ -48,7 +48,6 @@ dependencies:
 - pytest-cov=2.3.0=py27_0
 - python=2.7.12=1
 - python.app=1.2=py27_4
-- pyugrid=0.2.2=py27_0
 - readline=6.2=2
 - reportlab=3.3.0=py27_0
 - requests=2.10.0=py27_0
