@@ -1,3 +1,21 @@
+09/23/2016
+---------------------------
+Released 3.1b28
+- RM Change release generator to pyinstaller rather than py2app
+- RM Added hacked py.test script for conda environment
+- RM Downgrade pyugrid to my version until I figure out what's incompatible with conda version
+- RM Fix for GDAL 2 returning None instead of raising exception when can't decode image file
+- RM Fixed off-by-one error in BNA color feature codes
+- RM Fixed API change in MergeLayersCommand
+- RM Fixed nc particles tests for changed files and new API
+- CB added abiity to read either "status" or "status_codes" in nc_particles layer
+- CB changes "status" to "status_codes" in teh n cparticles files, for compatibility with the new GNOME
+- RM Added win64 side-by-side config for GDAL 2
+- RM Hack for really weird locale error only on macOS, and only when running py.test
+- RM Need better way to check if we're using conda... Doesn't seem to be a standard way
+- RM updated pillow, omnivore version numbers for conda environment
+- RM Fixes to include markdown.util in py2exe
+
 09/15/2016
 ---------------------------
 Released 3.1b27
