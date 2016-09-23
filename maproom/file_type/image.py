@@ -32,6 +32,6 @@ class GDALRecognizer(HasTraits):
         except RuntimeError:
             log.debug("GDAL can't open %s; not an image")
             return None
-        if dataset.RasterCount > 0:
+        if dataset is not None and dataset.RasterCount > 0:
             return "image/x-gdal"
         return None
