@@ -1,0 +1,17 @@
+#!/usr/bin/env pythonw
+# above line was: #!/Users/jgray/anaconda/bin/python
+
+# JRG: hacked py.test to use a framework build of python
+# allows -k usage:  py.testw -k polygon
+# find your values inside your .../anaconda/bin/pythonw
+
+if __name__ == '__main__':
+    import sys
+
+    # JRG add the next two lines:
+    import os
+    os.environ['PYTHONEXECUTABLE'] = '/Users/rob.mcmullen/miniconda2/envs/maproom/bin/pythonw'
+
+    from py.test import main
+
+    sys.exit(main())
