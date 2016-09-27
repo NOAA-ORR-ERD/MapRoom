@@ -232,3 +232,7 @@ class Picker(object):
     def is_polygon_fill(obj):
         (layer, object_type, object_index) = obj
         return type == FILL_PICKER_OFFSET
+
+    @staticmethod
+    def is_polygon_fill_type(object_type):
+        return object_type == FILL_PICKER_OFFSET

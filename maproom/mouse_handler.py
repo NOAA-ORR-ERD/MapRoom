@@ -181,6 +181,8 @@ class MouseHandler(object):
                     obj_text = "Point %s on %s" % (object_index + 1, layer.name)
                 elif c.picker.is_ugrid_line_type(object_type):
                     obj_text = "Line %s on %s" % (object_index + 1, layer.name)
+                elif c.picker.is_polygon_fill_type(object_type):
+                    obj_text = "Polygon %s on %s" % (object_index + 1, layer.name)
             except TypeError:
                 pass
         e.task.status_bar.debug = obj_text
