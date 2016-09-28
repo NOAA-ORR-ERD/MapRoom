@@ -25,6 +25,7 @@
 #cwd = os.getcwd()
 #cog.msg("working dir : %s" % cwd)
 #path = os.path.dirname(os.path.join(cwd, cog.inFile))
+#sys.path[0:0] = [path] # include current dir so it finds local gdal.py file
 #cog.msg("scanning dir: %s" % path)
 #top = os.path.abspath(os.path.join(path, "../../..")) # so absolute imports of omnivore will work
 #sys.path.append(top)
