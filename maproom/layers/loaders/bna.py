@@ -8,7 +8,7 @@ from osgeo import gdal, gdal_array, osr
 import pyproj
 
 from maproom.library.accumulator import accumulator
-from maproom.layers import PolygonLayer
+from maproom.layers import PolygonLayer, RNCLoaderLayer
 
 from common import BaseLayerLoader
 
@@ -25,8 +25,10 @@ class BNALoader(BaseLayerLoader):
     
     name = "BNA"
     
+    layer_class = PolygonLayer
+
     def load_layers(self, metadata, manager):
-        layer = PolygonLayer(manager=manager)
+        layer = self.layer_class(manager=manager)
         
         (layer.load_error_string,
          f_polygon_points,
@@ -44,6 +46,17 @@ class BNALoader(BaseLayerLoader):
     
     def save_to_fh(self, fh, layer):
         save_bna_file(fh, layer)
+
+class RNCLoader(BNALoader):
+    mime = "application/x-maproom-rncloader"
+    
+    layer_types = ["rncloader"]
+    
+    extensions = [".bna"]
+    
+    name = "RNCLoader"
+    
+    layer_class = RNCLoaderLayer
 
 
 def load_bna_file(uri):

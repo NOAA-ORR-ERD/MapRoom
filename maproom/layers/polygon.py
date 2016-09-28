@@ -370,3 +370,14 @@ class PolygonLayer(PointLayer):
                                         self.polygons.color,
                                         color_floats_to_int(0, 0, 0, 1.0),
                                         1)
+
+
+class RNCLoaderLayer(PolygonLayer):
+    """Layer for selecting RNC maps
+    
+    """
+    type = Str("rncloader")
+    
+    mouse_mode_toolbar = Str("BaseLayerToolBar")
+    
+    layer_info_panel = ["Polygon count"]

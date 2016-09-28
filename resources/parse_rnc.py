@@ -38,9 +38,9 @@ class RNCChart(object):
                 if k == "title":
                     self.title = v
                     last = "title"
-                elif k == "filename":
+                elif k == "file name":
                     self.filename = v
-                    last = "filename"
+                    last = "file name"
                 else:
                     last = None
             elif last:
@@ -49,7 +49,7 @@ class RNCChart(object):
                 # keyword separator
                 if last == "title":
                     self.title +=  "; " + arg
-                elif last == "filename":
+                elif last == "file name":
                     self.filename += "; " + arg
 
 
@@ -95,12 +95,12 @@ class RNCParser(object):
     def create_bna(self, filename):
         with open(filename, "w") as fh:
             for m in self.maps:
-                fh.write('"%s","1",%d\n' % (m.title, len(m.points)))
+                fh.write('"%s;%s","1",%d\n' % (m.title, m.filename, len(m.points)))
                 fh.write("%s\n" % "\n".join(["%f,%f" % pt for pt in m.points]))
 
 
 if __name__ == "__main__":
-    mm = RNCParser("small.xml")
+    # mm = RNCParser("small.xml")
     # print mm.maps
     mm = RNCParser("RNCProdCat_19115.xml")
     print mm.maps

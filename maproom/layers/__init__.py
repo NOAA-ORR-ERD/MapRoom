@@ -5,7 +5,7 @@ from grid import Grid
 from scale import Scale
 from compass_rose import CompassRose
 from triangle import TriangleLayer
-from polygon import PolygonLayer
+from polygon import PolygonLayer, RNCLoaderLayer
 from raster import RasterLayer
 from wms import WMSLayer
 from tiles import TileLayer

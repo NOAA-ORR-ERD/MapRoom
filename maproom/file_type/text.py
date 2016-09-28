@@ -57,6 +57,10 @@ class BNARecognizer(HasTraits):
     
     def identify(self, guess):
         if guess.metadata.uri.lower().endswith(".bna"):
+            byte_stream = guess.get_utf8()[:1000]
+            lines = byte_stream.splitlines()
+            if ".KAP" in lines[0]:
+                return "application/x-maproom-rncloader"
             return "application/x-maproom-bna"
 
 @provides(IFileRecognizer)
