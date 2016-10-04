@@ -119,7 +119,7 @@ def get_dataset(uri):
     if (dataset is None):
         return ("Unable to load the image file " + file_path, None)
 
-    if (dataset.RasterCount < 0 or dataset.RasterCount > 3):
+    if (dataset.RasterCount < 0 or dataset.RasterCount > 4):
         return ("The number of raster bands is unsupported for file " + file_path, None)
 
     return "", dataset
@@ -242,7 +242,7 @@ class GDALSubImageLoader(object):
             )
             image[:, :, 3] = DEFAULT_ALPHA
 
-            for band_index in range(0, raster_count):
+            for band_index in range(0, self.nbands):
                 band_data = gdal_array.BandReadAsArray(
                     self.raster_bands[band_index],
                     selection_origin[0],
