@@ -453,6 +453,12 @@ class Layer(HasTraits):
     
     def crop_rectangle(self, world_rect):
         raise NotImplementedError
+
+    def can_highlight_clickable_object(self, canvas, object_type, object_index):
+        return False
+
+    def get_highlight_lines(self, canvas, object_type, object_index):
+        return []
     
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer

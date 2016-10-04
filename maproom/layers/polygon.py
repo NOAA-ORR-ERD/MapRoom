@@ -381,3 +381,12 @@ class RNCLoaderLayer(PolygonLayer):
     mouse_mode_toolbar = Str("BaseLayerToolBar")
     
     layer_info_panel = ["Polygon count"]
+
+    def can_highlight_clickable_object(self, canvas, object_type, object_index):
+        return canvas.picker.is_polygon_fill_type(object_type)
+
+    def get_highlight_lines(self, canvas, object_type, object_index):
+        points, polygon_id = self.get_polygon(object_index)
+        # add starting point again so the outline will be closed
+        boundary = np.vstack((points, points[0]))
+        return boundary

@@ -503,6 +503,10 @@ class PanMode(MouseHandler):
     def process_mouse_down(self, event):
         return
 
+    def process_mouse_motion_up(self, event):
+        MouseHandler.process_mouse_motion_up(self, event)
+        self.layer_canvas.project.refresh()
+
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
         e = c.project
@@ -532,6 +536,18 @@ class PanMode(MouseHandler):
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
         c.selection_box_is_being_defined = False
+
+    def render_overlay(self, renderer):
+        # draw outline of polygon object that's currently being moused-over
+        c = self.layer_canvas
+        e = c.project
+        print e.clickable_object_mouse_is_over
+        if e.clickable_object_mouse_is_over is not None:
+            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+            if layer.can_highlight_clickable_object(c, object_type, object_index):
+                wp = layer.get_highlight_lines(c, object_type, object_index)
+                sp = [c.get_screen_point_from_world_point(w) for w in wp]
+                renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class ObjectSelectionMode(MouseHandler):
