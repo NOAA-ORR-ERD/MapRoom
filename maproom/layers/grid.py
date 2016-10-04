@@ -25,8 +25,6 @@ class Grid(ScreenLayer):
     
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)
-    # a nice amount of spacing between lines
-    REFERENCE_PIXEL_SIZE = (100, 100)
     
     def resize(self, renderer, world_rect, screen_rect):
         prefs = renderer.canvas.project.task.get_preferences()
@@ -37,17 +35,19 @@ class Grid(ScreenLayer):
         self.lat_step = self.grid.get_step_size(0)
         self.lon_step = self.grid.get_step_size(0)
 
+        ref_pixel_size = prefs.grid_spacing
+
         degrees_lon_per_pixel = float(rect.width(world_rect)) / float(rect.width(screen_rect))
         degrees_lat_per_pixel = float(rect.height(world_rect)) / float(rect.height(screen_rect))
 
-        self.lon_step = self.grid.get_step_size(self.REFERENCE_PIXEL_SIZE[0] * degrees_lon_per_pixel)
+        self.lon_step = self.grid.get_step_size(ref_pixel_size * degrees_lon_per_pixel)
         self.lon_steps = np.arange(
             world_rect[0][0] + self.lon_step - world_rect[0][0] % self.lon_step,
             world_rect[1][0],
             self.lon_step,
             dtype=np.float64)
 
-        self.lat_step = self.grid.get_step_size(self.REFERENCE_PIXEL_SIZE[1] * degrees_lat_per_pixel)
+        self.lat_step = self.grid.get_step_size(ref_pixel_size * degrees_lat_per_pixel)
         self.lat_steps = np.arange(
             world_rect[0][1] + self.lat_step - world_rect[0][1] % self.lat_step,
             world_rect[1][1],

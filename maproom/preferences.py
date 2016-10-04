@@ -1,9 +1,9 @@
 # Enthought library imports.
 from envisage.ui.tasks.api import PreferencesPane, TaskFactory
 from apptools.preferences.api import PreferencesHelper
-from traits.api import Bool, Dict, Enum, List, Str, Unicode
+from traits.api import Bool, Dict, Enum, List, Str, Unicode, Range
 from traitsui.api import EnumEditor, HGroup, VGroup, Item, Label, \
-    View
+    View, RangeEditor
 
 ## fixme:
 ## Some hard_coded stuff just to put it in a central place -- should be handled smarter
@@ -43,6 +43,10 @@ class MaproomPreferences(PreferencesHelper):
     # check for layer errors on file save
     check_errors_on_save = Bool(True)
 
+    # minimum number of pixels between grid lines
+    grid_spacing_low = 25
+    grid_spacing_high = 200
+    grid_spacing = Range(low=grid_spacing_low, high=grid_spacing_high, value=100)
 
 class MaproomPreferencesPane(PreferencesPane):
     """ The preferences pane for the Framework application.
@@ -63,6 +67,9 @@ class MaproomPreferencesPane(PreferencesPane):
                       show_labels = False),
                HGroup(Item('zoom_speed'),
                       Label('Scroll Zoom Speed'),
+                      show_labels = False),
+               HGroup(Item('grid_spacing', editor=RangeEditor(mode="spinner", is_float=False, low_name='grid_spacing_low', high_name='grid_spacing_high')),
+                      Label('Minimum Number of Pixels Between Grid Lines'),
                       show_labels = False),
                HGroup(Item('show_scale'),
                       Label('Show Scale Layer'),
