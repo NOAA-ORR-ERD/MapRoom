@@ -503,10 +503,6 @@ class PanMode(MouseHandler):
     def process_mouse_down(self, event):
         return
 
-    def process_mouse_motion_up(self, event):
-        MouseHandler.process_mouse_motion_up(self, event)
-        self.layer_canvas.project.refresh()
-
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
         e = c.project
@@ -537,17 +533,81 @@ class PanMode(MouseHandler):
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
         c.selection_box_is_being_defined = False
 
-    def render_overlay(self, renderer):
-        # draw outline of polygon object that's currently being moused-over
+
+class RNCSelectionMode(PanMode):
+    """Mouse mode to pan the viewport
+    """
+    icon = "select.png"
+    menu_item_name = "RNC Chart Selection Mode"
+    menu_item_tooltip = "Select an RNC chart to download"
+    editor_trait_for_enabled = ""
+
+    def __init__(self, layer_canvas):
+        PanMode.__init__(self, layer_canvas)
+        self.is_panning = False
+
+    def get_rnc_object(self):
         c = self.layer_canvas
         e = c.project
-        print e.clickable_object_mouse_is_over
         if e.clickable_object_mouse_is_over is not None:
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
             if layer.can_highlight_clickable_object(c, object_type, object_index):
-                wp = layer.get_highlight_lines(c, object_type, object_index)
-                sp = [c.get_screen_point_from_world_point(w) for w in wp]
-                renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+                return layer, object_type, object_index
+        return None
+
+    def get_cursor(self):
+        if self.is_panning:
+            return PanMode.get_cursor(self)
+        else:
+            rnc = self.get_rnc_object()
+            if rnc is not None:
+                return wx.StockCursor(wx.CURSOR_ARROW)
+        return self.layer_canvas.hand_cursor
+
+    def process_mouse_down(self, event):
+        # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_canvas
+        self.reset_early_mouse_params()
+        self.first_mouse_down_position = event.GetPosition()
+        self.is_panning = False
+
+    def process_mouse_motion_up(self, event):
+        MouseHandler.process_mouse_motion_up(self, event)
+        self.layer_canvas.project.refresh()
+
+    def process_mouse_motion_down(self, event):
+        if not self.is_panning:
+            if self.check_early_mouse_release(event):
+                return
+            self.is_panning = True
+        else:
+            PanMode.process_mouse_motion_down(self, event)
+
+    def process_mouse_up(self, event):
+        c = self.layer_canvas
+        if (not c.mouse_is_down):
+            c.selection_box_is_being_defined = False
+            return
+
+        c.mouse_is_down = False
+        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        c.selection_box_is_being_defined = False
+        if not self.is_panning:
+            rnc = self.get_rnc_object()
+            if rnc is not None:
+                layer, object_type, object_index = rnc
+                print "LOADING RNC MAP #", object_index
+        self.is_panning = False
+
+    def render_overlay(self, renderer):
+        # draw outline of polygon object that's currently being moused-over
+        rnc = self.get_rnc_object()
+        if rnc is not None:
+            c = self.layer_canvas
+            layer, object_type, object_index = rnc
+            wp = layer.get_highlight_lines(c, object_type, object_index)
+            sp = [c.get_screen_point_from_world_point(w) for w in wp]
+            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class ObjectSelectionMode(MouseHandler):

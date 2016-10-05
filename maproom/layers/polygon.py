@@ -378,7 +378,7 @@ class RNCLoaderLayer(PolygonLayer):
     """
     type = Str("rncloader")
     
-    mouse_mode_toolbar = Str("BaseLayerToolBar")
+    mouse_mode_toolbar = Str("RNCToolBar")
     
     layer_info_panel = ["Polygon count"]
 

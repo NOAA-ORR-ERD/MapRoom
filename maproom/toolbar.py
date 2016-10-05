@@ -10,6 +10,7 @@ valid_mouse_modes = {
     'PolygonLayerToolBar': [PanMode, ZoomRectMode, RulerMode, CropRectMode],
     'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode, AddArrowTextMode, AddArrowTextIconMode],
     'BaseLayerToolBar': [PanMode, ZoomRectMode, RulerMode],
+    'RNCToolBar': [RNCSelectionMode, ZoomRectMode],
     }
 
 def get_valid_mouse_mode(mouse_mode, mode_mode_toolbar_name):
