@@ -321,6 +321,7 @@ try:
             'pytest-cov',
             'docutils',
             'markdown',
+            'reportlab',
             ],
         data_files=data_files,
         packages=find_packages(),
