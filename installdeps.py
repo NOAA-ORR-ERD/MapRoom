@@ -12,8 +12,9 @@ deps = [
 ]
 
 using_conda = "Continuum Analytics" in sys.version or "conda" in sys.version
+needs_netcdf = not sys.platform.startswith("win")
 
-if not using_conda:
+if needs_netcdf and not using_conda:
     # extra stuff isn't available through pypi or not easily built by hand
     deps.extend([
         ['https://github.com/MacPython/gattai.git',],
