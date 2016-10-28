@@ -13,9 +13,10 @@ log = logging.getLogger(__name__)
 
 
 class RNCChart(object):
-    def __init__(self, description, polygon):
+    def __init__(self, description, polygon, url):
         self.title = ""
         self.filename = ""
+        self.url = url
         self.points = []
         try:
             self.parse_desc(description)
@@ -77,11 +78,22 @@ class RNCParser(object):
         root = ET.parse(self.filename)
         value = root.findall("{http://www.isotc211.org/2005/gmd}composedOf/{http://www.isotc211.org/2005/gmd}DS_DataSet/{http://www.isotc211.org/2005/gmd}has/{http://www.isotc211.org/2005/gmd}MD_Metadata")
         for v in value:
+            e = v.findall(".//{http://www.isotc211.org/2005/gmd}CI_OnlineResource")
+            desc = ""
+            url = ""
+            for t in e:
+                dx = t.findall(".//{http://www.isotc211.org/2005/gmd}description")
+                for d in dx:
+                    desc = d[0].text
+                lx = t.findall(".//{http://www.isotc211.org/2005/gmd}linkage")
+                for l in lx:
+                    url = l[0].text
+
             e = v.findall(".//{http://www.isotc211.org/2005/gmd}EX_Extent")
-            m = self.parse_extent(e)
+            m = self.parse_extent(e, desc, url)
             self.maps.extend(m)
 
-    def parse_extent(self, extent):
+    def parse_extent(self, extent, desc, url):
         maps = []
         for e in extent:
             desc = e.findall(".//{http://www.isotc211.org/2005/gmd}description/{http://www.isotc211.org/2005/gco}CharacterString")
@@ -89,13 +101,13 @@ class RNCParser(object):
             polygons = e.findall(".//{http://www.isotc211.org/2005/gmd}EX_BoundingPolygon/{http://www.isotc211.org/2005/gmd}polygon/{http://www.opengis.net/gml/3.2}Polygon/{http://www.opengis.net/gml/3.2}exterior/")
             p = polygons[0]
             log.debug("POLYGON:", p)
-            maps.append(RNCChart(desc, p))
+            maps.append(RNCChart(desc, p, url))
         return maps
 
     def create_bna(self, filename):
         with open(filename, "w") as fh:
             for m in self.maps:
-                fh.write('"%s;%s","1",%d\n' % (m.title, m.filename, len(m.points)))
+                fh.write('"%s;%s;%s","1",%d\n' % (m.title, m.filename, m.url, len(m.points)))
                 fh.write("%s\n" % "\n".join(["%f,%f" % pt for pt in m.points]))
 
 
