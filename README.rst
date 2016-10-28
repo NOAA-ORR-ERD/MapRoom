@@ -9,7 +9,7 @@ Visit the `Response And Restoration Blog
 MapRoom <https://usresponserestoration.wordpress.com/2015/12/16/on-the-hunt-for-shipping-containers-lost-off-california-coast/>`_
 in use.
 
-The newest versions for Mac OS X and Windows are on the `download page <https://srccontrol.orr.noaa.gov/erd/MapRoom/wikis/downloads>`_.
+The newest versions for Mac OS X and Windows are on the `download page <https://gitlab.orr.noaa.gov/erd/MapRoom/wikis/downloads>`_.
 
 
 Overview
