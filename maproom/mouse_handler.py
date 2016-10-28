@@ -555,6 +555,18 @@ class RNCSelectionMode(PanMode):
                 return layer, object_type, object_index
         return None
 
+    def get_help_text(self):
+        rnc = self.get_rnc_object()
+        if rnc is not None:
+            layer, object_type, object_index = rnc
+            name = layer.polygon_identifiers[object_index]['name']
+            if ";" in name:
+                name, extra = name.split(";", 1)
+                if "_" in extra:
+                    num, _ = extra.split("_", 1)
+            return "   RNC #%s: %s" % (num, name)
+        return ""
+
     def get_cursor(self):
         if self.is_panning:
             return PanMode.get_cursor(self)
@@ -596,7 +608,7 @@ class RNCSelectionMode(PanMode):
             rnc = self.get_rnc_object()
             if rnc is not None:
                 layer, object_type, object_index = rnc
-                print "LOADING RNC MAP #", object_index
+                log.info("LOADING RNC MAP #%s" % object_index)
         self.is_panning = False
 
     def render_overlay(self, renderer):
