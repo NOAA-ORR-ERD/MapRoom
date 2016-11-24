@@ -112,9 +112,16 @@ class RNCParser(object):
 
 
 if __name__ == "__main__":
-    # mm = RNCParser("small.xml")
-    # print mm.maps
-    mm = RNCParser("RNCProdCat_19115.xml")
-    print mm.maps
-    print mm.maps[2].points
-    mm.create_bna("RNCProdCat_19115.bna")
+    import argparse
+    
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", help="Show debug information as the program runs", action="store_true")
+    parser.add_argument("-v", "--verbose", help="Show processed instructions as the program runs", action="store_true")
+    args, extra = parser.parse_known_args()
+
+    for filename in extra:
+        mm = RNCParser(filename)
+        print mm.maps
+        print mm.maps[2].points
+        basename, ext = os.path.splitext(filename)
+        mm.create_bna(basename + ".bna")
