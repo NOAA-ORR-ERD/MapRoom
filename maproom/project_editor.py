@@ -123,6 +123,7 @@ class ProjectEditor(FrameworkEditor):
             # Clear modified flag
             self.layer_manager.undo_stack.set_save_point()
             self.dirty = self.layer_manager.undo_stack.is_dirty()
+            self.view_document(self.document)
         elif hasattr(loader, "iter_log"):
             line = 0
             batch_flags = BatchStatus()
@@ -150,6 +151,7 @@ class ProjectEditor(FrameworkEditor):
                 text = "\n".join(header)
                 self.task.error(text, "Error restoring from command log")
             self.perform_batch_flags(batch_flags)
+            self.view_document(self.document)
         else:
             cmd = LoadLayersCommand(metadata)
             self.process_command(cmd)
@@ -160,7 +162,6 @@ class ProjectEditor(FrameworkEditor):
                 center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
                 cmd = ViewportCommand(None, center, units_per_pixel)
             self.process_command(cmd)
-        self.view_document(self.document)
     
     def parse_extra_json(self, json, batch_flags):
         # handle old version which was a two element list
