@@ -3,6 +3,7 @@
 import os
 import sys
 import re
+import zipfile
 
 from fs.opener import fsopen
 
@@ -98,7 +99,23 @@ class BSBParser(object):
         # this is where we could check the version, but only have 3.0 samples
         self.info = BSBInfo(self.dirname, items)
 
+def extract_from_zip(zip_path, kapfile, dest_path=None):
+    kapfile = kapfile.lower()
+    found_kap_path = None
+    with zipfile.ZipFile(zip_path) as z:
+        found = None
+        for info in z.infolist():
+            if info.filename.lower().endswith(kapfile):
+                found = info
+        if found:
+            found_kap_path = z.extract(found, dest_path)
+    return found_kap_path
+
+
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
-        p = BSBParser(arg)
-        print p.info
+        if arg.endswith(".zip"):
+            extract_from_zip(arg, "16450_1.KAP", "/tmp")
+        else:
+            p = BSBParser(arg)
+            print p.info
