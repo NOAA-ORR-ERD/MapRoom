@@ -25,6 +25,7 @@ from mouse_handler import *
 from menu_commands import *
 from serializer import UnknownCommandError
 import toolbar
+from library.bsb_utils import extract_from_zip
 
 import logging
 log = logging.getLogger(__name__)
@@ -370,6 +371,26 @@ class ProjectEditor(FrameworkEditor):
         if cmd is None:
             return self.layer_manager.metadata.uri
         return cmd.metadata.uri
+
+    def process_rnc_download(self, req, error):
+        if not req.is_cancelled:
+            if error is None:
+                log.debug("loaded RNC map %s for map %s" % (req.path, req.extra_data))
+                kap = extract_from_zip(req.path, req.extra_data)
+                if kap:
+                    self.window.application.load_file(kap, self.task)
+                else:
+                    self.task.error("The metadata in %s\nhas a problem: map %s doesn't exist" % (req.path, req.extra_data))
+            else:
+                self.task.error("Error downloading %s:\n%s" % (req.url, error))
+
+
+    def download_file(self, url, filename, callback, extra_data):
+        if filename is None:
+            filename = os.path.basename(url)
+        req = self.sidebar.download_control.request_download(url, filename, callback)
+        req.extra_data = extra_data
+
 
     ###########################################################################
     # Private interface.

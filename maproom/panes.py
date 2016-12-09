@@ -11,6 +11,7 @@ from traits.api import on_trait_change
 
 from omnivore.framework.panes import FrameworkPane
 from omnivore.utils.wx.springtabs import SpringTabs
+from omnivore.utils.wx.download_manager import DownloadControl
 
 from layer_tree_control import LayerTreeControl
 from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
@@ -191,6 +192,23 @@ class FlaggedPointPanel(wx.ListBox):
         self.recalc_view()
         return len(self.point_indexes)
 
+class DownloadPanel(DownloadControl):
+    def __init__(self, parent, task, **kwargs):
+        self.task = task
+        self.editor = None
+        downloader = self.task.window.application.get_downloader()
+        DownloadControl.__init__(self, parent, downloader, size=(400,-1), **kwargs)
+
+    def refresh_view(self):
+        self.Refresh()
+        
+    def activateSpringTab(self):
+        self.refresh_view()
+    
+    def get_notification_count(self):
+        self.refresh_view()
+        return self.num_active
+
 
 class SidebarPane(FrameworkPane):
     #### TaskPane interface ###################################################
@@ -204,10 +222,14 @@ class SidebarPane(FrameworkPane):
     
     def flagged_cb(self, parent, task, **kwargs):
         control = FlaggedPointPanel(parent, task)
+    
+    def download_cb(self, parent, task, **kwargs):
+        self.download_control = DownloadPanel(parent, task)
         
     def create_contents(self, parent):
         control = SpringTabs(parent, self.task, popup_direction="left")
         control.addTab("Flagged Points", self.flagged_cb)
+        control.addTab("Downloads", self.download_cb)
         return control
     
     def refresh_active(self):

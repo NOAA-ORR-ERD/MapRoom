@@ -555,15 +555,25 @@ class RNCSelectionMode(PanMode):
                 return layer, object_type, object_index
         return None
 
+    def parse_rnc_object(self, rnc):
+        layer, object_type, object_index = rnc
+        name = layer.polygon_identifiers[object_index]['name']
+        if ";" in name:
+            name, filename, url = name.split(";")
+            if "_" in filename:
+                num, _ = filename.split("_", 1)
+        else:
+            name = "Invalid RNC"
+            filename = ""
+            url = None
+            num = "0"
+        return name, num, filename, url
+
     def get_help_text(self):
         rnc = self.get_rnc_object()
         if rnc is not None:
             layer, object_type, object_index = rnc
-            name = layer.polygon_identifiers[object_index]['name']
-            if ";" in name:
-                name, extra = name.split(";", 1)
-                if "_" in extra:
-                    num, _ = extra.split("_", 1)
+            name, num, filename, url = self.parse_rnc_object(rnc)
             return "   RNC #%s: %s" % (num, name)
         return ""
 
@@ -608,7 +618,14 @@ class RNCSelectionMode(PanMode):
             rnc = self.get_rnc_object()
             if rnc is not None:
                 layer, object_type, object_index = rnc
-                log.info("LOADING RNC MAP #%s" % object_index)
+                name, num, filename, url = self.parse_rnc_object(rnc)
+                if url:
+                    # submit download to downloader!
+                    log.info("LOADING RNC MAP #%s from %s" % (num, url))
+                    extra = filename
+                    e = c.project
+                    e.download_file(url, None, e.process_rnc_download, extra)
+                    
         self.is_panning = False
 
     def render_overlay(self, renderer):
