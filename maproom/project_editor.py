@@ -391,6 +391,7 @@ class ProjectEditor(FrameworkEditor):
             filename = os.path.basename(url)
         req = self.sidebar.download_control.request_download(url, filename, callback)
         req.extra_data = extra_data
+        self.sidebar.refresh_active()
 
 
     ###########################################################################
