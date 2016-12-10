@@ -622,9 +622,8 @@ class RNCSelectionMode(PanMode):
                 if url:
                     # submit download to downloader!
                     log.info("LOADING RNC MAP #%s from %s" % (num, url))
-                    extra = filename
                     e = c.project
-                    e.download_file(url, None, e.process_rnc_download, extra)
+                    e.download_rnc(url, filename, num)
                     
         self.is_panning = False
 

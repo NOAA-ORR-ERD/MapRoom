@@ -199,6 +199,21 @@ class DownloadPanel(DownloadControl):
         downloader = self.task.window.application.get_downloader()
         DownloadControl.__init__(self, parent, downloader, size=(400,-1), **kwargs)
 
+    # turn the superclass attribute path into a property so we can override it
+    # and pull out the paths from the preferences
+    @property
+    def path(self):
+        prefs = self.task.get_preferences()
+        if prefs.download_directory:
+            return prefs.download_directory
+        return os.getcwd()
+
+    @path.setter
+    def path(self, value):
+        if value:
+            prefs = self.task.get_preferences()
+            prefs.download_directory = value
+
     def refresh_view(self):
         self.Refresh()
         

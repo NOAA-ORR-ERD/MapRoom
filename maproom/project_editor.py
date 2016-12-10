@@ -377,7 +377,8 @@ class ProjectEditor(FrameworkEditor):
         if not req.is_cancelled:
             if error is None:
                 log.debug("loaded RNC map %s for map %s" % (req.path, req.extra_data))
-                kap = extract_from_zip(req.path, req.extra_data)
+                prefs = self.task.get_preferences()
+                kap = extract_from_zip(req.path, req.extra_data, prefs.bsb_directory)
                 if kap:
                     self.window.application.load_file(kap, self.task)
                 else:
@@ -385,6 +386,22 @@ class ProjectEditor(FrameworkEditor):
             else:
                 self.task.error("Error downloading %s:\n%s" % (req.url, error))
 
+    def check_rnc_map(self, url, filename, map_id):
+        # Check for existence of already downloaded RNC map. This assumes the
+        # layout BSB_ROOT/<map number>/<filename>
+        prefs = self.task.get_preferences()
+        if prefs.bsb_directory:
+            path = os.path.join(prefs.bsb_directory, "BSB_ROOT", map_id, filename)
+            log.debug("checking for RNC file %s" % path)
+            if os.path.exists(path):
+                return path
+
+    def download_rnc(self, url, filename, map_id):
+        kap = self.check_rnc_map(url, filename, map_id)
+        if not kap:
+            self.download_file(url, None, self.process_rnc_download, filename)
+        else:
+            self.window.application.load_file(kap, self.task)
 
     def download_file(self, url, filename, callback, extra_data):
         if filename is None:

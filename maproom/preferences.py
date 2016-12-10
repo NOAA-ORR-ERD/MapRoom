@@ -1,7 +1,9 @@
+import os
+
 # Enthought library imports.
 from envisage.ui.tasks.api import PreferencesPane, TaskFactory
 from apptools.preferences.api import PreferencesHelper
-from traits.api import Bool, Dict, Enum, List, Str, Unicode, Range
+from traits.api import Bool, Dict, Enum, List, Str, Unicode, Range, Directory
 from traitsui.api import EnumEditor, HGroup, VGroup, Item, Label, \
     View, RangeEditor
 
@@ -48,6 +50,10 @@ class MaproomPreferences(PreferencesHelper):
     grid_spacing_high = 200
     grid_spacing = Range(low=grid_spacing_low, high=grid_spacing_high, value=100)
 
+    download_directory = Directory(os.getcwd())
+
+    bsb_directory = Directory(os.getcwd())
+
 class MaproomPreferencesPane(PreferencesPane):
     """ The preferences pane for the Framework application.
     """
@@ -76,6 +82,12 @@ class MaproomPreferencesPane(PreferencesPane):
                       show_labels = False),
                HGroup(Item('check_errors_on_save'),
                       Label('Check for layer errors on save'),
+                      show_labels = False),
+               HGroup(Item('download_directory'),
+                      Label('Download directory'),
+                      show_labels = False),
+               HGroup(Item('bsb_directory'),
+                      Label('BSB storage directory'),
                       show_labels = False),
                label='MapRoom'),
         resizable=True)
