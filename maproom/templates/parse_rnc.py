@@ -29,7 +29,7 @@ class RNCChart(object):
         text = desc[0].text
         log.debug("DESCRIPTION:", text)
         args = text.split(";")
-        print("ARGS", args)
+        log.debug("ARGS %s" % args)
         last = None
         for arg in args:
             if ":" in arg:
@@ -121,7 +121,7 @@ if __name__ == "__main__":
 
     for filename in extra:
         mm = RNCParser(filename)
-        print mm.maps
-        print mm.maps[2].points
+        # print mm.maps
+        # print mm.maps[2].points
         basename, ext = os.path.splitext(filename)
         mm.create_bna(basename + ".bna")

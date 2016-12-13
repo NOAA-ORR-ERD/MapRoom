@@ -249,6 +249,7 @@ class MaproomProjectTask(FrameworkTask):
             NewTileLayerAction(),
             NewCompassRoseLayerAction(),
             NewLonLatLayerAction(),
+            NewRNCLayerAction(),
             ]
 
     def get_actions_Menu_Layer_LayerStackGroup(self):

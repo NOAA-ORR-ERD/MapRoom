@@ -119,6 +119,12 @@ if BUILD_APP:
     import pyface
     data_files.extend(omnivore.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
 
+    data_files.extend([
+        ("maproom/templates",
+            glob("maproom/templates/*.bna")
+            ),
+        ])
+    
     includes = [
         "ctypes",
         "ctypes.util",

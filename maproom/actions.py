@@ -273,6 +273,15 @@ class NewTileLayerAction(EditorAction):
         cmd = AddLayerCommand("tile")
         self.active_editor.process_command(cmd)
 
+class NewRNCLayerAction(EditorAction):
+    name = 'New RNC Download Selection Layer'
+    tooltip = 'Create new layer for downloading RNC images'
+
+    def perform(self, event):
+        from maproom.templates import get_template_path
+        path = get_template_path("RNCProdCat_*.bna")
+        event.task.window.application.load_file(path, event.task)
+
 class DeleteLayerAction(EditorAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'

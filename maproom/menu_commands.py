@@ -118,6 +118,8 @@ class AddLayerCommand(Command):
             layer = WMSLayer(manager=lm)
         elif self.type == "tile":
             layer = TileLayer(manager=lm)
+        elif self.type == "rnc":
+            layer = RNCDownloadLayer(manager=lm)
         else:
             layer = LineLayer(manager=lm)
         
