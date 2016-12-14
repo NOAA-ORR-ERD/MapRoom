@@ -134,8 +134,12 @@ def load_shapefile(uri):
             add_polygon(points, geo_type, feature_code)
         elif geo_type == 'LINESTRING':
             points = geom.GetPoints()
-            line_strings.append(points)
             print geo_type, points
+            # polygon layer doesn't currently support lines, so fake it by
+            # reversing the points and taking the line back on itself
+            backwards = list(points)
+            backwards.reverse()
+            points.extend(backwards)
             add_polygon(points, geo_type, feature_code)
         else:
             print 'unknown type: ', geo_type
