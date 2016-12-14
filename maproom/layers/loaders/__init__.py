@@ -65,6 +65,8 @@ from nc_particles import ParticleLoader
 loaders.append(ParticleLoader())
 from project import ProjectLoader
 loaders.append(ProjectLoader())
+from shapefile import ShapefileLoader
+loaders.append(ShapefileLoader())
 from ugrid import UGridLoader
 loaders.append(UGridLoader())
 from verdat import VerdatLoader
@@ -88,6 +90,7 @@ def load_layers_from_url(url, mime, manager=None):
 def get_loader(metadata):
     for loader in loaders:
         log.debug("trying loader %s" % loader.name)
+        print("trying loader %s" % loader.name)
         if loader.can_load(metadata):
             log.debug(" loading using loader %s!" % loader.name)
             return loader

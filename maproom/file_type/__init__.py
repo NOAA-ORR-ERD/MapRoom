@@ -62,6 +62,8 @@ recognizers.append(BSBRecognizer())
 recognizers.append(MapRoomCommandRecognizer())
 recognizers.append(MapRoomProjectRecognizer())
 recognizers.append(VerdatRecognizer())
+from vector import OGRRecognizer
+recognizers.append(OGRRecognizer())
 # [[[end]]]
 
 from envisage.api import Plugin
