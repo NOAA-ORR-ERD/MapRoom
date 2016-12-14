@@ -605,3 +605,13 @@ class ClearTileCacheAction(EditorAction):
                 event.task.window.window.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
                 
         dlg.Destroy()
+
+class NormalizeLongitudeAction(EditorAction):
+    name = 'Normalize Longitude'
+    tooltip = 'Adjust longitudes so the map lies between 0 and 360W'
+
+    def perform(self, event):
+        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
+        if sel_layer is not None:
+            cmd = NormalizeLongitudeCommand(sel_layer)
+            self.active_editor.process_command(cmd)

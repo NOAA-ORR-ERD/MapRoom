@@ -267,6 +267,7 @@ class MaproomProjectTask(FrameworkTask):
             ToVerdatLayerAction(),
             MergeLayersAction(),
             MergePointsAction(),
+            NormalizeLongitudeAction(),
             ]
     
     def get_actions_Menu_Layer_LayerDeleteGroup(self):

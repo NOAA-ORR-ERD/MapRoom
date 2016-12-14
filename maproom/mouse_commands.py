@@ -121,6 +121,41 @@ class MovePointsCommand(Command):
         layer.points.y[self.indexes] = old_y
         return self.undo_info
 
+class NormalizeLongitudeCommand(Command):
+    short_name = "norm_long"
+    serialize_order =  [
+        ('layer', 'layer'),
+        ]
+    
+    def __str__(self):
+        return "Normalize Longitude"
+    
+    def recurse_perform(self, layer, undo):
+        if layer.has_points():
+            layer_undo = layer.get_undo_info()
+            layer.normalize_longitude()
+            undo.data.append((layer.invariant, layer_undo))
+            lf = undo.flags.add_layer_flags(layer)
+            lf.layer_items_moved = True
+            lf.layer_contents_added = True
+        for child in layer.manager.get_layer_children(layer):
+            self.recurse_perform(child, undo)
+
+    def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = []
+        undo.flags.refresh_needed = True
+        self.recurse_perform(layer, undo)
+        lf = undo.flags.add_layer_flags(layer)
+        return undo
+
+    def undo(self, editor):
+        for invariant, layer_undo in self.undo_info:
+            layer = editor.layer_manager.get_layer_by_invariant(invariant)
+            layer.restore_undo_info(layer_undo)
+        return self.undo_info
+
 class ChangeDepthCommand(Command):
     short_name = "depth"
     serialize_order =  [

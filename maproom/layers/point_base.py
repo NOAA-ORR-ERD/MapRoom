@@ -282,6 +282,13 @@ class PointBaseLayer(ProjectedLayer):
             self.depth_unit = depth_unit
        # self.points.state = 0
     
+    def normalize_longitude(self):
+        l = self.points.x.min()
+        r = self.points.x.max()
+        print "left, right:", l, r
+        if l > 0 and r > 0:
+            self.points.x -= 360.0
+
     def compute_projected_point_data(self):
         projection = self.manager.project.layer_canvas.projection
         view = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy.astype(np.float32)
