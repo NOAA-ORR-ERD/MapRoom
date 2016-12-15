@@ -199,6 +199,7 @@ if BUILD_APP:
         # copied over
         import shapely
         libgeos = os.path.join(os.path.dirname(shapely.__file__), "geos_c.dll")
+        import requests.certs
         data_files.extend([
             ("maproom/renderer/gl",
                 glob("maproom/renderer/gl/*.pyd")
@@ -208,6 +209,7 @@ if BUILD_APP:
              ),
             ("pyproj/data", pyproj_data),
             ("shapely", [libgeos]),
+            ("requests",[requests.certs.where()]),
         ])
 
         # Add missing DLL files that py2exe doesn't pull in automatically.
