@@ -130,17 +130,22 @@ def load_shapefile(uri):
         elif geo_type == 'POLYGON':
             poly = geom.GetGeometryRef(0)
             points = poly.GetPoints()
-            print geo_type, points
             add_polygon(points, geo_type, feature_code)
         elif geo_type == 'LINESTRING':
             points = geom.GetPoints()
-            print geo_type, points
             # polygon layer doesn't currently support lines, so fake it by
             # reversing the points and taking the line back on itself
             backwards = list(points)
             backwards.reverse()
             points.extend(backwards)
             add_polygon(points, geo_type, feature_code)
+        elif geo_type == 'POINT':
+            points = geom.GetPoints()
+            # polygon layer doesn't currently support points, so fake it by
+            # creating tiny little triangles for each point
+            x, y = points[0]
+            polygon = [(x, y), (x + 0.0005, y + .001), (x + 0.001, y)]
+            add_polygon(polygon, geo_type, feature_code)
         else:
             print 'unknown type: ', geo_type
 
