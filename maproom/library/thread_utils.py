@@ -66,10 +66,10 @@ class WMSRequestServer(UnskippableURLRequest):
             print "Error contacting", self.url, e
             self.error = e
         except AttributeError, e:
-            print "Bad response from server", self.url
+            print "Bad response from server", self.url, e
             self.error = e
         except Exception, e:
-            print "Server error", self.url
+            print "Server error", self.url, e
             self.error = e
     
     def is_valid(self):
