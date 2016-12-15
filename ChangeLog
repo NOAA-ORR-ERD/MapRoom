@@ -1,3 +1,35 @@
+12/15/2016
+---------------------------
+Released 3.1b29
+- RM Added missing cacert.pem from requests module that was preventing SSL connections on the py2exe version
+- RM Added error string for server error when loading WMS
+- RM Refs #372, #726: workaround to support points from shapefiles by creating tiny triangles for each point
+- RM Refs #372, #726: workaround to support linestrings even though polygon layer doesn't currently support those
+- RM Refs #372, #726: added initial support for loading shapefiles
+- RM Refs #731: initial support for longitude normalizing of point-based layers
+- RM Fixed #722: Added built-in RNC download template & menu item to bring up download selection layer
+- RM Added bsb and download directory preferences for RNC maps
+- RM Added sidebar refresh so download count will appear immediately
+- RM Fixed zoom bug that would zoom all the way out after loading a layer and setting the zoom to that layer
+- RM Added basic RNC downloading
+- RM Added KAP extractor from BSB zipfiles
+- RM Added argument parser to RNC parser
+- RM Refs #722: added display of RNC number/name when hovering over chart
+- RM Refs #722: added url for each map
+- CB fixed link to download page to use "gitlab.orr.noaa.gov"
+- RM NetCDF installed by Gohlke package on windows, not via gattai
+- RM Updated version number for pending next release
+- RM Refs #722: created new mouse mode for RNC selection
+- RM Refs #722: added highlighting for map outlines
+- RM Fixed #723: added test image for geo-referenced PNG file
+- RM Refs #723: added support for RGBA images in gdal loader
+- RM Added preference for pixel spacing of grid lines
+- RM Refs #722: added special subclass of PolygonLayer to display custom BNA files for RNC selector map
+- RM Modified cog script to include current dir in python search path to pick up local gdal.py needed by bsb.py
+- RM Added polygon identification for mouse-overs
+- RM Refs #722: finished enough XML parsing to create BNA converter
+- RM Refs #722: Added initial parses for RNC XML files
+
 09/23/2016
 ---------------------------
 Released 3.1b28
