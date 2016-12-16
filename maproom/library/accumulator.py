@@ -14,7 +14,7 @@ IMPORTAT Only works for 1-d arrays at the moment.
 import numpy as np
 
 
-class accumulator:
+class accumulator(object):
     # A few parameters
     DEFAULT_BUFFER_SIZE = 128
     BUFFER_EXTEND_SIZE = 1.25  # array.array uses 1+1/16 -- that seems small to me.
@@ -100,7 +100,7 @@ class accumulator:
         try:
             self.__buffer[self._length:self._length + len(items)] = items
             self._length += len(items)
-        except ValueError:  # the buffer is not big enough, or wrong shape
+        except ValueError as e:  # the buffer is not big enough, or wrong shape
             items = np.asarray(items, dtype=self.dtype)
             if items.shape[1:] <> self._block_shape:
                 raise
@@ -167,3 +167,12 @@ class accumulator:
 
 def flatten(list_of_lists):
     return [j for i in list_of_lists for j in i]
+
+
+if __name__ == "__main__":
+    polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
+    p = [(0, 0)] * 190
+    polygon_points.extend(p) # works
+    p = [(0, 0, 0)] * 190
+    polygon_points.extend(p) # fails with ValueError, even though it's supposed to catch ValueError!
+
