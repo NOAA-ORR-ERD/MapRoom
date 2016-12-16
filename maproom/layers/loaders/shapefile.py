@@ -99,6 +99,11 @@ def load_shapefile(uri):
     scoping_hack = [0]
 
     def add_polygon(points, name, feature_code):
+        if len(points) < 1:
+            return
+        example = points[0]
+        if len(example) > 2:
+            points = [(p[0], p[1]) for p in points]
         num_points = len(points)
         polygon_points.extend(points)
         polygon_starts.append(scoping_hack[0])
