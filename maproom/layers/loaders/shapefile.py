@@ -4,7 +4,7 @@ import time
 
 from fs.opener import opener
 import numpy as np
-from osgeo import ogr
+from osgeo import ogr, osr
 import pyproj
 
 from maproom.library.accumulator import accumulator
@@ -19,7 +19,7 @@ progress_log = logging.getLogger("progress")
 class ShapefileLoader(BaseLayerLoader):
     mime = "application/x-maproom-shapefile"
     
-    layer_types = ["polygon"]
+    layer_types = ["polygon", "line"]
     
     extensions = [".shp"]
     
@@ -44,9 +44,9 @@ class ShapefileLoader(BaseLayerLoader):
             layer.mime = self.mime
         return [layer]
     
-    def save_to_file(self, f, layer):
-        return "Can't save shapefiles yet."
-
+    def save_to_local_file(self, filename, layer):
+        boundaries = self.get_boundaries(layer)
+        write_boundaries_as_shapefile(filename, layer, boundaries)
 
 def get_dataset(uri):
     """Get OGR Dataset, performing URI to filename conversion since OGR
@@ -161,3 +161,77 @@ def load_shapefile(uri):
             np.asarray(polygon_starts)[:, 0],
             np.asarray(polygon_counts)[:, 0],
             polygon_identifiers)
+
+def write_boundaries_as_shapefile(filename, layer, boundaries):
+    # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(layer.manager.project.layer_canvas.projection.srs)
+
+    driver = ogr.GetDriverByName('ESRI Shapefile')
+    shapefile = driver.CreateDataSource(filename)
+    shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
+
+    poly = ogr.Geometry(ogr.wkbPolygon)
+    file_point_index = 0
+    points = layer.points
+    for (boundary_index, boundary) in enumerate(boundaries):
+        ring = ogr.Geometry(ogr.wkbLinearRing)
+
+        for point_index in boundary:
+            ring.AddPoint(points.x[point_index], points.y[point_index])
+            file_point_index += 1
+            
+            if file_point_index % BaseLayerLoader.points_per_tick == 0:
+                progress_log.info("Saved %d points" % file_point_index)
+
+        print "adding ring", ring
+        poly.AddGeometry(ring)
+        print 'Polygon area =', poly.GetArea()
+
+    feature_index = 0
+    layer_defn = shapefile_layer.GetLayerDefn()
+    feature = ogr.Feature(layer_defn)
+    feature.SetGeometry(poly)
+    feature.SetFID(feature_index)
+    shapefile_layer.CreateFeature(feature)
+    feature.Destroy()
+    feature = None
+
+    # ## lets add now a second point with different coordinates:
+    # point.AddPoint(474598, 5429281)
+    # feature_index = 1
+    # feature = osgeo.ogr.Feature(layer_defn)
+    # feature.SetGeometry(point)
+    # feature.SetFID(feature_index)
+    # layer.CreateFeature(feature)
+    shapefile.Destroy()
+    shapefile = None  # garbage collection = save
+
+if __name__ == "__main__":
+    # from http://gis.stackexchange.com/questions/43436/why-does-this-simple-python-ogr-code-create-an-empty-polygon
+    #create simple square polygon shapefile:
+    from osgeo import ogr
+    driver = ogr.GetDriverByName('ESRI Shapefile')
+
+    datasource = driver.CreateDataSource('square.shp')
+    layer = datasource.CreateLayer('layerName',geom_type=ogr.wkbPolygon)
+
+    #create polygon object:
+    myRing = ogr.Geometry(type=ogr.wkbLinearRing)
+    myRing.AddPoint(0.0, 0.0)#LowerLeft
+    myRing.AddPoint(0.0, 10.0)#UpperLeft
+    myRing.AddPoint(10.0, 10.0)#UpperRight
+    myRing.AddPoint(10.0, 0.0)#Lower Right
+    myRing.AddPoint(0.0, 0.0)#close ring
+    myPoly = ogr.Geometry(type=ogr.wkbPolygon)
+    myPoly.AddGeometry(myRing)
+    print ('Polygon area =',myPoly.GetArea() )#returns correct area of 100.0
+
+    #create feature object with point geometry type from layer object:
+    feature = ogr.Feature( layer.GetLayerDefn() )
+    feature.SetGeometry(myPoly)
+    layer.CreateFeature(feature)
+
+    #flush memory
+    feature.Destroy()
+    datasource.Destroy()
