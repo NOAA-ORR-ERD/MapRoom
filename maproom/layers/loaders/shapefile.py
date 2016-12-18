@@ -133,9 +133,10 @@ def load_shapefile(uri):
                 print geo_type, i, points
                 add_polygon(points, geo_type, feature_code)
         elif geo_type == 'POLYGON':
-            poly = geom.GetGeometryRef(0)
-            points = poly.GetPoints()
-            add_polygon(points, geo_type, feature_code)
+            for i in range(geom.GetGeometryCount()):
+                poly = geom.GetGeometryRef(i)
+                points = poly.GetPoints()
+                add_polygon(points, geo_type, feature_code)
         elif geo_type == 'LINESTRING':
             points = geom.GetPoints()
             # polygon layer doesn't currently support lines, so fake it by
@@ -225,6 +226,16 @@ if __name__ == "__main__":
     myRing.AddPoint(0.0, 0.0)#close ring
     myPoly = ogr.Geometry(type=ogr.wkbPolygon)
     myPoly.AddGeometry(myRing)
+    print ('Polygon area =',myPoly.GetArea() )#returns correct area of 100.0
+
+    #create polygon object:
+    hole = ogr.Geometry(type=ogr.wkbLinearRing)
+    hole.AddPoint(3.0, 3.0)#LowerLeft
+    hole.AddPoint(7.0, 3.0)#Lower Right
+    hole.AddPoint(7.0, 7.0)#UpperRight
+    hole.AddPoint(3.0, 7.0)#UpperLeft
+    hole.AddPoint(3.0, 3.0)#close ring
+    myPoly.AddGeometry(hole)
     print ('Polygon area =',myPoly.GetArea() )#returns correct area of 100.0
 
     #create feature object with point geometry type from layer object:
