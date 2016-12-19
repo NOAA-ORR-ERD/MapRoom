@@ -150,7 +150,7 @@ class NormalizeLongitudeCommand(Command):
         return undo
 
     def undo(self, editor):
-        for invariant, layer_undo in self.undo_info:
+        for invariant, layer_undo in self.undo_info.data:
             layer = editor.layer_manager.get_layer_by_invariant(invariant)
             layer.restore_undo_info(layer_undo)
         return self.undo_info
