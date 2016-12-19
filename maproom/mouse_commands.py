@@ -131,13 +131,12 @@ class NormalizeLongitudeCommand(Command):
         return "Normalize Longitude"
     
     def recurse_perform(self, layer, undo):
-        if layer.has_points():
-            layer_undo = layer.get_undo_info()
-            layer.normalize_longitude()
-            undo.data.append((layer.invariant, layer_undo))
-            lf = undo.flags.add_layer_flags(layer)
-            lf.layer_items_moved = True
-            lf.layer_contents_added = True
+        layer_undo = layer.get_undo_info()
+        layer.normalize_longitude()
+        undo.data.append((layer.invariant, layer_undo))
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
         for child in layer.manager.get_layer_children(layer):
             self.recurse_perform(child, undo)
 

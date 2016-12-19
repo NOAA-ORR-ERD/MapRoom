@@ -626,6 +626,9 @@ class ProjectEditor(FrameworkEditor):
         """Make additions to the batch flags as a result of the passed-in flags
         
         """
+        # folders need bounds updating after child layers
+        folder_bounds = []
+
         if f.layers_changed:
             # Only set this to True, never back to False once True
             b.layers_changed = True
@@ -642,9 +645,12 @@ class ProjectEditor(FrameworkEditor):
             layer = lf.layer
             b.layers.append(layer)
             if lf.layer_items_moved:
-                layer.update_bounds()
                 b.need_rebuild[layer] = True
                 b.editable_properties_changed = True
+                if layer.is_folder():
+                    folder_bounds.append((self.layer_manager.get_multi_index_of_layer(layer), layer))
+                else:
+                    layer.update_bounds()
             if lf.layer_display_properties_changed:
                 b.need_rebuild[layer] = False
                 b.refresh_needed = True
@@ -665,6 +671,13 @@ class ProjectEditor(FrameworkEditor):
                 b.layers_changed = True
             if lf.layer_metadata_changed:
                 b.metadata_changed = True
+
+        # Update the folders after all the children are moved. Also, need to
+        # update the folders from children to parent because child folder
+        # bounds affect the parent.
+        folder_bounds.sort()
+        for _, layer in reversed(folder_bounds):
+            layer.update_bounds()
     
     def perform_batch_flags(self, b):
         """Perform the UI updates given the BatchStatus flags

@@ -410,6 +410,9 @@ class Layer(HasTraits):
     def get_display_property(self, prop):
         return ""
 
+    def normalize_longitude(self):
+        pass
+
     def merge_layer_into_new(self, other_layer, depth_unit=""):
         targets = []
         if self.is_mergeable_with(other_layer):
