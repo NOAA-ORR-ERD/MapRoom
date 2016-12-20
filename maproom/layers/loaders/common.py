@@ -13,6 +13,9 @@ class BaseLoader(object):
     # multiple extensions are supported, put the most common one first so that
     # the file dialog will display that as the default.
     extensions = []
+
+    # map of extension to pretty name
+    extension_desc = {}
     
     name = "Abstract loader"
     
@@ -25,6 +28,11 @@ class BaseLoader(object):
     def can_save_project(self):
         return False
     
+    def extension_name(self, ext):
+        if ext in self.extension_desc:
+            return self.extension_desc[ext]
+        return self.name
+
     def is_valid_extension(self, extension):
         return extension.lower() in self.extensions
     
@@ -35,8 +43,9 @@ class BaseLoader(object):
         # Using only the first extension
         wildcards = []
         if self.extensions:
-            ext = self.extensions[0]
-            wildcards.append("%s (*%s)|*%s" % (self.name, ext, ext))
+            for ext in self.extensions:
+                name = self.extension_name(ext)
+                wildcards.append("%s (*%s)|*%s" % (name, ext, ext))
         return "|".join(wildcards)
 
 class BaseLayerLoader(BaseLoader):

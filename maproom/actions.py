@@ -81,9 +81,10 @@ class SaveLayerAsAction(EditorAction):
 
 class SaveLayerAsFormatAction(EditorAction):
     loader = Any
+    ext = Str
     
     def _name_default(self):
-        return "%s (%s)" % (self.loader.name, self.loader.extensions[0])
+        return "%s (%s)" % (self.loader.extension_name(self.ext), self.ext)
     
     def perform(self, event):
         dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard=self.loader.get_file_dialog_wildcard())
@@ -104,8 +105,10 @@ class SaveLayerGroup(TaskDynamicSubmenuGroup):
             valid = valid_save_formats(layer)
             if valid:
                 for item in valid:
-                    action = SaveLayerAsFormatAction(loader=item[0])
-                    items.append(ActionItem(action=action))
+                    loader = item[0]
+                    for ext in loader.extensions:
+                        action = SaveLayerAsFormatAction(loader=loader, ext=ext)
+                        items.append(ActionItem(action=action))
             
         return items
 
