@@ -5,10 +5,12 @@ import time
 from fs.opener import opener
 import numpy as np
 from osgeo import ogr, osr
+import fiona
+from shapely.geometry import shape
 import pyproj
 
 from maproom.library.accumulator import accumulator
-from maproom.layers import PolygonLayer
+from maproom.layers import PolygonLayer, ShapefileLayer
 
 from common import BaseLayerLoader
 
@@ -16,7 +18,7 @@ import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
-class ShapefileLoader(BaseLayerLoader):
+class PolygonShapefileLoader(BaseLayerLoader):
     mime = "application/x-maproom-shapefile"
     
     layer_types = ["polygon", "line"]
@@ -212,6 +214,70 @@ def write_boundaries_as_shapefile(filename, layer, boundaries):
     shapefile.Destroy()
     shapefile = None  # garbage collection = save
 
+
+class ShapefileLoader(BaseLayerLoader):
+    mime = "application/x-maproom-shapefile-shapely"
+    
+    layer_types = ["shapefile"]
+    
+    extensions = [".shp"]
+    
+    name = "Shapefile"
+    
+    layer_class = ShapefileLayer
+
+    def load_layers(self, metadata, manager):
+        layer = self.layer_class(manager=manager)
+        
+        layer.load_error_string, geometry_list = load_shapely(metadata.uri)
+        progress_log.info("Creating layer...")
+        if (layer.load_error_string == ""):
+            layer.set_geometry(geometry_list)
+            layer.file_path = metadata.uri
+            layer.name = os.path.split(layer.file_path)[1]
+            layer.mime = self.mime
+        return [layer]
+    
+    def save_to_local_file(self, filename, layer):
+        write_geometry_as_shapefile(filename, layer)
+
+def get_fiona(uri):
+    """Get fiona Dataset, performing URI to filename conversion since OGR
+    doesn't support URIs, only files on the local filesystem
+    """
+
+    fs, relpath = opener.parse(uri)
+    print "fiona:", relpath
+    print "fiona:", fs
+    if not fs.hassyspath(relpath):
+        raise RuntimeError("Only file URIs are supported for OGR: %s" % metadata.uri)
+    file_path = fs.getsyspath(relpath)
+    if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
+        file_path = file_path[4:]
+    source = fiona.open(str(file_path), 'r')
+    print source
+
+    if (source is None):
+        return ("Unable to load the shapefile " + file_path, None)
+
+    return "", source
+
+
+def load_shapely(uri):
+    error, source = get_fiona(uri)
+    if error:
+        return (error, None)
+
+    geometry_list = []
+    for f in source:
+        print f
+        g = shape(f['geometry'])
+        print type(g), g
+        geometry_list.append(g)
+
+    return ("", geometry_list)
+
+
 if __name__ == "__main__":
     # from http://gis.stackexchange.com/questions/43436/why-does-this-simple-python-ogr-code-create-an-empty-polygon
     #create simple square polygon shapefile:
@@ -250,3 +316,6 @@ if __name__ == "__main__":
     #flush memory
     feature.Destroy()
     datasource.Destroy()
+
+    error, geom_list = load_shapely('/noaa/maproom/TestData/Shapefiles/20160516_0013d.shp')
+
