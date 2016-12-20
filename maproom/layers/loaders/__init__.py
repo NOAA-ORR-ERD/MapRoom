@@ -65,8 +65,7 @@ from nc_particles import ParticleLoader
 loaders.append(ParticleLoader())
 from project import ProjectLoader
 loaders.append(ProjectLoader())
-from shapefile import PolygonShapefileLoader, ShapefileLoader
-loaders.append(PolygonShapefileLoader())
+from shapefile import ShapefileLoader
 loaders.append(ShapefileLoader())
 from ugrid import UGridLoader
 loaders.append(UGridLoader())
