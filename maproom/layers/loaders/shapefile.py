@@ -10,7 +10,7 @@ from shapely.geometry import shape
 import pyproj
 
 from maproom.library.accumulator import accumulator
-from maproom.library.shapely_utils import load_shapely
+from maproom.library.shapely_utils import load_shapely, get_dataset
 from maproom.layers import PolygonLayer, PolygonShapefileLayer
 
 from common import BaseLayerLoader
@@ -50,29 +50,6 @@ class PolygonShapefileLoader(BaseLayerLoader):
     def save_to_local_file(self, filename, layer):
         boundaries = self.get_boundaries(layer)
         write_boundaries_as_shapefile(filename, layer, boundaries)
-
-def get_dataset(uri):
-    """Get OGR Dataset, performing URI to filename conversion since OGR
-    doesn't support URIs, only files on the local filesystem
-    """
-
-    fs, relpath = opener.parse(uri)
-    print "OGR:", relpath
-    print "OGR:", fs
-    if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for OGR: %s" % metadata.uri)
-    file_path = fs.getsyspath(relpath)
-    if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
-        file_path = file_path[4:]
-    dataset = ogr.Open(str(file_path))
-
-    if (dataset is None):
-        return ("Unable to load the shapefile " + file_path, None)
-
-    if (dataset.GetLayerCount() < 1):
-        return ("No vector layers in shapefile " + file_path, None)
-
-    return "", dataset
 
 
 def load_shapefile(uri):
@@ -221,7 +198,7 @@ class ShapefileLoader(BaseLayerLoader):
     
     layer_types = ["shapefile"]
     
-    extensions = [".shp"]
+    extensions = [".shp", ".kml", ".geojson"]
     
     name = "Shapefile"
     

@@ -3,8 +3,46 @@ from fs.opener import opener
 
 import fiona
 from shapely.geometry import shape
+from shapely.wkt import loads
+from osgeo import ogr, osr
 
 from accumulator import accumulator
+
+def get_dataset(uri):
+    """Get OGR Dataset, performing URI to filename conversion since OGR
+    doesn't support URIs, only files on the local filesystem
+    """
+
+    fs, relpath = opener.parse(uri)
+    print "OGR:", relpath
+    print "OGR:", fs
+    if not fs.hassyspath(relpath):
+        raise RuntimeError("Only file URIs are supported for OGR: %s" % metadata.uri)
+    file_path = fs.getsyspath(relpath)
+    if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
+        file_path = file_path[4:]
+    dataset = ogr.Open(str(file_path))
+
+    if (dataset is None):
+        return ("Unable to load the shapefile " + file_path, None)
+
+    if (dataset.GetLayerCount() < 1):
+        return ("No vector layers in shapefile " + file_path, None)
+
+    return "", dataset
+
+def convert_dataset(dataset):
+    geometry_list = []
+    layer = dataset.GetLayer()
+    for feature in layer:
+        geom = feature.GetGeometryRef()
+        print geom
+        wkt = geom.ExportToWkt()
+        g = loads(wkt)
+        print g
+        geometry_list.append(g)
+    return geometry_list
+
 
 def get_fiona(uri):
     """Get fiona Dataset, performing URI to filename conversion since OGR
@@ -29,16 +67,22 @@ def get_fiona(uri):
 
 
 def load_shapely(uri):
-    error, source = get_fiona(uri)
+    geometry_list = []
+    try:
+        error, source = get_fiona(uri)
+        for f in source:
+            print f
+            g = shape(f['geometry'])
+            print g.geom_type, g
+            geometry_list.append(g)
+    except fiona.errors.DriverError, e:
+        source = None
+        error, dataset = get_dataset(uri)
+        if not error:
+            geometry_list = convert_dataset(dataset)
+
     if error:
         return (error, None)
-
-    geometry_list = []
-    for f in source:
-        print f
-        g = shape(f['geometry'])
-        print g.geom_type, g
-        geometry_list.append(g)
 
     return ("", geometry_list)
 
