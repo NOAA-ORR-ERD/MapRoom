@@ -39,10 +39,10 @@ class LoadLayersCommand(Command):
             layers = loader.load_layers(self.metadata, manager=lm)
         except ProgressCancelError, e:
             undo.flags.success = False
-            undo.errors = [e.message]
+            undo.flags.errors = [e.message]
         except IOError, e:
             undo.flags.success = False
-            undo.errors = [str(e)]
+            undo.flags.errors = [str(e)]
         finally:
             progress_log.info("END")
         
@@ -51,7 +51,7 @@ class LoadLayersCommand(Command):
         
         if layers is None:
             undo.flags.success = False
-            undo.errors = ["Unknown file type %s for %s" % (metadata.mime, metadata.uri)]
+            undo.flags.errors = ["Unknown file type %s for %s" % (metadata.mime, metadata.uri)]
         else:
             errors = []
             for layer in layers:
@@ -59,7 +59,8 @@ class LoadLayersCommand(Command):
                     errors.append(layer.load_error_string)
             if errors:
                 undo.flags.success = False
-                undo.errors = errors
+                undo.flags.errors = errors
+            print errors
 
         if undo.flags.success:
             lm.add_layers(layers, False, editor)
