@@ -82,7 +82,7 @@ class PolygonLayer(PointLayer):
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
     
     def set_data(self, f_polygon_points, f_polygon_starts, f_polygon_counts,
-                 f_polygon_identifiers):
+                 f_polygon_identifiers, f_polygon_groups=None):
         self.set_layer_style_defaults()
         n_points = np.alen(f_polygon_points)
         self.points = self.make_points(n_points)
@@ -98,8 +98,14 @@ class PolygonLayer(PointLayer):
             self.polygons.count[
                 0: n_polygons
             ] = f_polygon_counts
-            # TODO: for now we assume each polygon is its own group
-            self.polygons.group = np.arange(n_polygons)
+            if f_polygon_groups is None:
+                # if not otherwise specified, each polygon is in its own group
+                self.polygons.group = np.arange(n_polygons)
+            else:
+                # grouping of polygons allows for holes: the first polygon is
+                # the outer boundary and subsequent polygons in the group are
+                # the holes
+                self.polygons.group = np.asarray(f_polygon_groups, dtype=np.uint32)
             self.polygon_adjacency_array = data_types.make_polygon_adjacency_array(n_points)
             
             # set up feature code to color map

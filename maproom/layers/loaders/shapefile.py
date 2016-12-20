@@ -34,11 +34,11 @@ class ShapefileLoader(BaseLayerLoader):
          f_polygon_points,
          f_polygon_starts,
          f_polygon_counts,
-         f_polygon_identifiers) = load_shapefile(metadata.uri)
+         f_polygon_identifiers,
+         f_polygon_groups) = load_shapefile(metadata.uri)
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
-            layer.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
-                           f_polygon_identifiers)
+            layer.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts, f_polygon_identifiers, f_polygon_groups)
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
@@ -96,9 +96,10 @@ def load_shapefile(uri):
     polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_identifiers = []
+    polygon_groups = []
     scoping_hack = [0]
 
-    def add_polygon(points, name, feature_code):
+    def add_polygon(points, name, feature_code, group):
         if len(points) < 1:
             return
         example = points[0]
@@ -113,17 +114,20 @@ def load_shapefile(uri):
             {'name': name,
              'feature_code': feature_code}
             )
+        polygon_groups.append(group)
 
     layer = dataset.GetLayer()
     progress_log.info("TICKS=%d" % dataset.GetLayerCount())
     progress_log.info("Loading Shapefile...")
 
+    group = 0
     for feature in layer:
         feature_code = 0
         name = "shapefile"
 
         geom = feature.GetGeometryRef()
         geo_type = geom.GetGeometryName()
+        group += 1
 
         if geo_type == 'MULTIPOLYGON':
             for i in range(geom.GetGeometryCount()):
@@ -131,12 +135,12 @@ def load_shapefile(uri):
                 ring = poly.GetGeometryRef(i)
                 points = ring.GetPoints()
                 print geo_type, i, points
-                add_polygon(points, geo_type, feature_code)
+                add_polygon(points, geo_type, feature_code, group)
         elif geo_type == 'POLYGON':
             for i in range(geom.GetGeometryCount()):
                 poly = geom.GetGeometryRef(i)
                 points = poly.GetPoints()
-                add_polygon(points, geo_type, feature_code)
+                add_polygon(points, geo_type, feature_code, group)
         elif geo_type == 'LINESTRING':
             points = geom.GetPoints()
             # polygon layer doesn't currently support lines, so fake it by
@@ -144,14 +148,14 @@ def load_shapefile(uri):
             backwards = list(points)
             backwards.reverse()
             points.extend(backwards)
-            add_polygon(points, geo_type, feature_code)
+            add_polygon(points, geo_type, feature_code, group)
         elif geo_type == 'POINT':
             points = geom.GetPoints()
             # polygon layer doesn't currently support points, so fake it by
             # creating tiny little triangles for each point
             x, y = points[0]
             polygon = [(x, y), (x + 0.0005, y + .001), (x + 0.001, y)]
-            add_polygon(polygon, geo_type, feature_code)
+            add_polygon(polygon, geo_type, feature_code, group)
         else:
             print 'unknown type: ', geo_type
 
@@ -161,7 +165,7 @@ def load_shapefile(uri):
             np.asarray(polygon_points),
             np.asarray(polygon_starts)[:, 0],
             np.asarray(polygon_counts)[:, 0],
-            polygon_identifiers)
+            polygon_identifiers, polygon_groups)
 
 def write_boundaries_as_shapefile(filename, layer, boundaries):
     # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
