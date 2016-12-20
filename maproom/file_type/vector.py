@@ -16,7 +16,7 @@ class OGRRecognizer(HasTraits):
     """
     id = "application/x-maproom-shapefile"
     
-    before = "text/plain"
+    before = "text/*"
     
     def identify(self, guess):
         try:
