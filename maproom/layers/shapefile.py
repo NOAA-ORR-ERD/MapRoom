@@ -34,6 +34,8 @@ class PolygonShapefileLayer(PolygonLayer):
     type = Str("shapefile")
     
     geometry = List
+    
+    layer_info_panel = ["Layer name", "Shapefile Objects", "Polygon count"]
 
     def __str__(self):
         num = len(self.geometry)
