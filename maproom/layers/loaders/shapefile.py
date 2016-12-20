@@ -10,7 +10,8 @@ from shapely.geometry import shape
 import pyproj
 
 from maproom.library.accumulator import accumulator
-from maproom.layers import PolygonLayer, ShapefileLayer
+from maproom.library.shapely_utils import load_shapely
+from maproom.layers import PolygonLayer, PolygonShapefileLayer
 
 from common import BaseLayerLoader
 
@@ -19,7 +20,7 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 class PolygonShapefileLoader(BaseLayerLoader):
-    mime = "application/x-maproom-shapefile"
+    mime = "application/x-maproom-shapefile-triangle"
     
     layer_types = ["polygon", "line"]
     
@@ -216,7 +217,7 @@ def write_boundaries_as_shapefile(filename, layer, boundaries):
 
 
 class ShapefileLoader(BaseLayerLoader):
-    mime = "application/x-maproom-shapefile-shapely"
+    mime = "application/x-maproom-shapefile"
     
     layer_types = ["shapefile"]
     
@@ -224,7 +225,7 @@ class ShapefileLoader(BaseLayerLoader):
     
     name = "Shapefile"
     
-    layer_class = ShapefileLayer
+    layer_class = PolygonShapefileLayer
 
     def load_layers(self, metadata, manager):
         layer = self.layer_class(manager=manager)
@@ -240,42 +241,6 @@ class ShapefileLoader(BaseLayerLoader):
     
     def save_to_local_file(self, filename, layer):
         write_geometry_as_shapefile(filename, layer)
-
-def get_fiona(uri):
-    """Get fiona Dataset, performing URI to filename conversion since OGR
-    doesn't support URIs, only files on the local filesystem
-    """
-
-    fs, relpath = opener.parse(uri)
-    print "fiona:", relpath
-    print "fiona:", fs
-    if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for OGR: %s" % metadata.uri)
-    file_path = fs.getsyspath(relpath)
-    if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
-        file_path = file_path[4:]
-    source = fiona.open(str(file_path), 'r')
-    print source
-
-    if (source is None):
-        return ("Unable to load the shapefile " + file_path, None)
-
-    return "", source
-
-
-def load_shapely(uri):
-    error, source = get_fiona(uri)
-    if error:
-        return (error, None)
-
-    geometry_list = []
-    for f in source:
-        print f
-        g = shape(f['geometry'])
-        print type(g), g
-        geometry_list.append(g)
-
-    return ("", geometry_list)
 
 
 if __name__ == "__main__":

@@ -16,8 +16,10 @@ from ..library.projection import Projection
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_floats_to_int, data_types
 from ..library.accumulator import accumulator
+from ..library.shapely_utils import shapely_to_polygon
 
 from point import PointLayer
+from polygon import PolygonLayer
 from constants import *
 
 import logging
@@ -25,11 +27,11 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
-class ShapefileLayer(PointLayer):
-    """Layer for shapely objects.
+class TriangleShapefileLayer(PointLayer):
+    """Layer for shapely objects rendered as triangles.
     
     """
-    type = Str("shapefile")
+    type = Str("triangle_shapefile")
     
     mouse_mode_toolbar = Str("BaseLayerToolBar")
     
@@ -163,3 +165,54 @@ class ShapefileLayer(PointLayer):
 
         if layer_visibility["labels"]:
             renderer.draw_labels_at_points(self.points.z, s_r, p_r)
+
+
+class PolygonShapefileLayer(PolygonLayer):
+    """Layer for shapely objects rendered as polygons.
+    
+    """
+    type = Str("shapefile")
+    
+    geometry = List
+
+    def __str__(self):
+        num = len(self.geometry)
+        return "ShapefileLayer %s: %d objects" % (self.name, num)
+    
+    def get_info_panel_text(self, prop):
+        if prop == "Shapefile Objects":
+            return str(len(self.geometry))
+        return PolygonLayer.get_info_panel_text(self, prop)
+
+    def empty(self):
+        """
+        We shouldn't allow saving of a layer with no content, so we use this method
+        to determine if we can save this layer.
+        """
+        return len(self.geometry) == 0
+
+    def set_layer_style_defaults(self):
+        self.style.use_next_default_color()
+        self.style.line_width = 1
+
+    def compute_bounding_rect(self, mark_type=STATE_NONE):
+        bounds = rect.NONE_RECT
+
+        if (len(self.geometry) > 0):
+            for o in self.geometry:
+                l, b, r, t = o.bounds
+                bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
+
+        return bounds
+
+    def set_geometry(self, geom):
+        self.geometry = geom
+        
+        (self.load_error_string,
+         f_polygon_points,
+         f_polygon_starts,
+         f_polygon_counts,
+         f_polygon_identifiers,
+         f_polygon_groups) = shapely_to_polygon(self.geometry)
+        self.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
+                 f_polygon_identifiers, f_polygon_groups)
