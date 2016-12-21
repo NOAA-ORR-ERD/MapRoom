@@ -13,6 +13,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.projection import Projection
 from ..library.Boundary import Boundary, Boundaries, PointsError
+from ..library.shapely_utils import shapely_to_polygon
 from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 
@@ -150,6 +151,10 @@ class PolygonLayer(PointLayer):
                  'feature_code': 1}
                 )
         self.set_data(all_points, starts, counts, identifiers)
+
+    def set_data_from_geometry(self, geom):
+        self.load_error_string, points, starts, counts, identifiers, groups = shapely_to_polygon(self.geometry)
+        self.set_data(points, starts, counts, identifiers, groups)
     
     def has_boundaries(self):
         return True
@@ -391,7 +396,7 @@ class RNCLoaderLayer(PolygonLayer):
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
         return canvas.picker.is_polygon_fill_type(object_type)
 
-    def get_highlight_lines(self, canvas, object_type, object_index):
+    def get_highlight_lines(self, object_type, object_index):
         points, polygon_id = self.get_polygon(object_index)
         # add starting point again so the outline will be closed
         boundary = np.vstack((points, points[0]))

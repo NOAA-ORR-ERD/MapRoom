@@ -6,7 +6,7 @@ from omnivore.framework.errors import ProgressCancelError
 from omnivore.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import loaders, Layer, Grid, LineLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer, CompassRose
+from layers import loaders, Layer, Grid, LineLayer, LineEditLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer, CompassRose
 from library.Boundary import Boundaries
 from vector_object_commands import update_parent_bounds, get_parent_layer_data, restore_layers
 
@@ -622,11 +622,14 @@ class PolygonEditLayerCommand(ToPolygonLayerCommand):
     short_name = "polygon_edit"
     serialize_order =  [
             ('layer', 'layer'),
+            ('obj_type', 'int'),
+            ('obj_index', 'int'),
             ]
 
-    def __init__(self, layer, boundary):
+    def __init__(self, layer, obj_type, obj_index):
         Command.__init__(self, layer)
-        self.boundary = boundary
+        self.obj_type = obj_type
+        self.obj_index = obj_index
         self.name = layer.name
 
     def __str__(self):
@@ -637,8 +640,9 @@ class PolygonEditLayerCommand(ToPolygonLayerCommand):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = LineLayer(manager=lm)
-        p.set_simple_data(self.boundary)
+        p = LineEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, object_index=self.obj_index)
+        geom = layer.get_geometry_from_object_index(self.obj_index)
+        p.set_data_from_geometry(geom)
         p.name = "Editing Polygon from %s" % layer.name
         lm.insert_loaded_layer(p, editor, after=layer)
         

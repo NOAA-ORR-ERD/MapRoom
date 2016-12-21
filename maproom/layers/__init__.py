@@ -1,5 +1,5 @@
 from base import Layer, EmptyLayer
-from line import LineLayer
+from line import LineLayer, LineEditLayer
 from folder import RootLayer, Folder
 from grid import Grid
 from scale import Scale

@@ -118,11 +118,12 @@ def shapely_to_polygon(geom_list):
         polygon_groups.append(group)
 
     group = 0
-    for geom in geom_list:
+    for geom_index, geom in enumerate(geom_list):
         feature_code = 0
         name = "shapefile"
         group += 1
 
+        geom.maproom_geom_index = geom_index
         if geom.geom_type == 'MultiPolygon':
             for poly in geom.geoms:
                 add_polygon(poly, poly.exterior.coords, poly.geom_type, feature_code, group)

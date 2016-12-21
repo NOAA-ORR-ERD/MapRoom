@@ -633,9 +633,10 @@ class RNCSelectionMode(PanMode):
         if rnc is not None:
             c = self.layer_canvas
             layer, object_type, object_index = rnc
-            wp = layer.get_highlight_lines(c, object_type, object_index)
-            sp = [c.get_screen_point_from_world_point(w) for w in wp]
-            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+            wp_list = layer.get_highlight_lines(object_type, object_index)
+            for wp in wp_list:
+                sp = [c.get_screen_point_from_world_point(w) for w in wp]
+                renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class PolygonSelectionMode(PanMode):
@@ -723,8 +724,7 @@ class PolygonSelectionMode(PanMode):
             rnc = self.get_rnc_object()
             if rnc is not None:
                 layer, object_type, object_index = rnc
-                wp = layer.get_highlight_lines(c, object_type, object_index)
-                cmd = PolygonEditLayerCommand(layer, wp)
+                cmd = PolygonEditLayerCommand(layer, object_type, object_index)
                 c.project.process_command(cmd)
                 c.render(event)
                     
@@ -736,9 +736,10 @@ class PolygonSelectionMode(PanMode):
         if rnc is not None:
             c = self.layer_canvas
             layer, object_type, object_index = rnc
-            wp = layer.get_highlight_lines(c, object_type, object_index)
-            sp = [c.get_screen_point_from_world_point(w) for w in wp]
-            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+            wp_list = layer.get_highlight_lines(object_type, object_index)
+            for wp in wp_list:
+                sp = [c.get_screen_point_from_world_point(w) for w in wp]
+                renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class ObjectSelectionMode(MouseHandler):

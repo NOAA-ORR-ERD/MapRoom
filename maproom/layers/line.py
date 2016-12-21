@@ -10,6 +10,7 @@ from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
 from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
 from ..library.Boundary import Boundaries, PointsError
+from ..library.shapely_utils import shapely_to_polygon
 from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
@@ -100,7 +101,18 @@ class LineLayer(PointLayer):
         lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
         lines[count - 1,1] = 0
         self.set_data(points, 0.0, lines)
-    
+
+    def set_data_from_geometry(self, geom):
+        error, points, starts, counts, identifiers, groups = shapely_to_polygon([geom])
+        count = np.alen(points)
+        lines = np.empty((count, 2), dtype=np.uint32)
+        for s, c in zip(starts, counts):
+            lines[s:s + c,0] = np.arange(s, s + c, dtype=np.uint32)
+            lines[s:s + c,1] = np.arange(s + 1, s + c + 1, dtype=np.uint32)
+            lines[s + c - 1,1] = s
+
+        self.set_data(points, 0.0, lines)
+
     def set_color(self, color):
         self.style.line_color = color
         self.points.color = color
@@ -564,3 +576,26 @@ class LineLayer(PointLayer):
 
             if layer_visibility["points"]:
                 renderer.draw_selected_points(self.point_size, self.get_selected_point_indexes())
+
+class LineEditLayer(LineLayer):
+    """Layer for points/lines/polygons.
+    
+    """
+    name = Unicode("Line Edit Layer")
+    
+    type = Str("line_edit")
+
+    parent_layer = Any
+
+    object_type = Int
+
+    object_index = Int
+    
+    layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
+
+    transient_edit_layer = True
+
+    def update_transient_layer(self):
+        print "UPDATING TRANSIENT!!!"
+        self.parent_layer.rebuild_polygon(self.object_type, self.object_index)
+

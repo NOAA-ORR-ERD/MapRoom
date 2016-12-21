@@ -69,25 +69,33 @@ class PolygonShapefileLayer(PolygonLayer):
 
     def set_geometry(self, geom):
         self.geometry = geom
-        
-        (self.load_error_string,
-         f_polygon_points,
-         f_polygon_starts,
-         f_polygon_counts,
-         f_polygon_identifiers,
-         f_polygon_groups) = shapely_to_polygon(self.geometry)
-        self.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
-                 f_polygon_identifiers, f_polygon_groups)
+        self.set_data_from_geometry(geom)
 
-    def get_polygon(self, object_index):
-        geom = self.polygon_identifiers[object_index]['geom']
-        return geom.exterior.coords, self.polygon_identifiers[object_index]
+    def get_geometry_from_object_index(self, object_index):
+        return self.polygon_identifiers[object_index]['geom']
+
+    def get_polygons(self, object_index):
+        geom = self.get_geometry_from_object_index(object_index)
+        return geom.exterior.coords, geom.interiors
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
         return canvas.picker.is_polygon_fill_type(object_type)
 
-    def get_highlight_lines(self, canvas, object_type, object_index):
-        points, polygon_id = self.get_polygon(object_index)
+    def get_highlight_lines(self, object_type, object_index):
+        points, holes = self.get_polygons(object_index)
+        boundaries = []
         # add starting point again so the outline will be closed
-        boundary = np.vstack((points, points[0]))
-        return boundary
+        boundaries.append(np.vstack((points, points[0])))
+        for hole in holes:
+            boundaries.append(np.vstack((hole.coords, hole.coords[0])))
+        return boundaries
+
+    def rebuild_polygon(self, object_type, object_index):
+        geom = self.polygon_identifiers[object_index]['geom']
+        print geom.maproom_geom_index, geom.geom_type
+        if geom.geom_type == 'Polygon':
+            # handle single polygon with holes here
+            pass
+        elif geom.geom_type == 'MultiPolygon':
+            # handle multiple polygons, which means multiple outer boundaries
+            pass

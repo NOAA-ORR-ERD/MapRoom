@@ -76,6 +76,8 @@ class Layer(HasTraits):
 
     pickable = False # is this a layer that support picking?
 
+    transient_edit_layer = False
+
     visibility_items = []
     
     layer_info_panel = ["Layer name"]
@@ -460,7 +462,7 @@ class Layer(HasTraits):
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
         return False
 
-    def get_highlight_lines(self, canvas, object_type, object_index):
+    def get_highlight_lines(self, object_type, object_index):
         return []
     
     def rebuild_renderer(self, renderer, in_place=False):
