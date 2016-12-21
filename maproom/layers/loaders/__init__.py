@@ -52,9 +52,10 @@
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
 loaders = []
-from bna import BNALoader, RNCLoader
+from bna import BNALoader, RNCLoader, BNAShapefileLoader
 loaders.append(BNALoader())
 loaders.append(RNCLoader())
+loaders.append(BNAShapefileLoader())
 from bsb import BSBLoader
 loaders.append(BSBLoader())
 from gdal import GDALLoader

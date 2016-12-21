@@ -6,9 +6,10 @@ from fs.opener import fsopen
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
+from shapely.geometry import Polygon, LineString
 
 from maproom.library.accumulator import accumulator
-from maproom.layers import PolygonLayer, RNCLoaderLayer
+from maproom.layers import PolygonLayer, RNCLoaderLayer, PolygonShapefileLayer
 
 from common import BaseLayerLoader
 
@@ -17,7 +18,7 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 class BNALoader(BaseLayerLoader):
-    mime = "application/x-maproom-bna"
+    mime = "application/x-maproom-bna-old"
     
     layer_types = ["polygon"]
     
@@ -57,6 +58,42 @@ class RNCLoader(BNALoader):
     name = "RNCLoader"
     
     layer_class = RNCLoaderLayer
+
+
+class BNAShapefileLoader(BaseLayerLoader):
+    mime = "application/x-maproom-bna"
+    
+    layer_types = ["shapefile"]
+    
+    extensions = [".shp", ".kml", ".json", ".geojson"]
+    
+    extension_desc = {
+        ".shp": "ESRI Shapefile",
+        ".kml": "KML",
+        ".geojson": "GeoJSON",
+        ".json": "GeoJSON",
+    }
+
+    name = "BNA"
+    
+    layer_class = PolygonShapefileLayer
+
+    def load_layers(self, metadata, manager):
+        layer = self.layer_class(manager=manager)
+        
+        layer.load_error_string, geometry_list, polygon_identifiers = load_bna_as_shapely(metadata.uri)
+        progress_log.info("Creating layer...")
+        if (layer.load_error_string == ""):
+            layer.set_geometry(geometry_list)
+            layer.file_path = metadata.uri
+            layer.name = os.path.split(layer.file_path)[1]
+            layer.mime = self.mime
+        return [layer]
+    
+    def save_to_local_file(self, filename, layer):
+        _, ext = os.path.splitext(filename)
+        desc = self.extension_desc[ext]
+        write_layer_as_shapefile(filename, layer, desc)
 
 
 def load_bna_file(uri):
@@ -228,3 +265,97 @@ def save_bna_file(f, layer):
                 progress_log.info("TICK=%d" % ticks)
     progress_log.info("TICK=%d" % ticks)
     progress_log.info("Saved BNA")
+
+def load_bna_as_shapely(uri):
+    """
+    used by the code below, to separate reading the file from creating the special maproom objects.
+    reads the data in the file, and returns:
+    
+    ( load_error_string, geometry_list )
+    
+    where:
+        load_error_string = string descripting the loading error, or "" if there was no error
+        geometry_list = list of shapely objects
+    """
+
+    f = fsopen(uri, "r")
+    s = f.read()
+    f.close()
+    lines = s.splitlines()
+
+    geometry_list = []
+    polygon_identifiers = []
+
+    update_every = 1000
+    total_points = 0
+    i = 0
+    num_lines = len(lines)
+    progress_log.info("TICKS=%d" % num_lines)
+    progress_log.info("Loading BNA...")
+    while True:
+        if (i >= num_lines):
+            break
+        if (i % update_every) == 0:
+            progress_log.info("TICK=%d" % i)
+        line = lines[i].strip()
+        i += 1
+        if (len(line) == 0):
+            continue
+
+        # fixme -- this will break if there are commas in any of the fields!
+        pieces = line.split(",")
+        if len(pieces) != 3:
+            return ("The .bna file {0} is invalid. Error at line {1}.".format(file_path, i), None, None, None, None, None)
+        try:
+            feature_code = int(pieces[1].strip('"'))
+        except ValueError:
+            feature_code = 0
+        name = pieces[0].strip('"')
+        if name.lower() in ['map bounds', 'mapbounds']:
+            feature_code = 4
+        elif name.lower() in ['spillable area', 'spillablearea']:
+            feature_code = 5
+        polygon_identifiers.append(
+            {'name': name,
+             'feature_code': feature_code}
+            )
+
+        num_points = int(pieces[2])
+        original_num_points = num_points
+
+        # A negative num_points value indicates that this is a line
+        # rather than a polygon. And if a "polygon" only has 1 or 2
+        # points, it's not a polygon.
+        is_polygon = False
+        if num_points < 3:
+            num_points = abs(num_points)
+        else:
+            is_polygon = True
+
+        # TODO: for now we just assume it's a polygon (could be a polyline or a point)
+        # fixme: should we be adding polylines and points?
+        # or put them somewhere separate -- particularly points!
+        first_point = ()
+        polygon_points = []
+        for j in xrange(num_points):
+            line = lines[i].strip()
+            i += 1
+            pieces = line.split(",")
+            p = (float(pieces[0]), float(pieces[1]))
+            if (j == 0):
+                first_point = p
+            # if the last point is a duplicate of the first point, remove it
+            if (j == (num_points - 1) and p[0] == first_point[0] and p[1] == first_point[1]):
+                num_points -= 1
+                continue
+            polygon_points.append(p)
+        if is_polygon:
+            geom = Polygon(polygon_points)
+        else:
+            geom = LineString(polygon_points)
+        geometry_list.append(geom)
+        
+        total_points += num_points
+    progress_log.info("TICK=%d" % num_lines)
+
+    return "", geometry_list, polygon_identifiers
