@@ -92,6 +92,14 @@ class LineLayer(PointLayer):
         
         if update_bounds:
             self.update_bounds()
+
+    def set_simple_data(self, points):
+        count = np.alen(points)
+        lines = np.empty((count, 2), dtype=np.uint32)
+        lines[:,0] = np.arange(0, count, dtype=np.uint32)
+        lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
+        lines[count - 1,1] = 0
+        self.set_data(points, 0.0, lines)
     
     def set_color(self, color):
         self.style.line_color = color

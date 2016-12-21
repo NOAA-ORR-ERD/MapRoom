@@ -618,6 +618,40 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         
         return self.undo_info
 
+class PolygonEditLayerCommand(ToPolygonLayerCommand):
+    short_name = "polygon_edit"
+    serialize_order =  [
+            ('layer', 'layer'),
+            ]
+
+    def __init__(self, layer, boundary):
+        Command.__init__(self, layer)
+        self.boundary = boundary
+        self.name = layer.name
+
+    def __str__(self):
+        return "Editing Polygon from %s" % self.name
+    
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        saved_invariant = lm.next_invariant
+        self.undo_info = undo = UndoInfo()
+        p = LineLayer(manager=lm)
+        p.set_simple_data(self.boundary)
+        p.name = "Editing Polygon from %s" % layer.name
+        lm.insert_loaded_layer(p, editor, after=layer)
+        
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(p)
+        lf.select_layer = True
+        lf.layer_loaded = True
+
+        undo.data = (p, p.invariant, saved_invariant)
+        
+        return self.undo_info
+
 class SavepointCommand(Command):
     short_name = "savepoint"
     serialize_order =  [

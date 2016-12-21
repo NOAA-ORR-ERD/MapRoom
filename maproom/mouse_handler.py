@@ -13,7 +13,7 @@ from library.coordinates import haversine, distance_bearing, format_coords_for_d
 import library.rect as rect
 from mouse_commands import *
 from vector_object_commands import *
-
+from menu_commands import *
 
 class NoObjectError(RuntimeError):
     pass
@@ -723,12 +723,10 @@ class PolygonSelectionMode(PanMode):
             rnc = self.get_rnc_object()
             if rnc is not None:
                 layer, object_type, object_index = rnc
-                name, num, filename, url = self.parse_rnc_object(rnc)
-                if url:
-                    # submit download to downloader!
-                    log.info("LOADING RNC MAP #%s from %s" % (num, url))
-                    e = c.project
-                    e.download_rnc(url, filename, num)
+                wp = layer.get_highlight_lines(c, object_type, object_index)
+                cmd = PolygonEditLayerCommand(layer, wp)
+                c.project.process_command(cmd)
+                c.render(event)
                     
         self.is_panning = False
 
