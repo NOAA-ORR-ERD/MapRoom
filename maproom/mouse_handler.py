@@ -638,6 +638,111 @@ class RNCSelectionMode(PanMode):
             renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
+class PolygonSelectionMode(PanMode):
+    """Mouse mode to select polygons
+    """
+    icon = "select.png"
+    menu_item_name = "Polygon Selection Mode"
+    menu_item_tooltip = "Select a polygon"
+    editor_trait_for_enabled = ""
+
+    def __init__(self, layer_canvas):
+        PanMode.__init__(self, layer_canvas)
+        self.is_panning = False
+
+    def get_rnc_object(self):
+        c = self.layer_canvas
+        e = c.project
+        if e.clickable_object_mouse_is_over is not None:
+            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+            if layer.can_highlight_clickable_object(c, object_type, object_index):
+                return layer, object_type, object_index
+        return None
+
+    def parse_rnc_object(self, rnc):
+        layer, object_type, object_index = rnc
+        name = layer.polygon_identifiers[object_index]['name']
+        if ";" in name:
+            name, filename, url = name.split(";")
+            if "_" in filename:
+                num, _ = filename.split("_", 1)
+        else:
+            name = "Invalid RNC"
+            filename = ""
+            url = None
+            num = "0"
+        return name, num, filename, url
+
+    def get_help_text(self):
+        rnc = self.get_rnc_object()
+        if rnc is not None:
+            layer, object_type, object_index = rnc
+            geom = layer.polygon_identifiers[object_index]['geom']
+            name = layer.polygon_identifiers[object_index]['name']
+            return "   Geom %s: %s" % (str(geom), name)
+        return ""
+
+    def get_cursor(self):
+        if self.is_panning:
+            return PanMode.get_cursor(self)
+        else:
+            rnc = self.get_rnc_object()
+            if rnc is not None:
+                return wx.StockCursor(wx.CURSOR_ARROW)
+        return self.layer_canvas.hand_cursor
+
+    def process_mouse_down(self, event):
+        # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_canvas
+        self.reset_early_mouse_params()
+        self.first_mouse_down_position = event.GetPosition()
+        self.is_panning = False
+
+    def process_mouse_motion_up(self, event):
+        MouseHandler.process_mouse_motion_up(self, event)
+        self.layer_canvas.project.refresh()
+
+    def process_mouse_motion_down(self, event):
+        if not self.is_panning:
+            if self.check_early_mouse_release(event):
+                return
+            self.is_panning = True
+        else:
+            PanMode.process_mouse_motion_down(self, event)
+
+    def process_mouse_up(self, event):
+        c = self.layer_canvas
+        if (not c.mouse_is_down):
+            c.selection_box_is_being_defined = False
+            return
+
+        c.mouse_is_down = False
+        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        c.selection_box_is_being_defined = False
+        if not self.is_panning:
+            rnc = self.get_rnc_object()
+            if rnc is not None:
+                layer, object_type, object_index = rnc
+                name, num, filename, url = self.parse_rnc_object(rnc)
+                if url:
+                    # submit download to downloader!
+                    log.info("LOADING RNC MAP #%s from %s" % (num, url))
+                    e = c.project
+                    e.download_rnc(url, filename, num)
+                    
+        self.is_panning = False
+
+    def render_overlay(self, renderer):
+        # draw outline of polygon object that's currently being moused-over
+        rnc = self.get_rnc_object()
+        if rnc is not None:
+            c = self.layer_canvas
+            layer, object_type, object_index = rnc
+            wp = layer.get_highlight_lines(c, object_type, object_index)
+            sp = [c.get_screen_point_from_world_point(w) for w in wp]
+            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+
+
 class ObjectSelectionMode(MouseHandler):
     """Processing of mouse events, separate from the rendering window
     

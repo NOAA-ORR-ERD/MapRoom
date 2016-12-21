@@ -78,3 +78,16 @@ class PolygonShapefileLayer(PolygonLayer):
          f_polygon_groups) = shapely_to_polygon(self.geometry)
         self.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
                  f_polygon_identifiers, f_polygon_groups)
+
+    def get_polygon(self, object_index):
+        geom = self.polygon_identifiers[object_index]['geom']
+        return geom.exterior.coords, self.polygon_identifiers[object_index]
+
+    def can_highlight_clickable_object(self, canvas, object_type, object_index):
+        return canvas.picker.is_polygon_fill_type(object_type)
+
+    def get_highlight_lines(self, canvas, object_type, object_index):
+        points, polygon_id = self.get_polygon(object_index)
+        # add starting point again so the outline will be closed
+        boundary = np.vstack((points, points[0]))
+        return boundary

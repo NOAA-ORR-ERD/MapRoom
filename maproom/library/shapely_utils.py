@@ -94,7 +94,7 @@ def shapely_to_polygon(geom_list):
     polygon_groups = []
     scoping_hack = [0]
 
-    def add_polygon(points, name, feature_code, group):
+    def add_polygon(geom, points, name, feature_code, group):
         if len(points) < 1:
             return
         example = points[0]
@@ -105,10 +105,16 @@ def shapely_to_polygon(geom_list):
         polygon_starts.append(scoping_hack[0])
         polygon_counts.append(num_points)
         scoping_hack[0] += num_points
-        polygon_identifiers.append(
-            {'name': name,
-             'feature_code': feature_code}
-            )
+        if hasattr(geom, "polygon_identifiers"):
+            pi = geom.polygon_identifiers
+        else:
+            pi = {
+                'name': name,
+                'feature_code': feature_code,
+                }
+        pi['geom'] = geom
+        print pi
+        polygon_identifiers.append(pi)
         polygon_groups.append(group)
 
     group = 0
@@ -119,27 +125,27 @@ def shapely_to_polygon(geom_list):
 
         if geom.geom_type == 'MultiPolygon':
             for poly in geom.geoms:
-                add_polygon(poly.exterior.coords, poly.geom_type, feature_code, group)
+                add_polygon(poly, poly.exterior.coords, poly.geom_type, feature_code, group)
                 for hole in poly.interiors:
-                    add_polygon(hole.coords, poly.geom_type, feature_code, group)
+                    add_polygon(poly, hole.coords, poly.geom_type, feature_code, group)
                 group += 1
         elif geom.geom_type == 'Polygon':
-            add_polygon(geom.exterior.coords, geom.geom_type, feature_code, group)
+            add_polygon(geom, geom.exterior.coords, geom.geom_type, feature_code, group)
             for hole in geom.interiors:
-                add_polygon(hole.coords, geom.geom_type, feature_code, group)
+                add_polygon(geom, hole.coords, geom.geom_type, feature_code, group)
         elif geom.geom_type == 'LineString':
             # polygon layer doesn't currently support lines, so fake it by
             # reversing the points and taking the line back on itself
             points = list(geom.coords)
             backwards = reversed(list(geom.coords))
             points.extend(backwards)
-            add_polygon(points, geom.geom_type, feature_code, group)
+            add_polygon(geom, points, geom.geom_type, feature_code, group)
         elif geom.geom_type == 'Point':
             # polygon layer doesn't currently support points, so fake it by
             # creating tiny little triangles for each point
             x, y = geom.coords[0]
             polygon = [(x, y), (x + 0.0005, y + .001), (x + 0.001, y)]
-            add_polygon(polygon, geom.geom_type, feature_code, group)
+            add_polygon(geom, polygon, geom.geom_type, feature_code, group)
         else:
             print 'unknown type: ', geom.geom_type
 
