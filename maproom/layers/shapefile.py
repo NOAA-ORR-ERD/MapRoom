@@ -84,10 +84,9 @@ class PolygonShapefileLayer(PolygonLayer):
     def get_highlight_lines(self, object_type, object_index):
         points, holes = self.get_polygons(object_index)
         boundaries = []
-        # add starting point again so the outline will be closed
-        boundaries.append(np.vstack((points, points[0])))
+        boundaries.append(points)
         for hole in holes:
-            boundaries.append(np.vstack((hole.coords, hole.coords[0])))
+            boundaries.append(hole.coords)
         return boundaries
 
     def rebuild_polygon(self, object_type, object_index):

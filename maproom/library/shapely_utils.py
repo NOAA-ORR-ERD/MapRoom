@@ -92,19 +92,24 @@ def shapely_to_polygon(geom_list):
     polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_identifiers = []
     polygon_groups = []
-    scoping_hack = [0]
+    total_points_scoping_hack = [0]
 
     def add_polygon(geom, points, name, feature_code, group):
         if len(points) < 1:
             return
+
+        # we're only interested in 2D points
         example = points[0]
         if len(example) > 2:
             points = [(p[0], p[1]) for p in points]
-        num_points = len(points)
-        polygon_points.extend(points)
-        polygon_starts.append(scoping_hack[0])
+
+        # shapely/OGR geometries list the starting point twice, which we don't
+        # want
+        num_points = len(points) - 1
+        polygon_points.extend(points[:-1])
+        polygon_starts.append(total_points_scoping_hack[0])
         polygon_counts.append(num_points)
-        scoping_hack[0] += num_points
+        total_points_scoping_hack[0] += num_points
         if hasattr(geom, "polygon_identifiers"):
             pi = geom.polygon_identifiers
         else:
