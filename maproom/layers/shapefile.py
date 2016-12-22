@@ -5,7 +5,7 @@ import sys
 import numpy as np
 
 from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
-from shapely.ops import triangulate
+from shapely.wkt import loads
 
 # Enthought library imports.
 from traits.api import Int, Unicode, Any, Str, Float, Enum, Property, List
@@ -66,6 +66,33 @@ class PolygonShapefileLayer(PolygonLayer):
                 bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
 
         return bounds
+
+    def points_to_json(self):
+        # dummy value; geometry is used to restore polygon data
+        return False
+
+    def points_from_json(self, json_data):
+        pass
+
+    def polygons_to_json(self):
+        # dummy value; geometry is used to restore polygon data
+        return False
+
+    def polygons_from_json(self, json_data):
+        pass
+
+    def geometry_to_json(self):
+        wkt = []
+        for geom in self.geometry:
+            wkt.append(geom.wkt)
+        return wkt
+
+    def geometry_from_json(self, json_data):
+        geom_list = []
+        for wkt in json_data['geometry']:
+            geom = loads(wkt)
+            geom_list.append(geom)
+        self.set_geometry(geom_list)
 
     def set_geometry(self, geom):
         self.geometry = geom
