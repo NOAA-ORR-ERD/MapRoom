@@ -678,9 +678,9 @@ class PolygonSelectionMode(PanMode):
         rnc = self.get_rnc_object()
         if rnc is not None:
             layer, object_type, object_index = rnc
-            geom = layer.polygon_identifiers[object_index]['geom']
-            name = layer.polygon_identifiers[object_index]['name']
-            return "   Geom %s: %s" % (str(geom), name)
+            ident = layer.polygon_identifiers[object_index]
+            geom = layer.geometry[ident['geom_index']]
+            return "   Geom %s: %s" % (str(geom), layer.name)
         return ""
 
     def get_cursor(self):

@@ -106,12 +106,22 @@ class LineLayer(PointLayer):
         error, points, starts, counts, identifiers, groups = shapely_to_polygon([geom])
         count = np.alen(points)
         lines = np.empty((count, 2), dtype=np.uint32)
-        for s, c in zip(starts, counts):
+        self.point_identifiers = []
+        for s, c, ident in zip(starts, counts, identifiers):
+            # generate list connecting each point to the next
             lines[s:s + c,0] = np.arange(s, s + c, dtype=np.uint32)
             lines[s:s + c,1] = np.arange(s + 1, s + c + 1, dtype=np.uint32)
+            # but replace the last point with the first to close the loop
             lines[s + c - 1,1] = s
+            self.point_identifiers.append((s, s + c, ident))
 
         self.set_data(points, 0.0, lines)
+
+    def get_point_identifier(self, point_num):
+        for s, e, ident in self.point_identifiers:
+            if point_num >= s and point_num < e:
+                return ident
+        raise IndexError("Point number %d not found!" % point_num)
 
     def set_color(self, color):
         self.style.line_color = color
@@ -595,7 +605,20 @@ class LineEditLayer(LineLayer):
 
     transient_edit_layer = True
 
-    def update_transient_layer(self):
-        print "UPDATING TRANSIENT!!!"
-        self.parent_layer.rebuild_polygon(self.object_type, self.object_index)
+    def get_points_of_geometry(self, layer, indexes):
+        new_points = {}
+        for i in indexes:
+            for s, e, ident in self.point_identifiers:
+                if i >= s and i < e:
+                    geom_index = ident['geom_index']
+                    geom = layer.geometry[geom_index]
+                    new_points[geom.maproom_geom_index] = (ident['ring_index'], self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
+        return new_points
+
+    def update_transient_layer(self, command):
+        log.debug("Updating transient layer %s with %s" % (self.name, command))
+        if command.short_name == "move_pt":
+            new_points = self.get_points_of_geometry(self.parent_layer, command.indexes)
+            self.parent_layer.rebuild_geometry_from_points(self.object_type, self.object_index, new_points)
+        return self.parent_layer
 

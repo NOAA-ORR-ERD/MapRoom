@@ -686,7 +686,8 @@ class ProjectEditor(FrameworkEditor):
         for layer in b.layers:
             layer.increment_change_count()
             if layer.transient_edit_layer:
-                layer.update_transient_layer()
+                affected_layer = layer.update_transient_layer(cmd)
+                b.need_rebuild[affected_layer] = True
         
         # Use LayerManager events to trigger updates in all windows that are
         # displaying this project

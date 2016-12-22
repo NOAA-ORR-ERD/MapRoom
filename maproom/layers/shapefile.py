@@ -16,7 +16,7 @@ from ..library.projection import Projection
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_floats_to_int, data_types
 from ..library.accumulator import accumulator
-from ..library.shapely_utils import shapely_to_polygon
+from ..library.shapely_utils import shapely_to_polygon, rebuild_geometry_list
 
 from point import PointLayer
 from polygon import PolygonLayer
@@ -72,7 +72,11 @@ class PolygonShapefileLayer(PolygonLayer):
         self.set_data_from_geometry(geom)
 
     def get_geometry_from_object_index(self, object_index):
-        return self.polygon_identifiers[object_index]['geom']
+        """Get the Shapely geometry given the polygon object index from the
+        PolygonLayer metadata
+        """
+        i = self.polygon_identifiers[object_index]['geom_index']
+        return self.geometry[i]
 
     def get_polygons(self, object_index):
         geom = self.get_geometry_from_object_index(object_index)
@@ -89,12 +93,6 @@ class PolygonShapefileLayer(PolygonLayer):
             boundaries.append(hole.coords)
         return boundaries
 
-    def rebuild_polygon(self, object_type, object_index):
-        geom = self.polygon_identifiers[object_index]['geom']
-        print geom.maproom_geom_index, geom.geom_type
-        if geom.geom_type == 'Polygon':
-            # handle single polygon with holes here
-            pass
-        elif geom.geom_type == 'MultiPolygon':
-            # handle multiple polygons, which means multiple outer boundaries
-            pass
+    def rebuild_geometry_from_points(self, object_type, object_index, new_points):
+        new_geoms = rebuild_geometry_list(self.geometry, new_points)
+        self.set_geometry(new_geoms)
