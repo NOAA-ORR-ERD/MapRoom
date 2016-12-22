@@ -115,7 +115,7 @@ class ProjectEditor(FrameworkEditor):
                 self.parse_extra_json(extra, batch_flags)
             self.layer_tree_control.clear_all_items()
             self.layer_tree_control.rebuild()
-            self.perform_batch_flags(batch_flags)
+            self.perform_batch_flags(None, batch_flags)
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
             cmd = ViewportCommand(None, center, units_per_pixel)
             self.process_command(cmd)
@@ -150,7 +150,7 @@ class ProjectEditor(FrameworkEditor):
                 header.extend(errors)
                 text = "\n".join(header)
                 self.task.error(text, "Error restoring from command log")
-            self.perform_batch_flags(batch_flags)
+            self.perform_batch_flags(None, batch_flags)
             self.view_document(self.document)
         else:
             cmd = LoadLayersCommand(metadata)
@@ -598,7 +598,7 @@ class ProjectEditor(FrameworkEditor):
         undo = self.process_batch_command(command, b)
         if override_editable_properties_changed is not None:
             b.editable_properties_changed = override_editable_properties_changed
-        self.perform_batch_flags(b)
+        self.perform_batch_flags(command, b)
         history = self.layer_manager.undo_stack.serialize()
         self.window.application.save_log(str(history), "command_log", ".mrc")
         if new_mouse_mode is not None:
@@ -610,7 +610,7 @@ class ProjectEditor(FrameworkEditor):
     def process_flags(self, flags):
         b = BatchStatus()
         self.add_batch_flags(None, flags, b)
-        self.perform_batch_flags(b)
+        self.perform_batch_flags(None, b)
         
     def process_batch_command(self, command, b):
         """Process a single command but don't update the UI immediately.
@@ -679,7 +679,7 @@ class ProjectEditor(FrameworkEditor):
         for _, layer in reversed(folder_bounds):
             layer.update_bounds()
     
-    def perform_batch_flags(self, b):
+    def perform_batch_flags(self, cmd, b):
         """Perform the UI updates given the BatchStatus flags
         
         """
