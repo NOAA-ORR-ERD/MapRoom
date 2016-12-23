@@ -640,7 +640,11 @@ class PolygonEditLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
         p = LineEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, object_index=self.obj_index)
-        geom, ident = layer.get_geometry_from_object_index(self.obj_index)
+
+        # arbitrarily choose sub_index 0 and ring_index 0; we only need to get
+        # the shapely geometry object
+        geom, ident = layer.get_geometry_from_object_index(self.obj_index, 0, 0)
+
         p.set_data_from_geometry(geom)
         p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
         old_layer, old_insertion_index = lm.replace_transient_layer(p, editor, after=layer)

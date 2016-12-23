@@ -608,13 +608,15 @@ class LineEditLayer(LineLayer):
     transient_edit_layer = True
 
     def get_points_of_geometry(self, layer, indexes):
-        new_points = {}
-        geom, geom_ident = layer.get_geometry_from_object_index(self.object_index)
+        new_points = []
         for i in indexes:
             # find the range of points that contains the selected point
             for s, e, line_layer_ident in self.point_identifiers:
                 if i >= s and i < e:
-                    new_points[geom_ident['geom_index']] = (geom_ident, self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
+                    sub_index = line_layer_ident['sub_index']
+                    ring_index = line_layer_ident['ring_index']
+                    geom, geom_ident = layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
+                    new_points.append((geom_ident, self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e]))
         return new_points
 
     def update_transient_layer(self, command):

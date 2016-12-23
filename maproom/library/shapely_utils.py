@@ -40,6 +40,7 @@ def convert_dataset(dataset):
         wkt = geom.ExportToWkt()
         g = loads(wkt)
         print g
+        add_maproom_attributes_to_shapely_geom(g)
         geometry_list.append(g)
     return geometry_list
 
@@ -74,6 +75,7 @@ def load_shapely(uri):
             print f
             g = shape(f['geometry'])
             print g.geom_type, g
+            add_maproom_attributes_to_shapely_geom(g)
             geometry_list.append(g)
     except fiona.errors.DriverError, e:
         source = None
@@ -85,6 +87,16 @@ def load_shapely(uri):
         return (error, None)
 
     return ("", geometry_list)
+
+def add_maproom_attributes_to_shapely_geom(geom, name="", feature_code=0):
+    if not name:
+        name = geom.geom_type
+    geom.maproom_name = name
+    geom.maproom_feature_code = feature_code
+
+def copy_maproom_attributes(geom, source):
+    geom.maproom_name = source.maproom_name
+    geom.maproom_feature_code = source.maproom_feature_code
 
 def shapely_to_polygon(geom_list):
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
@@ -112,9 +124,10 @@ def shapely_to_polygon(geom_list):
         polygon_starts.append(total_points_scoping_hack[0])
         polygon_counts.append(num_points)
         total_points_scoping_hack[0] += num_points
+        source_geom = geom_list[geom_index]
         pi = {
-            'name': name,
-            'feature_code': feature_code,
+            'name': source_geom.maproom_name,
+            'feature_code': source_geom.maproom_feature_code,
             'geom_index': geom_index,
             'sub_index': sub_index,  # index of polygon inside of multipolygon
             'ring_index': int(ring_index_scoping_hack[0]),
@@ -122,9 +135,6 @@ def shapely_to_polygon(geom_list):
             'num_points': num_points
             }
 
-        # keep the name from the initial load if it exists
-        if hasattr(geom, "initial_polygon_identifiers"):
-            pi.update(geom.initial_polygon_identifiers)
         ring_index_scoping_hack[0] += 1
         polygon_identifiers.append(pi)
         polygon_groups.append(group)
@@ -173,8 +183,11 @@ def rebuild_geometry_list(geometry_list, changes):
     """Shapely geometries are immutable, so we have to replace an object
     with a new instance when a polygon is edited.
     """
-    for gi, (ident, points) in changes.iteritems():
+    for ident, points in changes:
+        gi = ident['geom_index']
         geom = geometry_list[gi]
+        print ident
+        sub_index = ident['sub_index']
         ring_index = ident['ring_index']
 
         if geom.geom_type == 'Polygon':
@@ -193,5 +206,7 @@ def rebuild_geometry_list(geometry_list, changes):
             pass
         else:
             new_geom = geom
+        if new_geom != geom:
+            copy_maproom_attributes(new_geom, geom)
         geometry_list[gi] = new_geom
     return geometry_list

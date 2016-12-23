@@ -98,16 +98,26 @@ class PolygonShapefileLayer(PolygonLayer):
         self.geometry = geom
         self.set_data_from_geometry(geom)
 
-    def get_geometry_from_object_index(self, object_index):
+    def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
         """Get the Shapely geometry given the polygon object index from the
         PolygonLayer metadata
         """
+        print "obj_index=%d" % object_index, self.polygon_identifiers
         ident = self.polygon_identifiers[object_index]
-        i = ident['geom_index']
-        return self.geometry[i], ident
+        gi = ident['geom_index']
+        possible = [i for i in self.polygon_identifiers if i['geom_index'] == gi]
+        print "possible matching geom_index %d" % gi, possible
+        found = None
+        for ident in possible:
+            if sub_index == ident['sub_index'] and ring_index == ident['ring_index']:
+                found = ident
+        if not found:
+            raise IndexError("Can't find sub_index %d, ring_index %d" % (sub_index, ring_index))
+
+        return self.geometry[gi], found
 
     def get_polygons(self, object_index):
-        poly, ident = self.get_geometry_from_object_index(object_index)
+        poly, ident = self.get_geometry_from_object_index(object_index, 0, 0)
         return poly.exterior.coords, poly.interiors
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):

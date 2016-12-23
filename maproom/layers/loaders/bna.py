@@ -9,6 +9,7 @@ import pyproj
 from shapely.geometry import Polygon, LineString
 
 from maproom.library.accumulator import accumulator
+from maproom.library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from maproom.layers import PolygonLayer, RNCLoaderLayer, PolygonShapefileLayer
 
 from common import BaseLayerLoader
@@ -353,10 +354,7 @@ def load_bna_as_shapely(uri):
             geom = Polygon(polygon_points)
         else:
             geom = LineString(polygon_points)
-        geom.initial_polygon_identifiers = {
-            'name': name,
-            'feature_code': feature_code
-            }
+        add_maproom_attributes_to_shapely_geom(geom, name, feature_code)
         geometry_list.append(geom)
         
         total_points += num_points
