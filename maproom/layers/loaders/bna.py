@@ -353,7 +353,7 @@ def load_bna_as_shapely(uri):
             geom = Polygon(polygon_points)
         else:
             geom = LineString(polygon_points)
-        geom.polygon_identifiers = {
+        geom.initial_polygon_identifiers = {
             'name': name,
             'feature_code': feature_code
             }

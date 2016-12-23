@@ -95,7 +95,7 @@ def shapely_to_polygon(geom_list):
     total_points_scoping_hack = [0]
     ring_index_scoping_hack = [0]
 
-    def add_polygon(geom_index, points, name, feature_code, group):
+    def add_polygon(geom_index, sub_index, points, name, feature_code, group):
         if len(points) < 1:
             return
 
@@ -107,19 +107,24 @@ def shapely_to_polygon(geom_list):
         # shapely/OGR geometries need the last point to be the same as the
         # first point to complete the polygon, but OpenGL doesn't want that
         num_points = len(points) - 1
+        start_index = total_points_scoping_hack[0]
         polygon_points.extend(points[:-1])
         polygon_starts.append(total_points_scoping_hack[0])
         polygon_counts.append(num_points)
         total_points_scoping_hack[0] += num_points
-        if hasattr(geom, "polygon_identifiers"):
-            pi = geom.polygon_identifiers
-        else:
-            pi = {
-                'name': name,
-                'feature_code': feature_code,
-                }
-        pi['geom_index'] = geom_index
-        pi['ring_index'] = int(ring_index_scoping_hack[0])
+        pi = {
+            'name': name,
+            'feature_code': feature_code,
+            'geom_index': geom_index,
+            'sub_index': sub_index,  # index of polygon inside of multipolygon
+            'ring_index': int(ring_index_scoping_hack[0]),
+            'point_start_index': start_index,
+            'num_points': num_points
+            }
+
+        # keep the name from the initial load if it exists
+        if hasattr(geom, "initial_polygon_identifiers"):
+            pi.update(geom.initial_polygon_identifiers)
         ring_index_scoping_hack[0] += 1
         polygon_identifiers.append(pi)
         polygon_groups.append(group)
@@ -130,31 +135,31 @@ def shapely_to_polygon(geom_list):
         name = "shapefile"
         group += 1
 
-        geom.maproom_geom_index = geom_index
         ring_index_scoping_hack[0] = 0
         if geom.geom_type == 'MultiPolygon':
+            start_group = group
             for poly in geom.geoms:
-                add_polygon(geom_index, poly.exterior.coords, poly.geom_type, feature_code, group)
+                add_polygon(geom_index, group - start_group, poly.exterior.coords, poly.geom_type, feature_code, group)
                 for hole in poly.interiors:
-                    add_polygon(geom_index, hole.coords, poly.geom_type, feature_code, group)
+                    add_polygon(geom_index, group - start_group, hole.coords, poly.geom_type, feature_code, group)
                 group += 1
         elif geom.geom_type == 'Polygon':
-            add_polygon(geom_index, geom.exterior.coords, geom.geom_type, feature_code, group)
+            add_polygon(geom_index, 0, geom.exterior.coords, geom.geom_type, feature_code, group)
             for hole in geom.interiors:
-                add_polygon(geom_index, hole.coords, geom.geom_type, feature_code, group)
+                add_polygon(geom_index, 0, hole.coords, geom.geom_type, feature_code, group)
         elif geom.geom_type == 'LineString':
             # polygon layer doesn't currently support lines, so fake it by
             # reversing the points and taking the line back on itself
             points = list(geom.coords)
             backwards = reversed(list(geom.coords))
             points.extend(backwards)
-            add_polygon(geom_index, points, geom.geom_type, feature_code, group)
+            add_polygon(geom_index, 0, points, geom.geom_type, feature_code, group)
         elif geom.geom_type == 'Point':
             # polygon layer doesn't currently support points, so fake it by
             # creating tiny little triangles for each point
             x, y = geom.coords[0]
             polygon = [(x, y), (x + 0.0005, y + .001), (x + 0.001, y)]
-            add_polygon(geom_index, None, polygon, geom.geom_type, feature_code, group)
+            add_polygon(geom_index, 0, polygon, geom.geom_type, feature_code, group)
         else:
             print 'unknown type: ', geom.geom_type
 
@@ -168,8 +173,10 @@ def rebuild_geometry_list(geometry_list, changes):
     """Shapely geometries are immutable, so we have to replace an object
     with a new instance when a polygon is edited.
     """
-    for gi, (ring_index, points) in changes.iteritems():
+    for gi, (ident, points) in changes.iteritems():
         geom = geometry_list[gi]
+        ring_index = ident['ring_index']
+
         if geom.geom_type == 'Polygon':
             # handle single polygon with holes here
             points = list(points)

@@ -102,12 +102,13 @@ class PolygonShapefileLayer(PolygonLayer):
         """Get the Shapely geometry given the polygon object index from the
         PolygonLayer metadata
         """
-        i = self.polygon_identifiers[object_index]['geom_index']
-        return self.geometry[i]
+        ident = self.polygon_identifiers[object_index]
+        i = ident['geom_index']
+        return self.geometry[i], ident
 
     def get_polygons(self, object_index):
-        geom = self.get_geometry_from_object_index(object_index)
-        return geom.exterior.coords, geom.interiors
+        poly, ident = self.get_geometry_from_object_index(object_index)
+        return poly.exterior.coords, poly.interiors
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
         return canvas.picker.is_polygon_fill_type(object_type)

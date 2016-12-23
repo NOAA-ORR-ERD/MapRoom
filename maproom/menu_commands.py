@@ -618,7 +618,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         
         return self.undo_info
 
-class PolygonEditLayerCommand(ToPolygonLayerCommand):
+class PolygonEditLayerCommand(Command):
     short_name = "polygon_edit"
     serialize_order =  [
             ('layer', 'layer'),
@@ -638,13 +638,13 @@ class PolygonEditLayerCommand(ToPolygonLayerCommand):
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
-        saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
         p = LineEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, object_index=self.obj_index)
-        geom = layer.get_geometry_from_object_index(self.obj_index)
+        geom, ident = layer.get_geometry_from_object_index(self.obj_index)
         p.set_data_from_geometry(geom)
-        p.name = "Editing Polygon from %s" % layer.name
-        lm.insert_loaded_layer(p, editor, after=layer)
+        p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
+        old_layer, old_insertion_index = lm.replace_transient_layer(p, editor, after=layer)
+        insertion_index = lm.get_multi_index_of_layer(p)
         
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
@@ -652,9 +652,22 @@ class PolygonEditLayerCommand(ToPolygonLayerCommand):
         lf.select_layer = True
         lf.layer_loaded = True
 
-        undo.data = (p, p.invariant, saved_invariant)
+        undo.data = (p, insertion_index, old_layer, old_insertion_index)
         
         return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer, insertion_index, old_layer, old_insertion_index = self.undo_info.data
+        lm.remove_layer_at_multi_index(insertion_index)
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        if old_layer:
+            lm.insert_layer(old_insertion_index, old_layer)
+            lf = undo.flags.add_layer_flags(old_layer)
+            lf.select_layer = True
+        return undo
 
 class SavepointCommand(Command):
     short_name = "savepoint"

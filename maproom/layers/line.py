@@ -107,6 +107,8 @@ class LineLayer(PointLayer):
         count = np.alen(points)
         lines = np.empty((count, 2), dtype=np.uint32)
         self.point_identifiers = []
+        # there could be multiple polygons if the geometry has holes or is a
+        # MultiPolygon, so each subset needs to be matched to its identifier
         for s, c, ident in zip(starts, counts, identifiers):
             # generate list connecting each point to the next
             lines[s:s + c,0] = np.arange(s, s + c, dtype=np.uint32)
@@ -607,17 +609,17 @@ class LineEditLayer(LineLayer):
 
     def get_points_of_geometry(self, layer, indexes):
         new_points = {}
+        geom, geom_ident = layer.get_geometry_from_object_index(self.object_index)
         for i in indexes:
-            for s, e, ident in self.point_identifiers:
+            # find the range of points that contains the selected point
+            for s, e, line_layer_ident in self.point_identifiers:
                 if i >= s and i < e:
-                    geom_index = ident['geom_index']
-                    geom = layer.geometry[geom_index]
-                    new_points[geom.maproom_geom_index] = (ident['ring_index'], self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
+                    new_points[geom_ident['geom_index']] = (geom_ident, self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
         return new_points
 
     def update_transient_layer(self, command):
         log.debug("Updating transient layer %s with %s" % (self.name, command))
-        if command.short_name == "move_pt":
+        if command and command.short_name == "move_pt":
             new_points = self.get_points_of_geometry(self.parent_layer, command.indexes)
             self.parent_layer.rebuild_geometry_from_points(self.object_type, self.object_index, new_points)
         return self.parent_layer
