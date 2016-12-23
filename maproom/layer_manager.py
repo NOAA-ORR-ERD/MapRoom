@@ -72,6 +72,9 @@ class LayerManager(Document):
     # Linked control points are slaves of a truth layer: a dict that maps the
     # dependent layer/control point to the truth layer/control point
     control_point_links = Dict(Any)
+
+    # Transient layer always uses invariant
+    transient_invariant = -3
     
     def _undo_stack_default(self):
         return UndoStack()
@@ -465,6 +468,8 @@ class LayerManager(Document):
         log.debug("before: layers are " + str(self.layers))
         log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
         if (not isinstance(layer, list)):
+            if layer.transient_edit_layer:
+                invariant = self.transient_invariant
             # Layers being loaded from a project file will have their
             # invariants already saved, so don't mess with them.
             if not skip_invariant:
@@ -592,6 +597,22 @@ class LayerManager(Document):
             if child.dependent_of == layer.invariant:
                 return layer
         return None
+    
+    def find_transient_layer(self):
+        for child in self.flatten():
+            if child.transient_edit_layer:
+                return child
+        return None
+
+    def replace_transient_layer(self, layer, editor, **kwargs):
+        old = self.find_transient_layer()
+        if old:
+            insertion_index = self.get_multi_index_of_layer(old)
+            self.remove_layer_at_multi_index(insertion_index)
+        else:
+            insertion_index = None
+        self.insert_loaded_layer(layer, editor, **kwargs)
+        return old, insertion_index
     
     ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???    
     def is_raisable(self, layer):
