@@ -89,6 +89,10 @@ class MovePointsCommand(Command):
         if len(self.indexes) == 1:
             return "Move Point #%d" % self.indexes[0]
         return "Move %d Points" % len(self.indexes)
+
+    @property
+    def transient_point_indexes(self):
+        return self.indexes
     
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
@@ -281,6 +285,10 @@ class SplitLineCommand(Command):
     
     def __str__(self):
         return "Split Line #%d" % self.index
+
+    @property
+    def transient_point_indexes(self):
+        return [self.undo_point.index]
     
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)

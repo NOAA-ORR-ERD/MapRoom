@@ -33,6 +33,8 @@ class LineLayer(PointLayer):
     
     line_segment_indexes = Any
 
+    point_identifiers = Any
+
     pickable = True # this is a layer that supports picking
 
     visibility_items = ["points", "lines", "labels"]
@@ -118,6 +120,8 @@ class LineLayer(PointLayer):
             self.point_identifiers.append((s, s + c, ident))
 
         self.set_data(points, 0.0, lines)
+        for i, (s, c, ident) in enumerate(zip(starts, counts, identifiers)):
+            self.line_segment_indexes.state[s:s + c] = POLYGON_NUMBER_SHIFT * i
 
     def get_point_identifier(self, point_num):
         for s, e, ident in self.point_identifiers:
@@ -624,8 +628,10 @@ class LineEditLayer(LineLayer):
 
     def update_transient_layer(self, command):
         log.debug("Updating transient layer %s with %s" % (self.name, command))
-        if command and command.short_name == "move_pt":
-            new_points = self.get_points_of_geometry(self.parent_layer, command.indexes)
+        if command and hasattr(command, 'transient_point_indexes'):
+            indexes = command.transient_point_indexes
+            print indexes
+            new_points = self.get_points_of_geometry(self.parent_layer, indexes)
             self.parent_layer.rebuild_geometry_from_points(self.object_type, self.object_index, new_points)
         return self.parent_layer
 
