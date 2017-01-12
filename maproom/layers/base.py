@@ -71,6 +71,10 @@ class Layer(HasTraits):
     change_count = Int(0)
     
     load_error_string = Str
+
+    load_warning_string = Str
+
+    load_warning_details = Str
     
     manager = Any
 

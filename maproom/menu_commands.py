@@ -54,13 +54,17 @@ class LoadLayersCommand(Command):
             undo.flags.errors = ["Unknown file type %s for %s" % (metadata.mime, metadata.uri)]
         else:
             errors = []
+            warnings = []
             for layer in layers:
                 if layer.load_error_string != "":
                     errors.append(layer.load_error_string)
+                if layer.load_warning_string != "":
+                    warnings.append(layer.load_warning_string)
             if errors:
                 undo.flags.success = False
                 undo.flags.errors = errors
-            print errors
+            if warnings:
+                undo.flags.message = warnings
 
         if undo.flags.success:
             lm.add_layers(layers, False, editor)

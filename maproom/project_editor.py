@@ -641,6 +641,14 @@ class ProjectEditor(FrameworkEditor):
             for e in f.errors:
                 b.errors.append("- %s" % e)
             b.errors.append("")
+        if f.message:
+            b.messages.append("When processing command '%s', the following messages were generated:\n" % str(cmd))
+            if isinstance(f.message, list):
+                for m in f.message:
+                    b.messages.append("- %s" % m)
+            else:
+                b.messages.append("- %s" % f.message)
+            b.messages.append("")
         for lf in f.layer_flags:
             layer = lf.layer
             b.layers.append(layer)
