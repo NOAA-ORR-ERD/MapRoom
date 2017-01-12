@@ -1,3 +1,39 @@
+01/11/2017
+---------------------------
+Released 3.1b30
+- RM Updated test_nc_particles
+- RM Made fiona an optional package because it won't compile on Windows
+- RM Added warning message and remove bogus points when loading particles files
+- RM Added polygon number to line state; first step to allow new points in polygon
+- RM Refs #726: optimized get_points_of_geometry to coalesce multiple points in the same ring to a single update
+- RM Refs #726: fix for editing rings other than the exterior
+- RM Refs #726: fix for polygon_identifier getting overridden because it was being inadvertently reused in shapely_to_polygon
+- RM Added transient layer helpers: at most 1 transient layer at any time
+- RM Refs #726: added serialization for shapefile layer
+- RM Refs #726, #646: basic editing of polygon layers
+- RM Added command argument to perform_batch_flags
+- RM Refs #726: shapely objects list starting point twice to close polygon; MapRoom/OpenGL don't, so correct for this
+- RM Refs #726: support holes in editable line layers
+- RM Refs #726: first step to editable polygons: convert polygon to line layer so you can use verdat editing tools
+- RM Refs #726: added demonstration of polygon highlighting in shapefile
+- RM Refs #726: first code for loading BNA as shapely polygons
+- RM Added display of number of shapefile objects in PolygonShapefileLayer
+- RM Removed attempt at triangle shapefile layer and straight-OGR loader
+- RM Refs #726: Added OGR file saving (KML, GeoJSON, ESRI)
+- RM Added support to display multiple file types in Save Layer As
+- RM Refs #726: added support for basic KML loading; fiona doesn't support KML so had to fall back to OGR
+- RM Fixed error messages; errors were being attached to the wrong object
+- RM Moved shapefile recognizer ahead of all text recognizers because KML is in XML format
+- RM Refs #726: added shapely object-based polygon layer subclass
+- RM Refs #726: added experimental shapely-geometry-to-triangle layer
+- RM Fixed #732: GL tessellation can handle holes; fixed polygons.group attribute so holes share the same group number as the outer boundary
+- RM Fixed undo of NormalizeLongitudeCommand
+- RM Fixed #731: added longitude normalization for vector object layers
+- RM Fixed shapefile reading to load holes in polygons (note: holes aren't displayed correctly yet, but at least they are parsed)
+- RM Refs #638: initial support for saving as shapefile (using OGR)
+- RM Only use x & y coordinate in shapefiles; throw away z if exists.
+- RM Added test case to accumulator that fails with ValueError even though it's supposed to catch ValueError
+
 12/15/2016
 ---------------------------
 Released 3.1b29
