@@ -5,7 +5,6 @@ import time
 from fs.opener import opener
 import numpy as np
 from osgeo import ogr, osr
-import fiona
 from shapely.geometry import shape
 import pyproj
 

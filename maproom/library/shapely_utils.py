@@ -1,12 +1,15 @@
 import numpy as np
 from fs.opener import opener
 
-import fiona
 from shapely.geometry import shape, Polygon, MultiPolygon, LineString, Point
 from shapely.wkt import loads
 from osgeo import ogr, osr
 
 from accumulator import accumulator
+
+
+class DriverLoadFailure(RuntimeError):
+    pass
 
 def get_dataset(uri):
     """Get OGR Dataset, performing URI to filename conversion since OGR
@@ -44,12 +47,14 @@ def convert_dataset(dataset):
         geometry_list.append(g)
     return geometry_list
 
-
 def get_fiona(uri):
     """Get fiona Dataset, performing URI to filename conversion since OGR
     doesn't support URIs, only files on the local filesystem
     """
+    #import fiona
 
+    if True:
+        raise ImportError("fiona not found")
     fs, relpath = opener.parse(uri)
     print "fiona:", relpath
     print "fiona:", fs
@@ -58,7 +63,10 @@ def get_fiona(uri):
     file_path = fs.getsyspath(relpath)
     if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
         file_path = file_path[4:]
-    source = fiona.open(str(file_path), 'r')
+    try:
+        source = fiona.open(str(file_path), 'r')
+    except fiona.errors.DriverError, e:
+        raise DriverLoadFailure(e)
     print source
 
     if (source is None):
@@ -77,7 +85,7 @@ def load_shapely(uri):
             print g.geom_type, g
             add_maproom_attributes_to_shapely_geom(g)
             geometry_list.append(g)
-    except fiona.errors.DriverError, e:
+    except (DriverLoadFailure, ImportError), e:
         source = None
         error, dataset = get_dataset(uri)
         if not error:
