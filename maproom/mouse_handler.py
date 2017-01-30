@@ -557,7 +557,7 @@ class RNCSelectionMode(PanMode):
 
     def parse_rnc_object(self, rnc):
         layer, object_type, object_index = rnc
-        name = layer.polygon_identifiers[object_index]['name']
+        name = layer.ring_identifiers[object_index]['name']
         if ";" in name:
             name, filename, url = name.split(";")
             if "_" in filename:
@@ -640,7 +640,7 @@ class RNCSelectionMode(PanMode):
 
 
 class PolygonSelectionMode(PanMode):
-    """Mouse mode to select polygons
+    """Mouse mode to select rings
     """
     icon = "select.png"
     menu_item_name = "Polygon Selection Mode"
@@ -662,7 +662,7 @@ class PolygonSelectionMode(PanMode):
 
     def parse_rnc_object(self, rnc):
         layer, object_type, object_index = rnc
-        name = layer.polygon_identifiers[object_index]['name']
+        name = layer.ring_identifiers[object_index]['name']
         if ";" in name:
             name, filename, url = name.split(";")
             if "_" in filename:
@@ -678,7 +678,7 @@ class PolygonSelectionMode(PanMode):
         rnc = self.get_rnc_object()
         if rnc is not None:
             layer, object_type, object_index = rnc
-            ident = layer.polygon_identifiers[object_index]
+            ident = layer.ring_identifiers[object_index]
             geom = layer.geometry[ident['geom_index']]
             return "   Geom %s: %s" % (str(geom), layer.name)
         return ""

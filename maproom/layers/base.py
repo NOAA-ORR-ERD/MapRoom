@@ -362,7 +362,7 @@ class Layer(HasTraits):
     def clear_all_selections(self, mark_type=STATE_SELECTED):
         self.clear_all_point_selections(mark_type)
         self.clear_all_line_segment_selections(mark_type)
-        self.clear_all_polygon_selections(mark_type)
+        self.clear_all_ring_selections(mark_type)
         self.increment_change_count()
 
     def delete_all_selected_objects(self):
@@ -374,7 +374,7 @@ class Layer(HasTraits):
     def clear_all_line_segment_selections(self, mark_type=STATE_SELECTED):
         pass
 
-    def clear_all_polygon_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_ring_selections(self, mark_type=STATE_SELECTED):
         pass
     
     def set_visibility_when_selected(self, layer_visibility):

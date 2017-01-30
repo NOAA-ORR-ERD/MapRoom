@@ -109,7 +109,7 @@ class LineLayer(PointLayer):
         count = np.alen(points)
         lines = np.empty((count, 2), dtype=np.uint32)
         self.point_identifiers = []
-        # there could be multiple polygons if the geometry has holes or is a
+        # there could be multiple rings if the geometry has holes or is a
         # MultiPolygon, so each subset needs to be matched to its identifier
         for s, c, ident in zip(starts, counts, identifiers):
             # generate list connecting each point to the next
@@ -594,7 +594,7 @@ class LineLayer(PointLayer):
                 renderer.draw_selected_points(self.point_size, self.get_selected_point_indexes())
 
 class LineEditLayer(LineLayer):
-    """Layer for points/lines/polygons.
+    """Layer for points/lines/rings.
     
     """
     name = Unicode("Line Edit Layer")

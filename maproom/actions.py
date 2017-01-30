@@ -354,7 +354,7 @@ class ToPolygonLayerAction(EditorAction):
 
 class ToVerdatLayerAction(EditorAction):
     name = 'Convert to Editable Layer'
-    tooltip = 'Create new editable layer from polygons of current layer'
+    tooltip = 'Create new editable layer from rings of current layer'
     enabled_name = 'layer_has_boundaries'
 
     def perform(self, event):

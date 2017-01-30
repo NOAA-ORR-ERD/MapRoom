@@ -42,8 +42,8 @@ TRIANGLE_POINTS_VIEW_DTYPE = np.dtype([
     ("state", np.uint32)
 ])
 POLYGON_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
-    ("next", np.uint32),   # Index of next adjacent point in polygon.
-    ("polygon", np.uint32)  # Index of polygon this point is in.
+    ("next", np.uint32),   # Index of next adjacent point in ring
+    ("ring_index", np.uint32)  # Index of ring this point is in
 ])
 POLYGON_DTYPE = np.dtype([
     ("start", np.uint32),  # Index of arbitrary point in this polygon.
@@ -72,7 +72,7 @@ def make_polygons(count):
         count,
     ).view(np.recarray)
 
-def make_polygon_adjacency_array(count):
+def make_point_adjacency_array(count):
     return np.repeat(
         np.array([(0, 0)], dtype=POLYGON_ADJACENCY_DTYPE),
         count,

@@ -28,7 +28,7 @@ progress_log = logging.getLogger("progress")
 
 
 class PolygonShapefileLayer(PolygonLayer):
-    """Layer for shapely objects rendered as polygons.
+    """Layer for shapely objects rendered as rings.
     
     """
     type = Str("shapefile")
@@ -102,10 +102,10 @@ class PolygonShapefileLayer(PolygonLayer):
         """Get the Shapely geometry given the polygon object index from the
         PolygonLayer metadata
         """
-        print "obj_index=%d" % object_index, self.polygon_identifiers
-        ident = self.polygon_identifiers[object_index]
+        print "obj_index=%d" % object_index, self.ring_identifiers
+        ident = self.ring_identifiers[object_index]
         gi = ident['geom_index']
-        possible = [i for i in self.polygon_identifiers if i['geom_index'] == gi]
+        possible = [i for i in self.ring_identifiers if i['geom_index'] == gi]
         print "possible matching geom_index %d" % gi, possible
         found = None
         for ident in possible:

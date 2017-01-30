@@ -84,7 +84,7 @@ def load_verdat_file(uri):
     # the points are listed such that the first boundary polygon is defined by points 0 through i - 1,
     # the second boundary polygon is defined by points i through j - 1, and so on; and then there
     # are some number of non-boundary-polygon points at the end of the list; in this way, the boundary
-    # polygons can be specified simply by giving the indexes i, j, etc.
+    # rings can be specified simply by giving the indexes i, j, etc.
 
     # read the points
     while True:

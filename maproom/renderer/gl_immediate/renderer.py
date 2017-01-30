@@ -452,7 +452,7 @@ class ImmediateModeRenderer():
         tessellate(
             projected_points,  # used to be: self.points
             self.point_adjacency_array.next,
-            self.point_adjacency_array.polygon,
+            self.point_adjacency_array.ring_index,
             self.polygons.start,
             self.polygons.count,  # per-polygon point count
             self.line_nan_counts,  # out parameter -- how many nan/deleted points in each polygon

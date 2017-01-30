@@ -33,14 +33,14 @@ class BNALoader(BaseLayerLoader):
         layer = self.layer_class(manager=manager)
         
         (layer.load_error_string,
-         f_polygon_points,
-         f_polygon_starts,
-         f_polygon_counts,
-         f_polygon_identifiers) = load_bna_file(metadata.uri)
+         f_ring_points,
+         f_ring_starts,
+         f_ring_counts,
+         f_ring_identifiers) = load_bna_file(metadata.uri)
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
-            layer.set_data(f_polygon_points, f_polygon_starts, f_polygon_counts,
-                           f_polygon_identifiers)
+            layer.set_data(f_ring_points, f_ring_starts, f_ring_counts,
+                           f_ring_identifiers)
             layer.file_path = metadata.uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
@@ -82,7 +82,7 @@ class BNAShapefileLoader(BaseLayerLoader):
     def load_layers(self, metadata, manager):
         layer = self.layer_class(manager=manager)
         
-        layer.load_error_string, geometry_list, polygon_identifiers = load_bna_as_shapely(metadata.uri)
+        layer.load_error_string, geometry_list, ring_identifiers = load_bna_as_shapely(metadata.uri)
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
             layer.set_geometry(geometry_list)
@@ -102,7 +102,7 @@ def load_bna_file(uri):
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
     
-    ( load_error_string, polygon_points, polygon_starts, polygon_counts, polygon_types, polygon_identifiers )
+    ( load_error_string, polygon_points, polygon_starts, polygon_counts, polygon_types, ring_identifiers )
     
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
@@ -110,7 +110,7 @@ def load_bna_file(uri):
         polygon_starts = numpy array (type = 1 x np.uint32)
         polygon_counts = numpy array (type = 1 x np.uint32)
         polygon_types = numpy array (type = 1 x np.uint32) (these are the BNA feature codes)
-        polygon_identifiers = list
+        ring_identifiers = list
     """
 
     log.debug("******** START")
@@ -164,7 +164,7 @@ def load_bna_file(uri):
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
     polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
-    polygon_identifiers = []
+    ring_identifiers = []
 
     t0 = time.clock()
     update_every = 1000
@@ -196,7 +196,7 @@ def load_bna_file(uri):
             feature_code = 4
         elif name.lower() in ['spillable area', 'spillablearea']:
             feature_code = 5
-        polygon_identifiers.append(
+        ring_identifiers.append(
             {'name': name,
              'feature_code': feature_code}
             )
@@ -243,7 +243,7 @@ def load_bna_file(uri):
             np.asarray(polygon_points),
             np.asarray(polygon_starts)[:, 0],
             np.asarray(polygon_counts)[:, 0],
-            polygon_identifiers)
+            ring_identifiers)
 
 
 def save_bna_file(f, layer):
@@ -251,7 +251,7 @@ def save_bna_file(f, layer):
     ticks = 0
     progress_log.info("TICKS=%d" % np.alen(layer.points))
     progress_log.info("Saving BNA...")
-    for i, p in enumerate(layer.iter_polygons()):
+    for i, p in enumerate(layer.iter_rings()):
         print "polygon #%d" % i
         polygon = p[0]
         count = np.alen(polygon)
@@ -285,7 +285,7 @@ def load_bna_as_shapely(uri):
     lines = s.splitlines()
 
     geometry_list = []
-    polygon_identifiers = []
+    ring_identifiers = []
 
     update_every = 1000
     total_points = 0
@@ -316,7 +316,7 @@ def load_bna_as_shapely(uri):
             feature_code = 4
         elif name.lower() in ['spillable area', 'spillablearea']:
             feature_code = 5
-        polygon_identifiers.append(
+        ring_identifiers.append(
             {'name': name,
              'feature_code': feature_code}
             )
@@ -360,4 +360,4 @@ def load_bna_as_shapely(uri):
         total_points += num_points
     progress_log.info("TICK=%d" % num_lines)
 
-    return "", geometry_list, polygon_identifiers
+    return "", geometry_list, ring_identifiers

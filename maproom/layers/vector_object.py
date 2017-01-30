@@ -1320,25 +1320,25 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         start = self.center_point_index + 1
         last = np.alen(self.points)
         count = last - start
-        polygons = data_types.make_polygons(1)
-        polygons.start[0] = self.center_point_index + 1
-        polygons.count[0] = count
-        polygons.group[0] = 0
-        polygons.color[0] = self.style.fill_color
-        adjacency = data_types.make_polygon_adjacency_array(np.alen(self.points))
-        adjacency.polygon[0:start] = 99999
-        adjacency.polygon[start:last] = 0
+        rings = data_types.make_polygons(1)
+        rings.start[0] = self.center_point_index + 1
+        rings.count[0] = count
+        rings.group[0] = 0
+        rings.color[0] = self.style.fill_color
+        adjacency = data_types.make_point_adjacency_array(np.alen(self.points))
+        adjacency.ring_index[0:start] = 99999
+        adjacency.ring_index[start:last] = 0
         adjacency.next[start:last] = np.arange(start + 1, last + 1)
         adjacency.next[last - 1] = start
-        renderer.set_polygons(polygons, adjacency)
-        self.rasterized_polygons = polygons
+        renderer.set_polygons(rings, adjacency)
+        self.rasterized_rings = rings
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         renderer.draw_polygons(self, picker,
-                               self.rasterized_polygons.color,
+                               self.rasterized_rings.color,
                                self.style.line_color,
                                1, self.style)
 

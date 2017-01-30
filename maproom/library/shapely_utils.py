@@ -110,8 +110,8 @@ def shapely_to_polygon(geom_list):
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
     polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
     polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
-    polygon_identifiers = []
-    polygon_groups = []
+    ring_identifiers = []
+    ring_groups = []
     total_points_scoping_hack = [0]
     ring_index_scoping_hack = [0]
 
@@ -144,8 +144,8 @@ def shapely_to_polygon(geom_list):
             }
 
         ring_index_scoping_hack[0] += 1
-        polygon_identifiers.append(pi)
-        polygon_groups.append(group)
+        ring_identifiers.append(pi)
+        ring_groups.append(group)
 
     group = 0
     for geom_index, geom in enumerate(geom_list):
@@ -185,7 +185,7 @@ def shapely_to_polygon(geom_list):
             np.asarray(polygon_points),
             np.asarray(polygon_starts)[:, 0],
             np.asarray(polygon_counts)[:, 0],
-            polygon_identifiers, polygon_groups)
+            ring_identifiers, ring_groups)
 
 def rebuild_geometry_list(geometry_list, changes):
     """Shapely geometries are immutable, so we have to replace an object

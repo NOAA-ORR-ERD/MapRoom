@@ -117,7 +117,7 @@ class BaseLayerLoader(BaseLoader):
         if errors:
             raise PointsError("Problems with boundaries:\n\n%s" % "\n\n".join(errors), error_points)
         
-        # normalize windings on polygons
+        # normalize windings on rings
         for (boundary_index, boundary) in enumerate(boundaries):
             # if the outer boundary's area is positive, then reverse its
             # points so that they're wound counter-clockwise
