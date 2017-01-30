@@ -16,7 +16,7 @@ from ..library.projection import Projection
 from ..library.Boundary import Boundaries, PointsError
 from ..renderer import color_floats_to_int, data_types
 from ..library.accumulator import accumulator
-from ..library.shapely_utils import shapely_to_polygon, rebuild_geometry_list
+from ..library.shapely_utils import shapely_to_polygon, rebuild_geometry_list, add_maproom_attributes_to_shapely_geom
 
 from point import PointLayer
 from polygon import PolygonLayer
@@ -84,13 +84,23 @@ class PolygonShapefileLayer(PolygonLayer):
     def geometry_to_json(self):
         wkt = []
         for geom in self.geometry:
-            wkt.append(geom.wkt)
+            entry = ("v2", geom.maproom_name, geom.maproom_feature_code, geom.wkt)
+            wkt.append(entry)
         return wkt
 
     def geometry_from_json(self, json_data):
         geom_list = []
-        for wkt in json_data['geometry']:
+        for entry in json_data['geometry']:
+            if entry[0] == "v2":
+                name = entry[1]
+                feature_code = entry[2]
+                wkt = entry[3]
+            else:
+                name = ""
+                feature_code = 0
+                wkt = entry
             geom = loads(wkt)
+            add_maproom_attributes_to_shapely_geom(geom, name, feature_code)
             geom_list.append(geom)
         self.set_geometry(geom_list)
 
