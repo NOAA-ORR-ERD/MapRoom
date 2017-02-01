@@ -126,7 +126,7 @@ class LineLayer(PointLayer):
     def get_point_identifier(self, point_num):
         for s, e, ident in self.point_identifiers:
             if point_num >= s and point_num < e:
-                return ident
+                return s, e, ident
         raise IndexError("Point number %d not found!" % point_num)
 
     def set_color(self, color):
@@ -611,27 +611,46 @@ class LineEditLayer(LineLayer):
 
     transient_edit_layer = True
 
-    def get_points_of_geometry(self, layer, indexes):
+    def get_new_points_after_move(self, indexes):
         new_points = {}
         for i in indexes:
-            # find the range of points that contains the selected point
+            # find the ring that contains the selected point
             for s, e, line_layer_ident in self.point_identifiers:
                 if i >= s and i < e:
                     sub_index = line_layer_ident['sub_index']
                     ring_index = line_layer_ident['ring_index']
-                    geom, geom_ident = layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
+                    geom, geom_ident = self.parent_layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
                     geom_index = geom_ident['geom_index']
                     # use a dict to coalesce changes in multiple points on the
                     # same sub/ring to create a single change
                     new_points[(geom_index, sub_index, ring_index)] = (geom_ident, self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
         return new_points.values()
 
+    def get_new_points_after_insert(self, pt1, pt2, new_index):
+        new_points = {}
+        s, e, ident = self.get_point_identifier(pt1)
+        s2, e2, ident2 = self.get_point_identifier(pt2)
+        if ident != ident2:
+            log.error("Two points somehow aren't on the same ring")
+        sub_index = ident['sub_index']
+        ring_index = ident['ring_index']
+        geom, geom_ident = self.parent_layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
+        geom_index = geom_ident['geom_index']
+        new_points = self.make_points(e - s + 1) # start to pt1; add new index, pt1 + 1 to e
+        insertion_point = pt1 - s + 1
+        new_points[0:insertion_point] = self.points[s:s + insertion_point]
+        new_points[insertion_point] = self.points[new_index]
+        new_points[insertion_point + 1:e - s + 1] = self.points[pt1 + 1:e]
+        geom_points = [(geom_ident, new_points.view(data_types.POINT_XY_VIEW_DTYPE).xy)]
+        return geom_points
+
+    def rebuild_from_parent_layer(self):
+        geom, ident = self.parent_layer.get_geometry_from_object_index(self.object_index, 0, 0)
+        self.set_data_from_geometry(geom)
+
     def update_transient_layer(self, command):
         log.debug("Updating transient layer %s with %s" % (self.name, command))
-        if command and hasattr(command, 'transient_point_indexes'):
-            indexes = command.transient_point_indexes
-            print indexes
-            new_points = self.get_points_of_geometry(self.parent_layer, indexes)
-            self.parent_layer.rebuild_geometry_from_points(self.object_type, self.object_index, new_points)
+        if command and hasattr(command, 'transient_geometry_update'):
+            command.transient_geometry_update(self)
         return self.parent_layer
 

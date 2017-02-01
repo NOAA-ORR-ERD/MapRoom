@@ -153,7 +153,8 @@ class PolygonLayer(PointLayer):
         self.set_data(all_points, starts, counts, identifiers)
 
     def set_data_from_geometry(self, geom):
-        self.load_error_string, points, starts, counts, identifiers, groups = shapely_to_polygon(self.geometry)
+        self.load_error_string, points, starts, counts, identifiers, groups = shapely_to_polygon(geom)
+        log.debug("New geometry: for %s: %s" % (self, str(points)))
         self.set_data(points, starts, counts, identifiers, groups)
     
     def has_boundaries(self):

@@ -7,6 +7,9 @@ from osgeo import ogr, osr
 
 from accumulator import accumulator
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class DriverLoadFailure(RuntimeError):
     pass
@@ -194,7 +197,7 @@ def rebuild_geometry_list(geometry_list, changes):
     for ident, points in changes:
         gi = ident['geom_index']
         geom = geometry_list[gi]
-        print ident
+        log.debug("rebuild_geometry_list: ident=%s geom=%s" % (ident, geom))
         sub_index = ident['sub_index']
         ring_index = ident['ring_index']
 

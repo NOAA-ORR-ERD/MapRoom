@@ -90,10 +90,10 @@ class MovePointsCommand(Command):
             return "Move Point #%d" % self.indexes[0]
         return "Move %d Points" % len(self.indexes)
 
-    @property
-    def transient_point_indexes(self):
-        return self.indexes
-    
+    def transient_geometry_update(self, tlayer):
+        new_points = tlayer.get_new_points_after_move(self.indexes)
+        tlayer.parent_layer.rebuild_geometry_from_points(tlayer.object_type, tlayer.object_index, new_points)
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer and np.array_equal(next_command.indexes, self.indexes):
@@ -282,31 +282,37 @@ class SplitLineCommand(Command):
         self.undo_delete = None
         self.undo_line1 = None
         self.undo_line2 = None
+        self.point_index_1 = None
+        self.point_index_2 = None
     
     def __str__(self):
         return "Split Line #%d" % self.index
 
-    @property
-    def transient_point_indexes(self):
-        return [self.undo_point.index]
+    def transient_geometry_update(self, tlayer):
+        new_points = tlayer.get_new_points_after_insert(self.point_index_1, self.point_index_2, self.undo_point.index)
+        tlayer.parent_layer.rebuild_geometry_from_points(tlayer.object_type, tlayer.object_index, new_points)
+        tlayer.rebuild_from_parent_layer()
+        tlayer.select_nearest_point(self.world_point)
     
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_point = layer.insert_point(self.world_point)
         
         layer.select_point(self.undo_point.index)
-        point_index_1 = layer.line_segment_indexes.point1[self.index]
-        point_index_2 = layer.line_segment_indexes.point2[self.index]
+        self.point_index_1 = layer.line_segment_indexes.point1[self.index]
+        self.point_index_2 = layer.line_segment_indexes.point2[self.index]
         color = layer.line_segment_indexes.color[self.index]
         state = layer.line_segment_indexes.state[self.index]
-        depth = (layer.points.z[point_index_1] + layer.points.z[point_index_2])/2
+        depth = (layer.points.z[self.point_index_1] + layer.points.z[self.point_index_2])/2
         layer.points.z[self.undo_point.index] = depth
         self.undo_delete = layer.delete_line_segment(self.index)
-        self.undo_line1 = layer.insert_line_segment_at_index(len(layer.line_segment_indexes), point_index_1, self.undo_point.index, color, state)
-        self.undo_line2 = layer.insert_line_segment_at_index(len(layer.line_segment_indexes), self.undo_point.index, point_index_2, color, state)
+        self.undo_line1 = layer.insert_line_segment_at_index(len(layer.line_segment_indexes), self.point_index_1, self.undo_point.index, color, state)
+        self.undo_line2 = layer.insert_line_segment_at_index(len(layer.line_segment_indexes), self.undo_point.index, self.point_index_2, color, state)
 
         lf = self.undo_point.flags.add_layer_flags(layer)
         lf.hidden_layer_check = True
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
         return self.undo_point
 
     def undo(self, editor):
