@@ -200,6 +200,16 @@ class PointBaseLayer(ProjectedLayer):
         self.points.state[point_index] = self.points.state[point_index] | mark_type
         self.increment_change_count()
 
+    def select_nearest_point(self, world_point):
+        c = self.copy_points()
+        c.x -= world_point[0]
+        c.y -= world_point[1]
+        diff = np.empty([len(c)], dtype=np.float64)
+        diff[:] = np.abs(c.x + c.y)
+        s = np.argsort(diff, 0)
+        index = s[0]
+        self.select_point(index)
+
     def deselect_point(self, point_index, mark_type=STATE_SELECTED):
         self.points.state[point_index] = self.points.state[point_index] & (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
