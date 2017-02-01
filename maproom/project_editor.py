@@ -651,7 +651,10 @@ class ProjectEditor(FrameworkEditor):
             b.messages.append("")
         for lf in f.layer_flags:
             layer = lf.layer
-            b.layers.append(layer)
+            if layer in b.layers:
+                log.debug("layer %s already in batch flags" % layer)
+            else:
+                b.layers.append(layer)
             if lf.layer_items_moved:
                 b.need_rebuild[layer] = True
                 b.editable_properties_changed = True
@@ -691,6 +694,7 @@ class ProjectEditor(FrameworkEditor):
         """Perform the UI updates given the BatchStatus flags
         
         """
+        log.debug("perform_batch_flags layers affected: %s" % str(b.layers))
         for layer in b.layers:
             layer.increment_change_count()
             if layer.transient_edit_layer:
