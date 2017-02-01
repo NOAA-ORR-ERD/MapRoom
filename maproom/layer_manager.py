@@ -469,10 +469,10 @@ class LayerManager(Document):
         log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
         if (not isinstance(layer, list)):
             if layer.transient_edit_layer:
-                invariant = self.transient_invariant
-            # Layers being loaded from a project file will have their
-            # invariants already saved, so don't mess with them.
-            if not skip_invariant:
+                layer.invariant = self.transient_invariant
+            elif not skip_invariant:
+                # Layers being loaded from a project file will have their
+                # invariants already saved, so don't mess with them.
                 layer.invariant = self.get_next_invariant(invariant)
             if layer.is_folder() and not layer.is_root():
                 layer = [layer]
