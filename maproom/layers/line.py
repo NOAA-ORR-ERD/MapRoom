@@ -70,9 +70,12 @@ class LineLayer(PointLayer):
         else:
             raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True):
+    def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True, style=None):
         n = np.alen(f_points)
-        self.set_layer_style_defaults()
+        if style is None:
+            self.set_layer_style_defaults()
+        else:
+            self.style = style
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
@@ -104,7 +107,7 @@ class LineLayer(PointLayer):
         lines[count - 1,1] = 0
         self.set_data(points, 0.0, lines)
 
-    def set_data_from_geometry(self, geom):
+    def set_data_from_geometry(self, geom, style=None):
         error, points, starts, counts, identifiers, groups = shapely_to_polygon([geom])
         count = np.alen(points)
         lines = np.empty((count, 2), dtype=np.uint32)
@@ -119,7 +122,7 @@ class LineLayer(PointLayer):
             lines[s + c - 1,1] = s
             self.point_identifiers.append((s, s + c, ident))
 
-        self.set_data(points, 0.0, lines)
+        self.set_data(points, 0.0, lines, style=style)
         for i, (s, c, ident) in enumerate(zip(starts, counts, identifiers)):
             self.line_segment_indexes.state[s:s + c] = POLYGON_NUMBER_SHIFT * i
 
@@ -646,7 +649,9 @@ class LineEditLayer(LineLayer):
 
     def rebuild_from_parent_layer(self):
         geom, ident = self.parent_layer.get_geometry_from_object_index(self.object_index, 0, 0)
-        self.set_data_from_geometry(geom)
+        style_save = self.style.get_copy()
+        self.set_data_from_geometry(geom, style=style_save)
+        self.style = style_save
 
     def update_transient_layer(self, command):
         log.debug("Updating transient layer %s with %s" % (self.name, command))

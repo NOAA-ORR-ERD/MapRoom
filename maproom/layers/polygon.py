@@ -83,8 +83,11 @@ class PolygonLayer(PointLayer):
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
     
     def set_data(self, f_ring_points, f_ring_starts, f_ring_counts,
-                 f_ring_identifiers, f_ring_groups=None):
-        self.set_layer_style_defaults()
+                 f_ring_identifiers, f_ring_groups=None, style=None):
+        if style is None:
+            self.set_layer_style_defaults()
+        else:
+            self.style = style
         n_points = np.alen(f_ring_points)
         self.points = self.make_points(n_points)
         if (n_points > 0):

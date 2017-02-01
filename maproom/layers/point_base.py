@@ -90,8 +90,12 @@ class PointBaseLayer(ProjectedLayer):
         d["labels"] = False
         return d
     
-    def set_data(self, f_points):
+    def set_data(self, f_points, style=None):
         n = np.alen(f_points)
+        if style is None:
+            self.set_layer_style_defaults()
+        else:
+            self.style = style
         self.set_layer_style_defaults()
         self.points = self.make_points(n)
         if (n > 0):
