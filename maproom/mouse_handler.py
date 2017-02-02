@@ -221,6 +221,9 @@ class MouseHandler(object):
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
         #print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+
+    def dragged_on_empty_space(self, event):
+        pass
     
     def reset_early_mouse_params(self):
         self.mouse_up_too_close = False
@@ -833,6 +836,8 @@ class ObjectSelectionMode(MouseHandler):
                     c.render(event)
 
             self.update_status_text(proj_p, True, False, self.get_help_text())
+        else:
+            self.dragged_on_empty_space(event)
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
@@ -903,7 +908,102 @@ class ObjectSelectionMode(MouseHandler):
     def select_objects_in_rect(self, event, rect, layer):
         raise RuntimeError("Abstract method")
 
+
 class PointSelectionMode(ObjectSelectionMode):
+    """Combo of PanMode and PointEdit mode, but only allowing points/lines
+    to be selected and moved, not added to or deleted.
+    """
+    icon = "select.png"
+    menu_item_name = "Point Selection Mode"
+    menu_item_tooltip = "Edit and add points in the current layer"
+    editor_trait_for_enabled = "layer_has_points"
+
+    def __init__(self, layer_canvas):
+        ObjectSelectionMode.__init__(self, layer_canvas)
+        self.is_panning = False
+        self.pending_selection = None
+
+    def get_cursor(self):
+        c = self.layer_canvas
+        e = c.project
+        if not self.is_panning:
+            if (self.current_object_under_mouse is not None):
+                if e.clickable_object_mouse_is_over is not None:
+                    if e.clickable_object_is_ugrid_line() or e.clickable_object_is_ugrid_point():
+                        return wx.StockCursor(wx.CURSOR_HAND)
+                return wx.StockCursor(wx.CURSOR_ARROW)
+        if c.mouse_is_down:
+            return self.layer_canvas.hand_closed_cursor
+        return self.layer_canvas.hand_cursor
+
+    def clicked_on_empty_space(self, event, layer, world_point):
+        # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_canvas
+        self.reset_early_mouse_params()
+        self.first_mouse_down_position = event.GetPosition()
+        self.pending_selection = self.current_object_under_mouse
+        self.is_panning = False
+
+    def dragged_on_empty_space(self, event):
+        if self.pending_selection is not None:
+            return
+        if not self.is_panning:
+            if not self.check_early_mouse_release(event):
+                self.is_panning = True
+            return
+        c = self.layer_canvas
+        e = c.project
+        p = event.GetPosition()
+        proj_p = c.get_world_point_from_screen_point(p)
+        d_x = p[0] - c.mouse_down_position[0]
+        d_y = c.mouse_down_position[1] - p[1]
+        #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        if (d_x != 0 or d_y != 0):
+            # the user has panned the map
+            d_x_p = d_x * c.projected_units_per_pixel
+            d_y_p = d_y * c.projected_units_per_pixel
+            center = (c.projected_point_center[0] - d_x_p,
+                      c.projected_point_center[1] - d_y_p)
+            c.mouse_down_position = p
+
+            cmd = ViewportCommand(None, center, c.projected_units_per_pixel)
+            e.process_command(cmd)
+            event.Skip()
+
+    def process_mouse_up(self, event):
+        ObjectSelectionMode.process_mouse_up(self, event)
+        self.is_panning = False
+
+    def clicked_on_point(self, event, layer, point_index):
+        c = self.layer_canvas
+        e = c.project
+        vis = e.layer_visibility[layer]['layer']
+
+        if (event.ControlDown()):
+            if (layer.is_point_selected(point_index)):
+                layer.deselect_point(point_index)
+            else:
+                layer.select_point(point_index)
+        elif (layer.is_point_selected(point_index)):
+            layer.clear_all_selections()
+        elif (event.ShiftDown()):
+            path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
+            if (path != []):
+                for p_index in path:
+                    layer.select_point(p_index)
+            else:
+                layer.select_point(point_index)
+        else:
+            layer.clear_all_selections()
+            layer.select_point(point_index)
+
+        e.refresh()
+
+    def select_objects_in_rect(self, event, rect, layer):
+        layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+
+
+class PointEditMode(ObjectSelectionMode):
     icon = "add_points.png"
     menu_item_name = "Point Edit Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
@@ -981,7 +1081,7 @@ class PointSelectionMode(ObjectSelectionMode):
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
-class LineSelectionMode(PointSelectionMode):
+class LineEditMode(PointEditMode):
     icon = "add_lines.png"
     menu_item_name = "Line Edit Mode"
     menu_item_tooltip = "Edit and add lines in the current layer"
@@ -1001,7 +1101,7 @@ class LineSelectionMode(PointSelectionMode):
         message = ""
 
         if (event.ControlDown() or event.ShiftDown()):
-            return PointSelectionMode.clicked_on_point(self, event, layer, point_index)
+            return PointEditMode.clicked_on_point(self, event, layer, point_index)
 
         point_indexes = layer.get_selected_point_indexes()
         if len(point_indexes == 1):
@@ -1201,7 +1301,7 @@ class CropRectMode(RectSelectMode):
             cmd = CropRectCommand(layer, w_r)
             e.process_command(cmd)
 
-class ControlPointSelectionMode(ObjectSelectionMode):
+class ControlPointEditMode(ObjectSelectionMode):
     icon = "select.png"
     menu_item_name = "Control Point Edit Mode"
     menu_item_tooltip = "Select objects and move control points in the current layer"
@@ -1278,7 +1378,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
             cmd = self.get_vector_object_command(layer, cp1, cp2, layer.manager.default_style)
-            e.process_command(cmd, ControlPointSelectionMode)
+            e.process_command(cmd, ControlPointEditMode)
     
     def get_vector_object_command(self, layer, cp1, cp2, style):
         return self.vector_object_command(layer, cp1, cp2, style)
@@ -1428,7 +1528,7 @@ class AddPolylineMode(MouseHandler):
             layer = e.layer_tree_control.get_selected_layer()
             if (layer is not None):
                 cmd = self.vector_object_command(layer, self.points, layer.manager.default_style)
-                e.process_command(cmd, ControlPointSelectionMode)
+                e.process_command(cmd, ControlPointEditMode)
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
@@ -1474,7 +1574,7 @@ class AddOverlayMode(MouseHandler):
         if (layer is not None):
             cp = self.get_world_point(event)
             cmd = self.get_vector_object_command(layer, cp, layer.manager.default_style)
-            e.process_command(cmd, ControlPointSelectionMode)
+            e.process_command(cmd, ControlPointEditMode)
     
     def get_vector_object_command(self, layer, cp, style):
         return self.vector_object_command(layer, cp, style)

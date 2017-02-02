@@ -6,9 +6,9 @@ from traits.api import Any
 from mouse_handler import *
 
 valid_mouse_modes = {
-    'VectorLayerToolBar': [PanMode, ZoomRectMode, RulerMode, PointSelectionMode, LineSelectionMode],
+    'VectorLayerToolBar': [PointSelectionMode, ZoomRectMode, RulerMode, PointEditMode, LineEditMode],
     'PolygonLayerToolBar': [PolygonSelectionMode, ZoomRectMode, RulerMode, CropRectMode],
-    'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointSelectionMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode, AddArrowTextMode, AddArrowTextIconMode],
+    'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointEditMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode, AddArrowTextMode, AddArrowTextIconMode],
     'BaseLayerToolBar': [PanMode, ZoomRectMode, RulerMode],
     'RNCToolBar': [RNCSelectionMode, ZoomRectMode],
     }
