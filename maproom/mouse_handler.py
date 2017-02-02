@@ -121,6 +121,8 @@ class MouseHandler(object):
         self.last_modifier_state = None
         self.mouse_up_too_close = False
         self.can_snap = False
+        self.is_over_object = False
+        self.current_object_under_mouse = None
         
         # Optional (only OS X at this point) mouse wheel event filter
         self.wheel_scroll_count = 0
@@ -195,19 +197,20 @@ class MouseHandler(object):
 
         c.release_mouse()
         # print "mouse is not down"
-        o = c.get_object_at_mouse_position(event.GetPosition())
-        if (o is not None):
-            (layer, object_type, object_index) = o
+        self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
+        if (self.current_object_under_mouse is not None):
+            (layer, object_type, object_index) = self.current_object_under_mouse
             c.project.clickable_object_in_layer = layer
             if (c.project.layer_tree_control.is_selected_layer(layer)):
-                c.project.clickable_object_mouse_is_over = o
+                c.project.clickable_object_mouse_is_over = self.current_object_under_mouse
             else:
                 c.project.clickable_object_mouse_is_over = None
-
+            self.is_over_object = True
         else:
             c.project.clickable_object_mouse_is_over = None
             c.project.clickable_object_in_layer = None
-        mouselog.debug("object under mouse: %s, on current layer: %s" % (o, c.project.clickable_object_mouse_is_over is not None))
+            self.is_over_object = False
+        mouselog.debug("object under mouse: %s, on current layer: %s" % (self.current_object_under_mouse, c.project.clickable_object_mouse_is_over is not None))
 
         self.update_status_text(proj_p, True, True, self.get_help_text())
 
@@ -494,16 +497,34 @@ class PanMode(MouseHandler):
     menu_item_tooltip = "Scroll the viewport by holding down the mouse"
     editor_trait_for_enabled = ""
 
+    def __init__(self, layer_canvas):
+        MouseHandler.__init__(self, layer_canvas)
+        self.is_panning = False
+        self.pending_selection = None
+
     def get_cursor(self):
         c = self.layer_canvas
+        if not self.is_panning and self.is_over_object:
+            return wx.StockCursor(wx.CURSOR_ARROW)
         if c.mouse_is_down:
             return self.layer_canvas.hand_closed_cursor
         return self.layer_canvas.hand_cursor
 
     def process_mouse_down(self, event):
-        return
+        # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_canvas
+        self.reset_early_mouse_params()
+        self.first_mouse_down_position = event.GetPosition()
+        self.pending_selection = self.current_object_under_mouse
+        self.is_panning = False
 
     def process_mouse_motion_down(self, event):
+        if self.pending_selection is not None:
+            return
+        if not self.is_panning:
+            if not self.check_early_mouse_release(event):
+                self.is_panning = True
+            return
         c = self.layer_canvas
         e = c.project
         p = event.GetPosition()
@@ -532,6 +553,11 @@ class PanMode(MouseHandler):
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
         c.selection_box_is_being_defined = False
+        if self.pending_selection is not None:
+            layer, object_type, object_index = self.pending_selection
+            c.project.layer_tree_control.select_layer(layer)
+        self.is_panning = False
+        self.pending_selection = None
 
 
 class RNCSelectionMode(PanMode):
@@ -541,10 +567,6 @@ class RNCSelectionMode(PanMode):
     menu_item_name = "RNC Chart Selection Mode"
     menu_item_tooltip = "Select an RNC chart to download"
     editor_trait_for_enabled = ""
-
-    def __init__(self, layer_canvas):
-        PanMode.__init__(self, layer_canvas)
-        self.is_panning = False
 
     def get_rnc_object(self):
         c = self.layer_canvas
@@ -586,15 +608,9 @@ class RNCSelectionMode(PanMode):
                 return wx.StockCursor(wx.CURSOR_ARROW)
         return self.layer_canvas.hand_cursor
 
-    def process_mouse_down(self, event):
-        # Mouse down only sets the initial point, after that it is ignored
-        c = self.layer_canvas
-        self.reset_early_mouse_params()
-        self.first_mouse_down_position = event.GetPosition()
-        self.is_panning = False
-
     def process_mouse_motion_up(self, event):
         MouseHandler.process_mouse_motion_up(self, event)
+        self.is_over_object = self.get_rnc_object() is not None
         self.layer_canvas.project.refresh()
 
     def process_mouse_motion_down(self, event):
@@ -647,10 +663,6 @@ class PolygonSelectionMode(PanMode):
     menu_item_tooltip = "Select a polygon"
     editor_trait_for_enabled = ""
 
-    def __init__(self, layer_canvas):
-        PanMode.__init__(self, layer_canvas)
-        self.is_panning = False
-
     def get_rnc_object(self):
         c = self.layer_canvas
         e = c.project
@@ -683,24 +695,9 @@ class PolygonSelectionMode(PanMode):
             return "   Geom %s: %s" % (str(geom), layer.name)
         return ""
 
-    def get_cursor(self):
-        if self.is_panning:
-            return PanMode.get_cursor(self)
-        else:
-            rnc = self.get_rnc_object()
-            if rnc is not None:
-                return wx.StockCursor(wx.CURSOR_ARROW)
-        return self.layer_canvas.hand_cursor
-
-    def process_mouse_down(self, event):
-        # Mouse down only sets the initial point, after that it is ignored
-        c = self.layer_canvas
-        self.reset_early_mouse_params()
-        self.first_mouse_down_position = event.GetPosition()
-        self.is_panning = False
-
     def process_mouse_motion_up(self, event):
         MouseHandler.process_mouse_motion_up(self, event)
+        self.is_over_object = self.get_rnc_object() is not None
         self.layer_canvas.project.refresh()
 
     def process_mouse_motion_down(self, event):
