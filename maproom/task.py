@@ -98,7 +98,9 @@ class MaproomProjectTask(FrameworkTask):
             pass
         try:
             import OpenGL
+            import OpenGL.GL as gl
             desc += "  PyOpenGL %s\n" % OpenGL.__version__
+            desc += "  OpenGL %s\n" % gl.glGetString(gl.GL_VERSION)
         except:
             pass
         try:
