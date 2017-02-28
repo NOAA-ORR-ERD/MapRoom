@@ -57,6 +57,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         self.init_context(self)
         self.is_canvas_initialized = False
+        self.is_gl_driver_ok = False
+        self.gl_driver_error_message = None
 
         BaseCanvas.__init__(self, project)
 
@@ -113,13 +115,32 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
                 
                 # this has to be here because the window has to exist before creating
                 # textures and making the renderer
-                if self.font_texture is None:
-                    self.init_font()
-                    
+                try:
+                    if self.font_texture is None:
+                        self.init_font()
+                except gl.GLError:
+                    log.error("Caught GLError on initialization; likely OpenGL driver is not current")
+                    self.is_gl_driver_ok = False
+                else:
+                    self.is_gl_driver_ok = True
                 wx.CallAfter(self.set_callbacks)
                 self.is_canvas_initialized = True
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-            self.render()
+            if self.is_gl_driver_ok:
+                gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+                self.render()
+            else:
+                self.render_error()
+
+    def render_error(self):
+        if self.gl_driver_error_message is None:
+            err = "Unable to render OpenGL!\n\nThe OpenGL driver is not new enough to support MapRoom. The lowest version of OpenGL known to work is version 2.1 (any later version will also work). Since OpenGL 2.1 was released in 2006, support is likely available for this hardware.\n\nOpenGL support is included in the display driver. This problem is usually fixed by updating the display driver to the newest available version for your graphics hardware."
+
+            import sys
+            if sys.platform.startswith("win"):
+                err += "\n\nThis is especially common on Windows 10 machines, because Windows 10 does not require OpenGL 2.1 support. However, support is typically available with a driver update from the graphics hardware manufacturer."
+
+            self.gl_driver_error_message = err
+            wx.CallAfter(self.project.task.error, err, "OpenGL Error")
 
     def on_resize(self, event):
         if not self.GetContext():
