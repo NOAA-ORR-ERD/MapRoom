@@ -11,7 +11,8 @@ FINAL_TARGET=Maproom
 
 cp maproom.py $BUILD_TARGET.py
 rm -rf build/$BUILD_TARGET dist/$BUILD_TARGET dist/$BUILD_TARGET.app dist/$FINAL_TARGET.app
-pyinstaller -y -i maproom/icons/maproom.icns --osx-bundle-identifier gov.noaa.maproom --debug --additional-hooks-dir=pyinstaller --windowed $BUILD_TARGET.py
+#pyinstaller -y -i maproom/icons/maproom.icns --osx-bundle-identifier gov.noaa.maproom --debug --additional-hooks-dir=pyinstaller --windowed $BUILD_TARGET.py
+pyinstaller -y --debug --windowed $BUILD_TARGET.spec
 
 #### Configuration fixes
 
