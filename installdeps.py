@@ -21,6 +21,14 @@ if needs_netcdf and not using_conda:
         ['https://github.com/robmcmullen/mac-builds.git', 'packages/netCDF4', 'gattai netcdf.gattai'],
         ])
 
+if using_conda:
+    # let conda manage the dependencies rather than using pip. setup.py can't
+    # seem to find dependencies installed via conda and will try to install
+    # them again.
+    command_extra_args = " --no-deps"
+else:
+    command_extra_args = ""
+
 topdir = os.path.join(os.getcwd(), "deps")
 
 for dep in deps:
@@ -39,10 +47,10 @@ for dep in deps:
         repodir = repourl
     if len(dep) == 1:
         subdir = "."
-        command = "python setup.py develop"
+        command = "python setup.py develop" + command_extra_args
     elif len(dep) == 2:
         subdir = dep[1]
-        command = "python setup.py develop"
+        command = "python setup.py develop" + command_extra_args
     else:
         subdir = dep[1]
         command = dep[2]
