@@ -116,6 +116,7 @@ class accumulator(object):
         You might want to do this to speed things up if you know you want it
         to be a lot bigger eventually
         """
+        newsize = int(newsize)
         if newsize < self._length:
             raise ValueError("accumulator buffer cannot be made smaller than the data")
         shape = (newsize,) + self._block_shape
