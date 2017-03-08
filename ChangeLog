@@ -1,3 +1,28 @@
+03/07/2017
+---------------------------
+Released 3.1b31
+- RM Fixed #702: MacOS needs a Freeze/Thaw wrapper around the cascade of UI callbacks that result from command processing and the resulting trait handler callbacks
+- RM Made host objects sortable
+- RM Added URL for new USGS Topo WMS server
+- RM Fixed tests for import order and name change of polygons to rings
+- RM Force array resize to be integer; maybe something has changed in numpy 1.12 where it isn't cast to an int automatically
+- RM If using conda, don't try to install dependencies with setup.py in installdeps.py
+- RM Fixed OpenGL include paths for MacOS 10.11
+- RM Changed import name from Document to BaseDocument
+- RM Added cython exclusion and stripping of binaries to pyinstaller spec file
+- RM Added pyinstaller spec file to exclude unneeded tcl/tk
+- RM Added error dialog if OpenGL fails to initialize
+- RM Added the hardware's OpenGL version to about dialog
+- RM Added new mouse mode to select points and move them (but not add or delete)
+- RM Changed PanMode to be able to select a layer if over an object
+- RM Refs #726: fixed points flashing every time a transient layer point was moved
+- RM Refs #726: fixed line splitting in polygon layer
+- RM Added convenience function to find point nearest to world point
+- RM Fixed transient layer not setting invariant
+- RM Fix preventing same layer being processed in batch multiple times
+- RM Fixed #734: maproom name and feature code now saved/restored to json
+- RM Fixed #735: massive renaming of "polygon" to "ring" to change meaning of polygon
+
 01/11/2017
 ---------------------------
 Released 3.1b30
