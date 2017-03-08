@@ -63,7 +63,15 @@ class HostCache(object):
         return self.server.is_valid()
 
 
-class WMSHost(object):
+class SortableHost(object):
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __eq__(self, other):
+        return self.url == other.url
+
+
+class WMSHost(SortableHost):
     def __init__(self, name="", url="", version="1.3.0", strip_prefix="", default_layer_indexes=None):
         self.name = name
         if url.endswith("?"):
@@ -79,7 +87,10 @@ class WMSHost(object):
     
     def __str__(self):
         return " ".join([self.name, self.url, self.version])
-    
+     
+    def __repr__(self):
+        return "<" + " ".join([self.__class__.__name__, self.name, self.url, self.version]) + ">\n"
+   
     def is_in_url_list(self, url):
         return url == self.url
     
@@ -95,7 +106,7 @@ class WMSHost(object):
         return [0]
 
 
-class TileHost(object):
+class TileHost(SortableHost):
     def __init__(self, name="host", url_list=[], strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False):
         self.name = name
         self.urls = []
