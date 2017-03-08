@@ -16,7 +16,7 @@ class TestBNA(object):
     def test_simple(self):
         layer = self.bna
         assert 33 == len(layer.points)
-        assert 3 == len(layer.polygons)
+        assert 3 == len(layer.rings)
         print layer.points
         layer.check_for_problems(None)
     
