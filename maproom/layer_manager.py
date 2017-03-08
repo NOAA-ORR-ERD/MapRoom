@@ -19,7 +19,7 @@ from renderer import color_floats_to_int, int_to_color_floats
 from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set
 from pyface.api import YES, NO, GUI
 
-from omnivore.framework.document import Document
+from omnivore.framework.document import BaseDocument
 from omnivore.utils.jsonutil import collapse_json
 
 
@@ -27,7 +27,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class LayerManager(Document):
+class LayerManager(BaseDocument):
 
     """
     Manages the layers (a tree of Layer).
