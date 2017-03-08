@@ -594,17 +594,25 @@ class ProjectEditor(FrameworkEditor):
         """Process a single command and immediately update the UI to reflect
         the results of the command.
         """
-        b = BatchStatus()
-        undo = self.process_batch_command(command, b)
-        if override_editable_properties_changed is not None:
-            b.editable_properties_changed = override_editable_properties_changed
-        self.perform_batch_flags(command, b)
-        history = self.layer_manager.undo_stack.serialize()
-        self.window.application.save_log(str(history), "command_log", ".mrc")
-        if new_mouse_mode is not None:
-            self.mouse_mode_factory = new_mouse_mode
-            self.update_layer_selection_ui()
+        try:
+            # Fix for #702, crash adding a tile layer on MacOS. It seems that a
+            # bunch of UI stuff gets called, cascading through a lot of trait
+            # handlers and causing UI sizing and redrawing. Preventing the
+            # immediate updates with the Freeze/Thaw pair seems to fix it.
+            self.window.control.Freeze()
 
+            b = BatchStatus()
+            undo = self.process_batch_command(command, b)
+            if override_editable_properties_changed is not None:
+                b.editable_properties_changed = override_editable_properties_changed
+            self.perform_batch_flags(command, b)
+            history = self.layer_manager.undo_stack.serialize()
+            self.window.application.save_log(str(history), "command_log", ".mrc")
+            if new_mouse_mode is not None:
+                self.mouse_mode_factory = new_mouse_mode
+                self.update_layer_selection_ui()
+        finally:
+            self.window.control.Thaw()
         return undo
     
     def process_flags(self, flags):
