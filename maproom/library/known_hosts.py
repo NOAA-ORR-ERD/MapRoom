@@ -6,6 +6,7 @@ from host_utils import WMSHost, TileHost, LocalTileHost, OpenTileHost
 default_tile_hosts = [
     # LocalTileHost("Blank"),
     # ESRI services listed here: http://server.arcgisonline.com/ArcGIS/rest/services/
+    OpenTileHost("USGS Topo", ["https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/"], suffix="", reverse_coords=True),
     OpenTileHost("ESRI Topographic", ["http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/"], reverse_coords=True),
     OpenTileHost("ESRI USA Topographic", ["http://server.arcgisonline.com/ArcGIS/rest/services/USA_Topo_Maps/MapServer/tile/"], reverse_coords=True),
     OpenTileHost("ESRI Ocean Base", ["http://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/"], reverse_coords=True),
