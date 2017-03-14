@@ -126,6 +126,9 @@ class TileHost(SortableHost):
     
     def __hash__(self):
         return hash(self.urls[0])
+
+    def __eq__(self, other):
+        return set(self.urls) == set(other.urls)
     
     def is_in_url_list(self, url):
         return url in self.urls
