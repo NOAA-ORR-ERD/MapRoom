@@ -107,6 +107,8 @@ class WMSHost(SortableHost):
 
 
 class TileHost(SortableHost):
+    known_suffixes = ['.png', '']
+    
     def __init__(self, name="host", url_list=[], strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False):
         self.name = name
         self.urls = []
@@ -132,6 +134,14 @@ class TileHost(SortableHost):
     
     def is_in_url_list(self, url):
         return url in self.urls
+
+    @property
+    def url_format(self):
+        return "z/y/x" if self.reverse_coords else "z/x/y"
+
+    @url_format.setter
+    def url_format(self, value):
+        self.reverse_coords = (value == "z/y/x")
     
     @classmethod
     def copy_helper(cls, src):

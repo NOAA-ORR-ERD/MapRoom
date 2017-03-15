@@ -1,4 +1,5 @@
 import time
+import itertools
 
 import wx
 import wx.lib.sized_controls as sc
@@ -292,7 +293,8 @@ class TileServerDialog(ObjectEditDialog):
     def __init__(self, parent, title, default=None):
         fields = [
             ('verify list', 'urls', 'URLs: '),
-            ('boolean', 'reverse_coords', 'Reverse X/Y: '),
+            ('dropdown', 'url_format', 'URL Format', ['z/x/y', 'z/y/x']),
+            ('text', 'suffix', 'Image file extension (usually automatically determined)'),
             ('gauge', 'gauge', None),
             ('expando', 'status', ""),
             ('text', 'name', 'Server Name: '),
@@ -319,13 +321,15 @@ class TileServerDialog(ObjectEditDialog):
         gauge = self.controls['gauge']
         success = False
         verified_urls = []
-        for url in urls.splitlines():
-            if not url:
-                continue
+
+        def lookup(url, suffix, reverse):
             status.AppendText("Trying: %s..." % url)
-            host = OpenTileHost("test", [url])
+            if suffix:
+                status.AppendText(" (%s) " % suffix)
+            host = OpenTileHost("test", [url], suffix=suffix, reverse_coords=reverse)
             downloader = BackgroundTileDownloader(host, None)
             req = downloader.request_tile(4, 3, 2)
+            retval = False
             while True:
                 found = False
                 for r in downloader.get_finished():
@@ -337,17 +341,42 @@ class TileServerDialog(ObjectEditDialog):
                 wx.Yield()
             if req.is_finished and not req.error:
                 status.AppendText("OK!\n")
-                success = True
+                retval = True
                 verified_urls.append(url)
             else:
-                status.AppendText("Failed! (%s)" % req.error)
-                success = False
-                break
+                status.AppendText("Failed! (%s)\n" % req.error)
+            return retval
+
+        found_extension = False
+        reverse_coords = False
+        temp = self.get_new_object()
+        self.get_edited_value_of(temp, "suffix")
+        suffix = temp.suffix
+        exts = list(OpenTileHost.known_suffixes)
+        if suffix not in exts:
+            exts.append(suffix)
+        for url in urls.splitlines():
+            if not url:
+                continue
+            if found_extension:
+                success = lookup(url, suffix, reverse_coords)
+                if not success:
+                    break
+            else:
+                for ext in exts:
+                    success = lookup(url, ext, reverse_coords)
+                    if success:
+                        found_extension = True
+                        suffix = ext
+                        break
             
         gauge.SetValue(0)
         wx.Yield()
         if success:
             self.verified_urls = verified_urls
+            temp = self.get_new_object()
+            temp.suffix = suffix
+            self.set_initial_value_of(temp, "suffix")
         else:
             self.verified_urls = None
         verify.Enable(True)
