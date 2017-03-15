@@ -533,16 +533,11 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             type=gl.GL_UNSIGNED_BYTE,
             outputType=str,
         )
-
-        bitmap = wx.BitmapFromBuffer(
-            width=window_size[0],
-            height=window_size[1],
-            dataBuffer=raw_data,
-        )
-
-        image = wx.ImageFromBitmap(bitmap)
+        image = np.fromstring(raw_data, dtype=np.uint8).reshape((window_size[1], window_size[0], 3))
 
         # Flip the image vertically, because glReadPixel()'s y origin is at
         # the bottom and wxPython's y origin is at the top.
-        screenshot = image.Mirror(horizontally=False)
-        return screenshot
+
+        # Need to return a copy because PIL apparently can't handle views, it
+        # needs the data in sequence.
+        return np.flipud(image).copy()

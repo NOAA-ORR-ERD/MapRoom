@@ -38,6 +38,8 @@ class ProjectEditor(FrameworkEditor):
     """
     
     printable = True
+
+    imageable = True
     
     layer_manager = Any
     
@@ -316,31 +318,12 @@ class ProjectEditor(FrameworkEditor):
         self.layer_metadata_changed(layer)
         self.update_layer_selection_ui()
 
-    def save_image(self, path):
-        """ Saves the contents of the editor in a maproom project file
-        """
-        valid = {
-            '.png': wx.BITMAP_TYPE_PNG,
-            '.tif': wx.BITMAP_TYPE_TIFF,
-            '.tiff': wx.BITMAP_TYPE_TIFF,
-            '.jpg': wx.BITMAP_TYPE_JPEG,
-            '.jpeg': wx.BITMAP_TYPE_JPEG,
-            }
-        _, ext = os.path.splitext(path)
-        if ext not in valid:
-            path += ".png"
-            t = wx.BITMAP_TYPE_PNG
-        else:
-            t = valid[ext]
-
+    def get_numpy_image(self):
         # Deselect all layers because it's designed to be used as post-
         # processing image
         self.layer_tree_control.select_layer(None)
         self.layer_canvas.render()  # force update including deselected layer
-        image = self.layer_canvas.get_canvas_as_image()
-        # "save as" dialog contains confirmation for overwriting existing
-        # file, so just write the file here
-        image.SaveFile(path, t)
+        return self.layer_canvas.get_canvas_as_image()
     
     def print_preview(self):
         import os

@@ -112,15 +112,6 @@ class SaveLayerGroup(TaskDynamicSubmenuGroup):
             
         return items
 
-class SaveImageAction(EditorAction):
-    name = 'Save As Image...'
-    tooltip = 'Save a bitmap image of the current view'
-
-    def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control, action='save as')
-        if dialog.open() == OK:
-            self.active_editor.save_image(dialog.path)
-
 class RevertProjectAction(EditorAction):
     name = 'Revert Project'
     tooltip = 'Revert project to last saved version'

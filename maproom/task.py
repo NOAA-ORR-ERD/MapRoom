@@ -23,7 +23,7 @@ from library.tile_utils import BackgroundTileDownloader
 from library.known_hosts import default_wms_hosts, default_tile_hosts
 
 from actions import *
-from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction
+from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction, SaveAsImageAction
 
 import logging
 log = logging.getLogger(__name__)
@@ -177,7 +177,7 @@ class MaproomProjectTask(FrameworkTask):
             SaveLayerAction(),
             SMenu(SaveLayerGroup(),
                   id='SaveLayerAsSubmenu', name="Save Layer As"),
-            SaveImageAction(),
+            SaveAsImageAction(),
             ]
     
     def get_actions_Menu_File_RevertGroup(self):
