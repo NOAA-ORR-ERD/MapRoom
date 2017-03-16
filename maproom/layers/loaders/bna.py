@@ -82,7 +82,10 @@ class BNAShapefileLoader(BaseLayerLoader):
     def load_layers(self, metadata, manager):
         layer = self.layer_class(manager=manager)
         
-        layer.load_error_string, geometry_list, ring_identifiers = load_bna_as_shapely(metadata.uri)
+        try:
+            layer.load_error_string, geometry_list, ring_identifiers = load_bna_as_shapely(metadata.uri)
+        except RuntimeError, e:
+            layer.load_error_string = str(e)
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
             layer.set_geometry(geometry_list)
@@ -96,77 +99,13 @@ class BNAShapefileLoader(BaseLayerLoader):
         desc = self.extension_desc[ext]
         write_layer_as_shapefile(filename, layer, desc)
 
-
-def load_bna_file(uri):
-    """
-    used by the code below, to separate reading the file from creating the special maproom objects.
-    reads the data in the file, and returns:
-    
-    ( load_error_string, polygon_points, polygon_starts, polygon_counts, polygon_types, ring_identifiers )
-    
-    where:
-        load_error_string = string descripting the loading error, or "" if there was no error
-        polygon_points = numpy array (type = 2 x np.float64)
-        polygon_starts = numpy array (type = 1 x np.uint32)
-        polygon_counts = numpy array (type = 1 x np.uint32)
-        polygon_types = numpy array (type = 1 x np.uint32) (these are the BNA feature codes)
-        ring_identifiers = list
-    """
-
-    log.debug("******** START")
-    t0 = time.clock()
+def parse_bna_file(uri):
     f = fsopen(uri, "r")
     s = f.read()
     f.close()
-    t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    log.debug("read in {0} seconds".format(t))
+    lines = s.splitlines()
+    items = []
 
-    # arr = np.fromstring(str, dtype=np.float64, sep=' ')
-    t0 = time.clock()
-    length = len(s)
-    log.debug("length = " + str(length))
-    t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    log.debug("length in {0} seconds".format(t))
-
-    t0 = time.clock()
-    nr = s.count("\r")
-    log.debug("num \\r = = " + str(nr))
-    t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    log.debug("count in {0} seconds".format(t))
-
-    t0 = time.clock()
-    nn = s.count("\n")
-    log.debug("num \\n = = " + str(nn))
-    t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    log.debug("count in {0} seconds".format(t))
-
-    if (nr > 0 and nn > 0):
-        t0 = time.clock()
-        s = s.replace("\r", "")
-        t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        log.debug("replace \\r with empty in {0} seconds".format(t))
-        nr = 0
-
-    if (nr > 0):
-        t0 = time.clock()
-        s = s.replace("\r", "\n")
-        t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-        log.debug("replace \\r with \\n in {0} seconds".format(t))
-        nr = 0
-
-    t0 = time.clock()
-    lines = s.split("\n")
-    t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    log.debug(lines[0])
-    log.debug(lines[1])
-    log.debug("split in {0} seconds".format(t))
-
-    polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
-    polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
-    polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
-    ring_identifiers = []
-
-    t0 = time.clock()
     update_every = 1000
     total_points = 0
     i = 0
@@ -186,7 +125,7 @@ def load_bna_file(uri):
         # fixme -- this will break if there are commas in any of the fields!
         pieces = line.split(",")
         if len(pieces) != 3:
-            return ("The .bna file {0} is invalid. Error at line {1}.".format(uri, i), None, None, None, None)
+            raise RuntimeError("Error at line {0}. Expecting line with 3 items: primary name, secondary name & point count.".format(i))
         try:
             feature_code = int(pieces[1].strip('"'))
         except ValueError:
@@ -196,13 +135,8 @@ def load_bna_file(uri):
             feature_code = 4
         elif name.lower() in ['spillable area', 'spillablearea']:
             feature_code = 5
-        ring_identifiers.append(
-            {'name': name,
-             'feature_code': feature_code}
-            )
-
+        feature_type = pieces[1].strip('"')
         num_points = int(pieces[2])
-        original_num_points = num_points
 
         # A negative num_points value indicates that this is a line
         # rather than a polygon. And if a "polygon" only has 1 or 2
@@ -213,36 +147,71 @@ def load_bna_file(uri):
         else:
             is_polygon = True
 
-        # TODO: for now we just assume it's a polygon (could be a polyline or a point)
-        # fixme: should we be adding polylines and points?
-        # or put them somewhere separate -- particularly points!
+        polygon_points = np.zeros((num_points, 2), dtype=np.float64)
         first_point = ()
         for j in xrange(num_points):
             line = lines[i].strip()
             i += 1
             pieces = line.split(",")
+            if len(pieces) != 2:
+                raise RuntimeError("Error at line {0}. Expecting line with 2 items: longitude, latitude.".format(i))
             p = (float(pieces[0]), float(pieces[1]))
             if (j == 0):
-                first_point = p
+                first_point = tuple(p)
             # if the last point is a duplicate of the first point, remove it
             if (j == (num_points - 1) and p[0] == first_point[0] and p[1] == first_point[1]):
                 num_points -= 1
                 continue
-            polygon_points.append(p)
-
-        polygon_starts.append(total_points)
-        polygon_counts.append(num_points)
+            polygon_points[j,:] = p
         total_points += num_points
-    progress_log.info("TICK=%d" % num_lines)
 
-    t = time.clock() - t0  # t is wall seconds elapsed (floating point)
-    log.debug("loop in {0} seconds".format(t))
-    log.debug("******** END")
+        item = [name, feature_type, feature_code, num_points, is_polygon, polygon_points]
+        items.append(item)
+    progress_log.info("TICK=%d" % num_lines)
+    return items, total_points
+
+
+def load_bna_file(uri):
+    """
+    used by the code below, to separate reading the file from creating the special maproom objects.
+    reads the data in the file, and returns:
+    
+    ( load_error_string, polygon_points, polygon_starts, polygon_counts, polygon_types, ring_identifiers )
+    
+    where:
+        load_error_string = string descripting the loading error, or "" if there was no error
+        polygon_points = numpy array (type = 2 x np.float64)
+        polygon_starts = numpy array (type = 1 x np.uint32)
+        polygon_counts = numpy array (type = 1 x np.uint32)
+        polygon_types = numpy array (type = 1 x np.uint32) (these are the BNA feature codes)
+        ring_identifiers = list
+    """
+    items, total_points = parse_bna_file(uri)
+    num_polygons = len(items)
+    all_polygon_points = np.zeros((total_points, 2), dtype=np.float64)
+    polygon_starts = np.zeros((num_polygons,), dtype=np.uint32)
+    polygon_counts = np.zeros((num_polygons,), dtype=np.uint32)
+    ring_identifiers = []
+
+    polygon_index = 0
+    start_index = 0
+    for name, feature_type, feature_code, num_points, is_polygon, item_points in items:
+        ring_identifiers.append(
+            {'name': name,
+             'feature_code': feature_code}
+            )
+        last_index = start_index + num_points
+        all_polygon_points[start_index:last_index,:] = item_points[0:num_points,:]
+        polygon_starts[polygon_index] = start_index
+        polygon_counts[polygon_index] = num_points
+        polygon_index += 1
+        total_points += num_points
+        start_index = last_index
 
     return ("",
-            np.asarray(polygon_points),
-            np.asarray(polygon_starts)[:, 0],
-            np.asarray(polygon_counts)[:, 0],
+            all_polygon_points,
+            polygon_starts,
+            polygon_counts,
             ring_identifiers)
 
 
@@ -279,85 +248,22 @@ def load_bna_as_shapely(uri):
         geometry_list = list of shapely objects
     """
 
-    f = fsopen(uri, "r")
-    s = f.read()
-    f.close()
-    lines = s.splitlines()
+    items, total_points = parse_bna_file(uri)
 
     geometry_list = []
     ring_identifiers = []
 
-    update_every = 1000
-    total_points = 0
-    i = 0
-    num_lines = len(lines)
-    progress_log.info("TICKS=%d" % num_lines)
-    progress_log.info("Loading BNA...")
-    while True:
-        if (i >= num_lines):
-            break
-        if (i % update_every) == 0:
-            progress_log.info("TICK=%d" % i)
-        line = lines[i].strip()
-        i += 1
-        if (len(line) == 0):
-            continue
-
-        # fixme -- this will break if there are commas in any of the fields!
-        pieces = line.split(",")
-        if len(pieces) != 3:
-            return ("The .bna file {0} is invalid. Error at line {1}.".format(uri, i), None, None)
-        try:
-            feature_code = int(pieces[1].strip('"'))
-        except ValueError:
-            feature_code = 0
-        name = pieces[0].strip('"')
-        if name.lower() in ['map bounds', 'mapbounds']:
-            feature_code = 4
-        elif name.lower() in ['spillable area', 'spillablearea']:
-            feature_code = 5
+    start_index = 0
+    for name, feature_type, feature_code, num_points, is_polygon, item_points in items:
         ring_identifiers.append(
             {'name': name,
              'feature_code': feature_code}
             )
-
-        num_points = int(pieces[2])
-        original_num_points = num_points
-
-        # A negative num_points value indicates that this is a line
-        # rather than a polygon. And if a "polygon" only has 1 or 2
-        # points, it's not a polygon.
-        is_polygon = False
-        if num_points < 3:
-            num_points = abs(num_points)
-        else:
-            is_polygon = True
-
-        # TODO: for now we just assume it's a polygon (could be a polyline or a point)
-        # fixme: should we be adding polylines and points?
-        # or put them somewhere separate -- particularly points!
-        first_point = ()
-        polygon_points = []
-        for j in xrange(num_points):
-            line = lines[i].strip()
-            i += 1
-            pieces = line.split(",")
-            p = (float(pieces[0]), float(pieces[1]))
-            if (j == 0):
-                first_point = p
-            # if the last point is a duplicate of the first point, remove it
-            if (j == (num_points - 1) and p[0] == first_point[0] and p[1] == first_point[1]):
-                num_points -= 1
-                continue
-            polygon_points.append(p)
         if is_polygon:
-            geom = Polygon(polygon_points)
+            geom = Polygon(item_points[0:num_points])
         else:
-            geom = LineString(polygon_points)
+            geom = LineString(item_points[0:num_points])
         add_maproom_attributes_to_shapely_geom(geom, name, feature_code)
         geometry_list.append(geom)
-        
-        total_points += num_points
-    progress_log.info("TICK=%d" % num_lines)
 
     return "", geometry_list, ring_identifiers

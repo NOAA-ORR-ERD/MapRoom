@@ -100,6 +100,8 @@ class MockProject(object):
         else:
             cmd = LoadLayersCommand(metadata)
             self.process_command(cmd)
+            return cmd
+        return None
     
     def undo(self, count=1):
         while count > 0:
