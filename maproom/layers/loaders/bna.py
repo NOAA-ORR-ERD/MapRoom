@@ -186,7 +186,7 @@ def load_bna_file(uri):
         # fixme -- this will break if there are commas in any of the fields!
         pieces = line.split(",")
         if len(pieces) != 3:
-            return ("The .bna file {0} is invalid. Error at line {1}.".format(file_path, i), None, None, None, None, None)
+            return ("The .bna file {0} is invalid. Error at line {1}.".format(uri, i), None, None, None, None)
         try:
             feature_code = int(pieces[1].strip('"'))
         except ValueError:
@@ -306,7 +306,7 @@ def load_bna_as_shapely(uri):
         # fixme -- this will break if there are commas in any of the fields!
         pieces = line.split(",")
         if len(pieces) != 3:
-            return ("The .bna file {0} is invalid. Error at line {1}.".format(file_path, i), None, None, None, None, None)
+            return ("The .bna file {0} is invalid. Error at line {1}.".format(uri, i), None, None)
         try:
             feature_code = int(pieces[1].strip('"'))
         except ValueError:
