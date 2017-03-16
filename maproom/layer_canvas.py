@@ -1,8 +1,6 @@
 import os
-import time
 
 import wx
-import pyproj
 
 from omnivore import get_image_path
 
