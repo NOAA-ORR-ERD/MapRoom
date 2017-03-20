@@ -61,14 +61,15 @@ class RNCLoader(BNALoader):
     layer_class = RNCLoaderLayer
 
 
-class BNAShapefileLoader(BaseLayerLoader):
+class BNAShapefileLoader(BNALoader):
     mime = "application/x-maproom-bna"
     
     layer_types = ["shapefile"]
     
-    extensions = [".shp", ".kml", ".json", ".geojson"]
+    extensions = [".bna", ".shp", ".kml", ".json", ".geojson"]
     
     extension_desc = {
+        ".bna": "Boundary File",
         ".shp": "ESRI Shapefile",
         ".kml": "KML",
         ".geojson": "GeoJSON",
@@ -96,8 +97,11 @@ class BNAShapefileLoader(BaseLayerLoader):
     
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
-        desc = self.extension_desc[ext]
-        write_layer_as_shapefile(filename, layer, desc)
+        if ext.lower() == ".bna":
+            BNALoader.save_to_local_file(self, filename, layer)
+        else:
+            desc = self.extension_desc[ext]
+            write_layer_as_shapefile(filename, layer, desc)
 
 def parse_bna_file(uri):
     f = fsopen(uri, "r")
@@ -226,13 +230,15 @@ def save_bna_file(f, layer):
         count = np.alen(polygon)
         ident = p[1]
         print ident
-        f.write('"%s","%s", %d\n' % (ident['name'], ident['feature_code'], count))
+        f.write('"%s","%s", %d\n' % (ident['name'], ident['feature_code'], count + 1))  # extra point for closed polygon
         for j in range(count):
             f.write("%s,%s\n" % (polygon[j][0], polygon[j][1]))
             ticks += 1
                 
             if (ticks % update_every) == 0:
                 progress_log.info("TICK=%d" % ticks)
+        # duplicate first point to create a closed polygon
+        f.write("%s,%s\n" % (polygon[0][0], polygon[0][1]))
     progress_log.info("TICK=%d" % ticks)
     progress_log.info("Saved BNA")
 
