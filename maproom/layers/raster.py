@@ -11,7 +11,7 @@ from ..renderer import NullPicker
 from ..renderer import alpha_from_int
 
 from base import ProjectedLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ class RasterLayer(ProjectedLayer):
 
                 self.manager.dispatch_event('projection_changed', self)
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
 
         if self.image_data is not None:

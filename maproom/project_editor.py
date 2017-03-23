@@ -24,7 +24,6 @@ from layer_canvas import LayerCanvas
 from layer_manager import LayerManager
 import renderer
 from layers import loaders
-from layers.constants import *
 from command import UndoStack, BatchStatus
 from mouse_handler import *
 from menu_commands import *

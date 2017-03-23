@@ -16,7 +16,7 @@ from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 
 from point import PointLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -231,23 +231,23 @@ class PolygonLayer(PointLayer):
         if errors:
             raise PointsError(errors)
 
-    def clear_all_ring_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_ring_selections(self, mark_type=state.SELECTED):
         if (self.rings is not None):
             self.rings.state = self.rings.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
-    def select_ring(self, polygon_index, mark_type=STATE_SELECTED):
+    def select_ring(self, polygon_index, mark_type=state.SELECTED):
         self.rings.state[polygon_index] = self.rings.state[polygon_index] | mark_type
         self.increment_change_count()
 
-    def deselect_ring(self, polygon_index, mark_type=STATE_SELECTED):
+    def deselect_ring(self, polygon_index, mark_type=state.SELECTED):
         self.rings.state[polygon_index] = self.rings.state[polygon_index] & (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
 
-    def is_ring_selected(self, polygon_index, mark_type=STATE_SELECTED):
+    def is_ring_selected(self, polygon_index, mark_type=state.SELECTED):
         return self.rings is not None and (self.rings.state[polygon_index] & mark_type) != 0
 
-    def get_selected_ring_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_ring_indexes(self, mark_type=state.SELECTED):
         if (self.rings is None):
             return []
         #

@@ -1,6 +1,6 @@
 import wx
 
-from ..layers import constants
+from ..layers import state
 import sliders
 
 
@@ -214,7 +214,7 @@ class MergePointsPanel(wx.Panel):
 
         project = self.task.active_editor
         for layer in project.layer_manager.flatten():
-            layer.clear_all_selections(constants.STATE_FLAGGED)
+            layer.clear_all_selections(state.FLAGGED)
 
         self.list_contains_real_data = False
         self.update_selection()
@@ -222,7 +222,7 @@ class MergePointsPanel(wx.Panel):
     def display_results(self):
         project = self.task.active_editor
         self.list_view.ClearAll()
-        self.layer.clear_all_selections(constants.STATE_FLAGGED)
+        self.layer.clear_all_selections(state.FLAGGED)
 
         MAX_POINTS_TO_LIST = 500
 
@@ -309,13 +309,13 @@ class MergePointsPanel(wx.Panel):
 
         point_count = len(points)
 
-        self.layer.clear_all_selections(constants.STATE_FLAGGED)
+        self.layer.clear_all_selections(state.FLAGGED)
 
         if (point_count == 0):
             return
 
-        self.layer.select_points(points, constants.STATE_FLAGGED)
-        bounds = self.layer.compute_bounding_rect(constants.STATE_FLAGGED)
+        self.layer.select_points(points, state.FLAGGED)
+        bounds = self.layer.compute_bounding_rect(state.FLAGGED)
         project.layer_canvas.zoom_to_include_world_rect(bounds)
         project.refresh()
 

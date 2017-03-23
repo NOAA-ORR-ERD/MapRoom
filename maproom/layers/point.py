@@ -14,7 +14,7 @@ from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
 
 from point_base import PointBaseLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -74,9 +74,9 @@ class PointLayer(PointBaseLayer):
 
     def highlight_exception(self, e):
         if hasattr(e, "points") and e.points is not None:
-            self.clear_all_selections(STATE_FLAGGED)
+            self.clear_all_selections(state.FLAGGED)
             for p in e.points:
-                self.select_point(p, STATE_FLAGGED)
+                self.select_point(p, state.FLAGGED)
             self.manager.dispatch_event('refresh_needed')
 
     def set_data(self, f_points, f_depths, f_line_segment_indexes, style=None):
@@ -129,7 +129,7 @@ class PointLayer(PointBaseLayer):
             index = -1
         else:
             index = len(self.points)
-        return self.insert_point_at_index(index, world_point, self.default_depth, self.style.line_color, STATE_SELECTED)
+        return self.insert_point_at_index(index, world_point, self.default_depth, self.style.line_color, state.SELECTED)
 
     def insert_point_at_index(self, point_index, world_point, z, color, state):
         t0 = time.clock()

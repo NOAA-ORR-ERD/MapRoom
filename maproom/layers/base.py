@@ -17,7 +17,7 @@ from omnivore.utils.runtime import get_all_subclasses
 from ..library import rect
 
 # local package imports
-from constants import *
+import state
 from style import LayerStyle
 
 import logging
@@ -357,11 +357,11 @@ class Layer(HasTraits):
         # Hook for subclasses to change colors and styles
         self.style.copy_from(style)
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
         return bounds
 
-    def clear_all_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_selections(self, mark_type=state.SELECTED):
         self.clear_all_point_selections(mark_type)
         self.clear_all_line_segment_selections(mark_type)
         self.clear_all_ring_selections(mark_type)
@@ -370,13 +370,13 @@ class Layer(HasTraits):
     def delete_all_selected_objects(self):
         pass
 
-    def clear_all_point_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_point_selections(self, mark_type=state.SELECTED):
         pass
 
-    def clear_all_line_segment_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_line_segment_selections(self, mark_type=state.SELECTED):
         pass
 
-    def clear_all_ring_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_ring_selections(self, mark_type=state.SELECTED):
         pass
 
     def set_visibility_when_selected(self, layer_visibility):

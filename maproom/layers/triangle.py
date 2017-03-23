@@ -10,7 +10,7 @@ from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
 from point import PointLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ class TriangleLayer(PointLayer):
             self.triangles.point3 += offsets
 
     def insert_triangle(self, point_index_1, point_index_2, point_index_3):
-        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.style.line_color, STATE_NONE))
+        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.style.line_color, state.CLEAR))
 
     def insert_triangle_at_index(self, index, params):
         entry = np.array([params],

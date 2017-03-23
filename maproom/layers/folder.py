@@ -10,7 +10,7 @@ from line import LineLayer
 from ..library import rect
 
 # local package imports
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -94,7 +94,7 @@ class BoundedFolder(LineLayer, Folder):
             self.line_segment_indexes.state = 0
         log.debug("SET_DATA_FROM_BOUNDS:end %s" % self)
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
         log.debug("COMPUTE_BOUNDING_RECT:before %s %s" % (self, self.bounds))
 

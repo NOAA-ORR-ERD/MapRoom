@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from constants import *
+import state
 
 from ..renderer import color_floats_to_int, int_to_color_uint8
 

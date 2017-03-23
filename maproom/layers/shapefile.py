@@ -10,7 +10,7 @@ from ..library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from ..library.shapely_utils import rebuild_geometry_list
 
 from polygon import PolygonLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class PolygonShapefileLayer(PolygonLayer):
         self.style.use_next_default_color()
         self.style.line_width = 1
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
 
         if (len(self.geometry) > 0):

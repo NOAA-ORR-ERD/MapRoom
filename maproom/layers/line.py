@@ -14,7 +14,7 @@ from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 
 from point import PointLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -181,28 +181,28 @@ class LineLayer(PointLayer):
             count,
         ).view(np.recarray)
 
-    def clear_all_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_selections(self, mark_type=state.SELECTED):
         self.clear_all_point_selections(mark_type)
         self.clear_all_line_segment_selections(mark_type)
         self.increment_change_count()
 
-    def clear_all_line_segment_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_line_segment_selections(self, mark_type=state.SELECTED):
         if (self.line_segment_indexes is not None):
             self.line_segment_indexes.state = self.line_segment_indexes.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
-    def select_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
+    def select_line_segment(self, line_segment_index, mark_type=state.SELECTED):
         self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] | mark_type
         self.increment_change_count()
 
-    def deselect_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
+    def deselect_line_segment(self, line_segment_index, mark_type=state.SELECTED):
         self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] & (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
 
-    def is_line_segment_selected(self, line_segment_index, mark_type=STATE_SELECTED):
+    def is_line_segment_selected(self, line_segment_index, mark_type=state.SELECTED):
         return self.line_segment_indexes is not None and (self.line_segment_indexes.state[line_segment_index] & mark_type) != 0
 
-    def select_line_segments_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
+    def select_line_segments_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=state.SELECTED):
         if (not is_toggle_mode and not is_add_mode):
             self.clear_all_line_segment_selections()
         point_indexes = np.where(np.logical_and(
@@ -217,7 +217,7 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.state[indexes] ^= mark_type
         self.increment_change_count()
 
-    def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_and_dependent_point_indexes(self, mark_type=state.SELECTED):
         indexes = np.arange(0)
         if (self.points is not None):
             indexes = np.append(indexes, self.get_selected_point_indexes(mark_type))
@@ -228,10 +228,10 @@ class LineLayer(PointLayer):
         #
         return np.unique(indexes)
 
-    def get_num_points_selected(self, mark_type=STATE_SELECTED):
+    def get_num_points_selected(self, mark_type=state.SELECTED):
         return len(self.get_selected_and_dependent_point_indexes(mark_type))
 
-    def get_selected_line_segment_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_line_segment_indexes(self, mark_type=state.SELECTED):
         if (self.line_segment_indexes is None):
             return []
         #
@@ -397,7 +397,7 @@ class LineLayer(PointLayer):
         num_connections_made = 0
         for p_i in point_indexes:
             if ( p_i != point_index and not ( p_i in connected_points ) ):
-                l_s = np.array( [ ( p_i, point_index, DEFAULT_LINE_SEGMENT_COLOR, STATE_NONE ) ],
+                l_s = np.array( [ ( p_i, point_index, DEFAULT_LINE_SEGMENT_COLOR, state.CLEAR ) ],
                                 dtype = data_types.LINE_SEGMENT_DTYPE ).view( np.recarray )
                 self.line_segment_indexes = np.append( self.line_segment_indexes, l_s ).view( np.recarray )
                 num_connections_made += 1
@@ -406,7 +406,7 @@ class LineLayer(PointLayer):
     """
 
     def insert_line_segment(self, point_index_1, point_index_2):
-        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.style.line_color, STATE_NONE)
+        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.style.line_color, state.CLEAR)
 
     def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state):
         l_s = np.array([(point_index_1, point_index_2, color, state)],
@@ -575,12 +575,12 @@ class LineLayer(PointLayer):
         if layer_visibility["lines"]:
             renderer.draw_lines(self, picker, self.style,
                             self.get_selected_line_segment_indexes(),
-                            self.get_selected_line_segment_indexes(STATE_FLAGGED))
+                            self.get_selected_line_segment_indexes(state.FLAGGED))
 
         if layer_visibility["points"]:
             renderer.draw_points(self, picker, self.point_size,
                              self.get_selected_point_indexes(),
-                             self.get_selected_point_indexes(STATE_FLAGGED))
+                             self.get_selected_point_indexes(state.FLAGGED))
 
         # the labels
         if layer_visibility["labels"]:

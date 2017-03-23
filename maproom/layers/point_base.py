@@ -14,7 +14,7 @@ from ..library.depth_utils import convert_units
 from ..renderer import data_types
 
 from base import ProjectedLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -145,11 +145,11 @@ class PointBaseLayer(ProjectedLayer):
         else:
             self.points = jd
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
 
         if (self.points is not None and len(self.points) > 0):
-            if (mark_type == STATE_NONE):
+            if (mark_type == state.CLEAR):
                 points = self.points
             else:
                 points = self.points[self.get_selected_point_indexes(mark_type)]
@@ -167,20 +167,20 @@ class PointBaseLayer(ProjectedLayer):
         return self.points.state[index]
 
     def compute_selected_bounding_rect(self):
-        bounds = self.compute_bounding_rect(STATE_SELECTED)
+        bounds = self.compute_bounding_rect(state.SELECTED)
         return bounds
 
-    def clear_all_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_selections(self, mark_type=state.SELECTED):
         self.clear_all_point_selections(mark_type)
         self.increment_change_count()
 
-    def clear_all_point_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_point_selections(self, mark_type=state.SELECTED):
         if (self.points is not None):
             self.points.state = self.points.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
     def clear_flagged(self, refresh=False):
-        self.clear_all_selections(STATE_FLAGGED)
+        self.clear_all_selections(state.FLAGGED)
         if refresh:
             self.manager.dispatch_event('refresh_needed')
 
@@ -190,7 +190,7 @@ class PointBaseLayer(ProjectedLayer):
     def has_flagged(self):
         return self.get_num_points_flagged() > 0
 
-    def select_point(self, point_index, mark_type=STATE_SELECTED):
+    def select_point(self, point_index, mark_type=state.SELECTED):
         self.points.state[point_index] = self.points.state[point_index] | mark_type
         self.increment_change_count()
 
@@ -204,32 +204,32 @@ class PointBaseLayer(ProjectedLayer):
         index = s[0]
         self.select_point(index)
 
-    def deselect_point(self, point_index, mark_type=STATE_SELECTED):
+    def deselect_point(self, point_index, mark_type=state.SELECTED):
         self.points.state[point_index] = self.points.state[point_index] & (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
 
-    def is_point_selected(self, point_index, mark_type=STATE_SELECTED):
+    def is_point_selected(self, point_index, mark_type=state.SELECTED):
         return self.points is not None and (self.points.state[point_index] & mark_type) != 0
 
-    def select_points(self, indexes, mark_type=STATE_SELECTED):
+    def select_points(self, indexes, mark_type=state.SELECTED):
         self.points.state[indexes] |= mark_type
         self.increment_change_count()
 
-    def deselect_points(self, indexes, mark_type=STATE_SELECTED):
+    def deselect_points(self, indexes, mark_type=state.SELECTED):
         self.points.state[indexes] &= (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
 
     def select_flagged(self, refresh=False):
         indexes = self.get_flagged_point_indexes()
-        self.deselect_points(indexes, STATE_FLAGGED)
-        self.select_points(indexes, STATE_SELECTED)
+        self.deselect_points(indexes, state.FLAGGED)
+        self.select_points(indexes, state.SELECTED)
         if refresh:
             self.manager.dispatch_event('refresh_needed')
 
     def get_flagged_point_indexes(self):
-        return self.get_selected_point_indexes(STATE_FLAGGED)
+        return self.get_selected_point_indexes(state.FLAGGED)
 
-    def select_points_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
+    def select_points_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=state.SELECTED):
         if (not is_toggle_mode and not is_add_mode):
             self.clear_all_point_selections()
         indexes = np.where(np.logical_and(
@@ -241,12 +241,12 @@ class PointBaseLayer(ProjectedLayer):
             self.points.state[indexes] ^= mark_type
         self.increment_change_count()
 
-    def get_selected_point_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_point_indexes(self, mark_type=state.SELECTED):
         if (self.points is None):
             return []
         return np.where((self.points.state & mark_type) != 0)[0]
 
-    def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_and_dependent_point_indexes(self, mark_type=state.SELECTED):
         """Get all points from selected objects.
         
         Subclasses should override to provide a list of points that are
@@ -254,11 +254,11 @@ class PointBaseLayer(ProjectedLayer):
         """
         return self.get_selected_point_indexes(mark_type)
 
-    def get_num_points_selected(self, mark_type=STATE_SELECTED):
+    def get_num_points_selected(self, mark_type=state.SELECTED):
         return len(self.get_selected_point_indexes(mark_type))
 
     def get_num_points_flagged(self):
-        return len(self.get_selected_point_indexes(STATE_FLAGGED))
+        return len(self.get_selected_point_indexes(state.FLAGGED))
 
     def is_mergeable_with(self, other_layer):
         return hasattr(other_layer, "points")
@@ -316,7 +316,7 @@ class PointBaseLayer(ProjectedLayer):
         if layer_visibility["points"]:
             renderer.draw_points(self, picker, self.point_size,
                                       self.get_selected_point_indexes(),
-                                      self.get_selected_point_indexes(STATE_FLAGGED))
+                                      self.get_selected_point_indexes(state.FLAGGED))
 
         # the labels
         if layer_visibility["labels"]:

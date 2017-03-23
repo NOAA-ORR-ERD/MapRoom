@@ -3,7 +3,7 @@ import glob
 import tempfile
 import shutil
 
-from maproom.layers import constants
+from maproom.layers import state
 from maproom.library.Boundary import Boundaries, PointsError
 
 
@@ -73,15 +73,15 @@ class BaseLayerLoader(BaseLoader):
             import traceback
             print traceback.format_exc(e)
             if hasattr(e, "points") and e.points is not None:
-                layer.clear_all_selections(constants.STATE_FLAGGED)
+                layer.clear_all_selections(state.FLAGGED)
                 for p in e.points:
-                    layer.select_point(p, constants.STATE_FLAGGED)
+                    layer.select_point(p, state.FLAGGED)
                 layer.manager.dispatch_event('refresh_needed')
             error = e.message
 
         if (not error and temp_file and os.path.exists(temp_file)):
-            if layer.get_num_points_selected(constants.STATE_FLAGGED):
-                layer.clear_all_selections(constants.STATE_FLAGGED)
+            if layer.get_num_points_selected(state.FLAGGED):
+                layer.clear_all_selections(state.FLAGGED)
                 layer.manager.dispatch_event('refresh_needed')
             try:
                 # copy all the files that have been created in that directory;

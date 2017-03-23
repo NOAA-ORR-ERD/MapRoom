@@ -12,4 +12,4 @@ from tiles import TileLayer
 from vector_object import *
 from shapefile import PolygonShapefileLayer
 from style import LayerStyle
-import constants
+import state

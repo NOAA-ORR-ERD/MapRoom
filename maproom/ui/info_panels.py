@@ -9,7 +9,7 @@ from pyface.api import ImageResource
 
 import sliders
 import dialogs
-from ..layers import constants, LayerStyle
+from ..layers import state, LayerStyle
 from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import *
@@ -488,11 +488,11 @@ class FlaggedPointsField(DropDownField):
     same_line = True
 
     def is_displayed(self, layer):
-        return layer.get_num_points_selected(constants.STATE_FLAGGED) > 0
+        return layer.get_num_points_selected(state.FLAGGED) > 0
 
     def get_choices(self, layer):
-        selected = ["Total: %d" % layer.get_num_points_selected(constants.STATE_FLAGGED)]
-        selected += [str(i + 1) for i in layer.get_selected_point_indexes(constants.STATE_FLAGGED)]
+        selected = ["Total: %d" % layer.get_num_points_selected(state.FLAGGED)]
+        selected += [str(i + 1) for i in layer.get_selected_point_indexes(state.FLAGGED)]
         return selected
 
     def get_value(self, layer):
