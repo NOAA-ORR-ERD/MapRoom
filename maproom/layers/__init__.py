@@ -1,3 +1,5 @@
+# flake8: noqa
+
 from base import Layer, EmptyLayer
 from line import LineLayer, LineEditLayer
 from folder import RootLayer, Folder
