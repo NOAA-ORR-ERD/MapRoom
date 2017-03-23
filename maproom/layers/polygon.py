@@ -404,4 +404,4 @@ class RNCLoaderLayer(PolygonLayer):
         points, polygon_id = self.get_ring(object_index)
         # add starting point again so the outline will be closed
         boundary = np.vstack((points, points[0]))
-        return boundary
+        return [boundary]
