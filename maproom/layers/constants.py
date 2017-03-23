@@ -2,7 +2,6 @@
     point: x, y, z (depth), color, state
     state = selected | flagged | deleted | edited | added | land_polygon | water_polygon | other_polygon
 """
-from ..renderer import data_types
 
 STATE_NONE = 0
 STATE_SELECTED = 1

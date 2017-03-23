@@ -1,11 +1,8 @@
-import os
-import numpy as np
 import re
 import json
 
 from fs.opener import fsopen
 from common import BaseLoader
-from maproom.layers import Layer
 
 WHITESPACE_PATTERN = re.compile("\s+")
 

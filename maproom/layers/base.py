@@ -1,11 +1,15 @@
-import os
 import sys
-import numpy as np
 
 from fs.errors import ResourceNotFoundError
 
 # Enthought library imports.
-from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
+from traits.api import Any
+from traits.api import Bool
+from traits.api import Float
+from traits.api import HasTraits
+from traits.api import Int
+from traits.api import Str
+from traits.api import Unicode
 
 from omnivore.utils.runtime import get_all_subclasses
 
@@ -117,11 +121,9 @@ class Layer(HasTraits):
 
     def highlight_exception(self, e):
         """Highlight items flagged in the exception"""
-        pass
 
     def clear_flagged(self, refresh=False):
         """Clear any items previously flagged with highlight_exception"""
-        pass
 
     def is_folder(self):
         return False
@@ -172,7 +174,6 @@ class Layer(HasTraits):
         """ Restore the state of the layer given the data previously generated
         by get_undo_info
         """
-        pass
 
     def serialize_json(self, index, children=False):
         """Create json representation that can restore layer.
@@ -383,14 +384,12 @@ class Layer(HasTraits):
         elements that should be visibile only when it it selected.
         
         """
-        pass
 
     def clear_visibility_when_deselected(self, layer_visibility):
         """Called when layer is deselected to provide a hook if the layer has
         elements that should be visibile only when it it selected.
         
         """
-        pass
 
     def set_visibility_when_checked(self, checked, project_layer_visibility):
         """Called when layer visibility changes to provide a hook if the layer
@@ -474,7 +473,6 @@ class Layer(HasTraits):
         """Update renderer
         
         """
-        pass
 
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
         """Set up or rebuild any rendering elements prior to rendering.
@@ -484,7 +482,6 @@ class Layer(HasTraits):
         This can be used to update the world coordinates that other layers
         may depend on, used e.g. with linked control points.
         """
-        pass
 
     def render(self, renderer,
                world_rect,

@@ -1,6 +1,4 @@
-import numpy as np
 import pyproj
-from Cache import Cache
 
 
 ## some known projections -- at some point, may want to use these by name:
@@ -23,7 +21,6 @@ class NullProjection(object):
 
         no arguments to pass in
         """
-        pass
 
     def projection(self, x, y):
         """

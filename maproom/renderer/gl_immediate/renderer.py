@@ -1,17 +1,12 @@
-import os
-import sys
-import wx
 import numpy as np
 
-import OpenGL
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
-from omnivore import get_image_path
 
 import maproom.library.rect as rect
-from .. import data_types, int_to_color_floats
+from .. import int_to_color_floats
 from ..gl.textures import ImageTextures, TileTextures
 from ..gl.Tessellator import init_vertex_buffers, tessellate
 from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color

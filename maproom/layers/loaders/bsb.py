@@ -1,14 +1,11 @@
 import os
-import numpy as np
-import re
 
 import wx
 
-from fs.opener import fsopen
 
 from omnivore.framework.errors import ProgressCancelError
 
-from maproom.layers import Layer, RasterLayer
+from maproom.layers import RasterLayer
 from maproom.library.bsb_utils import BSBParser
 
 from common import BaseLoader

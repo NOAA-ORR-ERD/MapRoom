@@ -1,16 +1,15 @@
-import os
-import os.path
 import time
-import sys
 import numpy as np
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Enum
+from traits.api import Float
+from traits.api import Int
+from traits.api import Property
+from traits.api import Str
+from traits.api import Unicode
 
-from ..library import rect
-from ..library.Boundary import Boundaries, PointsError
-from ..library.textparse import parse_int_string, int_list_to_string
-from ..renderer import color_floats_to_int, data_types
+from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
 
@@ -160,7 +159,6 @@ class PointLayer(PointBaseLayer):
     def update_after_insert_point_at_index(self, point_index):
         """Hook for subclasses to update dependent items when a point is inserted.
         """
-        pass
 
     def delete_point(self, point_index):
         if (self.find_points_connected_to_point(point_index) != []):
@@ -190,4 +188,3 @@ class PointLayer(PointBaseLayer):
     def update_after_delete_point(self, point_index):
         """Hook for subclasses to update dependent items when a point is deleted.
         """
-        pass

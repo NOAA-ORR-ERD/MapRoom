@@ -1,5 +1,4 @@
 import os
-import math
 import time
 
 from fs.opener import opener
@@ -7,10 +6,8 @@ import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
 
-from maproom.library.accumulator import accumulator, flatten
-import maproom.library.rect as rect
 import maproom.library.Bitmap as Bitmap
-from maproom.renderer import ImageData, SubImageLoader
+from maproom.renderer import ImageData
 
 from common import BaseLayerLoader
 from maproom.layers import RasterLayer

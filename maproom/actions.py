@@ -1,11 +1,11 @@
-import os
-import sys
 
 # Enthought library imports.
 from pyface.api import ImageResource, GUI, FileDialog, YES, NO, OK, CANCEL
 from pyface.action.api import Action, ActionItem
-from pyface.tasks.action.api import TaskAction, EditorAction
-from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
+from pyface.tasks.action.api import EditorAction
+from traits.api import Any
+from traits.api import Str
+from traits.api import on_trait_change
 
 from omnivore.framework.actions import TaskDynamicSubmenuGroup
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog

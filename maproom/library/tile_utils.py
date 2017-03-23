@@ -7,12 +7,12 @@ from requests.exceptions import HTTPError
 
 from owslib.util import ServiceException
 
-from omnivore.utils.background_http import BackgroundHttpMultiDownloader, BaseRequest, UnskippableRequest
+from omnivore.utils.background_http import BackgroundHttpMultiDownloader
+from omnivore.utils.background_http import UnskippableRequest
 
 from numpy_images import get_numpy_from_data
 
 import rect
-import known_hosts
 from host_utils import HostCache
 
 import logging

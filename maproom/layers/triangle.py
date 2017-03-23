@@ -1,18 +1,12 @@
-import os
-import os.path
-import time
-import sys
 import numpy as np
 
 from pytriangle import triangulate_simple
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Str
 
-from ..library import rect
-from ..library.accumulator import flatten
-from ..library.projection import Projection
-from ..library.Boundary import Boundaries, PointsError
+from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
 from point import PointLayer

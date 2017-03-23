@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
 
-import sys
-import traceback
 import wx
 
-from omnivore.framework.errors import ProgressCancelError
 
 import logging
 progress_log = logging.getLogger("progress")

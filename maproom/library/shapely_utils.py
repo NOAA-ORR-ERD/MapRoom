@@ -1,9 +1,10 @@
 import numpy as np
 from fs.opener import opener
 
-from shapely.geometry import shape, Polygon, MultiPolygon, LineString, Point
+from shapely.geometry import Polygon
+from shapely.geometry import shape
 from shapely.wkt import loads
-from osgeo import ogr, osr
+from osgeo import ogr
 
 from accumulator import accumulator
 

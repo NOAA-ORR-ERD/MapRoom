@@ -1,18 +1,16 @@
-import os
-import os.path
-import time
-import sys
-import numpy as np
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Any, Float
+from traits.api import Any
+from traits.api import Str
+from traits.api import Unicode
 from pyface.api import YES
 
 from ..library import rect
 
-from ..renderer import alpha_from_int, data_types, NullPicker
+from ..renderer import NullPicker
+from ..renderer import alpha_from_int
 
-from base import Layer, ProjectedLayer
+from base import ProjectedLayer
 from constants import *
 
 import logging

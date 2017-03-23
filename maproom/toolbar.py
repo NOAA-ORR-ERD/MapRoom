@@ -2,6 +2,7 @@ from pyface.api import ImageResource
 from pyface.action.api import Group
 from pyface.tasks.action.api import SToolBar, EditorAction
 from traits.api import Any
+from traits.api import on_trait_change
 
 from mouse_handler import *
 
@@ -17,7 +18,7 @@ valid_mouse_modes = {
 def get_valid_mouse_mode(mouse_mode, mode_mode_toolbar_name):
     """
     Return a valid mouse mode for the specified toolbar
-    
+
     Used when switching modes to guarantee a valid mouse mode.
     """
     valid = valid_mouse_modes.get(mode_mode_toolbar_name, valid_mouse_modes['BaseLayerToolBar'])
@@ -28,7 +29,7 @@ def get_valid_mouse_mode(mouse_mode, mode_mode_toolbar_name):
 
 class MouseHandlerBaseAction(EditorAction):
     """Save a bit of boilerplate with a base class for toolbar mouse mode buttons
-    
+
     Note that the traits for name, tooltip, and image must be repeated
     in subclasses because the trait initialization appears to reference
     the handler in the class that is named, not superclasses.  E.g.:

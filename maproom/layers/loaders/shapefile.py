@@ -1,14 +1,7 @@
 import os
-import math
-import time
 
-from fs.opener import opener
-import numpy as np
 from osgeo import ogr, osr
-from shapely.geometry import shape
-import pyproj
 
-from maproom.library.accumulator import accumulator
 from maproom.library.shapely_utils import load_shapely
 from maproom.layers import PolygonShapefileLayer
 

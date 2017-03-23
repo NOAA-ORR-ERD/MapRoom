@@ -1,5 +1,3 @@
-import sys
-import math
 import wx
 
 from ..layers import constants

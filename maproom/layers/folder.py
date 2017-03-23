@@ -1,9 +1,8 @@
-import os
-import sys
 import numpy as np
 
 # Enthought library imports.
-from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
+from traits.api import Str
+from traits.api import Unicode
 
 # MapRoom imports
 from base import Layer

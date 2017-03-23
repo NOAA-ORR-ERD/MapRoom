@@ -1,16 +1,15 @@
-import os
-import os.path
-import time
-import sys
 import math
 
 import numpy as np
 
-import wx
 
 # Enthought library imports.
-from traits.api import on_trait_change, Unicode, Str, Any, Float, Bool, Int
-from pyface.api import YES
+from traits.api import Any
+from traits.api import Bool
+from traits.api import Float
+from traits.api import Int
+from traits.api import Str
+from traits.api import Unicode
 
 from ..library import rect
 from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, mi_to_rounded_string
@@ -19,7 +18,6 @@ from ..renderer import color_floats_to_int, int_to_color_floats, int_to_color_ui
 
 from line import LineLayer
 from folder import BoundedFolder
-from constants import *
 
 import logging
 log = logging.getLogger(__name__)
@@ -143,7 +141,6 @@ class VectorObjectLayer(LineLayer):
         """Hook for image-based renderers to rebuild image data
         
         """
-        pass
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
@@ -833,7 +830,6 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
             s = s2 - s1
             print "Moving screen point to", s
             self.screen_dx, self.screen_dy = list(s)
-            pass
         else:
             LineVectorObject.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
 

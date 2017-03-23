@@ -1,14 +1,22 @@
 import json
 
-import numpy as np
 
 from omnivore.framework.errors import ProgressCancelError
-from omnivore.utils.file_guess import FileMetadata
 
 from command import Command, UndoInfo
-from layers import loaders, Layer, Grid, LineLayer, LineEditLayer, TriangleLayer, AnnotationLayer, WMSLayer, TileLayer, EmptyLayer, PolygonLayer, CompassRose
-from library.Boundary import Boundaries
-from vector_object_commands import update_parent_bounds, get_parent_layer_data, restore_layers
+from layers import AnnotationLayer
+from layers import CompassRose
+from layers import EmptyLayer
+from layers import Grid
+from layers import LineEditLayer
+from layers import LineLayer
+from layers import PolygonLayer
+from layers import TileLayer
+from layers import TriangleLayer
+from layers import WMSLayer
+from layers import loaders
+from vector_object_commands import get_parent_layer_data
+from vector_object_commands import restore_layers
 
 import logging
 progress_log = logging.getLogger("progress")

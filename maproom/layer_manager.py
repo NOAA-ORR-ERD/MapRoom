@@ -1,19 +1,27 @@
 import os
 import json
 
-import numpy as np
-from fs.opener import opener, fsopen
+from fs.opener import fsopen
 
 import library.rect as rect
-from library.accumulator import flatten
 
-from layers import Layer, RootLayer, Grid, Scale, LineLayer, TriangleLayer, RasterLayer, AnnotationLayer, constants, loaders, LayerStyle
+from layers import Grid
+from layers import Layer
+from layers import LayerStyle
+from layers import LineLayer
+from layers import RootLayer
+from layers import Scale
+from layers import TriangleLayer
+from layers import loaders
 from command import UndoStack
-from renderer import color_floats_to_int, int_to_color_floats
 
 # Enthought library imports.
-from traits.api import HasTraits, Int, Any, List, Set, Bool, Event, Dict, Set
-from pyface.api import YES, NO, GUI
+from traits.api import Any
+from traits.api import Dict
+from traits.api import Event
+from traits.api import Int
+from traits.api import List
+from pyface.api import GUI
 
 from omnivore.framework.document import BaseDocument
 from omnivore.utils.jsonutil import collapse_json

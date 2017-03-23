@@ -1,14 +1,10 @@
-import os
 
 import wx
 
 from omnivore import get_image_path
 
-import library.coordinates as coordinates
 import renderer
-import library.rect as rect
 from mouse_handler import *
-import toolbar
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.

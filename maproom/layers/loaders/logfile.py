@@ -1,13 +1,8 @@
-import os
 import re
-import json
 
 from fs.opener import fsopen
-import numpy as np
 
 from common import BaseLoader
-from maproom.layers import Layer
-from maproom.serializer import magic_template, TextDeserializer
 
 WHITESPACE_PATTERN = re.compile("\s+")
 

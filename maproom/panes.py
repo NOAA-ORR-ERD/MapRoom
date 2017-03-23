@@ -7,7 +7,6 @@ import wx
 from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 
 # Enthought library imports.
-from traits.api import on_trait_change
 
 from omnivore.framework.panes import FrameworkPane
 from omnivore.utils.wx.springtabs import SpringTabs

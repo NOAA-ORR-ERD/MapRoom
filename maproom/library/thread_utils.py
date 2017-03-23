@@ -11,7 +11,6 @@ from omnivore.utils.background_http import BackgroundHttpDownloader, BaseRequest
 from numpy_images import get_numpy_from_data
 
 import rect
-import known_hosts
 from host_utils import HostCache
 
 import logging

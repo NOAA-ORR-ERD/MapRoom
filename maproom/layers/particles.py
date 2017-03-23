@@ -11,7 +11,10 @@ import sys
 
 import numpy as np
 
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Int
+from traits.api import Str
+from traits.api import Unicode
 
 from ..renderer import color_floats_to_int
 

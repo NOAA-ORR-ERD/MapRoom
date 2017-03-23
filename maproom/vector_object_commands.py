@@ -1,4 +1,3 @@
-import numpy as np
 
 from command import Command, UndoInfo
 from layers.vector_object import *

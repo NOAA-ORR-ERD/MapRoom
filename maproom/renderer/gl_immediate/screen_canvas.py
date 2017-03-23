@@ -1,16 +1,12 @@
-import os
-import time
 
 import wx
 import wx.glcanvas as glcanvas
 
-import math
 import numpy as np
 
 import OpenGL.GL as gl
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
-import OpenGL.GLU as glu
 
 # Thanks to Mike Fletcher's comment on the PyOpenGL mailing list,
 # pyopengl_accelerate now works by registering a plugin handler for recarrays.
@@ -26,7 +22,8 @@ import maproom.library.rect as rect
 
 from ..gl.font import load_font_texture_with_alpha
 from ..gl import data_types
-from .. import NullPicker, BaseCanvas, int_to_color_floats
+from .. import BaseCanvas
+from .. import int_to_color_floats
 
 import logging
 log = logging.getLogger(__name__)

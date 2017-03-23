@@ -8,8 +8,13 @@ import json
 import wx
 
 # Enthought library imports.
-from pyface.api import YES, NO
-from traits.api import provides, on_trait_change, Any, Bool, Int, Str, Float, Event, Dict
+from pyface.api import YES
+from traits.api import Any
+from traits.api import Bool
+from traits.api import Dict
+from traits.api import Float
+from traits.api import Str
+from traits.api import on_trait_change
 
 from omnivore.framework.editor import FrameworkEditor
 from omnivore.framework.errors import ProgressCancelError
@@ -23,7 +28,6 @@ from layers.constants import *
 from command import UndoStack, BatchStatus
 from mouse_handler import *
 from menu_commands import *
-from serializer import UnknownCommandError
 import toolbar
 from library.bsb_utils import extract_from_zip
 

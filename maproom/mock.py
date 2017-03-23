@@ -3,7 +3,8 @@ import os
 from omnivore.utils.file_guess import FileGuess
 
 from layer_manager import LayerManager
-from layers import loaders, TriangleLayer, Layer
+from layers import Layer
+from layers import loaders
 from library.Boundary import Boundaries
 from library.projection import NullProjection
 from library.host_utils import HostCache

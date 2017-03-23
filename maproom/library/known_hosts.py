@@ -1,7 +1,8 @@
 """Collection of known hosts for WMS and tile services
 
 """
-from host_utils import WMSHost, TileHost, LocalTileHost, OpenTileHost
+from host_utils import OpenTileHost
+from host_utils import WMSHost
 
 default_tile_hosts = [
     # LocalTileHost("Blank"),

@@ -1,13 +1,7 @@
-import os
-import time
 import math
 
 import wx
-import wx.glcanvas as glcanvas
-import pyproj
 
-import OpenGL
-import OpenGL.GL as gl
 
 from library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
 import library.rect as rect

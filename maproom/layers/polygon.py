@@ -1,18 +1,16 @@
-import os
-import os.path
-import time
-import sys
 import numpy as np
 from cStringIO import StringIO
 
-from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
+from shapely.geometry import LineString
+from shapely.geometry import Polygon
+from shapely.geometry import box
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Str
 
-from ..library import rect
-from ..library.projection import Projection
-from ..library.Boundary import Boundary, Boundaries, PointsError
+from ..library.Boundary import Boundary
+from ..library.Boundary import PointsError
 from ..library.shapely_utils import shapely_to_polygon
 from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo

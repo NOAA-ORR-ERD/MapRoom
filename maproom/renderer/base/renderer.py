@@ -1,11 +1,5 @@
-import os
-import sys
-import wx
-import numpy as np
 
-from omnivore import get_image_path
 
-import maproom.library.rect as rect
 
 
 class BaseRenderer():

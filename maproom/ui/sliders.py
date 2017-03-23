@@ -1,4 +1,3 @@
-import string
 import wx
 import wx.lib.sized_controls  # for control border calcs
 

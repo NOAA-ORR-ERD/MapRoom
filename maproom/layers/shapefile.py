@@ -1,24 +1,14 @@
-import os
-import os.path
-import time
-import sys
-import numpy as np
 
-from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
 from shapely.wkt import loads
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property, List
+from traits.api import List
+from traits.api import Str
 
 from ..library import rect
-from ..library.accumulator import flatten
-from ..library.projection import Projection
-from ..library.Boundary import Boundaries, PointsError
-from ..renderer import color_floats_to_int, data_types
-from ..library.accumulator import accumulator
-from ..library.shapely_utils import shapely_to_polygon, rebuild_geometry_list, add_maproom_attributes_to_shapely_geom
+from ..library.shapely_utils import add_maproom_attributes_to_shapely_geom
+from ..library.shapely_utils import rebuild_geometry_list
 
-from point import PointLayer
 from polygon import PolygonLayer
 from constants import *
 

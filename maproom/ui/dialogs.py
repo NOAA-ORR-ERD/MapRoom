@@ -1,10 +1,8 @@
 import time
-import itertools
 
 import wx
 import wx.lib.sized_controls as sc
 import wx.lib.buttons as buttons
-from wx.lib.expando import ExpandoTextCtrl, EVT_ETC_LAYOUT_NEEDED
 
 from omnivore.utils.wx.dialogs import ObjectEditDialog
 

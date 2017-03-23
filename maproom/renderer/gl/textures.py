@@ -1,14 +1,11 @@
-import os
 import Queue
 import weakref
 
-import wx
 import numpy as np
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import pyproj
 
-from maproom.library.accumulator import flatten
 import maproom.library.rect as rect
 
 import data_types
@@ -87,7 +84,6 @@ class ImageData(object):
 
         # UPDATE: need to keep raw images around for PDF rendering
         #self.images = True
-        pass
 
     def set_projection(self, projection=None):
         if projection is None:

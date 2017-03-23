@@ -2,13 +2,22 @@
 
 """
 import os
-import sys
 
 # Enthought library imports.
-from pyface.api import ImageResource, GUI, YES, OK, CANCEL
-from pyface.action.api import Group, Separator
-from pyface.tasks.action.api import SMenuBar, SMenu, SToolBar, SchemaAddition
-from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
+from pyface.api import GUI
+from pyface.api import ImageResource
+from pyface.api import YES
+from pyface.action.api import Separator
+from pyface.tasks.action.api import SMenu
+from pyface.tasks.action.api import SchemaAddition
+from traits.api import Dict
+from traits.api import Event
+from traits.api import Instance
+from traits.api import Property
+from traits.api import Str
+from traits.api import Unicode
+from traits.api import on_trait_change
+from traits.api import provides
 
 from omnivore.framework.task import FrameworkTask
 from omnivore.framework.i_about import IAbout

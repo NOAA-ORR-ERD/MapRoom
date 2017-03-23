@@ -1,16 +1,12 @@
-import os
-import sys
-import wx
 import numpy as np
 
 from PIL import Image
 
 from reportlab.lib.utils import ImageReader
 
-from omnivore import get_image_path
 
 import maproom.library.rect as rect
-from .. import data_types, int_to_color_floats, color_floats_to_int
+from .. import int_to_color_floats
 from .. import BaseRenderer
 
 import logging

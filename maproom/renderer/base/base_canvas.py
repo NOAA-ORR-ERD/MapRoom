@@ -1,4 +1,3 @@
-import os
 import time
 
 import math
@@ -6,7 +5,7 @@ import numpy as np
 
 from picker import NullPicker
 import maproom.library.rect as rect
-from maproom.library.projection import Projection, NullProjection
+from maproom.library.projection import Projection
 import maproom.preferences
 
 import logging
@@ -72,7 +71,6 @@ class BaseCanvas(object):
     def remove_renderer_for_layer(self, layer):
         if layer in self.layer_renderers:
             del self.layer_renderers[layer]
-        pass
 
     def rebuild_renderers(self):
         for layer in self.project.layer_manager.flatten():

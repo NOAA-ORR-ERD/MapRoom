@@ -1,7 +1,4 @@
 # coding=utf8
-import math
-import bisect
-import numpy as np
 
 # Enthought library imports.
 from traits.api import on_trait_change, Unicode, Str, Any

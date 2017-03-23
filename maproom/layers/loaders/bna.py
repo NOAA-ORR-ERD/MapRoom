@@ -1,14 +1,9 @@
 import os
-import math
-import time
 
 from fs.opener import fsopen
 import numpy as np
-from osgeo import gdal, gdal_array, osr
-import pyproj
 from shapely.geometry import Polygon, LineString
 
-from maproom.library.accumulator import accumulator
 from maproom.library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from maproom.layers import PolygonLayer, RNCLoaderLayer, PolygonShapefileLayer
 

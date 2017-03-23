@@ -1,17 +1,15 @@
-import os
-import os.path
-import time
-import sys
 import numpy as np
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Int
+from traits.api import Str
+from traits.api import Unicode
 
-from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
-from ..library.Boundary import Boundaries, PointsError
+from ..library.Boundary import Boundaries
 from ..library.shapely_utils import shapely_to_polygon
-from ..renderer import color_floats_to_int, data_types
+from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 

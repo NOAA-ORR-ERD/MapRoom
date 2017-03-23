@@ -1,4 +1,3 @@
-import math
 
 convert_units_map = {
     "feet": {

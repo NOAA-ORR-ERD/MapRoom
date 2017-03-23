@@ -2,26 +2,16 @@
 Layer type to be used as a base class for layers with points
 
 """
-import os
-import os.path
-import time
-import sys
-import tempfile
-import shutil
-from StringIO import StringIO
 import numpy as np
-import wx
-from pytriangle import triangulate_simple
-from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Str
+from traits.api import Unicode
 
 from ..library import rect
-from ..library.accumulator import flatten
-from ..library.Boundary import Boundaries, PointsError
 from ..library.depth_utils import convert_units
-from ..renderer import color_floats_to_int, data_types
+from ..renderer import data_types
 
 from base import ProjectedLayer
 from constants import *

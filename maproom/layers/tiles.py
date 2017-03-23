@@ -1,15 +1,17 @@
-import numpy as np
 import Queue
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Int, Bool, Any, Set
+from traits.api import Any
+from traits.api import Bool
+from traits.api import Int
+from traits.api import Str
+from traits.api import Unicode
 
-from ..library import rect, coordinates
-from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, TileImageData
+from ..renderer import TileImageData
+from ..renderer import alpha_from_int
 
 from base import ProjectedLayer
 
-from maproom.library import numpy_images
 
 import logging
 log = logging.getLogger(__name__)

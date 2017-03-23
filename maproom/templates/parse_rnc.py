@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
 import os
-import sys
-import re
 from xml.etree import ElementTree as ET
 
-import numpy as np
 
 
 import logging

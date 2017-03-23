@@ -1,10 +1,14 @@
-import numpy as np
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Int, Bool, Any, Set
+from traits.api import Any
+from traits.api import Bool
+from traits.api import Int
+from traits.api import Str
+from traits.api import Unicode
 
-from ..library import rect, coordinates
-from ..renderer import color_floats_to_int, int_to_color_floats, int_to_html_color_string, alpha_from_int, ImageData
+from ..library import rect
+from ..renderer import ImageData
+from ..renderer import alpha_from_int
 
 from base import ProjectedLayer
 

@@ -1,4 +1,3 @@
-import os
 
 from omnivore.utils.runtime import get_all_subclasses
 

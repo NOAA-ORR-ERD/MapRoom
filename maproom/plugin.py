@@ -1,9 +1,6 @@
 # Standard library imports.
-import os.path
 
 # Enthought library imports.
-from envisage.api import ExtensionPoint
-from envisage.ui.tasks.api import TaskFactory
 from traits.api import List
 
 from omnivore.framework.plugin import FrameworkPlugin
