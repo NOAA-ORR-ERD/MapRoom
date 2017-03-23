@@ -8,7 +8,7 @@ from omnivore.utils.wx.dialogs import ObjectEditDialog
 
 from ..library import coordinates
 from ..library.textparse import parse_int_string
-from ..library.marplot_icons import *
+from ..library.marplot_icons import get_wx_bitmap, marplot_icons, marplot_icon_data, marplot_icon_max_size, marplot_icon_id_to_category, marplot_icon_id_to_name
 from ..mock import MockProject
 from ..library.thread_utils import BackgroundWMSDownloader
 from ..library.tile_utils import BackgroundTileDownloader

@@ -71,7 +71,7 @@ class Boundary(object):
 
             search_count += 1
             if search_count > self.MAX_SEARCH_COUNT:
-                raise Find_boundaries_error("Cannot find an inner boundary hole for triangulation.")
+                raise PointsError("Cannot find an inner boundary hole for triangulation.")
 
         return (candidate_x, candidate_y)
 
@@ -107,7 +107,7 @@ class Boundary(object):
 
             search_count += 1
             if search_count > self.MAX_SEARCH_COUNT:
-                raise Find_boundaries_error("Cannot find an outer boundary hole for triangulation.")
+                raise PointsError("Cannot find an outer boundary hole for triangulation.")
 
         return (candidate_x, candidate_y)
 
@@ -180,11 +180,6 @@ class Boundaries(object):
         if len(self) > 0:
             return self.boundaries[0]
         return None
-
-    def raise_errors(self):
-        if self.has_branches():
-            raise Find_boundaries_error("Branching boundaries are not supported in Verdat files.",
-                                        points=tuple(self.branch_points))
 
     def find_boundaries(self):
         """
@@ -294,7 +289,7 @@ class Boundaries(object):
                 # to the boundary. Otherwise, try adding the second adjacent
                 # point. If there isn't one, then the boundary isn't closed.
                 if len(adjacent) == 1:
-                    raise Find_boundaries_error(
+                    raise PointsError(
                         "Only closed boundaries are supported.",
                         points=(boundary[-2], boundary[-1], )
                         if len(boundary) >= 2
@@ -307,7 +302,7 @@ class Boundaries(object):
                 elif adjacent[0] == adjacent[1]:
                     adjacent_point = adjacent[0]
                 else:
-                    raise Find_boundaries_error(
+                    raise PointsError(
                         "Two points are connected by multiple line segments.",
                         points=(previous_point, ) + tuple(adjacent),
                     )

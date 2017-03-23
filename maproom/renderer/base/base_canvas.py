@@ -3,6 +3,7 @@ import time
 import math
 import numpy as np
 
+from renderer import BaseRenderer
 from picker import NullPicker
 import maproom.library.rect as rect
 from maproom.library.projection import Projection
@@ -52,7 +53,7 @@ class BaseCanvas(object):
         return NullPicker()
 
     def new_renderer(self, layer):
-        return NullRenderer(self, layer)
+        return BaseRenderer(self, layer)
 
     def get_renderer(self, layer):
         return self.layer_renderers[layer]

@@ -4,7 +4,7 @@ import wx
 from omnivore import get_image_path
 
 import renderer
-from mouse_handler import *
+from mouse_handler import MouseHandler, PanMode
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.

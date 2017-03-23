@@ -31,7 +31,7 @@ class nc_particles_file_loader():
     def __init__(self, uri):
         fs, relpath = opener.parse(uri)
         if not fs.hassyspath(relpath):
-            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % metadata.uri)
+            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % uri)
         path = fs.getsyspath(relpath)
         self.reader = nc_particles.Reader(path)
         self.current_timestep = 0  # fixme## hard coded limit!!!!!

@@ -4,7 +4,7 @@
 # Enthought library imports.
 from pyface.tasks.api import TaskLayout, PaneItem, HSplitter, VSplitter
 
-from panes import *
+import panes
 
 
 # The project ID must be changed when the pane layout changes, otherwise
@@ -67,14 +67,14 @@ def pane_create():
     MaproomTask.activated)
     """
     return [
-        LayerSelectionPane(),
-        LayerInfoPane(),
-        SelectionInfoPane(),
-        TriangulatePane(),
-        MergePointsPane(),
-        UndoHistoryPane(),
-        HtmlHelpPane(),
-        RSTHelpPane(),
-        MarkdownHelpPane(),
-        SidebarPane()
+        panes.LayerSelectionPane(),
+        panes.LayerInfoPane(),
+        panes.SelectionInfoPane(),
+        panes.TriangulatePane(),
+        panes.MergePointsPane(),
+        panes.UndoHistoryPane(),
+        panes.HtmlHelpPane(),
+        panes.RSTHelpPane(),
+        panes.MarkdownHelpPane(),
+        panes.SidebarPane()
         ]

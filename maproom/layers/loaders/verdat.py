@@ -96,7 +96,7 @@ def load_verdat_file(uri):
         if data == (0, 0, 0, 0):
             break
         if len(data) != 4:
-            return ("The .verdat file {0} is invalid.".format(file_path), None, None, None, "", None, None)
+            return ("The .verdat file {0} is invalid.".format(uri), None, None, None, "", None, None)
 
         (index, longitude, latitude, depth) = data
 

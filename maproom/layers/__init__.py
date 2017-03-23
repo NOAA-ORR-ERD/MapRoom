@@ -9,7 +9,7 @@ from polygon import PolygonLayer, RNCLoaderLayer
 from raster import RasterLayer
 from wms import WMSLayer
 from tiles import TileLayer
-from vector_object import *
+from vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayScalableImageObject, OverlayTextObject, OverlayIconObject, PolylineObject, PolygonObject, AnnotationLayer
 from shapefile import PolygonShapefileLayer
 from style import LayerStyle
 import state

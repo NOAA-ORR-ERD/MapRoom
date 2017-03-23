@@ -109,7 +109,7 @@ def get_dataset(uri):
     print "GDAL:", relpath
     print "GDAL:", fs
     if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for GDAL: %s" % metadata.uri)
+        raise RuntimeError("Only file URIs are supported for GDAL: %s" % uri)
     file_path = fs.getsyspath(relpath)
     if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
         file_path = file_path[4:]

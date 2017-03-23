@@ -6,6 +6,7 @@ import urllib2 as urllib2
 from requests.exceptions import HTTPError
 
 from owslib.util import ServiceException
+from owslib.wms import WebMapService
 
 from omnivore.utils.background_http import BackgroundHttpMultiDownloader
 from omnivore.utils.background_http import UnskippableRequest

@@ -11,7 +11,7 @@ from omnivore.utils.background_http import BackgroundHttpDownloader, BaseRequest
 from numpy_images import get_numpy_from_data
 
 import rect
-from host_utils import HostCache
+from host_utils import WMSHost, HostCache
 
 import logging
 log = logging.getLogger(__name__)
@@ -222,6 +222,7 @@ class WMSRequest(BaseRequest):
 
 
 if __name__ == "__main__":
+    import sys
     import time
 
     wr = ((-126.59861836927804, 45.49049794230259), (-118.90005638437373, 50.081373712237856))

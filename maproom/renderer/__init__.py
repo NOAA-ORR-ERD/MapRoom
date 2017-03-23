@@ -10,9 +10,6 @@ if driver == "gl_immediate":
     from .gl.textures import ImageData, ImageTextures, SubImageLoader, TileImageData
     from .gl_immediate.screen_canvas import ScreenCanvas
 else:
-    from .vispy.parser import *
-    from .gl.color import color_floats_to_int, int_to_color_floats, int_to_color_uint8, int_to_html_color_string
-    import gl.data_types as data_types
-    from .vispy.screen_canvas import ScreenCanvas
+    raise ImportError("Unknown renderer type %s" % driver)
 
 from .pdf.pdf_canvas import PDFCanvas

@@ -1,3 +1,4 @@
+import sys
 import math
 
 import wx
@@ -5,9 +6,9 @@ import wx
 
 from library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
 import library.rect as rect
-from mouse_commands import *
-from vector_object_commands import *
-from menu_commands import *
+from mouse_commands import ViewportCommand, SetAnchorCommand, CropRectCommand, InsertPointCommand, InsertLineCommand, SplitLineCommand, ConnectPointsCommand
+from vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawVectorObjectCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
+from menu_commands import PolygonEditLayerCommand
 
 
 class NoObjectError(RuntimeError):

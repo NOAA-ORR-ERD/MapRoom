@@ -9,7 +9,7 @@ import OpenGL.GL.EXT.framebuffer_object as gl_fbo
 
 import maproom.library.rect as rect
 
-from ..gl.color import *
+from ..gl.color import color_floats_to_int
 
 import logging
 log = logging.getLogger(__name__)

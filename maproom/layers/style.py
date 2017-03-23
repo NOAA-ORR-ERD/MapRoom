@@ -7,7 +7,7 @@ import state
 
 from ..renderer import color_floats_to_int, int_to_color_uint8
 
-from maproom.library.marplot_icons import *
+from maproom.library.marplot_icons import get_numpy_bitmap
 
 import logging
 log = logging.getLogger(__name__)

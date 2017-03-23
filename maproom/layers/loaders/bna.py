@@ -8,6 +8,7 @@ from maproom.library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from maproom.layers import PolygonLayer, RNCLoaderLayer, PolygonShapefileLayer
 
 from common import BaseLayerLoader
+from shapefile import write_layer_as_shapefile
 
 import logging
 log = logging.getLogger(__name__)

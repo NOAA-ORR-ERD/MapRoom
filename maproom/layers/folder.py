@@ -8,6 +8,7 @@ from traits.api import Unicode
 from base import Layer
 from line import LineLayer
 from ..library import rect
+from ..renderer import data_types
 
 # local package imports
 import state

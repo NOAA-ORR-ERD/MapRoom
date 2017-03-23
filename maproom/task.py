@@ -31,7 +31,7 @@ from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
 from library.known_hosts import default_wms_hosts, default_tile_hosts
 
-from actions import *
+import actions
 from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction, SaveAsImageAction
 
 import logging
@@ -175,159 +175,159 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_actions_Menu_File_NewGroup(self):
         return [
-            NewProjectAction(),
+            actions.NewProjectAction(),
             ]
 
     def get_actions_Menu_File_SaveGroup(self):
         return [
-            SaveProjectAction(),
-            SaveProjectAsAction(),
-            SaveCommandLogAction(),
-            SaveLayerAction(),
-            SMenu(SaveLayerGroup(),
+            actions.SaveProjectAction(),
+            actions.SaveProjectAsAction(),
+            actions.SaveCommandLogAction(),
+            actions.SaveLayerAction(),
+            SMenu(actions.SaveLayerGroup(),
                   id='SaveLayerAsSubmenu', name="Save Layer As"),
             SaveAsImageAction(),
             ]
 
     def get_actions_Menu_File_RevertGroup(self):
         return [
-            RevertProjectAction(),
+            actions.RevertProjectAction(),
             ]
 
     def get_actions_Menu_Edit_CopyPasteGroup(self):
         return [
             CutAction(),
             CopyAction(),
-            DuplicateLayerAction(),
+            actions.DuplicateLayerAction(),
             PasteAction(),
             Separator(),
-            CopyStyleAction(),
-            PasteStyleAction(),
+            actions.CopyStyleAction(),
+            actions.PasteStyleAction(),
             ]
 
     def get_actions_Menu_Edit_SelectGroup(self):
         return [
-            ClearSelectionAction(),
-            DeleteSelectionAction(),
+            actions.ClearSelectionAction(),
+            actions.DeleteSelectionAction(),
             Separator(),
-            BoundaryToSelectionAction(),
+            actions.BoundaryToSelectionAction(),
             Separator(),
-            ClearFlaggedAction(),
-            FlaggedToSelectionAction(),
+            actions.ClearFlaggedAction(),
+            actions.FlaggedToSelectionAction(),
             ]
 
     def get_actions_Menu_Edit_PrefGroup(self):
         return [
-            DefaultStyleAction(),
+            actions.DefaultStyleAction(),
             PreferencesAction(),
             ]
 
     def get_actions_Menu_Edit_FindGroup(self):
         return [
-            FindPointsAction(),
+            actions.FindPointsAction(),
             ]
 
     def get_actions_Menu_Help_BugReportGroup(self):
         return [
             OpenLogDirectoryAction(),
-            OpenLogAction(),
+            actions.OpenLogAction(),
             ]
 
     def get_actions_Menu_View_ViewZoomGroup(self):
         return [
-            ZoomInAction(),
-            ZoomOutAction(),
-            ZoomToFit(),
-            ZoomToLayer(),
+            actions.ZoomInAction(),
+            actions.ZoomOutAction(),
+            actions.ZoomToFit(),
+            actions.ZoomToLayer(),
             ]
 
     def get_actions_Menu_View_ViewChangeGroup(self):
         return [
-            JumpToCoordsAction(),
+            actions.JumpToCoordsAction(),
             ]
 
     def get_actions_Menu_View_ViewDebugGroup(self):
         return [
-            BoundingBoxAction(),
-            PickerFramebufferAction(),
+            actions.BoundingBoxAction(),
+            actions.PickerFramebufferAction(),
             ]
 
     def get_actions_Menu_Layer_LayerCreateGroup(self):
         return [
-            NewVectorLayerAction(),
-            NewAnnotationLayerAction(),
-            NewWMSLayerAction(),
-            NewTileLayerAction(),
-            NewCompassRoseLayerAction(),
-            NewLonLatLayerAction(),
-            NewRNCLayerAction(),
+            actions.NewVectorLayerAction(),
+            actions.NewAnnotationLayerAction(),
+            actions.NewWMSLayerAction(),
+            actions.NewTileLayerAction(),
+            actions.NewCompassRoseLayerAction(),
+            actions.NewLonLatLayerAction(),
+            actions.NewRNCLayerAction(),
             ]
 
     def get_actions_Menu_Layer_LayerStackGroup(self):
         return [
-            RaiseToTopAction(),
-            RaiseLayerAction(),
-            LowerLayerAction(),
-            LowerToBottomAction(),
+            actions.RaiseToTopAction(),
+            actions.RaiseLayerAction(),
+            actions.LowerLayerAction(),
+            actions.LowerToBottomAction(),
             ]
 
     def get_actions_Menu_Layer_LayerUtilGroup(self):
         return [
-            TriangulateLayerAction(),
-            ToPolygonLayerAction(),
-            ToVerdatLayerAction(),
-            MergeLayersAction(),
-            MergePointsAction(),
-            NormalizeLongitudeAction(),
+            actions.TriangulateLayerAction(),
+            actions.ToPolygonLayerAction(),
+            actions.ToVerdatLayerAction(),
+            actions.MergeLayersAction(),
+            actions.MergePointsAction(),
+            actions.NormalizeLongitudeAction(),
             ]
 
     def get_actions_Menu_Layer_LayerDeleteGroup(self):
         return [
-            DeleteLayerAction(),
+            actions.DeleteLayerAction(),
             ]
 
     def get_actions_Menu_Layer_LayerCheckGroup(self):
         return [
-            CheckSelectedLayerAction(),
-            CheckAllLayersAction(),
+            actions.CheckSelectedLayerAction(),
+            actions.CheckAllLayersAction(),
             ]
 
     def get_actions_Menu_Tools_ToolsManageGroup(self):
         return [
-            ManageWMSAction(),
+            actions.ManageWMSAction(),
             Separator(),
-            ManageTileServersAction(),
-            ClearTileCacheAction(),
+            actions.ManageTileServersAction(),
+            actions.ClearTileCacheAction(),
             ]
 
     def get_actions_Tool_File_SaveGroup(self):
         return [
-            SaveProjectAction(),
-            SaveProjectAsAction(),
+            actions.SaveProjectAction(),
+            actions.SaveProjectAsAction(),
             ]
 
     def get_actions_Tool_Edit_SelectGroup(self):
         return [
-            ClearSelectionAction(),
-            DeleteSelectionAction(),
+            actions.ClearSelectionAction(),
+            actions.DeleteSelectionAction(),
             ]
 
     def get_actions_Tool_View_ViewConfigGroup(self):
         return [
-            ZoomInAction(),
-            ZoomOutAction(),
-            ZoomToFit(),
-            ZoomToLayer(),
+            actions.ZoomInAction(),
+            actions.ZoomOutAction(),
+            actions.ZoomToFit(),
+            actions.ZoomToLayer(),
             ]
 
     def get_actions_Tool_View_ViewChangeGroup(self):
         return [
-            RaiseToTopAction(),
-            RaiseLayerAction(),
-            LowerLayerAction(),
-            LowerToBottomAction(),
-            TriangulateLayerAction(),
-            DeleteLayerAction(),
+            actions.RaiseToTopAction(),
+            actions.RaiseLayerAction(),
+            actions.LowerLayerAction(),
+            actions.LowerToBottomAction(),
+            actions.TriangulateLayerAction(),
+            actions.DeleteLayerAction(),
             ]
 
     def get_editor(self, guess=None):

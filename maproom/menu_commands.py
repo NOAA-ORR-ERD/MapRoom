@@ -14,6 +14,7 @@ from layers import PolygonLayer
 from layers import TileLayer
 from layers import TriangleLayer
 from layers import WMSLayer
+from layers import RNCLoaderLayer
 from layers import loaders
 from vector_object_commands import get_parent_layer_data
 from vector_object_commands import restore_layers
@@ -59,7 +60,7 @@ class LoadLayersCommand(Command):
 
         if layers is None:
             undo.flags.success = False
-            undo.flags.errors = ["Unknown file type %s for %s" % (metadata.mime, metadata.uri)]
+            undo.flags.errors = ["Unknown file type %s for %s" % (self.metadata.mime, self.metadata.uri)]
         else:
             errors = []
             warnings = []
@@ -133,7 +134,7 @@ class AddLayerCommand(Command):
         elif self.type == "tile":
             layer = TileLayer(manager=lm)
         elif self.type == "rnc":
-            layer = RNCDownloadLayer(manager=lm)
+            layer = RNCLoaderLayer(manager=lm)
         else:
             layer = LineLayer(manager=lm)
 
@@ -359,8 +360,8 @@ class MergeLayersCommand(Command):
 
         layer = layer_a.merge_layer_into_new(layer_b, self.depth_unit)
         if layer is None:
-            undo_info.flags.success = False
-            undo_info.flags.errors = ["Incompatible layer types for merge"]
+            undo.flags.success = False
+            undo.flags.errors = ["Incompatible layer types for merge"]
         else:
             lm.insert_layer(None, layer)
             lf = undo.flags.add_layer_flags(layer)

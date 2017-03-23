@@ -25,7 +25,7 @@ def get_dataset(uri):
     print "OGR:", relpath
     print "OGR:", fs
     if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for OGR: %s" % metadata.uri)
+        raise RuntimeError("Only file URIs are supported for OGR: %s" % uri)
     file_path = fs.getsyspath(relpath)
     if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
         file_path = file_path[4:]
@@ -58,7 +58,11 @@ def get_fiona(uri):
     """Get fiona Dataset, performing URI to filename conversion since OGR
     doesn't support URIs, only files on the local filesystem
     """
-    #import fiona
+    if False:
+        # Still disabling fiona support until working on windows. Disabling it
+        # this way rather than commenting it out means thatlinters will still
+        # see fiona even though the code can never be executed
+        import fiona
 
     if True:
         raise ImportError("fiona not found")
@@ -66,7 +70,7 @@ def get_fiona(uri):
     print "fiona:", relpath
     print "fiona:", fs
     if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for OGR: %s" % metadata.uri)
+        raise RuntimeError("Only file URIs are supported for OGR: %s" % uri)
     file_path = fs.getsyspath(relpath)
     if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
         file_path = file_path[4:]

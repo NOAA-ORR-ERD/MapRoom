@@ -122,7 +122,7 @@ class LineLayer(PointLayer):
 
         self.set_data(points, 0.0, lines, style=style)
         for i, (s, c, ident) in enumerate(zip(starts, counts, identifiers)):
-            self.line_segment_indexes.state[s:s + c] = POLYGON_NUMBER_SHIFT * i
+            self.line_segment_indexes.state[s:s + c] = state.POLYGON_NUMBER_SHIFT * i
 
     def get_point_identifier(self, point_num):
         for s, e, ident in self.point_identifiers:

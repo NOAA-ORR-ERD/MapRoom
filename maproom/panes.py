@@ -1,6 +1,4 @@
-"""Sample panes for Skeleton
-
-"""
+import os
 import cgi
 
 import wx

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-
 import wx
 
 
@@ -16,8 +13,6 @@ class UndoHistoryPanel(wx.Panel):
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
         self.SetBackgroundColour(attr.colBg)
-
-        self.SetHelpText("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -39,15 +34,3 @@ class UndoHistoryPanel(wx.Panel):
         index = project.layer_manager.undo_stack.insert_index
         if index > 0:
             self.history.SetSelection(index - 1)
-
-
-if __name__ == "__main__":
-    """
-    simple test for the dialog
-    """
-    a = wx.App(False)
-    import wx.lib.inspection
-    wx.lib.inspection.InspectionTool().Show()
-    d = Triangle_dialog()
-    d.Show()
-    a.MainLoop()

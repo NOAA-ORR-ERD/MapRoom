@@ -10,7 +10,7 @@ from library.projection import NullProjection
 from library.host_utils import HostCache
 from library.known_hosts import default_tile_hosts
 from command import UndoStack, BatchStatus
-from menu_commands import *
+from menu_commands import LoadLayersCommand
 
 
 class MockApplication(object):

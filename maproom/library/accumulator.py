@@ -153,7 +153,7 @@ class accumulator(object):
         return self.__buffer[i:j].copy()
 
     def __delitem__(self):
-        raise NotImplimentedError
+        raise NotImplementedError
 
     def __eq__(self, other):
         return self.__buffer[:self._length] == other

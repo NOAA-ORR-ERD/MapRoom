@@ -231,7 +231,7 @@ class Layer(HasTraits):
         name = "unserialize_json_version" + str(json_data['version'])
         try:
             method = getattr(self, name)
-        except AttributeEror:
+        except AttributeError:
             batch_flags.errors.append("Unsupported MapRoom save file version %s" % str(json_data['version']))
             raise
         log.debug("Restoring JSON data using %s" % name)

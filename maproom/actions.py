@@ -1,3 +1,5 @@
+import wx
+import json
 
 # Enthought library imports.
 from pyface.api import ImageResource, GUI, FileDialog, YES, NO, OK, CANCEL
@@ -11,9 +13,8 @@ from omnivore.framework.actions import TaskDynamicSubmenuGroup
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 import pane_layout
-from menu_commands import *
-from vector_object_commands import *
-from mouse_commands import *
+from menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand
+from mouse_commands import ViewportCommand, NormalizeLongitudeCommand
 from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
@@ -138,11 +139,6 @@ class RevertProjectAction(EditorAction):
 class DefaultStyleAction(EditorAction):
     name = 'Default Style...'
     tooltip = 'Choose the line, fill and font styles'
-
-    def perform(self, event):
-        dialog = StyleDialog(parent=event.task.window.control, action='save as')
-        if dialog.open() == OK:
-            self.active_editor.save_layer(dialog.path)
 
     def perform(self, event):
         GUI.invoke_later(self.show_dialog, self.active_editor)

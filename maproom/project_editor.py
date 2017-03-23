@@ -25,8 +25,9 @@ from layer_manager import LayerManager
 import renderer
 from layers import loaders
 from command import UndoStack, BatchStatus
-from mouse_handler import *
-from menu_commands import *
+from mouse_handler import PanMode
+from menu_commands import LoadLayersCommand, DeleteLayerCommand, SavepointCommand, PasteLayerCommand
+from mouse_commands import ViewportCommand, StyleChangeCommand
 import toolbar
 from library.bsb_utils import extract_from_zip
 

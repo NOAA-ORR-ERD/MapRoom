@@ -4,14 +4,47 @@ from pyface.tasks.action.api import SToolBar, EditorAction
 from traits.api import Any
 from traits.api import on_trait_change
 
-from mouse_handler import *
+import mouse_handler as modes
 
 valid_mouse_modes = {
-    'VectorLayerToolBar': [PointSelectionMode, ZoomRectMode, RulerMode, PointEditMode, LineEditMode],
-    'PolygonLayerToolBar': [PolygonSelectionMode, ZoomRectMode, RulerMode, CropRectMode],
-    'AnnotationLayerToolBar': [PanMode, ZoomRectMode, RulerMode, ControlPointEditMode, AddLineMode, AddPolylineMode, AddRectangleMode, AddEllipseMode, AddCircleMode, AddPolygonMode, AddOverlayTextMode, AddOverlayIconMode, AddArrowTextMode, AddArrowTextIconMode],
-    'BaseLayerToolBar': [PanMode, ZoomRectMode, RulerMode],
-    'RNCToolBar': [RNCSelectionMode, ZoomRectMode],
+    'VectorLayerToolBar': [
+        modes.PointSelectionMode,
+        modes.ZoomRectMode,
+        modes.RulerMode,
+        modes.PointEditMode,
+        modes.LineEditMode,
+        ],
+    'PolygonLayerToolBar': [
+        modes.PolygonSelectionMode,
+        modes.ZoomRectMode,
+        modes.RulerMode,
+        modes.CropRectMode,
+        ],
+    'AnnotationLayerToolBar': [
+        modes.PanMode,
+        modes.ZoomRectMode,
+        modes.RulerMode,
+        modes.ControlPointEditMode,
+        modes.AddLineMode,
+        modes.AddPolylineMode,
+        modes.AddRectangleMode,
+        modes.AddEllipseMode,
+        modes.AddCircleMode,
+        modes.AddPolygonMode,
+        modes.AddOverlayTextMode,
+        modes.AddOverlayIconMode,
+        modes.AddArrowTextMode,
+        modes.AddArrowTextIconMode,
+        ],
+    'BaseLayerToolBar': [
+        modes.PanMode,
+        modes.ZoomRectMode,
+        modes.RulerMode,
+        ],
+    'RNCToolBar': [
+        modes.RNCSelectionMode,
+        modes.ZoomRectMode,
+        ],
     }
 
 

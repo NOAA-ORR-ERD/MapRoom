@@ -134,15 +134,3 @@ class TrianglePanel(wx.Panel):
 
         cmd = TriangulateLayerCommand(layer, q, a)
         project.process_command(cmd)
-
-
-if __name__ == "__main__":
-    """
-    simple test for the dialog
-    """
-    a = wx.App(False)
-    import wx.lib.inspection
-    wx.lib.inspection.InspectionTool().Show()
-    d = Triangle_dialog()
-    d.Show()
-    a.MainLoop()
