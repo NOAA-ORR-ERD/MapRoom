@@ -1,3 +1,5 @@
+# flake8: noqa
+#
 # Automatically generated file, DO NOT EDIT!",
 # Generated from resources/marplot/fonts/parse_marplot.py",
 
