@@ -9,7 +9,7 @@ import sliders
 class DistanceCtrl(wx.Panel):
     SPACING = 5
     SECONDS_TO_METERS = 1852 / 60.0
-    
+
     def __init__(self, parent, initial_value=0.6):
         wx.Panel.__init__(self, parent, -1)
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
@@ -17,19 +17,19 @@ class DistanceCtrl(wx.Panel):
         self.Sizer.Add(label, 0, wx.ALL, 0)
         label = wx.StaticText(self, wx.ID_ANY, "(add m for meters, otherwise interpreted as \" lat)")
         self.Sizer.Add(label, 0, wx.ALL, 2)
-        
+
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.distance_ctrl = wx.TextCtrl(self, -1)
         hbox.Add(self.distance_ctrl, 1, wx.EXPAND, self.SPACING)
         self.other_distance = wx.StaticText(self, wx.ID_ANY, " =")
         hbox.Add(self.other_distance, 3, wx.ALIGN_CENTER_VERTICAL, self.SPACING)
-        
+
         self.Sizer.Add(hbox, 0, wx.EXPAND, self.SPACING)
 
         self.is_valid(str(initial_value))
         self.distance_ctrl.SetValue(str(initial_value))
         self.distance_ctrl.Bind(wx.EVT_TEXT, self.on_text_changed)
-    
+
     def is_valid(self, text):
         c = self.distance_ctrl
         c.SetBackgroundColour("#FFFFFF")
@@ -48,7 +48,7 @@ class DistanceCtrl(wx.Panel):
                 label = " = %fm" % self.meters
         self.other_distance.SetLabel(label)
         return valid
-    
+
     def parse_from_string(self, text):
         text = text.strip()
         if not text:
@@ -87,7 +87,7 @@ class MergePointsPanel(wx.Panel):
     def __init__(self, parent, task):
         self.task = task
         wx.Panel.__init__(self, parent, wx.ID_ANY)
-        
+
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
         self.SetBackgroundColour(attr.colBg)
@@ -174,7 +174,7 @@ class MergePointsPanel(wx.Panel):
 
         self.find_button.Bind(wx.EVT_BUTTON, self.find_duplicates)
         self.Bind(wx.EVT_CHECKBOX, self.on_depth_check)
-    
+
     def set_task(self, task):
         self.task = task
 
@@ -191,7 +191,7 @@ class MergePointsPanel(wx.Panel):
             # even when the panel is hidden, which is not what we want.
             event.Skip()
             return
-        
+
         # at the time the button is pressed, we commit to a layer
         project = self.task.active_editor
         self.layer = project.layer_tree_control.get_selected_layer()

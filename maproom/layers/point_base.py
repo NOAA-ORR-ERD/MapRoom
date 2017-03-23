@@ -37,15 +37,15 @@ class PointBaseLayer(ProjectedLayer):
     
     """
     name = Unicode("Point Layer")
-    
+
     type = Str("base_point")
-    
+
     points = Any
-    
+
     visibility_items = ["points"]
-    
+
     layer_info_panel = ["Layer name", "Point count"]
-    
+
     selection_info_panel = []
 
     def __str__(self):
@@ -54,7 +54,7 @@ class PointBaseLayer(ProjectedLayer):
         except TypeError:
             points = 0
         return "%s layer '%s': %d points" % (self.type, self.name, points)
-    
+
     def get_info_panel_text(self, prop):
         if prop == "Point count":
             return str(len(self.points))
@@ -81,7 +81,7 @@ class PointBaseLayer(ProjectedLayer):
 
         return no_points
 
-    ##fixme: can we remove all the visibility stuff???    
+    ##fixme: can we remove all the visibility stuff???
     ## and if not -- this shouldn't have any references to labels
     def get_visibility_dict(self):
         ##fixme: why not call self.get_visibility_dict ?
@@ -89,7 +89,7 @@ class PointBaseLayer(ProjectedLayer):
         ## fixme: and why do I need to mess with label visibility here?
         d["labels"] = False
         return d
-    
+
     def set_data(self, f_points, style=None):
         n = np.alen(f_points)
         if style is None:
@@ -105,10 +105,10 @@ class PointBaseLayer(ProjectedLayer):
             self.points.state = 0
 
         self.update_bounds()
-    
+
     def set_color(self, color):
         self.points.color = color
-    
+
     def set_style(self, style):
         ProjectedLayer.set_style(self, style)
         if style.line_color is not None:
@@ -119,10 +119,10 @@ class PointBaseLayer(ProjectedLayer):
             np.array([(np.nan, np.nan, np.nan, 0, 0)], dtype=data_types.POINT_DTYPE),
             count,
         ).view(np.recarray)
-    
+
     def copy_points(self):
         return self.points.copy().view(np.recarray)
-    
+
     def copy_bounds(self):
         ((l, b), (r, t)) = self.bounds
         return ((l, b), (r, t))
@@ -141,13 +141,13 @@ class PointBaseLayer(ProjectedLayer):
         """
         self.points = info[0]
         self.bounds = info[1]
-    
+
     ##### JSON Serialization
-    
+
     def points_to_json(self):
         if self.points is not None:
             return self.points.tolist()
-    
+
     def points_from_json(self, json_data):
         jd = json_data['points']
         if jd is not None:
@@ -193,7 +193,7 @@ class PointBaseLayer(ProjectedLayer):
         self.clear_all_selections(STATE_FLAGGED)
         if refresh:
             self.manager.dispatch_event('refresh_needed')
-    
+
     def has_selection(self):
         return self.get_num_points_selected() > 0
 
@@ -228,14 +228,14 @@ class PointBaseLayer(ProjectedLayer):
     def deselect_points(self, indexes, mark_type=STATE_SELECTED):
         self.points.state[indexes] &= (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
-    
+
     def select_flagged(self, refresh=False):
         indexes = self.get_flagged_point_indexes()
         self.deselect_points(indexes, STATE_FLAGGED)
         self.select_points(indexes, STATE_SELECTED)
         if refresh:
             self.manager.dispatch_event('refresh_needed')
-    
+
     def get_flagged_point_indexes(self):
         return self.get_selected_point_indexes(STATE_FLAGGED)
 
@@ -269,17 +269,17 @@ class PointBaseLayer(ProjectedLayer):
 
     def get_num_points_flagged(self):
         return len(self.get_selected_point_indexes(STATE_FLAGGED))
-    
+
     def is_mergeable_with(self, other_layer):
         return hasattr(other_layer, "points")
-    
+
     def find_merge_layer_class(self, other_layer):
         return type(self)
 
     def merge_from_source_layers(self, layer_a, layer_b, depth_unit=""):
         # for now we only handle merging of points and lines
         self.new()
-        
+
         self.merged_points_index = len(layer_a.points)
 
         n = len(layer_a.points) + len(layer_b.points)
@@ -295,7 +295,7 @@ class PointBaseLayer(ProjectedLayer):
         if depth_unit:
             self.depth_unit = depth_unit
        # self.points.state = 0
-    
+
     def normalize_longitude(self):
         l = self.points.x.min()
         r = self.points.x.max()
@@ -312,7 +312,7 @@ class PointBaseLayer(ProjectedLayer):
         )
         projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
         return projected_point_data
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         
@@ -331,7 +331,7 @@ class PointBaseLayer(ProjectedLayer):
         # the labels
         if layer_visibility["labels"]:
             renderer.draw_labels_at_points(self.points.z, s_r, p_r)
-                
+
         # render selections after everything else
         if (not picker.is_active):
             if layer_visibility["points"]:

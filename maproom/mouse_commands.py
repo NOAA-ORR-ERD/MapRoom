@@ -2,6 +2,7 @@ import numpy as np
 
 from command import Command, UndoInfo
 
+
 class ViewportCommand(Command):
     short_name = "viewport"
     serialize_order = [
@@ -9,22 +10,22 @@ class ViewportCommand(Command):
         ('center', 'point'),
         ('units_per_pixel', 'float'),
         ]
-    
+
     def __init__(self, layer, center=None, units_per_pixel=None):
         Command.__init__(self, layer)
         self.center = center
         self.units_per_pixel = units_per_pixel
-    
+
     def __str__(self):
         return "Viewport Change"
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer:
                 self.center = next_command.center
                 self.units_per_pixel = next_command.units_per_pixel
                 return True
-    
+
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
         c = editor.layer_canvas
@@ -43,20 +44,21 @@ class ViewportCommand(Command):
         editor.layer_canvas.set_viewport(old_center, old_units_per_pixel)
         return self.undo_info
 
+
 class InsertPointCommand(Command):
     short_name = "pt"
     serialize_order = [
         ('layer', 'layer'),
         ('world_point', 'point'),
         ]
-    
+
     def __init__(self, layer, world_point):
         Command.__init__(self, layer)
         self.world_point = world_point
-    
+
     def __str__(self):
         return "Add Point #%d" % self.undo_info.index
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = layer.insert_point(self.world_point)
@@ -70,6 +72,7 @@ class InsertPointCommand(Command):
         undo_info = layer.delete_point(self.undo_info.index)
         return undo_info
 
+
 class MovePointsCommand(Command):
     short_name = "move_pt"
     serialize_order =  [
@@ -78,13 +81,13 @@ class MovePointsCommand(Command):
         ('dx', 'float'),
         ('dy', 'float'),
         ]
-    
+
     def __init__(self, layer, indexes, dx, dy):
         Command.__init__(self, layer)
         self.indexes = indexes
         self.dx = dx
         self.dy = dy
-    
+
     def __str__(self):
         if len(self.indexes) == 1:
             return "Move Point #%d" % self.indexes[0]
@@ -100,10 +103,10 @@ class MovePointsCommand(Command):
                 self.dx += next_command.dx
                 self.dy += next_command.dy
                 return True
-    
+
     def is_recordable(self):
         return len(self.indexes) > 0
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
@@ -125,15 +128,16 @@ class MovePointsCommand(Command):
         layer.points.y[self.indexes] = old_y
         return self.undo_info
 
+
 class NormalizeLongitudeCommand(Command):
     short_name = "norm_long"
     serialize_order =  [
         ('layer', 'layer'),
         ]
-    
+
     def __str__(self):
         return "Normalize Longitude"
-    
+
     def recurse_perform(self, layer, undo):
         layer_undo = layer.get_undo_info()
         layer.normalize_longitude()
@@ -159,6 +163,7 @@ class NormalizeLongitudeCommand(Command):
             layer.restore_undo_info(layer_undo)
         return self.undo_info
 
+
 class ChangeDepthCommand(Command):
     short_name = "depth"
     serialize_order =  [
@@ -166,24 +171,24 @@ class ChangeDepthCommand(Command):
         ('indexes', 'list_int'),
         ('depth', 'float'),
         ]
-    
+
     def __init__(self, layer, indexes, depth):
         Command.__init__(self, layer)
         self.indexes = indexes
         self.depth = depth
-    
+
     def __str__(self):
         return "Set Depth to %s" % str(self.depth)
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer and np.array_equal(next_command.indexes, self.indexes):
                 self.depth = next_command.depth
                 return True
-    
+
     def is_recordable(self):
         return len(self.indexes) > 0
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
@@ -201,6 +206,7 @@ class ChangeDepthCommand(Command):
         layer.points.z[self.indexes] = old_depths
         return self.undo_info
 
+
 class InsertLineCommand(Command):
     short_name = "line_to"
     serialize_order =  [
@@ -208,17 +214,17 @@ class InsertLineCommand(Command):
             ('index', 'int'),
             ('world_point', 'point'),
             ]
-    
+
     def __init__(self, layer, index, world_point):
         Command.__init__(self, layer)
         self.index = index
         self.world_point = world_point
         self.undo_point = None
         self.undo_line = None
-    
+
     def __str__(self):
         return "Line From Point %d" % self.index
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_point = layer.insert_point(self.world_point)
@@ -236,6 +242,7 @@ class InsertLineCommand(Command):
         undo_info = layer.delete_point(self.undo_point.index)
         return undo_info
 
+
 class ConnectPointsCommand(Command):
     short_name = "line"
     serialize_order =  [
@@ -243,16 +250,16 @@ class ConnectPointsCommand(Command):
             ('index1', 'int'),
             ('index2', 'int'),
             ]
-    
+
     def __init__(self, layer, index1, index2):
         Command.__init__(self, layer)
         self.index1 = index1
         self.index2 = index2
         self.undo_line = None
-    
+
     def __str__(self):
         return "Line Connecting Points %d & %d" % (self.index1, self.index2)
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_line = layer.insert_line_segment(self.index1, self.index2)
@@ -266,6 +273,7 @@ class ConnectPointsCommand(Command):
         undo_info = layer.delete_line_segment(self.undo_line.index)
         return undo_info
 
+
 class SplitLineCommand(Command):
     short_name = "split"
     serialize_order =  [
@@ -273,7 +281,7 @@ class SplitLineCommand(Command):
             ('index', 'int'),
             ('world_point', 'point'),
             ]
-    
+
     def __init__(self, layer, index, world_point):
         Command.__init__(self, layer)
         self.index = index
@@ -284,7 +292,7 @@ class SplitLineCommand(Command):
         self.undo_line2 = None
         self.point_index_1 = None
         self.point_index_2 = None
-    
+
     def __str__(self):
         return "Split Line #%d" % self.index
 
@@ -293,11 +301,11 @@ class SplitLineCommand(Command):
         tlayer.parent_layer.rebuild_geometry_from_points(tlayer.object_type, tlayer.object_index, new_points)
         tlayer.rebuild_from_parent_layer()
         tlayer.select_nearest_point(self.world_point)
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_point = layer.insert_point(self.world_point)
-        
+
         layer.select_point(self.undo_point.index)
         self.point_index_1 = layer.line_segment_indexes.point1[self.index]
         self.point_index_2 = layer.line_segment_indexes.point2[self.index]
@@ -324,6 +332,7 @@ class SplitLineCommand(Command):
         undo_info = layer.delete_point(self.undo_point.index)
         return undo_info
 
+
 class DeleteLinesCommand(Command):
     short_name = "del"
     serialize_order =  [
@@ -331,14 +340,14 @@ class DeleteLinesCommand(Command):
             ('point_indexes', 'list_int'),
             ('line_indexes', 'list_int'),
             ]
-    
+
     def __init__(self, layer, point_indexes, line_indexes=None):
         Command.__init__(self, layer)
         self.point_indexes = point_indexes
         self.line_indexes = line_indexes
         self.undo_point = None
         self.undo_line = None
-    
+
     def __str__(self):
         old_points, old_line_segments, old_line_indexes = self.undo_info.data
         if len(old_line_indexes) == 0:
@@ -352,7 +361,7 @@ class DeleteLinesCommand(Command):
                 line = old_line_indexes[0]
             return "Delete Line #%d" % line
         return "Delete %d Lines" % len(old_line_indexes)
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
@@ -415,33 +424,35 @@ class DeleteLinesCommand(Command):
         lf.layer_contents_deleted = True
         return undo
 
+
 class MergePointsCommand(DeleteLinesCommand):
     short_name = "merge_pt"
     serialize_order =  [
             ('layer', 'layer'),
             ('point_indexes', 'list_int'),
             ]
-    
+
     def __init__(self, layer, point_indexes):
         DeleteLinesCommand.__init__(self, layer, point_indexes, None)
-    
+
     def __str__(self):
         return "Merge Points"
-    
+
+
 class CropRectCommand(Command):
     short_name = "crop"
     serialize_order =  [
             ('layer', 'layer'),
             ('world_rect', 'rect'),
             ]
-    
+
     def __init__(self, layer, world_rect):
         Command.__init__(self, layer)
         self.world_rect = world_rect
-    
+
     def __str__(self):
         return "Crop"
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = layer.crop_rectangle(self.world_rect)
@@ -453,26 +464,27 @@ class CropRectCommand(Command):
         undo_info = layer.set_state(old_state)
         return undo_info
 
+
 class StyleChangeCommand(Command):
     short_name = "style"
     serialize_order =  [
             ('layer', 'layer'),
             ('style', 'style'),
             ]
-    
+
     def __init__(self, layer, style):
         Command.__init__(self, layer)
         self.style = style
-    
+
     def __str__(self):
         return "Layer Style"
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer and next_command.style.has_same_keywords(self.style):
                 self.style = next_command.style
                 return True
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -492,26 +504,27 @@ class StyleChangeCommand(Command):
         lm.update_default_style(default_style)
         return self.undo_info
 
+
 class TextCommand(Command):
     short_name = "text"
     serialize_order =  [
             ('layer', 'layer'),
             ('text', 'text'),
             ]
-    
+
     def __init__(self, layer, text):
         Command.__init__(self, layer)
         self.text = text
-    
+
     def __str__(self):
         return "Edit Text"
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer:
                 self.text = next_command.text
                 return True
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -531,26 +544,27 @@ class TextCommand(Command):
         layer.rebuild_needed = True
         return self.undo_info
 
+
 class SetAnchorCommand(Command):
     short_name = "text_anchor"
     serialize_order =  [
             ('layer', 'layer'),
             ('anchor', 'int'),
             ]
-    
+
     def __init__(self, layer, anchor):
         Command.__init__(self, layer)
         self.anchor = anchor
-    
+
     def __str__(self):
         return "Set Anchor Point"
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer:
                 self.anchor = next_command.anchor
                 return True
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -570,6 +584,7 @@ class SetAnchorCommand(Command):
         layer.rebuild_needed = True
         return self.undo_info
 
+
 class StatusCodeColorCommand(Command):
     short_name = "status_code_color"
     serialize_order =  [
@@ -577,22 +592,22 @@ class StatusCodeColorCommand(Command):
             ('code', 'int'),
             ('color', 'int'),
             ]
-    
+
     def __init__(self, layers, code, color):
         Command.__init__(self)
         self.layers = [layer.invariant for layer in layers]
         self.code = code
         self.color = color
-    
+
     def __str__(self):
         return "Status Code Color"
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if set(next_command.layers) == set(self.layers) and next_command.code == self.code:
                 self.color = next_command.color
                 return True
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         self.undo_info = undo = UndoInfo()

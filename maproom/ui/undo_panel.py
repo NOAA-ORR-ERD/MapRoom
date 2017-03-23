@@ -15,7 +15,7 @@ class UndoHistoryPanel(wx.Panel):
     def __init__(self, parent, task):
         self.task = task
         wx.Panel.__init__(self, parent, wx.ID_ANY)
-        
+
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
         self.SetBackgroundColour(attr.colBg)
@@ -31,7 +31,7 @@ class UndoHistoryPanel(wx.Panel):
         self.SetSizer(self.sizer)
         self.sizer.Layout()
         self.Fit()
-    
+
     def set_task(self, task):
         self.task = task
 
@@ -42,6 +42,7 @@ class UndoHistoryPanel(wx.Panel):
         index = project.layer_manager.undo_stack.insert_index
         if index > 0:
             self.history.SetSelection(index - 1)
+
 
 if __name__ == "__main__":
     """

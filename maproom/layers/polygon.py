@@ -30,19 +30,19 @@ class PolygonLayer(PointLayer):
     
     """
     type = Str("polygon")
-    
+
     mouse_mode_toolbar = Str("PolygonLayerToolBar")
-    
+
     rings = Any
-    
+
     point_adjacency_array = Any  # parallels the points array
-    
+
     ring_identifiers = Any
 
     visibility_items = ["points", "polygons"]
-    
+
     layer_info_panel = ["Layer name", "Polygon count"]
-    
+
     selection_info_panel = []
 
     def __str__(self):
@@ -55,7 +55,7 @@ class PolygonLayer(PointLayer):
         except:
             rings = 0
         return "PolygonLayer %s: %d points, %d rings" % (self.name, points, rings)
-    
+
     def get_info_panel_text(self, prop):
         if prop == "Polygon count":
             if self.rings is not None:
@@ -72,7 +72,7 @@ class PolygonLayer(PointLayer):
         no_rings = (self.rings is None or len(self.rings) == 0)
 
         return no_points and no_rings
-        
+
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
@@ -81,7 +81,7 @@ class PolygonLayer(PointLayer):
         if label == "polygons":
             return self.rings is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
-    
+
     def set_data(self, f_ring_points, f_ring_starts, f_ring_counts,
                  f_ring_identifiers, f_ring_groups=None, style=None):
         if style is None:
@@ -111,7 +111,7 @@ class PolygonLayer(PointLayer):
                 # the holes
                 self.rings.group = np.asarray(f_ring_groups, dtype=np.uint32)
             self.point_adjacency_array = data_types.make_point_adjacency_array(n_points)
-            
+
             # set up feature code to color map
             green = color_floats_to_int(0.25, 0.5, 0, 0.75)
             blue = color_floats_to_int(0.0, 0.0, 0.5, 0.75)
@@ -119,7 +119,7 @@ class PolygonLayer(PointLayer):
             mapbounds = color_floats_to_int(0.9, 0.9, 0.9, 0.15)
             spillable = color_floats_to_int(0.0, 0.2, 0.5, 0.15)
             color_array = np.array((0, green, blue, gray, mapbounds, spillable), dtype=np.uint32)
-            
+
             total = 0
             for p in xrange(n_rings):
                 c = self.rings.count[p]
@@ -159,10 +159,10 @@ class PolygonLayer(PointLayer):
         self.load_error_string, points, starts, counts, identifiers, groups = shapely_to_polygon(geom)
         log.debug("New geometry: for %s: %s" % (self, str(points)))
         self.set_data(points, starts, counts, identifiers, groups)
-    
+
     def has_boundaries(self):
         return True
-    
+
     def get_all_boundaries(self):
         boundaries = []
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
@@ -173,7 +173,7 @@ class PolygonLayer(PointLayer):
             b = Boundary(points, indexes, 0.0)
             boundaries.append(b)
         return boundaries
-    
+
     def get_points_lines(self):
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
         all_lines = np.empty((0, 2), dtype=np.uint32)
@@ -207,7 +207,6 @@ class PolygonLayer(PointLayer):
 
     def identifiers_from_json(self, json_data):
         self.ring_identifiers = json_data['identifiers']
-
 
     def check_for_problems(self, window):
         problems = []
@@ -258,10 +257,10 @@ class PolygonLayer(PointLayer):
 
     def insert_line_segment(self, point_index_1, point_index_2):
         raise RuntimeError("Not implemented yet for polygon layer!")
-    
+
     def can_crop(self):
         return True
-    
+
     def get_ring(self, index):
         start = self.rings.start[index]
         count = self.rings.count[index]
@@ -269,12 +268,12 @@ class PolygonLayer(PointLayer):
         points = np.c_[boundary.x[start:start + count], boundary.y[start:start + count]]
         points = np.require(points, np.float64, ["C", "OWNDATA"])
         return points, self.ring_identifiers[index]
-    
+
     def iter_rings(self):
         for n in range(np.alen(self.rings)):
             poly = self.get_ring(n)
             yield poly
-    
+
     def get_shapely_polygon(self, index, debug=False):
         points, ident = self.get_ring(index)
         if np.alen(points) > 2:
@@ -286,23 +285,24 @@ class PolygonLayer(PointLayer):
             print "numpy:", points.__array_interface__, points.shape, id(points), points.flags
             print "shapely polygon:", poly.bounds
         return poly
-    
+
     def crop_rectangle(self, w_r):
         print "Cropping to %s" % str(w_r)
-        
+
         crop_rect = box(w_r[0][0], w_r[1][1], w_r[1][0], w_r[0][1])
-        
+
         class AccumulatePolygons(object):
             """Helper class to store results from stepping through the clipped
             rings
             """
+
             def __init__(self):
                 self.p_points = None
                 self.p_starts = []
                 self.p_counts = []
                 self.p_identifiers = []
                 self.total_points = 0
-            
+
             def add_polygon(self, cropped_poly, ident):
                 points = np.require(cropped_poly.exterior.coords.xy, np.float64, ["C", "OWNDATA"])
                 num_points = points.shape[1]
@@ -318,7 +318,7 @@ class PolygonLayer(PointLayer):
                 self.p_counts.append(num_points)
                 self.p_identifiers.append(ident)
                 self.total_points += num_points
-        
+
         new_polys = AccumulatePolygons()
         for n in range(np.alen(self.rings)):
             poly = self.get_shapely_polygon(n)
@@ -329,7 +329,7 @@ class PolygonLayer(PointLayer):
                 print poly
                 print poly.is_valid
                 raise
-                
+
             if not cropped_poly.is_empty:
                 if cropped_poly.geom_type == "MultiPolygon":
                     for i, p in enumerate(cropped_poly):
@@ -343,13 +343,13 @@ class PolygonLayer(PointLayer):
                     print "Temporarily skipping %s" % cropped_poly.geom_type
                     continue
                 new_polys.add_polygon(cropped_poly, self.ring_identifiers[n])
-                
+
         old_state = self.get_restore_state()
         self.set_data(new_polys.p_points,
                       np.asarray(new_polys.p_starts, dtype=np.uint32),
                       np.asarray(new_polys.p_counts, dtype=np.uint32),
                       new_polys.p_identifiers)
-        
+
         undo = UndoInfo()
         undo.data = old_state
         undo.flags.refresh_needed = True
@@ -357,10 +357,10 @@ class PolygonLayer(PointLayer):
         lf = undo.flags.add_layer_flags(self)
         lf.layer_contents_deleted = True
         return undo
-    
+
     def get_restore_state(self):
         return self.points.copy(), self.rings.copy(), self.point_adjacency_array.copy(), list(self.ring_identifiers)
-    
+
     def set_state(self, params):
         self.points, self.rings, self.point_adjacency_array, self.ring_identifiers = params
         undo = UndoInfo()
@@ -376,7 +376,7 @@ class PolygonLayer(PointLayer):
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_polygons(self.rings, self.point_adjacency_array)
-    
+
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering polygon layer!!! pick=%s" % (picker))
         # the rings
@@ -392,9 +392,9 @@ class RNCLoaderLayer(PolygonLayer):
     
     """
     type = Str("rncloader")
-    
+
     mouse_mode_toolbar = Str("RNCToolBar")
-    
+
     layer_info_panel = ["Polygon count"]
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):

@@ -56,24 +56,24 @@ class ImageData(object):
     """
 
     NORTH_UP_TOLERANCE = 0.002
-    
+
     def __init__(self, x, y, texture_size=1024):
         self.x = x
         self.y = y
         self.texture_size = texture_size
         self.projection = None
         self.pixel_to_projected_transform = np.array((0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
-        
+
         self.image_list = []
-        
+
         self.calc_textures(self.texture_size)
-    
+
     def __iter__(self):
         return iter(self.image_list)
-    
+
     def is_threaded(self):
         return False
-    
+
     def release_images(self):
         """Free image data after renderer is done converting to textures.
         
@@ -84,18 +84,18 @@ class ImageData(object):
         """
         # release images by allowing garbage collector to collect the now
         # unrefcounted images.
-        
+
         # UPDATE: need to keep raw images around for PDF rendering
         #self.images = True
         pass
-    
+
     def set_projection(self, projection=None):
         if projection is None:
             # no projection, assume latlong:
             projection = pyproj.Proj("+proj=latlong")
         self.projection = projection
         self.calc_image_world_rects()
-    
+
     def get_bounds(self):
         bounds = rect.NONE_RECT
 
@@ -104,9 +104,9 @@ class ImageData(object):
             for r in self.image_list[1:]:
                 b = rect.accumulate_rect(b, r.world_rect)
             bounds = rect.accumulate_rect(bounds, b)
-        
+
         return bounds
-    
+
     def calc_textures(self, texture_size):
         self.texture_size = texture_size
         num_cols = self.x / texture_size
@@ -125,10 +125,10 @@ class ImageData(object):
                 selection_width = texture_size
                 if (((c + 1) * texture_size) > self.x):
                     selection_width -= (c + 1) * texture_size - self.x
-                
+
                 image = Image(selection_origin, (selection_width, selection_height))
                 self.image_list.append(image)
-    
+
     def calc_world_rect(self, selection_origin, selection_size):
         # we invert the y in going to projected coordinates
         left_bottom_projected = apply_transform(
@@ -163,9 +163,9 @@ class ImageData(object):
             right_top_world = self.projection(right_top_projected[0], right_top_projected[1], inverse=True)
             right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
         log.debug("  after: %s" % str((left_bottom_world, left_top_world, right_top_world, right_bottom_world)))
-        
+
         return left_bottom_world, left_top_world, right_top_world, right_bottom_world
-    
+
     def calc_image_world_rects(self):
         """ Includes a simple dateline check to move images that cross the
         dateline or are in far east latitudes to move to the west latitude (US
@@ -182,7 +182,7 @@ class ImageData(object):
         subimage_loader.prepare(len(self.image_list))
         for entry in self.image_list:
             entry.data = subimage_loader.load(entry.origin, entry.size)
-    
+
     def set_control_points(self, cp, projection):
         xoffset = cp[0][0]
         yoffset = cp[0][1]
@@ -190,7 +190,7 @@ class ImageData(object):
         yscale = (cp[3][1] - cp[0][1])/self.y
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
-    
+
     def set_rect(self, rect, projection):
         xoffset = rect[0][0]
         yoffset = rect[0][1]
@@ -198,7 +198,7 @@ class ImageData(object):
         yscale = (rect[1][1] - rect[0][1])/self.y
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
-    
+
     def load_numpy_array(self, cp, array, projection=None):
         if projection is not None:
             self.set_control_points(cp, projection)
@@ -214,10 +214,11 @@ class ImageData(object):
                 return False
         return True
 
+
 class SubImageLoader(object):
     def prepare(self, num_sub_images):
         pass
-    
+
     def load(self, origin, size):
         pass
 
@@ -225,7 +226,7 @@ class SubImageLoader(object):
 class RawSubImageLoader(SubImageLoader):
     def __init__(self, array):
         self.array = array
-    
+
     def load(self, origin, size):
         # numpy image coords are reversed!
         return self.array[origin[1]:origin[1] + size[1],
@@ -252,10 +253,10 @@ class TileImageData(ImageData):
         self.downloader_ref = weakref.ref(downloader)
         self.last_requested = None
         self.requested = dict()  # (x, y): Image
-    
+
     def __iter__(self):
         return self.requested.itervalues()
-    
+
     def calc_textures(self, texture_size):
         pass
 
@@ -290,10 +291,10 @@ class TileImageData(ImageData):
             self.last_requested = self.requested
             self.zoom_level = zoom
             self.requested = dict()
-    
+
     def release_tiles(self):
         print "RELEASING TILES FOR ZOOM=%d: %s" % (self.last_zoom_level, self.last_requested)
-    
+
     def calc_center_tiles(self, tl, br):
         needed = []
         x1, y1 = tl
@@ -304,7 +305,7 @@ class TileImageData(ImageData):
                 if not tile in self.requested:
                     needed.append(tile)
         return needed
-    
+
     def calc_border_tiles(self, tl, br):
         needed = []
         z = self.zoom_level
@@ -326,7 +327,7 @@ class TileImageData(ImageData):
                 if not tile in self.requested:
                     needed.append(tile)
         return needed
-    
+
     def request_tiles(self, tiles, manager, event_data):
         downloader = self.downloader_ref()
         if downloader is None:
@@ -337,7 +338,7 @@ class TileImageData(ImageData):
                 print "REQUESTING TILE:", tile
                 req = downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
                 self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_lb_rt)
-    
+
     def add_tiles(self, queue, image_textures):
         if image_textures.static_renderer:
             # short circuit to skip for PDF renderer or other renderers that
@@ -370,6 +371,7 @@ class ImageTextures(object):
     """Class to allow sharing of textures between views
     
     """
+
     def __init__(self, image_data):
         self.blank = np.array([128, 128, 128, 128], 'B')
         self.textures = []
@@ -398,7 +400,7 @@ class ImageTextures(object):
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
             gl.glTexEnvf(gl.GL_TEXTURE_FILTER_CONTROL, gl.GL_TEXTURE_LOD_BIAS, -0.5)
-            
+
             if image.data is not None:
                 gl.glTexImage2D(
                     gl.GL_TEXTURE_2D,
@@ -444,7 +446,7 @@ class ImageTextures(object):
         self.vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-    
+
     def update_texture(self, texture_index, w, h, image):
 #        print "ImageData: loading texture index %d" % texture_index
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[texture_index])
@@ -459,7 +461,7 @@ class ImageTextures(object):
             gl.GL_UNSIGNED_BYTE,
             image
         )
-    
+
     def set_projection(self, image_data, projection):
         image_projected_rects = []
         log.debug("set_projection: image_list=%s" % str(list(image_data)))
@@ -484,7 +486,7 @@ class ImageTextures(object):
             vertex_data.y_rb = rb_projected[1]
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
-    
+
     def use_screen_rect(self, image_data, r, scale=1.0):
         for i, image in enumerate(image_data):
             x = image.origin[0] * scale
@@ -503,7 +505,7 @@ class ImageTextures(object):
             vertex_data.y_rb = y + r[0][1]
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
-    
+
     def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
         left = int(point[0] - (image_data.x/2) * scale)
         bottom = int(point[1] + (image_data.y/2) * scale)
@@ -527,6 +529,7 @@ class VBOTexture(object):
         self.z = z
         self.tex_id = tex_id
         self.vbo_vertexes = None
+
 
 class TileTextures(object):
     """Class to allow sharing of textures between views
@@ -570,7 +573,7 @@ class TileTextures(object):
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
         gl.glTexEnvf(gl.GL_TEXTURE_FILTER_CONTROL, gl.GL_TEXTURE_LOD_BIAS, -0.5)
-        
+
         if image.data is not None:
             gl.glTexImage2D(
                 gl.GL_TEXTURE_2D,
@@ -604,14 +607,14 @@ class TileTextures(object):
         # we fill the vbo_vertexes data in reproject() below
         tile.vbo_vertexes = gl_vbo.VBO(vertex_raw)
         self.set_projection(tile, image, projection)
-        
+
         if self.vbo_texture_coordinates is None:
             self.get_vbo_texture_coords()
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-        
+
         self.tiles.append(tile)
-    
+
     def set_projection(self, tile, image, projection):
         log.debug("  world rect %s: %s" % (tile.xy, str(image.world_rect)))
         lb, lt, rt, rb = image.world_rect
@@ -633,7 +636,7 @@ class TileTextures(object):
         vertex_data.y_rb = rb_projected[1]
 
         tile.vbo_vertexes[: np.alen(vertex_data)] = raw
-    
+
     def reorder_tiles(self, image_data):
         z_front = image_data.zoom_level
         z_behind = image_data.last_zoom_level
@@ -646,13 +649,13 @@ class TileTextures(object):
                 behind.append(tile)
             else:
                 self.remove_tile(tile)
-        
+
         # Tiles that appear in front will be drawn last.  Tiles that have
         # been removed won't appear in either the front or behind list
         # will be garbage collected
         self.tiles = behind
         self.tiles.extend(front)
-    
+
     def remove_tile(self, tile):
         gl.glDeleteTextures(np.array([tile.tex_id], np.uint32))
         tile.vbo_vertexes = None

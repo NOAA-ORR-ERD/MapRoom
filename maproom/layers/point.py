@@ -30,31 +30,31 @@ class PointLayer(PointBaseLayer):
 
     """
     name = Unicode("Point Layer")
-    
+
     type = Str("point")
-    
+
     mouse_mode_toolbar = Str("VectorLayerToolBar")
-      
+
     merged_points_index = Int(0)
-    
+
     default_depth = Float(1.0)
-    
+
     depth_unit = Property(Str)
-    
+
     _depth_unit = Enum("unknown", "meters", "feet", "fathoms")
-    
+
     pickable = True # is this a layer that support picking?
 
     visibility_items = ["points", "labels"]
-    
+
     layer_info_panel = ["Layer name", "Point count", "Flagged points", "Default depth", "Depth unit", "Color"]
-    
+
     selection_info_panel = ["Selected points", "Point index", "Point depth", "Point coordinates"]
 
     # Trait setters/getters
     def _get_depth_unit(self):
         return self._depth_unit
-    
+
     def _set_depth_unit(self, unit):
         unit = unit.lower()
         if unit in ['meter', 'meters', 'm']:
@@ -67,7 +67,7 @@ class PointLayer(PointBaseLayer):
             log.warning("Depth unit '%s' in %s; set to 'unknown'" % (unit, self.file_path))
             unit = 'unknown'
         self._depth_unit = unit
-    
+
     def get_info_panel_text(self, prop):
         if prop == "Selected points":
             return str(self.get_num_points_selected())
@@ -79,7 +79,7 @@ class PointLayer(PointBaseLayer):
             for p in e.points:
                 self.select_point(p, STATE_FLAGGED)
             self.manager.dispatch_event('refresh_needed')
-    
+
     def set_data(self, f_points, f_depths, f_line_segment_indexes, style=None):
         n = np.alen(f_points)
         if style is None:
@@ -100,31 +100,31 @@ class PointLayer(PointBaseLayer):
             ] = f_line_segment_indexes
             self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0
-        
+
         self.update_bounds()
-    
+
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)
-    
+
     ##### JSON Serialization
-    
+
     def default_depth_to_json(self):
         return self.default_depth
-    
+
     def default_depth_from_json(self, json_data):
         self.default_depth = json_data['default_depth']
-    
+
     def depth_unit_to_json(self):
         return self.depth_unit
-    
+
     def depth_unit_from_json(self, json_data):
         self.depth_unit = json_data['depth_unit']
-    
+
     def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp, about_center=False):
         indexes = self.get_selected_and_dependent_point_indexes()
         cmd = MovePointsCommand(self, indexes, world_dx, world_dy)
         return cmd
-    
+
     def insert_point(self, world_point):
         if self.points is None:
             index = -1
@@ -186,7 +186,7 @@ class PointLayer(PointBaseLayer):
     #     ## fixme -- are an points connected to a pint without a lines layer? i.e. this belongs in LineLayer]
     #     ##          ormore tot the point , not needed
     #     return []
-    
+
     def update_after_delete_point(self, point_index):
         """Hook for subclasses to update dependent items when a point is deleted.
         """

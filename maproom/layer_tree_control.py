@@ -10,17 +10,18 @@ from menu_commands import MoveLayerCommand
 import logging
 log = logging.getLogger(__name__)
 
+
 class LayerTreeControl(wx.Panel):
 
     dragged_item = None
 
     def __init__(self, parent, project, size=(-1,-1)):
         wx.Panel.__init__(self, parent, wx.ID_ANY, size=size)
-        
+
         self.tree = treectrl.CustomTreeCtrl(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE,
  agwStyle=treectrl.TR_HIDE_ROOT|treectrl.TR_NO_LINES|treectrl.TR_HAS_BUTTONS)
         self.project = project
-        
+
         self.tree.Bind(treectrl.EVT_TREE_ITEM_CHECKED, self.handle_item_checked)
         self.tree.Bind(treectrl.EVT_TREE_BEGIN_DRAG, self.handle_begin_drag)
         self.tree.Bind(treectrl.EVT_TREE_END_DRAG, self.handle_end_drag)
@@ -37,13 +38,13 @@ class LayerTreeControl(wx.Panel):
         # self.Bind( wx.EVT_RIGHT_UP, self.mouse_right_released )
         if sys.platform.startswith("win"):
             self.tree.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
-            
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.tree, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.sizer.Layout()
         self.Fit()
-    
+
     def set_project(self, project):
         self.project = project
         self.rebuild()
@@ -328,5 +329,5 @@ class LayerTreeControl(wx.Panel):
             if self.project is not None:
                 self.project.control.on_mouse_wheel_scroll(event)
             return
-        
+
         event.Skip()

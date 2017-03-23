@@ -37,7 +37,7 @@ def write_boundaries_as_shapefile(filename, layer, boundaries):
         for point_index in boundary:
             ring.AddPoint(points.x[point_index], points.y[point_index])
             file_point_index += 1
-            
+
             if file_point_index % BaseLayerLoader.points_per_tick == 0:
                 progress_log.info("Saved %d points" % file_point_index)
 
@@ -64,10 +64,12 @@ def write_boundaries_as_shapefile(filename, layer, boundaries):
     shapefile.Destroy()
     shapefile = None  # garbage collection = save
 
+
 def write_layer_as_shapefile(filename, layer, driver_name):
     srs = osr.SpatialReference()
     srs.ImportFromProj4(layer.manager.project.layer_canvas.projection.srs)
     write_geometry_as_shapefile(filename, layer.name.encode("UTF-8"), driver_name, layer.geometry, srs)
+
 
 def write_geometry_as_shapefile(filename, layer_name, driver_name, geometry_list, srs=None):
     driver = ogr.GetDriverByName(driver_name)
@@ -91,11 +93,11 @@ def write_geometry_as_shapefile(filename, layer_name, driver_name, geometry_list
 
 class ShapefileLoader(BaseLayerLoader):
     mime = "application/x-maproom-shapefile"
-    
+
     layer_types = ["shapefile"]
-    
+
     extensions = [".shp", ".kml", ".json", ".geojson"]
-    
+
     extension_desc = {
         ".shp": "ESRI Shapefile",
         ".kml": "KML",
@@ -104,12 +106,12 @@ class ShapefileLoader(BaseLayerLoader):
     }
 
     name = "Shapefile"
-    
+
     layer_class = PolygonShapefileLayer
 
     def load_layers(self, metadata, manager):
         layer = self.layer_class(manager=manager)
-        
+
         layer.load_error_string, geometry_list = load_shapely(metadata.uri)
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
@@ -118,7 +120,7 @@ class ShapefileLoader(BaseLayerLoader):
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
-    
+
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
         desc = self.extension_desc[ext]

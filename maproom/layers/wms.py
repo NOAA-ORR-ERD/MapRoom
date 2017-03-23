@@ -13,38 +13,39 @@ from maproom.library import numpy_images
 import logging
 log = logging.getLogger(__name__)
 
+
 class WMSLayer(ProjectedLayer):
     """Web Map Service
     
     """
     name = Unicode("WMS")
-    
+
     type = Str("wms")
-    
+
     layer_info_panel = ["Layer name", "Transparency", "Server status", "Server reload", "Map status"]
-    
+
     selection_info_panel = ["Map server", "Map layer"]
-    
+
     map_server_id = Int(0)
-    
+
     map_layers = Any(None)  # holds a set of names representing shown overlay layers
-    
+
     image_data = Any
-    
+
     current_size = Any(None)  # holds tuple of screen size
-    
+
     current_proj = Any(None)  # holds rect of projected coords
-    
+
     current_world = Any(None)  # holds rect of world coords
-    
+
     rebuild_needed = Bool(True)
-    
+
     threaded_request_ready = Any(None)
-    
+
     download_status_text = Any(None)
-    
+
     checkerboard_when_loading = False
-    
+
     def map_server_id_to_json(self):
         # get a representative URL to use as the reference in the project file
         # so we can restore the correct tile server
@@ -56,7 +57,7 @@ class WMSLayer(ProjectedLayer):
         index = self.manager.project.task.get_wms_server_id_from_url(url)
         if index is not None:
             self.map_server_id = index
-    
+
     def map_layers_to_json(self):
         # get a representative URL to use as the reference in the project file
         # so we can restore the correct tile server
@@ -68,14 +69,14 @@ class WMSLayer(ProjectedLayer):
         if layers is not None:
             layers = set(layers)
         self.map_layers = layers
-    
+
     def is_valid_threaded_result(self, map_server_id, wms_request):
         if map_server_id == self.map_server_id:
             self.rebuild_needed = True
             self.threaded_request_ready = wms_request
             return True
         return False
-    
+
     def get_image_array(self):
         if self.threaded_request_ready is None:
             return self.current_world, numpy_images.get_checkerboard(*self.current_size), None
@@ -92,13 +93,13 @@ class WMSLayer(ProjectedLayer):
             self.image_data = None
         if self.image_data is None and self.current_size is not None:
             world_rect, raw, error = self.get_image_array()
-            
+
             # Need to use an image even on an error condition, otherwise when
             # the screen is redrawn from some external event (window unhidden,
             # switching layer, etc.) the checkerboard image will be loaded
             # but because rebuild_needed wasn't set, no corresponding threaded
             # call will be issued to load a new image
-            
+
             self.image_data = ImageData(raw.shape[1], raw.shape[0])
             self.image_data.load_numpy_array(None, raw)
             # OpenGL y coords are backwards, so simply flip world y coords and
@@ -130,7 +131,7 @@ class WMSLayer(ProjectedLayer):
             # first time, load map immediately
             self.wms_rebuild(renderer.canvas)
             self.rebuild_needed = True
-    
+
     def wms_rebuild(self, canvas):
         downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
         if downloader.is_valid():
@@ -154,7 +155,7 @@ class WMSLayer(ProjectedLayer):
                 log.debug("WMS error, not attempting to contact again")
         self.change_count += 1  # Force info panel update
         canvas.project.update_info_panels(self, True)
-    
+
     def change_server_id(self, id, canvas):
         if id != self.map_server_id:
             self.map_server_id = id
@@ -177,11 +178,11 @@ class WMSLayer(ProjectedLayer):
         if self.image_data is not None:
             alpha = alpha_from_int(self.style.line_color)
             renderer.draw_image(self, picker, alpha)
-    
+
     # Utility routines used by info_panels to abstract the server info
-    
+
     def get_downloader(self, server_id):
         return self.manager.project.task.get_threaded_wms_by_id(server_id)
-    
+
     def get_server_names(self):
         return self.manager.project.task.get_known_wms_names()

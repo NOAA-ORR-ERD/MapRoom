@@ -20,7 +20,7 @@ class TrianglePanel(wx.Panel):
     def __init__(self, parent, task):
         self.task = task
         wx.Panel.__init__(self, parent, wx.ID_ANY)
-        
+
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
         self.SetBackgroundColour(attr.colBg)
@@ -83,7 +83,7 @@ class TrianglePanel(wx.Panel):
         self.SetSizer(self.sizer)
         self.sizer.Layout()
         self.Fit()
-    
+
     def set_task(self, task):
         self.task = task
 
@@ -93,7 +93,7 @@ class TrianglePanel(wx.Panel):
             # even when the panel is hidden, which is not what we want.
             event.Skip()
             return
-        
+
         self.triangulate_button.Enable(False)
         self.triangulate_button.SetLabel("Triangulating...")
         self.sizer.Layout()
@@ -104,7 +104,7 @@ class TrianglePanel(wx.Panel):
 
     def triangulate_internal(self):
         project = self.task.active_editor
-        
+
         q = None
         if (self.angle_text_box.GetValue().strip() != ""):
             try:

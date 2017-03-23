@@ -18,20 +18,21 @@ import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
+
 class BNALoader(BaseLayerLoader):
     mime = "application/x-maproom-bna-old"
-    
+
     layer_types = ["polygon"]
-    
+
     extensions = [".bna"]
-    
+
     name = "BNA"
-    
+
     layer_class = PolygonLayer
 
     def load_layers(self, metadata, manager):
         layer = self.layer_class(manager=manager)
-        
+
         (layer.load_error_string,
          f_ring_points,
          f_ring_starts,
@@ -45,29 +46,30 @@ class BNALoader(BaseLayerLoader):
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
-    
+
     def save_to_fh(self, fh, layer):
         save_bna_file(fh, layer)
 
+
 class RNCLoader(BNALoader):
     mime = "application/x-maproom-rncloader"
-    
+
     layer_types = ["rncloader"]
-    
+
     extensions = [".bna"]
-    
+
     name = "RNCLoader"
-    
+
     layer_class = RNCLoaderLayer
 
 
 class BNAShapefileLoader(BNALoader):
     mime = "application/x-maproom-bna"
-    
+
     layer_types = ["shapefile"]
-    
+
     extensions = [".bna", ".shp", ".kml", ".json", ".geojson"]
-    
+
     extension_desc = {
         ".bna": "Boundary File",
         ".shp": "ESRI Shapefile",
@@ -77,12 +79,12 @@ class BNAShapefileLoader(BNALoader):
     }
 
     name = "BNA"
-    
+
     layer_class = PolygonShapefileLayer
 
     def load_layers(self, metadata, manager):
         layer = self.layer_class(manager=manager)
-        
+
         try:
             layer.load_error_string, geometry_list, ring_identifiers = load_bna_as_shapely(metadata.uri)
         except RuntimeError, e:
@@ -94,7 +96,7 @@ class BNAShapefileLoader(BNALoader):
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
-    
+
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
         if ext.lower() == ".bna":
@@ -102,6 +104,7 @@ class BNAShapefileLoader(BNALoader):
         else:
             desc = self.extension_desc[ext]
             write_layer_as_shapefile(filename, layer, desc)
+
 
 def parse_bna_file(uri):
     f = fsopen(uri, "r")
@@ -234,13 +237,14 @@ def save_bna_file(f, layer):
         for j in range(count):
             f.write("%s,%s\n" % (polygon[j][0], polygon[j][1]))
             ticks += 1
-                
+
             if (ticks % update_every) == 0:
                 progress_log.info("TICK=%d" % ticks)
         # duplicate first point to create a closed polygon
         f.write("%s,%s\n" % (polygon[0][0], polygon[0][1]))
     progress_log.info("TICK=%d" % ticks)
     progress_log.info("Saved BNA")
+
 
 def load_bna_as_shapely(uri):
     """

@@ -54,6 +54,7 @@ class MaproomPreferences(PreferencesHelper):
 
     bsb_directory = Directory(os.getcwd())
 
+
 class MaproomPreferencesPane(PreferencesPane):
     """ The preferences pane for the Framework application.
     """

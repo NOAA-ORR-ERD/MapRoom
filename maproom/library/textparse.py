@@ -1,5 +1,6 @@
 import itertools
 
+
 def parse_int_string(nputstr=""):
     """Return list of integers from comma separated ranges
     
@@ -45,13 +46,14 @@ def parse_int_string(nputstr=""):
     #ordered.sort()
     return selection, error
 
+
 def int_list_to_string(values):
     # from http://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
     def ranges(i):
         for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
             b = list(b)
             yield b[0][1], b[-1][1]
-    
+
     items = []
     for r in ranges(values):
         if r[0] < r[1]:

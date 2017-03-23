@@ -53,7 +53,6 @@ class RNCChart(object):
                 elif last == "file name":
                     self.filename += "; " + arg
 
-
     def parse_polygon(self, p):
         log.debug("POLYGON:", p)
         if p.tag == "{http://www.opengis.net/gml/3.2}LinearRing":
@@ -70,7 +69,7 @@ class RNCParser(object):
         self.fileroot, _ = os.path.splitext(os.path.basename(self.filename))
         self.maps = []
         self.parse()
-    
+
     def parse(self):
         self.maps = []
         tree = ET.parse(self.filename)
@@ -113,7 +112,7 @@ class RNCParser(object):
 
 if __name__ == "__main__":
     import argparse
-    
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--debug", help="Show debug information as the program runs", action="store_true")
     parser.add_argument("-v", "--verbose", help="Show processed instructions as the program runs", action="store_true")

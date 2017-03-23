@@ -21,16 +21,16 @@ class Folder(Layer):
     """Layer that contains other layers.
     """
     name = Unicode("Folder")
-    
+
     type = Str("folder")
-    
+
     def is_folder(self):
         return True
-    
+
     @property
     def is_renderable(self):
         return False
-    
+
     def set_visibility_when_checked(self, checked, project_layer_visibility):
         # Folders will automatically set their children's visiblity state to
         # the parent state
@@ -46,14 +46,14 @@ class RootLayer(Folder):
     Only one root layer per project.
     """
     name = Unicode("Root Layer")
-    
+
     type = Str("root")
-    
+
     skip_on_insert = True
-    
+
     def is_root(self):
         return True
-    
+
     def serialize_json(self, index):
         # Root layer is never serialized
         pass
@@ -63,13 +63,13 @@ class BoundedFolder(LineLayer, Folder):
     """Layer that contains other layers.
     """
     name = Unicode("BoundedFolder")
-    
+
     type = Str("boundedfolder")
-    
+
     @property
     def is_renderable(self):
         return np.alen(self.points) > 0
-    
+
     def set_data_from_bounds(self, bounds):
         ((l, b), (r, t)) = bounds
         if l is None:
@@ -86,7 +86,7 @@ class BoundedFolder(LineLayer, Folder):
             self.points.z = 0.0
             self.points.color = self.style.line_color
             self.points.state = 0
-            
+
             lines = [(0, 1), (1, 2), (2, 3), (3, 0)]
             n = len(lines)
             self.line_segment_indexes = self.make_line_segment_indexes(n)

@@ -25,30 +25,30 @@ log = logging.getLogger(__name__)
 class InfoField(object):
     same_line = False
     display_label = True
-    
+
     # wx.Sizer proportion of the main control (not the label).  See the
     # wx.Sizer docs, but basically 0 will fix vertical size to initial size, >
     # 0 will fill available space based on the total proportion in the sizer.
     vertical_proportion = 0
-    
+
     default_width = 100
-    
+
     popup_width = 300
-    
+
     def __init__(self, panel, field_name):
         self.field_name = field_name
         self.panel = panel
         self.create()
-    
+
     def is_displayed(self, layer):
         return True
-    
+
     def show(self, state=True):
         self.parent.Show(state)
 
     def hide(self):
         self.show(False)
-    
+
     def create(self):
         self.parent = wx.Window(self.panel)
         self.box =  wx.BoxSizer(wx.VERTICAL)
@@ -75,35 +75,35 @@ class InfoField(object):
             for extra in self.extra_ctrls:
                 hbox.Add(extra, 0, wx.ALIGN_CENTER)
         self.box.AddSpacer(self.panel.VALUE_SPACING)
-    
+
     def create_all_controls(self):
         self.ctrl = self.create_control()
         if sys.platform.startswith("win"):
             self.ctrl.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
         self.extra_ctrls = self.create_extra_controls()
-    
+
     def is_editable_control(self, ctrl):
         return ctrl == self.ctrl
-    
+
     def create_extra_controls(self):
         return []
 
     def add_to_parent(self):
         self.panel.sizer.Add(self.parent, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, 0)
         self.show(True)
-    
+
     def fill_data(self, layer):
         raise NotImplementedError
-    
+
     def is_valid(self):
         return True
-    
+
     def wants_focus(self):
         return False
-    
+
     def set_focus(self):
         pass
-    
+
     def process_command(self, cmd):
         # Override the normal refreshing of the InfoPanel when editing the
         # properties here because refreshing them messes up the text editing.
@@ -116,35 +116,40 @@ class InfoField(object):
 #            print "Mouse not over info panel %s: trying map!" % self
             self.panel.project.control.on_mouse_wheel_scroll(event)
             return
-        
+
         event.Skip()
+
 
 class LabelField(InfoField):
     same_line = True
-    
+
     def create_control(self):
         c = wx.StaticText(self.parent, style=wx.ALIGN_RIGHT)
         return c
-        
+
+
 class SimplePropertyField(LabelField):
     def fill_data(self, layer):
         text = layer.get_info_panel_text(self.field_name)
         self.ctrl.SetLabel(text)
 
+
 class WholeLinePropertyField(SimplePropertyField):
     same_line = False
 
+
 class MultiLinePropertyField(InfoField):
     same_line = False
-    
+
     def fill_data(self, layer):
         text = layer.get_info_panel_text(self.field_name)
         self.ctrl.SetValue(str(text))
-    
+
     def create_control(self):
         c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
         return c
-        
+
+
 class BooleanLabelField(SimplePropertyField):
     def create_extra_controls(self):
         b = buttons.GenBitmapToggleButton(self.parent, -1, None, style=wx.BORDER_NONE|wx.BU_EXACTFIT)  # BU_EXACTFIT removes padding
@@ -157,48 +162,53 @@ class BooleanLabelField(SimplePropertyField):
         b.SetInitialSize()
         self.toggle = b
         return [self.toggle]
-        
+
     def fill_data(self, layer):
         SimplePropertyField.fill_data(self, layer)
         vis = self.get_visibility(layer)
         self.toggle.SetToggle(vis)
-    
+
     def on_toggled(self, evt):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
         self.set_visibility(layer, evt.GetIsDown())
 
+
 class VisibilityField(BooleanLabelField):
     visibility_name = 'DEFINE IN SUBCLASS!'
-    
+
     def get_visibility(self, layer):
         return self.panel.project.layer_visibility[layer][self.visibility_name]
-    
+
     def set_visibility(self, layer, state):
         self.panel.project.layer_visibility[layer][self.visibility_name] = state
         self.panel.project.refresh()
 
+
 class PointVisibilityField(VisibilityField):
     visibility_name = 'points'
+
 
 class LineVisibilityField(VisibilityField):
     visibility_name = 'lines'
 
+
 class DepthVisibilityField(VisibilityField):
     visibility_name = 'labels'
-    
+
     def fill_data(self, layer):
         self.ctrl.SetLabel("")
 
+
 class TriangleShadingVisibilityField(VisibilityField):
     visibility_name = 'triangles'
-    
+
     def fill_data(self, layer):
         self.ctrl.SetLabel("")
         vis = self.get_visibility(layer)
         self.toggle.SetToggle(vis)
-    
+
     def set_visibility(self, layer, state):
         self.panel.project.layer_visibility[layer][self.visibility_name] = state
         self.panel.project.refresh()
@@ -210,7 +220,7 @@ class TextEditField(InfoField):
         c.Bind(wx.EVT_TEXT, self.on_text_changed)
         c.SetEditable(True)
         return c
-    
+
     def fill_data(self, layer):
         try:
             text = self.get_value(layer)
@@ -220,7 +230,7 @@ class TextEditField(InfoField):
             self.ctrl.Enable(False)
         self.ctrl.ChangeValue(text)
         self.is_valid()
-    
+
     def is_valid(self):
         c = self.ctrl
         c.SetBackgroundColour("#FFFFFF")
@@ -232,26 +242,27 @@ class TextEditField(InfoField):
             valid = False
         self.ctrl.Refresh()
         return valid
-    
+
     def parse_from_string(self):
         return self.ctrl.GetValue()
-    
+
     def on_text_changed(self, evt):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
         self.process_text_change(layer)
-    
+
     def process_text_change(self, layer):
         layer.name = self.ctrl.GetValue()
         self.panel.ignore_next_update = True
         # a side effect of select_layer() is to make sure the layer name is up-to-date
         self.panel.project.layer_tree_control.select_layer(layer)
-    
+
     def initial_text_input(self, text):
         self.ctrl.SetValue(text)
         self.ctrl.SetInsertionPointEnd()#(self.ctrl.GetLastPosition())
-        
+
+
 class LayerNameField(TextEditField):
     def get_value(self, layer):
         if (layer is None):
@@ -259,13 +270,14 @@ class LayerNameField(TextEditField):
         else:
             text = layer.name
         return text
-    
+
     def process_text_change(self, layer):
         name = self.ctrl.GetValue()
         cmd = RenameLayerCommand(layer, name)
         self.process_command(cmd)
         self.ctrl.SetFocus()
-        
+
+
 class DefaultDepthField(TextEditField):
     same_line = True
 
@@ -275,27 +287,28 @@ class DefaultDepthField(TextEditField):
         else:
             text = str(layer.default_depth)
         return text
-    
+
     def parse_from_string(self):
         return float(self.ctrl.GetValue())
-    
+
     def process_text_change(self, layer):
         if self.is_valid():
             layer.default_depth = self.parse_from_string()
-        
+
+
 class PointDepthField(TextEditField):
     same_line = True
 
     def is_displayed(self, layer):
         return layer.get_num_points_selected() > 0
-    
+
     def wants_focus(self):
         return True
-    
+
     def set_focus(self):
         self.ctrl.SetSelection(-1, -1)
         self.ctrl.SetFocus()
-    
+
     def get_value(self, layer):
         if (layer is None):
             return ""
@@ -314,13 +327,13 @@ class PointDepthField(TextEditField):
         if (not conflict):
             s = str(depth)
         return s
-    
+
     def parse_from_string(self):
         text = self.ctrl.GetValue()
         if text == "":
             return None
         return float(text)
-    
+
     def process_text_change(self, layer):
         if self.is_valid():
             depth = self.parse_from_string()
@@ -329,11 +342,12 @@ class PointDepthField(TextEditField):
                 if len(selected_point_indexes > 0):
                     cmd = ChangeDepthCommand(layer, selected_point_indexes, depth)
                     self.process_command(cmd)
-        
+
+
 class PointCoordinatesField(TextEditField):
     def is_displayed(self, layer):
         return layer.get_num_points_selected() > 0
-    
+
     def get_point_index(self, layer):
         if (layer is None):
             return -1
@@ -341,7 +355,7 @@ class PointCoordinatesField(TextEditField):
         if len(indexes) == 0:
             return -1
         return indexes[0]
-    
+
     def get_value(self, layer):
         i = self.get_point_index(layer)
         if i < 0:
@@ -349,7 +363,7 @@ class PointCoordinatesField(TextEditField):
         prefs = self.panel.project.task.get_preferences()
         coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
         return coords_text
-    
+
     def parse_from_string(self):
         text = self.ctrl.GetValue()
         c = coordinates.lat_lon_from_format_string(text)
@@ -368,10 +382,11 @@ class PointCoordinatesField(TextEditField):
             cmd = self.get_command(layer, index, x_diff, y_diff)
             self.process_command(cmd)
 
+
 class AnchorCoordinatesField(PointCoordinatesField):
     def is_displayed(self, layer):
         return True
-    
+
     def get_point_index(self, layer):
         if (layer is None):
             return -1
@@ -380,19 +395,20 @@ class AnchorCoordinatesField(PointCoordinatesField):
     def get_command(self, layer, index, dx, dy):
         return MoveControlPointCommand(layer, index, index, dx, dy, None, None)
 
+
 class AnchorPointField(InfoField):
     same_line = True
-    
+
     def fill_data(self, layer):
         self.ctrl.SetSelection(layer.anchor_point_index)
-    
+
     def create_control(self):
         names = [str(s) for s in range(9)]
         c = wx.ComboBox(self.parent, -1, "",
                         size=(self.default_width, -1), choices=names, style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.anchor_changed)
         return c
-        
+
     def anchor_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -401,10 +417,11 @@ class AnchorPointField(InfoField):
         cmd = SetAnchorCommand(layer, item)
         self.process_command(cmd)
 
+
 class PointIndexesField(TextEditField):
     def is_displayed(self, layer):
         return layer.get_num_points_selected() > 0
-    
+
     def get_value(self, layer):
         if (layer is None):
             return ""
@@ -428,56 +445,59 @@ class PointIndexesField(TextEditField):
             print traceback.format_exc(e)
             c.SetBackgroundColour("#FF8080")
 
+
 class DropDownField(InfoField):
     def get_choices(self, layer):
         return []
-    
+
     def get_value(self, layer):
         return ""
-        
+
     def fill_data(self, layer):
         choices = self.get_choices(layer)
         self.ctrl.SetItems(choices)
         default_choice = self.get_value(layer)
         self.ctrl.SetSelection(choices.index(default_choice))
-    
+
     def create_control(self):
         c = wx.Choice(self.parent, choices=[])
         c.Bind(wx.EVT_CHOICE, self.drop_down_changed)
         return c
-        
+
     def drop_down_changed(self, event):
         pass
+
 
 class DepthUnitField(DropDownField):
     same_line = True
 
     def get_choices(self, layer):
         return ["unknown", "meters", "feet", "fathoms"]
-    
+
     def get_value(self, layer):
         return layer.depth_unit
-        
+
     def drop_down_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
         layer.depth_unit = self.ctrl.GetString(self.ctrl.GetSelection())
-        
+
+
 class FlaggedPointsField(DropDownField):
     same_line = True
 
     def is_displayed(self, layer):
         return layer.get_num_points_selected(constants.STATE_FLAGGED) > 0
-    
+
     def get_choices(self, layer):
         selected = ["Total: %d" % layer.get_num_points_selected(constants.STATE_FLAGGED)]
         selected += [str(i + 1) for i in layer.get_selected_point_indexes(constants.STATE_FLAGGED)]
         return selected
-    
+
     def get_value(self, layer):
         return self.get_choices(layer)[0]
-        
+
     def drop_down_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -488,34 +508,36 @@ class FlaggedPointsField(DropDownField):
             point_index = int(c.GetString(item_num)) - 1
             self.panel.project.layer_canvas.do_select_points(layer, [point_index])
 
+
 class FloatSliderField(InfoField):
     def get_value(self, layer):
         return 0
-        
+
     def fill_data(self, layer):
         value = self.get_value(layer)
         self.ctrl.SetValue(value)
-    
+
     def get_params(self):
         return 0, 100, 100
-    
+
     def create_control(self):
         minval, maxval, steps = self.get_params()
         c = sliders.TextSlider(self.parent, -1, minval, minval, maxval, steps)
         c.Bind(wx.EVT_SLIDER, self.slider_changed)
         c.Bind(wx.EVT_SPINCTRLDOUBLE, self.slider_changed)
         return c
-        
+
     def slider_changed(self, event):
         pass
+
 
 class LineAlphaField(FloatSliderField):
     def get_layer_color(self, layer):
         return layer.style.line_color
-    
+
     def get_layer_style(self, layer, color):
         return LayerStyle(line_color=color)
-    
+
     def get_style(self, layer, alpha):
         color = self.get_layer_color(layer)
         r, g, b, _ = int_to_color_floats(color)
@@ -543,37 +565,39 @@ class LineAlphaField(FloatSliderField):
         except Exception as e:
             c.textCtrl.SetBackgroundColour("#FF8080")
 
+
 class FillAlphaField(LineAlphaField):
     def get_layer_color(self, layer):
         return layer.style.fill_color
-    
+
     def get_layer_style(self, layer, color):
         return LayerStyle(fill_color=color)
+
 
 class TextAlphaField(LineAlphaField):
     def get_layer_color(self, layer):
         return layer.style.text_color
-    
+
     def get_layer_style(self, layer, color):
         return LayerStyle(text_color=color)
 
 
 class ColorPickerField(InfoField):
     same_line = True
-    
+
     def get_value(self, layer):
         return ""
-        
+
     def fill_data(self, layer):
         color = tuple(int(255 * c) for c in int_to_color_floats(self.get_value(layer))[0:3])
         self.ctrl.SetColour(color)
-    
+
     def create_control(self):
         color = (0, 0, 0)
         c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width,-1))
         c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
         return c
-        
+
     def color_changed(self, event):
         color = [float(c/255.0) for c in event.GetValue()]
         color.append(1.0)
@@ -585,24 +609,27 @@ class ColorPickerField(InfoField):
         cmd = StyleChangeCommand(layer, style)
         self.process_command(cmd)
 
+
 class ColorField(ColorPickerField):
     def get_style(self, color):
         return LayerStyle(line_color=color)
-        
+
     def get_value(self, layer):
         return layer.style.line_color
-    
+
+
 class FillColorField(ColorPickerField):
     def get_style(self, color):
         return LayerStyle(fill_color=color)
-        
+
     def get_value(self, layer):
         return layer.style.fill_color
+
 
 class TextColorField(ColorPickerField):
     def get_style(self, color):
         return LayerStyle(text_color=color)
-        
+
     def get_value(self, layer):
         return layer.style.text_color
 
@@ -636,7 +663,6 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
                         )
             dc.DrawLine( r.x+5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1 )
 
-           
     # Overridden from OwnerDrawnComboBox, called for drawing the
     # background area of each item.
     def OnDrawBackground(self, dc, rect, item, flags):
@@ -663,20 +689,21 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
     def OnMeasureItemWidth(self, item):
         return -1; # default - will be measured from text width
 
+
 class LineStyleField(InfoField):
     same_line = True
-    
+
     def fill_data(self, layer):
         index, style = layer.style.get_current_line_style()
         self.ctrl.SetSelection(index)
-    
+
     def create_control(self):
         names = [s[0] for s in LayerStyle.line_styles]
         c = PenStyleComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                              style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -690,18 +717,18 @@ class LineStyleField(InfoField):
 
 class LineWidthField(InfoField):
     same_line = True
-    
+
     def fill_data(self, layer):
         index, width = layer.style.get_current_line_width()
         self.ctrl.SetSelection(index)
-    
+
     def create_control(self):
         names = [str(s) for s in LayerStyle.standard_line_widths]
         c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                         style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -715,11 +742,11 @@ class LineWidthField(InfoField):
 
 class FillStyleField(InfoField):
     same_line = True
-    
+
     def fill_data(self, layer):
         index, style = layer.style.get_current_fill_style()
         self.ctrl.SetSelection(index)
-    
+
     def create_control(self):
         c = wx.combo.BitmapComboBox(self.parent, -1, "", size=(self.default_width, -1),
                              style=wx.CB_READONLY)
@@ -728,7 +755,7 @@ class FillStyleField(InfoField):
 
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -738,14 +765,14 @@ class FillStyleField(InfoField):
         cmd = StyleChangeCommand(layer, style)
         self.process_command(cmd)
 
-        
+
 class MultiLineTextField(InfoField):
     def create_control(self):
         c = wx.TextCtrl(self.parent, style=wx.TE_MULTILINE)
         c.Bind(wx.EVT_TEXT, self.on_text_changed)
         c.SetEditable(True)
         return c
-        
+
     def fill_data(self, layer):
         text = self.get_value(layer)
         current = self.ctrl.GetValue()
@@ -755,32 +782,33 @@ class MultiLineTextField(InfoField):
         # by InfoPanel.set_fields) and we leave the cursor in place.
         if text != current:
             self.ctrl.ChangeValue(text)
-    
+
     def on_text_changed(self, evt):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
         self.process_text_change(layer)
-    
+
     def process_text_change(self, layer):
         pass
-        
+
     def initial_text_input(self, text):
         self.ctrl.SetValue(text)
         self.ctrl.SetInsertionPointEnd()
 
+
 class OverlayTextField(MultiLineTextField):
     vertical_proportion = 1
-    
+
     def wants_focus(self):
         return True
-    
+
     def set_focus(self):
         text = self.ctrl.GetValue()
         if text == "<b>New Label</b>":
             self.ctrl.SetSelection(-1, -1)
         self.ctrl.SetFocus()
-    
+
     def get_value(self, layer):
         if (layer is None):
             return ""
@@ -794,10 +822,10 @@ class OverlayTextField(MultiLineTextField):
 
 class TextFormatField(InfoField):
     same_line = True
-    
+
     def fill_data(self, layer):
         self.ctrl.SetSelection(layer.style.text_format)
-    
+
     def create_control(self):
         names = [s[0] for s in LayerStyle.text_format_styles]
         c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
@@ -845,7 +873,7 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
         face = LayerStyle.get_font_name(item)
         font = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, face)
         dc.SetFont(font)
-        
+
         if flags & wx.combo.ODCB_PAINTING_CONTROL:
             # for painting the control itself
             dc.DrawText(face, r.x+5, (r.y + 5) + ( (r.height/2) - dc.GetCharHeight() )/2)
@@ -870,18 +898,18 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
 
 class FontStyleField(InfoField):
     same_line = True
-    
+
     def fill_data(self, layer):
         index, style = layer.style.get_current_font()
         self.ctrl.SetSelection(index)
-    
+
     def create_control(self):
         names = LayerStyle.get_font_names()
         c = FontComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                              style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -895,18 +923,18 @@ class FontStyleField(InfoField):
 
 class FontSizeField(InfoField):
     same_line = True
-    
+
     def fill_data(self, layer):
         index, style = layer.style.get_current_font_size()
         self.ctrl.SetSelection(index)
-    
+
     def create_control(self):
         names = [str(s) for s in LayerStyle.standard_font_sizes]
         c = wx.ComboBox(self.parent, -1, str(LayerStyle.default_font_size),
                         size=(self.default_width, -1), choices=names, style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -920,24 +948,24 @@ class FontSizeField(InfoField):
 
 class MarkerField(InfoField):
     same_line = True
-    
+
     def get_marker(self, layer):
         raise NotImplementedError
-    
+
     def get_style(self, marker):
         raise NotImplementedError
-    
+
     def fill_data(self, layer):
         marker = self.get_marker(layer)
         self.ctrl.SetSelection(marker)
-    
+
     def create_control(self):
         names = [m[0] for m in LayerStyle.marker_styles]
         c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
                              style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -947,38 +975,41 @@ class MarkerField(InfoField):
         cmd = StyleChangeCommand(layer, style)
         self.process_command(cmd)
 
+
 class StartMarkerField(MarkerField):
     def get_marker(self, layer):
         return layer.style.line_start_marker
-    
+
     def get_style(self, marker):
         return LayerStyle(line_start_marker=marker)
+
 
 class EndMarkerField(MarkerField):
     def get_marker(self, layer):
         return layer.style.line_end_marker
-    
+
     def get_style(self, marker):
         return LayerStyle(line_end_marker=marker)
 
+
 class MarplotIconField(InfoField):
     same_line = True
-    
+
     def get_marker(self, layer):
         return layer.style.icon_marker
-    
+
     def get_style(self, marker):
         return LayerStyle(icon_marker=marker)
-    
+
     def fill_data(self, layer):
         marker = self.get_marker(layer)
         self.ctrl.SetLabel(marplot_icon_id_to_name[marker])
-    
+
     def create_control(self):
         c = wx.Button(self.parent, -1, "none", size=(self.default_width, -1))
         c.Bind(wx.EVT_BUTTON, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -997,6 +1028,7 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
     """Popup for wx.combo.ComboCtrl, based on wxPython demo and converted to
     the ListBox rather than the full ListCtrl
     """
+
     def __init__(self):
         # Since we are using multiple inheritance, and don't know yet
         # which window is to be the parent, we'll do 2-phase create of
@@ -1060,25 +1092,26 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
 
     SetItems = wx.ListBox.Set
 
+
 class ParticleField(InfoField):
     same_line = True
-    
+
     def get_valid_timestep_names(self, layer):
         children = layer.get_particle_layers()
         self.total_timesteps = len(children)
         names = [c.name for c in children]
         return names
-    
+
     def get_timestep_index(self, layer):
         raise NotImplementedError
-    
+
     def fill_data(self, layer):
         names = self.get_valid_timestep_names(layer)
         self.popup.SetItems(names)
         selected = self.get_timestep_index(layer)
         self.popup.SetSelection(selected)
         self.ctrl.SetText(names[selected])
-    
+
     def create_control(self):
         names = ["all"]
         c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width,-1))
@@ -1086,16 +1119,17 @@ class ParticleField(InfoField):
         c.SetPopupControl(self.popup)
         c.Bind(wx.EVT_COMBOBOX, self.timestep_changed)
         return c
-        
+
     def timestep_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
         index = event.GetSelection()
         self.highlight_timestep(layer, index)
-    
+
     def highlight_timestep(self, layer, index):
         raise NotImplementedError
+
 
 class ParticleStartField(ParticleField):
     def get_timestep_index(self, layer):
@@ -1103,10 +1137,11 @@ class ParticleStartField(ParticleField):
         if i < 0:
             i = 0
         return i
-    
+
     def highlight_timestep(self, layer, index):
         layer.set_start_index(index)
         layer.update_timestep_visibility(self.panel.project)
+
 
 class ParticleEndField(ParticleField):
     def get_timestep_index(self, layer):
@@ -1115,19 +1150,20 @@ class ParticleEndField(ParticleField):
         if i > last_index:
             i = last_index
         return i
-    
+
     def highlight_timestep(self, layer, index):
         layer.set_end_index(index)
         layer.update_timestep_visibility(self.panel.project)
+
 
 class StatusCodeColorField(InfoField):
     same_line = False
 
     default_width = 40
-    
+
     def get_value(self, layer):
         pass
-    
+
     def fill_data(self, layer):
         ctrls = {}
         code_map = layer.status_code_names
@@ -1148,13 +1184,13 @@ class StatusCodeColorField(InfoField):
             ctrls[id(c)] = code
         self.color_ctrls = ctrls
         self.ctrl.Fit()
-        
+
     def create_control(self):
         panel = wx.Panel(self.parent)
         vbox =  wx.BoxSizer(wx.VERTICAL)
         panel.SetSizer(vbox)
         return panel
-        
+
     def color_changed(self, event):
         ctrl = event.GetEventObject()
         code = self.color_ctrls[id(ctrl)]
@@ -1171,18 +1207,18 @@ class StatusCodeColorField(InfoField):
 
 class MapServerField(InfoField):
     same_line = False
-    
+
     def fill_data(self, layer):
         names = layer.get_server_names()
         self.ctrl.SetItems(names)
         self.ctrl.SetSelection(layer.map_server_id)
-    
+
     def create_control(self):
         c = wx.ComboBox(self.parent, -1, str(LayerStyle.default_font_size),
                         size=(self.default_width, -1), choices=[], style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
-        
+
     def style_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -1193,14 +1229,14 @@ class MapServerField(InfoField):
 
 class MapOverlayField(InfoField):
     same_line = False
-    
+
     def fill_data(self, layer):
         downloader = layer.get_downloader(layer.map_server_id)
         server = downloader.get_server()
         titles = [str(n[1]) for n in server.get_layer_info()]
         self.ctrl.SetItems(titles)
         self.set_selected(layer, server)
-    
+
     def set_selected(self, layer, server):
         names = [n[0] for n in server.get_layer_info()]
         selected = []
@@ -1209,7 +1245,7 @@ class MapOverlayField(InfoField):
                 if name in layer.map_layers:
                     selected.append(i)
         self.ctrl.SetChecked(selected)
-    
+
     def create_control(self):
         names = []
         c = wx.CheckListBox(self.parent, -1, size=(self.default_width, -1), choices=names)
@@ -1220,7 +1256,7 @@ class MapOverlayField(InfoField):
         self.clear_id = wx.NewId()
         c.Bind(wx.EVT_MENU, self.on_menu)
         return c
-        
+
     def overlay_selected(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -1235,13 +1271,13 @@ class MapOverlayField(InfoField):
             layer.map_layers.add(name)
         self.set_selected(layer, server)
         layer.wms_rebuild(self.panel.project.layer_canvas)
-    
+
     def on_popup(self, event):
         popup = wx.Menu()
         popup.Append(self.select_id, "Select All Layers")
         popup.Append(self.clear_id, "Clear All Selections")
         self.ctrl.PopupMenu(popup, event.GetPosition())
-    
+
     def on_menu(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -1259,7 +1295,7 @@ class MapOverlayField(InfoField):
 
 class ExpandableErrorField(InfoField):
     same_line = False
-    
+
     def fill_data(self, layer):
         text, color = self.get_error_text(layer)
         if color is None:
@@ -1267,10 +1303,10 @@ class ExpandableErrorField(InfoField):
             color = attr.colBg
         self.ctrl.SetBackgroundColour(color)
         self.ctrl.SetValue(str(text))
-    
+
     def get_error_text(layer):
         raise NotImplementedError
-    
+
     def create_control(self):
         c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
         return c
@@ -1278,7 +1314,7 @@ class ExpandableErrorField(InfoField):
 
 class ServerStatusField(ExpandableErrorField):
     same_line = False
-    
+
     def get_error_text(self, layer):
         downloader = layer.get_downloader(layer.map_server_id)
         server = downloader.get_server()
@@ -1295,7 +1331,7 @@ class ServerStatusField(ExpandableErrorField):
 
 class ServerReloadField(InfoField):
     display_label = False
-    
+
     def fill_data(self, layer):
         downloader = layer.get_downloader(layer.map_server_id)
         server = downloader.get_server()
@@ -1303,12 +1339,12 @@ class ServerReloadField(InfoField):
             self.ctrl.Show(True)
         else:
             self.ctrl.Show(False)
-    
+
     def create_control(self):
         c = wx.Button(self.parent, -1, "Retry")
         c.Bind(wx.EVT_BUTTON, self.on_press)
         return c
-    
+
     def on_press(self, event):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
@@ -1318,10 +1354,9 @@ class ServerReloadField(InfoField):
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
 
-
 class DownloadStatusField(ExpandableErrorField):
     same_line = False
-    
+
     def get_error_text(self, layer):
         color = None
         if layer.download_status_text is not None:
@@ -1336,13 +1371,15 @@ class DownloadStatusField(ExpandableErrorField):
             attr = self.panel.GetDefaultAttributes()
             color = attr.colBg
         return text, color
-    
+
     def create_control(self):
         c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
         return c
 
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
+
+
 class InfoPanel(PANELTYPE):
 
     """
@@ -1354,7 +1391,7 @@ class InfoPanel(PANELTYPE):
 
     def __init__(self, parent, project, size=(-1,-1)):
         self.project = project
-        
+
         self.layer_name_control = None
         self.depth_unit_control = None
         self.default_depth_control = None
@@ -1368,14 +1405,14 @@ class InfoPanel(PANELTYPE):
         self.focus_on_input = None
 
         PANELTYPE.__init__(self, parent, size=size)
-        
+
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
         self.SetBackgroundColour(attr.colBg)
-        
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
-    
+
     def display_panel_for_layer(self, project, layer, force_selection_change=False, has_focus=None):
         self.project = project
 
@@ -1400,7 +1437,7 @@ class InfoPanel(PANELTYPE):
                 # continue to edit.  The change count will always be increased
                 # by least 2 when a new point or line is selected (or points
                 # added to the selection etc.) in a point_base subclass.
-                # 
+                #
                 # Vector object layers operate differently because the
                 # selection doesn't apply, but the selection changed should
                 # always remain false for these layers because processing a
@@ -1425,7 +1462,7 @@ class InfoPanel(PANELTYPE):
         else:
             log.debug("creating fields")
             self.create_fields(layer, fields)
-    
+
     known_fields = {
         "Layer name": LayerNameField,
         "Depth unit": DepthUnitField,
@@ -1474,7 +1511,7 @@ class InfoPanel(PANELTYPE):
         "Circumference": WholeLinePropertyField,
         "Area": WholeLinePropertyField,
         }
-    
+
     def create_fields(self, layer, fields):
         self.sizer.AddSpacer(self.LABEL_SPACING)
         self.layer_name_control = None
@@ -1503,7 +1540,7 @@ class InfoPanel(PANELTYPE):
                 self.field_map[field_name] = field
             else:
                 field = self.field_map[field_name]
-            
+
             field.add_to_parent()
             if field.is_displayed(layer):
                 field.fill_data(layer)
@@ -1513,7 +1550,7 @@ class InfoPanel(PANELTYPE):
                     focus = field
             else:
                 field.hide()
-        
+
         # Hide fields that exist for some layer but not needed for this layer
         for field_name in undisplayed:
             field = self.field_map[field_name]
@@ -1525,7 +1562,7 @@ class InfoPanel(PANELTYPE):
         self.Update()
         self.Refresh()
         self.current_fields = list(fields)
-    
+
     def set_fields(self, layer, fields, different_layer, selection_changed, has_focus):
         focus = None
         for field_name in fields:
@@ -1543,14 +1580,14 @@ class InfoPanel(PANELTYPE):
                 else:
                     field.hide()
         self.constrain_size(focus)
-    
+
     def constrain_size(self, focus=None):
         self.sizer.Layout()
         self.focus_on_input = focus
         if focus is not None:
             self.ScrollChildIntoView(focus.ctrl)
         self.SetupScrolling(scroll_x=False, scrollToTop=False, scrollIntoView=True)
-    
+
     def process_initial_key(self, event, text):
         """ Uses keyboard input from another control to set the focus to the
         previously noted info field and process the text there.
@@ -1567,6 +1604,7 @@ class LayerInfoPanel(InfoPanel):
     def get_visible_fields(self, layer):
         fields = list(layer.layer_info_panel)
         return fields
+
 
 class SelectionInfoPanel(InfoPanel):
     def get_visible_fields(self, layer):

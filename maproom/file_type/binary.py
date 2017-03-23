@@ -6,17 +6,18 @@ from omnivore.file_type.i_file_recognizer import IFileRecognizer
 # @provides(IFileRecognizer)
 # class HDF5Recognizer(HasTraits):
 #     """Recognizer for HDF5
-    
+
 #     """
 #     id = "application/x-hdf"
-    
+
 #     # GDAL recognizes HDF files, so this needs to be before the GDAL recognizer
 #     before = "image/x-gdal"
-    
+
 #     def identify(self, guess):
 #         byte_stream = guess.bytes
 #         if byte_stream[0:8] == "\211HDF\r\n\032\n":
 #             return self.id
+
 
 @provides(IFileRecognizer)
 class UGRID_Recognizer(HasTraits):
@@ -39,6 +40,7 @@ class UGRID_Recognizer(HasTraits):
             if ('cf_role' in byte_stream) and ('mesh_topology' in byte_stream):
                 return self.id
 
+
 @provides(IFileRecognizer)
 class NC_ParticleRecognizer(HasTraits):
     """Recognizer for nc_particles file.
@@ -59,4 +61,3 @@ class NC_ParticleRecognizer(HasTraits):
         if byte_stream[:3] == "CDF" or byte_stream[0:8] == "\211HDF\r\n\032\n":
             if ('feature_type' in byte_stream) and ('particle_trajector' in byte_stream):
                 return self.id
-

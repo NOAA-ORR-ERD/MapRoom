@@ -33,43 +33,43 @@ log = logging.getLogger(__name__)
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
-    
+
     id = pane_layout.task_id_with_pane_layout
-    
+
     new_file_text = 'MapRoom Project'
-    
+
     about_application = ""
 
     #### Task interface #######################################################
 
     name = 'MapRoom Project File'
-    
+
     icon = ImageResource('maproom')
-    
+
     preferences_helper = MaproomPreferences
-    
+
     status_bar_debug_width = 300
-    
+
     start_new_editor_in_new_window = True
-    
+
     #### 'IAbout' interface ###################################################
-    
+
     about_title = Str('MapRoom')
-    
+
     about_version = Unicode
-    
+
     about_description = Property(Unicode)
-    
+
     about_website = Str('http://www.noaa.gov')
-    
+
     about_image = Instance(ImageResource, ImageResource('maproom_large'))
-    
+
     #### 'IErrorReporter' interface ###########################################
-    
+
     error_email_to = Str('rob.mcmullen@noaa.gov')
-    
+
     #### Menu events ##########################################################
-    
+
     # Layer selection event placed here instead of in the ProjectEditor
     # because the trait events don't seem to be triggered in the
     # menu items on task.active_editor.layer_selection_changed
@@ -77,11 +77,11 @@ class MaproomProjectTask(FrameworkTask):
     # ProjectEditor.update_layer_selection_ui() sets an event here in the
     # MaproomTask rather than in itself.
     layer_selection_changed = Event
-    
+
     def _about_version_default(self):
         import Version
         return Version.VERSION
-    
+
     def _get_about_description(self):
         desc = "High-performance 2d mapping developed by NOAA\n\nMemory usage: %.0fMB\n\nUsing libraries:\n" % get_mem_use()
         import wx
@@ -149,12 +149,12 @@ class MaproomProjectTask(FrameworkTask):
     ###########################################################################
     # 'FrameworkTask' interface.
     ###########################################################################
-    
+
     def activated(self):
         FrameworkTask.activated(self)
-        
+
         self.init_threaded_processing()
-        
+
         # This trait can't be set as a decorator on the method because
         # active_editor can be None during the initialization process.  Set
         # here because it's guaranteed not to be None
@@ -163,12 +163,12 @@ class MaproomProjectTask(FrameworkTask):
     def prepare_destroy(self):
         self.window.application.remember_perspectives(self.window)
         self.stop_threaded_processing()
-    
+
     def get_actions_Menu_File_NewGroup(self):
         return [
             NewProjectAction(),
             ]
-    
+
     def get_actions_Menu_File_SaveGroup(self):
         return [
             SaveProjectAction(),
@@ -179,12 +179,12 @@ class MaproomProjectTask(FrameworkTask):
                   id='SaveLayerAsSubmenu', name="Save Layer As"),
             SaveAsImageAction(),
             ]
-    
+
     def get_actions_Menu_File_RevertGroup(self):
         return [
             RevertProjectAction(),
             ]
-    
+
     def get_actions_Menu_Edit_CopyPasteGroup(self):
         return [
             CutAction(),
@@ -195,7 +195,7 @@ class MaproomProjectTask(FrameworkTask):
             CopyStyleAction(),
             PasteStyleAction(),
             ]
-    
+
     def get_actions_Menu_Edit_SelectGroup(self):
         return [
             ClearSelectionAction(),
@@ -206,24 +206,24 @@ class MaproomProjectTask(FrameworkTask):
             ClearFlaggedAction(),
             FlaggedToSelectionAction(),
             ]
-    
+
     def get_actions_Menu_Edit_PrefGroup(self):
         return [
             DefaultStyleAction(),
             PreferencesAction(),
             ]
-    
+
     def get_actions_Menu_Edit_FindGroup(self):
         return [
             FindPointsAction(),
             ]
-    
+
     def get_actions_Menu_Help_BugReportGroup(self):
         return [
             OpenLogDirectoryAction(),
             OpenLogAction(),
             ]
-    
+
     def get_actions_Menu_View_ViewZoomGroup(self):
         return [
             ZoomInAction(),
@@ -231,18 +231,18 @@ class MaproomProjectTask(FrameworkTask):
             ZoomToFit(),
             ZoomToLayer(),
             ]
-    
+
     def get_actions_Menu_View_ViewChangeGroup(self):
         return [
             JumpToCoordsAction(),
             ]
-    
+
     def get_actions_Menu_View_ViewDebugGroup(self):
         return [
             BoundingBoxAction(),
             PickerFramebufferAction(),
             ]
-    
+
     def get_actions_Menu_Layer_LayerCreateGroup(self):
         return [
             NewVectorLayerAction(),
@@ -261,7 +261,7 @@ class MaproomProjectTask(FrameworkTask):
             LowerLayerAction(),
             LowerToBottomAction(),
             ]
-    
+
     def get_actions_Menu_Layer_LayerUtilGroup(self):
         return [
             TriangulateLayerAction(),
@@ -271,18 +271,18 @@ class MaproomProjectTask(FrameworkTask):
             MergePointsAction(),
             NormalizeLongitudeAction(),
             ]
-    
+
     def get_actions_Menu_Layer_LayerDeleteGroup(self):
         return [
             DeleteLayerAction(),
             ]
-    
+
     def get_actions_Menu_Layer_LayerCheckGroup(self):
         return [
             CheckSelectedLayerAction(),
             CheckAllLayersAction(),
             ]
-    
+
     def get_actions_Menu_Tools_ToolsManageGroup(self):
         return [
             ManageWMSAction(),
@@ -290,7 +290,7 @@ class MaproomProjectTask(FrameworkTask):
             ManageTileServersAction(),
             ClearTileCacheAction(),
             ]
-    
+
     def get_actions_Tool_File_SaveGroup(self):
         return [
             SaveProjectAction(),
@@ -310,7 +310,7 @@ class MaproomProjectTask(FrameworkTask):
             ZoomToFit(),
             ZoomToLayer(),
             ]
-    
+
     def get_actions_Tool_View_ViewChangeGroup(self):
         return [
             RaiseToTopAction(),
@@ -374,7 +374,7 @@ class MaproomProjectTask(FrameworkTask):
             info = window._aui_manager.GetPane(name)
             info.Show(state)
         window._aui_manager.Update()
-    
+
 # This trait change is set in activated() rather than as a decorator (see above)
 #    @on_trait_change('active_editor.mouse_mode_toolbar')
     def mode_toolbar_changed(self, changed_to):
@@ -394,11 +394,11 @@ class MaproomProjectTask(FrameworkTask):
             # because we segfault without the GUI.invoke_later (equivalent
             # to wx.CallAfter)
             GUI.invoke_later(tree.control.set_project, self.active_editor)
-    
+
     def _wx_on_mousewheel_from_window(self, event):
         if self.active_editor:
             self.active_editor.layer_canvas.on_mouse_wheel_scroll(event)
-    
+
     @on_trait_change('window.application.preferences_changed_event')
     def preferences_changed(self, evt):
         if self.active_editor:
@@ -413,39 +413,38 @@ class MaproomProjectTask(FrameworkTask):
                  mime == "application/x-nc_ugrid" or
                  mime == "application/x-nc_particles"
                  )
-    
+
     @classmethod
     def get_match_score(cls, document):
         if cls.can_edit(document):
             return 10
         return 0
 
-
     ##### WMS and Tile processing
 
     # Traits
     downloaders = Dict
-    
+
     # class attributes
-    
+
     wms_extra_loaded = False
-    
+
     @classmethod
     def init_extra_servers(cls, application):
         if cls.wms_extra_loaded is False:
             # try once
             cls.wms_extra_loaded = True
-            
+
             hosts = application.get_json_data("wms_servers")
             if hosts is None:
                 hosts = default_wms_hosts
             BackgroundWMSDownloader.set_known_hosts(hosts)
-            
+
             hosts = application.get_json_data("tile_servers")
             if hosts is None:
                 hosts = default_tile_hosts
             BackgroundTileDownloader.set_known_hosts(hosts)
-    
+
     def remember_wms(self, host=None):
         if host is not None:
             BackgroundWMSDownloader.add_wms_host(host)
@@ -457,7 +456,7 @@ class MaproomProjectTask(FrameworkTask):
 #        if "OpenStreetMap Test" not in self.get_known_wms_names():
 #            BackgroundWMSDownloader.add_wms("OpenStreetMap Test", "http://ows.terrestris.de/osm/service?", "1.1.1")
 #            self.remember_wms()
-    
+
     def stop_threaded_processing(self):
         log.debug("Stopping threaded services...")
         while len(self.downloaders) > 0:
@@ -487,13 +486,13 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_known_wms_names(self):
         return [s.name for s in BackgroundWMSDownloader.get_known_hosts()]
-    
+
     def remember_tile_servers(self, host=None):
         if host is not None:
             BackgroundTileDownloader.add_wms_host(host)
         hosts = BackgroundTileDownloader.get_known_hosts()
         self.window.application.save_json_data("tile_servers", hosts)
-    
+
     def get_tile_cache_root(self):
         return os.path.join(self.window.application.cache_dir, "tiles")
 

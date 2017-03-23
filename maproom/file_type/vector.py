@@ -9,15 +9,16 @@ from omnivore.file_type.i_file_recognizer import IFileRecognizer
 import logging
 log = logging.getLogger(__name__)
 
+
 @provides(IFileRecognizer)
 class OGRRecognizer(HasTraits):
     """Check to see if OGR can open this as a vector shapefile.
 
     """
     id = "application/x-maproom-shapefile"
-    
+
     before = "text/*"
-    
+
     def identify(self, guess):
         try:
             fs, relpath = opener.parse(guess.metadata.uri)

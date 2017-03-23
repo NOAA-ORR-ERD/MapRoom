@@ -18,6 +18,7 @@ POINTS_PICKER_OFFSET = 0
 LINES_PICKER_OFFSET = 1
 FILL_PICKER_OFFSET = 2
 
+
 class Picker(object):
     """
     An off-screen buffer for detecting what object the mouse is over.
@@ -30,9 +31,9 @@ class Picker(object):
     render_buffer = None  # the render buffer within the frame buffer for offscreen drawing
     screen_rect = rect.EMPTY_RECT
     vbo_colors = None
-    
+
     is_active = True
-    
+
     def __init__(self):
         # self.colored_objects = {} # renderer -> ( index, original color )
         gl_fbo.glInitFramebufferObjectEXT()
@@ -209,12 +210,12 @@ class Picker(object):
         object_index = int(picked_color - start_color)
 
         return (layer, object_type, object_index)
-    
+
     @staticmethod
     def is_ugrid_point(obj):
         (layer, object_type, object_index) = obj
         return object_type == POINTS_PICKER_OFFSET
-    
+
     @staticmethod
     def is_ugrid_point_type(object_type):
         return object_type == POINTS_PICKER_OFFSET

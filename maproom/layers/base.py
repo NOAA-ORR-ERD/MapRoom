@@ -19,63 +19,64 @@ from style import LayerStyle
 import logging
 log = logging.getLogger(__name__)
 
+
 class Layer(HasTraits):
     """Base Layer class with some abstract methods.
     """
     next_default_color_index = 0
-    
+
     new_layer_index = 0
-    
+
     # Traits
-    
+
     name = Unicode("Empty Layer")
-    
+
     # invariant is sort of a serial number of the layer in a LayerManager: an
     # id that doesn't change when the layer is renamed or reordered.  It is
     # unique within a particular instance of a LayerManager, and gets created
     # when the layer is added to a LayerManager.  Initial value of -999 is a
     # flag to indicate that the invariant hasn't been initialized.
     invariant = Int(-999)
-    
+
     # the invariant of the parent layer (used in triangulation so that a
     # retriangulation will replace the older triangulation.
     dependent_of = Int(-1)
-    
+
     # type is a string identifier that uniquely refers to a layer class.
     # Base classes should use an empty string to show that they won't be
     # serializable.
     type = Str("")
-    
+
     mime = Str("")
-    
+
     skip_on_insert = Bool(False)
-    
+
     file_path = Unicode
-    
+
     style = Any
-    
+
     point_size = Float(4.0)
-    
+
     selected_point_size = Float(15.0)
-    
+
     selected_line_width = Float(10.0)
-    
+
     bounds = Any(rect.NONE_RECT)
-    
+
     grouped = Bool
-    
+
     mouse_mode_toolbar = Str("BaseLayerToolBar")
-    
+
     # this is any change that might affect the properties panel (e.g., number
     # of points selected)
     change_count = Int(0)
-    
+
     load_error_string = Str
 
     load_warning_string = Str
 
     load_warning_details = Str
-    
+
     manager = Any
 
     pickable = False # is this a layer that support picking?
@@ -83,17 +84,17 @@ class Layer(HasTraits):
     transient_edit_layer = False
 
     visibility_items = []
-    
+
     layer_info_panel = ["Layer name"]
-    
+
     selection_info_panel = []
-    
+
     def _style_default(self):
         return LayerStyle()
 
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
-    
+
     def get_info_panel_text(self, prop):
         # Subclasses should define this to return values for any properties in
         # layer_info_panel that are read-only and can be represented as strings
@@ -113,46 +114,46 @@ class Layer(HasTraits):
         to determine if we can save this layer.
         """
         return True
-    
+
     def highlight_exception(self, e):
         """Highlight items flagged in the exception"""
         pass
-    
+
     def clear_flagged(self, refresh=False):
         """Clear any items previously flagged with highlight_exception"""
         pass
-    
+
     def is_folder(self):
         return False
-    
+
     def is_root(self):
         return False
-    
+
     @property
     def is_renderable(self):
         return True
-    
+
     def can_copy(self):
         return False
-    
+
     def can_save(self):
         """Can the layer be saved using the current filename?"""
         return False
-    
+
     def can_save_as(self):
         """Can the layer be saved if given a new filename?"""
         return False
-    
+
     def save_to_file(self, file_path):
         raise NotImplementedError
-    
+
     def children_affected_by_move(self):
         """ Returns a list of layers that will be affected by moving a control
         point.  This is used for layer groups; moving a control point of a
         group will affect all the layers in the group.
         """
         return []
-    
+
     def parents_affected_by_move(self):
         """ Returns a list of layers that might need to have boundaries
         recalculated after moving this layer.
@@ -196,7 +197,7 @@ class Layer(HasTraits):
         if self.file_path:
             json['url'] = self.file_path
             json['mime'] = self.mime
-        
+
         update = {}
         for attr, to_json in self.get_to_json_attrs():
             update[attr] = to_json()
@@ -208,13 +209,13 @@ class Layer(HasTraits):
             for c in self.manager.get_layer_children(self):
                 json['children'].append(c.serialize_json(-999, True))
         return json
-    
+
     def get_to_json_attrs(self):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
-    
+
     def get_from_json_attrs(self):
         return [(m[0:-10], getattr(self, m)) for m in dir(self) if m.endswith("_from_json")]
-    
+
     def unserialize_json(self, json_data, batch_flags):
         """Restore layer from json representation.
         
@@ -235,7 +236,7 @@ class Layer(HasTraits):
         log.debug("Restoring JSON data using %s" % name)
         method(json_data, batch_flags)
         self.update_bounds()
-    
+
     def unserialize_json_version1(self, json_data, batch_flags):
         """Restore layer from json representation.
         
@@ -262,9 +263,9 @@ class Layer(HasTraits):
                 batch_flags.messages.append("WARNING: %s" % message)
             except TypeError:
                 log.warning("Skipping from_json function %s", from_json)
-    
+
     type_to_class_defs = {}
-    
+
     @classmethod
     def get_subclasses(cls):
         if not cls.type_to_class_defs:
@@ -274,12 +275,12 @@ class Layer(HasTraits):
                 if layer.type:
                     cls.type_to_class_defs[layer.type] = kls
         return cls.type_to_class_defs
-            
+
     @classmethod
     def type_to_class(cls, type_string):
         cls.get_subclasses()
         return cls.type_to_class_defs[type_string]
-    
+
     @classmethod
     def load_from_json(cls, json_data, manager, batch_flags=None):
         t = json_data['type']
@@ -287,7 +288,7 @@ class Layer(HasTraits):
         log.debug("load_from_json: found type %s, class=%s" % (t, kls))
         if 'url' in json_data and not json_data['has encoded data']:
             from maproom.layers import loaders
-            
+
             log.debug("Loading layers from url %s" % json_data['url'])
             try:
                 loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
@@ -300,13 +301,13 @@ class Layer(HasTraits):
             layers = [layer]
         log.debug("returning layers: %s" % str(layers))
         return layers
-    
+
     def set_dependent_of(self, layer):
         self.dependent_of = layer.invariant
-    
+
     def check_for_problems(self, window):
         pass
-    
+
     def check_projection(self, task):
         pass
 
@@ -327,7 +328,7 @@ class Layer(HasTraits):
             d["labels"] = False
             d["points"] = False
         return d
-        
+
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
@@ -344,13 +345,13 @@ class Layer(HasTraits):
                 parent = self.manager.get_folder_of_layer(parent)
         else:
             self.bounds = self.compute_bounding_rect()
-    
+
     def is_zoomable(self):
         return self.bounds != rect.NONE_RECT
 
     def set_layer_style_defaults(self):
         self.style.use_next_default_color()
-    
+
     def set_style(self, style):
         # Hook for subclasses to change colors and styles
         self.style.copy_from(style)
@@ -376,7 +377,7 @@ class Layer(HasTraits):
 
     def clear_all_ring_selections(self, mark_type=STATE_SELECTED):
         pass
-    
+
     def set_visibility_when_selected(self, layer_visibility):
         """Called when layer is selected to provide a hook if the layer has
         elements that should be visibile only when it it selected.
@@ -390,7 +391,7 @@ class Layer(HasTraits):
         
         """
         pass
-    
+
     def set_visibility_when_checked(self, checked, project_layer_visibility):
         """Called when layer visibility changes to provide a hook if the layer
         has elements that should be visibile only when it it selected.
@@ -406,13 +407,13 @@ class Layer(HasTraits):
 
     def has_flagged(self):
         return False
-    
+
     def has_boundaries(self):
         return False
-    
+
     def display_properties(self):
         return []
-    
+
     def get_display_property(self, prop):
         return ""
 
@@ -427,7 +428,7 @@ class Layer(HasTraits):
             targets.append(other_layer.find_merge_layer_class(self))
         if not targets:
             return
-        
+
         # Use the most specific layer as the merge layer target
         if len(targets) > 1:
             a, b = targets[0], targets[1]
@@ -437,15 +438,15 @@ class Layer(HasTraits):
                 new_layer_cls = b
         else:
             new_layer_cls = targets[0]
-        
+
         layer = new_layer_cls(manager=self.manager)
         layer.name = "Merged"
         layer.merge_from_source_layers(self, other_layer, depth_unit)
         return layer
-    
+
     def is_mergeable_with(self, other_layer):
         return False
-    
+
     def find_merge_layer_class(self, other_layer):
         return None
 
@@ -456,10 +457,10 @@ class Layer(HasTraits):
         self.change_count += 1
         if (self.change_count == sys.maxint):
             self.change_count = 0
-    
+
     def can_crop(self):
         return False
-    
+
     def crop_rectangle(self, world_rect):
         raise NotImplementedError
 
@@ -468,7 +469,7 @@ class Layer(HasTraits):
 
     def get_highlight_lines(self, object_type, object_index):
         return []
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         
@@ -508,7 +509,7 @@ class Layer(HasTraits):
                 # picker framebuffer
                 renderer.prepare_to_render_projected_objects()
                 self.render_control_points_only(renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker)
-    
+
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         pass
 
@@ -517,7 +518,7 @@ class EmptyLayer(Layer):
     """Emply layer used when a folder has no other children.
     """
     name = Unicode("<empty folder>")
-    
+
     type = Str("empty")
 
 

@@ -10,6 +10,7 @@ def update_parent_bounds(layer, undo):
     layer.update_bounds()
     return parent_layer_data
 
+
 def get_parent_layer_data(affected, undo):
     parent_layer_data = []
     for layer in affected:
@@ -17,6 +18,7 @@ def get_parent_layer_data(affected, undo):
         lf.layer_items_moved = True
         parent_layer_data.append((layer.invariant, layer.get_undo_info()))
     return parent_layer_data
+
 
 def update_linked_layers(lm, layer, undo):
     """Update truth layer control point in response to dependent layer control
@@ -31,6 +33,7 @@ def update_linked_layers(lm, layer, undo):
         truth.copy_control_point_from(truth_cp, layer, dep_cp)
         truth.update_bounds()
     return parent_layer_data
+
 
 def restore_layers(editor, old_layer_data, undo=None):
     lm = editor.layer_manager
@@ -53,7 +56,7 @@ class MoveControlPointCommand(Command):
         ('snapped_layer', 'layer'),
         ('snapped_cp', 'int'),
         ]
-    
+
     def __init__(self, layer, drag, anchor, dx, dy, snapped_layer, snapped_cp, about_center=False):
         Command.__init__(self, layer)
         self.drag = drag
@@ -66,10 +69,10 @@ class MoveControlPointCommand(Command):
             self.snapped_layer = None
         self.snapped_cp = snapped_cp
         self.about_center = about_center
-    
+
     def __str__(self):
         return "Move Control Point #%d" % self.drag
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer and next_command.drag == self.drag and next_command.anchor == self.anchor:
@@ -78,7 +81,7 @@ class MoveControlPointCommand(Command):
                 self.snapped_layer = next_command.snapped_layer
                 self.snapped_cp = next_command.snapped_cp
                 return True
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -94,10 +97,10 @@ class MoveControlPointCommand(Command):
             lf = undo.flags.add_layer_flags(la)
             lf.layer_items_moved = True
             child_layer_data.append((la.invariant, la.get_undo_info()))
-        
+
         layer.move_control_point(self.drag, self.anchor, self.dx, self.dy, self.about_center)
         linked_layer_data = update_linked_layers(lm, layer, undo)
-        
+
         parent_layer_data = update_parent_bounds(layer, undo)
 
         undo.data = (old_links, child_layer_data, linked_layer_data, parent_layer_data)
@@ -116,7 +119,7 @@ class MoveControlPointCommand(Command):
         restore_layers(editor, linked_layer_data)
         child_layer_data.reverse()
         restore_layers(editor, child_layer_data)
-        
+
         layer = lm.get_layer_by_invariant(self.layer)
         links = layer.remove_from_master_control_points(self.drag, self.anchor)
         for dep, master in old_links:
@@ -130,14 +133,14 @@ class UnlinkControlPointCommand(Command):
         ('layer', 'layer'),
         ('anchor', 'int'),
         ]
-    
+
     def __init__(self, layer, anchor):
         Command.__init__(self, layer)
         self.anchor = anchor
-    
+
     def __str__(self):
         return "Unlink Control Point #%d" % self.anchor
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -164,23 +167,23 @@ class RotateObjectCommand(Command):
         ('dx', 'float'),
         ('dy', 'float'),
         ]
-    
+
     def __init__(self, layer, drag, dx, dy):
         Command.__init__(self, layer)
         self.drag = drag
         self.dx = dx
         self.dy = dy
-    
+
     def __str__(self):
         return "Rotate Object"
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer and next_command.drag == self.drag:
                 self.dx += next_command.dx
                 self.dy += next_command.dy
                 return True
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -195,9 +198,9 @@ class RotateObjectCommand(Command):
             lf = undo.flags.add_layer_flags(la)
             lf.layer_items_moved = True
             child_layer_data.append((la.invariant, la.get_undo_info()))
-        
+
         layer.rotate_point(self.drag, self.dx, self.dy)
-        
+
         parent_layer_data = update_parent_bounds(layer, undo)
 
         undo.data = (child_layer_data, parent_layer_data)
@@ -222,16 +225,16 @@ class DrawVectorObjectCommand(Command):
         ('cp2', 'point'),
         ('style', 'style'),
         ]
-    
+
     def __init__(self, event_layer, cp1, cp2, style):
         Command.__init__(self, event_layer)
         self.cp1 = cp1
         self.cp2 = cp2
         self.style = style.get_copy()  # Make sure not sharing objects
-    
+
     def __str__(self):
         return self.ui_name
-    
+
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
@@ -244,24 +247,24 @@ class DrawVectorObjectCommand(Command):
             undo.flags.success = False
             undo.flags.errors = ["All annotation layers are grouped. Objects can't be added to grouped layers"]
             return undo
-            
+
         kwargs = {'first_child_of': parent_layer}
         lm.insert_loaded_layer(layer, editor, **kwargs)
-        
+
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         lf.layer_loaded = True
-        
+
         parent_layer_data = update_parent_bounds(layer, undo)
-        
+
         undo.data = (layer.invariant, saved_invariant, parent_layer_data)
-        
+
         self.perform_post(editor, lm, layer, undo)
-        
+
         return self.undo_info
-    
+
     def perform_post(self, editor, lm, layer, undo):
         pass
 
@@ -276,18 +279,18 @@ class DrawVectorObjectCommand(Command):
         invariant, saved_invariant, parent_layer_data = self.undo_info.data
         layer = editor.layer_manager.get_layer_by_invariant(invariant)
         insertion_index = lm.get_multi_index_of_layer(layer)
-        
+
         # Only remove the reference to the layer in the layer manager, leave
         # all the layer info around so that it can be undone
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = saved_invariant
-        
+
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
-        
+
         self.undo_post(editor, lm, layer, undo)
-        
+
         restore_layers(editor, parent_layer_data, undo)
 
         return undo
@@ -332,7 +335,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
     def perform_post(self, editor, lm, layer, undo):
         layer.grouped = True
         layer.name = self.ui_name
-        
+
         halfway = ((self.cp1[0] + self.cp2[0])/2.0, (self.cp1[1] + self.cp2[1])/2.0)
         line = OverlayLineObject(manager=lm)
         line.set_opposite_corners(self.cp1, halfway)
@@ -342,7 +345,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         lm.insert_loaded_layer(line, editor, **kwargs)
         lf = undo.flags.add_layer_flags(line)
         lf.layer_loaded = True
-        
+
         #text = RectangleVectorObject(manager=lm)
         text = OverlayTextObject(manager=lm)
         text.set_opposite_corners(halfway, self.cp2)
@@ -356,7 +359,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         lf = undo.flags.add_layer_flags(text)
         lf.layer_loaded = True
         lf.select_layer = True
-        
+
         # The line's control point is always 1 because it's the endpoint,
         # and the text box's control point is zero because it's the one
         # corresponding to the first control point at layer creation time
@@ -411,7 +414,7 @@ class DrawLineCommand(DrawVectorObjectCommand):
         ('snapped_layer', 'layer'),
         ('snapped_cp', 'int'),
         ]
-    
+
     def __init__(self, event_layer, cp1, cp2, style, snapped_layer, snapped_cp):
         DrawVectorObjectCommand.__init__(self, event_layer, cp1, cp2, style)
         if snapped_layer is not None:
@@ -419,7 +422,7 @@ class DrawLineCommand(DrawVectorObjectCommand):
         else:
             self.snapped_layer = None
         self.snapped_cp = snapped_cp
-    
+
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
         layer.set_opposite_corners(self.cp1, self.cp2)
@@ -451,16 +454,16 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
         ('points', 'points'),
         ('style', 'style'),
         ]
-    
+
     def __init__(self, event_layer, points, style):
         Command.__init__(self, event_layer)
         self.points = points
         self.init_style(style)
-    
+
     def init_style(self, style):
         self.style = style.get_copy()  # Make sure not sharing objects
         self.style.fill_style = 0  # Turn off fill by default because it's a polyLINE
-    
+
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
         layer.set_points(self.points)
@@ -472,7 +475,7 @@ class DrawPolygonCommand(DrawPolylineCommand):
     short_name = "polygon_obj"
     ui_name = "Polygon"
     vector_object_class = PolygonObject
-    
+
     def init_style(self, style):
         self.style = style.get_copy()  # Make sure not sharing objects
 
@@ -488,14 +491,14 @@ class AddTextCommand(DrawVectorObjectCommand):
         ('screen_width', 'int'),
         ('screen_height', 'int'),
         ]
-    
+
     def __init__(self, event_layer, point, style, screen_width, screen_height):
         Command.__init__(self, event_layer)
         self.point = point
         self.style = style.get_copy()  # Make sure not sharing objects
         self.screen_width = screen_width
         self.screen_height = screen_height
-    
+
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
         layer.set_location_and_size(self.point, self.screen_width, self.screen_height)
@@ -512,12 +515,12 @@ class AddIconCommand(DrawVectorObjectCommand):
         ('point', 'point'),
         ('style', 'style'),
         ]
-    
+
     def __init__(self, event_layer, point, style):
         Command.__init__(self, event_layer)
         self.point = point
         self.style = style.get_copy()  # Make sure not sharing objects
-    
+
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
         layer.set_location_and_size(self.point, 32, 32)

@@ -20,16 +20,16 @@ class BaseCanvas(object):
 
     def __init__(self, project):
         self.project = project
-        
+
         self.layer_renderers = {}
-        
+
         self.init_overlay()
-        
+
         self.picker = self.new_picker()
         self.hide_picker_layer = None
 
         self.screen_rect = rect.EMPTY_RECT
-        
+
         # limiting value to prevent screen cluttering: if more characters would
         # be visible in all labels on screen, disable the display of the labels
         self.max_label_characters = 1000
@@ -40,18 +40,18 @@ class BaseCanvas(object):
 
         # two variables keep track of what's visible on the screen:
         # (1) the projected point at the center of the screen (Seattle Area)
-        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)        
+        # (2) the number of projected units (starts as meters, or degrees; starts as meters) per pixel on the screen (i.e., the zoom level)
         self.set_viewport((-13664393.732, 6048089.93218), 1000)
-        
+
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
-    
+
     def init_overlay(self):
         pass
-    
+
     def new_picker(self):
         return NullPicker()
-    
+
     def new_renderer(self, layer):
         return NullRenderer(self, layer)
 
@@ -68,7 +68,7 @@ class BaseCanvas(object):
     def update_renderers(self):
         for layer in self.project.layer_manager.flatten():
             self.update_renderer(layer)
-    
+
     def remove_renderer_for_layer(self, layer):
         if layer in self.layer_renderers:
             del self.layer_renderers[layer]
@@ -88,7 +88,7 @@ class BaseCanvas(object):
             log.warning("layer %s isn't in layer_renderers!" % layer)
             for layer in self.layer_renderers.keys():
                 log.warning("  layer: %s" % layer)
-    
+
     def begin_rendering_screen(self, projected_rect, screen_rect):
         self.screen_rect = screen_rect
         self.s_w = rect.width(screen_rect)
@@ -99,13 +99,13 @@ class BaseCanvas(object):
 
         if (self.s_w <= 0 or self.s_h <= 0 or p_w <= 0 or p_h <= 0):
             return False
-        
+
         self.prepare_screen_viewport()
         return True
-    
+
     def prepare_screen_viewport(self):
         pass
-    
+
     def finalize_rendering_screen(self):
         pass
 
@@ -190,6 +190,7 @@ class BaseCanvas(object):
             layer.rebuild_renderer(renderer, True)
 
         null_picker = NullPicker()
+
         def render_layers(layer_order, picker=null_picker):
             delayed_pick_layer = None
             control_points_layer = None
@@ -234,9 +235,9 @@ class BaseCanvas(object):
 
         elapsed = time.clock() - t0
         self.post_render_update_ui_hook(elapsed, event)
-        
+
         self.finalize_rendering_screen()
-    
+
     def render_overlay(self):
         pass
 
@@ -247,7 +248,7 @@ class BaseCanvas(object):
 
     def get_screen_size(self):
         raise NotImplementedError
-    
+
     def set_screen_size(self, size):
         # provided for non-screen based canvas like PDF that copy their
         # settings from a screen canvas
@@ -375,7 +376,7 @@ class BaseCanvas(object):
     def calc_zoom_to_world_rect(self, w_r, border=True):
         if (w_r == rect.NONE_RECT):
             return self.projected_point_center, self.projected_units_per_pixel
-        
+
         p_r = self.get_projected_rect_from_world_rect(w_r)
         size = self.get_screen_size()
         if border:
@@ -390,7 +391,7 @@ class BaseCanvas(object):
         ratio_h = float(pixels_h) / float(size[0])
         ratio_v = float(pixels_v) / float(size[1])
         ratio = max(ratio_h, ratio_v)
-        
+
         units_per_pixel = self.constrain_zoom(self.projected_units_per_pixel * ratio)
         center = rect.center(p_r)
         return center, units_per_pixel
@@ -416,7 +417,7 @@ class BaseCanvas(object):
         units_per_pixel = max(units_per_pixel, max_zoom_in)
         units_per_pixel = min(units_per_pixel, max_zoom_out)
         return units_per_pixel
-    
+
     def get_zoom_level(self, units_per_pixel, round=0.0):
         # Calculate tile size in standard wmts/google maps units.  At each zoom
         # level n, there are 2**n tiles across the 360 degrees of longitude,
@@ -428,28 +429,28 @@ class BaseCanvas(object):
             zoom_level = int(zoom_level / round) * round
         log.debug("get_zoom_level: units_per_pixel %s, num_tiles %s, zoom level %s" % (units_per_pixel, num_tiles, zoom_level))
         return zoom_level
-    
+
     def get_delta_lon_per_pixel(self, num_pixels, units_per_pixel=None):
         if units_per_pixel is None:
             units_per_pixel = self.projected_units_per_pixel
         return self.get_world_point_from_projected_point((num_pixels * units_per_pixel, 0.0))[0]
-    
+
     def get_units_per_pixel_from_zoom(self, zoom_level):
         num_tiles = math.pow(2.0, zoom_level)
         delta_lon_per_tile = 360.0 / num_tiles
         units_per_pixel = self.get_projected_point_from_world_point((delta_lon_per_tile / 256.0, 0.0))[0]
         log.debug("get_units_per_pixel_from_zoom: units_per_pixel %s, num_tiles %s, zoom level %s" % (units_per_pixel, num_tiles, zoom_level))
         return units_per_pixel
-    
+
     @property
     def world_center(self):
         return self.get_world_point_from_projected_point(self.projected_point_center)
-    
+
     def set_viewport(self, center, units_per_pixel):
         self.projected_point_center = center
         self.projected_units_per_pixel = units_per_pixel
         self.zoom_level = self.get_zoom_level(units_per_pixel)
-    
+
     def copy_viewport_from(self, other):
         self.projected_units_per_pixel = other.projected_units_per_pixel
         self.projected_point_center = tuple(other.projected_point_center)

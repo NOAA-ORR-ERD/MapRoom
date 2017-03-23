@@ -21,13 +21,13 @@ progress_log = logging.getLogger("progress")
 
 class BSBLoader(BaseLoader):
     mime = "application/x-maproom-bsb"
-    
+
     layer_types = []
-    
+
     extensions = [".bsb"]
-    
+
     name = "NOAA BSB"
-    
+
     def load_query(self, metadata, manager):
         bsb = BSBParser(metadata.uri)
         items = []
@@ -49,7 +49,7 @@ class BSBLoader(BaseLoader):
         layers = []
         for filename in self.selected:
             layer = RasterLayer(manager=manager)
-            
+
             progress_log.info("Loading from %s" % metadata.uri)
             (layer.load_error_string, layer.image_data) = load_image_file(filename)
             if (layer.load_error_string == ""):

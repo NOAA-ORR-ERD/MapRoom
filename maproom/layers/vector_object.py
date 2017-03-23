@@ -45,26 +45,26 @@ class VectorObjectLayer(LineLayer):
     name = Unicode("Vector Object Layer")
 
     type = Str("vector_object")
-    
+
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
-    
+
     rebuild_needed = Bool(False)
 
     rotation = Float(0.0)
-    
+
     # class attributes
     center_point_index = 0
-    
+
     display_center_control_point = False
-    
+
     control_point_color = color_floats_to_int(0, 0, 0, 1.0)
 
     def can_copy(self):
         return True
-    
+
     def check_for_problems(self, window):
         pass
-    
+
     def rotation_to_json(self):
         return self.rotation
 
@@ -107,31 +107,31 @@ class VectorObjectLayer(LineLayer):
 
     def clear_visibility_when_deselected(self, layer_visibility):
         layer_visibility['points'] = False
-    
+
     def has_points(self):
         # Points on vector layers aren't individually editable
         return False
-    
+
     def has_selection(self):
         # "selection" on a vector layer is coerced to mean that when a vector
         # layer is selected in the layer tree control, the entire layer is
         # selected
         return True
-    
+
     def delete_all_selected_objects(self):
         from ..menu_commands import DeleteLayerCommand
         return DeleteLayerCommand(self)
-    
+
     def calculate_distances(self, cp):
         return 0.0
-    
+
     def children_affected_by_move(self):
         """ Returns a list of layers that will be affected by moving a control
         point.  This is used for layer groups; moving a control point of a
         group will affect all the layers in the group.
         """
         return [self]
-    
+
     def parents_affected_by_move(self):
         """ Returns a list of layers that might need to have boundaries
         recalculated after moving this layer.
@@ -144,7 +144,7 @@ class VectorObjectLayer(LineLayer):
         
         """
         pass
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         
@@ -185,21 +185,21 @@ class LineVectorObject(VectorObjectLayer):
     
     """
     name = Unicode("Line")
-    
+
     type = Str("line_obj")
-    
+
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency"]
-    
+
     selection_info_panel = ["Anchor coordinates", "Path length"]
 
     corners_from_flat = np.asarray((0, 1, 2, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1),), dtype=np.uint8)
     num_corners = 2
     center_point_index = 2
-    
+
     # return the anchor point of the index point. E.g. anchor_of[0] = 1
     anchor_of = np.asarray((1, 0, 2), dtype=np.uint8)
-    
+
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
@@ -207,7 +207,7 @@ class LineVectorObject(VectorObjectLayer):
         ((1,1), (0,0), (0.5,0.5)), # anchor point is 1, etc.
         ((1,1), (1,1), (1,1)), # center point acts as rigid move
         ), dtype=np.float32)
-    
+
     def calculate_distances(self):
         return haversine_list(self.points[0:self.num_corners])
 
@@ -216,7 +216,7 @@ class LineVectorObject(VectorObjectLayer):
         c = p[self.corners_from_flat].reshape(-1,2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines, update_bounds)
-    
+
     def copy_control_point_from(self, cp, other_layer, other_cp):
         log.log(5, "copy control point from %s %s to %s %s" % (other_layer.name, other_cp, self.name, cp))
         x = self.points.x[cp]
@@ -224,7 +224,7 @@ class LineVectorObject(VectorObjectLayer):
         x1 = other_layer.points.x[other_cp]
         y1 = other_layer.points.y[other_cp]
         self.move_control_point(cp, self.anchor_of[cp], x1 - x, y1 - y)
-    
+
     def get_control_points_from_corners(self, c):
         num_cp = self.center_point_index + 1
         cp = np.empty((num_cp,2), dtype=np.float32)
@@ -232,10 +232,10 @@ class LineVectorObject(VectorObjectLayer):
         cp[self.center_point_index] = c.mean(0)
         self.compute_constrained_control_points(cp)
         return cp
-    
+
     def compute_constrained_control_points(self, cp):
         pass
-    
+
     def find_nearest_corner(self, world_pt):
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         x = np.copy(self.points.x[0:self.num_corners]) - world_pt[0]
@@ -259,12 +259,12 @@ class LineVectorObject(VectorObjectLayer):
 
     def set_initial_rotation(self):
         self.initial_rotation = self.rotation
-        
+
     def dragging_selected_objects(self, world_dx, world_dy, snapped_layer, snapped_cp, about_center=False):
         from ..vector_object_commands import MoveControlPointCommand
         cmd = MoveControlPointCommand(self, self.drag_point, self.anchor_point, world_dx, world_dy, snapped_layer, snapped_cp, about_center)
         return cmd
-    
+
     def move_control_point(self, drag, anchor, dx, dy, about_center=False):
         """Moving the control point changes the size of the bounding rectangle.
         
@@ -277,10 +277,10 @@ class LineVectorObject(VectorObjectLayer):
             self.move_polyline_point(anchor, dx, dy)
         else:
             self.move_bounding_box_point(drag, anchor, dx, dy, about_center)
-    
+
     def move_polyline_point(self, anchor, dx, dy):
         pass
-    
+
     def remove_from_master_control_points(self, drag, anchor, force=False):
         # if the item is moved and it's linked to a master control point,
         # detatch it.  Moving dependent points will not update the master
@@ -290,7 +290,7 @@ class LineVectorObject(VectorObjectLayer):
         else:
             remove = -1
         return self.manager.remove_control_point_links(self, remove, force)
-    
+
     def move_bounding_box_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         """ Adjust points within object after bounding box has been resized
         
@@ -310,36 +310,36 @@ class LineVectorObject(VectorObjectLayer):
         scale = self.anchor_dxdy[anchor]
         xoffset = scale.T[0] * dx
         yoffset = scale.T[1] * dy
-        
+
         # Only scale the bounding box control points & center because
         # subclasses may have additional points in the list
         offset = self.center_point_index + 1
-        
+
         # FIXME: Why does specifying .x work for a range, but not for a single
         # element? Have to use the dict notation for a single element.
         self.points[0:offset].x += xoffset
         self.points[0:offset].y += yoffset
-        
+
         # Optionally, the anchor point can also move, so scale again if needed
         scale = self.anchor_dxdy[drag]
         xoffset = scale.T[0] * ax
         yoffset = scale.T[1] * ay
         self.points[0:offset].x += xoffset
         self.points[0:offset].y += yoffset
-        
+
         if about_center:
             new_center = np.copy(p.xy[self.center_point_index])
             self.points[0:offset].x -= new_center[0] - orig_center[0]
             self.points[0:offset].y -= new_center[1] - orig_center[1]
-        
+
         new_origin = np.copy(p.xy[0])  # see above re use of copy
         scaled_wh = p.xy[self.anchor_of[0]] - new_origin
         scale = scaled_wh / orig_wh
         self.rescale_after_bounding_box_change(old_origin, new_origin, scale)
-    
+
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         pass
-    
+
     def rotating_selected_objects(self, world_dx, world_dy):
         from ..vector_object_commands import RotateObjectCommand
         cmd = RotateObjectCommand(self, self.drag_point, world_dx, world_dy)
@@ -421,12 +421,12 @@ class LineVectorObject(VectorObjectLayer):
 
 class FillableVectorObject(LineVectorObject):
     name = Unicode("Fillable")
-    
+
     type = Str("fillable_obj")
-    
+
     # Fillable objects should (in general) display their center control point
     display_center_control_point = True
-    
+
     def set_layer_style_defaults(self):
         self.style.line_color = self.manager.default_style.line_color
         self.style.fill_color = self.manager.default_style.fill_color
@@ -463,10 +463,10 @@ class RectangleMixin(object):
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
     num_corners = 4
     center_point_index = 8
-    
+
     # return the anchor point of the index point. E.g. anchor_of[0] = 2
     anchor_of = np.asarray((2, 3, 0, 1, 6, 7, 4, 5, 8), dtype=np.uint8)
-    
+
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
@@ -480,7 +480,7 @@ class RectangleMixin(object):
         ((0,0), (1,0), (1,0), (0,0), (.5,0), (1,0), (.5,0), (0,0), (.5,0)),
         ((1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
         ), dtype=np.float32)
-    
+
     def compute_constrained_control_points(self, cp):
         x1 = cp[0,0]
         x2 = cp[1,0]
@@ -493,13 +493,14 @@ class RectangleMixin(object):
         cp[6] = (xm, y2)
         cp[7] = (x1, ym)
 
+
 class RectangleVectorObject(RectangleMixin, FillableVectorObject):
     name = Unicode("Rectangle")
-    
+
     type = Str("rectangle_obj")
-    
+
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
-    
+
     selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
 
     def get_width_height(self):
@@ -527,14 +528,14 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
 
     def get_marker_points(self):
         return []
-    
+
     def has_boundaries(self):
         return True
-    
+
     def get_all_boundaries(self):
         b = Boundary(self.points, [0, 1, 2, 3, 0], 0.0)
         return [b]
-    
+
     def get_points_lines(self):
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:4]
         lines = [(0, 1), (1, 2), (2, 3), (3, 0)]
@@ -547,7 +548,7 @@ class EllipseVectorObject(RectangleVectorObject):
     
     """
     name = Unicode("Ellipse")
-    
+
     type = Str("ellipse_obj")
 
     def get_info_panel_text(self, prop):
@@ -587,31 +588,31 @@ class EllipseVectorObject(RectangleVectorObject):
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
         p = projected_point_data
-        
+
         # FIXME: this only supports axis aligned ellipses
         sx, sy = self.get_semimajor_axes(p)
         cx = p[self.center_point_index][0]
         cy = p[self.center_point_index][1]
-         
+
         num_segments = 128
         xy = np.zeros((num_segments, 2), dtype=np.float32)
-        
+
         dtheta = 2 * 3.1415926 / num_segments
         theta = 0.0
-        x = sx # we start at angle = 0 
+        x = sx # we start at angle = 0
         y = 0
         i = 0
         while i < num_segments:
             xy[i] = (cx + sx*math.cos(theta), cy + sy*math.sin(theta))
             theta += dtheta
             i += 1
-        
+
         # create line segment list from one point to the next
         i1 = np.arange(num_segments, dtype=np.uint32)
         i2 = np.arange(1, num_segments+1, dtype=np.uint32)
         i2[-1] = 0
         lsi = np.vstack((i1, i2)).T  # zip arrays to get line segment indexes
-        
+
         # set_lines expects a color list for each point, not a single color
         colors = np.empty(num_segments, dtype=np.uint32)
         colors.fill(line_color)
@@ -626,9 +627,9 @@ class CircleVectorObject(EllipseVectorObject):
     
     """
     name = Unicode("Circle")
-    
+
     type = Str("circle_obj")
-    
+
     selection_info_panel = ["Anchor coordinates", "Radius", "Circumference", "Area"]
 
     def get_radius(self):
@@ -662,7 +663,7 @@ class CircleVectorObject(EllipseVectorObject):
         rx = lon2 - lon1
         ry = lat2 - lat1
         print "rkm, dlon, dlat", rkm, rx, ry
-        
+
         c = np.empty((4,2), dtype=np.float32)
         c[0] = (lon1 - rx, lat1 - ry)
         c[1] = (lon1 + rx, lat1 - ry)
@@ -670,7 +671,7 @@ class CircleVectorObject(EllipseVectorObject):
         c[3] = (lon1 - rx, lat1 + ry)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
-    
+
     def get_semimajor_axes(self, p):
         width = p[1][0] - p[0][0]
         height = p[2][1] - p[1][1]
@@ -687,17 +688,17 @@ class ScaledImageObject(RectangleVectorObject):
     
     """
     name = Unicode("Image")
-    
+
     type = Str("scaled_image_obj")
-    
+
     layer_info_panel = ["Layer name", "Transparency"]
-    
+
     image_data = Any
-    
+
     def get_image_array(self):
         from maproom.library.numpy_images import get_square
         return get_square(100)
-    
+
     def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         self.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
         if self.image_data is not None:
@@ -738,7 +739,7 @@ class OverlayMixin(object):
 
     def calc_control_points_from_screen(self, canvas):
         pass
-    
+
     def update_world_control_points(self, renderer):
         self.calc_control_points_from_screen(renderer.canvas)
         projected_point_data = self.compute_projected_point_data()
@@ -759,10 +760,10 @@ class OverlayMixin(object):
         log.log(5, "Rendering overlay image %s!!! pick=%s" % (self.name, picker))
         self.set_overlay_position(renderer)
         self.render_overlay(renderer, w_r, p_r, s_r, layer_visibility, picker)
-    
+
     def set_overlay_position(self, renderer):
         pass
-    
+
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Draw the overlay on screen.
 
@@ -783,11 +784,11 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
     
     """
     name = Unicode("OverlayLine")
-    
+
     type = Str("overlay_line_obj")
-    
+
     screen_dx = Float(-1)
-    
+
     screen_dy = Float(-1)
 
     def get_undo_info(self):
@@ -798,13 +799,13 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
         self.bounds = info[1]
         self.screen_dx = info[2]
         self.screen_dy = info[3]
-    
+
     def screen_dx_to_json(self):
         return self.screen_dx
 
     def screen_dx_from_json(self, json_data):
         self.screen_dx = json_data['screen_dx']
-    
+
     def screen_dy_to_json(self):
         return self.screen_dy
 
@@ -848,7 +849,7 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
         self.points.y[1] = w[1]
         self.points.x[2] = (self.points[0].x + self.points[1].x) / 2
         self.points.y[2] = (self.points[0].y + self.points[1].y) / 2
-    
+
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         pass
 
@@ -865,27 +866,27 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
     
     """
     name = Unicode("Overlay Image")
-    
+
     type = Str("overlay_image_obj")
-    
+
     layer_info_panel = ["Layer name", "Transparency"]
-    
+
     image_data = Any
-    
+
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
-    
+
     # Screen y coords are backwards from world y coords (screen y increases
     # downward)
     screen_offset_from_center = np.asarray(
         ((-0.5,0.5), (0.5,0.5), (0.5,-0.5), (-0.5,-0.5), (0,0.5), (0.5,0), (0,-0.5), (-0.5,0), (0,0)),
         dtype=np.float32)
-    
+
     def anchor_point_index_to_json(self):
         return self.anchor_point_index
 
     def anchor_point_index_from_json(self, json_data):
         self.anchor_point_index = json_data['anchor_point_index']
-    
+
     def can_anchor_point_move(self):
         return True
 
@@ -898,12 +899,12 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
         c = p[self.corners_from_flat].reshape(-1,2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
-    
+
     def set_anchor_index(self, index):
         if index == self.anchor_point_index:
             return
         self.anchor_point_index = index
-    
+
     def copy_control_point_from(self, cp, other_layer, other_cp):
         log.debug("copy control point from %s %s to %s %s" % (other_layer.name, other_cp, self.name, cp))
         x = self.points.x[cp]
@@ -921,7 +922,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
             projection = c.projection
             self.image_data.set_control_points(self.points, projection)
             renderer.set_image_projection(self.image_data, projection)
-    
+
     def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         self.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
         if self.image_data is not None:
@@ -943,13 +944,13 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
             self.image_data = ImageData(raw.shape[1], raw.shape[0])
             self.image_data.load_numpy_array(self.points, raw)
         renderer.set_image_screen(self.image_data)
-    
+
     def set_overlay_position(self, renderer):
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         center = c.get_numpy_screen_point_from_world_point(p[self.center_point_index]['xy'])
         renderer.set_image_center_at_screen_point(self.image_data, center, c.screen_rect, 1.0)
-    
+
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         alpha = alpha_from_int(self.style.line_color)
         renderer.draw_image(self, picker, alpha)
@@ -971,13 +972,13 @@ class OverlayScalableImageObject(OverlayImageObject):
     
     """
     name = Unicode("Scalable Image")
-    
+
     type = Str("overlay_scalable_image_obj")
-    
+
     text_width = Float(-1)
-    
+
     text_height = Float(-1)
-    
+
     border_width = Int(0)
 
     def get_undo_info(self):
@@ -989,25 +990,25 @@ class OverlayScalableImageObject(OverlayImageObject):
         self.text_width = info[2]
         self.text_height = info[3]
         self.border_width = info[4]
-    
+
     def text_width_to_json(self):
         return self.text_width
 
     def text_width_from_json(self, json_data):
         self.text_width = json_data['text_width']
-    
+
     def text_height_to_json(self):
         return self.text_height
 
     def text_height_from_json(self, json_data):
         self.text_height = json_data['text_height']
-    
+
     def border_width_to_json(self):
         return self.border_width
 
     def border_width_from_json(self, json_data):
         self.border_width = json_data['border_width']
-    
+
     def set_style(self, style):
         OverlayImageObject.set_style(self, style)
         self.rebuild_needed = True  # Force rebuild to change image color
@@ -1026,18 +1027,18 @@ class OverlayScalableImageObject(OverlayImageObject):
         anchor = canvas.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
         #print "anchor (center):", anchor, "text w,h", self.text_width, self.text_height
         anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
-        
+
         scale = self.screen_offset_from_center.T
         xoffset = (scale[0] - anchor_to_center[0]) * w + anchor[0]
         yoffset = (scale[1] - anchor_to_center[1]) * h + anchor[1]
-        
+
         for i in range(self.center_point_index + 1):
             w = canvas.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
             #print "world point for anchor %d" % i, w
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
             self.points.y[i] = w[1]
-    
+
     def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         # Note: center point drag is rigid body move so text box size is only
         # recalculated if dragging some other control point
@@ -1049,7 +1050,7 @@ class OverlayScalableImageObject(OverlayImageObject):
             d += (dx, dy)
             a = np.copy(p.xy[anchor])
             a += (ax, ay)
-            
+
             d_s = c.get_numpy_screen_point_from_world_point(d)
             a_s = c.get_numpy_screen_point_from_world_point(a)
 
@@ -1086,23 +1087,23 @@ class OverlayTextObject(OverlayScalableImageObject):
     
     """
     name = Unicode("Text")
-    
+
     type = Str("overlay_text_obj")
-    
+
     user_text = Unicode("<b>New Label</b>")
-    
+
     border_width = Int(10)
-    
+
     layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
-    
+
     selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
-    
+
     def user_text_to_json(self):
         return self.user_text
 
     def user_text_from_json(self, json_data):
         self.user_text = json_data['user_text']
-    
+
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
         bg = int_to_color_uint8(self.style.fill_color)
@@ -1110,7 +1111,7 @@ class OverlayTextObject(OverlayScalableImageObject):
         c = int_to_html_color_string(self.style.text_color)
         arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
         return arr
-    
+
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         renderer.prepare_to_render_projected_objects()
         renderer.fill_object(self, picker, self.style)
@@ -1126,24 +1127,24 @@ class OverlayIconObject(OverlayScalableImageObject):
     Uses the Marplot category icons.
     """
     name = Unicode("Icon")
-    
+
     type = Str("overlay_icon_obj")
-    
+
     layer_info_panel = ["Layer name", "Marplot icon", "Color", "Transparency"]
-    
+
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
-    
+
     text_width = Float(32)
-    
+
     text_height = Float(32)
-    
+
     border_width = Int(5)
-    
+
     min_size = Int(10)
-    
+
     def get_image_array(self):
         return self.style.get_numpy_image_from_icon()
-    
+
     def set_overlay_position(self, renderer):
         c = renderer.canvas
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
@@ -1182,26 +1183,26 @@ class PolylineMixin(object):
 
     def set_points(self, points):
         points = np.asarray(points)
-        
+
         # initialize boundary box control points with zeros; will be filled in
         # with call to recalc_bounding_box below
         cp = np.zeros((self.center_point_index + 1,2), dtype=np.float32)
-        
+
         p = np.concatenate((cp, points), 0)  # flatten to 1D
         lines = self.get_polylines(np.alen(points))
         self.set_data(p, 0.0, np.asarray(lines, dtype=np.uint32))
         self.recalc_bounding_box()
-    
+
     def get_polylines(self, num_points):
         offset = self.center_point_index + 1
         lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
         return lines
-    
+
     def move_polyline_point(self, anchor, dx, dy):
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
         points[anchor] += (dx, dy)
         self.recalc_bounding_box()
-    
+
     def recalc_bounding_box(self):
         offset = self.center_point_index + 1
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
@@ -1214,13 +1215,13 @@ class PolylineMixin(object):
         cp = self.get_control_points_from_corners(corners)
         points[0:offset] = cp
         self.update_bounds()
-    
+
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         offset = self.center_point_index + 1
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         points = ((p.xy[offset:] - old_origin) * scale) + new_origin
         p.xy[offset:] = points
-        
+
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
@@ -1230,9 +1231,9 @@ class PolylineMixin(object):
 
 class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
     name = Unicode("Polyline")
-    
+
     type = Str("polyline_obj")
-    
+
     display_center_control_point = True
 
     def calculate_distances(self):
@@ -1249,11 +1250,11 @@ class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
 
 class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     name = Unicode("Polygon")
-    
+
     type = Str("polygon_obj")
-    
+
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
-    
+
     selection_info_panel = ["Anchor coordinates", "Area"]
 
     def get_area(self):
@@ -1283,7 +1284,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
             km = self.get_area()
             return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
         return FillableVectorObject.get_info_panel_text(self, prop)
-    
+
     def get_polylines(self, num_points):
         offset = self.center_point_index + 1
         lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
@@ -1293,16 +1294,16 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     def get_marker_points(self):
         # Polygon is closed, so endpoint markers don't make sense
         return []
-    
+
     def has_boundaries(self):
         return True
-    
+
     def get_all_boundaries(self):
         indexes = range(self.center_point_index + 1, np.alen(self.points))
         indexes.append(self.center_point_index + 1)
         b = Boundary(self.points, indexes, 0.0)
         return [b]
-    
+
     def get_points_lines(self):
         start = self.center_point_index + 1
         count = np.alen(self.points) - start
@@ -1312,7 +1313,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
         lines[count - 1,1] = 0
         return points, lines
-        
+
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
@@ -1350,34 +1351,34 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     name = Unicode("Annotation Layer")
 
     type = Str("annotation")
-    
+
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
-    
+
     layer_info_panel = ["Layer name"]
-    
+
     selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
-    
+
     def set_layer_style_defaults(self):
         self.style.line_stipple = 0xaaaa
         self.style.line_width = 1
         self.style.fill_style = 0
-    
+
     def set_data_from_bounds(self, bounds):
         log.debug("SETTING BOUNDARY BOX!!! %s %s" % (self, bounds))
         if bounds[0][0] is None:
             self.points = self.make_points(0)
-            
+
         else:
             points = np.asarray(bounds, dtype=np.float32)
             self.set_opposite_corners(points[0], points[1], update_bounds=False)
-    
+
     def children_affected_by_move(self):
         affected = []
         for layer in self.manager.get_layer_children(self):
             affected.extend(layer.children_affected_by_move())
         affected.append(self)
         return affected
-    
+
     def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
         layers = self.manager.get_layer_children(self)
         print "SCALING SUB-OBJECTS!!!", self, layers

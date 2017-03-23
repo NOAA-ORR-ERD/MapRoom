@@ -22,12 +22,13 @@ from ui.undo_panel import UndoHistoryPanel
 import logging
 log = logging.getLogger(__name__)
 
+
 class LayerSelectionPane(FrameworkPane):
     #### TaskPane interface ###################################################
 
     id = 'maproom.layer_selection_pane'
     name = 'Layers'
-    
+
     def create_contents(self, parent):
         control = LayerTreeControl(parent, self.task.active_editor, size=(200,300))
         return control
@@ -38,7 +39,7 @@ class LayerInfoPane(FrameworkPane):
 
     id = 'maproom.layer_info_pane'
     name = 'Current Layer'
-    
+
     def create_contents(self, parent):
         control = LayerInfoPanel(parent, self.task.active_editor, size=(200,200))
         return control
@@ -49,7 +50,7 @@ class SelectionInfoPane(FrameworkPane):
 
     id = 'maproom.selection_info_pane'
     name = 'Current Selection'
-    
+
     def create_contents(self, parent):
         control = SelectionInfoPanel(parent, self.task.active_editor, size=(200,200))
         return control
@@ -60,7 +61,7 @@ class TriangulatePane(FrameworkPane):
 
     id = 'maproom.triangulate_pane'
     name = 'Triangulate'
-    
+
     def create_contents(self, parent):
         control = TrianglePanel(parent, self.task)
         return control
@@ -71,7 +72,7 @@ class MergePointsPane(FrameworkPane):
 
     id = 'maproom.merge_points_pane'
     name = 'Merge Points'
-    
+
     def create_contents(self, parent):
         control = MergePointsPanel(parent, self.task)
         return control
@@ -82,13 +83,13 @@ class UndoHistoryPane(FrameworkPane):
 
     id = 'maproom.undo_history_pane'
     name = 'Undo History'
-    
+
     def create_contents(self, parent):
         control = UndoHistoryPanel(parent, self.task)
         return control
-    
+
     #### trait change handlers
-    
+
     def _task_changed(self):
         log.debug("TASK CHANGED IN UNDOHISTORYPANE!!!! %s" % self.task)
         if self.control:
@@ -100,7 +101,7 @@ class UndoHistoryPane(FrameworkPane):
 #        self.task = task
 #        self.editor = None
 #        wx.Panel.__init__(self, parent, wx.ID_ANY, **kwargs)
-#        
+#
 #        # Mac/Win needs this, otherwise background color is black
 #        attr = self.GetDefaultAttributes()
 #        self.SetBackgroundColour(attr.colBg)
@@ -114,7 +115,7 @@ class UndoHistoryPane(FrameworkPane):
 #        self.SetSizer(self.sizer)
 #        self.sizer.Layout()
 #        self.Fit()
-    
+
 class FlaggedPointPanel(wx.ListBox):
     def __init__(self, parent, task, **kwargs):
         self.task = task
@@ -122,7 +123,7 @@ class FlaggedPointPanel(wx.ListBox):
         self.point_indexes = []
         wx.ListBox.__init__(self, parent, wx.ID_ANY, **kwargs)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
-        
+
         # Return key not sent through to EVT_CHAR, EVT_CHAR_HOOK or
         # EVT_KEY_DOWN events in a ListBox. This is the only event handler
         # that catches a Return.
@@ -140,7 +141,7 @@ class FlaggedPointPanel(wx.ListBox):
         self.CacheBestSize(best)
 
         return best
-    
+
     def on_char(self, evt):
         keycode = evt.GetKeyCode()
         log.debug("key down: %s" % keycode)
@@ -154,14 +155,14 @@ class FlaggedPointPanel(wx.ListBox):
         if index >= 0:
             self.Select(index)
             self.process_index(index)
-    
+
     def process_index(self, index):
         point_index = self.point_indexes[index]
         editor = self.task.active_editor
         layer = editor.layer_tree_control.get_selected_layer()
         print point_index, layer
         editor.layer_canvas.do_center_on_point_index(layer, point_index)
-    
+
     def set_flagged(self, point_indexes):
         self.point_indexes = list(point_indexes)
         self.Set([str(i) for i in point_indexes])
@@ -176,7 +177,7 @@ class FlaggedPointPanel(wx.ListBox):
             except AttributeError:
                 points = []
             self.set_flagged(points)
-    
+
     def refresh_view(self):
         editor = self.task.active_editor
         if editor is not None:
@@ -184,13 +185,14 @@ class FlaggedPointPanel(wx.ListBox):
                 self.recalc_view()
             else:
                 self.Refresh()
-        
+
     def activateSpringTab(self):
         self.recalc_view()
-    
+
     def get_notification_count(self):
         self.recalc_view()
         return len(self.point_indexes)
+
 
 class DownloadPanel(DownloadControl):
     def __init__(self, parent, task, **kwargs):
@@ -216,10 +218,10 @@ class DownloadPanel(DownloadControl):
 
     def refresh_view(self):
         self.Refresh()
-        
+
     def activateSpringTab(self):
         self.refresh_view()
-    
+
     def get_notification_count(self):
         self.refresh_view()
         return self.num_active
@@ -230,23 +232,23 @@ class SidebarPane(FrameworkPane):
 
     id = 'maproom.sidebar'
     name = 'Sidebar'
-    
+
     movable = False
     caption_visible = False
     dock_layer = 9
-    
+
     def flagged_cb(self, parent, task, **kwargs):
         control = FlaggedPointPanel(parent, task)
-    
+
     def download_cb(self, parent, task, **kwargs):
         self.download_control = DownloadPanel(parent, task)
-        
+
     def create_contents(self, parent):
         control = SpringTabs(parent, self.task, popup_direction="left")
         control.addTab("Flagged Points", self.flagged_cb)
         control.addTab("Downloads", self.download_cb)
         return control
-    
+
     def refresh_active(self):
         self.control.update_notifications()
         active = self.control._radio

@@ -21,15 +21,17 @@ from library.tile_utils import BackgroundTileDownloader
 import logging
 log = logging.getLogger(__name__)
 
+
 class NewProjectAction(Action):
     """ An action for creating a new empty file that can be edited by a particular task
     """
     name = 'New Project'
     tooltip = 'Open an empty grid to create new layers'
-    
+
     def perform(self, event=None):
         task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
         task.new()
+
 
 class SaveProjectAction(EditorAction):
     name = 'Save Project'
@@ -40,6 +42,7 @@ class SaveProjectAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.save(None)
+
 
 class SaveProjectAsAction(EditorAction):
     name = 'Save Project As...'
@@ -52,6 +55,7 @@ class SaveProjectAsAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save(dialog.path)
 
+
 class SaveCommandLogAction(EditorAction):
     name = 'Save Command Log...'
     tooltip = 'Save a copy of the command log'
@@ -61,6 +65,7 @@ class SaveCommandLogAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save_log(dialog.path)
 
+
 class SaveLayerAction(EditorAction):
     name = 'Save Layer'
     tooltip = 'Save the currently selected layer'
@@ -68,6 +73,7 @@ class SaveLayerAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.save_layer(None)
+
 
 class SaveLayerAsAction(EditorAction):
     name = 'Save Layer As...'
@@ -79,23 +85,25 @@ class SaveLayerAsAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save_layer(dialog.path)
 
+
 class SaveLayerAsFormatAction(EditorAction):
     loader = Any
     ext = Str
-    
+
     def _name_default(self):
         return "%s (%s)" % (self.loader.extension_name(self.ext), self.ext)
-    
+
     def perform(self, event):
         dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard=self.loader.get_file_dialog_wildcard())
         if dialog.open() == OK:
             self.active_editor.save_layer(dialog.path)
 
+
 class SaveLayerGroup(TaskDynamicSubmenuGroup):
     """ A menu for changing the active task in a task window.
     """
     id = 'SaveLayerGroup'
-    
+
     event_name = Str('layer_selection_changed')
 
     def _get_items(self, layer=None):
@@ -109,8 +117,9 @@ class SaveLayerGroup(TaskDynamicSubmenuGroup):
                     for ext in loader.extensions:
                         action = SaveLayerAsFormatAction(loader=loader, ext=ext)
                         items.append(ActionItem(action=action))
-            
+
         return items
+
 
 class RevertProjectAction(EditorAction):
     name = 'Revert Project'
@@ -125,6 +134,7 @@ class RevertProjectAction(EditorAction):
         elif result == YES:
             self.active_editor.load_omnivore_document(self.active_editor.document)
 
+
 class DefaultStyleAction(EditorAction):
     name = 'Default Style...'
     tooltip = 'Choose the line, fill and font styles'
@@ -136,12 +146,13 @@ class DefaultStyleAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.show_dialog, self.active_editor)
-    
+
     def show_dialog(self, project):
         dialog = StyleDialog(project)
         status = dialog.ShowModal()
         if status == wx.ID_OK:
             project.layer_manager.update_default_style(dialog.get_style())
+
 
 class BoundingBoxAction(EditorAction):
     name = 'Show Bounding Boxes'
@@ -158,6 +169,7 @@ class BoundingBoxAction(EditorAction):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_bounding_boxes
 
+
 class PickerFramebufferAction(EditorAction):
     name = 'Show Picker Framebuffer'
     tooltip = 'Display the picker framebuffer instead of the normal view'
@@ -173,6 +185,7 @@ class PickerFramebufferAction(EditorAction):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_picker_framebuffer
 
+
 class ZoomInAction(EditorAction):
     name = 'Zoom In'
     tooltip = 'Increase magnification'
@@ -183,6 +196,7 @@ class ZoomInAction(EditorAction):
         units_per_pixel = c.zoom_in()
         cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
         self.active_editor.process_command(cmd)
+
 
 class ZoomOutAction(EditorAction):
     name = 'Zoom Out'
@@ -195,6 +209,7 @@ class ZoomOutAction(EditorAction):
         cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
         self.active_editor.process_command(cmd)
 
+
 class ZoomToFit(EditorAction):
     name = 'Zoom to Fit'
     tooltip = 'Set magnification to show all layers'
@@ -205,6 +220,7 @@ class ZoomToFit(EditorAction):
         center, units_per_pixel = c.calc_zoom_to_fit()
         cmd = ViewportCommand(None, center, units_per_pixel)
         self.active_editor.process_command(cmd)
+
 
 class ZoomToLayer(EditorAction):
     name = 'Zoom to Layer'
@@ -218,6 +234,7 @@ class ZoomToLayer(EditorAction):
             cmd = ViewportCommand(sel_layer)
             self.active_editor.process_command(cmd)
 
+
 class NewVectorLayerAction(EditorAction):
     name = 'New Verdat Layer'
     tooltip = 'Create new vector (grid) layer'
@@ -227,6 +244,7 @@ class NewVectorLayerAction(EditorAction):
         cmd = AddLayerCommand("vector")
         self.active_editor.process_command(cmd)
 
+
 class NewLonLatLayerAction(EditorAction):
     name = 'New Lon/Lat Layer'
     tooltip = 'Create new longitude/latitude grid layer'
@@ -234,6 +252,7 @@ class NewLonLatLayerAction(EditorAction):
     def perform(self, event):
         cmd = AddLayerCommand("grid")
         self.active_editor.process_command(cmd)
+
 
 class NewCompassRoseLayerAction(EditorAction):
     name = 'New Compass Rose Layer'
@@ -243,6 +262,7 @@ class NewCompassRoseLayerAction(EditorAction):
         cmd = AddLayerCommand("compass_rose")
         self.active_editor.process_command(cmd)
 
+
 class NewAnnotationLayerAction(EditorAction):
     name = 'New Annotation Layer'
     tooltip = 'Create new annotation layer'
@@ -250,6 +270,7 @@ class NewAnnotationLayerAction(EditorAction):
     def perform(self, event):
         cmd = AddLayerCommand("annotation")
         self.active_editor.process_command(cmd)
+
 
 class NewWMSLayerAction(EditorAction):
     name = 'New WMS Layer'
@@ -259,6 +280,7 @@ class NewWMSLayerAction(EditorAction):
         cmd = AddLayerCommand("wms")
         self.active_editor.process_command(cmd)
 
+
 class NewTileLayerAction(EditorAction):
     name = 'New Tile Layer'
     tooltip = 'Create new tile background service layer'
@@ -266,6 +288,7 @@ class NewTileLayerAction(EditorAction):
     def perform(self, event):
         cmd = AddLayerCommand("tile")
         self.active_editor.process_command(cmd)
+
 
 class NewRNCLayerAction(EditorAction):
     name = 'New RNC Download Selection Layer'
@@ -276,6 +299,7 @@ class NewRNCLayerAction(EditorAction):
         path = get_template_path("RNCProdCat_*.bna")
         event.task.window.application.load_file(path, event.task)
 
+
 class DeleteLayerAction(EditorAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
@@ -284,6 +308,7 @@ class DeleteLayerAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.delete_selected_layer)
+
 
 class RaiseLayerAction(EditorAction):
     name = 'Raise Layer'
@@ -294,6 +319,7 @@ class RaiseLayerAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.raise_selected_layer)
 
+
 class RaiseToTopAction(EditorAction):
     name = 'Raise Layer To Top'
     tooltip = 'Move layer to the top'
@@ -302,6 +328,7 @@ class RaiseToTopAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.raise_to_top)
+
 
 class LowerToBottomAction(EditorAction):
     name = 'Lower Layer To Bottom'
@@ -312,6 +339,7 @@ class LowerToBottomAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.lower_to_bottom)
 
+
 class LowerLayerAction(EditorAction):
     name = 'Lower Layer'
     tooltip = 'Move layer down in the stacking order'
@@ -320,6 +348,7 @@ class LowerLayerAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer)
+
 
 class TriangulateLayerAction(EditorAction):
     name = 'Triangulate Layer'
@@ -332,6 +361,7 @@ class TriangulateLayerAction(EditorAction):
         pane = task.window.get_dock_pane('maproom.triangulate_pane')
         pane.visible = True
 
+
 class ToPolygonLayerAction(EditorAction):
     name = 'Convert to Polygon Layer'
     tooltip = 'Create new polygon layer from boundaries of current layer'
@@ -342,6 +372,7 @@ class ToPolygonLayerAction(EditorAction):
         if sel_layer is not None:
             cmd = ToPolygonLayerCommand(sel_layer)
             self.active_editor.process_command(cmd)
+
 
 class ToVerdatLayerAction(EditorAction):
     name = 'Convert to Editable Layer'
@@ -354,6 +385,7 @@ class ToVerdatLayerAction(EditorAction):
             cmd = ToVerdatLayerCommand(sel_layer)
             self.active_editor.process_command(cmd)
 
+
 class MergeLayersAction(EditorAction):
     name = 'Merge Layers'
     tooltip = 'Merge two vector layers'
@@ -362,7 +394,7 @@ class MergeLayersAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.show_dialog, self.active_editor)
-    
+
     def show_dialog(self, project):
         layers = project.layer_manager.get_mergeable_layers()
 
@@ -413,6 +445,7 @@ class MergeLayersAction(EditorAction):
                 cmd = MergeLayersCommand(layer_a, layer_b, depth_unit)
                 project.process_command(cmd)
 
+
 class MergePointsAction(EditorAction):
     name = 'Merge Duplicate Points'
     tooltip = 'Merge points within a layer'
@@ -424,6 +457,7 @@ class MergePointsAction(EditorAction):
         pane = task.window.get_dock_pane('maproom.merge_points_pane')
         pane.visible = True
 
+
 class JumpToCoordsAction(EditorAction):
     name = 'Jump to Coordinates'
     accelerator = 'Ctrl+J'
@@ -433,6 +467,7 @@ class JumpToCoordsAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_canvas.do_jump_coords)
 
+
 class ClearSelectionAction(EditorAction):
     name = 'Clear Selection'
     enabled_name = 'layer_has_selection'
@@ -441,6 +476,7 @@ class ClearSelectionAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.clear_selection)
+
 
 class DeleteSelectionAction(EditorAction):
     name = 'Delete Selection'
@@ -452,6 +488,7 @@ class DeleteSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.delete_selection)
 
+
 class ClearFlaggedAction(EditorAction):
     name = 'Clear Flagged'
     enabled_name = 'layer_has_flagged'
@@ -460,6 +497,7 @@ class ClearFlaggedAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.clear_all_flagged)
 
+
 class FlaggedToSelectionAction(EditorAction):
     name = 'Select Flagged'
     enabled_name = 'layer_has_flagged'
@@ -467,6 +505,7 @@ class FlaggedToSelectionAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.select_all_flagged)
+
 
 class BoundaryToSelectionAction(EditorAction):
     name = 'Select Boundary'
@@ -486,6 +525,7 @@ class FindPointsAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_canvas.do_find_points)
 
+
 class CheckSelectedLayerAction(EditorAction):
     name = 'Check Layer For Errors'
     accelerator = 'Ctrl+E'
@@ -495,6 +535,7 @@ class CheckSelectedLayerAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.check_for_errors)
 
+
 class CheckAllLayersAction(EditorAction):
     name = 'Check All Layers For Errors'
     accelerator = 'Shift+Ctrl+E'
@@ -502,6 +543,7 @@ class CheckAllLayersAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.check_all_layers_for_errors)
+
 
 class OpenLogAction(Action):
     name = 'View Command History Log'
@@ -512,13 +554,14 @@ class OpenLogAction(Action):
         filename = app.get_log_file_name("command_log", ".mrc")
         app.load_file(filename, task_id="omnivore.framework.text_edit_task")
 
+
 class DebugAnnotationLayersAction(EditorAction):
     name = 'Sample Annotation Layer'
     tooltip = 'Create a sample annotation layer with examples of all vector objects'
 
     def perform(self, event):
         GUI.invoke_later(self.after, self.active_editor)
-    
+
     def after(self, project):
         import debug
         lm = project.layer_manager
@@ -526,6 +569,7 @@ class DebugAnnotationLayersAction(EditorAction):
         project.update_default_visibility()
         project.layer_metadata_changed(None)
         project.layer_canvas.zoom_to_fit()
+
 
 class CopyStyleAction(EditorAction):
     name = 'Copy Style'
@@ -536,6 +580,7 @@ class CopyStyleAction(EditorAction):
     def perform(self, event):
         self.active_editor.copy_style()
 
+
 class PasteStyleAction(EditorAction):
     name = 'Paste Style'
     accelerator = 'Alt+Ctrl+V'
@@ -544,6 +589,7 @@ class PasteStyleAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.paste_style()
+
 
 class DuplicateLayerAction(EditorAction):
     name = 'Duplicate'
@@ -560,9 +606,10 @@ class DuplicateLayerAction(EditorAction):
                 cmd = PasteLayerCommand(sel_layer, text, self.active_editor.layer_canvas.world_center)
                 self.active_editor.process_command(cmd)
 
+
 class ManageWMSAction(EditorAction):
     name = 'Manage WMS Servers...'
-    
+
     def perform(self, event):
         dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_hosts(), lambda a:getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
         if dlg.ShowModal() == wx.ID_OK:
@@ -572,9 +619,10 @@ class ManageWMSAction(EditorAction):
             self.active_editor.refresh(True)
         dlg.Destroy()
 
+
 class ManageTileServersAction(EditorAction):
     name = 'Manage Tile Servers...'
-    
+
     def perform(self, event):
         hosts = BackgroundTileDownloader.get_known_hosts()
         dlg = ListReorderDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), prompt_for_tile, "Manage Tile Servers")
@@ -585,9 +633,10 @@ class ManageTileServersAction(EditorAction):
             self.active_editor.refresh(True)
         dlg.Destroy()
 
+
 class ClearTileCacheAction(EditorAction):
     name = 'Clear Tile Cache...'
-    
+
     def perform(self, event):
         hosts = BackgroundTileDownloader.get_known_hosts()
         dlg = CheckItemDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
@@ -597,8 +646,9 @@ class ClearTileCacheAction(EditorAction):
                     host.clear_cache(event.task.get_tile_cache_root())
             except OSError, e:
                 event.task.window.window.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
-                
+
         dlg.Destroy()
+
 
 class NormalizeLongitudeAction(EditorAction):
     name = 'Normalize Longitude'

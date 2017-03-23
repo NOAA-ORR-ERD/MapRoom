@@ -159,6 +159,7 @@ def n_or_s(y):
     if y < 0: return "S"
     return "N"
 
+
 def e_or_w(x):
     if x < 0: return "W"
     return "E"

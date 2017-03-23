@@ -37,32 +37,32 @@ class LayerManager(BaseDocument):
     purpose at present is to hold the folder name.
     """
     project = Any
-    
+
     layers = List(Any)
-    
+
     next_invariant = Int(0)
-    
+
     layer_loaded = Event
-    
+
     layers_changed = Event
-    
+
     layer_contents_changed = Event
-    
+
     layer_contents_changed_in_place = Event
-    
+
     # when points are deleted from a layer the indexes of the points in the
     # merge dialog box become invalid; so this event will trigger the user to
     # re-find duplicates in order to create a valid list again
     layer_contents_deleted = Event
-    
+
     layer_metadata_changed = Event
-    
+
     projection_changed = Event
-    
+
     refresh_needed = Event
-    
+
     background_refresh_needed = Event
-    
+
     threaded_image_loaded = Event
 
     # Linked control points are slaves of a truth layer: a dict that maps the
@@ -71,7 +71,7 @@ class LayerManager(BaseDocument):
 
     # Transient layer always uses invariant
     transient_invariant = -3
-    
+
     def _undo_stack_default(self):
         return UndoStack()
 
@@ -87,7 +87,7 @@ class LayerManager(BaseDocument):
         """
         self = cls()
         self.project = project
-        
+
         # In order for the serializer to correcly map the layer invariant to
         # the actual layer, the next_invariant must be preset so first user
         # added layer will use 1.  If the number of default layers added below
@@ -107,15 +107,15 @@ class LayerManager(BaseDocument):
             import debug
             debug.debug_objects(self)
         return self
-    
+
     def __str__(self):
         root = self.get_layer_by_multi_index([0])
         layers = self.get_children(root)
         return str(layers)
-    
+
     def get_to_json_attrs(self):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-8]) and m.endswith("_to_json")]
-    
+
     def get_from_json_attrs(self):
         return [(m[0:-10], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-10]) and m.endswith("_from_json")]
 
@@ -124,10 +124,10 @@ class LayerManager(BaseDocument):
         print "next invariant: %d" % self.next_invariant
         for layer in layers:
             print "  %s: invariant=%d" % (layer, layer.invariant)
-    
+
     def update_default_style(self, style):
         self.default_style.copy_from(style)
-    
+
     def flatten(self):
         return self.flatten_recursive(self.layers)
 
@@ -141,7 +141,7 @@ class LayerManager(BaseDocument):
                 result.extend(self.flatten_recursive(item))
 
         return result
-    
+
     def flatten_with_indexes(self):
         return self.flatten_with_indexes_recursive(self.layers, [])
 
@@ -160,23 +160,23 @@ class LayerManager(BaseDocument):
             index += 1
 
         return result
-    
+
     def recalc_all_bounds(self):
         # calculate bound starting at leaf layers and working back up to folder
         # layers
         for layer in reversed(self.flatten()):
             layer.update_bounds()
-    
+
     # Invariant handling: invariants are unique identifiers for each layer that
     # don't change when the layer is renamed or reordered
-    
+
     def get_next_invariant(self, invariant=None):
         if invariant is None:
             invariant = self.next_invariant
         if invariant == self.next_invariant:
             self.next_invariant += 1
         return invariant
-    
+
     def roll_back_invariant(self, invariant):
         """ Roll back the next_invariant if the supplied invariant is the 
         last invariant used.
@@ -196,10 +196,10 @@ class LayerManager(BaseDocument):
             if layer.invariant == invariant:
                 return layer
         return None
-    
+
     def get_invariant_offset(self):
         return self.next_invariant - 1
-    
+
     def has_user_created_layers(self):
         """Returns true if all the layers can be recreated automatically
         
@@ -209,25 +209,25 @@ class LayerManager(BaseDocument):
             if not layer.skip_on_insert:
                 return True
         return False
-    
+
     def destroy(self):
         ## fixme: why do layers need a destroy() method???
         for layer in self.flatten():
             layer.destroy()
         self.layers = []
-    
+
     def dispatch_event(self, event, value=True):
         log.debug("dispatching event %s = %s" % (event, value))
         setattr(self, event, value)
-    
+
     def post_event(self, event_name, *args):
         log.debug("event: %s.  args=%s" % (event_name, str(args)))
-        
+
     def get_event_callback(self, event):
         import functools
         callback = functools.partial(self.post_event, event)
         return callback
-    
+
     def add_layers(self, layers, is_project, editor):
         parent = None
         if is_project:
@@ -237,7 +237,7 @@ class LayerManager(BaseDocument):
             for layer in existing:
                 if not layer.is_root():
                     self.remove_layer(layer)
-            
+
             # layers are inserted from the beginning, so reverse loaded layers
             # so they won't show up backwards
             layers.reverse()
@@ -245,13 +245,13 @@ class LayerManager(BaseDocument):
             if layers[0].is_folder():
                 parent = layers.pop(0)
                 self.insert_loaded_layer(parent, editor)
-        
+
         for layer in layers:
             layer.check_projection(editor.task)
             if not layer.load_error_string:
                 self.insert_loaded_layer(layer, editor, last_child_of=parent)
         return layers
-    
+
     def check_layer(self, layer, window):
         if layer is not None:
             try:
@@ -262,7 +262,7 @@ class LayerManager(BaseDocument):
                 else:
                     raise
         return None
-    
+
     def load_all_from_json(self, json, batch_flags=None):
         order = []
         if json[0] == "extra json data":
@@ -280,7 +280,7 @@ class LayerManager(BaseDocument):
                 batch_flags.messages.append("ERROR: %s" % str(e))
         order.sort()
         log.debug("load_all_from_json: order: %s" % str(order))
-        
+
         for attr, from_json in self.get_from_json_attrs():
             try:
                 from_json(extra_json)
@@ -288,9 +288,9 @@ class LayerManager(BaseDocument):
                 message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
                 log.warning(message)
                 batch_flags.messages.append("WARNING: %s" % message)
-        
+
         return order, extra_json
-    
+
     def add_all(self, layer_order, editor=None):
         existing = self.flatten()
         for layer in existing:
@@ -322,7 +322,7 @@ class LayerManager(BaseDocument):
                     self.next_invariant = layer.invariant + 1
         self.recalc_all_bounds()
         return layers
-    
+
     def save_all(self, file_path, extra_json_data=None):
         log.debug("saving layers in project file: " + file_path)
         layer_info = self.flatten_with_indexes()
@@ -347,7 +347,7 @@ class LayerManager(BaseDocument):
                     return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
 
                 project.append(data)
-        
+
         try:
             with fsopen(file_path, "wb") as fh:
                 fh.write("# -*- MapRoom project file -*-\n")
@@ -358,7 +358,7 @@ class LayerManager(BaseDocument):
         except Exception, e:
             return "Failed saving %s: %s" % (file_path, e)
         return ""
-    
+
     def save_layer(self, layer, file_path, loader=None):
         if layer is not None:
             error = loaders.save_layer(layer, file_path, loader)
@@ -366,14 +366,14 @@ class LayerManager(BaseDocument):
                 layer.name = os.path.basename(layer.file_path)
             return error
         return "No selected layer."
-    
+
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
         self.dispatch_event('layer_loaded', layer)
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
         return mi
-    
+
     def insert_json(self, json_data, editor, mi, old_invariant_map=None):
         mi = list(mi)  # operate on a copy, otherwise changes get returned
         layer = Layer.load_from_json(json_data, self)[0]
@@ -388,7 +388,7 @@ class LayerManager(BaseDocument):
                 mi[-1] = mi[-1] + 1
         layer.update_bounds()
         return layer
-    
+
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
         # be inserted below them.  If the lat/lon layer has been moved down,
@@ -402,7 +402,7 @@ class LayerManager(BaseDocument):
             else:
                 break
         return [pos]
-    
+
     def find_vector_object_insert_layer(self, event_layer):
         """Find the appropriate layer to insert a vector object, given the
         layer on which the event occurred.
@@ -420,7 +420,7 @@ class LayerManager(BaseDocument):
                     return event_layer
             event_layer = self.get_folder_of_layer(event_layer)
         return None
-    
+
     def get_insertion_multi_index(self, before=None, after=None, first_child_of=None, last_child_of=None):
         if first_child_of is not None:
             mi = self.get_multi_index_of_layer(first_child_of)
@@ -581,19 +581,19 @@ class LayerManager(BaseDocument):
                     return r
 
         return None
-    
+
     def find_dependent_layer(self, layer, dependent_type):
         for child in self.flatten():
             if child.dependent_of == layer.invariant:
                 return child
         return None
-    
+
     def find_parent_of_dependent_layer(self, child, dependent_type):
         for layer in self.flatten():
             if child.dependent_of == layer.invariant:
                 return layer
         return None
-    
+
     def find_transient_layer(self):
         for child in self.flatten():
             if child.transient_edit_layer:
@@ -609,8 +609,8 @@ class LayerManager(BaseDocument):
             insertion_index = None
         self.insert_loaded_layer(layer, editor, **kwargs)
         return old, insertion_index
-    
-    ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???    
+
+    ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???
     def is_raisable(self, layer):
         if not layer.is_root():
             mi = self.get_multi_index_of_layer(layer)
@@ -711,7 +711,7 @@ class LayerManager(BaseDocument):
 
     def count_raster_layers(self):
         ## fixme -- what  in the world are these used for?
-        ## and if there is a need, maybe it should be more  like 
+        ## and if there is a need, maybe it should be more  like
         ## count_layer_of_type(self, layer_type="")
         n = 0
         for layer in self.flatten():
@@ -767,7 +767,6 @@ class LayerManager(BaseDocument):
         layers.reverse()
         return layers
 
-
     def control_point_links_to_json(self):
         # json can't handle dictionaries with tuples as their keys, so have
         # to compress
@@ -792,7 +791,7 @@ class LayerManager(BaseDocument):
                 locked = False
             cpdict[tuple(entry)] = (tuple(truth), locked)
         self.control_point_links = cpdict
-        
+
     def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None, locked=False):
         """Links a control point to a truth (master) layer
         
@@ -815,7 +814,7 @@ class LayerManager(BaseDocument):
             truth = (truth_layer.invariant, truth_cp)
         log.debug("control_point_links: adding %s child of %s" % (entry, truth))
         self.control_point_links[entry] = (truth, locked)
-        
+
     def get_control_point_links(self, layer):
         """Returns the list of control points that the specified layer links to
         
@@ -827,7 +826,7 @@ class LayerManager(BaseDocument):
                 truth_invariant, truth_cp = truth[0], truth[1]
                 links.append((dep_cp, truth_invariant, truth_cp, locked))
         return links
-    
+
     def remove_control_point_links(self, layer, remove_cp=-1, force=False):
         """Remove links to truth layer control points from the specified
         dependent layer.
@@ -846,7 +845,7 @@ class LayerManager(BaseDocument):
             log.debug("control_point_links: removing %s from %s" % (dep, truth))
             del self.control_point_links[dep]
         return to_remove
-    
+
     def update_linked_control_points(self):
         """Update control points in depedent layers from the truth layers.
         
@@ -860,7 +859,7 @@ class LayerManager(BaseDocument):
             dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
             layers.append(dep_layer)
         return layers
-    
+
     def remove_all_links_to_layer(self, layer):
         """Remove all links to the specified layer, whether it's a truth layer
         or a dependent layer.
@@ -880,7 +879,7 @@ class LayerManager(BaseDocument):
             log.debug("control_point_links: removing %s from %s" % (dep, truth))
             del self.control_point_links[dep]
         return to_remove
-    
+
     def restore_all_links_to_layer(self, layer, links):
         for dep, truth, locked in links:
             log.debug("control_point_links: restoring %s from %s" % (dep, truth))

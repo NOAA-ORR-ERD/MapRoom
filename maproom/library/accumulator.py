@@ -176,4 +176,3 @@ if __name__ == "__main__":
     polygon_points.extend(p) # works
     p = [(0, 0, 0)] * 190
     polygon_points.extend(p) # fails with ValueError, even though it's supposed to catch ValueError!
-

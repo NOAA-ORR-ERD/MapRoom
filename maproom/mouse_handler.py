@@ -15,6 +15,7 @@ from mouse_commands import *
 from vector_object_commands import *
 from menu_commands import *
 
+
 class NoObjectError(RuntimeError):
     pass
 
@@ -99,6 +100,7 @@ import logging
 log = logging.getLogger(__name__)
 mouselog = logging.getLogger("mouse")
 
+
 class MouseHandler(object):
     """
     Processing of mouse events, separate from the rendering window
@@ -109,7 +111,7 @@ class MouseHandler(object):
     menu_item_name = "Generic Mouse Handler"
     menu_item_tooltip = "Tooltip for generic mouse handler"
     editor_trait_for_enabled = ""
-    
+
     mouse_too_close_pixel_tolerance = 5
 
     def __init__(self, layer_canvas):
@@ -123,11 +125,11 @@ class MouseHandler(object):
         self.can_snap = False
         self.is_over_object = False
         self.current_object_under_mouse = None
-        
+
         # Optional (only OS X at this point) mouse wheel event filter
         self.wheel_scroll_count = 0
         self.use_every_nth_wheel_scroll = 5
-    
+
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_ARROW)
 
@@ -142,10 +144,10 @@ class MouseHandler(object):
         p = event.GetPosition()
         cp = c.get_world_point_from_screen_point(p)
         return cp
-    
+
     def get_position(self, event):
         return self.get_snap_position(event.GetPosition())
-    
+
     def get_snap_position(self, position):
         if self.can_snap:
             c = self.layer_canvas
@@ -224,11 +226,11 @@ class MouseHandler(object):
 
     def dragged_on_empty_space(self, event):
         pass
-    
+
     def reset_early_mouse_params(self):
         self.mouse_up_too_close = False
         self.after_first_mouse_up = False
-    
+
     def check_early_mouse_release(self, event):
         c = self.layer_canvas
         p = event.GetPosition()
@@ -269,7 +271,7 @@ class MouseHandler(object):
             layer = e.layer_tree_control.get_selected_layer()
             world_point = c.get_world_point_from_screen_point(event.GetPosition())
             self.right_clicked_on_empty_space(event, layer, world_point)
-        
+
     def right_clicked_on_point(self, event, layer, point_index):
         pass
 
@@ -307,7 +309,7 @@ class MouseHandler(object):
             # handling is performed in the usual manner on OS X it produces a
             # strange back-and-forth zooming in/zooming out.  So, this extra
             # hack is needed to operate like the other platforms.
-            
+
             # add extra to the rotation so the minimum amount is 1 or -1
             extra = delta if rotation > 0 else -delta
             amount = (rotation + extra) / delta
@@ -319,7 +321,7 @@ class MouseHandler(object):
             amount = rotation / delta
 
         screen_point = event.GetPosition()
-        
+
         # On windows, the mouse wheel events are only passed to controls with
         # the text focus.  So we are forced to grab mouse wheel events on the
         # Frame because the events are propagated up from the control with
@@ -333,7 +335,7 @@ class MouseHandler(object):
             if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
                 mouselog.debug("Mouse not over RenderWindow: skipping!")
                 return
-            
+
         world_point = c.get_world_point_from_screen_point(screen_point)
 
         prefs = e.task.get_preferences()
@@ -362,7 +364,7 @@ class MouseHandler(object):
 
         cmd = ViewportCommand(None, center, units_per_pixel)
         e.process_command(cmd)
-        
+
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
         self.update_status_text(proj_p, True, True)
@@ -404,10 +406,10 @@ class MouseHandler(object):
                 self.process_text_input(event, text)
                 handled = True
         return handled
-    
+
     def esc_key_pressed(self):
         self.layer_canvas.project.clear_all_selections()
-    
+
     def delete_key_pressed(self):
         pass
 
@@ -491,6 +493,7 @@ class MouseHandler(object):
         hkm = haversine(p1, p3)
         s = "Width: %s, %s  Height: %s, %s" % (km_to_rounded_string(wkm), mi_to_rounded_string(wkm * .621371), km_to_rounded_string(hkm), mi_to_rounded_string(hkm * .621371))
         c.project.task.status_bar.message = s
+
 
 class PanMode(MouseHandler):
     """Mouse mode to pan the viewport
@@ -643,7 +646,7 @@ class RNCSelectionMode(PanMode):
                     log.info("LOADING RNC MAP #%s from %s" % (num, url))
                     e = c.project
                     e.download_rnc(url, filename, num)
-                    
+
         self.is_panning = False
 
     def render_overlay(self, renderer):
@@ -727,7 +730,7 @@ class PolygonSelectionMode(PanMode):
                 cmd = PolygonEditLayerCommand(layer, object_type, object_index)
                 c.project.process_command(cmd)
                 c.render(event)
-                    
+
         self.is_panning = False
 
     def render_overlay(self, renderer):
@@ -820,7 +823,7 @@ class ObjectSelectionMode(MouseHandler):
                         c.mouse_down_position = p
                         self.last_modifier_state = modifiers
                         return
-                       
+
                 self.last_modifier_state = modifiers
                 w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
                 w_p1 = c.get_world_point_from_screen_point(p)
@@ -878,16 +881,16 @@ class ObjectSelectionMode(MouseHandler):
             if cmd is not None:
                 e.process_command(cmd)
         c.selection_box_is_being_defined = False
-        
+
         # This render is needed to update the picker buffer because the
         # rendered lines may have only been drawn in the overlay layer.  (Might
         # possibly render twice if the finished_drag renders because the final
         # drag position is different from the last rendered drag position)
         c.render()
-    
+
     def delete_key_pressed(self):
         self.layer_canvas.project.delete_selection()
-        
+
     def clicked_on_point(self, event, layer, point_index):
         pass
 
@@ -1070,16 +1073,17 @@ class PointEditMode(ObjectSelectionMode):
 
         if (not event.ControlDown() and not event.ShiftDown()):
             e.clear_all_selections(False)
-            
+
             # FIXME: this comment is from pre maproom3. Is it still applicable?
             # we release the focus because we don't want to immediately drag the new object (if any)
             # self.control.release_mouse() # shouldn't be captured now anyway
-            
+
             cmd = InsertPointCommand(layer, world_point)
             e.process_command(cmd)
 
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+
 
 class LineEditMode(PointEditMode):
     icon = "add_lines.png"
@@ -1151,7 +1155,7 @@ class LineEditMode(PointEditMode):
             layer.select_line_segment(line_segment_index)
 
         e.refresh()
-        
+
     def clicked_on_empty_space(self, event, layer, world_point):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
         c = self.layer_canvas
@@ -1161,7 +1165,7 @@ class LineEditMode(PointEditMode):
         if layer.is_folder():
             e.window.error("You cannot add lines to folder layers.", "Cannot Edit")
             return
-        
+
         if (not event.ControlDown() and not event.ShiftDown()):
             point_indexes = layer.get_selected_point_indexes()
             if (len(point_indexes == 1)):
@@ -1174,16 +1178,17 @@ class LineEditMode(PointEditMode):
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_line_segments_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
+
 class RectSelectMode(MouseHandler):
     dim_background_outside_selection = True
     normalize_mouse_coordinates = True
-    
+
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
-    
+
     def is_snappable_to_layer(self, layer):
         return False
-    
+
     def process_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
         # unless it is released too soon.
@@ -1209,7 +1214,7 @@ class RectSelectMode(MouseHandler):
         if (not c.mouse_is_down):
             c.selection_box_is_being_defined = False
             return
-        
+
         if not self.after_first_mouse_up and self.check_early_mouse_release(event):
             self.mouse_up_too_close = True
             self.after_first_mouse_up = True
@@ -1227,7 +1232,7 @@ class RectSelectMode(MouseHandler):
             x2, y2 = c.mouse_move_position
         self.process_rect_select(x1, y1, x2, y2)
         self.reset_early_mouse_params()
-    
+
     def process_rect_select(self, x1, y1, x2, y2):
         raise RuntimeError("Abstract method")
 
@@ -1262,7 +1267,7 @@ class RulerMode(RectSelectMode):
             x2, y2 = c.mouse_move_position
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
             self.show_distance_between_screen_points("Path length", c.mouse_down_position, c.mouse_move_position)
-    
+
     def process_rect_select(self, x1, y1, x2, y2):
         # Clear ruler line by redrawing screen.  The ruler won't be drawn in
         # render_overlay because the mouse will not be down.
@@ -1285,6 +1290,7 @@ class ZoomRectMode(RectSelectMode):
             cmd = ViewportCommand(None, center, units_per_pixel)
             e.process_command(cmd)
 
+
 class CropRectMode(RectSelectMode):
     icon = "crop.png"
     menu_item_name = "Crop Mode"
@@ -1301,11 +1307,12 @@ class CropRectMode(RectSelectMode):
             cmd = CropRectCommand(layer, w_r)
             e.process_command(cmd)
 
+
 class ControlPointEditMode(ObjectSelectionMode):
     icon = "select.png"
     menu_item_name = "Control Point Edit Mode"
     menu_item_tooltip = "Select objects and move control points in the current layer"
-    
+
     def right_clicked_on_point(self, event, layer, point_index):
         menu = []
         try:
@@ -1379,7 +1386,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         if (layer is not None):
             cmd = self.get_vector_object_command(layer, cp1, cp2, layer.manager.default_style)
             e.process_command(cmd, ControlPointEditMode)
-    
+
     def get_vector_object_command(self, layer, cp1, cp2, style):
         return self.vector_object_command(layer, cp1, cp2, style)
 
@@ -1441,10 +1448,10 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
             rx = lon2 - lon1
             ry = lat2 - lat1
             w = [(lon1 - rx, lat1 - ry), (lon1 + rx, lat1 - ry), (lon1 + rx, lat1 + ry), (lon1 - rx, lat1 + ry), (lon1 - rx, lat1 - ry)]
-            
+
             sp = [c.get_screen_point_from_world_point(p) for p in w]
             renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
-            
+
             (x1, y1) = c.mouse_down_position
             (x2, y2) = c.mouse_move_position
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
@@ -1457,7 +1464,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
     menu_item_name = "Add Line"
     menu_item_tooltip = "Add a new line"
     vector_object_command = DrawLineCommand
-    
+
     def is_snappable_to_layer(self, layer):
         return hasattr(layer, "center_point_index")
 
@@ -1469,7 +1476,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
             renderer.draw_screen_line((x1, y1), (x2, y2), 1.0, 0, 1.0, 1.0, xor=True)
             self.show_distance_between_screen_points("Path length", c.mouse_down_position, c.mouse_move_position)
         self.render_snapped_point(renderer)
-    
+
     def get_vector_object_command(self, layer, cp1, cp2, style):
         return self.vector_object_command(layer, cp1, cp2, style, *self.snapped_point)
 
@@ -1484,10 +1491,10 @@ class AddPolylineMode(MouseHandler):
         MouseHandler.__init__(self, *args, **kwargs)
         self.points = []
         self.cursor_point = None
-    
+
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
-    
+
     def process_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_canvas
@@ -1502,24 +1509,24 @@ class AddPolylineMode(MouseHandler):
         c = self.layer_canvas
         self.cursor_point = self.get_world_point(event)
         c.render(event)
-    
+
     def process_mouse_motion_down(self, event):
         self.process_mouse_motion_up(event)
 
     def process_mouse_up(self, event):
         # After the first point, mouse up events add points
         c = self.layer_canvas
-        
+
         if not self.after_first_mouse_up and self.check_early_mouse_release(event):
             self.mouse_up_too_close = True
             self.after_first_mouse_up = True
             return
         self.after_first_mouse_up = True
-        
+
         cp = self.get_world_point(event)
         self.points.append(cp)
         c.render(event)
-    
+
     def process_right_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_canvas
@@ -1562,7 +1569,7 @@ class AddPolygonMode(AddPolylineMode):
 
 class AddOverlayMode(MouseHandler):
     vector_object_command = None
-    
+
     def get_cursor(self):
         return wx.StockCursor(wx.CURSOR_CROSS)
 
@@ -1575,7 +1582,7 @@ class AddOverlayMode(MouseHandler):
             cp = self.get_world_point(event)
             cmd = self.get_vector_object_command(layer, cp, layer.manager.default_style)
             e.process_command(cmd, ControlPointEditMode)
-    
+
     def get_vector_object_command(self, layer, cp, style):
         return self.vector_object_command(layer, cp, style)
 
@@ -1585,7 +1592,7 @@ class AddOverlayTextMode(AddOverlayMode):
     menu_item_name = "Add Text"
     menu_item_tooltip = "Add a new text overlay"
     vector_object_command = AddTextCommand
-    
+
     def get_vector_object_command(self, layer, cp, style):
         return self.vector_object_command(layer, cp, style, 300, 250)
 

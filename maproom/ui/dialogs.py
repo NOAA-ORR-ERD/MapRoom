@@ -32,7 +32,7 @@ class FindPointDialog(sc.SizedDialog):
         self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())
 
         self.layer = project.layer_tree_control.get_selected_layer()
-        
+
         # Note: indexes are stored in zero-based array but need to be displayed
         # to the user as one-based
         indexes = self.layer.get_selected_point_indexes()
@@ -47,14 +47,14 @@ class FindPointDialog(sc.SizedDialog):
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
         self.Fit()
-    
+
     def ShowModalWithFocus(self):
         self.text.SetFocus()
         return self.ShowModal()
 
     def OnClose(self, event):
         self.EndModal(wx.ID_CANCEL)
-    
+
     def get_values(self):
         """Return indexes of points.
         
@@ -89,7 +89,7 @@ class JumpCoordsDialog(sc.SizedDialog):
         self.coords_text.Value = coordinates.format_coords_for_display(self.lat_lon[0], self.lat_lon[1], display_format)
 
         self.Fit()
-    
+
     def ShowModalWithFocus(self):
         self.coords_text.SetFocus()
         return self.ShowModal()
@@ -109,6 +109,7 @@ class JumpCoordsDialog(sc.SizedDialog):
             self.coords_text.SetBackgroundColour("#FF8080")
             valid = False
         self.ok_btn.Enable(valid)
+
 
 class IconDialog(wx.Dialog):
     def __init__(self, parent, iid):
@@ -145,7 +146,7 @@ class IconDialog(wx.Dialog):
         sizer.Add(vsiz, 0, wx.EXPAND, 0)
         self.SetSizer(sizer)
         self.Fit()
-    
+
     def repopulate_grid(self, cat_id):
         self.grid.Clear(True)
         cat_name, icons = marplot_icons[cat_id]
@@ -166,17 +167,17 @@ class IconDialog(wx.Dialog):
     def OnButton(self, event):
         iid = self.id_map[event.GetId()]
         self.EndModal(iid)
-    
+
     def on_category(self, event):
         self.repopulate_grid(event.GetSelection())
-    
+
     def on_enter(self, event):
         wid = event.GetId()
         if wid in self.id_map:
             iid = self.id_map[wid]
             name = marplot_icon_id_to_name[iid]
             self.name.SetLabel(name)
-    
+
     def on_leave(self, event):
         self.name.SetLabel("")
 
@@ -185,24 +186,24 @@ class StyleDialog(wx.Dialog):
     def __init__(self, project):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300,-1))
         self.lm = project.layer_manager
-        
+
         self.mock_project = MockProject(add_tree_control=True)
         self.mock_project.control = None
         self.layer = self.mock_project.layer_tree_control.get_selected_layer()
         self.layer.style.copy_from(self.lm.default_style)
         self.layer.layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Marplot icon"]
-        
+
         # Can't import from the top level because info_panels imports this
         # file, creating a circular import loop
         from info_panels import LayerInfoPanel
         self.info = LayerInfoPanel(self, self.mock_project)
         self.info.display_panel_for_layer(self.mock_project, self.layer)
-        
+
         # Force the minimum client area to be big enough so there's no scrollbar
         vsiz = (400, self.info.GetBestVirtualSize()[1]+50)
         self.info.SetMinSize(vsiz)
         self.info.Layout()
-        
+
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
         btn.SetDefault()
@@ -223,7 +224,7 @@ class StyleDialog(wx.Dialog):
 
 class WMSDialog(ObjectEditDialog):
     border = 5
-    
+
     def __init__(self, parent, title, default=None):
         fields = [
             ('verify', 'url', 'URL: '),
@@ -233,13 +234,13 @@ class WMSDialog(ObjectEditDialog):
             ]
         self.verified_host = False
         ObjectEditDialog.__init__(self, parent, title, "Enter WMS Server Information:", fields, WMSHost, default)
-        
+
         # Assume the host has been verified if there is a default URL
         control = self.controls['url']
         url = control.GetValue()
         self.verified_host = bool(url)
         self.check_enable()
-    
+
     def on_verify(self, evt):
         control = self.controls['url']
         url = control.GetValue()
@@ -263,7 +264,7 @@ class WMSDialog(ObjectEditDialog):
                 wx.Yield()
             if server.is_valid():
                 break
-            
+
         gauge.SetValue(0)
         wx.Yield()
         name = self.controls['name']
@@ -278,9 +279,10 @@ class WMSDialog(ObjectEditDialog):
             self.verified_host = None
         verify.Enable(True)
         self.check_enable()
-        
+
     def can_submit(self):
         return bool(self.verified_host)
+
 
 def prompt_for_wms(parent, title, default=None):
     d = WMSDialog(parent, title, default)
@@ -289,7 +291,7 @@ def prompt_for_wms(parent, title, default=None):
 
 class TileServerDialog(ObjectEditDialog):
     border = 5
-    
+
     def __init__(self, parent, title, default=None):
         fields = [
             ('verify list', 'urls', 'URLs: '),
@@ -301,13 +303,13 @@ class TileServerDialog(ObjectEditDialog):
             ]
         self.verified_urls = False
         ObjectEditDialog.__init__(self, parent, title, "Enter Tile Server Information:", fields, OpenTileHost, default)
-        
+
         # Assume the host has been verified if there is a default URL
         control = self.controls['urls']
         urls = control.GetValue()
         self.verified_urls = urls
         self.check_enable()
-    
+
     def on_verify(self, evt):
         control = self.controls['urls']
         urls = control.GetValue()
@@ -369,7 +371,7 @@ class TileServerDialog(ObjectEditDialog):
                         found_extension = True
                         suffix = ext
                         break
-            
+
         gauge.SetValue(0)
         wx.Yield()
         if success:
@@ -381,10 +383,11 @@ class TileServerDialog(ObjectEditDialog):
             self.verified_urls = None
         verify.Enable(True)
         self.check_enable()
-        
+
     def can_submit(self):
         name = self.controls['name']
         return bool(self.verified_urls) and bool(name.GetValue())
+
 
 def prompt_for_tile(parent, title, default=None):
     d = TileServerDialog(parent, title, default)

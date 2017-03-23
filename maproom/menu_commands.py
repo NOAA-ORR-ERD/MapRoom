@@ -19,14 +19,14 @@ class LoadLayersCommand(Command):
     serialize_order =  [
             ('metadata', 'file_metadata'),
             ]
-    
+
     def __init__(self, metadata):
         Command.__init__(self)
         self.metadata = metadata
-    
+
     def __str__(self):
         return "Load Layers From %s" % self.metadata.uri
-    
+
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
@@ -45,10 +45,10 @@ class LoadLayersCommand(Command):
             undo.flags.errors = [str(e)]
         finally:
             progress_log.info("END")
-        
+
         if not undo.flags.success:
             return undo
-        
+
         if layers is None:
             undo.flags.success = False
             undo.flags.errors = ["Unknown file type %s for %s" % (metadata.mime, metadata.uri)]
@@ -72,41 +72,42 @@ class LoadLayersCommand(Command):
                 lf = undo.flags.add_layer_flags(layer)
                 lf.select_layer = True
                 lf.layer_loaded = True
-                
+
             undo.flags.layers_changed = True
             undo.flags.refresh_needed = True
             undo.data = (layers, saved_invariant)
-        
+
         return self.undo_info
 
     def undo(self, editor):
         lm = editor.layer_manager
         layers, saved_invariant = self.undo_info.data
-        
+
         for layer in layers:
             lm.remove_layer(layer)
         lm.next_invariant = saved_invariant
-        
+
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         return undo
+
 
 class AddLayerCommand(Command):
     short_name = "add_layer"
     serialize_order =  [
             ('type', 'string'),
             ]
-    
+
     def __init__(self, type, before=None, after=None):
         Command.__init__(self)
         self.type = type
         self.before = before
         self.after = after
-    
+
     def __str__(self):
         return "Add %s Layer" % self.type.title()
-    
+
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
@@ -127,17 +128,17 @@ class AddLayerCommand(Command):
             layer = RNCDownloadLayer(manager=lm)
         else:
             layer = LineLayer(manager=lm)
-        
+
         layer.new()
         lm.insert_loaded_layer(layer, editor, self.before, self.after)
-        
+
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         lf.layer_loaded = True
         undo.data = (layer.invariant, saved_invariant)
-        
+
         return self.undo_info
 
     def undo(self, editor):
@@ -145,16 +146,17 @@ class AddLayerCommand(Command):
         invariant, saved_invariant = self.undo_info.data
         layer = editor.layer_manager.get_layer_by_invariant(invariant)
         insertion_index = lm.get_multi_index_of_layer(layer)
-        
+
         # Only remove the reference to the layer in the layer manager, leave
         # all the layer info around so that it can be undone
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = saved_invariant
-        
+
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         return undo
+
 
 class PasteLayerCommand(Command):
     short_name = "paste_layer"
@@ -163,15 +165,15 @@ class PasteLayerCommand(Command):
             ('json_text', 'string'),
             ('center', 'point'),
             ]
-    
+
     def __init__(self, layer, json_text, center):
         Command.__init__(self, layer)
         self.json_text = json_text
         self.center = center
-    
+
     def __str__(self):
         return "Paste Layer"
-    
+
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
@@ -182,14 +184,14 @@ class PasteLayerCommand(Command):
         old_invariant_map = {}
         layer = lm.insert_json(json_data, editor, mi, old_invariant_map)
         layer.name = "Copy of %s" % layer.name
-        
+
         drag = layer.center_point_index
         x = layer.points.x[drag]
         y = layer.points.y[drag]
         layer.move_control_point(drag, drag, self.center[0] - x, self.center[1] - y)
         print "AFTER NEW LAYER POSITION"
         layer.update_bounds()
-        
+
         new_links = []
         for old_invariant, new_layer in old_invariant_map.iteritems():
             for dep_cp, truth_invariant, truth_cp, locked in new_layer.control_point_links:
@@ -204,14 +206,14 @@ class PasteLayerCommand(Command):
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
-        
+
         affected = layer.parents_affected_by_move()
         for parent in affected:
             print "AFFECTED!", parent
             lf = undo.flags.add_layer_flags(parent)
             lf.layer_items_moved = True
         undo.data = (layer.invariant, saved_invariant, new_links)
-        
+
         return self.undo_info
 
     def undo(self, editor):
@@ -219,19 +221,20 @@ class PasteLayerCommand(Command):
         invariant, saved_invariant, cp_links = self.undo_info.data
         layer = editor.layer_manager.get_layer_by_invariant(invariant)
         insertion_index = lm.get_multi_index_of_layer(layer)
-        
+
         # Only remove the reference to the layer in the layer manager, leave
         # all the layer info around so that it can be undone
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = saved_invariant
-        
+
         for layer, cp in cp_links:
             lm.remove_control_point_links(layer, cp, force=True)
-        
+
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         return undo
+
 
 class RenameLayerCommand(Command):
     short_name = "rename_layer"
@@ -243,25 +246,25 @@ class RenameLayerCommand(Command):
     def __init__(self, layer, name):
         Command.__init__(self, layer)
         self.name = name
-    
+
     def __str__(self):
         return "Rename Layer to %s" % self.name
-    
+
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
             if next_command.layer == self.layer:
                 self.name = next_command.name
                 return True
-    
+
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
         undo.data = (layer.name,)
-        
+
         layer.name = self.name
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_metadata_changed = True
-        
+
         return self.undo_info
 
     def undo(self, editor):
@@ -269,6 +272,7 @@ class RenameLayerCommand(Command):
         name, = self.undo_info.data
         layer.name = name
         return self.undo_info
+
 
 class DeleteLayerCommand(Command):
     short_name = "del_layer"
@@ -279,10 +283,10 @@ class DeleteLayerCommand(Command):
     def __init__(self, layer):
         Command.__init__(self, layer)
         self.name = layer.name
-    
+
     def __str__(self):
         return "Delete Layer %s" % self.name
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -295,12 +299,12 @@ class DeleteLayerCommand(Command):
             links.extend(lm.remove_all_links_to_layer(child))
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
-        
+
         # Only remove the reference to the layer in the layer manager, leave
         # all the layer info around so that it can be undone
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = lm.roll_back_invariant(layer.invariant)
-        
+
         parent_layer_data = get_parent_layer_data(parents, undo)
 
         undo.data = (layer, insertion_index, layer.invariant, children, links, parent_layer_data)
@@ -316,6 +320,7 @@ class DeleteLayerCommand(Command):
         restore_layers(editor, parent_layer_data)
         return self.undo_info
 
+
 class MergeLayersCommand(Command):
     short_name = "merge_layers"
     serialize_order =  [
@@ -323,7 +328,7 @@ class MergeLayersCommand(Command):
             ('layer_b', 'layer'),
             ('depth_unit', 'string'),
             ]
-    
+
     def __init__(self, layer_a, layer_b, depth_unit):
         Command.__init__(self)
         self.layer_a = layer_a.invariant
@@ -331,10 +336,10 @@ class MergeLayersCommand(Command):
         self.layer_b = layer_b.invariant
         self.name_b = str(layer_b.name)
         self.depth_unit = depth_unit
-    
+
     def __str__(self):
         return "Merge Layers %s & %s" % (self.name_a, self.name_b)
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
@@ -343,7 +348,7 @@ class MergeLayersCommand(Command):
         layer_b = lm.get_layer_by_invariant(self.layer_b)
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
-        
+
         layer = layer_a.merge_layer_into_new(layer_b, self.depth_unit)
         if layer is None:
             undo_info.flags.success = False
@@ -355,7 +360,7 @@ class MergeLayersCommand(Command):
             lf.layer_loaded = True
 
             undo.data = (layer.invariant, saved_invariant)
-        
+
         return self.undo_info
 
     def undo(self, editor):
@@ -363,16 +368,17 @@ class MergeLayersCommand(Command):
         invariant, saved_invariant = self.undo_info.data
         layer = lm.get_layer_by_invariant(invariant)
         insertion_index = lm.get_multi_index_of_layer(layer)
-        
+
         # Only remove the reference to the layer in the layer manager, leave
         # all the layer info around so that it can be undone
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = saved_invariant
-        
+
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         return undo
+
 
 class MoveLayerCommand(Command):
     short_name = "move_layer"
@@ -382,7 +388,7 @@ class MoveLayerCommand(Command):
             ('before', 'bool'),
             ('in_folder', 'bool'),
             ]
-    
+
     def __init__(self, moved_layer, target_layer, before, in_folder):
         Command.__init__(self)
         self.moved_layer = moved_layer.invariant
@@ -390,10 +396,10 @@ class MoveLayerCommand(Command):
         self.target_layer = target_layer.invariant
         self.before = before
         self.in_folder = in_folder
-    
+
     def __str__(self):
         return "Move Layer %s" % (self.name)
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         tree = editor.layer_tree_control
@@ -405,7 +411,7 @@ class MoveLayerCommand(Command):
         lf = undo.flags.add_layer_flags(source_layer)
         lf.select_layer = True
         lf.metadata_changed = True
-        
+
         mi_source = lm.get_multi_index_of_layer(source_layer)
         mi_target = lm.get_multi_index_of_layer(target_layer)
 
@@ -429,7 +435,7 @@ class MoveLayerCommand(Command):
         lm.insert_children(source_layer, children)
 
         undo.data = (mi_temp, )
-        
+
         return self.undo_info
 
     def undo(self, editor):
@@ -437,15 +443,16 @@ class MoveLayerCommand(Command):
         mi_temp, = self.undo_info.data
         temp_layer = EmptyLayer(layer_manager=lm)
         lm.insert_layer(mi_temp, temp_layer)
-        
+
         source_layer = lm.get_layer_by_invariant(self.moved_layer)
         children = lm.get_children(source_layer)
         lm.remove_layer(source_layer)
         mi_temp = lm.get_multi_index_of_layer(temp_layer)
         lm.replace_layer(mi_temp, source_layer)
         lm.insert_children(source_layer, children)
-        
+
         return self.undo_info
+
 
 class TriangulateLayerCommand(Command):
     short_name = "triangulate"
@@ -460,10 +467,10 @@ class TriangulateLayerCommand(Command):
         self.name = layer.name
         self.q = q
         self.a = a
-    
+
     def __str__(self):
         return "Triangulate Layer %s" % self.name
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -495,7 +502,7 @@ class TriangulateLayerCommand(Command):
                 invariant = None
             lm.insert_loaded_layer(t_layer, editor, after=layer, invariant=invariant)
             t_layer.set_dependent_of(layer)
-            
+
             undo.flags.layers_changed = True
             undo.flags.refresh_needed = True
             lf = undo.flags.add_layer_flags(t_layer)
@@ -503,25 +510,26 @@ class TriangulateLayerCommand(Command):
             lf.layer_loaded = True
 
             undo.data = (t_layer, old_t_layer, invariant, saved_invariant)
-        
+
         return self.undo_info
 
     def undo(self, editor):
         lm = editor.layer_manager
         t_layer, old_t_layer, invariant, saved_invariant = self.undo_info.data
-        
+
         insertion_index = lm.get_multi_index_of_layer(t_layer)
         lm.remove_layer_at_multi_index(insertion_index)
         if old_t_layer is not None:
             lm.insert_layer(insertion_index, old_t_layer, invariant=invariant)
         lm.next_invariant = saved_invariant
-        
+
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(old_t_layer)
         lf.select_layer = True
         return undo
+
 
 class ToPolygonLayerCommand(Command):
     short_name = "to_polygon"
@@ -535,7 +543,7 @@ class ToPolygonLayerCommand(Command):
 
     def __str__(self):
         return "Polygon Layer from %s" % self.name
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -561,7 +569,7 @@ class ToPolygonLayerCommand(Command):
             p.set_data_from_boundaries(boundaries)
             p.name = "Polygons from %s" % layer.name
             lm.insert_loaded_layer(p, editor, after=layer)
-            
+
             undo.flags.layers_changed = True
             undo.flags.refresh_needed = True
             lf = undo.flags.add_layer_flags(p)
@@ -569,17 +577,17 @@ class ToPolygonLayerCommand(Command):
             lf.layer_loaded = True
 
             undo.data = (p, p.invariant, saved_invariant)
-        
+
         return self.undo_info
 
     def undo(self, editor):
         lm = editor.layer_manager
         p, invariant, saved_invariant = self.undo_info.data
-        
+
         insertion_index = lm.get_multi_index_of_layer(p)
         lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = saved_invariant
-        
+
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
@@ -587,6 +595,7 @@ class ToPolygonLayerCommand(Command):
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         return undo
+
 
 class ToVerdatLayerCommand(ToPolygonLayerCommand):
     short_name = "to_verdat"
@@ -600,7 +609,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
 
     def __str__(self):
         return "Line Layer from %s" % self.name
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -611,7 +620,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         p.set_data(points, 0, segments)
         p.name = "Verdat from %s" % layer.name
         lm.insert_loaded_layer(p, editor, after=layer)
-        
+
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(p)
@@ -619,8 +628,9 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         lf.layer_loaded = True
 
         undo.data = (p, p.invariant, saved_invariant)
-        
+
         return self.undo_info
+
 
 class PolygonEditLayerCommand(Command):
     short_name = "polygon_edit"
@@ -638,7 +648,7 @@ class PolygonEditLayerCommand(Command):
 
     def __str__(self):
         return "Editing Polygon from %s" % self.name
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
@@ -653,7 +663,7 @@ class PolygonEditLayerCommand(Command):
         p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
         old_layer, old_insertion_index = lm.replace_transient_layer(p, editor, after=layer)
         insertion_index = lm.get_multi_index_of_layer(p)
-        
+
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(p)
@@ -661,7 +671,7 @@ class PolygonEditLayerCommand(Command):
         lf.layer_loaded = True
 
         undo.data = (p, insertion_index, old_layer, old_insertion_index)
-        
+
         return self.undo_info
 
     def undo(self, editor):
@@ -677,20 +687,21 @@ class PolygonEditLayerCommand(Command):
             lf.select_layer = True
         return undo
 
+
 class SavepointCommand(Command):
     short_name = "savepoint"
     serialize_order =  [
             ('layer', 'layer'),
             ('world_rect', 'rect'),
             ]
-    
+
     def __init__(self, layer, world_rect):
         Command.__init__(self, layer)
         self.world_rect = world_rect
-    
+
     def __str__(self):
         return "Save Point"
-    
+
     def perform(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)

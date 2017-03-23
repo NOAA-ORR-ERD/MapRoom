@@ -14,38 +14,39 @@ from maproom.library import numpy_images
 import logging
 log = logging.getLogger(__name__)
 
+
 class TileLayer(ProjectedLayer):
     """Web Tile Service
     
     """
     name = Unicode("Tiles")
-    
+
     type = Str("tiles")
-    
+
     layer_info_panel = ["Layer Name", "Transparency", "Server status", "Server reload"]
-    
+
     selection_info_panel = ["Tile server"]
-    
+
     map_server_id = Int(0)
-    
+
     image_data = Any(None)
-    
+
     current_size = Any(None)  # holds tuple of screen size
-    
+
     current_proj = Any(None)  # holds rect of projected coords
-    
+
     current_world = Any(None)  # holds rect of world coords
-    
+
     current_zoom = Int(-1)  # holds map zoom level
-    
+
     rebuild_needed = Bool(True)
-    
+
     threaded_request_results = Any
-    
+
     download_status_text = Any(None)
-    
+
     checkerboard_when_loading = False
-    
+
     def map_server_id_to_json(self):
         # get a representative URL to use as the reference in the project file
         # so we can restore the correct tile server
@@ -58,16 +59,16 @@ class TileLayer(ProjectedLayer):
         index = self.manager.project.task.get_tile_server_id_from_url(url)
         if index is not None:
             self.map_server_id = index
-    
+
     def _threaded_request_results_default(self):
         return Queue.Queue()
-    
+
     def is_valid_threaded_result(self, map_server_id, tile_request):
         if map_server_id == self.map_server_id:
             self.threaded_request_results.put_nowait(tile_request)
             return True
         return False
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         # Called only when tile server changed: throws away current tiles and
         # starts fresh
@@ -100,13 +101,13 @@ class TileLayer(ProjectedLayer):
             return
         # first time, load map immediately
         self.image_data.update_tiles(zoom_level, self.current_world, self.manager, (self, self.map_server_id))
-    
+
     def zoom_changed(self, canvas):
         print "ZOOM CHANGED:", canvas.zoom_level
         self.image_data.update_tiles(canvas.zoom_level, self.current_world, self.manager, (self, self.map_server_id))
         self.change_count += 1  # Force info panel update
         canvas.project.update_info_panels(self, True)
-    
+
     def change_server_id(self, id, canvas):
         if id != self.map_server_id:
             self.map_server_id = id
@@ -130,11 +131,11 @@ class TileLayer(ProjectedLayer):
             alpha = alpha_from_int(self.style.line_color)
             print "DRAW TILES HERE!!!"
             renderer.draw_tiles(self, picker, alpha)
-    
+
     # Utility routines used by info_panels to abstract the server info
-    
+
     def get_downloader(self, server_id):
         return self.manager.project.task.get_tile_downloader_by_id(server_id)
-    
+
     def get_server_names(self):
         return self.manager.project.task.get_known_tile_server_names()

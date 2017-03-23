@@ -2,6 +2,7 @@
 import re
 import math
 
+
 def haversine(lon1, lat1, lon2=None, lat2=None, r=6371.0):
     if lon2 is None:
         lon2, lat2 = lat1[0], lat1[1]
@@ -10,14 +11,15 @@ def haversine(lon1, lat1, lon2=None, lat2=None, r=6371.0):
     lat1 = math.radians(lat1)
     lon2 = math.radians(lon2)
     lat2 = math.radians(lat2)
-    
-    # haversine formula 
+
+    # haversine formula
     sdlon = math.sin((lon2 - lon1) / 2.0)
     sdlat = math.sin((lat2 - lat1) / 2.0)
     a = sdlat * sdlat + math.cos(lat1) * math.cos(lat2) * sdlon * sdlon
     c = 2 * math.asin(math.sqrt(a))
     d = r * c
     return d
+
 
 def distance_bearing(lon1, lat1, bearing, d, r=6371.0):
     lon1 = math.radians(lon1)
@@ -26,6 +28,7 @@ def distance_bearing(lon1, lat1, bearing, d, r=6371.0):
     lat2 = math.asin(math.sin(lat1)*math.cos(d/r) + math.cos(lat1)*math.sin(d/r)*math.cos(bearing))
     lon2 = lon1 + math.atan2(math.sin(bearing)*math.sin(d/r)*math.cos(lat1), math.cos(d/r)-math.sin(lat1)*math.sin(lat2))
     return math.degrees(lon2), math.degrees(lat2)
+
 
 def haversine_at_const_lat(delta_deg_lon, deg_lat, r=6371.0):
     lon = math.radians(delta_deg_lon)
@@ -37,16 +40,17 @@ def haversine_at_const_lat(delta_deg_lon, deg_lat, r=6371.0):
     d = r * c
     return d
 
+
 def haversine_list(points, r=6371.0):
     lon1 = math.radians(points[0]['x'])
     lat1 = math.radians(points[0]['y'])
-    
+
     path = 0.0
     for p in points[1:]:
         lon2 = math.radians(p['x'])
         lat2 = math.radians(p['y'])
-        
-        # haversine formula 
+
+        # haversine formula
         sdlon = math.sin((lon2 - lon1) / 2.0)
         sdlat = math.sin((lat2 - lat1) / 2.0)
         a = sdlat * sdlat + math.cos(lat1) * math.cos(lat2) * sdlon * sdlon
@@ -56,12 +60,14 @@ def haversine_list(points, r=6371.0):
         lon1, lat1 = lon2, lat2
     return path
 
+
 def km_to_string(km):
     if km < 1.0:
         s = "%d m" % (km * 1000)
     else:
         s = "%d km" % km
     return s
+
 
 def km_to_rounded_string(val, sigfigs=5, area=False):
     if val < 1.0:
@@ -75,12 +81,14 @@ def km_to_rounded_string(val, sigfigs=5, area=False):
     val = float(format % val)
     return u"%s %s" % (val, unit)
 
+
 def ft_to_string(ft):
     if ft < 5000:
         s = "%d ft" % ft
     else:
         s = "%d mi" % ((ft + 280) / 5280)
     return s
+
 
 def mi_to_rounded_string(val, sigfigs=5, area=False):
     if val < 1.0:
@@ -147,9 +155,11 @@ def check_degrees(degrees):
     if degrees < -360 or degrees > 360:
         raise ValueError("Degrees out of range")
 
+
 def check_min_sec(value):
     if value < 0 or value > 60:
         raise ValueError("Value not in minutes or seconds range")
+
 
 def degrees_minutes_seconds_to_float(degrees):
     # handle with spaces or without

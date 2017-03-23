@@ -12,20 +12,21 @@ from base import ScreenLayer
 import logging
 log = logging.getLogger(__name__)
 
+
 class Grid(ScreenLayer):
     """Root layer
     
     Only one root layer per project.
     """
     name = Unicode("Lon/Lat Grid")
-    
+
     type = Str("grid")
-    
+
     skip_on_insert = True
-    
+
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)
-    
+
     def resize(self, renderer, world_rect, screen_rect):
         prefs = renderer.canvas.project.task.get_preferences()
         if prefs.coordinate_display_format == "decimal degrees":
@@ -105,7 +106,8 @@ class GridLines(object):
             bisect.bisect(self.STEPS, abs(reference_size)),
             self.STEP_COUNT - 1,
         )]
-    
+
+
 class DegreeMinuteGridLines(GridLines):
     DEGREE = np.float64(1.0)
     MINUTE = DEGREE / 60.0
@@ -133,12 +135,13 @@ class DegreeMinuteGridLines(GridLines):
         DEGREE * 40,
     )
     STEP_COUNT = len(STEPS)
-    
+
     def format_lat_line_label(self, latitude):
         return coordinates.format_lat_line_label(latitude)
 
     def format_lon_line_label(self, longitude):
         return coordinates.format_lon_line_label(longitude)
+
 
 class DecimalDegreeGridLines(GridLines):
     DEGREE = np.float64(1.0)
@@ -164,7 +167,7 @@ class DecimalDegreeGridLines(GridLines):
         DEGREE * 40,
     )
     STEP_COUNT = len(STEPS)
-    
+
     def format_lat_line_label(self, latitude):
         ( degrees, direction ) = \
             coordinates.float_to_degrees(latitude, directions=("N", "S"))

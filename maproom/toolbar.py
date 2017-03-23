@@ -13,6 +13,7 @@ valid_mouse_modes = {
     'RNCToolBar': [RNCSelectionMode, ZoomRectMode],
     }
 
+
 def get_valid_mouse_mode(mouse_mode, mode_mode_toolbar_name):
     """
     Return a valid mouse mode for the specified toolbar
@@ -36,15 +37,15 @@ class MouseHandlerBaseAction(EditorAction):
     """
     # Traits
     handler = Any
-    
+
     style = 'radio'
-    
+
     def _name_default(self):
         return self.handler.menu_item_name
-    
+
     def _tooltip_default(self):
         return self.handler.menu_item_tooltip
-    
+
     def _image_default(self):
         return ImageResource(self.handler.icon)
 
@@ -57,6 +58,7 @@ class MouseHandlerBaseAction(EditorAction):
         if self.active_editor:
             self.checked = self.active_editor.mouse_mode_factory == self.handler
 
+
 def get_toolbar_group(toolbar_name):
     """Create the toolbar groups with buttons in the order specified in the
     valid_mouse_modes dict.
@@ -66,6 +68,7 @@ def get_toolbar_group(toolbar_name):
                     show_tool_names=False,
                     # image_size=(22,22),
                     id=toolbar_name)
+
 
 def get_all_toolbars():
     """Return a list of all toolbar definitions for inclusion in a toolbars list

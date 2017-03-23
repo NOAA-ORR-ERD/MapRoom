@@ -17,6 +17,7 @@ The RenderWindow class -- where the opengl rendering really takes place.
 import logging
 log = logging.getLogger(__name__)
 
+
 class LayerCanvas(renderer.ScreenCanvas):
 
     """
@@ -28,7 +29,7 @@ class LayerCanvas(renderer.ScreenCanvas):
     selection_box_is_being_defined = False
     mouse_down_position = (0, 0)
     mouse_move_position = (0, 0)
-    
+
     def __init__(self, *args, **kwargs):
         renderer.ScreenCanvas.__init__(self, *args, **kwargs)
 
@@ -53,7 +54,7 @@ class LayerCanvas(renderer.ScreenCanvas):
 
     def get_selected_layer(self):
         return self.project.layer_tree_control.get_selected_layer()
-    
+
     def set_mouse_handler(self, mode):
         self.release_mouse()
         self.mouse_handler = mode(self)
@@ -101,13 +102,13 @@ class LayerCanvas(renderer.ScreenCanvas):
             self.projected_point_center = self.get_projected_point_from_world_point(dialog.lat_lon)
             self.project.refresh()
         dialog.Destroy()
-    
+
     def do_center_on_point_index(self, layer, index):
         if layer.has_points():
             lat_lon = layer.points[index].x, layer.points[index].y
             self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)
             self.project.refresh()
-    
+
     def do_select_points(self, layer, indexes):
         if len(indexes) > 0 and layer.has_points():
             layer.clear_all_point_selections()
@@ -137,7 +138,7 @@ class LayerCanvas(renderer.ScreenCanvas):
             except:
                 raise
         dialog.Destroy()
-        
+
     """
     def get_degrees_lon_per_pixel( self, reference_latitude = None ):
         if ( reference_latitude is None ):

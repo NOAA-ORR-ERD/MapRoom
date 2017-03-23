@@ -19,6 +19,7 @@ progress_log = logging.getLogger("progress")
 
 from post_gnome import nc_particles
 
+
 class nc_particles_file_loader():
     """
     iterator for loading all the timesteps in an nc_particles file
@@ -26,6 +27,7 @@ class nc_particles_file_loader():
     note: this should probably be in the nc_particles lib...
 
     """
+
     def __init__(self, uri):
         fs, relpath = opener.parse(uri)
         if not fs.hassyspath(relpath):
@@ -88,6 +90,7 @@ class nc_particles_file_loader():
         self.current_timestep += 1
 
         return (points, status_codes, self.status_code_map, time, warning)
+
 
 class ParticleLoader(BaseLayerLoader):
     """

@@ -14,15 +14,16 @@ from base import ScreenLayer
 import logging
 log = logging.getLogger(__name__)
 
+
 class CompassRose(ScreenLayer):
     """Compass Rose layer
     
     Shows a compass rose or north-up arrow as a graphic overlay
     """
     name = Unicode("Compass Rose")
-    
+
     type = Str("compass_rose")
-    
+
     # Sample compass rose from ElfQrin - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=15810328
     svg_source = Str("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Creator: CorelDRAW -->
@@ -133,10 +134,10 @@ class CompassRose(ScreenLayer):
     svg = Any
 
     skip_on_insert = True
-    
+
     x_offset = 10
     y_offset = 50
-    
+
     def _svg_default(self):
         return SVGOverlay(self.svg_source)
 

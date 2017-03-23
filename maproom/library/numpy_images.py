@@ -22,6 +22,7 @@ import cgi
 
 from pyface.api import ImageResource
 
+
 def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
     image = ImageResource(icon_path)
     bitmap = image.create_bitmap()
@@ -88,7 +89,7 @@ def simple_text_formatter(text):
     text = text.split("\n\n")
     text = [p.strip().replace("\n","<br>") for p in text]
     text = "<p>\n" + "\n</p>\n<p>\n".join(text) + "\n</p>"
-    
+
     return text
 
 
@@ -118,37 +119,37 @@ class OffScreenHTML(object):
 
     Works on OS-X, may need an explicite alpha bitmap on other platforms
     """
-    
+
     def __init__(self, bg=(255, 255, 255)):
         self.height = 100
-        
+
         self.hr = wx.html.HtmlDCRenderer()
-        
+
         # background will be transformed into transparent in get_numpy
         self.bg = tuple(bg[0:3])  # throw away alpha value, if any
-    
+
     def setup(self, text, bitmap, face, size):
         DC = wx.MemoryDC()
         DC.SelectObject(bitmap)
         DC = wx.GCDC(DC)
         DC.SetBackground(wx.Brush(self.bg))
         DC.Clear()
-        
+
         self.hr.SetDC(DC, 1.0)
         self.hr.SetSize(bitmap.Width, self.height)
         self.hr.SetStandardFonts(size, face, "Deja Vu Sans Mono")
-        
+
         self.hr.SetHtmlText(text)
-        
+
         return DC
-       
+
     def render(self, source, face, size, width):
         """
         Render the html source to the bitmap
         """
         bitmap = wx.EmptyBitmap(width, self.height)
         dc = self.setup(source, bitmap, face, size)
-        
+
         # Calculate the height of the final rendered text
         y = ylast = 0
         while True:
@@ -156,12 +157,12 @@ class OffScreenHTML(object):
             if y == ylast:
                 break
             ylast = y
-            
+
         if ylast > self.height:
             self.height = ylast
             bitmap = wx.EmptyBitmap(width, self.height)
             dc = self.setup(source, bitmap, face, size)
-        
+
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
         # analogue to GetTotalHeight
         self.hr.Render(0, 0, [])
@@ -170,7 +171,7 @@ class OffScreenHTML(object):
     def get_numpy(self, text, c=None, face="", size=12, text_format=0, width_in_pixels=200):
         if width_in_pixels < 1:
             return self.get_blank()
-        
+
         if text_format == 0:
             text = simple_text_formatter(text)
         elif text_format == 2:
@@ -189,7 +190,7 @@ class OffScreenHTML(object):
             bg = self.bg
             mask = (red == bg[0]) & (green == bg[1]) & (blue == bg[2])
             arr[:,:,3][mask] = 0
-            
+
             # Compute bounding box of text by looking at the mask.  The mask
             # contains all those pixels that are only background color,
             # so the bounding box can be computed by using the idea from
@@ -208,7 +209,7 @@ class OffScreenHTML(object):
             bb = self.get_blank()
 
         return bb
-    
+
     def get_blank(self):
         return np.asarray([255, 255, 255, 0], dtype=np.uint8).reshape((1, 1, 4))
 
@@ -232,7 +233,7 @@ if __name__ == "__main__":
     and here is some <b> Bold Text </b>
     <p> It does seem to work OK </p>
     """
-    
+
     App = wx.App(False)
     OSR = OffScreenHTML(200)
     OSR.get_png(HTML, 'junk.png')

@@ -20,13 +20,13 @@ class BaseRenderer():
 
     def prepare_to_render_screen_objects(self):
         pass
-    
+
     def set_points(self, xy, depths, color=None, num_points=-1):
         pass
-    
+
     def set_lines(self, xy, indexes, color):
         pass
-    
+
     def draw_lines(self,
                    layer,
                    picker,
@@ -63,7 +63,7 @@ class BaseRenderer():
 
     def set_image_screen(self, image_data):
         pass
-    
+
     def release_textures(self):
         pass
 

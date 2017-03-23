@@ -19,6 +19,7 @@ magic_header = "%s%d" % (magic_template, magic_version)
 # shlex quote routine modified from python 3 to allow [ and ] unquoted for lists
 _find_unsafe = re.compile(r'[^\w@%+=:,./[\]-]').search
 
+
 def quote(s):
     """Return a shell-escaped version of the string *s*."""
     if not s:
@@ -36,20 +37,20 @@ class UnknownCommandError(RuntimeError):
 
 class Serializer(object):
     known_commands = None
-    
+
     def __init__(self):
         self.serialized_commands = []
-    
+
     def __str__(self):
         lines = [magic_header]
         for cmd in self.serialized_commands:
             lines.append(str(cmd))
         return "\n".join(lines)
-    
+
     def add(self, cmd):
         sc = SerializedCommand(cmd)
         self.serialized_commands.append(sc)
-    
+
     @classmethod
     def get_command(cls, short_name):
         if cls.known_commands is None:
@@ -68,7 +69,7 @@ class TextDeserializer(object):
         self.lines = lines
         if not self.header.startswith(magic_template):
             raise RuntimeError("Not a MapRoom log file!")
-    
+
     def iter_cmds(self, manager):
         build_multiline = ""
         for line in self.lines:
@@ -85,7 +86,7 @@ class TextDeserializer(object):
                 continue
             cmd = self.unserialize_line(text_args, manager)
             yield cmd
-    
+
     def unserialize_line(self, text_args, manager):
         short_name = text_args.pop(0)
         log.debug("unserialize: short_name=%s, args=%s" % (short_name, text_args))
@@ -104,12 +105,12 @@ class TextDeserializer(object):
 
 class ArgumentConverter(object):
     stype = None  # Default converter just uses strings
-    
+
     def get_args(self, instance):
         """Return list of strings that can be used to reconstruct the instance
         """
         return str(instance),
-    
+
     def instance_from_args(self, args, manager, deserializer):
         arg = args.pop(0)
         return arg
@@ -117,10 +118,10 @@ class ArgumentConverter(object):
 
 class FileMetadataConverter(ArgumentConverter):
     stype = "file_metadata"
-    
+
     def get_args(self, instance):
         return instance.uri, instance.mime
-    
+
     def instance_from_args(self, args, manager, deserializer):
         uri = args.pop(0)
         mime = args.pop(0)
@@ -129,10 +130,10 @@ class FileMetadataConverter(ArgumentConverter):
 
 class LayerConverter(ArgumentConverter):
     stype = "layer"
-    
+
     def get_args(self, instance):
         return instance,
-    
+
     def instance_from_args(self, args, manager, deserializer):
         val = args.pop(0)
         try:
@@ -146,12 +147,12 @@ class LayerConverter(ArgumentConverter):
 
 class TextConverter(ArgumentConverter):
     stype = "text"
-    
+
     def get_args(self, instance):
         """Return list of strings that can be used to reconstruct the instance
         """
         return instance.encode("utf-8"),
-    
+
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         return text.decode("utf-8")
@@ -159,7 +160,7 @@ class TextConverter(ArgumentConverter):
 
 class BoolConverter(ArgumentConverter):
     stype = "bool"
-    
+
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text == "None":
@@ -171,7 +172,7 @@ class BoolConverter(ArgumentConverter):
 
 class IntConverter(ArgumentConverter):
     stype = "int"
-    
+
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text == "None":
@@ -181,7 +182,7 @@ class IntConverter(ArgumentConverter):
 
 class FloatConverter(ArgumentConverter):
     stype = "float"
-    
+
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text == "None":
@@ -191,12 +192,12 @@ class FloatConverter(ArgumentConverter):
 
 class PointConverter(ArgumentConverter):
     stype = "point"
-    
+
     def get_args(self, instance):
         if instance is None:
             return None,
         return instance  # already a tuple
-    
+
     def instance_from_args(self, args, manager, deserializer):
         lon = args.pop(0)
         if lon == "None":
@@ -207,11 +208,11 @@ class PointConverter(ArgumentConverter):
 
 class PointsConverter(ArgumentConverter):
     stype = "points"
-    
+
     def get_args(self, instance):
         text = ",".join(["(%s,%s)" % (str(i[0]), str(i[1])) for i in instance])
         return "[%s]" % text,
-    
+
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0).lstrip("[").rstrip("]")
         if text:
@@ -227,11 +228,11 @@ class PointsConverter(ArgumentConverter):
 
 class RectConverter(ArgumentConverter):
     stype = "rect"
-    
+
     def get_args(self, instance):
         (x1, y1), (x2, y2) = instance
         return x1, y1, x2, y2
-    
+
     def instance_from_args(self, args, manager, deserializer):
         x1 = args.pop(0)
         y1 = args.pop(0)
@@ -242,14 +243,14 @@ class RectConverter(ArgumentConverter):
 
 class ListIntConverter(ArgumentConverter):
     stype = "list_int"
-    
+
     def get_args(self, instance):
         text = ",".join([str(i) for i in instance])
         return "[%s]" % text,
-    
+
     def get_values_from_list(self, vals, manager, deserializer):
         return [int(i) for i in vals]
-    
+
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         if text.startswith("["):
@@ -264,7 +265,7 @@ class ListIntConverter(ArgumentConverter):
 
 class LayersConverter(ListIntConverter):
     stype = "layers"
-    
+
     def get_values_from_list(self, vals, manager, deserializer):
         layers = []
         for i in vals:
@@ -277,7 +278,7 @@ class LayersConverter(ListIntConverter):
 
 class StyleConverter(ArgumentConverter):
     stype = "style"
-    
+
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
         style = LayerStyle()
@@ -293,9 +294,10 @@ def get_converters():
     c[None] = ArgumentConverter()  # Include default converter
     return c
 
+
 class SerializedCommand(object):
     converters = get_converters()
-    
+
     def __init__(self, cmd):
         self.cmd_name = cmd.get_serialized_name()
         p = []
@@ -313,10 +315,10 @@ class SerializedCommand(object):
                 values = [value]
             string_values = [quote(str(v)) for v in values]
             output.append(" ".join(string_values))
-        
+
         text = " ".join(output)
         return "%s %s" % (self.cmd_name, text)
-    
+
     @classmethod
     def get_converter(cls, stype):
         try:

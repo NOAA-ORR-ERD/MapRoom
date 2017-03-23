@@ -31,62 +31,63 @@ import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
+
 class ProjectEditor(FrameworkEditor):
     """The wx implementation of a ProjectEditor.
     
     See the IProjectEditor interface for the API documentation.
     """
-    
+
     printable = True
 
     imageable = True
-    
+
     layer_manager = Any
-    
+
     layer_zoomable = Bool
-    
+
     layer_can_save = Bool
-    
+
     layer_can_save_as = Bool
-    
+
     layer_selected = Bool
-    
+
     layer_above = Bool
-    
+
     layer_below = Bool
-    
+
     multiple_layers = Bool
-    
+
     layer_has_points = Bool
-    
+
     layer_has_selection = Bool
-    
+
     layer_has_flagged = Bool
-    
+
     layer_has_boundaries = Bool
-    
+
     clickable_object_mouse_is_over = Any
-    
+
     clickable_object_in_layer = Any
-    
+
     last_refresh = Float(0.0)
-    
+
     layer_visibility = Dict()
-    
+
     # can_paste_style is set by copy_style if there's a style that can be
     # applied
     can_paste_style = Bool(False)
-    
+
     # NOTE: Class attribute!
     clipboard_style = None
-    
+
     # Force mouse mode toolbar to be blank so that the initial trait change
     # that occurs during initialization of this class doesn't match a real
     # mouse mode.  If it does match, the toolbar won't be properly adjusted
     # during the first trait change in response to update_layer_selection_ui
     # and there will be an empty between named toolbars
     mouse_mode_toolbar = Str("")
-    
+
     mouse_mode_factory = Any(PanMode)
 
     ###########################################################################
@@ -95,7 +96,7 @@ class ProjectEditor(FrameworkEditor):
 
     def create(self, parent):
         self.control = self._create_control(parent)
-    
+
     def load_in_new_tab(self, metadata):
         if metadata.mime == "application/x-maproom-project-json":
             return self.layer_manager.has_user_created_layers()
@@ -121,7 +122,7 @@ class ProjectEditor(FrameworkEditor):
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
             cmd = ViewportCommand(None, center, units_per_pixel)
             self.process_command(cmd)
-            
+
             # Clear modified flag
             self.layer_manager.undo_stack.set_save_point()
             self.dirty = self.layer_manager.undo_stack.is_dirty()
@@ -164,7 +165,7 @@ class ProjectEditor(FrameworkEditor):
                 center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
                 cmd = ViewportCommand(None, center, units_per_pixel)
             self.process_command(cmd)
-    
+
     def parse_extra_json(self, json, batch_flags):
         # handle old version which was a two element list
         try:
@@ -173,10 +174,10 @@ class ProjectEditor(FrameworkEditor):
         except KeyError:
             # a two element dict won't have a key of zero
             pass
-        
+
         if "layer_visibility" in json:
             self.layer_visibility_from_json(json["layer_visibility"])
-            
+
             # Just as a sanity check, make sure all layers have visibility
             # info. Very old json formats may not include visibility info for
             # all layers
@@ -186,13 +187,13 @@ class ProjectEditor(FrameworkEditor):
         if "commands" in json:
             for cmd in self.layer_manager.undo_stack.unserialize_text(json["commands"], self.layer_manager):
                 self.process_batch_command(cmd, batch_flags)
-    
+
     def layer_visibility_to_json(self):
         v = dict()
         for layer, vis in self.layer_visibility.iteritems():
             v[layer.invariant] = vis
         return v
-    
+
     def layer_visibility_from_json(self, json_data):
         lm = self.layer_manager
         v = dict()
@@ -209,7 +210,7 @@ class ProjectEditor(FrameworkEditor):
         for layer in self.layer_manager.flatten():
             layer_visibility[layer] = layer.get_visibility_dict()
         return layer_visibility
-    
+
     def update_default_visibility(self, warn=False):
         for layer in self.layer_manager.flatten():
             if layer not in self.layer_visibility:
@@ -229,15 +230,15 @@ class ProjectEditor(FrameworkEditor):
             path = self.document.uri
         if not path:
             path = "%s.maproom" % self.name
-        
+
         prefs = self.task.get_preferences()
         if prefs.check_errors_on_save:
             if not self.check_all_layers_for_errors(True):
                 return
-        
+
         try:
             progress_log.info("START=Saving %s" % path)
-            
+
             cmd = self.get_savepoint()
             u = UndoStack()
             u.add_command(cmd)
@@ -248,12 +249,12 @@ class ProjectEditor(FrameworkEditor):
             error = e.message
         finally:
             progress_log.info("END")
-        
+
         if error:
             self.task.error(error)
         else:
             self.layer_manager.undo_stack.set_save_point()
-            
+
             # Update tab name.  Note that dirty must be changed in order for
             # the trait to be updated, so force a change if needed.  Also,
             # update the URI first because trait callbacks happen immediately
@@ -263,13 +264,13 @@ class ProjectEditor(FrameworkEditor):
             if not self.dirty:
                 self.dirty = True
             self.dirty = self.layer_manager.undo_stack.is_dirty()
-            
+
             # Push URL to top of recent files list
             self.window.application.successfully_loaded_event = self.layer_manager.metadata.uri
-            
+
             # refresh window name in case filename has changed
             self.task._active_editor_tab_change(None)
-    
+
     def get_savepoint(self):
         layer = self.layer_tree_control.get_selected_layer()
         cmd = SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
@@ -298,7 +299,7 @@ class ProjectEditor(FrameworkEditor):
         layer = self.layer_tree_control.get_selected_layer()
         if layer is None:
             return
-        
+
         prefs = self.task.get_preferences()
         if prefs.check_errors_on_save:
             if not self.check_all_layers_for_errors(True):
@@ -324,7 +325,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.select_layer(None)
         self.layer_canvas.render()  # force update including deselected layer
         return self.layer_canvas.get_canvas_as_image()
-    
+
     def print_preview(self):
         import os
         temp = os.path.join(self.window.application.cache_dir, "preview.pdf")
@@ -338,10 +339,10 @@ class ProjectEditor(FrameworkEditor):
             else:
                 file_manager = 'xdg-open'
             subprocess.call([file_manager, temp])
-    
+
     def print_page(self):
         self.print_preview()
-    
+
     def save_as_pdf(self, path=None):
         self.layer_tree_control.select_layer(None)
         pdf_canvas = renderer.PDFCanvas(project=self, path=path)
@@ -393,7 +394,6 @@ class ProjectEditor(FrameworkEditor):
         req.extra_data = extra_data
         self.sidebar.refresh_active()
 
-
     ###########################################################################
     # Private interface.
     ###########################################################################
@@ -406,30 +406,30 @@ class ProjectEditor(FrameworkEditor):
 
         # Base-class constructor.
         self.layer_canvas = LayerCanvas(parent, project=self)
-        
+
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
         self.layer_info = self.window.get_dock_pane('maproom.layer_info_pane').control
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
         self.undo_history = self.window.get_dock_pane('maproom.undo_history_pane').control
         self.sidebar = self.window.get_dock_pane('maproom.sidebar')
-        
+
         log.debug("LayerEditor: task=%s" % self.task)
 
         return self.layer_canvas.get_native_control()
-    
+
     #### Traits event handlers
-    
+
     @on_trait_change('layer_manager:layer_loaded')
     def layer_loaded(self, layer):
         log.debug("layer_loaded called for %s" % layer)
         self.layer_visibility[layer] = layer.get_visibility_dict()
-    
+
     @on_trait_change('layer_manager:layers_changed')
     def layers_changed(self):
         log.debug("layers_changed called!!!")
         self.layer_tree_control.rebuild()
-    
+
     def update_layer_menu_ui(self, sel_layer):
         if sel_layer is not None:
             self.can_copy = sel_layer.can_copy()
@@ -451,7 +451,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_zoomable = False
             self.layer_above = False
             self.layer_below = False
-    
+
     def update_layer_selection_ui(self, sel_layer=None):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
@@ -467,7 +467,7 @@ class ProjectEditor(FrameworkEditor):
         self.update_info_panels(sel_layer)
         self.update_layer_contents_ui(sel_layer)
         self.task.layer_selection_changed = sel_layer
-    
+
     def update_layer_contents_ui(self, sel_layer=None):
         if sel_layer is None:
             sel_layer = self.layer_tree_control.get_selected_layer()
@@ -485,7 +485,7 @@ class ProjectEditor(FrameworkEditor):
         self.update_undo_redo()
         self.sidebar.refresh_active()
         self.window._aui_manager.Update()
-    
+
     def update_info_panels(self, layer, force=False):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer == layer:
@@ -493,55 +493,55 @@ class ProjectEditor(FrameworkEditor):
             self.selection_info.display_panel_for_layer(self, layer, force)
         else:
             log.debug("Attempting to update panel for layer %s that isn't current", layer)
-    
+
     def process_info_panel_keystroke(self, event, text):
         if self.layer_info.process_initial_key(event, text):
             return
         if self.selection_info.process_initial_key(event, text):
             return
-    
+
     @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self):
         log.debug("undo_stack_changed called!!!")
         self.refresh()
-    
+
     @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, layer):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
-    
+
     @on_trait_change('layer_manager:layer_contents_changed_in_place')
     def layer_contents_changed_in_place(self, layer):
         log.debug("layer_contents_changed_in_place called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer, in_place=True)
-    
+
     @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, layer):
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
-    
+
     @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, layer):
         log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
-    
+
     @on_trait_change('layer_manager:refresh_needed')
     def refresh(self, editable_properties_changed=False):
         log.debug("refresh called; editable_properties_changed=%s" % editable_properties_changed)
         if self.control is None:
             return
-        
+
         # current control with focus is used to prevent usability issues with
         # text field editing in the calls to the info panel displays below.
         # Without checking for the current text field it is reformatted every
         # time, moving the cursor position to the beginning and generally
         # being annoying
         current = self.window.control.FindFocus()
-        
+
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
             self.control.Update()
-        
+
         sel_layer = self.layer_tree_control.get_selected_layer()
         self.update_layer_contents_ui(sel_layer)
         self.update_layer_menu_ui(sel_layer)
@@ -549,7 +549,7 @@ class ProjectEditor(FrameworkEditor):
         self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
         self.last_refresh = time.clock()
         self.control.Refresh()
-    
+
     @on_trait_change('layer_manager:background_refresh_needed')
     def background_refresh(self):
         log.debug("background refresh called")
@@ -558,7 +558,7 @@ class ProjectEditor(FrameworkEditor):
             log.debug("refreshed too recently; skipping.")
             return
         self.refresh()
-    
+
     @on_trait_change('layer_manager:threaded_image_loaded')
     def threaded_image_loaded(self, data):
         log.debug("threaded image loaded called")
@@ -569,10 +569,9 @@ class ProjectEditor(FrameworkEditor):
             wx.CallAfter(self.layer_canvas.render)
         else:
             print "Throwing away result from old map server id"
-    
-    
+
     # New Command processor
-    
+
     def process_command(self, command, new_mouse_mode=None, override_editable_properties_changed=None):
         """Process a single command and immediately update the UI to reflect
         the results of the command.
@@ -597,12 +596,12 @@ class ProjectEditor(FrameworkEditor):
         finally:
             self.window.control.Thaw()
         return undo
-    
+
     def process_flags(self, flags):
         b = BatchStatus()
         self.add_batch_flags(None, flags, b)
         self.perform_batch_flags(None, b)
-        
+
     def process_batch_command(self, command, b):
         """Process a single command but don't update the UI immediately.
         Instead, update the batch flags to reflect the changes needed to
@@ -612,7 +611,7 @@ class ProjectEditor(FrameworkEditor):
         undo = self.layer_manager.undo_stack.perform(command, self)
         self.add_batch_flags(command, undo.flags, b)
         return undo
-    
+
     def add_batch_flags(self, cmd, f, b):
         """Make additions to the batch flags as a result of the passed-in flags
         
@@ -680,7 +679,7 @@ class ProjectEditor(FrameworkEditor):
         folder_bounds.sort()
         for _, layer in reversed(folder_bounds):
             layer.update_bounds()
-    
+
     def perform_batch_flags(self, cmd, b):
         """Perform the UI updates given the BatchStatus flags
         
@@ -692,7 +691,7 @@ class ProjectEditor(FrameworkEditor):
                 affected_layer = layer.update_transient_layer(cmd)
                 b.need_rebuild[affected_layer] = True
                 b.need_rebuild[layer] = True
-        
+
         # Use LayerManager events to trigger updates in all windows that are
         # displaying this project
         for layer, in_place in b.need_rebuild.iteritems():
@@ -700,7 +699,7 @@ class ProjectEditor(FrameworkEditor):
                 self.layer_manager.layer_contents_changed_in_place = layer
             else:
                 self.layer_manager.layer_contents_changed = layer
-        
+
         if b.layers_changed:
             self.layer_manager.layers_changed = True
         if b.metadata_changed:
@@ -711,16 +710,16 @@ class ProjectEditor(FrameworkEditor):
             self.layer_canvas.render()
         if b.select_layer:
             self.layer_tree_control.select_layer(b.select_layer)
-        
+
         if b.errors:
             self.task.error("\n".join(b.errors))
         if b.messages:
             self.task.information("\n".join(b.messages), "Messages")
-        
+
         self.undo_history.update_history()
 
     supported_clipboard_data_objects = [wx.CustomDataObject("maproom")]
-    
+
     def create_clipboard_data_object(self):
         focused = self.control.FindFocus()
         if hasattr(focused, "AppendText"):
@@ -757,13 +756,13 @@ class ProjectEditor(FrameworkEditor):
         if sel_layer is not None:
             cmd = PasteLayerCommand(sel_layer, text, self.layer_canvas.world_center)
             self.process_command(cmd)
-    
+
     def copy_style(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
             self.__class__.clipboard_style = sel_layer.style.get_copy()
             self.can_paste_style = True
-        
+
     def paste_style(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
@@ -771,7 +770,7 @@ class ProjectEditor(FrameworkEditor):
             if style is not None:
                 cmd = StyleChangeCommand(sel_layer, style)
                 self.process_command(cmd)
-        
+
     def clear_selection(self):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is not None:
@@ -803,7 +802,7 @@ class ProjectEditor(FrameworkEditor):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is None:
             return
-        
+
         error = None
         try:
             progress_log.info("START=Finding outer boundary for %s" % sel_layer.name)
@@ -814,7 +813,7 @@ class ProjectEditor(FrameworkEditor):
             error = "Can't determine boundary"
         finally:
             progress_log.info("END")
-        
+
         if error == "cancel":
             return
         elif error is not None:
@@ -887,7 +886,7 @@ class ProjectEditor(FrameworkEditor):
         sel_layer = self.layer_tree_control.get_selected_layer()
         if sel_layer is None:
             return
-        
+
         try:
             progress_log.info("START=Checking layer %s" % sel_layer.name)
             error = self.layer_manager.check_layer(sel_layer, self.window)
@@ -895,7 +894,7 @@ class ProjectEditor(FrameworkEditor):
             error = "cancel"
         finally:
             progress_log.info("END")
-        
+
         self.update_layer_contents_ui()
         all_ok = True
         if error == "cancel":
@@ -929,7 +928,7 @@ class ProjectEditor(FrameworkEditor):
             error = "cancel"
         finally:
             progress_log.info("END")
-        
+
         self.update_layer_contents_ui()
         all_ok = True
         if error == "cancel":

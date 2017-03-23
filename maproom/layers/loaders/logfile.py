@@ -14,11 +14,11 @@ WHITESPACE_PATTERN = re.compile("\s+")
 
 class CommandLogLoader(BaseLoader):
     mime = "application/x-maproom-command-log"
-    
+
     extensions = [".mrc"]
-    
+
     name = "MapRoom Command Log"
-    
+
     def iter_log(self, metadata, manager):
         project = []
         with fsopen(metadata.uri, "r") as fh:

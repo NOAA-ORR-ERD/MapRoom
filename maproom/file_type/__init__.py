@@ -69,6 +69,7 @@ recognizers.append(OGRRecognizer())
 from envisage.api import Plugin
 from traits.api import List
 
+
 class MaproomFileRecognizerPlugin(Plugin):
     """ A plugin that contributes to the omnivore.file_type.recognizer extension point. """
 
@@ -83,5 +84,6 @@ class MaproomFileRecognizerPlugin(Plugin):
     # This tells us that the plugin contributes the value of this trait to the
     # 'greetings' extension point.
     recognizer = List(recognizers, contributes_to='omnivore.file_recognizer')
+
 
 plugins = [MaproomFileRecognizerPlugin()]

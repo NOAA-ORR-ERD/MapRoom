@@ -72,6 +72,7 @@ def make_polygons(count):
         count,
     ).view(np.recarray)
 
+
 def make_point_adjacency_array(count):
     return np.repeat(
         np.array([(0, 0)], dtype=POLYGON_ADJACENCY_DTYPE),

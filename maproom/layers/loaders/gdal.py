@@ -19,17 +19,18 @@ import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
+
 class GDALLoader(BaseLayerLoader):
     mime = "image/*"
-    
+
     name = "GDAL"
-    
+
     def can_load(self, metadata):
         return metadata.mime.startswith("image/")
-    
+
     def load_layers(self, metadata, manager):
         layer = RasterLayer(manager=manager)
-        
+
         progress_log.info("Loading from %s" % metadata.uri)
         (layer.load_error_string, layer.image_data) = load_image_file(metadata.uri)
         if (layer.load_error_string == ""):
@@ -39,10 +40,10 @@ class GDALLoader(BaseLayerLoader):
             layer.mime = self.mime
             layer.update_bounds()
         return [layer]
-    
+
     def can_save_layer(self, layer):
         return False
-    
+
     def save_to_file(self, f, layer):
         return "Can't save to GDAL yet."
 
@@ -67,15 +68,15 @@ class GDALImageData(ImageData):
     """
 
     NORTH_UP_TOLERANCE = 0.002
-    
+
     def __init__(self, dataset):
         ImageData.__init__(self, dataset.RasterXSize, dataset.RasterYSize)
         self.nbands = dataset.RasterCount
-        
+
         self.calc_projection(dataset)
-        
+
         log.debug("Image: %sx%s, %d band, %s" % (self.x, self.y, self.nbands, self.projection.srs))
-    
+
     def calc_projection(self, dataset):
         projection = dataset.GetProjection() or dataset.GetGCPProjection()
         log.debug("DATASET projection: %s" % projection)
@@ -93,6 +94,7 @@ class ImageDataBlocks(GDALImageData):
     """Version of ImageData to load using GDAL blocks.
     
     """
+
     def load_dataset(self, dataset):
         loader = GDALSubImageLoader(dataset)
         self.load_texture_data(loader)
@@ -124,6 +126,7 @@ def get_dataset(uri):
 
     return "", dataset
 
+
 def load_image_file(uri):
     """
     Load data from a raster file. Returns:
@@ -154,7 +157,7 @@ def load_image_file(uri):
     error, dataset = get_dataset(uri)
     if error:
         return (error, None)
-    
+
     has_scaline_data = False
     if (dataset.GetDriver().ShortName in SCANLINE_DRIVER_NAMES):
         has_scaline_data = True
@@ -163,7 +166,7 @@ def load_image_file(uri):
     image_data = ImageDataBlocks(dataset)
     image_data.load_dataset(dataset)
     log.debug("GDAL load time: %f" % (time.clock() - t0))
-    
+
     return ("", image_data)
 
 
@@ -213,7 +216,7 @@ class GDALSubImageLoader(object):
         for band_index in range(1, self.nbands + 1):
             self.raster_bands.append(dataset.GetRasterBand(band_index))
         self.palette = get_palette(self.raster_bands[0])
-    
+
     def prepare(self, num_sub_images):
         progress_log.info("TICKS=%d" % (num_sub_images))
 

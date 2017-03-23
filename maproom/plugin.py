@@ -10,6 +10,7 @@ from omnivore.framework.plugin import FrameworkPlugin
 
 from preferences import MaproomPreferencesPane
 
+
 class MaproomPlugin(FrameworkPlugin):
     """ The sample framework plugin.
     """

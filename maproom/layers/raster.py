@@ -18,6 +18,7 @@ from constants import *
 import logging
 log = logging.getLogger(__name__)
 
+
 class RasterLayer(ProjectedLayer):
     """Layer for raster images
     
@@ -27,11 +28,11 @@ class RasterLayer(ProjectedLayer):
     type = Str("image")
 
     image_data = Any
-    
+
     layer_info_panel = ["Layer name", "Transparency", "Raster size", "Memory used"]
-    
+
     selection_info_panel = []
-    
+
     def get_info_panel_text(self, prop):
         if prop == "Raster size":
             return "%dx%d" % (self.image_data.x, self.image_data.y)
@@ -44,12 +45,12 @@ class RasterLayer(ProjectedLayer):
         to determine if we can save this layer.
         """
         return self.image_data is None
-    
+
     def get_allowable_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
         """
         return ["images"]
-    
+
     def visibility_item_exists(self, label):
         if label == "images":
             return self.image_data is not None
@@ -63,7 +64,7 @@ class RasterLayer(ProjectedLayer):
         # TODO: handle other projections besides +proj=merc and +proj=longlat
         raster_layers = self.manager.count_raster_layers()
         vector_layers = self.manager.count_vector_layers()
-        
+
         if raster_layers == 0:
             self.manager.dispatch_event('projection_changed', self)
             return
@@ -100,7 +101,7 @@ class RasterLayer(ProjectedLayer):
             bounds = self.image_data.get_bounds()
 
         return bounds
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         

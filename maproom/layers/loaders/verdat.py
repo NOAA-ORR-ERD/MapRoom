@@ -18,18 +18,18 @@ WHITESPACE_PATTERN = re.compile("\s+")
 
 class VerdatLoader(BaseLayerLoader):
     mime = "application/x-maproom-verdat"
-    
+
     layer_types = ["line"]
-    
+
     extensions = [".verdat", ".dat"]
-    
+
     name = "Verdat"
-    
+
     points_per_tick = 5000
-    
+
     def load_layers(self, metadata, manager):
         layer = LineLayer(manager=manager)
-        
+
         progress_log.info("Loading from %s" % metadata.uri)
         (layer.load_error_string,
          f_points,
@@ -43,7 +43,7 @@ class VerdatLoader(BaseLayerLoader):
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
-    
+
     def save_to_fh(self, fh, layer):
         return write_layer_as_verdat(fh, layer)
 
@@ -147,7 +147,7 @@ def write_layer_as_verdat(f, layer):
     errors, error_points = boundaries.check_errors()
     if errors:
         raise PointsError("Layer can't be saved as Verdat:\n\n%s" % "\n\n".join(errors), error_points)
-    
+
     points = layer.points
     lines = layer.line_segment_indexes
 
@@ -186,7 +186,7 @@ def write_layer_as_verdat(f, layer):
                 points.z[point_index],
             ))
             file_point_index += 1
-            
+
             if file_point_index % VerdatLoader.points_per_tick == 0:
                 progress_log.info("Saved %d points" % file_point_index)
 
@@ -206,7 +206,7 @@ def write_layer_as_verdat(f, layer):
             x, y, z,
         ))
         file_point_index += 1
-        
+
         if file_point_index % VerdatLoader.points_per_tick == 0:
             progress_log.info("Saved %d points" % file_point_index)
 
@@ -218,5 +218,5 @@ def write_layer_as_verdat(f, layer):
 
     for endpoint in boundary_endpoints:
         f.write("{0}\n".format(endpoint))
-    
+
     progress_log.info("Saved verdat")

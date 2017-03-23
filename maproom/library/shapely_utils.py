@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 class DriverLoadFailure(RuntimeError):
     pass
 
+
 def get_dataset(uri):
     """Get OGR Dataset, performing URI to filename conversion since OGR
     doesn't support URIs, only files on the local filesystem
@@ -37,6 +38,7 @@ def get_dataset(uri):
 
     return "", dataset
 
+
 def convert_dataset(dataset):
     geometry_list = []
     layer = dataset.GetLayer()
@@ -49,6 +51,7 @@ def convert_dataset(dataset):
         add_maproom_attributes_to_shapely_geom(g)
         geometry_list.append(g)
     return geometry_list
+
 
 def get_fiona(uri):
     """Get fiona Dataset, performing URI to filename conversion since OGR
@@ -99,15 +102,18 @@ def load_shapely(uri):
 
     return ("", geometry_list)
 
+
 def add_maproom_attributes_to_shapely_geom(geom, name="", feature_code=0):
     if not name:
         name = geom.geom_type
     geom.maproom_name = name
     geom.maproom_feature_code = feature_code
 
+
 def copy_maproom_attributes(geom, source):
     geom.maproom_name = source.maproom_name
     geom.maproom_feature_code = source.maproom_feature_code
+
 
 def shapely_to_polygon(geom_list):
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
@@ -189,6 +195,7 @@ def shapely_to_polygon(geom_list):
             np.asarray(polygon_starts)[:, 0],
             np.asarray(polygon_counts)[:, 0],
             ring_identifiers, ring_groups)
+
 
 def rebuild_geometry_list(geometry_list, changes):
     """Shapely geometries are immutable, so we have to replace an object

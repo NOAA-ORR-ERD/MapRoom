@@ -25,15 +25,16 @@ hatched[::8] = 0xff
 
 marker_arrow = np.array(((-8, 0), (-10, -4), (0, 0), (-10, 4)), dtype=np.float32)
 
+
 class LayerStyle(object):
     """Style data for drawing layer objects
     
     """
-    
+
     default_line_color = color_floats_to_int(0,0,0,1.0)
-    
+
     default_fill_color = color_floats_to_int(1.0,1.0,1.0,0.75)
-    
+
     default_text_color = color_floats_to_int(0,0,0,1.0)
 
     default_colors = [
@@ -44,40 +45,40 @@ class LayerStyle(object):
         color_floats_to_int(0.5, 0.5, 0, 1),
     ]
     default_color_index = 0
-    
+
     line_styles = [
         ("No Line", 0x0000, wx.TRANSPARENT),
         ("Solid", 0xffff, wx.SOLID),
         ("Dashed", 0xcccc, wx.LONG_DASH),
         ("Dotted", 0xaaaa, wx.DOT),
         ]
-    
+
     marker_styles = [
         ("None", None, False),
         ("Arrow", marker_arrow, False),
         ("Filled Arrow", marker_arrow, True),
         ]
-    
+
     fill_styles = OrderedDict([
         (0, ("No Fill", None,)),
         (1, ("Solid Color", None,)),
         (2, ("50%", fill_50)),
         (3, ("Hatched", hatched)),
         ])
-    
+
     text_format_styles = [
         ("Plain Text", None),
         ("HTML", None),
         ("RST Markup", None),
         ("Markdown", None),
         ]
-    
+
     fonts = None  # Will be initialized in call to get_font_names
-    
+
     standard_font_sizes = [4, 6, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 48, 56, 64, 72, 144]
     default_font_size = 12
     default_font_index = standard_font_sizes.index(default_font_size)
-    
+
     standard_line_widths = [1, 2, 3, 4, 5, 6, 7, 8]
     default_line_width = 2
     default_line_width_index = standard_line_widths.index(default_line_width)
@@ -92,27 +93,27 @@ class LayerStyle(object):
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style',
         ]
-    
+
     stylev3_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size'
         ]
-    
+
     stylev4_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size',
         'text_format'
         ]
-    
+
     stylev5_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size',
         'text_format', 'icon_marker'
         ]
-    
+
     stylev6_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
@@ -120,9 +121,9 @@ class LayerStyle(object):
         'text_color', 'font', 'font_size', 'text_format',
         'icon_marker'
         ]
-    
+
     valid = set(stylev6_serialization_order)
-    
+
     def __init__(self, **kwargs):
         if len(kwargs):
             # If kwargs are specified, only the style elements specified are
@@ -149,11 +150,11 @@ class LayerStyle(object):
             self.font_size = self.default_font_size
             self.text_format = 1
             self.icon_marker = 320  # Shapes/Cross
-    
+
     def __str__(self):
         args = [self.get_str(i) for i in self.stylev6_serialization_order]
         return "stylev6:%s" % ",".join(args)
-    
+
     def get_str(self, k):
         v = getattr(self, k)
         if v is None:
@@ -161,7 +162,7 @@ class LayerStyle(object):
         if k == 'font':
             return v.encode('utf-8')
         return "%x" % v
-    
+
     def has_same_keywords(self, other_style):
         for k in self.valid:
             v1 = getattr(self, k)
@@ -169,7 +170,7 @@ class LayerStyle(object):
             if (v1 is None and v2 is not None) or (v1 is not None and v2 is None):
                 return False
         return True
-    
+
     def parse(self, txt):
         try:
             version, info = txt.split(":", 1)
@@ -177,7 +178,7 @@ class LayerStyle(object):
             self.parse_style(order, info)
         except Exception, e:
             raise
-    
+
     def parse_style(self, order, txt):
         vals = txt.split(",")
         for k in order:
@@ -189,13 +190,13 @@ class LayerStyle(object):
             else:
                 v = int(v, 16)
             setattr(self, k, v)
-    
+
     def use_next_default_color(self):
         index = self.__class__.default_color_index
         self.line_color = self.default_colors[index]
         index += 1
         self.__class__.default_color_index = index % len(self.default_colors)
-    
+
     def copy_from(self, other_style):
         """Copy the valid entries (i.e.  those that aren't None) from another
         style to this one
@@ -205,7 +206,7 @@ class LayerStyle(object):
             v = getattr(other_style, k)
             if v is not None:
                 setattr(self, k, v)
-    
+
     def get_copy(self):
         """Copy the valid entries (i.e.  those that aren't None) from another
         style to this one
@@ -223,7 +224,7 @@ class LayerStyle(object):
 
     def get_current_line_style(self):
         return self.get_line_style_from_stipple(self.line_stipple)
-    
+
     def get_fill_stipple(self):
         return self.fill_styles[self.fill_style][1]
 
@@ -251,12 +252,12 @@ class LayerStyle(object):
             if self.line_width == w:
                 return i, w
         return self.default_line_width_index, self.default_line_width
-    
+
     @classmethod
     def get_font_name(cls, index):
         fonts = cls.get_font_names()
         return fonts[index]
-    
+
     @classmethod
     def get_font_names(cls):
         if cls.fonts is None:
@@ -268,7 +269,7 @@ class LayerStyle(object):
             fonts[0:0] = [u"default"]
             cls.fonts = fonts
         return cls.fonts
-    
+
     def get_numpy_image_from_icon(self):
         arr = get_numpy_bitmap(self.icon_marker)
         r, g, b, a = int_to_color_uint8(self.line_color)

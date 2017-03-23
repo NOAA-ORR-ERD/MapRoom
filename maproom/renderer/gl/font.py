@@ -6,6 +6,7 @@ from omnivore import get_image_path
 
 from font_extents import FONT_EXTENTS
 
+
 def load_font_texture_with_alpha():
     font_path = get_image_path("font.png", __name__, up_one_level=True)
     image = wx.Image(font_path, wx.BITMAP_TYPE_PNG)
@@ -22,5 +23,5 @@ def load_font_texture_with_alpha():
     buffer_with_alpha[:, :, 3] = (
         255 - buffer[:, :, 0: 3].sum(axis=2) / 3
     ).clip(180, 255)
-    
+
     return buffer_with_alpha, FONT_EXTENTS

@@ -9,14 +9,14 @@ from Cache import Cache
 # mercator"+proj=merc +units=m +over" (centered at equator)
 
 
-
 class NullProjection(object):
     """
     A projection class that does nothing -- sinmply returns what is passed in
 
     i.e. the "identity" projection
-    """   
-    name = "lat-lon" # name of projection 
+    """
+    name = "lat-lon" # name of projection
+
     def __init__(self):
         """
         initilize a NullProjection
@@ -52,7 +52,6 @@ class Projection(object):
     name = "" # would be nice to have a name....
 
     def __init__(self, proj_string):
-
         """
         :param proj_string=None: the destination projection which points will be transformed into.
         :type proj_string: pyproj projection string.
@@ -115,7 +114,7 @@ class Projection(object):
 
     # def reverse_transform(self, point, destination_projection):
     #     """
-    #     Transform the point from the :arg:`projection` passed to 
+    #     Transform the point from the :arg:`projection` passed to
     #     :meth:`__init__()` to the given :arg:`destination_projection`. Note
     #     that transforming a point directly like this does not use the cache.
 
@@ -163,7 +162,7 @@ class Projection(object):
 
     # def cache_lookup(self, source_points, source_projection):
     #     """
-    #     Lookup the given :arg:`source_points` in the cache and return the 
+    #     Lookup the given :arg:`source_points` in the cache and return the
     #     transformed points.
 
     #     :param source_points: points in :arg:`source_projection` to transform

@@ -32,15 +32,15 @@ class PolygonShapefileLayer(PolygonLayer):
     
     """
     type = Str("shapefile")
-    
+
     geometry = List
-    
+
     layer_info_panel = ["Layer name", "Shapefile Objects", "Polygon count"]
 
     def __str__(self):
         num = len(self.geometry)
         return "ShapefileLayer %s: %d objects" % (self.name, num)
-    
+
     def get_info_panel_text(self, prop):
         if prop == "Shapefile Objects":
             return str(len(self.geometry))

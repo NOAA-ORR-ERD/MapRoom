@@ -28,9 +28,9 @@ class LineLayer(PointLayer):
     
     """
     name = Unicode("Ugrid Layer")
-    
+
     type = Str("line")
-    
+
     line_segment_indexes = Any
 
     point_identifiers = Any
@@ -38,7 +38,7 @@ class LineLayer(PointLayer):
     pickable = True # this is a layer that supports picking
 
     visibility_items = ["points", "lines", "labels"]
-    
+
     layer_info_panel = ["Layer name", "Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     def __str__(self):
@@ -47,7 +47,7 @@ class LineLayer(PointLayer):
         except:
             lines = 0
         return PointLayer.__str__(self) + ", %d lines" % lines
-    
+
     def new(self):
         super(LineLayer, self).new()
         self.line_segment_indexes = self.make_line_segment_indexes(0)
@@ -58,7 +58,7 @@ class LineLayer(PointLayer):
                 return str(len(self.line_segment_indexes))
             return "0"
         return PointLayer.get_info_panel_text(self, prop)
-        
+
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
@@ -95,7 +95,7 @@ class LineLayer(PointLayer):
             ] = f_line_segment_indexes
             self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0
-        
+
         if update_bounds:
             self.update_bounds()
 
@@ -139,7 +139,7 @@ class LineLayer(PointLayer):
 
     def can_save_as(self):
         return True
-    
+
     def lines_to_json(self):
         if self.line_segment_indexes is not None:
             return self.line_segment_indexes.tolist()
@@ -150,24 +150,24 @@ class LineLayer(PointLayer):
             self.line_segment_indexes = np.array([tuple(i) for i in jd], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
         else:
             self.line_segment_indexes = jd
-    
+
     def check_for_problems(self, window):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(self, allow_branches=False, allow_self_crossing=False)
         boundaries.check_errors(True)
-    
+
     def has_boundaries(self):
         return True
-    
+
     def get_all_boundaries(self):
         b = Boundaries(self, True, True)
         return b.boundaries
-    
+
     def get_points_lines(self):
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
         lines = self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points
         return points, lines
-    
+
     def select_outer_boundary(self):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(self, allow_branches=True, allow_self_crossing=True)
@@ -378,7 +378,7 @@ class LineLayer(PointLayer):
             offsets[: np.alen(offsets)] = 0
             offsets += np.where(self.line_segment_indexes.point2 >= point_index, 1, 0).astype(np.uint32)
             self.line_segment_indexes.point2 += offsets
-    
+
     def insert_point_in_line(self, world_point, line_segment_index):
         new_point_index = self.insert_point(world_point)
         point_index_1 = self.line_segment_indexes.point1[line_segment_index]
@@ -556,7 +556,7 @@ class LineLayer(PointLayer):
 
         if (len(points_to_delete) > 0):
             return MergePointsCommand(self, list(points_to_delete))
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer
         
@@ -587,7 +587,7 @@ class LineLayer(PointLayer):
         # the labels
         if layer_visibility["labels"]:
             renderer.draw_labels_at_points(self.points.z, s_r, p_r)
-            
+
         # render selections after everything else
         if (not picker.is_active):
             if layer_visibility["lines"]:
@@ -596,12 +596,13 @@ class LineLayer(PointLayer):
             if layer_visibility["points"]:
                 renderer.draw_selected_points(self.point_size, self.get_selected_point_indexes())
 
+
 class LineEditLayer(LineLayer):
     """Layer for points/lines/rings.
     
     """
     name = Unicode("Line Edit Layer")
-    
+
     type = Str("line_edit")
 
     parent_layer = Any
@@ -609,7 +610,7 @@ class LineEditLayer(LineLayer):
     object_type = Int
 
     object_index = Int
-    
+
     layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     transient_edit_layer = True
@@ -658,4 +659,3 @@ class LineEditLayer(LineLayer):
         if command and hasattr(command, 'transient_geometry_update'):
             command.transient_geometry_update(self)
         return self.parent_layer
-

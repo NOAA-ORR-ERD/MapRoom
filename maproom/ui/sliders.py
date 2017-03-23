@@ -117,10 +117,10 @@ class FloatSlider(wx.PyPanel):
 
     def Enable(self, enable=True):
         self.sliderCtrl.Enable(enable)
-    
+
     def slider_value_to_float(self, slider_value):
         return self.minValue + (slider_value * self.step_size)
-    
+
     def float_to_slider_value(self, value):
         return int((value - self.minValue) / self.step_size)
 
@@ -210,6 +210,7 @@ class TextSlider(wx.PyPanel):
         self.textCtrl.Value = self.sliderCtrl.GetValue()
 
     Value = property(GetValue, SetValue)
+
 
 if __name__ == "__main__":
     app = wx.PySimpleApp()

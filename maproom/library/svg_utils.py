@@ -9,6 +9,7 @@ from glsvg.glutils import CurrentTransform, DisplayListGenerator
 class SVGOverlay(glsvg.SVGDoc):
     """Subclass that renders SVG images without clearing the screen
     """
+
     def __init__(self, xmltext):
         root_element = ET.fromstring(xmltext)
         glsvg.SVGDoc.__init__(self, root_element)

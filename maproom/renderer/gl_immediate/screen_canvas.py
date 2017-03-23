@@ -19,7 +19,7 @@ FormatHandler('recarray',
               'OpenGL.arrays.numpymodule.NumpyHandler',
               ['numpy.recarray',],
               )
-     
+
 from renderer import ImmediateModeRenderer
 from picker import Picker
 import maproom.library.rect as rect
@@ -37,9 +37,9 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
     """
     The core rendering class for MapRoom app.
     """
-    
+
     shared_context = None
-    
+
     @classmethod
     def init_context(cls, canvas):
         # Only one GLContext is needed for the entire application -- this way,
@@ -68,24 +68,24 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         # Only bind paint event; others depend on window being realized
         self.Bind(wx.EVT_PAINT, self.on_draw)
-        
+
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
-        
+
         self.native = self.get_native_control()
-        
+
         self.minimum_delay_timers = {}
-    
+
     def init_overlay(self):
         self.debug_show_bounding_boxes = False
         self.overlay = ImmediateModeRenderer(self, None)
-    
+
     def new_picker(self):
         return Picker()
 
     def get_native_control(self):
         return self
-    
+
     def set_callbacks(self):
         # Callbacks are not set immediately because they depend on the OpenGL
         # context being set on the canvas, which can't happen until the window
@@ -102,7 +102,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
         self.Bind(wx.EVT_TIMER, self.on_timer)
-        
+
         # Prevent flashing on Windows by doing nothing on an erase background event.
         ## fixme -- I think you can pass a flag to the Window instead...
         self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
@@ -112,7 +112,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         if self.native.IsShownOnScreen():
             if not self.is_canvas_initialized:
                 self.SetCurrent(self.shared_context)
-                
+
                 # this has to be here because the window has to exist before creating
                 # textures and making the renderer
                 try:
@@ -203,29 +203,29 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         mode = self.get_effective_tool_mode(event)
         mode.process_key_down(event)
         self.set_cursor(mode)
-        
+
         event.Skip()
 
     def on_key_up(self, event):
         mode = self.get_effective_tool_mode(event)
         mode.process_key_up(event)
         self.set_cursor(mode)
-        
+
         event.Skip()
 
     def on_key_char(self, event):
         mode = self.get_effective_tool_mode(event)
         self.set_cursor(mode)
-        
+
         if not mode.process_key_char(event):
             event.Skip()
-    
+
     def on_timer(self, event):
         id = event.GetTimer().GetId()
         timer, callback = self.minimum_delay_timers.pop(id)
         log.debug("timer %d triggered for callback %s" % (timer.GetId(), callback))
         wx.CallAfter(callback, self)
-    
+
     def set_minimum_delay_callback(self, callback, delay):
         """Trigger a callback after a delay.
         
@@ -247,13 +247,13 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             timer = wx.Timer(self.native)
             self.minimum_delay_timers[timer.GetId()] = (timer, callback)
             log.debug("created timer %d for callback %s" % (timer.GetId(), callback))
-            
+
         timer.Start(delay, oneShot=True)
-    
+
     def new_renderer(self, layer):
         r = ImmediateModeRenderer(self, layer)
         return r
-    
+
     def load_font_texture(self):
         buffer_with_alpha, extents = load_font_texture_with_alpha()
         width = buffer_with_alpha.shape[0]
@@ -280,17 +280,17 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
 
         return (texture, (width, height), extents)
-    
+
     def init_font(self, max_label_characters=1000):
         (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
         self.max_label_characters = max_label_characters
-        
+
         self.screen_vertex_data = np.zeros(
             (max_label_characters, ),
             dtype=data_types.QUAD_VERTEX_DTYPE,
         ).view(np.recarray)
         self.screen_vertex_raw = self.screen_vertex_data.view(dtype=np.float32).reshape(-1,8)
-        
+
         self.texcoord_data = np.zeros(
             (max_label_characters, ),
             dtype=data_types.TEXTURE_COORDINATE_DTYPE,
@@ -306,10 +306,10 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.vbo_screen_vertexes = gl_vbo.VBO(self.screen_vertex_raw)
         self.vbo_texture_coordinates = gl_vbo.VBO(self.texcoord_raw)
 
-    def prepare_string_texture(self, sx, sy, text): 
+    def prepare_string_texture(self, sx, sy, text):
         # these are used just because it seems to be the fastest way to full numpy arrays
         # fixme: -- yes, but if you know how big the arrays are going to be
-        #           better to build the array once. 
+        #           better to build the array once.
         screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
         tex_coord_accumulators = [[], [], [], [], [], [], [], []]
 
@@ -368,10 +368,10 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         self.vbo_screen_vertexes[0: n] = self.screen_vertex_raw[0: n]
         self.vbo_texture_coordinates[0: n] = self.texcoord_raw[0: n]
-        
+
         return n, self.font_texture
 
-    def prepare_string_texture_for_labels(self, values, projected_points, projected_rect): 
+    def prepare_string_texture_for_labels(self, values, projected_points, projected_rect):
         n, labels, relevant_points = self.get_visible_labels(values, projected_points, projected_rect)
         if n == 0:
             return 0, 0
@@ -453,7 +453,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         self.vbo_screen_vertexes[0: n] = self.screen_vertex_raw[0: n]
         self.vbo_texture_coordinates[0: n] = self.texcoord_raw[0: n]
-        
+
         return n, self.font_texture
 
     def prepare_screen_viewport(self):
@@ -488,7 +488,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             return False
         self.SetCurrent(self.shared_context)  # Needed every time for OS X
         return True
-    
+
     def render_overlay(self):
         self.overlay.prepare_to_render_screen_objects()
         if self.debug_show_bounding_boxes:

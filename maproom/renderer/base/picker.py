@@ -1,10 +1,10 @@
 class NullPicker(object):
     is_active = False
-    
+
     @classmethod
     def get_picker_index_base(cls, layer_index):
         return layer_index
-    
+
     def prepare_to_render(self, screen_rect):
         pass
 
@@ -30,11 +30,11 @@ class NullPicker(object):
         """returns ( layer_index, object_index ) or None
         """
         return None
-    
+
     @staticmethod
     def is_ugrid_point(obj):
         return False
-    
+
     @staticmethod
     def is_ugrid_point_type(type):
         return False
