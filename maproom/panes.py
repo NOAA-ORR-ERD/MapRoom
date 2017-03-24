@@ -85,7 +85,7 @@ class UndoHistoryPane(FrameworkPane):
         control = UndoHistoryPanel(parent, self.task)
         return control
 
-    #### trait change handlers
+    # trait change handlers
 
     def _task_changed(self):
         log.debug("TASK CHANGED IN UNDOHISTORYPANE!!!! %s" % self.task)
@@ -93,7 +93,7 @@ class UndoHistoryPane(FrameworkPane):
             self.control.set_task(self.task)
 
 
-#class FlaggedPointPanel(wx.Panel):
+# class FlaggedPointPanel(wx.Panel):
 #    def __init__(self, parent, task, **kwargs):
 #        self.task = task
 #        self.editor = None

@@ -83,7 +83,7 @@ class Layer(HasTraits):
 
     manager = Any
 
-    pickable = False # is this a layer that support picking?
+    pickable = False  # is this a layer that support picking?
 
     transient_edit_layer = False
 
@@ -105,8 +105,8 @@ class Layer(HasTraits):
         pass
 
     def new(self):
-        ## fixme -- shouldn't layer indexes, etc be controled by the layer_manager?
-        ## and maybe this should be using the python copy() mechanism anyway
+        # fixme -- shouldn't layer indexes, etc be controled by the layer_manager?
+        # and maybe this should be using the python copy() mechanism anyway
         self.name = "New %s" % self.name
         Layer.new_layer_index += 1
         if Layer.new_layer_index > 1:
@@ -313,9 +313,9 @@ class Layer(HasTraits):
         pass
 
     def get_visibility_dict(self):
-        ##fixme: you'be GOT to be kidding me!
-        ## shouldn't visibility be governed by the layer manager?
-        ## or each layer has its own sub-layer visibility
+        # fixme: you'be GOT to be kidding me!
+        # shouldn't visibility be governed by the layer manager?
+        # or each layer has its own sub-layer visibility
         d = dict()
         d["layer"] = True
         d["images"] = True
@@ -324,7 +324,7 @@ class Layer(HasTraits):
         d["lines"] = True
         d["triangles"] = True
         d["labels"] = True
-        ## why is this not handled in the subclass????
+        # why is this not handled in the subclass????
         if self.type == "polygon":
             d["labels"] = False
             d["points"] = False

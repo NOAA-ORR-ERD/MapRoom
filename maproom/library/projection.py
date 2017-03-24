@@ -1,7 +1,7 @@
 import pyproj
 
 
-## some known projections -- at some point, may want to use these by name:
+# some known projections -- at some point, may want to use these by name:
 
 # spherical mercator (google mercator) : "epsg:3857"
 # mercator"+proj=merc +units=m +over" (centered at equator)
@@ -13,7 +13,7 @@ class NullProjection(object):
 
     i.e. the "identity" projection
     """
-    name = "lat-lon" # name of projection
+    name = "lat-lon"  # name of projection
 
     def __init__(self):
         """
@@ -43,10 +43,10 @@ class Projection(object):
     A class used for transforming points from one projection to another.
     """
 
-    #fixme: is there a reason to use the cache???
+    # fixme: is there a reason to use the cache???
     MAX_CACHE_ENTRIES = 20
 
-    name = "" # would be nice to have a name....
+    name = ""  # would be nice to have a name....
 
     def __init__(self, proj_string):
         """
@@ -54,12 +54,12 @@ class Projection(object):
         :type proj_string: pyproj projection string.
         """
         if "+proj=latlong" in proj_string or "+proj=longlat" in proj_string:
-            ## this all becuase proj converts latlon to radians, rather than just a pass through.
-            ## NOTE: why do we care???
+            # this all becuase proj converts latlon to radians, rather than just a pass through.
+            # NOTE: why do we care???
             raise ValueError("You won't get the right result for proj:%s\nUse the NullProjection instead" % proj_string)
         self.proj = pyproj.Proj(proj_string)
         self.srs = self.proj.srs
-        self.name = proj_string # would be nice to make this cleaner.
+        self.name = proj_string  # would be nice to make this cleaner.
 
         # need a cache for anything????
         # ( id of original array, original projection ) -> transformed points
@@ -78,7 +78,7 @@ class Projection(object):
         fixme: pyproj can take a Nx2 array!
 
         """
-        #return self.projection(lon, lat, inverse=inverse)
+        # return self.projection(lon, lat, inverse=inverse)
         return self.proj(lon, lat, inverse=inverse)
 
     # def projection(self, x, y, inverse=False):

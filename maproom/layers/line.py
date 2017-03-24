@@ -33,7 +33,7 @@ class LineLayer(PointLayer):
 
     point_identifiers = Any
 
-    pickable = True # this is a layer that supports picking
+    pickable = True  # this is a layer that supports picking
 
     visibility_items = ["points", "lines", "labels"]
 
@@ -60,7 +60,7 @@ class LineLayer(PointLayer):
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
-        ## fixme == does this need to be hard-coded?
+        # fixme == does this need to be hard-coded?
         if label in ["points", "labels"]:
             return self.points is not None
         elif label == "lines":
@@ -638,7 +638,7 @@ class LineEditLayer(LineLayer):
         ring_index = ident['ring_index']
         geom, geom_ident = self.parent_layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
         geom_index = geom_ident['geom_index']
-        new_points = self.make_points(e - s + 1) # start to pt1; add new index, pt1 + 1 to e
+        new_points = self.make_points(e - s + 1)  # start to pt1; add new index, pt1 + 1 to e
         insertion_point = pt1 - s + 1
         new_points[0:insertion_point] = self.points[s:s + insertion_point]
         new_points[insertion_point] = self.points[new_index]

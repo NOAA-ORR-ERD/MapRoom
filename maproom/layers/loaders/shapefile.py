@@ -122,7 +122,7 @@ class ShapefileLoader(BaseLayerLoader):
 
 if __name__ == "__main__":
     # from http://gis.stackexchange.com/questions/43436/why-does-this-simple-python-ogr-code-create-an-empty-polygon
-    #create simple square polygon shapefile:
+    # create simple square polygon shapefile:
     from osgeo import ogr
     # driver = ogr.GetDriverByName('ESRI Shapefile')
 

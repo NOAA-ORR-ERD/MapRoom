@@ -219,7 +219,7 @@ class PolygonLayer(PointLayer):
             poly = self.get_shapely_polygon(n)
             if not poly.is_valid:
                 problems.append(poly)
-                #print "\n".join(str(a) for a in list(poly.exterior.coords))
+                # print "\n".join(str(a) for a in list(poly.exterior.coords))
                 try:
                     templog.warning("in polygon #%d (%d points in polygon)" % (n, len(poly.exterior.coords)))
                 except:

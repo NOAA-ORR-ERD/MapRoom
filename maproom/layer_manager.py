@@ -219,7 +219,7 @@ class LayerManager(BaseDocument):
         return False
 
     def destroy(self):
-        ## fixme: why do layers need a destroy() method???
+        # fixme: why do layers need a destroy() method???
         for layer in self.flatten():
             layer.destroy()
         self.layers = []
@@ -618,7 +618,7 @@ class LayerManager(BaseDocument):
         self.insert_loaded_layer(layer, editor, **kwargs)
         return old, insertion_index
 
-    ## fixme -- why wouldn't is_raisable, etc be an attribute of the layer???
+    # fixme -- why wouldn't is_raisable, etc be an attribute of the layer???
     def is_raisable(self, layer):
         if not layer.is_root():
             mi = self.get_multi_index_of_layer(layer)
@@ -718,8 +718,8 @@ class LayerManager(BaseDocument):
         return n
 
     def count_raster_layers(self):
-        ## fixme -- what  in the world are these used for?
-        ## and if there is a need, maybe it should be more  like
+        # fixme -- what  in the world are these used for?
+        # and if there is a need, maybe it should be more  like
         ## count_layer_of_type(self, layer_type="")
         n = 0
         for layer in self.flatten():

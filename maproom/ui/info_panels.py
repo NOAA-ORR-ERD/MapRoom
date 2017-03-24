@@ -260,7 +260,7 @@ class TextEditField(InfoField):
 
     def initial_text_input(self, text):
         self.ctrl.SetValue(text)
-        self.ctrl.SetInsertionPointEnd()#(self.ctrl.GetLastPosition())
+        self.ctrl.SetInsertionPointEnd()  # (self.ctrl.GetLastPosition())
 
 
 class LayerNameField(TextEditField):
@@ -687,7 +687,7 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
     # Overridden from OwnerDrawnComboBox.  Callback for item width, or
     # -1 for default/undetermined
     def OnMeasureItemWidth(self, item):
-        return -1; # default - will be measured from text width
+        return -1;  # default - will be measured from text width
 
 
 class LineStyleField(InfoField):
@@ -893,7 +893,7 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
     # Overridden from OwnerDrawnComboBox.  Callback for item width, or
     # -1 for default/undetermined
     def OnMeasureItemWidth(self, item):
-        return -1; # default - will be measured from text width
+        return -1;  # default - will be measured from text width
 
 
 class FontStyleField(InfoField):
@@ -1521,7 +1521,7 @@ class InfoPanel(PANELTYPE):
         self.point_depth_control = None
 
         self.Freeze()
-        self.sizer.Clear(False) # don't delete controls because we reuse them
+        self.sizer.Clear(False)  # don't delete controls because we reuse them
 
         undisplayed = set(self.field_map.keys())
         focus = None

@@ -101,7 +101,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.Bind(wx.EVT_TIMER, self.on_timer)
 
         # Prevent flashing on Windows by doing nothing on an erase background event.
-        ## fixme -- I think you can pass a flag to the Window instead...
+        # fixme -- I think you can pass a flag to the Window instead...
         self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
         self.Bind(wx.EVT_SIZE, self.on_resize)
 
@@ -147,7 +147,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.render(event)
 
     def on_mouse_down(self, event):
-        self.SetFocus() # why would it not be focused?
+        self.SetFocus()  # why would it not be focused?
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         self.mouse_is_down = True

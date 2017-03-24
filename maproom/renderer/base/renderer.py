@@ -3,7 +3,7 @@
 
 
 class BaseRenderer():
-    NUM_COLOR_CHANNELS = 4 #i.e. RGBA
+    NUM_COLOR_CHANNELS = 4  # i.e. RGBA
 
     def __init__(self, canvas, layer):
         self.canvas = canvas

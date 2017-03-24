@@ -99,7 +99,7 @@ class MockProject(object):
                         break
                 except Exception, e:
                     #errors = [str(e)]
-                    #break
+                    # break
                     raise
             if errors is not None:
                 text = "\n".join(errors)

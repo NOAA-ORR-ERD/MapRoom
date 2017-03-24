@@ -561,7 +561,7 @@ def general_intersection_check(points, boundary_min_max):
     """
     print len(points)
     progress_log.info("PULSE")
-    points.sort() # lexicographical sort
+    points.sort()  # lexicographical sort
     open_segments = {}
 
     intersecting_segments = []

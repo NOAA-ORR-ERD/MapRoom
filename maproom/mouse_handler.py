@@ -217,7 +217,7 @@ class MouseHandler(object):
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
-        #print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        # print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
 
     def dragged_on_empty_space(self, event):
         pass
@@ -397,7 +397,7 @@ class MouseHandler(object):
             elif keycode == wx.WXK_DELETE or keycode == wx.WXK_BACK:
                 self.delete_key_pressed()
                 handled = True
-            elif text in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~': # string.printable minus whitespace
+            elif text in '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~':  # string.printable minus whitespace
                 self.process_text_input(event, text)
                 handled = True
         return handled
@@ -532,7 +532,7 @@ class PanMode(MouseHandler):
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
-        #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
         if (d_x != 0 or d_y != 0):
             # the user has panned the map
             d_x_p = d_x * c.projected_units_per_pixel
@@ -799,7 +799,7 @@ class ObjectSelectionMode(MouseHandler):
             proj_p = c.get_world_point_from_screen_point(p)
             d_x = p[0] - c.mouse_down_position[0]
             d_y = c.mouse_down_position[1] - p[1]
-            #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+            # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
             if (d_x != 0 or d_y != 0):
                 modifiers = event.GetModifiers()
                 rotate = modifiers & wx.MOD_CMD
@@ -867,8 +867,8 @@ class ObjectSelectionMode(MouseHandler):
             p = self.get_position(event)
             w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
             w_p1 = c.get_world_point_from_screen_point(p)
-            #print "move: %s" % str(c.mouse_move_position)
-            #print "down: %s" % str(c.mouse_down_position)
+            # print "move: %s" % str(c.mouse_move_position)
+            # print "down: %s" % str(c.mouse_down_position)
             if rotate:
                 cmd = self.finished_rotate(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
             else:
@@ -955,7 +955,7 @@ class PointSelectionMode(ObjectSelectionMode):
         proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
-        #print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
         if (d_x != 0 or d_y != 0):
             # the user has panned the map
             d_x_p = d_x * c.projected_units_per_pixel
@@ -1296,7 +1296,7 @@ class CropRectMode(RectSelectMode):
         e = c.project
         p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
         w_r = c.get_world_rect_from_projected_rect(p_r)
-        #print "CROPPING!!!!  ", w_r
+        # print "CROPPING!!!!  ", w_r
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None and layer.can_crop()):
             cmd = CropRectCommand(layer, w_r)
@@ -1343,7 +1343,7 @@ class ControlPointEditMode(ObjectSelectionMode):
         if layer.type == "line_obj":
             self.can_snap = True
             c.hide_from_picker(layer)
-            c.render() # force re-rendering to hide the current layer from the picker
+            c.render()  # force re-rendering to hide the current layer from the picker
         else:
             self.can_snap = False
             c.hide_from_picker(None)

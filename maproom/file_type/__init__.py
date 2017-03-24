@@ -28,14 +28,14 @@
 #cog.msg("working dir : %s" % cwd)
 #path = os.path.dirname(os.path.join(cwd, cog.inFile))
 #cog.msg("scanning dir: %s" % path)
-#top = os.path.abspath(os.path.join(path, "../..")) # so absolute imports of maproom will work
-#sys.path.append(top)
+# top = os.path.abspath(os.path.join(path, "../..")) # so absolute imports of maproom will work
+# sys.path.append(top)
 #cog.msg("top dir     : %s" % top)
 #import glob
 #cog.outl("recognizers = []")
 #source_files = glob.glob(os.path.join(path, "*.py"))
-#source_files.sort()
-#for filename in source_files:
+# source_files.sort()
+# for filename in source_files:
 #    if filename.endswith("__init__.py"):
 #        continue
 #    modname = filename.split(".py")[0].split("/")[-1]

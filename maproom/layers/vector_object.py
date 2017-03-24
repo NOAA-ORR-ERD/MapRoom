@@ -200,9 +200,9 @@ class LineVectorObject(VectorObjectLayer):
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
-        ((0,0), (1,1), (0.5,0.5)), # anchor point is 0 (drag point is 1)
-        ((1,1), (0,0), (0.5,0.5)), # anchor point is 1, etc.
-        ((1,1), (1,1), (1,1)), # center point acts as rigid move
+        ((0,0), (1,1), (0.5,0.5)),  # anchor point is 0 (drag point is 1)
+        ((1,1), (0,0), (0.5,0.5)),  # anchor point is 1, etc.
+        ((1,1), (1,1), (1,1)),  # center point acts as rigid move
         ), dtype=np.float32)
 
     def calculate_distances(self):
@@ -467,15 +467,15 @@ class RectangleMixin(object):
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
-        ((0,0), (1,0), (1,1), (0,1), (.5,0), (1,.5), (.5,1), (0,.5), (.5,.5)), # anchor point is 0 (drag point is 2)
-        ((1,0), (0,0), (0,1), (1,1), (.5,0), (0,.5), (.5,1), (1,.5), (.5,.5)), # anchor point is 1 (drag is 3)
-        ((1,1), (0,1), (0,0), (1,0), (.5,1), (0,.5), (.5,0), (1,.5), (.5,.5)), # anchor point is 2, etc.
+        ((0,0), (1,0), (1,1), (0,1), (.5,0), (1,.5), (.5,1), (0,.5), (.5,.5)),  # anchor point is 0 (drag point is 2)
+        ((1,0), (0,0), (0,1), (1,1), (.5,0), (0,.5), (.5,1), (1,.5), (.5,.5)),  # anchor point is 1 (drag is 3)
+        ((1,1), (0,1), (0,0), (1,0), (.5,1), (0,.5), (.5,0), (1,.5), (.5,.5)),  # anchor point is 2, etc.
         ((0,1), (1,1), (1,0), (0,0), (.5,1), (1,.5), (.5,0), (0,.5), (.5,.5)),
-        ((0,0), (0,0), (0,1), (0,1), (0,0), (0,.5), (0,1), (0,.5), (0,.5)), # edges start here
+        ((0,0), (0,0), (0,1), (0,1), (0,0), (0,.5), (0,1), (0,.5), (0,.5)),  # edges start here
         ((1,0), (0,0), (0,0), (1,0), (.5,0), (0,0), (.5,0), (1,0), (.5,0)),
         ((0,1), (0,1), (0,0), (0,0), (0,1), (0,.5), (0,0), (0,.5), (0,.5)),
         ((0,0), (1,0), (1,0), (0,0), (.5,0), (1,0), (.5,0), (0,0), (.5,0)),
-        ((1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1)), # center point acts as rigid move
+        ((1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1)),  # center point acts as rigid move
         ), dtype=np.float32)
 
     def compute_constrained_control_points(self, cp):
@@ -596,7 +596,7 @@ class EllipseVectorObject(RectangleVectorObject):
 
         dtheta = 2 * 3.1415926 / num_segments
         theta = 0.0
-        x = sx # we start at angle = 0
+        x = sx  # we start at angle = 0
         y = 0
         i = 0
         while i < num_segments:
@@ -839,7 +839,7 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
         xs = anchor[0] + self.screen_dx
         ys = anchor[1] + self.screen_dy
         w = canvas.get_numpy_world_point_from_screen_point((xs, ys))
-        #print "world point for anchor %d" % i, w
+        # print "world point for anchor %d" % i, w
         # p[i]['xy'] = w  # Doesn't work!
         self.points.x[1] = w[0]
         self.points.y[1] = w[1]
@@ -1021,7 +1021,7 @@ class OverlayScalableImageObject(OverlayImageObject):
         h, w = self.text_height + (2 * self.border_width), self.text_width + (2 * self.border_width)  # array indexes of numpy images are reversed
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         anchor = canvas.get_numpy_screen_point_from_world_point(p[self.anchor_point_index]['xy'])
-        #print "anchor (center):", anchor, "text w,h", self.text_width, self.text_height
+        # print "anchor (center):", anchor, "text w,h", self.text_width, self.text_height
         anchor_to_center = self.screen_offset_from_center[self.anchor_point_index]
 
         scale = self.screen_offset_from_center.T
@@ -1030,7 +1030,7 @@ class OverlayScalableImageObject(OverlayImageObject):
 
         for i in range(self.center_point_index + 1):
             w = canvas.get_numpy_world_point_from_screen_point((xoffset[i], yoffset[i]))
-            #print "world point for anchor %d" % i, w
+            # print "world point for anchor %d" % i, w
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
             self.points.y[i] = w[1]

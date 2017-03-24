@@ -173,6 +173,6 @@ def flatten(list_of_lists):
 if __name__ == "__main__":
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
     p = [(0, 0)] * 190
-    polygon_points.extend(p) # works
+    polygon_points.extend(p)  # works
     p = [(0, 0, 0)] * 190
-    polygon_points.extend(p) # fails with ValueError, even though it's supposed to catch ValueError!
+    polygon_points.extend(p)  # fails with ValueError, even though it's supposed to catch ValueError!

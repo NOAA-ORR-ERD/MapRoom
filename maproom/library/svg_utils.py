@@ -21,10 +21,10 @@ class SVGOverlay(glsvg.SVGDoc):
         # image, so I'm taking them out.
 
         # prepare all the patterns
-        #self.prerender_patterns()
+        # self.prerender_patterns()
 
         # prepare all the predefined paths
-        #self.prerender_defs()
+        # self.prerender_defs()
 
         with DisplayListGenerator() as display_list:
             self.disp_list = display_list

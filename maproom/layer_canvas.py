@@ -37,7 +37,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         self.set_mouse_handler(MouseHandler)  # dummy initial mouse handler
         self.default_pan_mode = PanMode(self)
 
-        self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
+        self.pick_layer_index_map = {}  # provides mapping from pick_layer index to layer index.
 
     def rebuild_renderers(self):
         for layer in self.project.layer_manager.flatten():

@@ -429,7 +429,7 @@ class MaproomProjectTask(FrameworkTask):
             return 10
         return 0
 
-    ##### WMS and Tile processing
+    # WMS and Tile processing
 
     # Traits
     downloaders = Dict

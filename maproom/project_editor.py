@@ -422,7 +422,7 @@ class ProjectEditor(FrameworkEditor):
 
         return self.layer_canvas.get_native_control()
 
-    #### Traits event handlers
+    # Traits event handlers
 
     @on_trait_change('layer_manager:layer_loaded')
     def layer_loaded(self, layer):

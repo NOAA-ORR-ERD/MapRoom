@@ -77,14 +77,14 @@ class Scale(ScreenLayer):
 
         s = km_to_string(self.km_length)
         length = self.km_length / self.km_per_pixel
-        #print "km_length", self.km_length, "length", length
+        # print "km_length", self.km_length, "length", length
         size = renderer.get_drawn_string_dimensions(s)
         renderer.draw_screen_lines([(x, y - self.tick_length), (x, y), (x + self.tick_spacing + length, y), (x + self.tick_spacing + length, y - self.tick_length)], width=self.line_width)
         renderer.draw_screen_string((x + self.tick_spacing, y - size[1] - 1), s)
 
         s = ft_to_string(self.ft_length)
         length = self.ft_length / self.ft_per_pixel
-        #print "ft_length", self.ft_length, "length", length
+        # print "ft_length", self.ft_length, "length", length
         size = renderer.get_drawn_string_dimensions(s)
         renderer.draw_screen_lines([(x, y + self.tick_length), (x, y), (x + self.tick_spacing + length, y), (x + self.tick_spacing + length, y + self.tick_length)], width=self.line_width)
         renderer.draw_screen_string((x + self.tick_spacing, y + 1), s)

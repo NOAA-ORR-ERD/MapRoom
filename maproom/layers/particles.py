@@ -154,7 +154,7 @@ class ParticleLayer(PointBaseLayer):
             status_code_colors[k] = cls.status_code_color_map.get(k, color_floats_to_int(1.0, 0, 0, 1.0))
         return status_code_colors
 
-    ##### JSON Serialization
+    # JSON Serialization
 
     def status_codes_to_json(self):
         if self.status_codes is not None:

@@ -83,7 +83,7 @@ if sys.platform.startswith('win'):
         return info['PrivateUsage'] / float(div[units])
 
 
-else: # for posix systems only tested on OS-X for now
+else:  # for posix systems only tested on OS-X for now
     def get_mem_use(units='MB'):
         """
         returns the total memory use of the current python process

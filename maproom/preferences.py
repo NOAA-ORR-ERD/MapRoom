@@ -11,8 +11,8 @@ from traits.api import Str
 from traitsui.api import EnumEditor, HGroup, VGroup, Item, Label, \
     View, RangeEditor
 
-## fixme:
-## Some hard_coded stuff just to put it in a central place -- should be handled smarter
+# fixme:
+# Some hard_coded stuff just to put it in a central place -- should be handled smarter
 
 # EPSG:3857 now the default projection due to the use of WMS and Tile servers
 DEFAULT_PROJECTION_STRING = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +over +no_defs"

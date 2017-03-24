@@ -15,7 +15,7 @@ from .gldc import GLDC
 
 
 class ImmediateModeRenderer():
-    NUM_COLOR_CHANNELS = 4 #i.e. RGBA
+    NUM_COLOR_CHANNELS = 4  # i.e. RGBA
 
     def __init__(self, canvas, layer):
         self.canvas = canvas
@@ -673,9 +673,9 @@ class ImmediateModeRenderer():
         return (width, height)
 
     def draw_screen_string(self, point, text):
-        ##fixme: Is this is the right place?
-        ##fixme: This should be done with shaders anyway.
-        ##fixme:  if not shaders, Cython could help a lot, too
+        # fixme: Is this is the right place?
+        # fixme: This should be done with shaders anyway.
+        # fixme:  if not shaders, Cython could help a lot, too
 
         c = self.canvas
         # flip y to treat point as normal screen coordinates

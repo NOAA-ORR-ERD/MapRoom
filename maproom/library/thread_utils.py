@@ -111,7 +111,7 @@ class WMSRequestServer(UnskippableURLRequest):
         #    bands, 321 mapping)'}, 'visual_bright': {'title': 'Real-color image (Uses
         #    the visual bands, 321 mapping), gamma 1.5'}}
 
-        #Available methods, their URLs, and available formats::
+        # Available methods, their URLs, and available formats::
 
         print [op.name for op in wms.operations]
         print wms.getOperationByName('GetMap').methods
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     pr = ((-14092893.732, 5668589.93218), (-13235893.732, 6427589.93218))
     size = (857, 759)
 
-#http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
+# http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?BBOX=-8556942.2885109,4566851.4970803,-8551142.6289909,4570907.4368929&BUFFER=0&FORMAT=image%2Fpng&HEIGHT=849&LAYERS=0%2C1%2C2%2C3%2C4%2C5%2C6%2C7&REQUEST=GetMap&SERVICE=WMS&SRS=EPSG%3A102113&STYLES=&TRANSPARENT=true&VERSION=1.1.1&WIDTH=1214&etag=0
 # Capabilities: http://gis.charttools.noaa.gov/arcgis/rest/services/MCS/ENCOnline/MapServer/exts/Maritime%20Chart%20Server/WMSServer?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0
 
     # FAILS:

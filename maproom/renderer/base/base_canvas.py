@@ -208,7 +208,7 @@ class BaseCanvas(object):
                             delayed_pick_layer = (layer, vis)
                         else:
                             layer.render(renderer, w_r, p_r, s_r, vis, picker)
-                else: # not in pick-mode
+                else:  # not in pick-mode
                     if layer == selected:
                         control_points_layer = (layer, vis)
                     layer.render(renderer, w_r, p_r, s_r, vis, picker)

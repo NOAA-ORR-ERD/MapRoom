@@ -12,7 +12,7 @@ class GLDC(object):
         self.fill_color = None
 
     def BeginDrawing(self):
-        gl.glDisable(gl.GL_TEXTURE_2D) # don't let texture colors override line color
+        gl.glDisable(gl.GL_TEXTURE_2D)  # don't let texture colors override line color
         gl.glDisable(gl.GL_LINE_SMOOTH)
 
     def EndDrawing(self):
@@ -43,14 +43,14 @@ class GLDC(object):
         # http://slabode.exofire.net/circle_draw.shtml
         num_segments = 128
         theta = 2 * 3.1415926 / num_segments
-        c = math.cos(theta) # precalculate the sine and cosine
+        c = math.cos(theta)  # precalculate the sine and cosine
         s = math.sin(theta)
 
         def draw(mode):
             gl.glBegin(mode)
             if mode == gl.GL_TRIANGLE_FAN:
                 gl.glVertex2f(cx, cy)
-            x = r # we start at angle = 0
+            x = r  # we start at angle = 0
             y = 0
             i = num_segments
             while i > 0:
@@ -88,7 +88,7 @@ class GLDC(object):
             if mode == gl.GL_TRIANGLE_FAN:
                 gl.glVertex2f(cx, cy)
             theta = 0.0
-            x = sx # we start at angle = 0
+            x = sx  # we start at angle = 0
             y = 0
             i = num_segments
             while i > 0:

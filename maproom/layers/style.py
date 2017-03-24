@@ -218,7 +218,7 @@ class LayerStyle(object):
         for i, s in enumerate(self.line_styles):
             if stipple == s[1]:
                 return i, s
-        return 1, self.line_styles[1] # default to solid
+        return 1, self.line_styles[1]  # default to solid
 
     def get_current_line_style(self):
         return self.get_line_style_from_stipple(self.line_stipple)
@@ -237,7 +237,7 @@ class LayerStyle(object):
         for i, f in enumerate(self.fonts):
             if self.font == f:
                 return i, f
-        return 0, self.fonts[0] # default to system default
+        return 0, self.fonts[0]  # default to system default
 
     def get_current_font_size(self):
         for i, f in enumerate(self.standard_font_sizes):

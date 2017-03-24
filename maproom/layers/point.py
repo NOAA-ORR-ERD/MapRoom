@@ -42,7 +42,7 @@ class PointLayer(PointBaseLayer):
 
     _depth_unit = Enum("unknown", "meters", "feet", "fathoms")
 
-    pickable = True # is this a layer that support picking?
+    pickable = True  # is this a layer that support picking?
 
     visibility_items = ["points", "labels"]
 
@@ -105,7 +105,7 @@ class PointLayer(PointBaseLayer):
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)
 
-    ##### JSON Serialization
+    # JSON Serialization
 
     def default_depth_to_json(self):
         return self.default_depth

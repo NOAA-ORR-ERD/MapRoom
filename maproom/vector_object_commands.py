@@ -106,8 +106,8 @@ class MoveControlPointCommand(Command):
 
         if self.snapped_layer is not None:
             sl = lm.get_layer_by_invariant(self.snapped_layer)
-            #print "sl", sl
-            #print "snapped_cp", self.snapped_cp
+            # print "sl", sl
+            # print "snapped_cp", self.snapped_cp
             lm.set_control_point_link(layer, self.drag, sl, self.snapped_cp)
         return undo
 

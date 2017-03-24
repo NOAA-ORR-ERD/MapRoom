@@ -58,11 +58,11 @@ class PointBaseLayer(ProjectedLayer):
         return True
 
     def new_points(self, num=0):
-        #fixme: this should be done differently...
+        # fixme: this should be done differently...
         self.set_layer_style_defaults()
         self.points = self.make_points(num)
 
-    def empty(self):##fixme: make a property?
+    def empty(self):  # fixme: make a property?
         """
         We shouldn't allow saving of a layer with no content, so we use this method
         to determine if we can save this layer.
@@ -71,12 +71,12 @@ class PointBaseLayer(ProjectedLayer):
 
         return no_points
 
-    ##fixme: can we remove all the visibility stuff???
-    ## and if not -- this shouldn't have any references to labels
+    # fixme: can we remove all the visibility stuff???
+    # and if not -- this shouldn't have any references to labels
     def get_visibility_dict(self):
-        ##fixme: why not call self.get_visibility_dict ?
+        # fixme: why not call self.get_visibility_dict ?
         d = ProjectedLayer.get_visibility_dict(self)
-        ## fixme: and why do I need to mess with label visibility here?
+        # fixme: and why do I need to mess with label visibility here?
         d["labels"] = False
         return d
 
@@ -132,7 +132,7 @@ class PointBaseLayer(ProjectedLayer):
         self.points = info[0]
         self.bounds = info[1]
 
-    ##### JSON Serialization
+    # JSON Serialization
 
     def points_to_json(self):
         if self.points is not None:
@@ -163,7 +163,7 @@ class PointBaseLayer(ProjectedLayer):
         return bounds
 
     def get_state(self, index):
-        ##fixme -- is this needed -- should all points have a state?
+        # fixme -- is this needed -- should all points have a state?
         return self.points.state[index]
 
     def compute_selected_bounding_rect(self):
