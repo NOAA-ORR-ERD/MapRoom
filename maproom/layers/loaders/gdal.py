@@ -240,7 +240,7 @@ class GDALSubImageLoader(object):
                 (selection_size[1], selection_size[0], 4),
                 np.uint8,
             )
-            image[:, :, 3] = DEFAULT_ALPHA
+            image[:,:,3] = DEFAULT_ALPHA
 
             for band_index in range(0, self.nbands):
                 band_data = gdal_array.BandReadAsArray(
@@ -252,6 +252,6 @@ class GDALSubImageLoader(object):
                     selection_size[0],
                     selection_size[1])
 
-                image[:, :, band_index] = band_data
+                image[:,:,band_index] = band_data
 
         return image

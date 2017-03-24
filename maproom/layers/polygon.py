@@ -181,7 +181,7 @@ class PolygonLayer(PointLayer):
             lines = np.empty((count, 2), dtype=np.uint32)
             lines[:,0] = np.arange(start, start + count, dtype=np.uint32)
             lines[:,1] = np.arange(start + 1, start + count + 1, dtype=np.uint32)
-            lines[count - 1,1] = start
+            lines[count - 1, 1] = start
             all_lines = np.vstack([all_lines, lines])
         return points, all_lines
 
@@ -311,7 +311,7 @@ class PolygonLayer(PointLayer):
                     self.p_points = np.require(points.T, requirements=["C", "OWNDATA"])
                 else:
                     self.p_points.resize((self.total_points + num_points, 2))
-                    self.p_points[self.total_points:,:] = points.T
+                    self.p_points[self.total_points:, :] = points.T
                 self.p_starts.append(self.total_points)
                 self.p_counts.append(num_points)
                 self.p_identifiers.append(ident)

@@ -19,9 +19,9 @@ def load_font_texture_with_alpha():
     # Make an alpha channel that is opaque where the pixels are black
     # and semi-transparent where the pixels are white.
     buffer_with_alpha = np.empty((width, height, 4), np.uint8)
-    buffer_with_alpha[:, :, 0: 3] = buffer
-    buffer_with_alpha[:, :, 3] = (
-        255 - buffer[:, :, 0: 3].sum(axis=2) / 3
+    buffer_with_alpha[:,:,0: 3] = buffer
+    buffer_with_alpha[:,:,3] = (
+        255 - buffer[:,:,0: 3].sum(axis=2) / 3
     ).clip(180, 255)
 
     return buffer_with_alpha, FONT_EXTENTS

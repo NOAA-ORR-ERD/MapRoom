@@ -163,7 +163,7 @@ def check_min_sec(value):
 
 def degrees_minutes_seconds_to_float(degrees):
     # handle with spaces or without
-    values = re.split(u"[°′″]", degrees.strip().replace(" ",""))
+    values = re.split(u"[°′″]", degrees.strip().replace(" ", ""))
     dir = ""
     if len(values) == 3:
         degrees, minutes, seconds = values

@@ -185,7 +185,7 @@ class ParticleLayer(PointBaseLayer):
     def status_code_colors_to_json(self):
         if self.status_code_colors is not None:
             # force numbers to be python ints, not numpy. JSON can't serialize numpy
-            return [(k, int(v)) for k,v in self.status_code_colors.iteritems()]
+            return [(k, int(v)) for k, v in self.status_code_colors.iteritems()]
 
     def status_code_colors_from_json(self, json_data):
         jd = json_data['status_code_colors']

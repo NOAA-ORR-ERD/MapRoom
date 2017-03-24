@@ -29,11 +29,11 @@ class LayerStyle(object):
     
     """
 
-    default_line_color = color_floats_to_int(0,0,0,1.0)
+    default_line_color = color_floats_to_int(0, 0, 0, 1.0)
 
-    default_fill_color = color_floats_to_int(1.0,1.0,1.0,0.75)
+    default_fill_color = color_floats_to_int(1.0, 1.0, 1.0, 0.75)
 
-    default_text_color = color_floats_to_int(0,0,0,1.0)
+    default_text_color = color_floats_to_int(0, 0, 0, 1.0)
 
     default_colors = [
         color_floats_to_int(0, 0, 1.0, 1),

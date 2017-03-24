@@ -300,7 +300,7 @@ class PointBaseLayer(ProjectedLayer):
             (len(self.points), 2),
             dtype=np.float32
         )
-        projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
+        projected_point_data[:,0], projected_point_data[:,1] = projection(view[:,0], view[:,1])
         return projected_point_data
 
     def rebuild_renderer(self, renderer, in_place=False):

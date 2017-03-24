@@ -27,7 +27,7 @@ class LayerSelectionPane(FrameworkPane):
     name = 'Layers'
 
     def create_contents(self, parent):
-        control = LayerTreeControl(parent, self.task.active_editor, size=(200,300))
+        control = LayerTreeControl(parent, self.task.active_editor, size=(200, 300))
         return control
 
 
@@ -38,7 +38,7 @@ class LayerInfoPane(FrameworkPane):
     name = 'Current Layer'
 
     def create_contents(self, parent):
-        control = LayerInfoPanel(parent, self.task.active_editor, size=(200,200))
+        control = LayerInfoPanel(parent, self.task.active_editor, size=(200, 200))
         return control
 
 
@@ -49,7 +49,7 @@ class SelectionInfoPane(FrameworkPane):
     name = 'Current Selection'
 
     def create_contents(self, parent):
-        control = SelectionInfoPanel(parent, self.task.active_editor, size=(200,200))
+        control = SelectionInfoPanel(parent, self.task.active_editor, size=(200, 200))
         return control
 
 
@@ -196,7 +196,7 @@ class DownloadPanel(DownloadControl):
         self.task = task
         self.editor = None
         downloader = self.task.window.application.get_downloader()
-        DownloadControl.__init__(self, parent, downloader, size=(400,-1), **kwargs)
+        DownloadControl.__init__(self, parent, downloader, size=(400, -1), **kwargs)
 
     # turn the superclass attribute path into a property so we can override it
     # and pull out the paths from the preferences
@@ -272,7 +272,7 @@ class HtmlHelpPane(FrameworkPane):
     """
 
     def create_contents(self, parent):
-        control = PyClickableHtmlWindow(parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE, size=(400,300))
+        control = PyClickableHtmlWindow(parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE, size=(400, 300))
         control.SetPage(self.get_help_text())
         return control
 

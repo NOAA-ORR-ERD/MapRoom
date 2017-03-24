@@ -125,7 +125,7 @@ class ParticleLoader(BaseLayerLoader):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
-            layer.name = time.isoformat().rsplit(':',1)[0]
+            layer.name = time.isoformat().rsplit(':', 1)[0]
             progress_log.info("Finished loading %s" % layer.name)
             layer.set_data(points, status_codes, code_map)
             layers.append(layer)

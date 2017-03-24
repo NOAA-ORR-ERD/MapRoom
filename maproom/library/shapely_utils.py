@@ -197,8 +197,8 @@ def shapely_to_polygon(geom_list):
 
     return ("",
             np.asarray(polygon_points),
-            np.asarray(polygon_starts)[:, 0],
-            np.asarray(polygon_counts)[:, 0],
+            np.asarray(polygon_starts)[:,0],
+            np.asarray(polygon_counts)[:,0],
             ring_identifiers, ring_groups)
 
 

@@ -14,7 +14,7 @@ class LayerTreeControl(wx.Panel):
 
     dragged_item = None
 
-    def __init__(self, parent, project, size=(-1,-1)):
+    def __init__(self, parent, project, size=(-1, -1)):
         wx.Panel.__init__(self, parent, wx.ID_ANY, size=size)
 
         self.tree = treectrl.CustomTreeCtrl(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE,

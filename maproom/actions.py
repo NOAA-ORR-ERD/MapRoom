@@ -607,7 +607,7 @@ class ManageWMSAction(EditorAction):
     name = 'Manage WMS Servers...'
 
     def perform(self, event):
-        dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_hosts(), lambda a:getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
+        dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_hosts(), lambda a: getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundWMSDownloader.set_known_hosts(items)
@@ -621,7 +621,7 @@ class ManageTileServersAction(EditorAction):
 
     def perform(self, event):
         hosts = BackgroundTileDownloader.get_known_hosts()
-        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), prompt_for_tile, "Manage Tile Servers")
+        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: getattr(a, 'name'), prompt_for_tile, "Manage Tile Servers")
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundTileDownloader.set_known_hosts(items)
@@ -635,7 +635,7 @@ class ClearTileCacheAction(EditorAction):
 
     def perform(self, event):
         hosts = BackgroundTileDownloader.get_known_hosts()
-        dlg = CheckItemDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
+        dlg = CheckItemDialog(event.task.window.control, hosts, lambda a: getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
         if dlg.ShowModal() == wx.ID_OK:
             try:
                 for host in dlg.get_checked_items():

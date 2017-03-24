@@ -13,7 +13,7 @@ import OpenGL.arrays.vbo as gl_vbo
 from OpenGL.plugins import FormatHandler
 FormatHandler('recarray',
               'OpenGL.arrays.numpymodule.NumpyHandler',
-              ['numpy.recarray',],
+              ['numpy.recarray', ],
               )
 
 from renderer import ImmediateModeRenderer
@@ -286,13 +286,13 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             (max_label_characters, ),
             dtype=data_types.QUAD_VERTEX_DTYPE,
         ).view(np.recarray)
-        self.screen_vertex_raw = self.screen_vertex_data.view(dtype=np.float32).reshape(-1,8)
+        self.screen_vertex_raw = self.screen_vertex_data.view(dtype=np.float32).reshape(-1, 8)
 
         self.texcoord_data = np.zeros(
             (max_label_characters, ),
             dtype=data_types.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
-        self.texcoord_raw = self.texcoord_data.view(dtype=np.float32).reshape(-1,8)
+        self.texcoord_raw = self.texcoord_data.view(dtype=np.float32).reshape(-1, 8)
 
         # note that the data for these vbo arrays is not yet set; it is set on
         # each render and depends on the number of points being labeled

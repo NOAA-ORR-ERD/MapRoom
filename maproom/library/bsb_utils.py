@@ -58,13 +58,13 @@ class BSBInfo(object):
                 break
             index += 1
 
-        images.sort(key=lambda a:a.pane)
+        images.sort(key=lambda a: a.pane)
         self.images = images
 
 
 class BSBParser(object):
     delimiter_separators = {
-        "CRR":" ",
+        "CRR": " ",
     }
 
     def __init__(self, filename):

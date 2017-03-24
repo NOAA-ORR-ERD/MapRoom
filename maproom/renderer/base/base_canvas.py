@@ -483,10 +483,10 @@ class BaseCanvas(object):
         return [above, below, left, right]
 
     def get_visible_labels(self, values, projected_points, projected_rect):
-        r1 = projected_points[:, 0] >= projected_rect[0][0]
-        r2 = projected_points[:, 0] <= projected_rect[1][0]
-        r3 = projected_points[:, 1] >= projected_rect[0][1]
-        r4 = projected_points[:, 1] <= projected_rect[1][1]
+        r1 = projected_points[:,0] >= projected_rect[0][0]
+        r2 = projected_points[:,0] <= projected_rect[1][0]
+        r3 = projected_points[:,1] >= projected_rect[0][1]
+        r4 = projected_points[:,1] <= projected_rect[1][1]
         mask = np.logical_and(np.logical_and(r1, r2), np.logical_and(r3, r4))
         relevant_indexes = np.where(mask)[0]
         relevant_points = projected_points[relevant_indexes]

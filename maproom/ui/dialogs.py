@@ -182,7 +182,7 @@ class IconDialog(wx.Dialog):
 
 class StyleDialog(wx.Dialog):
     def __init__(self, project):
-        wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300,-1))
+        wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))
         self.lm = project.layer_manager
 
         self.mock_project = MockProject(add_tree_control=True)

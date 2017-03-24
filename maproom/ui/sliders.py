@@ -164,9 +164,9 @@ class TextSlider(wx.PyPanel):
         # Set the slider width small to work around layout problem with the
         # initial size of the slider being too wide for the sidebar panel
         # width & pushing the text control off to the right
-        self.sliderCtrl = FloatSlider(self, -1, value, minValue, maxValue, steps, valueUnit, point, (50,-1), style, validator, name)
+        self.sliderCtrl = FloatSlider(self, -1, value, minValue, maxValue, steps, valueUnit, point, (50, -1), style, validator, name)
         self.Sizer.Add(self.sliderCtrl, 2, wx.CENTER)
-        self.textCtrl = wx.SpinCtrlDouble(self, value='0.00', size=(50,21),
+        self.textCtrl = wx.SpinCtrlDouble(self, value='0.00', size=(50, 21),
                                  min=minValue, max=maxValue, inc=(maxValue - minValue) / steps)
         self.textCtrl.SetDigits(0)
         self.Sizer.Add(self.textCtrl, 1, wx.CENTER)

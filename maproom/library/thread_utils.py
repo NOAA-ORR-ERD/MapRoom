@@ -151,7 +151,7 @@ class WMSRequestServer(UnskippableURLRequest):
         # layers have different allowed coordinate systems?
         layer = layers[0]
         bbox = None
-        c = {t.split(":",1)[1]: t for t in self.wms[layer].crsOptions}
+        c = {t.split(":", 1)[1]: t for t in self.wms[layer].crsOptions}
         for crs, which in types:
             if crs in c:
                 if which == "p":
@@ -269,7 +269,7 @@ if __name__ == "__main__":
 
     test = downloader.request_map(wr, pr, size)
     test = downloader.request_map(wr, pr, size)
-    test = downloader.request_map(wr, pr, size, layer=["0","1","2","3","4","5","6","7"])
+    test = downloader.request_map(wr, pr, size, layer=["0", "1", "2", "3", "4", "5", "6", "7"])
     test = downloader.request_map(wr, pr, size, layer=['10', '11', '12', '14', '15', '17', '18', '19', '20'])
     test = downloader.request_map(wr, pr, size)
     while True:

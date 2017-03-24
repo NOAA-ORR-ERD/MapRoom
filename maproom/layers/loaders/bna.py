@@ -165,7 +165,7 @@ def parse_bna_file(uri):
             if (j == (num_points - 1) and p[0] == first_point[0] and p[1] == first_point[1]):
                 num_points -= 1
                 continue
-            polygon_points[j,:] = p
+            polygon_points[j, :] = p
         total_points += num_points
 
         item = [name, feature_type, feature_code, num_points, is_polygon, polygon_points]
@@ -204,7 +204,7 @@ def load_bna_file(uri):
              'feature_code': feature_code}
             )
         last_index = start_index + num_points
-        all_polygon_points[start_index:last_index,:] = item_points[0:num_points,:]
+        all_polygon_points[start_index:last_index, :] = item_points[0:num_points, :]
         polygon_starts[polygon_index] = start_index
         polygon_counts[polygon_index] = num_points
         polygon_index += 1

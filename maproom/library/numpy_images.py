@@ -87,7 +87,7 @@ def simple_text_formatter(text):
     text = cgi.escape(text)
     # double returns are a new paragraph
     text = text.split("\n\n")
-    text = [p.strip().replace("\n","<br>") for p in text]
+    text = [p.strip().replace("\n", "<br>") for p in text]
     text = "<p>\n" + "\n</p>\n<p>\n".join(text) + "\n</p>"
 
     return text

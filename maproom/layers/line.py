@@ -102,7 +102,7 @@ class LineLayer(PointLayer):
         lines = np.empty((count, 2), dtype=np.uint32)
         lines[:,0] = np.arange(0, count, dtype=np.uint32)
         lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
-        lines[count - 1,1] = 0
+        lines[count - 1, 1] = 0
         self.set_data(points, 0.0, lines)
 
     def set_data_from_geometry(self, geom, style=None):
@@ -114,10 +114,10 @@ class LineLayer(PointLayer):
         # MultiPolygon, so each subset needs to be matched to its identifier
         for s, c, ident in zip(starts, counts, identifiers):
             # generate list connecting each point to the next
-            lines[s:s + c,0] = np.arange(s, s + c, dtype=np.uint32)
-            lines[s:s + c,1] = np.arange(s + 1, s + c + 1, dtype=np.uint32)
+            lines[s:s + c, 0] = np.arange(s, s + c, dtype=np.uint32)
+            lines[s:s + c, 1] = np.arange(s + 1, s + c + 1, dtype=np.uint32)
             # but replace the last point with the first to close the loop
-            lines[s + c - 1,1] = s
+            lines[s + c - 1, 1] = s
             self.point_identifiers.append((s, s + c, ident))
 
         self.set_data(points, 0.0, lines, style=style)

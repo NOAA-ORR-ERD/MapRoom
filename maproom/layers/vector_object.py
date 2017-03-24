@@ -200,9 +200,9 @@ class LineVectorObject(VectorObjectLayer):
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
-        ((0,0), (1,1), (0.5,0.5)),  # anchor point is 0 (drag point is 1)
-        ((1,1), (0,0), (0.5,0.5)),  # anchor point is 1, etc.
-        ((1,1), (1,1), (1,1)),  # center point acts as rigid move
+        ((0, 0), (1, 1), (0.5, 0.5)),  # anchor point is 0 (drag point is 1)
+        ((1, 1), (0, 0), (0.5, 0.5)),  # anchor point is 1, etc.
+        ((1, 1), (1, 1), (1, 1)),  # center point acts as rigid move
         ), dtype=np.float32)
 
     def calculate_distances(self):
@@ -210,7 +210,7 @@ class LineVectorObject(VectorObjectLayer):
 
     def set_opposite_corners(self, p1, p2, update_bounds=True):
         p = np.concatenate((p1, p2), 0)  # flatten to 1D
-        c = p[self.corners_from_flat].reshape(-1,2)
+        c = p[self.corners_from_flat].reshape(-1, 2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines, update_bounds)
 
@@ -224,7 +224,7 @@ class LineVectorObject(VectorObjectLayer):
 
     def get_control_points_from_corners(self, c):
         num_cp = self.center_point_index + 1
-        cp = np.empty((num_cp,2), dtype=np.float32)
+        cp = np.empty((num_cp, 2), dtype=np.float32)
         cp[0:self.num_corners] = c
         cp[self.center_point_index] = c.mean(0)
         self.compute_constrained_control_points(cp)
@@ -467,23 +467,23 @@ class RectangleMixin(object):
     # anchor modification array: apply dx,dy values to each control point based
     # on the anchor point.  Used when moving/resizing
     anchor_dxdy = np.asarray((
-        ((0,0), (1,0), (1,1), (0,1), (.5,0), (1,.5), (.5,1), (0,.5), (.5,.5)),  # anchor point is 0 (drag point is 2)
-        ((1,0), (0,0), (0,1), (1,1), (.5,0), (0,.5), (.5,1), (1,.5), (.5,.5)),  # anchor point is 1 (drag is 3)
-        ((1,1), (0,1), (0,0), (1,0), (.5,1), (0,.5), (.5,0), (1,.5), (.5,.5)),  # anchor point is 2, etc.
-        ((0,1), (1,1), (1,0), (0,0), (.5,1), (1,.5), (.5,0), (0,.5), (.5,.5)),
-        ((0,0), (0,0), (0,1), (0,1), (0,0), (0,.5), (0,1), (0,.5), (0,.5)),  # edges start here
-        ((1,0), (0,0), (0,0), (1,0), (.5,0), (0,0), (.5,0), (1,0), (.5,0)),
-        ((0,1), (0,1), (0,0), (0,0), (0,1), (0,.5), (0,0), (0,.5), (0,.5)),
-        ((0,0), (1,0), (1,0), (0,0), (.5,0), (1,0), (.5,0), (0,0), (.5,0)),
-        ((1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1), (1,1)),  # center point acts as rigid move
+        ((0, 0), (1, 0), (1, 1), (0, 1), (.5, 0), (1, .5), (.5, 1), (0, .5), (.5, .5)),  # anchor point is 0 (drag point is 2)
+        ((1, 0), (0, 0), (0, 1), (1, 1), (.5, 0), (0, .5), (.5, 1), (1, .5), (.5, .5)),  # anchor point is 1 (drag is 3)
+        ((1, 1), (0, 1), (0, 0), (1, 0), (.5, 1), (0, .5), (.5, 0), (1, .5), (.5, .5)),  # anchor point is 2, etc.
+        ((0, 1), (1, 1), (1, 0), (0, 0), (.5, 1), (1, .5), (.5, 0), (0, .5), (.5, .5)),
+        ((0, 0), (0, 0), (0, 1), (0, 1), (0, 0), (0, .5), (0, 1), (0, .5), (0, .5)),  # edges start here
+        ((1, 0), (0, 0), (0, 0), (1, 0), (.5, 0), (0, 0), (.5, 0), (1, 0), (.5, 0)),
+        ((0, 1), (0, 1), (0, 0), (0, 0), (0, 1), (0, .5), (0, 0), (0, .5), (0, .5)),
+        ((0, 0), (1, 0), (1, 0), (0, 0), (.5, 0), (1, 0), (.5, 0), (0, 0), (.5, 0)),
+        ((1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)),  # center point acts as rigid move
         ), dtype=np.float32)
 
     def compute_constrained_control_points(self, cp):
-        x1 = cp[0,0]
-        x2 = cp[1,0]
+        x1 = cp[0, 0]
+        x2 = cp[1, 0]
         xm = (x1 + x2) * .5
-        y1 = cp[0,1]
-        y2 = cp[2,1]
+        y1 = cp[0, 1]
+        y2 = cp[2, 1]
         ym = (y1 + y2) * .5
         cp[4] = (xm, y1)
         cp[5] = (x2, ym)
@@ -661,7 +661,7 @@ class CircleVectorObject(EllipseVectorObject):
         ry = lat2 - lat1
         print "rkm, dlon, dlat", rkm, rx, ry
 
-        c = np.empty((4,2), dtype=np.float32)
+        c = np.empty((4, 2), dtype=np.float32)
         c[0] = (lon1 - rx, lat1 - ry)
         c[1] = (lon1 + rx, lat1 - ry)
         c[2] = (lon1 + rx, lat1 + ry)
@@ -874,7 +874,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
     # Screen y coords are backwards from world y coords (screen y increases
     # downward)
     screen_offset_from_center = np.asarray(
-        ((-0.5,0.5), (0.5,0.5), (0.5,-0.5), (-0.5,-0.5), (0,0.5), (0.5,0), (0,-0.5), (-0.5,0), (0,0)),
+        ((-0.5, 0.5), (0.5, 0.5), (0.5, -0.5), (-0.5, -0.5), (0, 0.5), (0.5, 0), (0, -0.5), (-0.5, 0), (0, 0)),
         dtype=np.float32)
 
     def anchor_point_index_to_json(self):
@@ -892,7 +892,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
     def set_location(self, p1):
         p = np.concatenate((p1, p1), 0)  # flatten to 1D
-        c = p[self.corners_from_flat].reshape(-1,2)
+        c = p[self.corners_from_flat].reshape(-1, 2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
 
@@ -1013,7 +1013,7 @@ class OverlayScalableImageObject(OverlayImageObject):
         self.text_width = w
         self.text_height = h
         p = np.concatenate((p1, p1), 0)  # flatten to 1D
-        c = p[self.corners_from_flat].reshape(-1,2)
+        c = p[self.corners_from_flat].reshape(-1, 2)
         cp = self.get_control_points_from_corners(c)
         self.set_data(cp, 0.0, self.lines)
 
@@ -1182,7 +1182,7 @@ class PolylineMixin(object):
 
         # initialize boundary box control points with zeros; will be filled in
         # with call to recalc_bounding_box below
-        cp = np.zeros((self.center_point_index + 1,2), dtype=np.float32)
+        cp = np.zeros((self.center_point_index + 1, 2), dtype=np.float32)
 
         p = np.concatenate((cp, points), 0)  # flatten to 1D
         lines = self.get_polylines(np.alen(points))
@@ -1203,7 +1203,7 @@ class PolylineMixin(object):
         offset = self.center_point_index + 1
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
         r = rect.get_rect_of_points(points[offset:])
-        corners = np.empty((4,2), dtype=np.float32)
+        corners = np.empty((4, 2), dtype=np.float32)
         corners[0] = r[0]
         corners[1] = (r[1][0], r[0][1])
         corners[2] = r[1]
@@ -1307,7 +1307,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         lines = np.empty((count, 2), dtype=np.uint32)
         lines[:,0] = np.arange(0, count, dtype=np.uint32)
         lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
-        lines[count - 1,1] = 0
+        lines[count - 1, 1] = 0
         return points, lines
 
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):

@@ -226,7 +226,7 @@ class RawSubImageLoader(SubImageLoader):
     def load(self, origin, size):
         # numpy image coords are reversed!
         return self.array[origin[1]:origin[1] + size[1],
-                          origin[0]:origin[0] + size[0],:]
+                          origin[0]:origin[0] + size[0], :]
 
 
 class TileImage(Image):
@@ -380,7 +380,7 @@ class ImageTextures(object):
             (1, ),
             dtype=data_types.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
-        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1, 8)
 
         n = 0
         for i, image in enumerate(image_data):
@@ -426,7 +426,7 @@ class ImageTextures(object):
                 (1, ),
                 dtype=data_types.QUAD_VERTEX_DTYPE,
             ).view(np.recarray)
-            vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1,8)
+            vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1, 8)
             # we fill the vbo_vertexes data in reproject() below
             self.vbo_vertexes.append(gl_vbo.VBO(vertex_raw))
 
@@ -543,7 +543,7 @@ class TileTextures(object):
             (1, ),
             dtype=data_types.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
-        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1, 8)
 
         texcoord_data.u_lb = 0
         texcoord_data.v_lb = 1.0
@@ -599,7 +599,7 @@ class TileTextures(object):
             (1, ),
             dtype=data_types.QUAD_VERTEX_DTYPE,
         ).view(np.recarray)
-        vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1,8)
+        vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1, 8)
         # we fill the vbo_vertexes data in reproject() below
         tile.vbo_vertexes = gl_vbo.VBO(vertex_raw)
         self.set_projection(tile, image, projection)

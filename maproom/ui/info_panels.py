@@ -594,7 +594,7 @@ class ColorPickerField(InfoField):
 
     def create_control(self):
         color = (0, 0, 0)
-        c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width,-1))
+        c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width, -1))
         c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
         return c
 
@@ -674,7 +674,7 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
             return
 
         # Otherwise, draw every other background with different colour.
-        bgCol = wx.Colour(240,240,250)
+        bgCol = wx.Colour(240, 240, 250)
         dc.SetBrush(wx.Brush(bgCol))
         dc.SetPen(wx.Pen(bgCol))
         dc.DrawRectangleRect(rect);
@@ -1114,7 +1114,7 @@ class ParticleField(InfoField):
 
     def create_control(self):
         names = ["all"]
-        c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width,-1))
+        c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width, -1))
         self.popup = ListBoxComboPopup()
         c.SetPopupControl(self.popup)
         c.Bind(wx.EVT_COMBOBOX, self.timestep_changed)
@@ -1177,7 +1177,7 @@ class StatusCodeColorField(InfoField):
             hbox.Add(label, 99, wx.ALIGN_CENTER)
             hbox.AddStretchSpacer(1)
             color = tuple(int(255 * c) for c in int_to_color_floats(code_colors[code])[0:3])
-            c = csel.ColourSelect(self.ctrl, -1, "", color, size=(self.default_width,-1))
+            c = csel.ColourSelect(self.ctrl, -1, "", color, size=(self.default_width, -1))
             c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
             hbox.Add(c, 0, wx.ALIGN_CENTER)
             sizer.Add(hbox, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
@@ -1389,7 +1389,7 @@ class InfoPanel(PANELTYPE):
     VALUE_SPACING = 3
     SIDE_SPACING = 5
 
-    def __init__(self, parent, project, size=(-1,-1)):
+    def __init__(self, parent, project, size=(-1, -1)):
         self.project = project
 
         self.layer_name_control = None

@@ -192,7 +192,7 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
         # layers have different allowed coordinate systems?
         layer = layers[0]
         bbox = None
-        c = {t.split(":",1)[1]: t for t in self.tile_server[layer].crsOptions}
+        c = {t.split(":", 1)[1]: t for t in self.tile_server[layer].crsOptions}
         for crs, which in types:
             if crs in c:
                 if which == "p":
