@@ -19,7 +19,7 @@ progress_log = logging.getLogger("progress")
 
 class TriangleLayer(PointLayer):
     """Layer for triangles.
-    
+
     """
     type = Str("triangle")
 
@@ -34,7 +34,7 @@ class TriangleLayer(PointLayer):
     def __str__(self):
         try:
             triangles = len(self.triangles)
-        except:
+        except TypeError:
             triangles = 0
         return PointLayer.__str__(self) + ", %d triangles" % triangles
 
@@ -122,8 +122,8 @@ class TriangleLayer(PointLayer):
         return index
 
     def delete_triangle(self, index):
-        t = self.triangles[index]
-        params = (t.point1, t.point2, t.color, t.state)
+        # t = self.triangles[index]
+        # params = (t.point1, t.point2, t.color, t.state)
         # FIXME: add undo info
         self.triangles = np.delete(self.triangles, index, 0)
 
@@ -320,7 +320,7 @@ class TriangleLayer(PointLayer):
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer
-        
+
         """
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))

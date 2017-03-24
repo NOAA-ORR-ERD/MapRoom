@@ -178,9 +178,9 @@ def load_bna_file(uri):
     """
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
-    
+
     ( load_error_string, polygon_points, polygon_starts, polygon_counts, polygon_types, ring_identifiers )
-    
+
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
         polygon_points = numpy array (type = 2 x np.float64)
@@ -246,9 +246,9 @@ def load_bna_as_shapely(uri):
     """
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
-    
+
     ( load_error_string, geometry_list )
-    
+
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
         geometry_list = list of shapely objects
@@ -259,7 +259,6 @@ def load_bna_as_shapely(uri):
     geometry_list = []
     ring_identifiers = []
 
-    start_index = 0
     for name, feature_type, feature_code, num_points, is_polygon, item_points in items:
         ring_identifiers.append(
             {'name': name,

@@ -1,4 +1,3 @@
-import time
 import numpy as np
 
 # Enthought library imports.
@@ -132,7 +131,6 @@ class PointLayer(PointBaseLayer):
         return self.insert_point_at_index(index, world_point, self.default_depth, self.style.line_color, state.SELECTED)
 
     def insert_point_at_index(self, point_index, world_point, z, color, state):
-        t0 = time.clock()
         # insert it into the layer
         p = np.array([(world_point[0], world_point[1], z, color, state)],
                      dtype=data_types.POINT_DTYPE)

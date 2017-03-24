@@ -38,7 +38,7 @@ progress_log = logging.getLogger("progress")
 
 class ProjectEditor(FrameworkEditor):
     """The wx implementation of a ProjectEditor.
-    
+
     See the IProjectEditor interface for the API documentation.
     """
 
@@ -610,7 +610,7 @@ class ProjectEditor(FrameworkEditor):
         """Process a single command but don't update the UI immediately.
         Instead, update the batch flags to reflect the changes needed to
         the UI.
-        
+
         """
         undo = self.layer_manager.undo_stack.perform(command, self)
         self.add_batch_flags(command, undo.flags, b)
@@ -618,7 +618,7 @@ class ProjectEditor(FrameworkEditor):
 
     def add_batch_flags(self, cmd, f, b):
         """Make additions to the batch flags as a result of the passed-in flags
-        
+
         """
         # folders need bounds updating after child layers
         folder_bounds = []
@@ -686,7 +686,7 @@ class ProjectEditor(FrameworkEditor):
 
     def perform_batch_flags(self, cmd, b):
         """Perform the UI updates given the BatchStatus flags
-        
+
         """
         log.debug("perform_batch_flags layers affected: %s" % str(b.layers))
         for layer in b.layers:
@@ -811,9 +811,9 @@ class ProjectEditor(FrameworkEditor):
         try:
             progress_log.info("START=Finding outer boundary for %s" % sel_layer.name)
             status = sel_layer.select_outer_boundary()
-        except ProgressCancelError, e:
+        except ProgressCancelError:
             error = "cancel"
-        except Exception, e:
+        except Exception:
             error = "Can't determine boundary"
         finally:
             progress_log.info("END")
@@ -894,7 +894,7 @@ class ProjectEditor(FrameworkEditor):
         try:
             progress_log.info("START=Checking layer %s" % sel_layer.name)
             error = self.layer_manager.check_layer(sel_layer, self.window)
-        except ProgressCancelError, e:
+        except ProgressCancelError:
             error = "cancel"
         finally:
             progress_log.info("END")
@@ -928,7 +928,7 @@ class ProjectEditor(FrameworkEditor):
                     layer.highlight_exception(error)
                     self.control.Refresh()
                     error = None
-        except ProgressCancelError, e:
+        except ProgressCancelError:
             error = "cancel"
         finally:
             progress_log.info("END")

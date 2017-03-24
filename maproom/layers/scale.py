@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 class Scale(ScreenLayer):
     """Scale layer
-    
+
     Shows a scale in miles/meters
     """
     name = Unicode("Scale")
@@ -52,8 +52,6 @@ class Scale(ScreenLayer):
         return d
 
     def resize(self, renderer, world_rect, screen_rect):
-        c = renderer.canvas
-        z = c.zoom_level
         center = rect.center(world_rect)
         degrees_lon_per_pixel = float(rect.width(world_rect)) / float(rect.width(screen_rect))
         self.km_per_pixel = haversine_at_const_lat(degrees_lon_per_pixel, center[1])
@@ -69,7 +67,6 @@ class Scale(ScreenLayer):
         if picker.is_active:
             return
         log.log(5, "Rendering scale!!! pick=%s" % (picker))
-        render_window = renderer.canvas
         self.resize(renderer, w_r, s_r)
 
         x = s_r[0][0] + self.x_offset

@@ -234,7 +234,6 @@ class LineVectorObject(VectorObjectLayer):
         pass
 
     def find_nearest_corner(self, world_pt):
-        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         x = np.copy(self.points.x[0:self.num_corners]) - world_pt[0]
         y = np.copy(self.points.y[0:self.num_corners]) - world_pt[1]
         d = (x * x) + (y * y)
@@ -596,8 +595,6 @@ class EllipseVectorObject(RectangleVectorObject):
 
         dtheta = 2 * 3.1415926 / num_segments
         theta = 0.0
-        x = sx  # we start at angle = 0
-        y = 0
         i = 0
         while i < num_segments:
             xy[i] = (cx + sx * math.cos(theta), cy + sy * math.sin(theta))
@@ -654,7 +651,7 @@ class CircleVectorObject(EllipseVectorObject):
         lon1, lat1 = p1
         lon2, lat2 = p2
         rkm = haversine(lon1, lat1, lon2, lat2)
-        bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2), math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
+        # bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2), math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
         _, lat2 = distance_bearing(lon1, lat1, 0.0, rkm)
         lon2, _ = distance_bearing(lon1, lat1, 90.0, rkm)
         rx = lon2 - lon1

@@ -101,7 +101,6 @@ class BaseLayerLoader(BaseLoader):
     def save_to_local_file(self, filename, layer):
         fh = open(filename, "w")
         error = ""
-        had_error = False
         try:
             self.save_to_fh(fh, layer)
         except Exception:

@@ -120,7 +120,7 @@ class MoveControlPointCommand(Command):
         restore_layers(editor, child_layer_data)
 
         layer = lm.get_layer_by_invariant(self.layer)
-        links = layer.remove_from_master_control_points(self.drag, self.anchor)
+        layer.remove_from_master_control_points(self.drag, self.anchor)
         for dep, master in old_links:
             lm.set_control_point_link(dep, master)
         return self.undo_info
@@ -145,7 +145,7 @@ class UnlinkControlPointCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
         undo.flags.refresh_needed = True
-        lf = undo.flags.add_layer_flags(layer)
+        undo.flags.add_layer_flags(layer)
         old_links = layer.remove_from_master_control_points(self.anchor, -1, force=True)
         undo.data = (old_links,)
         return undo
@@ -206,7 +206,6 @@ class RotateObjectCommand(Command):
         return undo
 
     def undo(self, editor):
-        lm = editor.layer_manager
         (child_layer_data, parent_layer_data) = self.undo_info.data
         restore_layers(editor, parent_layer_data)
         child_layer_data.reverse()

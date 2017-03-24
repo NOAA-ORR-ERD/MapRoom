@@ -578,7 +578,7 @@ class ImmediateModeRenderer():
 
     def draw_screen_markers(self, markers, style):
         """Draws a list of markers on screen.
-        
+
         Each entry in markers is a 3-tuple; the point to center the marker, a
         point on the other end of the line, and the marker type
         """
@@ -788,7 +788,6 @@ class ImmediateModeRenderer():
 
         """
         gl.glDisable(gl.GL_TEXTURE_2D)
-        c = self.canvas
         x = (r[0][0] + r[1][0]) / 2
         y = (r[0][1] + r[1][1]) / 2
         w = rect.width(r)

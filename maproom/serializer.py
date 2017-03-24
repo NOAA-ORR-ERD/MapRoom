@@ -80,7 +80,7 @@ class TextDeserializer(object):
                     continue
             try:
                 text_args = shlex.split(line.strip())
-            except ValueError, e:
+            except ValueError:
                 build_multiline = line
                 continue
             cmd = self.unserialize_line(text_args, manager)

@@ -42,7 +42,7 @@ class LineLayer(PointLayer):
     def __str__(self):
         try:
             lines = len(self.line_segment_indexes)
-        except:
+        except TypeError:
             lines = 0
         return PointLayer.__str__(self) + ", %d lines" % lines
 
@@ -637,7 +637,7 @@ class LineEditLayer(LineLayer):
         sub_index = ident['sub_index']
         ring_index = ident['ring_index']
         geom, geom_ident = self.parent_layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
-        geom_index = geom_ident['geom_index']
+        # geom_index = geom_ident['geom_index']
         new_points = self.make_points(e - s + 1)  # start to pt1; add new index, pt1 + 1 to e
         insertion_point = pt1 - s + 1
         new_points[0:insertion_point] = self.points[s:s + insertion_point]

@@ -97,8 +97,8 @@ class MockProject(object):
                     if not undo.flags.success:
                         errors = undo.errors
                         break
-                except Exception, e:
-                    #errors = [str(e)]
+                except Exception:
+                    # errors = [str(e)]
                     # break
                     raise
             if errors is not None:

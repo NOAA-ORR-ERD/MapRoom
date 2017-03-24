@@ -177,7 +177,7 @@ class Layer(HasTraits):
 
     def serialize_json(self, index, children=False):
         """Create json representation that can restore layer.
-        
+
         Layers don't know their own indexes, so the manager must pass the index
         here so it can be serialized with the rest of the data.
         """
@@ -219,11 +219,11 @@ class Layer(HasTraits):
 
     def unserialize_json(self, json_data, batch_flags):
         """Restore layer from json representation.
-        
+
         The json data passed to this function will be the subset of the json
         applicable to this layer only, so it doesn't have to deal with parsing
         anything other than what's necessary to restore itself.
-        
+
         This is the driver routine and will call the version-specific routine
         based on the 'version' keyword in json_data.  The method should be
         named 'unserialize_json_versionX' where X is the version number.
@@ -240,7 +240,7 @@ class Layer(HasTraits):
 
     def unserialize_json_version1(self, json_data, batch_flags):
         """Restore layer from json representation.
-        
+
         The json data passed to this function will be the subset of the json
         applicable to this layer only, so it doesn't have to deal with parsing
         anything other than what's necessary to restore itself.
@@ -293,7 +293,7 @@ class Layer(HasTraits):
             log.debug("Loading layers from url %s" % json_data['url'])
             try:
                 loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
-            except ResourceNotFoundError, e:
+            except ResourceNotFoundError:
                 raise RuntimeError("Failed loading from %s" % json_data['url'])
         else:
             log.debug("Loading layers from json encoded data")
@@ -382,19 +382,19 @@ class Layer(HasTraits):
     def set_visibility_when_selected(self, layer_visibility):
         """Called when layer is selected to provide a hook if the layer has
         elements that should be visibile only when it it selected.
-        
+
         """
 
     def clear_visibility_when_deselected(self, layer_visibility):
         """Called when layer is deselected to provide a hook if the layer has
         elements that should be visibile only when it it selected.
-        
+
         """
 
     def set_visibility_when_checked(self, checked, project_layer_visibility):
         """Called when layer visibility changes to provide a hook if the layer
         has elements that should be visibile only when it it selected.
-        
+
         """
         project_layer_visibility[self]["layer"] = checked
 
@@ -471,12 +471,12 @@ class Layer(HasTraits):
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
-        
+
         """
 
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
         """Set up or rebuild any rendering elements prior to rendering.
-        
+
         The rendering loop in BaseCanvas.render loops through all layers and
         calls this method on each of them before any layers are rendered.
         This can be used to update the world coordinates that other layers

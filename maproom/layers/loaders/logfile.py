@@ -15,7 +15,6 @@ class CommandLogLoader(BaseLoader):
     name = "MapRoom Command Log"
 
     def iter_log(self, metadata, manager):
-        project = []
         with fsopen(metadata.uri, "r") as fh:
             text = fh.read()
             for cmd in manager.undo_stack.unserialize_text(text, manager):

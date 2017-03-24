@@ -237,7 +237,7 @@ class TextEditField(InfoField):
         try:
             self.parse_from_string()
             valid = True
-        except Exception as e:
+        except Exception:
             c.SetBackgroundColour("#FF8080")
             valid = False
         self.ctrl.Refresh()
@@ -554,7 +554,6 @@ class LineAlphaField(FloatSliderField):
         layer = self.panel.project.layer_tree_control.get_selected_layer()
         if (layer is None):
             return
-        refresh = False
         c = self.ctrl
         try:
             val = (100 - int(c.GetValue())) / 100.0
@@ -562,7 +561,7 @@ class LineAlphaField(FloatSliderField):
             cmd = StyleChangeCommand(layer, style)
             wx.CallAfter(self.process_command, cmd)
             c.textCtrl.SetBackgroundColour("#FFFFFF")
-        except Exception as e:
+        except Exception:
             c.textCtrl.SetBackgroundColour("#FF8080")
 
 
@@ -1113,7 +1112,6 @@ class ParticleField(InfoField):
         self.ctrl.SetText(names[selected])
 
     def create_control(self):
-        names = ["all"]
         c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width, -1))
         self.popup = ListBoxComboPopup()
         c.SetPopupControl(self.popup)

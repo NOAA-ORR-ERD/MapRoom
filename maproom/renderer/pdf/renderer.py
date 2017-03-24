@@ -26,7 +26,6 @@ class PDFImage(object):
             yield image, xywh[0], xywh[1], xywh[2], xywh[3]
 
     def load(self, image_data):
-        n = 0
         for image in image_data:
             try:
                 if image.z != image_data.zoom_level:

@@ -86,7 +86,7 @@ class LayerManager(BaseDocument):
     @classmethod
     def create(cls, project):
         """Convenience function to create a new, empty LayerManager
-        
+
         Since classes that use Traits can't seem to use an __init__ method,
         we are forced to use a convenience function to initialize non-traits
         members.  Trying to define layers using _layers_default results
@@ -186,9 +186,9 @@ class LayerManager(BaseDocument):
         return invariant
 
     def roll_back_invariant(self, invariant):
-        """ Roll back the next_invariant if the supplied invariant is the 
+        """ Roll back the next_invariant if the supplied invariant is the
         last invariant used.
-        
+
         This method is used to correctly restore the invariant when the last
         layer is deleted.  If the passed-in invariant doesn't represent the
         last layer added, leave things alone because the invariant of the
@@ -210,7 +210,7 @@ class LayerManager(BaseDocument):
 
     def has_user_created_layers(self):
         """Returns true if all the layers can be recreated automatically
-        
+
         If any layer has any user-created data, this will return False.
         """
         for layer in self.flatten():
@@ -414,12 +414,12 @@ class LayerManager(BaseDocument):
     def find_vector_object_insert_layer(self, event_layer):
         """Find the appropriate layer to insert a vector object, given the
         layer on which the event occurred.
-        
+
         If the event_layer is an annotation layer it will typically be used,
         *unless* the layer is grouped, in which case it will look
         upwards in the hierarchy to find the first parent annotation layer
         that is not grouped.
-        
+
         None is returned if the top-level annotation layer is also grouped.
         """
         while not event_layer.is_root():
@@ -448,7 +448,7 @@ class LayerManager(BaseDocument):
 
     def insert_children(self, in_layer, children):
         """Insert a list of children as children of the speficied folder
-        
+
         The list of children should be generated from :func:`get_children`
         """
         log.debug("before: layers are " + str(self.layers))
@@ -492,7 +492,7 @@ class LayerManager(BaseDocument):
 
     def replace_layer(self, at_multi_index, layer):
         """Replace a layer with another
-        
+
         Returns a tuple containing the replaced layer as the first component
         and a list (possibly empty) of its children as the second component.
         """
@@ -526,7 +526,7 @@ class LayerManager(BaseDocument):
         self.remove_layer_at_multi_index(mi)
 
     def remove_layer_at_multi_index(self, at_multi_index):
-        layer = self.remove_layer_recursive(at_multi_index, self.layers)
+        self.remove_layer_recursive(at_multi_index, self.layers)
 
     def remove_layer_recursive(self, at_multi_index, tree):
         index = at_multi_index[0]
@@ -540,7 +540,7 @@ class LayerManager(BaseDocument):
 
     def get_folder_of_layer(self, layer):
         """Returns the containing folder of the specified layer
-        
+
         """
         mi = self.get_multi_index_of_layer(layer)
         mi = mi[:-1]
@@ -674,7 +674,7 @@ class LayerManager(BaseDocument):
     def get_children(self, layer):
         """Return a list containing the hierarchy starting at the specified
         layer and containing any children and descendents.
-        
+
         This potentially could include lists of lists of lists, as deep as the
         hierarchy goes.
         """
@@ -802,14 +802,14 @@ class LayerManager(BaseDocument):
 
     def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None, locked=False):
         """Links a control point to a truth (master) layer
-        
+
         Parameters can be passed two ways: if only two parameters
         are passed in, they will each be tuples of (layer.invariant,
         control_point_index), the first tuple being the dependent layer &
         second the master layer.  Otherwise, all 4 parameters are needed,
         individually specifying the dependent layer and its control point,
         followed by the truth layer and its control point.
-        
+
         Passing in two arguments is a convenience for using the return
         data from remove_control_point_links in the undo method of
         MoveControlPointCommand.
@@ -825,7 +825,7 @@ class LayerManager(BaseDocument):
 
     def get_control_point_links(self, layer):
         """Returns the list of control points that the specified layer links to
-        
+
         """
         links = []
         for dep, (truth, locked) in self.control_point_links.iteritems():
@@ -838,7 +838,7 @@ class LayerManager(BaseDocument):
     def remove_control_point_links(self, layer, remove_cp=-1, force=False):
         """Remove links to truth layer control points from the specified
         dependent layer.
-        
+
         If a remove_cp is specified, only remove that control point's
         reference, otherwise remove all control points links that are on the
         dependent layer.
@@ -856,7 +856,7 @@ class LayerManager(BaseDocument):
 
     def update_linked_control_points(self):
         """Update control points in depedent layers from the truth layers.
-        
+
         The truth_layer is the layer that control point values are taken from
         and propagated to the dependent layer
         """
@@ -871,7 +871,7 @@ class LayerManager(BaseDocument):
     def remove_all_links_to_layer(self, layer):
         """Remove all links to the specified layer, whether it's a truth layer
         or a dependent layer.
-        
+
         Used when deleting a layer.
         """
         to_remove = []

@@ -382,7 +382,6 @@ class ImageTextures(object):
         ).view(np.recarray)
         texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1, 8)
 
-        n = 0
         for i, image in enumerate(image_data):
             self.textures.append(gl.glGenTextures(1))
             gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[i])
@@ -459,7 +458,6 @@ class ImageTextures(object):
         )
 
     def set_projection(self, image_data, projection):
-        image_projected_rects = []
         log.debug("set_projection: image_list=%s" % str(list(image_data)))
         for i, image in enumerate(image_data):
             log.debug("  world rect #%d: %s" % (i, str(image.world_rect)))

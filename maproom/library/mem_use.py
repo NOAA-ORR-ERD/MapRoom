@@ -92,7 +92,7 @@ else:  # for posix systems only tested on OS-X for now
                            'GB', 'MB', 'KB'
         """
         import resource
-        useage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        usage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         div = {'GB': 1024 * 1024 * 1024,
                'MB': 1024 * 1024,
                'KB': 1024,
@@ -100,4 +100,4 @@ else:  # for posix systems only tested on OS-X for now
         d = div[units]
         if sys.platform.startswith("linux"):
             d /= 1024
-        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / float(d)
+        return usage / float(d)

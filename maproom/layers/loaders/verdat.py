@@ -51,9 +51,9 @@ class VerdatLoader(BaseLayerLoader):
 def load_verdat_file(uri):
     """
     Load data from a DOGS-style verdat file. Returns:
-    
+
     ( load_error_string, points, depths, line_segment_indexes, depth_unit )
-    
+
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
         points = numpy array (type = 2 x np.float64)
@@ -108,7 +108,6 @@ def load_verdat_file(uri):
     # read the boundary polygon indexes
 
     boundary_count = int(in_file.readline())
-    line_segments = []
     point_index = 0
     start_point_index = 0
 
@@ -149,7 +148,6 @@ def write_layer_as_verdat(f, layer):
         raise PointsError("Layer can't be saved as Verdat:\n\n%s" % "\n\n".join(errors), error_points)
 
     points = layer.points
-    lines = layer.line_segment_indexes
 
     f.write("DOGS")
     if layer.depth_unit is not None and layer.depth_unit != "unknown":

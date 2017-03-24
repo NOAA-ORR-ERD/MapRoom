@@ -48,7 +48,7 @@ class GDALLoader(BaseLayerLoader):
 class GDALImageData(ImageData):
     """ Temporary storage object to hold raw image data before converted to GL
     textures.
-    
+
     images = list of lists, where each sublist is a row of images
                 and each image is a numpy array [ 0 : max_y, 0 : max_x, 0 : num_bands ]
                 where:
@@ -89,7 +89,7 @@ class GDALImageData(ImageData):
 
 class ImageDataBlocks(GDALImageData):
     """Version of ImageData to load using GDAL blocks.
-    
+
     """
 
     def load_dataset(self, dataset):
@@ -127,9 +127,9 @@ def get_dataset(uri):
 def load_image_file(uri):
     """
     Load data from a raster file. Returns:
-    
+
     ( load_error_string, images, image_sizes, image_world_rects )
-    
+
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
         images = list of lists, where each sublist is a row of images
@@ -149,15 +149,15 @@ def load_image_file(uri):
                      such that projection( world_x, world_y ) = ( projected_x, projected_y )
     """
 
-    SCANLINE_DRIVER_NAMES = ("BSB")
+    # SCANLINE_DRIVER_NAMES = ("BSB")
 
     error, dataset = get_dataset(uri)
     if error:
         return (error, None)
 
-    has_scaline_data = False
-    if (dataset.GetDriver().ShortName in SCANLINE_DRIVER_NAMES):
-        has_scaline_data = True
+    # has_scaline_data = False
+    # if (dataset.GetDriver().ShortName in SCANLINE_DRIVER_NAMES):
+    #     has_scaline_data = True
 
     t0 = time.clock()
     image_data = ImageDataBlocks(dataset)

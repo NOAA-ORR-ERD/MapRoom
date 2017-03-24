@@ -49,7 +49,6 @@ class Boundary(object):
             points = a numpy array of points with at least .x and .y fields
         """
         points = self.points
-        boundary_size = len(self)
         inside = False
         search_count = 0
 
@@ -438,8 +437,6 @@ class Boundaries(object):
     def check_errors(self, throw_exception=False):
         errors = set()
         error_points = set()
-
-        t0 = time.clock()
 
         progress_log.info("Checking for branching boundaries...")
 

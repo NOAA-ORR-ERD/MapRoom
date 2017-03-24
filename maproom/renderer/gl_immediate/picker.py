@@ -121,7 +121,7 @@ class Picker(object):
 
         :param object_count: how many objects need colors
 
-        :param doubled = False: whether to double the array (used for drawing line segments) 
+        :param doubled = False: whether to double the array (used for drawing line segments)
         """
         # Get range of picker colors for this layer and object type
         color_data = self.get_next_color_block(layer, object_type, object_count)
@@ -179,17 +179,17 @@ class Picker(object):
                                            outputType=str,
                                            )
 
-        if (color_string is not None) and (color_string[0: 3] != self.BACKGROUND_COLOR_STRING):
-
-            full_string = gl.glReadPixels(x=0,
-                                          # glReadPixels() expects coordinates with a lower-left origin
-                                          y=0,
-                                          width=rect.width(self.screen_rect),
-                                          height=rect.height(self.screen_rect),
-                                          format=gl.GL_RGBA,
-                                          type=gl.GL_UNSIGNED_BYTE,  # gl.GL_UNSIGNED_INT_8_8_8_8
-                                          outputType=str,
-                                          )
+        # if (color_string is not None) and (color_string[0: 3] != self.BACKGROUND_COLOR_STRING):
+        #     print "WTF?"
+        #     full_string = gl.glReadPixels(x=0,
+        #                                   # glReadPixels() expects coordinates with a lower-left origin
+        #                                   y=0,
+        #                                   width=rect.width(self.screen_rect),
+        #                                   height=rect.height(self.screen_rect),
+        #                                   format=gl.GL_RGBA,
+        #                                   type=gl.GL_UNSIGNED_BYTE,  # gl.GL_UNSIGNED_INT_8_8_8_8
+        #                                   outputType=str,
+        #                                   )
 
         self.unbind_frame_buffer()
 

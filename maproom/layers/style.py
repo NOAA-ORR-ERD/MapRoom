@@ -172,7 +172,7 @@ class LayerStyle(object):
             version, info = txt.split(":", 1)
             order = getattr(self, "%s_serialization_order" % version)
             self.parse_style(order, info)
-        except Exception, e:
+        except Exception:
             raise
 
     def parse_style(self, order, txt):

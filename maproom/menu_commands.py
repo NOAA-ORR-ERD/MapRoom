@@ -411,7 +411,6 @@ class MoveLayerCommand(Command):
 
     def perform(self, editor):
         lm = editor.layer_manager
-        tree = editor.layer_tree_control
         self.undo_info = undo = UndoInfo()
         source_layer = lm.get_layer_by_invariant(self.moved_layer)
         target_layer = lm.get_layer_by_invariant(self.target_layer)

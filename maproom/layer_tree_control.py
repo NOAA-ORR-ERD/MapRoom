@@ -150,7 +150,7 @@ class LayerTreeControl(wx.Panel):
 
         for item in layer_tree[1:]:
             if (isinstance(item, Layer)):
-                node = self.add_layer(item, folder_node, expanded_state)
+                self.add_layer(item, folder_node, expanded_state)
             else:
                 self.add_layers_recursive(item, folder_node, expanded_state)
 
@@ -228,7 +228,6 @@ class LayerTreeControl(wx.Panel):
     def handle_begin_drag(self, event):
         (layer, ) = self.tree.GetItemPyData(event.GetItem()).Data
         item = event.GetItem()
-        checked = self.tree.IsItemChecked(item)
         if not layer.is_root():
             event.Allow()
             self.dragged_item = item

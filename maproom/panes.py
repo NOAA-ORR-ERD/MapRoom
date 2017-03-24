@@ -235,7 +235,7 @@ class SidebarPane(FrameworkPane):
     dock_layer = 9
 
     def flagged_cb(self, parent, task, **kwargs):
-        control = FlaggedPointPanel(parent, task)
+        self.flagged_control = FlaggedPointPanel(parent, task)
 
     def download_cb(self, parent, task, **kwargs):
         self.download_control = DownloadPanel(parent, task)

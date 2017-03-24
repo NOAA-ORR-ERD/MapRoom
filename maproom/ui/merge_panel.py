@@ -34,7 +34,7 @@ class DistanceCtrl(wx.Panel):
         try:
             is_m = self.parse_from_string(text)
             valid = True
-        except Exception as e:
+        except Exception:
             c.SetBackgroundColour("#FF8080")
             valid = False
         c.Refresh()

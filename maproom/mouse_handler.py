@@ -146,7 +146,6 @@ class MouseHandler(object):
     def get_snap_position(self, position):
         if self.can_snap:
             c = self.layer_canvas
-            e = c.project
             o = c.get_object_at_mouse_position(position)
             self.snapped_point = None, 0
             if (o is not None):
@@ -188,7 +187,6 @@ class MouseHandler(object):
 
     def process_mouse_motion_up(self, event):
         c = self.layer_canvas
-        e = c.project
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
 
@@ -212,12 +210,13 @@ class MouseHandler(object):
         self.update_status_text(proj_p, True, True, self.get_help_text())
 
     def process_mouse_motion_down(self, event):
-        c = self.layer_canvas
-        p = event.GetPosition()
-        proj_p = c.get_world_point_from_screen_point(p)
-        d_x = p[0] - c.mouse_down_position[0]
-        d_y = c.mouse_down_position[1] - p[1]
+        # c = self.layer_canvas
+        # p = event.GetPosition()
+        # proj_p = c.get_world_point_from_screen_point(p)
+        # d_x = p[0] - c.mouse_down_position[0]
+        # d_y = c.mouse_down_position[1] - p[1]
         # print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        pass
 
     def dragged_on_empty_space(self, event):
         pass
@@ -227,7 +226,6 @@ class MouseHandler(object):
         self.after_first_mouse_up = False
 
     def check_early_mouse_release(self, event):
-        c = self.layer_canvas
         p = event.GetPosition()
         dx = p[0] - self.first_mouse_down_position[0]
         dy = p[1] - self.first_mouse_down_position[1]
@@ -245,7 +243,6 @@ class MouseHandler(object):
     def process_right_mouse_down(self, event):
         c = self.layer_canvas
         e = c.project
-        lm = e.layer_manager
 
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
@@ -421,7 +418,6 @@ class MouseHandler(object):
     def get_current_object_info(self):
         c = self.layer_canvas
         e = c.project
-        lm = e.layer_manager
         if (e.clickable_object_mouse_is_over is None):
             raise NoObjectError
 
@@ -513,7 +509,6 @@ class PanMode(MouseHandler):
 
     def process_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
-        c = self.layer_canvas
         self.reset_early_mouse_params()
         self.first_mouse_down_position = event.GetPosition()
         self.pending_selection = self.current_object_under_mouse
@@ -529,7 +524,6 @@ class PanMode(MouseHandler):
         c = self.layer_canvas
         e = c.project
         p = event.GetPosition()
-        proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
         # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
@@ -757,7 +751,6 @@ class ObjectSelectionMode(MouseHandler):
     def process_mouse_down(self, event):
         c = self.layer_canvas
         e = c.project
-        lm = e.layer_manager
         proj_p = None
 
         self.last_modifier_state = None
@@ -936,7 +929,6 @@ class PointSelectionMode(ObjectSelectionMode):
 
     def clicked_on_empty_space(self, event, layer, world_point):
         # Mouse down only sets the initial point, after that it is ignored
-        c = self.layer_canvas
         self.reset_early_mouse_params()
         self.first_mouse_down_position = event.GetPosition()
         self.pending_selection = self.current_object_under_mouse
@@ -952,7 +944,6 @@ class PointSelectionMode(ObjectSelectionMode):
         c = self.layer_canvas
         e = c.project
         p = event.GetPosition()
-        proj_p = c.get_world_point_from_screen_point(p)
         d_x = p[0] - c.mouse_down_position[0]
         d_y = c.mouse_down_position[1] - p[1]
         # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
@@ -975,7 +966,6 @@ class PointSelectionMode(ObjectSelectionMode):
     def clicked_on_point(self, event, layer, point_index):
         c = self.layer_canvas
         e = c.project
-        vis = e.layer_visibility[layer]['layer']
 
         if (event.ControlDown()):
             if (layer.is_point_selected(point_index)):
@@ -1019,7 +1009,6 @@ class PointEditMode(ObjectSelectionMode):
     def clicked_on_point(self, event, layer, point_index):
         c = self.layer_canvas
         e = c.project
-        vis = e.layer_visibility[layer]['layer']
 
         if (event.ControlDown()):
             if (layer.is_point_selected(point_index)):
@@ -1044,8 +1033,6 @@ class PointEditMode(ObjectSelectionMode):
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_canvas
         e = c.project
-        lm = e.layer_manager
-        vis = e.layer_visibility[layer]['layer']
 
         if (not event.ControlDown() and not event.ShiftDown()):
             e.clear_all_selections(False)
@@ -1061,7 +1048,6 @@ class PointEditMode(ObjectSelectionMode):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)))
         c = self.layer_canvas
         e = c.project
-        vis = e.layer_visibility[layer]['layer']
         if layer.is_folder():
             e.window.error("You cannot add points to folder layers.", "Cannot Edit")
             return
@@ -1095,7 +1081,6 @@ class LineEditMode(PointEditMode):
     def clicked_on_point(self, event, layer, point_index):
         c = self.layer_canvas
         e = c.project
-        lm = e.layer_manager
         vis = e.layer_visibility[layer]['layer']
         message = ""
 
@@ -1128,8 +1113,6 @@ class LineEditMode(PointEditMode):
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_canvas
         e = c.project
-        lm = e.layer_manager
-        vis = e.layer_visibility[layer]['layer']
 
         if (event.ControlDown()):
             if (layer.is_line_segment_selected(line_segment_index)):
@@ -1155,8 +1138,6 @@ class LineEditMode(PointEditMode):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)))
         c = self.layer_canvas
         e = c.project
-        lm = e.layer_manager
-        vis = e.layer_visibility[layer]['layer']
         if layer.is_folder():
             e.window.error("You cannot add lines to folder layers.", "Cannot Edit")
             return
@@ -1332,8 +1313,6 @@ class ControlPointEditMode(ObjectSelectionMode):
 
     def clicked_on_point(self, event, layer, point_index):
         c = self.layer_canvas
-        e = c.project
-        vis = e.layer_visibility[layer]['layer']
 
         if (event.ControlDown()):
             maintain_aspect = True
@@ -1355,10 +1334,6 @@ class ControlPointEditMode(ObjectSelectionMode):
         self.clicked_on_point(event, layer, layer.center_point_index)
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
-        c = self.layer_canvas
-        e = c.project
-        lm = e.layer_manager
-        vis = e.layer_visibility[layer]['layer']
         layer.set_anchor_point(layer.center_point_index, maintain_aspect=True)
 
     def select_objects_in_rect(self, event, rect, layer):
@@ -1437,7 +1412,7 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
             lon1, lat1 = c.get_world_point_from_screen_point(c.mouse_down_position)
             lon2, lat2 = c.get_world_point_from_screen_point(c.mouse_move_position)
             rkm = haversine(lon1, lat1, lon2, lat2)
-            bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2), math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
+            # bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2), math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
             _, lat2 = distance_bearing(lon1, lat1, 0.0, rkm)
             lon2, _ = distance_bearing(lon1, lat1, 90.0, rkm)
             rx = lon2 - lon1

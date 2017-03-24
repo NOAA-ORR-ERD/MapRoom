@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class CompassRose(ScreenLayer):
     """Compass Rose layer
-    
+
     Shows a compass rose or north-up arrow as a graphic overlay
     """
     name = Unicode("Compass Rose")
@@ -150,7 +150,6 @@ class CompassRose(ScreenLayer):
         if picker.is_active:
             return
         log.log(5, "Rendering scale!!! pick=%s" % (picker))
-        render_window = renderer.canvas
 
         w = s_r[1][0]
         h = s_r[1][1]

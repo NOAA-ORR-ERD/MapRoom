@@ -96,7 +96,7 @@ def load_shapely(uri):
             print g.geom_type, g
             add_maproom_attributes_to_shapely_geom(g)
             geometry_list.append(g)
-    except (DriverLoadFailure, ImportError), e:
+    except (DriverLoadFailure, ImportError):
         source = None
         error, dataset = get_dataset(uri)
         if not error:
@@ -164,7 +164,6 @@ def shapely_to_polygon(geom_list):
     group = 0
     for geom_index, geom in enumerate(geom_list):
         feature_code = 0
-        name = "shapefile"
         group += 1
 
         ring_index_scoping_hack[0] = 0

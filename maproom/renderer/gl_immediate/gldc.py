@@ -88,8 +88,6 @@ class GLDC(object):
             if mode == gl.GL_TRIANGLE_FAN:
                 gl.glVertex2f(cx, cy)
             theta = 0.0
-            x = sx  # we start at angle = 0
-            y = 0
             i = num_segments
             while i > 0:
                 gl.glVertex2f(cx + sx * math.cos(theta), cy + sy * math.sin(theta))
