@@ -417,7 +417,7 @@ class MaproomProjectTask(FrameworkTask):
     @classmethod
     def can_edit(cls, document):
         mime = document.metadata.mime
-        return ( mime.startswith("image") or
+        return (mime.startswith("image") or
                  mime.startswith("application/x-maproom-") or
                  mime == "application/x-nc_ugrid" or
                  mime == "application/x-nc_particles"

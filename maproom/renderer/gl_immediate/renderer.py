@@ -260,14 +260,14 @@ class ImmediateModeRenderer():
             gl.glColor(0.5, 0.5, 0.5, 0.75)
 
             if filled:
-                gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+                gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
                 self.vbo_triangle_point_colors.bind()
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
                 gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
                 gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
-                gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+                gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
 
             gl.glLineWidth(line_width)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
@@ -740,9 +740,9 @@ class ImmediateModeRenderer():
         r, g, b, a = int_to_color_floats(fill_color)
         gl.glColor(r, g, b, a)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-        gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+        gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
         gl.glDrawArrays(gl.GL_TRIANGLE_FAN, 0, np.alen(self.vbo_line_segment_point_xys.data))
-        gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+        gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
         gl.glDisable(gl.GL_POLYGON_STIPPLE)
 
         self.vbo_line_segment_point_xys.unbind()

@@ -215,13 +215,13 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
         if self.is_valid():
             crs, bbox = self.get_bbox(corrected, wr, pr)
             img = self.tile_server.getmap(layers=corrected,
-#                             styles=styles,
-                             srs=crs,
-                             bbox=bbox,
-                             size=size,
-                             format='image/png',
-                             transparent=True
-                             )
+                                          # styles=styles,
+                                          srs=crs,
+                                          bbox=bbox,
+                                          size=size,
+                                          format='image/png',
+                                          transparent=True
+                                          )
             data = img.read()
         else:
             data = loading_png

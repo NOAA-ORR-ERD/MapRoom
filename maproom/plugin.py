@@ -34,7 +34,7 @@ class MaproomPlugin(FrameworkPlugin):
     ###########################################################################
 
     def _preferences_panes_default(self):
-        return [ MaproomPreferencesPane ]
+        return [MaproomPreferencesPane]
 
     def _task_factories_default(self):
         from maproom.task import MaproomProjectTask

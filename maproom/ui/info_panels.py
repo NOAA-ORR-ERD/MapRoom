@@ -653,15 +653,15 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
 
         if flags & wx.combo.ODCB_PAINTING_CONTROL:
             # for painting the control itself
-            dc.DrawLine( r.x+5, r.y+r.height/2, r.x+r.width - 5, r.y+r.height/2 )
+            dc.DrawLine(r.x+5, r.y+r.height/2, r.x+r.width - 5, r.y+r.height/2)
 
         else:
             # for painting the items in the popup
-            dc.DrawText(self.GetString( item ),
+            dc.DrawText(self.GetString(item),
                         r.x + 3,
-                        (r.y + 0) + ( (r.height/2) - dc.GetCharHeight() )/2
+                        (r.y + 0) + ((r.height/2) - dc.GetCharHeight())/2
                         )
-            dc.DrawLine( r.x+5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1 )
+            dc.DrawLine(r.x+5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1)
 
     # Overridden from OwnerDrawnComboBox, called for drawing the
     # background area of each item.
@@ -876,13 +876,13 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
 
         if flags & wx.combo.ODCB_PAINTING_CONTROL:
             # for painting the control itself
-            dc.DrawText(face, r.x+5, (r.y + 5) + ( (r.height/2) - dc.GetCharHeight() )/2)
+            dc.DrawText(face, r.x+5, (r.y + 5) + ((r.height/2) - dc.GetCharHeight())/2)
 
         else:
             # for painting the items in the popup
             dc.DrawText(face,
                         r.x + 3,
-                        (r.y + 5) + ( (r.height/2) - dc.GetCharHeight() )/2
+                        (r.y + 5) + ((r.height/2) - dc.GetCharHeight())/2
                         )
 
     # Overridden from OwnerDrawnComboBox, should return the height

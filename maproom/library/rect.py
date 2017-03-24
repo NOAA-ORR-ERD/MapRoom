@@ -6,7 +6,7 @@ EMPTY_RECT = ((0, 0), (0, 0))
 
 
 def is_rect_empty(r):
-    return r[ 0 ][ 0 ] is None or r[ 0 ][ 1 ] is None or r[ 1 ][ 0 ] is None or r[ 1 ][ 1 ] is None or \
+    return r[0][0] is None or r[0][1] is None or r[1][0] is None or r[1][1] is None or \
         width(r) <= 0 or height(r) <= 0
 
 

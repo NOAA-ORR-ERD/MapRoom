@@ -252,7 +252,7 @@ def format_coords_for_display(longitude, latitude, display_format):
 
 
 def format_lat_line_label(latitude):
-    ( degrees, minutes, direction ) = \
+    (degrees, minutes, direction) = \
         float_to_degrees_minutes(latitude, directions=("N", "S"))
 
     minutes = round(minutes)
@@ -264,7 +264,7 @@ def format_lat_line_label(latitude):
 
 
 def format_lon_line_label(longitude):
-    ( degrees, minutes, direction ) = \
+    (degrees, minutes, direction) = \
         float_to_degrees_minutes(longitude, directions=("E", "W"))
 
     minutes = round(minutes)

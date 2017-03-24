@@ -65,9 +65,9 @@ class GLDC(object):
 
         if self.fill_color is not None:
             gl.glColor(*self.fill_color)
-            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
             draw(gl.GL_TRIANGLE_FAN)
-            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
             gl.glColor(*self.line_color)
         draw(gl.GL_LINE_LOOP)
 
@@ -101,9 +101,9 @@ class GLDC(object):
 
         if self.fill_color is not None:
             gl.glColor(*self.fill_color)
-            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
             draw(gl.GL_TRIANGLE_FAN)
-            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
             gl.glColor(*self.line_color)
         draw(gl.GL_LINE_LOOP)
 
@@ -193,9 +193,9 @@ class GLDC(object):
 
         if self.fill_color is not None:
             gl.glColor(*self.fill_color)
-            gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
             draw(gl.GL_QUADS)
-            gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+            gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
             gl.glColor(*self.line_color)
         draw(gl.GL_LINE_LOOP)
 

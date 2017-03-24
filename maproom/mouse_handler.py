@@ -1058,7 +1058,7 @@ class PointEditMode(ObjectSelectionMode):
 #                layer.select_point(point_index)
 
     def clicked_on_empty_space(self, event, layer, world_point):
-        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
+        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)))
         c = self.layer_canvas
         e = c.project
         vis = e.layer_visibility[layer]['layer']
@@ -1152,7 +1152,7 @@ class LineEditMode(PointEditMode):
         e.refresh()
 
     def clicked_on_empty_space(self, event, layer, world_point):
-        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)) )
+        log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)))
         c = self.layer_canvas
         e = c.project
         lm = e.layer_manager

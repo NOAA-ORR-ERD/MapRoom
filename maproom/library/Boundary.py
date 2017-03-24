@@ -122,15 +122,15 @@ class Boundary(object):
         intersecting_segments = self_intersection_check(boundary_points)
         if len(intersecting_segments) > 0:
             # Get all the point indexes in the boundary point array:
-            #>>> s = [(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))]
-            #>>> {segment for segment in s}
-            #set([(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))])
-            #>>> {item for segment in s for item in segment}
-            #set([((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13)])
-            #>>> {point for segment in s for item in segment for point in item}
-            #set([(2.1, 3.2), (1.1, 2.2), 13, 14, 15, 16, (2.2, 3.3), (1.3, 2.3)])
-            #>>> {point for segment in s for item in segment for point in item[2:]}
-            #set([16, 13, 14, 15])
+            # >>> s = [(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))]
+            # >>> {segment for segment in s}
+            # set([(((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13))])
+            # >>> {item for segment in s for item in segment}
+            # set([((1.1, 2.2), (2.2, 3.3), 15, 16), ((2.1, 3.2), (1.3, 2.3), 14, 13)])
+            # >>> {point for segment in s for item in segment for point in item}
+            # set([(2.1, 3.2), (1.1, 2.2), 13, 14, 15, 16, (2.2, 3.3), (1.3, 2.3)])
+            # >>> {point for segment in s for item in segment for point in item[2:]}
+            # set([16, 13, 14, 15])
 
             error_points.update({self[point] for segment in intersecting_segments for item in segment for point in item[2:]})
 
@@ -323,7 +323,7 @@ class Boundaries(object):
 
                 # See http://alienryderflex.com/polygon_area/
                 area += \
-                    ( points.x[ previous_point ] + points.x[ adjacent_point ] ) * \
+                    (points.x[previous_point] + points.x[adjacent_point]) * \
                     (points.y[previous_point] - points.y[adjacent_point])
 
                 # If the adjacent point is the first point in the boundary,

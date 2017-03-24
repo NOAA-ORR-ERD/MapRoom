@@ -169,13 +169,13 @@ class DecimalDegreeGridLines(GridLines):
     STEP_COUNT = len(STEPS)
 
     def format_lat_line_label(self, latitude):
-        ( degrees, direction ) = \
+        (degrees, direction) = \
             coordinates.float_to_degrees(latitude, directions=("N", "S"))
 
         return u" %.2f° %s " % (degrees, direction)
 
     def format_lon_line_label(self, longitude):
-        ( degrees, direction ) = \
+        (degrees, direction) = \
             coordinates.float_to_degrees(longitude, directions=("E", "W"))
 
         return u" %.2f° %s " % (degrees, direction)

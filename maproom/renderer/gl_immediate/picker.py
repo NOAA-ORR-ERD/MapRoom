@@ -132,7 +132,7 @@ class Picker(object):
         if doubled:
             color_data = np.c_[color_data, color_data].reshape(-1)
 
-        self.vbo_colors = gl_vbo.VBO( color_data.view(dtype=np.uint8) )
+        self.vbo_colors = gl_vbo.VBO(color_data.view(dtype=np.uint8))
 
         gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
         self.vbo_colors.bind()
