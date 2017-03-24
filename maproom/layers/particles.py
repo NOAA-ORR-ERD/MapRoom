@@ -139,12 +139,12 @@ class ParticleLayer(PointBaseLayer):
 
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_color_map = {
-        7: color_floats_to_int(1.0, 0, 0, 1.0),
-        12: color_floats_to_int(1.0, 1.0, 1.0, 1.0),
-        0: color_floats_to_int(0, 0, 0, 1.0),
-        10: color_floats_to_int(1.0, 1.0, 0, 1.0),
-        2: color_floats_to_int(0, 1.0, 0, 1.0),
-        3: color_floats_to_int(0, 0, 1.0, 1.0),
+        7: color_floats_to_int(1.0, 0, 1.0, 1.0),  # off maps
+        12: color_floats_to_int(0.5, 0.5, 0.5, 1.0),  # to be removed
+        0: color_floats_to_int(0, 1.0, 0, 1.0),  # not released
+        10: color_floats_to_int(1.0, 1.0, 0, 1.0),  # evaporated
+        2: color_floats_to_int(0, 0, 0, 1.0),  # in water
+        3: color_floats_to_int(1.0, 0, 0, 1.0),  # on land
     }
 
     @classmethod
