@@ -324,7 +324,7 @@ class LayerTreeControl(wx.Panel):
         screen_point = event.GetPosition()
         size = self.GetSize()
         if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
-#            print "Mouse not over Tree: trying map!"
+            # print "Mouse not over Tree: trying map!"
             if self.project is not None:
                 self.project.control.on_mouse_wheel_scroll(event)
             return

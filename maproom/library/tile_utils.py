@@ -105,11 +105,11 @@ class URLTileServerInitRequest(TileServerInitRequest):
 
 class WMTSTileServerInitRequest(TileServerInitRequest):
     def get_data_from_server(self):
-#        if True:  # To test error handling, uncomment this
-#            import time
-#            time.sleep(1)
-#            self.error = "Test error"
-#            return
+        # if True:  # To test error handling, uncomment this
+        #     import time
+        #     time.sleep(1)
+        #     self.error = "Test error"
+        #     return
         try:
             tile_server = WebMapService(self.url, self.tile_host.version)
             self.setup(tile_server)

@@ -444,7 +444,7 @@ class ImageTextures(object):
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
 
     def update_texture(self, texture_index, w, h, image):
-#        print "ImageData: loading texture index %d" % texture_index
+        # print "ImageData: loading texture index %d" % texture_index
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[texture_index])
         gl.glTexImage2D(
             gl.GL_TEXTURE_2D,

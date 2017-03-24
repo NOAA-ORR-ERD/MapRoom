@@ -25,16 +25,16 @@ log = logging.getLogger(__name__)
 
 class VectorObjectLayer(LineLayer):
     """Layer for a vector object
-    
+
     Vector objects have control points (the points that can be moved by the
     user) and rasterized points, the points created by the control points
     in order to generate whatever shape is needed.  E.g.  a simple spline
     might have 4 control points, but only those endpoints on the drawn object
     actually go through the control points so the rasterized points are
     computed from those control points.
-    
+
     The self.points array contains the control points
-    
+
     NOTE: Each subclass of VectorObjectLayer must have a unique string used for
     the class attribute 'type'.  This string is what's used when deserializing
     from a saved project file, and if multiple objects use the same string,
@@ -139,12 +139,12 @@ class VectorObjectLayer(LineLayer):
 
     def rebuild_image(self, renderer):
         """Hook for image-based renderers to rebuild image data
-        
+
         """
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
-        
+
         """
         projected_point_data = self.compute_projected_point_data()
         r, g, b, a = int_to_color_floats(self.style.line_color)
@@ -156,7 +156,7 @@ class VectorObjectLayer(LineLayer):
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Renders the outline of the vector object.
-        
+
         If the vector object subclass is fillable, subclass from
         FillableVectorObject instead of this base class.
         """
@@ -167,7 +167,7 @@ class VectorObjectLayer(LineLayer):
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Renders the outline of the vector object.
-        
+
         If the vector object subclass is fillable, subclass from
         FillableVectorObject instead of this base class.
         """
@@ -179,7 +179,7 @@ class LineVectorObject(VectorObjectLayer):
     """Line uses 3 control points in the self.points array.  The midpoint is an
     additional control point, which is constrained and not independent of the
     ends.  This is used as the control point when translating.
-    
+
     """
     name = Unicode("Line")
 
@@ -264,7 +264,7 @@ class LineVectorObject(VectorObjectLayer):
 
     def move_control_point(self, drag, anchor, dx, dy, about_center=False):
         """Moving the control point changes the size of the bounding rectangle.
-        
+
         Assuming the drag point is one of the corners and the anchor is the
         opposite corner, the points are constrained as follows: the drag point
         moves by both dx & dy.  The anchor point doesn't move at all, and of
@@ -290,7 +290,7 @@ class LineVectorObject(VectorObjectLayer):
 
     def move_bounding_box_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         """ Adjust points within object after bounding box has been resized
-        
+
         Returns a list of affected layers (child layers can be resized as a
         side effect!)
         """
@@ -391,7 +391,7 @@ class LineVectorObject(VectorObjectLayer):
 
     def get_marker_points(self):
         """Return a tuple of point indexes for each marker.
-        
+
         The first index is the point where the marker will be drawn.  The
         second is the other end of the line which is used to align the marker
         in the proper direction.
@@ -401,7 +401,7 @@ class LineVectorObject(VectorObjectLayer):
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Marker rendering occurs in screen coordinates
-        
+
         It doesn't scale with the image, it scales with the line size on screen
         """
         log.log(5, "Rendering markers!!! pick=%s" % (picker))
@@ -444,10 +444,10 @@ class FillableVectorObject(LineVectorObject):
 class RectangleMixin(object):
     """Rectangle uses 4 control points in the self.points array, and nothing in
     the polygon points array.  All corner points can be used as control points.
-    
+
     The center is an additional control point, which is constrained and not
     independent of the corners.
-    
+
      3     6     2
       o----o----o
       |         |
@@ -542,7 +542,7 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
 class EllipseVectorObject(RectangleVectorObject):
     """Rectangle uses 4 control points in the self.points array, and nothing in
     the polygon points array.  All corner points can be used as control points.
-    
+
     """
     name = Unicode("Ellipse")
 
@@ -621,7 +621,7 @@ class EllipseVectorObject(RectangleVectorObject):
 class CircleVectorObject(EllipseVectorObject):
     """Special case of the ellipse where the object is constrained to be a
     circle on resizing.
-    
+
     """
     name = Unicode("Circle")
 
@@ -678,11 +678,11 @@ class CircleVectorObject(EllipseVectorObject):
 
 class ScaledImageObject(RectangleVectorObject):
     """Texture mapped image object that scales to the lat/lon view
-    
+
     Image uses 4 control points like the rectangle, but uses a texture
     object as the foreground.  The background color will show through in
     trasparent pixels.
-    
+
     """
     name = Unicode("Image")
 
@@ -707,7 +707,7 @@ class ScaledImageObject(RectangleVectorObject):
 
     def rebuild_image(self, renderer):
         """Update renderer
-        
+
         """
         projection = self.manager.project.layer_canvas.projection
         if self.image_data is None:
@@ -718,7 +718,7 @@ class ScaledImageObject(RectangleVectorObject):
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Renders the outline of the vector object.
-        
+
         If the vector object subclass is fillable, subclass from
         FillableVectorObject instead of this base class.
         """
@@ -751,7 +751,7 @@ class OverlayMixin(object):
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Marker rendering occurs in screen coordinates
-        
+
         It doesn't scale with the image, it scales with the line size on screen
         """
         log.log(5, "Rendering overlay image %s!!! pick=%s" % (self.name, picker))
@@ -778,7 +778,7 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
     """OverlayLine uses the first control point as the fixed point in world
     coordinate space, and the 2nd point as the offset in screen space so that
     the resulting line is always the same length regardless of zoom
-    
+
     """
     name = Unicode("OverlayLine")
 
@@ -855,11 +855,11 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
 
 class OverlayImageObject(OverlayMixin, RectangleVectorObject):
     """Texture mapped image object that is fixed in size relative to the screen
-    
+
     Image uses the same control points as the rectangle, but uses a texture
     object as the foreground.  The background color will show through in
     trasparent pixels.
-    
+
     """
     name = Unicode("Overlay Image")
 
@@ -930,7 +930,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
     def rebuild_image(self, renderer):
         """Update renderer
-        
+
         """
         if self.rebuild_needed:
             renderer.release_textures()
@@ -961,11 +961,11 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
 class OverlayScalableImageObject(OverlayImageObject):
     """Texture mapped image object that is fixed in size relative to the screen
-    
+
     Image uses 4 control points like the rectangle, but uses a texture
     object as the foreground.  The background color will show through in
     trasparent pixels.
-    
+
     """
     name = Unicode("Scalable Image")
 
@@ -1038,7 +1038,7 @@ class OverlayScalableImageObject(OverlayImageObject):
     def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         # Note: center point drag is rigid body move so text box size is only
         # recalculated if dragging some other control point
-#        print "BEFORE: move_cp: text w,h", self.text_width, self.text_height
+        # print "BEFORE: move_cp: text w,h", self.text_width, self.text_height
         if drag < self.center_point_index:
             c = self.manager.project.layer_canvas
             p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
@@ -1076,11 +1076,11 @@ class OverlayScalableImageObject(OverlayImageObject):
 
 class OverlayTextObject(OverlayScalableImageObject):
     """Texture mapped image object that is fixed in size relative to the screen
-    
+
     Image uses 4 control points like the rectangle, but uses a texture
     object as the foreground.  The background color will show through in
     trasparent pixels.
-    
+
     """
     name = Unicode("Text")
 
@@ -1119,7 +1119,7 @@ class OverlayTextObject(OverlayScalableImageObject):
 
 class OverlayIconObject(OverlayScalableImageObject):
     """Texture mapped Marplot icon object that is fixed in size relative to the screen
-    
+
     Uses the Marplot category icons.
     """
     name = Unicode("Icon")
@@ -1160,14 +1160,14 @@ class PolylineMixin(object):
     """Polyline uses 4 control points in the self.points array as the control
     points for the bounding box, one center point, and subsequent points as
     the list of points that define the segmented line.
-    
+
     Adjusting the corner control points will resize or move the entire
     polyline.  The center is an additional control point, which is constrained
     and not independent of the corners.  Note that the control points that
     represent the line don't have to start or end at one of the corners; the
     bounding box points are calculated every time a point is added or removed
     from the polyline.
-    
+
      3           2
       o---------o
       |         |
@@ -1255,7 +1255,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
 
     def get_area(self):
         """Adapted from http://stackoverflow.com/questions/4681737
-        
+
         Assumes spherical earth so there will be an inaccuracy, but it's good
         enough for this purpose for now.
         """
@@ -1342,7 +1342,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
 
 class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     """Layer for vector annotation image
-    
+
     """
     name = Unicode("Annotation Layer")
 

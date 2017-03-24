@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 class Grid(ScreenLayer):
     """Root layer
-    
+
     Only one root layer per project.
     """
     name = Unicode("Lon/Lat Grid")
@@ -61,16 +61,16 @@ class Grid(ScreenLayer):
             return
         log.log(5, "Rendering grid!!! pick=%s" % (picker))
         render_window = renderer.canvas
-#        print "projected_rect = %r" % (projected_rect,)
-#        print "screen_rect = %r" % (screen_rect,)
+        # print "projected_rect = %r" % (projected_rect,)
+        # print "screen_rect = %r" % (screen_rect,)
         self.resize(renderer, world_rect, screen_rect)
-#        print "lon_step = " + str(self.lon_step)
-#        print "lat_step = " + str(self.lat_step)
-#        print "world_rect = " + str(world_rect)
+        # print "lon_step = " + str(self.lon_step)
+        # print "lat_step = " + str(self.lat_step)
+        # print "world_rect = " + str(world_rect)
 
         for longitude in self.lon_steps:
 
-#            print "  longitude = " + str(longitude)
+            # print "  longitude = " + str(longitude)
             if (longitude < -360 or longitude > 360):
                 continue
             w_p = (longitude, world_rect[0][1])
@@ -87,7 +87,7 @@ class Grid(ScreenLayer):
 
         for latitude in self.lat_steps:
 
-#            print "  latitude = " + str(latitude)
+            # print "  latitude = " + str(latitude)
             if (latitude < -89 or latitude > 89):
                 continue
             w_p = (world_rect[0][0], latitude)

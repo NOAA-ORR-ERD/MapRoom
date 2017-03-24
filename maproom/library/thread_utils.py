@@ -49,11 +49,11 @@ class WMSRequestServer(UnskippableURLRequest):
         return wms
 
     def get_data_from_server(self):
-#        if True:  # To test error handling, uncomment this
-#            import time
-#            time.sleep(1)
-#            self.error = "Test error"
-#            return
+        # if True:  # To test error handling, uncomment this
+        #     import time
+        #     time.sleep(1)
+        #     self.error = "Test error"
+        #     return
         try:
             wms = self.get_wms()
             self.setup(wms)
