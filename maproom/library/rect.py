@@ -156,13 +156,11 @@ def get_rect_of_points(points):
 
 
 def n_or_s(y):
-    if y < 0: return "S"
-    return "N"
+    return "S" if y < 0 else "N"
 
 
 def e_or_w(x):
-    if x < 0: return "W"
-    return "E"
+    return "W" if x < 0 else "E"
 
 
 def pretty_format(r):
