@@ -96,7 +96,7 @@ class ReportLabRenderer(BaseRenderer):
             converted = [black for i in range(count)]
         else:
             c = color.view(dtype=np.uint32)
-            converted = [((r, g, b), a) for r, g, b, a in [int_to_color_floats(color) for color in c]]
+            converted = [((r, g, b), a) for r, g, b, a in [int_to_color_floats(intcolor) for intcolor in c]]
         return converted
 
     def set_points(self, xy, depths, color=None, num_points=-1):

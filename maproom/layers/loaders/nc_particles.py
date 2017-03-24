@@ -138,5 +138,5 @@ class ParticleLoader(BaseLayerLoader):
         if warnings:
             warnings[0:0] = ["The following layers have spurious values. Those values have been removed.\n"]
         parent.load_warning_string = "\n  ".join(warnings)
-        log.debug("Adding layers: %s" % ("\n".join([str(layer) for layer in layers])))
+        log.debug("Adding layers: %s" % ("\n".join([str(lr) for lr in layers])))
         return layers
