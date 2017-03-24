@@ -677,7 +677,7 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
         bgCol = wx.Colour(240, 240, 250)
         dc.SetBrush(wx.Brush(bgCol))
         dc.SetPen(wx.Pen(bgCol))
-        dc.DrawRectangleRect(rect);
+        dc.DrawRectangleRect(rect)
 
     # Overridden from OwnerDrawnComboBox, should return the height
     # needed to display an item in the popup, or -1 for default
@@ -687,7 +687,7 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
     # Overridden from OwnerDrawnComboBox.  Callback for item width, or
     # -1 for default/undetermined
     def OnMeasureItemWidth(self, item):
-        return -1;  # default - will be measured from text width
+        return -1  # default - will be measured from text width
 
 
 class LineStyleField(InfoField):
@@ -893,7 +893,7 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
     # Overridden from OwnerDrawnComboBox.  Callback for item width, or
     # -1 for default/undetermined
     def OnMeasureItemWidth(self, item):
-        return -1;  # default - will be measured from text width
+        return -1  # default - will be measured from text width
 
 
 class FontStyleField(InfoField):
