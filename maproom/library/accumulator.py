@@ -102,7 +102,7 @@ class accumulator(object):
             self._length += len(items)
         except ValueError:  # the buffer is not big enough, or wrong shape
             items = np.asarray(items, dtype=self.dtype)
-            if items.shape[1:] <> self._block_shape:
+            if items.shape[1:] != self._block_shape:
                 raise
             self.resize((self._length + len(items)) * self.BUFFER_EXTEND_SIZE)
             self.extend(items)
