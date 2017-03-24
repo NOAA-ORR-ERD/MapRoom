@@ -23,7 +23,7 @@ progress_log = logging.getLogger("progress")
 
 class LineLayer(PointLayer):
     """Layer for points/lines/polygons.
-    
+
     """
     name = Unicode("Ugrid Layer")
 
@@ -262,7 +262,7 @@ class LineLayer(PointLayer):
                 p = path[len(path) - 1]
                 connections = self.find_points_connected_to_point(p)
                 for q in connections:
-                    if (not q in path):
+                    if (q not in path):
                         extended = []
                         extended.extend(path)
                         extended.append(q)
@@ -305,7 +305,7 @@ class LineLayer(PointLayer):
                 i = path[len(path) - 1]
                 connections = self.find_lines_connected_to_line(i)
                 for j in connections:
-                    if (not j in path):
+                    if (j not in path):
                         extended = []
                         extended.extend(path)
                         extended.append(j)
@@ -557,7 +557,7 @@ class LineLayer(PointLayer):
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer
-        
+
         """
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
@@ -565,7 +565,7 @@ class LineLayer(PointLayer):
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Actually draw the screen using the current display canvas renderer
-        
+
         """
         log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
@@ -597,7 +597,7 @@ class LineLayer(PointLayer):
 
 class LineEditLayer(LineLayer):
     """Layer for points/lines/rings.
-    
+
     """
     name = Unicode("Line Edit Layer")
 

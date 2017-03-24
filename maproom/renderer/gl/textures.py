@@ -36,7 +36,7 @@ class Image(object):
 class ImageData(object):
     """ Temporary storage object to hold raw image data before converted to GL
     textures.
-    
+
     images = list of lists, where each sublist is a row of images
                 and each image is a numpy array [ 0 : max_y, 0 : max_x, 0 : num_bands ]
                 where:
@@ -73,7 +73,7 @@ class ImageData(object):
 
     def release_images(self):
         """Free image data after renderer is done converting to textures.
-        
+
         This has no effect when using the background loader because each image
         chunk is sent to the main thread through a callback.  When using the
         normal non-threaded loader, the entire image is loaded into memory and
@@ -298,7 +298,7 @@ class TileImageData(ImageData):
         for x in range(x1, x2 + 1):
             for y in range(y1, y2 + 1):
                 tile = (x, y)
-                if not tile in self.requested:
+                if tile not in self.requested:
                     needed.append(tile)
         return needed
 
@@ -315,12 +315,12 @@ class TileImageData(ImageData):
         for x in [x1, x2]:
             for y in range(y1, y2 + 1):
                 tile = (x, y)
-                if not tile in self.requested:
+                if tile not in self.requested:
                     needed.append(tile)
         for y in [y1, y2]:
             for x in range(x1 + 1, x2):
                 tile = (x, y)
-                if not tile in self.requested:
+                if tile not in self.requested:
                     needed.append(tile)
         return needed
 
@@ -365,7 +365,7 @@ class TileImageData(ImageData):
 
 class ImageTextures(object):
     """Class to allow sharing of textures between views
-    
+
     """
 
     def __init__(self, image_data):
@@ -529,7 +529,7 @@ class VBOTexture(object):
 
 class TileTextures(object):
     """Class to allow sharing of textures between views
-    
+
     """
     static_renderer = False
 

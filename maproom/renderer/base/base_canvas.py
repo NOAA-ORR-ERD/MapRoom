@@ -59,7 +59,7 @@ class BaseCanvas(object):
         return self.layer_renderers[layer]
 
     def update_renderer(self, layer):
-        if layer.is_renderable and not layer in self.layer_renderers:
+        if layer.is_renderable and layer not in self.layer_renderers:
             log.debug("update_renderers: rebuilding layer %s" % layer)
             r = self.new_renderer(layer)
             layer.rebuild_renderer(r)
