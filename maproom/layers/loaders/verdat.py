@@ -64,7 +64,7 @@ def load_verdat_file(uri):
 
     points = accumulator(block_shape=(2,), dtype=np.float64)
     depths = accumulator(dtype=np.float32)
-    line_segment_indexes = accumulator(block_shape=(2,), dtype = np.uint32)
+    line_segment_indexes = accumulator(block_shape=(2,), dtype=np.uint32)
 
     in_file = fsopen(uri, "r")
 

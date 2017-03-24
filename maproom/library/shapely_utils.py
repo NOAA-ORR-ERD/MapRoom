@@ -122,8 +122,8 @@ def copy_maproom_attributes(geom, source):
 
 def shapely_to_polygon(geom_list):
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
-    polygon_starts = accumulator(block_shape=(1,), dtype = np.uint32)
-    polygon_counts = accumulator(block_shape=(1,), dtype = np.uint32)
+    polygon_starts = accumulator(block_shape=(1,), dtype=np.uint32)
+    polygon_counts = accumulator(block_shape=(1,), dtype=np.uint32)
     ring_identifiers = []
     ring_groups = []
     total_points_scoping_hack = [0]
