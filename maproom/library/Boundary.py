@@ -188,7 +188,7 @@ class Boundaries(object):
             lines = numpy array of point-to-point line segments with at least .point1 and point2 fields
                     (where point1 and point2 are indexes into the points array)
             line_count = number of line segments to consider
-            
+
             output: ( boundaries, non_boundary_points )
                         where:
                           boundaries = a python list of ( boundary, area )
@@ -383,9 +383,9 @@ class Boundaries(object):
             # that boundary.
             points = (
                 [(tuple(points[num_points - 1]), tuple(points[0]), start_index, boundary_id),
-                 (tuple(points[0]), tuple(points[num_points - 1]), start_index, boundary_id)]
-                + [(tuple(points[i - 1]), tuple(points[i]), i + start_index, boundary_id) for i in range(1, num_points)]
-                + [(tuple(points[i]), tuple(points[i - 1]), i + start_index, boundary_id) for i in range(1, num_points)]
+                 (tuple(points[0]), tuple(points[num_points - 1]), start_index, boundary_id)] +
+                [(tuple(points[i - 1]), tuple(points[i]), i + start_index, boundary_id) for i in range(1, num_points)] +
+                [(tuple(points[i]), tuple(points[i - 1]), i + start_index, boundary_id) for i in range(1, num_points)]
             )
             boundary_points.extend(points)
             boundary_min_max.append((start_index, start_index + num_points - 1))
@@ -443,7 +443,7 @@ class Boundaries(object):
 
         progress_log.info("Checking for branching boundaries...")
 
-        if len(self.branch_points) > 0 and self.allow_branches == False:
+        if len(self.branch_points) > 0 and not self.allow_branches:
             errors.add("Branching boundaries.")
             error_points.update(self.branch_points)
 
@@ -506,8 +506,7 @@ def segments_intersect(a, b, c, d):
     if (dir1 > 0.0) != (dir2 > 0.0) or (not dir1) != (not dir2):
         dir1 = (d[0] - c[0]) * (a[1] - c[1]) - (a[0] - c[0]) * (d[1] - c[1])
         dir2 = (d[0] - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (d[1] - c[1])
-        return ((dir1 > 0.0) != (dir2 > 0.0)
-                or (not dir1) != (not dir2))
+        return ((dir1 > 0.0) != (dir2 > 0.0) or (not dir1) != (not dir2))
     return False
 
 
@@ -520,7 +519,7 @@ def self_intersection_check(points):
     also quickly identify self-intersecting polygons in most cases,
     although it is slower for severely self-intersecting cases due to
     its startup cost.
-    
+
     :returns: list of intersecting segments, where each entry contains
     two tuples each representing one of the intersecting segments.  Each
     tuple contains 4 items representingthe intersecting segment: a tuple
@@ -529,8 +528,7 @@ def self_intersection_check(points):
     for both the start and end point in the segment.
     """
     indices = range(len(points))
-    points = ([(tuple(points[i - 1]), tuple(points[i]), i, 0) for i in indices]
-              + [(tuple(points[i]), tuple(points[i - 1]), i, 0) for i in indices])
+    points = ([(tuple(points[i - 1]), tuple(points[i]), i, 0) for i in indices] + [(tuple(points[i]), tuple(points[i - 1]), i, 0) for i in indices])
     return general_intersection_check(points, [(0, len(indices) - 1)])
 
 
@@ -543,15 +541,15 @@ def general_intersection_check(points, boundary_min_max):
     also quickly identify self-intersecting polygons in most cases,
     although it is slower for severely self-intersecting cases due to
     its startup cost.
-    
+
     :param points: list of points and line segment numbers set up in 4-tuple
     form: tuple of first coord in line, tuple of second coord of line, index
     number, and boundary id number. The boundary id number is an index into
     the boundary_min_max array below.
-    
+
     :param boundary_min_max: list of tuples defining a closed-loop boundary,
     each tuple contains the min and max index for each boundary.
-    
+
     :returns: list of intersecting segments, where each entry contains
     two tuples each representing one of the intersecting segments.  Each
     tuple contains 4 items representingthe intersecting segment: a tuple
@@ -574,8 +572,7 @@ def general_intersection_check(points, boundary_min_max):
             for open_start, open_end, open_index, open_id in open_segments.values():
                 # ignore adjacent edges (note that the index number wraps
                 # around within each closed-loop boundary)
-                if (((seg_id != open_id) or ((boundary_min_max[seg_id][1] - boundary_min_max[seg_id][0]) > abs(index - open_index) > 1))
-                        and segments_intersect(seg_start, seg_end, open_start, open_end)):
+                if (((seg_id != open_id) or ((boundary_min_max[seg_id][1] - boundary_min_max[seg_id][0]) > abs(index - open_index) > 1)) and segments_intersect(seg_start, seg_end, open_start, open_end)):
                     seg_prev_index = index - 1
                     if seg_prev_index < boundary_min_max[seg_id][0]:
                         seg_prev_index = boundary_min_max[seg_id][1]
