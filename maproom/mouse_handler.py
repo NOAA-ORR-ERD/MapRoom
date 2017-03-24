@@ -463,7 +463,7 @@ class MouseHandler(object):
             y = layer.points.y[index]
             s = c.get_numpy_screen_point_from_world_point((x, y))
             x, y = s[0], s[1]
-            (x1, y1, x2, y2) = rect.get_normalized_coordinates((x-5, y-5), (x+5, y+5))
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates((x - 5, y - 5), (x + 5, y + 5))
             r = ((x1, y1), (x2, y2))
             renderer.draw_screen_box(r, 0.0, 0.0, 0.0, 1.0)
 
@@ -1280,7 +1280,7 @@ class ZoomRectMode(RectSelectMode):
         d_x = x2 - x1
         d_y = y2 - y1
         if (d_x >= 5 and d_y >= 5):
-            w_r =  c.get_world_rect_from_screen_rect(((x1, y1), (x2, y2)))
+            w_r = c.get_world_rect_from_screen_rect(((x1, y1), (x2, y2)))
             center, units_per_pixel = c.calc_zoom_to_world_rect(w_r, False)
             cmd = ViewportCommand(None, center, units_per_pixel)
             e.process_command(cmd)
@@ -1437,7 +1437,7 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
             lon1, lat1 = c.get_world_point_from_screen_point(c.mouse_down_position)
             lon2, lat2 = c.get_world_point_from_screen_point(c.mouse_move_position)
             rkm = haversine(lon1, lat1, lon2, lat2)
-            bearing = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), math.cos(lat1)*math.sin(lat2)-math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1))
+            bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2), math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
             _, lat2 = distance_bearing(lon1, lat1, 0.0, rkm)
             lon2, _ = distance_bearing(lon1, lat1, 90.0, rkm)
             rx = lon2 - lon1

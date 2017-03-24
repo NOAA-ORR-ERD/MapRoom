@@ -46,7 +46,7 @@ def restore_layers(editor, old_layer_data, undo=None):
 
 class MoveControlPointCommand(Command):
     short_name = "move_cpt"
-    serialize_order =  [
+    serialize_order = [
         ('layer', 'layer'),
         ('drag', 'int'),
         ('anchor', 'int'),
@@ -128,7 +128,7 @@ class MoveControlPointCommand(Command):
 
 class UnlinkControlPointCommand(Command):
     short_name = "unlink_cpt"
-    serialize_order =  [
+    serialize_order = [
         ('layer', 'layer'),
         ('anchor', 'int'),
         ]
@@ -160,7 +160,7 @@ class UnlinkControlPointCommand(Command):
 
 class RotateObjectCommand(Command):
     short_name = "rotate_obj"
-    serialize_order =  [
+    serialize_order = [
         ('layer', 'layer'),
         ('drag', 'int'),
         ('dx', 'float'),
@@ -335,7 +335,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         layer.grouped = True
         layer.name = self.ui_name
 
-        halfway = ((self.cp1[0] + self.cp2[0])/2.0, (self.cp1[1] + self.cp2[1])/2.0)
+        halfway = ((self.cp1[0] + self.cp2[0]) / 2.0, (self.cp1[1] + self.cp2[1]) / 2.0)
         line = OverlayLineObject(manager=lm)
         line.set_opposite_corners(self.cp1, halfway)
         self.style.line_start_marker = 2

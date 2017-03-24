@@ -794,7 +794,7 @@ class ImmediateModeRenderer():
         w = rect.width(r)
         h = rect.height(r)
         scale = min(w / svg.width, h / svg.height)
-        x_origin = x - (scale * svg.width)/2
-        y_origin = y - (scale * svg.height)/2
+        x_origin = x - (scale * svg.width) / 2
+        y_origin = y - (scale * svg.height) / 2
         svg.draw(x_origin, y_origin, scale=scale, angle=0)
         gl.glEnable(gl.GL_TEXTURE_2D)

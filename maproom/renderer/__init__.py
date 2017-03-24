@@ -1,6 +1,6 @@
 # flake8: noqa
 
-driver="gl_immediate"
+driver = "gl_immediate"
 
 from .base.base_canvas import BaseCanvas
 from .base.picker import NullPicker

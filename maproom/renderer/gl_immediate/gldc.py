@@ -92,7 +92,7 @@ class GLDC(object):
             y = 0
             i = num_segments
             while i > 0:
-                gl.glVertex2f(cx + sx*math.cos(theta), cy + sy*math.sin(theta))
+                gl.glVertex2f(cx + sx * math.cos(theta), cy + sy * math.sin(theta))
                 theta += dtheta
                 i -= 1
             if mode == gl.GL_TRIANGLE_FAN:
@@ -123,7 +123,7 @@ class GLDC(object):
     def DrawEllipticArcPointSize(self, pt, sz, start, end):
         pass
 
-    def DrawLabel(self, text, rect, alignment=wx.ALIGN_LEFT|wx.ALIGN_TOP, indexAccel=-1):
+    def DrawLabel(self, text, rect, alignment=wx.ALIGN_LEFT | wx.ALIGN_TOP, indexAccel=-1):
         pass
 
     def DrawLine(self, x1, y1, x2, y2):
@@ -252,7 +252,7 @@ class GLDC(object):
             self.fill_color = None
         else:
             r, g, b, a = color.Get(True)
-            self.fill_color = r/255., g/255., b/255., a/255.
+            self.fill_color = r / 255., g / 255., b / 255., a / 255.
 
     def SetClippingRect(self, rect):
         pass
@@ -266,7 +266,7 @@ class GLDC(object):
     def SetPen(self, pen):
         color = pen.GetColour()
         r, g, b, a = color.Get(True)
-        self.line_color = r/255., g/255., b/255., a/255.
+        self.line_color = r / 255., g / 255., b / 255., a / 255.
         gl.glColor(*self.line_color)
         gl.glLineWidth(pen.GetWidth())
         gl.glPointSize(pen.GetWidth())

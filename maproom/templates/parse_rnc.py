@@ -46,7 +46,7 @@ class RNCChart(object):
                 # to the last item if we find an arg that doesn't have a ":"
                 # keyword separator
                 if last == "title":
-                    self.title +=  "; " + arg
+                    self.title += "; " + arg
                 elif last == "file name":
                     self.filename += "; " + arg
 

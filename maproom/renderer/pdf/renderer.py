@@ -58,8 +58,8 @@ class PDFImage(object):
             self.xywh.append((x, y, w, h))
 
     def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
-        left = int(point[0] - (image_data.x/2) * scale)
-        bottom = int(point[1] + (image_data.y/2) * scale)
+        left = int(point[0] - (image_data.x / 2) * scale)
+        bottom = int(point[1] + (image_data.y / 2) * scale)
         right = left + (image_data.x * scale)
         top = bottom + (image_data.y * scale)
         # flip y to treat rect as normal opengl coordinates
@@ -282,7 +282,7 @@ class ReportLabRenderer(BaseRenderer):
             p.moveTo(x, h - y)
             for x, y in points[1:]:
                 log.debug("%f -> %f" % (x, y))
-                p.lineTo(x, h -y)
+                p.lineTo(x, h - y)
             p.close()
             c.pdf.drawPath(p, fill=filled, stroke=1)
 

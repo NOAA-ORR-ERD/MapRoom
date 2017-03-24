@@ -75,7 +75,7 @@ class InsertPointCommand(Command):
 
 class MovePointsCommand(Command):
     short_name = "move_pt"
-    serialize_order =  [
+    serialize_order = [
         ('layer', 'layer'),
         ('indexes', 'list_int'),
         ('dx', 'float'),
@@ -131,7 +131,7 @@ class MovePointsCommand(Command):
 
 class NormalizeLongitudeCommand(Command):
     short_name = "norm_long"
-    serialize_order =  [
+    serialize_order = [
         ('layer', 'layer'),
         ]
 
@@ -166,7 +166,7 @@ class NormalizeLongitudeCommand(Command):
 
 class ChangeDepthCommand(Command):
     short_name = "depth"
-    serialize_order =  [
+    serialize_order = [
         ('layer', 'layer'),
         ('indexes', 'list_int'),
         ('depth', 'float'),
@@ -209,7 +209,7 @@ class ChangeDepthCommand(Command):
 
 class InsertLineCommand(Command):
     short_name = "line_to"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('index', 'int'),
             ('world_point', 'point'),
@@ -245,7 +245,7 @@ class InsertLineCommand(Command):
 
 class ConnectPointsCommand(Command):
     short_name = "line"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('index1', 'int'),
             ('index2', 'int'),
@@ -276,7 +276,7 @@ class ConnectPointsCommand(Command):
 
 class SplitLineCommand(Command):
     short_name = "split"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('index', 'int'),
             ('world_point', 'point'),
@@ -311,7 +311,7 @@ class SplitLineCommand(Command):
         self.point_index_2 = layer.line_segment_indexes.point2[self.index]
         color = layer.line_segment_indexes.color[self.index]
         state = layer.line_segment_indexes.state[self.index]
-        depth = (layer.points.z[self.point_index_1] + layer.points.z[self.point_index_2])/2
+        depth = (layer.points.z[self.point_index_1] + layer.points.z[self.point_index_2]) / 2
         layer.points.z[self.undo_point.index] = depth
         self.undo_delete = layer.delete_line_segment(self.index)
         self.undo_line1 = layer.insert_line_segment_at_index(len(layer.line_segment_indexes), self.point_index_1, self.undo_point.index, color, state)
@@ -335,7 +335,7 @@ class SplitLineCommand(Command):
 
 class DeleteLinesCommand(Command):
     short_name = "del"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('point_indexes', 'list_int'),
             ('line_indexes', 'list_int'),
@@ -427,7 +427,7 @@ class DeleteLinesCommand(Command):
 
 class MergePointsCommand(DeleteLinesCommand):
     short_name = "merge_pt"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('point_indexes', 'list_int'),
             ]
@@ -441,7 +441,7 @@ class MergePointsCommand(DeleteLinesCommand):
 
 class CropRectCommand(Command):
     short_name = "crop"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('world_rect', 'rect'),
             ]
@@ -467,7 +467,7 @@ class CropRectCommand(Command):
 
 class StyleChangeCommand(Command):
     short_name = "style"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('style', 'style'),
             ]
@@ -507,7 +507,7 @@ class StyleChangeCommand(Command):
 
 class TextCommand(Command):
     short_name = "text"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('text', 'text'),
             ]
@@ -547,7 +547,7 @@ class TextCommand(Command):
 
 class SetAnchorCommand(Command):
     short_name = "text_anchor"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('anchor', 'int'),
             ]
@@ -587,7 +587,7 @@ class SetAnchorCommand(Command):
 
 class StatusCodeColorCommand(Command):
     short_name = "status_code_color"
-    serialize_order =  [
+    serialize_order = [
             ('layers', 'layers'),
             ('code', 'int'),
             ('color', 'int'),

@@ -33,8 +33,8 @@ def parse_int_string(nputstr=""):
                     # we have items seperated by a dash
                     # try to build a valid range
                     first = token[0]
-                    last = token[len(token)-1]
-                    for x in range(first, last+1):
+                    last = token[len(token) - 1]
+                    for x in range(first, last + 1):
                         selection.append(x)
             except ValueError:
                 # not an int and not a range...

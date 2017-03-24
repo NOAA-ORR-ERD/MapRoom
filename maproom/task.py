@@ -350,7 +350,7 @@ class MaproomProjectTask(FrameworkTask):
         respectively.
         """
         log.debug("In new...")
-        log.debug(" active editor is: %s"%self.active_editor)
+        log.debug(" active editor is: %s" % self.active_editor)
         if hasattr(source, 'document_id'):
             if self.active_editor and not self.active_editor.load_in_new_tab(source.metadata):
                 editor = self.active_editor

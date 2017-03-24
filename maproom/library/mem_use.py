@@ -4,8 +4,8 @@
 
 import sys
 
-div = {'GB': 1024*1024*1024,
-       'MB': 1024*1024,
+div = {'GB': 1024 * 1024 * 1024,
+       'MB': 1024 * 1024,
        'KB': 1024,
        }
 
@@ -93,8 +93,8 @@ else: # for posix systems only tested on OS-X for now
         """
         import resource
         useage = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-        div = {'GB': 1024*1024*1024,
-               'MB': 1024*1024,
+        div = {'GB': 1024 * 1024 * 1024,
+               'MB': 1024 * 1024,
                'KB': 1024,
                }
         d = div[units]

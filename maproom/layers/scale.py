@@ -25,14 +25,14 @@ class Scale(ScreenLayer):
 
     skip_on_insert = True
 
-    km_steps = [item for sublist in [[i*math.pow(10,scale) for i in [1,2,5]] for scale in range(-3,5)] for item in sublist]
+    km_steps = [item for sublist in [[i * math.pow(10,scale) for i in [1,2,5]] for scale in range(-3,5)] for item in sublist]
     km_step_count = len(km_steps)
 
     # in feet, the steps 1 through 2000 are taken from a subset of the above
     # list (of course, referring to feet here in this list), then next steps
     # are in units of miles (5280 feet)
     ft_steps = list(km_steps[9:20])
-    ft_steps.extend([item for sublist in [[5280.0*i*math.pow(10,scale) for i in [1,2,5]] for scale in range(0,5)] for item in sublist])
+    ft_steps.extend([item for sublist in [[5280.0 * i * math.pow(10,scale) for i in [1,2,5]] for scale in range(0,5)] for item in sublist])
     ft_step_count = len(ft_steps)
 
     # length of the scale bar in pixels

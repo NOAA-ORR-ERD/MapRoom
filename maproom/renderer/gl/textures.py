@@ -182,16 +182,16 @@ class ImageData(object):
     def set_control_points(self, cp, projection):
         xoffset = cp[0][0]
         yoffset = cp[0][1]
-        xscale = (cp[1][0] - cp[0][0])/self.x
-        yscale = (cp[3][1] - cp[0][1])/self.y
+        xscale = (cp[1][0] - cp[0][0]) / self.x
+        yscale = (cp[3][1] - cp[0][1]) / self.y
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
 
     def set_rect(self, rect, projection):
         xoffset = rect[0][0]
         yoffset = rect[0][1]
-        xscale = (rect[1][0] - rect[0][0])/self.x
-        yscale = (rect[1][1] - rect[0][1])/self.y
+        xscale = (rect[1][0] - rect[0][0]) / self.x
+        yscale = (rect[1][1] - rect[0][1]) / self.y
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
 
@@ -503,8 +503,8 @@ class ImageTextures(object):
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
 
     def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
-        left = int(point[0] - (image_data.x/2) * scale)
-        bottom = int(point[1] + (image_data.y/2) * scale)
+        left = int(point[0] - (image_data.x / 2) * scale)
+        bottom = int(point[1] + (image_data.y / 2) * scale)
         right = left + (image_data.x * scale)
         top = bottom + (image_data.y * scale)
         # flip y to treat rect as normal opengl coordinates

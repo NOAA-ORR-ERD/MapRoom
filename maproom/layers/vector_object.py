@@ -481,10 +481,10 @@ class RectangleMixin(object):
     def compute_constrained_control_points(self, cp):
         x1 = cp[0,0]
         x2 = cp[1,0]
-        xm = (x1 + x2)*.5
+        xm = (x1 + x2) * .5
         y1 = cp[0,1]
         y2 = cp[2,1]
-        ym = (y1 + y2)*.5
+        ym = (y1 + y2) * .5
         cp[4] = (xm, y1)
         cp[5] = (x2, ym)
         cp[6] = (xm, y2)
@@ -574,10 +574,10 @@ class EllipseVectorObject(RectangleVectorObject):
         sx, sy = self.get_semimajor_axes(self.points)
         ux = sx * math.cos(phi)
         uy = sx * math.sin(phi)
-        vx = sy * math.cos(phi+np.pi/2)
-        vy = sy * math.sin(phi+np.pi/2)
-        bbox_halfwidth = math.sqrt(ux*ux + vx*vx)
-        bbox_halfheight = math.sqrt(uy*uy + vy*vy)
+        vx = sy * math.cos(phi + np.pi / 2)
+        vy = sy * math.sin(phi + np.pi / 2)
+        bbox_halfwidth = math.sqrt(ux * ux + vx * vx)
+        bbox_halfheight = math.sqrt(uy * uy + vy * vy)
         dx = bbox_halfwidth - sx
         dy = bbox_halfheight - sy
         self.move_bounding_box_point(2, 0, dx, dy, about_center=True)
@@ -600,13 +600,13 @@ class EllipseVectorObject(RectangleVectorObject):
         y = 0
         i = 0
         while i < num_segments:
-            xy[i] = (cx + sx*math.cos(theta), cy + sy*math.sin(theta))
+            xy[i] = (cx + sx * math.cos(theta), cy + sy * math.sin(theta))
             theta += dtheta
             i += 1
 
         # create line segment list from one point to the next
         i1 = np.arange(num_segments, dtype=np.uint32)
-        i2 = np.arange(1, num_segments+1, dtype=np.uint32)
+        i2 = np.arange(1, num_segments + 1, dtype=np.uint32)
         i2[-1] = 0
         lsi = np.vstack((i1, i2)).T  # zip arrays to get line segment indexes
 
@@ -654,7 +654,7 @@ class CircleVectorObject(EllipseVectorObject):
         lon1, lat1 = p1
         lon2, lat2 = p2
         rkm = haversine(lon1, lat1, lon2, lat2)
-        bearing = math.atan2(math.sin(lon2-lon1)*math.cos(lat2), math.cos(lat1)*math.sin(lat2)-math.sin(lat1)*math.cos(lat2)*math.cos(lon2-lon1))
+        bearing = math.atan2(math.sin(lon2 - lon1) * math.cos(lat2), math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(lon2 - lon1))
         _, lat2 = distance_bearing(lon1, lat1, 0.0, rkm)
         lon2, _ = distance_bearing(lon1, lat1, 90.0, rkm)
         rx = lon2 - lon1
@@ -1272,7 +1272,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
             y.append(lat * lat_dist)
             x.append(lon * lat_dist * math.cos(math.radians(lat)))
         for i in range(-1, len(indexes) - 1):
-            area += x[i] * (y[i+1] - y[i-1])
+            area += x[i] * (y[i + 1] - y[i - 1])
         return abs(area) / 2.0
 
     def get_info_panel_text(self, prop):

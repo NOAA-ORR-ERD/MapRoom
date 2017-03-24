@@ -13,7 +13,7 @@ class MaproomPlugin(FrameworkPlugin):
     """
 
     # Extension point IDs.
-    TASK_FACTORIES  = 'envisage.ui.tasks.tasks'
+    TASK_FACTORIES = 'envisage.ui.tasks.tasks'
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
 
     #### 'IPlugin' interface ##################################################

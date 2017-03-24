@@ -51,7 +51,7 @@ class InfoField(object):
 
     def create(self):
         self.parent = wx.Window(self.panel)
-        self.box =  wx.BoxSizer(wx.VERTICAL)
+        self.box = wx.BoxSizer(wx.VERTICAL)
         self.parent.SetSizer(self.box)
         if self.display_label:
             self.label = wx.StaticText(self.parent, label=self.field_name, style=wx.ST_ELLIPSIZE_END)
@@ -146,13 +146,13 @@ class MultiLinePropertyField(InfoField):
         self.ctrl.SetValue(str(text))
 
     def create_control(self):
-        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
+        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT | wx.TE_READONLY | wx.NO_BORDER)
         return c
 
 
 class BooleanLabelField(SimplePropertyField):
     def create_extra_controls(self):
-        b = buttons.GenBitmapToggleButton(self.parent, -1, None, style=wx.BORDER_NONE|wx.BU_EXACTFIT)  # BU_EXACTFIT removes padding
+        b = buttons.GenBitmapToggleButton(self.parent, -1, None, style=wx.BORDER_NONE | wx.BU_EXACTFIT)  # BU_EXACTFIT removes padding
         b.Bind(wx.EVT_BUTTON, self.on_toggled)
         image = ImageResource('eye-closed.png')
         bitmap = image.create_bitmap()
@@ -599,7 +599,7 @@ class ColorPickerField(InfoField):
         return c
 
     def color_changed(self, event):
-        color = [float(c/255.0) for c in event.GetValue()]
+        color = [float(c / 255.0) for c in event.GetValue()]
         color.append(1.0)
         int_color = color_floats_to_int(*color)
         layer = self.panel.project.layer_tree_control.get_selected_layer()
@@ -653,15 +653,15 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
 
         if flags & wx.combo.ODCB_PAINTING_CONTROL:
             # for painting the control itself
-            dc.DrawLine(r.x+5, r.y+r.height/2, r.x+r.width - 5, r.y+r.height/2)
+            dc.DrawLine(r.x + 5, r.y + r.height / 2, r.x + r.width - 5, r.y + r.height / 2)
 
         else:
             # for painting the items in the popup
             dc.DrawText(self.GetString(item),
                         r.x + 3,
-                        (r.y + 0) + ((r.height/2) - dc.GetCharHeight())/2
+                        (r.y + 0) + ((r.height / 2) - dc.GetCharHeight()) / 2
                         )
-            dc.DrawLine(r.x+5, r.y+((r.height/4)*3)+1, r.x+r.width - 5, r.y+((r.height/4)*3)+1)
+            dc.DrawLine(r.x + 5, r.y + ((r.height / 4) * 3) + 1, r.x + r.width - 5, r.y + ((r.height / 4) * 3) + 1)
 
     # Overridden from OwnerDrawnComboBox, called for drawing the
     # background area of each item.
@@ -876,13 +876,13 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
 
         if flags & wx.combo.ODCB_PAINTING_CONTROL:
             # for painting the control itself
-            dc.DrawText(face, r.x+5, (r.y + 5) + ((r.height/2) - dc.GetCharHeight())/2)
+            dc.DrawText(face, r.x + 5, (r.y + 5) + ((r.height / 2) - dc.GetCharHeight()) / 2)
 
         else:
             # for painting the items in the popup
             dc.DrawText(face,
                         r.x + 3,
-                        (r.y + 5) + ((r.height/2) - dc.GetCharHeight())/2
+                        (r.y + 5) + ((r.height / 2) - dc.GetCharHeight()) / 2
                         )
 
     # Overridden from OwnerDrawnComboBox, should return the height
@@ -1058,7 +1058,7 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
     # Create the popup child control.  Return true for success.
     def Create(self, parent):
         wx.ListBox.Create(self, parent,
-                          style=wx.LB_SINGLE|wx.SIMPLE_BORDER)
+                          style=wx.LB_SINGLE | wx.SIMPLE_BORDER)
         self.Bind(wx.EVT_MOTION, self.OnMotion)
         self.Bind(wx.EVT_LEFT_DOWN, self.OnMotion)
         self.Bind(wx.EVT_LEFT_UP, self.OnLeftUp)
@@ -1187,14 +1187,14 @@ class StatusCodeColorField(InfoField):
 
     def create_control(self):
         panel = wx.Panel(self.parent)
-        vbox =  wx.BoxSizer(wx.VERTICAL)
+        vbox = wx.BoxSizer(wx.VERTICAL)
         panel.SetSizer(vbox)
         return panel
 
     def color_changed(self, event):
         ctrl = event.GetEventObject()
         code = self.color_ctrls[id(ctrl)]
-        color = [float(c/255.0) for c in event.GetValue()]
+        color = [float(c / 255.0) for c in event.GetValue()]
         color.append(1.0)
         int_color = color_floats_to_int(*color)
         layer = self.panel.project.layer_tree_control.get_selected_layer()
@@ -1308,7 +1308,7 @@ class ExpandableErrorField(InfoField):
         raise NotImplementedError
 
     def create_control(self):
-        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
+        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT | wx.TE_READONLY | wx.NO_BORDER)
         return c
 
 
@@ -1373,7 +1373,7 @@ class DownloadStatusField(ExpandableErrorField):
         return text, color
 
     def create_control(self):
-        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT|wx.TE_READONLY|wx.NO_BORDER)
+        c = ExpandoTextCtrl(self.parent, style=wx.ALIGN_LEFT | wx.TE_READONLY | wx.NO_BORDER)
         return c
 
 

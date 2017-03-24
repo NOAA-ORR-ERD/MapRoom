@@ -25,7 +25,7 @@ progress_log = logging.getLogger("progress")
 
 class LoadLayersCommand(Command):
     short_name = "load"
-    serialize_order =  [
+    serialize_order = [
             ('metadata', 'file_metadata'),
             ]
 
@@ -104,7 +104,7 @@ class LoadLayersCommand(Command):
 
 class AddLayerCommand(Command):
     short_name = "add_layer"
-    serialize_order =  [
+    serialize_order = [
             ('type', 'string'),
             ]
 
@@ -169,7 +169,7 @@ class AddLayerCommand(Command):
 
 class PasteLayerCommand(Command):
     short_name = "paste_layer"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('json_text', 'string'),
             ('center', 'point'),
@@ -247,7 +247,7 @@ class PasteLayerCommand(Command):
 
 class RenameLayerCommand(Command):
     short_name = "rename_layer"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('name', 'string'),
             ]
@@ -285,7 +285,7 @@ class RenameLayerCommand(Command):
 
 class DeleteLayerCommand(Command):
     short_name = "del_layer"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ]
 
@@ -332,7 +332,7 @@ class DeleteLayerCommand(Command):
 
 class MergeLayersCommand(Command):
     short_name = "merge_layers"
-    serialize_order =  [
+    serialize_order = [
             ('layer_a', 'layer'),
             ('layer_b', 'layer'),
             ('depth_unit', 'string'),
@@ -391,7 +391,7 @@ class MergeLayersCommand(Command):
 
 class MoveLayerCommand(Command):
     short_name = "move_layer"
-    serialize_order =  [
+    serialize_order = [
             ('moved_layer', 'layer'),
             ('target_layer', 'layer'),
             ('before', 'bool'),
@@ -465,7 +465,7 @@ class MoveLayerCommand(Command):
 
 class TriangulateLayerCommand(Command):
     short_name = "triangulate"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('q', 'float'),
             ('a', 'float'),
@@ -542,7 +542,7 @@ class TriangulateLayerCommand(Command):
 
 class ToPolygonLayerCommand(Command):
     short_name = "to_polygon"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ]
 
@@ -608,7 +608,7 @@ class ToPolygonLayerCommand(Command):
 
 class ToVerdatLayerCommand(ToPolygonLayerCommand):
     short_name = "to_verdat"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ]
 
@@ -643,7 +643,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
 
 class PolygonEditLayerCommand(Command):
     short_name = "polygon_edit"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('obj_type', 'int'),
             ('obj_index', 'int'),
@@ -699,7 +699,7 @@ class PolygonEditLayerCommand(Command):
 
 class SavepointCommand(Command):
     short_name = "savepoint"
-    serialize_order =  [
+    serialize_order = [
             ('layer', 'layer'),
             ('world_rect', 'rect'),
             ]

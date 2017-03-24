@@ -167,7 +167,7 @@ class TextSlider(wx.PyPanel):
         self.sliderCtrl = FloatSlider(self, -1, value, minValue, maxValue, steps, valueUnit, point, (50,-1), style, validator, name)
         self.Sizer.Add(self.sliderCtrl, 2, wx.CENTER)
         self.textCtrl = wx.SpinCtrlDouble(self, value='0.00', size=(50,21),
-                                 min=minValue, max=maxValue, inc=(maxValue - minValue)/steps)
+                                 min=minValue, max=maxValue, inc=(maxValue - minValue) / steps)
         self.textCtrl.SetDigits(0)
         self.Sizer.Add(self.textCtrl, 1, wx.CENTER)
 

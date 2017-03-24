@@ -61,9 +61,9 @@ def get_rect(w, h):
 
     # Set the alpha for the border pixels to be fully opaque
     arr[0,   0:w, A] = wx.ALPHA_OPAQUE  # first row
-    arr[h-1, 0:w, A] = wx.ALPHA_OPAQUE  # last row
+    arr[h - 1, 0:w, A] = wx.ALPHA_OPAQUE  # last row
     arr[0:h, 0,   A] = wx.ALPHA_OPAQUE  # first col
-    arr[0:h, w-1, A] = wx.ALPHA_OPAQUE  # last col
+    arr[0:h, w - 1, A] = wx.ALPHA_OPAQUE  # last col
 
     return arr
 
@@ -153,7 +153,7 @@ class OffScreenHTML(object):
         # Calculate the height of the final rendered text
         y = ylast = 0
         while True:
-            y = self.hr.Render(0, 0, [], y, True, y+self.height)
+            y = self.hr.Render(0, 0, [], y, True, y + self.height)
             if y == ylast:
                 break
             ylast = y

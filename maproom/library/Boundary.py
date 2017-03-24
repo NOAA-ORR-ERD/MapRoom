@@ -501,11 +501,11 @@ def segments_intersect(a, b, c, d):
     """Return True if the line segment a->b intersects with
     line segment c->d
     """
-    dir1 = (b[0] - a[0])*(c[1] - a[1]) - (c[0] - a[0])*(b[1] - a[1])
-    dir2 = (b[0] - a[0])*(d[1] - a[1]) - (d[0] - a[0])*(b[1] - a[1])
+    dir1 = (b[0] - a[0]) * (c[1] - a[1]) - (c[0] - a[0]) * (b[1] - a[1])
+    dir2 = (b[0] - a[0]) * (d[1] - a[1]) - (d[0] - a[0]) * (b[1] - a[1])
     if (dir1 > 0.0) != (dir2 > 0.0) or (not dir1) != (not dir2):
-        dir1 = (d[0] - c[0])*(a[1] - c[1]) - (a[0] - c[0])*(d[1] - c[1])
-        dir2 = (d[0] - c[0])*(b[1] - c[1]) - (b[0] - c[0])*(d[1] - c[1])
+        dir1 = (d[0] - c[0]) * (a[1] - c[1]) - (a[0] - c[0]) * (d[1] - c[1])
+        dir2 = (d[0] - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (d[1] - c[1])
         return ((dir1 > 0.0) != (dir2 > 0.0)
             or (not dir1) != (not dir2))
     return False
@@ -576,10 +576,10 @@ def general_intersection_check(points, boundary_min_max):
                 # around within each closed-loop boundary)
                 if (((seg_id != open_id) or ((boundary_min_max[seg_id][1] - boundary_min_max[seg_id][0]) > abs(index - open_index) > 1))
                     and segments_intersect(seg_start, seg_end, open_start, open_end)):
-                    seg_prev_index = index-1
+                    seg_prev_index = index - 1
                     if seg_prev_index < boundary_min_max[seg_id][0]:
                         seg_prev_index = boundary_min_max[seg_id][1]
-                    open_prev_index = open_index-1
+                    open_prev_index = open_index - 1
                     if open_prev_index < boundary_min_max[open_id][0]:
                         open_prev_index = boundary_min_max[open_id][1]
                     intersecting_segments.append(((seg_start, seg_end, seg_prev_index, index), (open_start, open_end, open_index, open_prev_index)))

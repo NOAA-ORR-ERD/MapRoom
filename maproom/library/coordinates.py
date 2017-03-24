@@ -25,8 +25,8 @@ def distance_bearing(lon1, lat1, bearing, d, r=6371.0):
     lon1 = math.radians(lon1)
     lat1 = math.radians(lat1)
     bearing = math.radians(bearing)
-    lat2 = math.asin(math.sin(lat1)*math.cos(d/r) + math.cos(lat1)*math.sin(d/r)*math.cos(bearing))
-    lon2 = lon1 + math.atan2(math.sin(bearing)*math.sin(d/r)*math.cos(lat1), math.cos(d/r)-math.sin(lat1)*math.sin(lat2))
+    lat2 = math.asin(math.sin(lat1) * math.cos(d / r) + math.cos(lat1) * math.sin(d / r) * math.cos(bearing))
+    lon2 = lon1 + math.atan2(math.sin(bearing) * math.sin(d / r) * math.cos(lat1), math.cos(d / r) - math.sin(lat1) * math.sin(lat2))
     return math.degrees(lon2), math.degrees(lat2)
 
 
@@ -34,7 +34,7 @@ def haversine_at_const_lat(delta_deg_lon, deg_lat, r=6371.0):
     lon = math.radians(delta_deg_lon)
     lat = math.radians(deg_lat)
     clat = math.cos(lat)
-    slon = math.sin(lon/2)
+    slon = math.sin(lon / 2)
     a = clat * clat * slon * slon
     c = 2 * math.asin(math.sqrt(a))
     d = r * c

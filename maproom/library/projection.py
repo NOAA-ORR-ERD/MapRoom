@@ -56,7 +56,7 @@ class Projection(object):
         if "+proj=latlong" in proj_string or "+proj=longlat" in proj_string:
             ## this all becuase proj converts latlon to radians, rather than just a pass through.
             ## NOTE: why do we care???
-            raise ValueError("You won't get the right result for proj:%s\nUse the NullProjection instead"%proj_string)
+            raise ValueError("You won't get the right result for proj:%s\nUse the NullProjection instead" % proj_string)
         self.proj = pyproj.Proj(proj_string)
         self.srs = self.proj.srs
         self.name = proj_string # would be nice to make this cleaner.
