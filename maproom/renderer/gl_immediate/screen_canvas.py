@@ -5,7 +5,6 @@ import wx.glcanvas as glcanvas
 import numpy as np
 
 import OpenGL.GL as gl
-import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 
 # Thanks to Mike Fletcher's comment on the PyOpenGL mailing list,
@@ -225,11 +224,11 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def set_minimum_delay_callback(self, callback, delay):
         """Trigger a callback after a delay.
-        
+
         Only one timer against a particular callback is allowed.  If this
         method is called before the delay time expires, it will reset to the
         full delay, effectively rescheduling the callback.
-        
+
         E.g. this is used in the WMS layer to prevent the background image
         from being reloaded while the user is panning the view around,
         preventing unnecessary traffic to the external webserver.
