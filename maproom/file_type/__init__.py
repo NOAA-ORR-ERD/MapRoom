@@ -1,3 +1,5 @@
+# flake8: noqa  # cog scripts won't work with E265: extra space after the "#"
+
 # All built-in recognizer plugins should be listed in this file so that the
 # application can import this single file and determine the default plugins.
 # In addition, a list of plugins is expected so that the framework can import
