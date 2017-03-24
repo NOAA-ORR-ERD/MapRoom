@@ -24,7 +24,7 @@ progress_log = logging.getLogger("progress")
 class PointBaseLayer(ProjectedLayer):
     """
     Layer for just points
-    
+
     """
     name = Unicode("Point Layer")
 
@@ -248,7 +248,7 @@ class PointBaseLayer(ProjectedLayer):
 
     def get_selected_and_dependent_point_indexes(self, mark_type=state.SELECTED):
         """Get all points from selected objects.
-        
+
         Subclasses should override to provide a list of points that are
         implicitly selected by an object being selected.
         """
@@ -284,7 +284,7 @@ class PointBaseLayer(ProjectedLayer):
 
         if depth_unit:
             self.depth_unit = depth_unit
-       # self.points.state = 0
+        # self.points.state = 0
 
     def normalize_longitude(self):
         l = self.points.x.min()
@@ -305,7 +305,7 @@ class PointBaseLayer(ProjectedLayer):
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
-        
+
         """
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
