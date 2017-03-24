@@ -3,8 +3,6 @@ from collections import OrderedDict
 
 import numpy as np
 
-import state
-
 from ..renderer import color_floats_to_int, int_to_color_uint8
 
 from maproom.library.marplot_icons import get_numpy_bitmap
@@ -26,7 +24,7 @@ marker_arrow = np.array(((-8, 0), (-10, -4), (0, 0), (-10, 4)), dtype=np.float32
 
 class LayerStyle(object):
     """Style data for drawing layer objects
-    
+
     """
 
     default_line_color = color_floats_to_int(0, 0, 0, 1.0)
@@ -198,7 +196,7 @@ class LayerStyle(object):
     def copy_from(self, other_style):
         """Copy the valid entries (i.e.  those that aren't None) from another
         style to this one
-        
+
         """
         for k in self.valid:
             v = getattr(other_style, k)
@@ -208,7 +206,7 @@ class LayerStyle(object):
     def get_copy(self):
         """Copy the valid entries (i.e.  those that aren't None) from another
         style to this one
-        
+
         """
         style = self.__class__()
         style.copy_from(self)

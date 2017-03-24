@@ -8,7 +8,7 @@ from omnivore.utils.wx.dialogs import ObjectEditDialog
 
 from ..library import coordinates
 from ..library.textparse import parse_int_string
-from ..library.marplot_icons import get_wx_bitmap, marplot_icons, marplot_icon_data, marplot_icon_max_size, marplot_icon_id_to_category, marplot_icon_id_to_name
+from ..library.marplot_icons import get_wx_bitmap, marplot_icons, marplot_icon_max_size, marplot_icon_id_to_category, marplot_icon_id_to_name
 from ..mock import MockProject
 from ..library.thread_utils import BackgroundWMSDownloader
 from ..library.tile_utils import BackgroundTileDownloader
@@ -55,7 +55,7 @@ class FindPointDialog(sc.SizedDialog):
 
     def get_values(self):
         """Return indexes of points.
-        
+
         Note that point indexes are stored internally numbered from zero,
         but the user expects indexes starting from 1.  Returned values are
         zero-based.

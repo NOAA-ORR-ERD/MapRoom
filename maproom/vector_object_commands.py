@@ -1,6 +1,6 @@
 
 from command import Command, UndoInfo
-from layers.vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayScalableImageObject, OverlayTextObject, OverlayIconObject, OverlayLineObject, PolylineObject, PolygonObject, AnnotationLayer
+from layers.vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayTextObject, OverlayIconObject, OverlayLineObject, PolylineObject, PolygonObject, AnnotationLayer
 
 
 def update_parent_bounds(layer, undo):

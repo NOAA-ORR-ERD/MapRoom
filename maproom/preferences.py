@@ -8,7 +8,7 @@ from traits.api import Directory
 from traits.api import Enum
 from traits.api import Range
 from traits.api import Str
-from traitsui.api import EnumEditor, HGroup, VGroup, Item, Label, \
+from traitsui.api import HGroup, VGroup, Item, Label, \
     View, RangeEditor
 
 # fixme:

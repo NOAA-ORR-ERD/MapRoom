@@ -5,7 +5,7 @@ import wx
 from reportlab.pdfgen import canvas
 import reportlab.lib.pagesizes as pagesizes
 from reportlab.pdfbase.pdfmetrics import stringWidth
-from reportlab import rl_settings  # to allow py2exe bundling of this dynamic import
+from reportlab import rl_settings  # to allow py2exe bundling of this dynamic import  # noqa
 
 from renderer import ReportLabRenderer
 import maproom.library.rect as rect

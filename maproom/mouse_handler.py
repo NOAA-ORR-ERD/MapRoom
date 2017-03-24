@@ -7,7 +7,7 @@ import wx
 from library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
 import library.rect as rect
 from mouse_commands import ViewportCommand, SetAnchorCommand, CropRectCommand, InsertPointCommand, InsertLineCommand, SplitLineCommand, ConnectPointsCommand
-from vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawVectorObjectCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
+from vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
 from menu_commands import PolygonEditLayerCommand
 
 
@@ -26,7 +26,7 @@ These are the original editing rules from version 1.x of maproom:
     - selecting a different line in the tree clears all selections (DONE)
     - moving a layer up or down in the tree clears all selections (DONE)
     - Delete key or click on Delete button deletes all selected points and lines (and any lines using the deleted points) (DONE)
-    
+
     - with point tool
         - mouse-over point changes cursor to hand (DONE)
         - mouse-over line changes cursor to bull's eye (DONE)
@@ -78,7 +78,7 @@ These are the original editing rules from version 1.x of maproom:
             - else show the properties panel for the layer, including the "Default depth" field (DONE)
         - when the user changes the "Point depth" field to a valid number:
             - set the depth of selected point(s) and update their labels (DONE)
-    
+
     undoable operations:
         - add points and/or lines
         - delete points and/or lines
@@ -99,7 +99,7 @@ mouselog = logging.getLogger("mouse")
 class MouseHandler(object):
     """
     Processing of mouse events, separate from the rendering window
-    
+
     This is an object-based control system of mouse modes
     """
     icon = "help.png"
@@ -413,8 +413,8 @@ class MouseHandler(object):
 
     def render_overlay(self, renderer):
         """Render additional graphics on canvas
-        
-        
+
+
         """
         self.render_snapped_point(renderer)
 
@@ -454,7 +454,7 @@ class MouseHandler(object):
 
     def render_snapped_point(self, renderer):
         """Highlight snapped point when applicable
-        
+
         """
         layer, index = self.snapped_point
         if layer is not None:
@@ -742,7 +742,7 @@ class PolygonSelectionMode(PanMode):
 
 class ObjectSelectionMode(MouseHandler):
     """Processing of mouse events, separate from the rendering window
-    
+
     This is a precursor to an object-based control system of mouse modes
     """
 
