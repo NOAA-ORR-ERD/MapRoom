@@ -336,7 +336,7 @@ class LayerManager(BaseDocument):
         layer_info = self.flatten_with_indexes()
         log.debug("layers are " + str(self.layers))
         log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
-        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s  in Layer.get_subclasses().iteritems()]))
+        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
         project = []
         if extra_json_data is None:
             extra_json_data = {}
