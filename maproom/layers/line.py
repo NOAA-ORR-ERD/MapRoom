@@ -574,13 +574,13 @@ class LineLayer(PointLayer):
         # the points and line segments
         if layer_visibility["lines"]:
             renderer.draw_lines(self, picker, self.style,
-                            self.get_selected_line_segment_indexes(),
-                            self.get_selected_line_segment_indexes(state.FLAGGED))
+                                self.get_selected_line_segment_indexes(),
+                                self.get_selected_line_segment_indexes(state.FLAGGED))
 
         if layer_visibility["points"]:
             renderer.draw_points(self, picker, self.point_size,
-                             self.get_selected_point_indexes(),
-                             self.get_selected_point_indexes(state.FLAGGED))
+                                 self.get_selected_point_indexes(),
+                                 self.get_selected_point_indexes(state.FLAGGED))
 
         # the labels
         if layer_visibility["labels"]:

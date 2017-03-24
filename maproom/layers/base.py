@@ -194,7 +194,7 @@ class Layer(HasTraits):
             # control point links only used for copy/paste of layers, not for
             # restoring from project files
             'control_point_links': self.manager.get_control_point_links(self),
-            }
+        }
         if self.file_path:
             json['url'] = self.file_path
             json['mime'] = self.mime

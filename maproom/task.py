@@ -149,7 +149,7 @@ class MaproomProjectTask(FrameworkTask):
                            path='MenuBar',
                            after="Edit",
                            ),
-            ]
+        ]
         return actions
 
     def pane_layout_initial_visibility(self):
@@ -176,7 +176,7 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions_Menu_File_NewGroup(self):
         return [
             actions.NewProjectAction(),
-            ]
+        ]
 
     def get_actions_Menu_File_SaveGroup(self):
         return [
@@ -187,12 +187,12 @@ class MaproomProjectTask(FrameworkTask):
             SMenu(actions.SaveLayerGroup(),
                   id='SaveLayerAsSubmenu', name="Save Layer As"),
             SaveAsImageAction(),
-            ]
+        ]
 
     def get_actions_Menu_File_RevertGroup(self):
         return [
             actions.RevertProjectAction(),
-            ]
+        ]
 
     def get_actions_Menu_Edit_CopyPasteGroup(self):
         return [
@@ -203,7 +203,7 @@ class MaproomProjectTask(FrameworkTask):
             Separator(),
             actions.CopyStyleAction(),
             actions.PasteStyleAction(),
-            ]
+        ]
 
     def get_actions_Menu_Edit_SelectGroup(self):
         return [
@@ -214,24 +214,24 @@ class MaproomProjectTask(FrameworkTask):
             Separator(),
             actions.ClearFlaggedAction(),
             actions.FlaggedToSelectionAction(),
-            ]
+        ]
 
     def get_actions_Menu_Edit_PrefGroup(self):
         return [
             actions.DefaultStyleAction(),
             PreferencesAction(),
-            ]
+        ]
 
     def get_actions_Menu_Edit_FindGroup(self):
         return [
             actions.FindPointsAction(),
-            ]
+        ]
 
     def get_actions_Menu_Help_BugReportGroup(self):
         return [
             OpenLogDirectoryAction(),
             actions.OpenLogAction(),
-            ]
+        ]
 
     def get_actions_Menu_View_ViewZoomGroup(self):
         return [
@@ -239,18 +239,18 @@ class MaproomProjectTask(FrameworkTask):
             actions.ZoomOutAction(),
             actions.ZoomToFit(),
             actions.ZoomToLayer(),
-            ]
+        ]
 
     def get_actions_Menu_View_ViewChangeGroup(self):
         return [
             actions.JumpToCoordsAction(),
-            ]
+        ]
 
     def get_actions_Menu_View_ViewDebugGroup(self):
         return [
             actions.BoundingBoxAction(),
             actions.PickerFramebufferAction(),
-            ]
+        ]
 
     def get_actions_Menu_Layer_LayerCreateGroup(self):
         return [
@@ -261,7 +261,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.NewCompassRoseLayerAction(),
             actions.NewLonLatLayerAction(),
             actions.NewRNCLayerAction(),
-            ]
+        ]
 
     def get_actions_Menu_Layer_LayerStackGroup(self):
         return [
@@ -269,7 +269,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.RaiseLayerAction(),
             actions.LowerLayerAction(),
             actions.LowerToBottomAction(),
-            ]
+        ]
 
     def get_actions_Menu_Layer_LayerUtilGroup(self):
         return [
@@ -279,18 +279,18 @@ class MaproomProjectTask(FrameworkTask):
             actions.MergeLayersAction(),
             actions.MergePointsAction(),
             actions.NormalizeLongitudeAction(),
-            ]
+        ]
 
     def get_actions_Menu_Layer_LayerDeleteGroup(self):
         return [
             actions.DeleteLayerAction(),
-            ]
+        ]
 
     def get_actions_Menu_Layer_LayerCheckGroup(self):
         return [
             actions.CheckSelectedLayerAction(),
             actions.CheckAllLayersAction(),
-            ]
+        ]
 
     def get_actions_Menu_Tools_ToolsManageGroup(self):
         return [
@@ -298,19 +298,19 @@ class MaproomProjectTask(FrameworkTask):
             Separator(),
             actions.ManageTileServersAction(),
             actions.ClearTileCacheAction(),
-            ]
+        ]
 
     def get_actions_Tool_File_SaveGroup(self):
         return [
             actions.SaveProjectAction(),
             actions.SaveProjectAsAction(),
-            ]
+        ]
 
     def get_actions_Tool_Edit_SelectGroup(self):
         return [
             actions.ClearSelectionAction(),
             actions.DeleteSelectionAction(),
-            ]
+        ]
 
     def get_actions_Tool_View_ViewConfigGroup(self):
         return [
@@ -318,7 +318,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.ZoomOutAction(),
             actions.ZoomToFit(),
             actions.ZoomToLayer(),
-            ]
+        ]
 
     def get_actions_Tool_View_ViewChangeGroup(self):
         return [
@@ -328,7 +328,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.LowerToBottomAction(),
             actions.TriangulateLayerAction(),
             actions.DeleteLayerAction(),
-            ]
+        ]
 
     def get_editor(self, guess=None):
         """ Opens a new empty window
@@ -418,10 +418,10 @@ class MaproomProjectTask(FrameworkTask):
     def can_edit(cls, document):
         mime = document.metadata.mime
         return (mime.startswith("image") or
-                 mime.startswith("application/x-maproom-") or
-                 mime == "application/x-nc_ugrid" or
-                 mime == "application/x-nc_particles"
-                 )
+                mime.startswith("application/x-maproom-") or
+                mime == "application/x-nc_ugrid" or
+                mime == "application/x-nc_particles"
+                )
 
     @classmethod
     def get_match_score(cls, document):

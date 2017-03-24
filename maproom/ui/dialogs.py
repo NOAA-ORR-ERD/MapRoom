@@ -229,7 +229,7 @@ class WMSDialog(ObjectEditDialog):
             ('gauge', 'gauge', None),
             ('expando', 'status', ""),
             ('text', 'name', 'Server Name: '),
-            ]
+        ]
         self.verified_host = False
         ObjectEditDialog.__init__(self, parent, title, "Enter WMS Server Information:", fields, WMSHost, default)
 
@@ -298,7 +298,7 @@ class TileServerDialog(ObjectEditDialog):
             ('gauge', 'gauge', None),
             ('expando', 'status', ""),
             ('text', 'name', 'Server Name: '),
-            ]
+        ]
         self.verified_urls = False
         ObjectEditDialog.__init__(self, parent, title, "Enter Tile Server Information:", fields, OpenTileHost, default)
 

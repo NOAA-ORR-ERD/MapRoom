@@ -155,7 +155,7 @@ def shapely_to_polygon(geom_list):
             'ring_index': int(ring_index_scoping_hack[0]),
             'point_start_index': start_index,
             'num_points': num_points
-            }
+        }
 
         ring_index_scoping_hack[0] += 1
         ring_identifiers.append(pi)

@@ -26,8 +26,8 @@ progress_log = logging.getLogger("progress")
 class LoadLayersCommand(Command):
     short_name = "load"
     serialize_order = [
-            ('metadata', 'file_metadata'),
-            ]
+        ('metadata', 'file_metadata'),
+    ]
 
     def __init__(self, metadata):
         Command.__init__(self)
@@ -105,8 +105,8 @@ class LoadLayersCommand(Command):
 class AddLayerCommand(Command):
     short_name = "add_layer"
     serialize_order = [
-            ('type', 'string'),
-            ]
+        ('type', 'string'),
+    ]
 
     def __init__(self, type, before=None, after=None):
         Command.__init__(self)
@@ -170,10 +170,10 @@ class AddLayerCommand(Command):
 class PasteLayerCommand(Command):
     short_name = "paste_layer"
     serialize_order = [
-            ('layer', 'layer'),
-            ('json_text', 'string'),
-            ('center', 'point'),
-            ]
+        ('layer', 'layer'),
+        ('json_text', 'string'),
+        ('center', 'point'),
+    ]
 
     def __init__(self, layer, json_text, center):
         Command.__init__(self, layer)
@@ -248,9 +248,9 @@ class PasteLayerCommand(Command):
 class RenameLayerCommand(Command):
     short_name = "rename_layer"
     serialize_order = [
-            ('layer', 'layer'),
-            ('name', 'string'),
-            ]
+        ('layer', 'layer'),
+        ('name', 'string'),
+    ]
 
     def __init__(self, layer, name):
         Command.__init__(self, layer)
@@ -286,8 +286,8 @@ class RenameLayerCommand(Command):
 class DeleteLayerCommand(Command):
     short_name = "del_layer"
     serialize_order = [
-            ('layer', 'layer'),
-            ]
+        ('layer', 'layer'),
+    ]
 
     def __init__(self, layer):
         Command.__init__(self, layer)
@@ -333,10 +333,10 @@ class DeleteLayerCommand(Command):
 class MergeLayersCommand(Command):
     short_name = "merge_layers"
     serialize_order = [
-            ('layer_a', 'layer'),
-            ('layer_b', 'layer'),
-            ('depth_unit', 'string'),
-            ]
+        ('layer_a', 'layer'),
+        ('layer_b', 'layer'),
+        ('depth_unit', 'string'),
+    ]
 
     def __init__(self, layer_a, layer_b, depth_unit):
         Command.__init__(self)
@@ -392,11 +392,11 @@ class MergeLayersCommand(Command):
 class MoveLayerCommand(Command):
     short_name = "move_layer"
     serialize_order = [
-            ('moved_layer', 'layer'),
-            ('target_layer', 'layer'),
-            ('before', 'bool'),
-            ('in_folder', 'bool'),
-            ]
+        ('moved_layer', 'layer'),
+        ('target_layer', 'layer'),
+        ('before', 'bool'),
+        ('in_folder', 'bool'),
+    ]
 
     def __init__(self, moved_layer, target_layer, before, in_folder):
         Command.__init__(self)
@@ -466,10 +466,10 @@ class MoveLayerCommand(Command):
 class TriangulateLayerCommand(Command):
     short_name = "triangulate"
     serialize_order = [
-            ('layer', 'layer'),
-            ('q', 'float'),
-            ('a', 'float'),
-            ]
+        ('layer', 'layer'),
+        ('q', 'float'),
+        ('a', 'float'),
+    ]
 
     def __init__(self, layer, q, a):
         Command.__init__(self, layer)
@@ -543,8 +543,8 @@ class TriangulateLayerCommand(Command):
 class ToPolygonLayerCommand(Command):
     short_name = "to_polygon"
     serialize_order = [
-            ('layer', 'layer'),
-            ]
+        ('layer', 'layer'),
+    ]
 
     def __init__(self, layer):
         Command.__init__(self, layer)
@@ -609,8 +609,8 @@ class ToPolygonLayerCommand(Command):
 class ToVerdatLayerCommand(ToPolygonLayerCommand):
     short_name = "to_verdat"
     serialize_order = [
-            ('layer', 'layer'),
-            ]
+        ('layer', 'layer'),
+    ]
 
     def __init__(self, layer):
         Command.__init__(self, layer)
@@ -644,10 +644,10 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
 class PolygonEditLayerCommand(Command):
     short_name = "polygon_edit"
     serialize_order = [
-            ('layer', 'layer'),
-            ('obj_type', 'int'),
-            ('obj_index', 'int'),
-            ]
+        ('layer', 'layer'),
+        ('obj_type', 'int'),
+        ('obj_index', 'int'),
+    ]
 
     def __init__(self, layer, obj_type, obj_index):
         Command.__init__(self, layer)
@@ -700,9 +700,9 @@ class PolygonEditLayerCommand(Command):
 class SavepointCommand(Command):
     short_name = "savepoint"
     serialize_order = [
-            ('layer', 'layer'),
-            ('world_rect', 'rect'),
-            ]
+        ('layer', 'layer'),
+        ('world_rect', 'rect'),
+    ]
 
     def __init__(self, layer, world_rect):
         Command.__init__(self, layer)

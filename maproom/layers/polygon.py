@@ -150,7 +150,7 @@ class PolygonLayer(PointLayer):
             identifiers.append(
                 {'name': "boundary %d" % i,
                  'feature_code': 1}
-                )
+            )
         self.set_data(all_points, starts, counts, identifiers)
 
     def set_data_from_geometry(self, geom):
@@ -334,7 +334,7 @@ class PolygonLayer(PointLayer):
                         ident = dict({
                             'name': '%s (cropped part #%d)' % (self.ring_identifiers[n]['name'], i + 1),
                             'feature_code': self.ring_identifiers[n]['feature_code'],
-                            })
+                        })
                         new_polys.add_polygon(p, ident)
                     continue
                 elif not hasattr(cropped_poly, 'exterior'):
@@ -380,9 +380,9 @@ class PolygonLayer(PointLayer):
         # the rings
         if layer_visibility["polygons"]:
             renderer.draw_polygons(self, picker,
-                                        self.rings.color,
-                                        color_floats_to_int(0, 0, 0, 1.0),
-                                        1)
+                                   self.rings.color,
+                                   color_floats_to_int(0, 0, 0, 1.0),
+                                   1)
 
 
 class RNCLoaderLayer(PolygonLayer):

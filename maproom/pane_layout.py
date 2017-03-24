@@ -30,7 +30,7 @@ def pane_layout():
             PaneItem('maproom.layer_selection_pane'),
             PaneItem('maproom.layer_info_pane'),
             PaneItem('maproom.selection_info_pane'),
-            ),
+        ),
         right=HSplitter(
             PaneItem('maproom.triangulate_pane'),
             PaneItem('maproom.merge_points_pane'),
@@ -39,8 +39,8 @@ def pane_layout():
             PaneItem('maproom.rst_markup_help_pane'),
             PaneItem('maproom.markdown_help_pane'),
             PaneItem('maproom.sidebar'),
-            ),
-        )
+        ),
+    )
 
 
 def pane_initially_visible():
@@ -58,7 +58,7 @@ def pane_initially_visible():
         'maproom.rst_markup_help_pane': False,
         'maproom.markdown_help_pane': False,
         'maproom.sidebar': True,
-        }
+    }
 
 
 def pane_create():
@@ -77,4 +77,4 @@ def pane_create():
         panes.RSTHelpPane(),
         panes.MarkdownHelpPane(),
         panes.SidebarPane()
-        ]
+    ]

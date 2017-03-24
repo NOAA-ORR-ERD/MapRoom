@@ -732,7 +732,7 @@ class LayerManager(BaseDocument):
         n = 0
         for layer in self.flatten():
             if (hasattr(layer, "points") and (layer.points is not None or
-                    layer.rings is not None)):
+                                              layer.rings is not None)):
                 n += 1
         #
         return n

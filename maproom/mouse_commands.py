@@ -9,7 +9,7 @@ class ViewportCommand(Command):
         ('layer', 'layer'),
         ('center', 'point'),
         ('units_per_pixel', 'float'),
-        ]
+    ]
 
     def __init__(self, layer, center=None, units_per_pixel=None):
         Command.__init__(self, layer)
@@ -50,7 +50,7 @@ class InsertPointCommand(Command):
     serialize_order = [
         ('layer', 'layer'),
         ('world_point', 'point'),
-        ]
+    ]
 
     def __init__(self, layer, world_point):
         Command.__init__(self, layer)
@@ -80,7 +80,7 @@ class MovePointsCommand(Command):
         ('indexes', 'list_int'),
         ('dx', 'float'),
         ('dy', 'float'),
-        ]
+    ]
 
     def __init__(self, layer, indexes, dx, dy):
         Command.__init__(self, layer)
@@ -133,7 +133,7 @@ class NormalizeLongitudeCommand(Command):
     short_name = "norm_long"
     serialize_order = [
         ('layer', 'layer'),
-        ]
+    ]
 
     def __str__(self):
         return "Normalize Longitude"
@@ -170,7 +170,7 @@ class ChangeDepthCommand(Command):
         ('layer', 'layer'),
         ('indexes', 'list_int'),
         ('depth', 'float'),
-        ]
+    ]
 
     def __init__(self, layer, indexes, depth):
         Command.__init__(self, layer)
@@ -210,10 +210,10 @@ class ChangeDepthCommand(Command):
 class InsertLineCommand(Command):
     short_name = "line_to"
     serialize_order = [
-            ('layer', 'layer'),
-            ('index', 'int'),
-            ('world_point', 'point'),
-            ]
+        ('layer', 'layer'),
+        ('index', 'int'),
+        ('world_point', 'point'),
+    ]
 
     def __init__(self, layer, index, world_point):
         Command.__init__(self, layer)
@@ -246,10 +246,10 @@ class InsertLineCommand(Command):
 class ConnectPointsCommand(Command):
     short_name = "line"
     serialize_order = [
-            ('layer', 'layer'),
-            ('index1', 'int'),
-            ('index2', 'int'),
-            ]
+        ('layer', 'layer'),
+        ('index1', 'int'),
+        ('index2', 'int'),
+    ]
 
     def __init__(self, layer, index1, index2):
         Command.__init__(self, layer)
@@ -277,10 +277,10 @@ class ConnectPointsCommand(Command):
 class SplitLineCommand(Command):
     short_name = "split"
     serialize_order = [
-            ('layer', 'layer'),
-            ('index', 'int'),
-            ('world_point', 'point'),
-            ]
+        ('layer', 'layer'),
+        ('index', 'int'),
+        ('world_point', 'point'),
+    ]
 
     def __init__(self, layer, index, world_point):
         Command.__init__(self, layer)
@@ -336,10 +336,10 @@ class SplitLineCommand(Command):
 class DeleteLinesCommand(Command):
     short_name = "del"
     serialize_order = [
-            ('layer', 'layer'),
-            ('point_indexes', 'list_int'),
-            ('line_indexes', 'list_int'),
-            ]
+        ('layer', 'layer'),
+        ('point_indexes', 'list_int'),
+        ('line_indexes', 'list_int'),
+    ]
 
     def __init__(self, layer, point_indexes, line_indexes=None):
         Command.__init__(self, layer)
@@ -428,9 +428,9 @@ class DeleteLinesCommand(Command):
 class MergePointsCommand(DeleteLinesCommand):
     short_name = "merge_pt"
     serialize_order = [
-            ('layer', 'layer'),
-            ('point_indexes', 'list_int'),
-            ]
+        ('layer', 'layer'),
+        ('point_indexes', 'list_int'),
+    ]
 
     def __init__(self, layer, point_indexes):
         DeleteLinesCommand.__init__(self, layer, point_indexes, None)
@@ -442,9 +442,9 @@ class MergePointsCommand(DeleteLinesCommand):
 class CropRectCommand(Command):
     short_name = "crop"
     serialize_order = [
-            ('layer', 'layer'),
-            ('world_rect', 'rect'),
-            ]
+        ('layer', 'layer'),
+        ('world_rect', 'rect'),
+    ]
 
     def __init__(self, layer, world_rect):
         Command.__init__(self, layer)
@@ -468,9 +468,9 @@ class CropRectCommand(Command):
 class StyleChangeCommand(Command):
     short_name = "style"
     serialize_order = [
-            ('layer', 'layer'),
-            ('style', 'style'),
-            ]
+        ('layer', 'layer'),
+        ('style', 'style'),
+    ]
 
     def __init__(self, layer, style):
         Command.__init__(self, layer)
@@ -508,9 +508,9 @@ class StyleChangeCommand(Command):
 class TextCommand(Command):
     short_name = "text"
     serialize_order = [
-            ('layer', 'layer'),
-            ('text', 'text'),
-            ]
+        ('layer', 'layer'),
+        ('text', 'text'),
+    ]
 
     def __init__(self, layer, text):
         Command.__init__(self, layer)
@@ -548,9 +548,9 @@ class TextCommand(Command):
 class SetAnchorCommand(Command):
     short_name = "text_anchor"
     serialize_order = [
-            ('layer', 'layer'),
-            ('anchor', 'int'),
-            ]
+        ('layer', 'layer'),
+        ('anchor', 'int'),
+    ]
 
     def __init__(self, layer, anchor):
         Command.__init__(self, layer)
@@ -588,10 +588,10 @@ class SetAnchorCommand(Command):
 class StatusCodeColorCommand(Command):
     short_name = "status_code_color"
     serialize_order = [
-            ('layers', 'layers'),
-            ('code', 'int'),
-            ('color', 'int'),
-            ]
+        ('layers', 'layers'),
+        ('code', 'int'),
+        ('color', 'int'),
+    ]
 
     def __init__(self, layers, code, color):
         Command.__init__(self)

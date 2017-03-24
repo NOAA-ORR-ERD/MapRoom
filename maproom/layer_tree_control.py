@@ -18,7 +18,7 @@ class LayerTreeControl(wx.Panel):
         wx.Panel.__init__(self, parent, wx.ID_ANY, size=size)
 
         self.tree = treectrl.CustomTreeCtrl(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE,
- agwStyle=treectrl.TR_HIDE_ROOT | treectrl.TR_NO_LINES | treectrl.TR_HAS_BUTTONS)
+                                            agwStyle=treectrl.TR_HIDE_ROOT | treectrl.TR_NO_LINES | treectrl.TR_HAS_BUTTONS)
         self.project = project
 
         self.tree.Bind(treectrl.EVT_TREE_ITEM_CHECKED, self.handle_item_checked)

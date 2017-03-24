@@ -34,14 +34,14 @@ class MaproomPreferences(PreferencesHelper):
         "degrees decimal minutes",
         "degrees minutes seconds",
         "decimal degrees",
-        )
+    )
 
     # mouse wheel zoom speed
     zoom_speed = Enum(
         "Slow",
         "Medium",
         "Fast",
-        )
+    )
 
     # display scale legend by default
     show_scale = Bool(True)

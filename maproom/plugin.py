@@ -40,8 +40,8 @@ class MaproomPlugin(FrameworkPlugin):
         from maproom.task import MaproomProjectTask
 
         return self.task_factories_from_tasks([
-                MaproomProjectTask,
-            ])
+            MaproomProjectTask,
+        ])
 
     def start(self):
         pass

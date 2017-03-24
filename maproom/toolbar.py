@@ -13,13 +13,13 @@ valid_mouse_modes = {
         modes.RulerMode,
         modes.PointEditMode,
         modes.LineEditMode,
-        ],
+    ],
     'PolygonLayerToolBar': [
         modes.PolygonSelectionMode,
         modes.ZoomRectMode,
         modes.RulerMode,
         modes.CropRectMode,
-        ],
+    ],
     'AnnotationLayerToolBar': [
         modes.PanMode,
         modes.ZoomRectMode,
@@ -35,17 +35,17 @@ valid_mouse_modes = {
         modes.AddOverlayIconMode,
         modes.AddArrowTextMode,
         modes.AddArrowTextIconMode,
-        ],
+    ],
     'BaseLayerToolBar': [
         modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
-        ],
+    ],
     'RNCToolBar': [
         modes.RNCSelectionMode,
         modes.ZoomRectMode,
-        ],
-    }
+    ],
+}
 
 
 def get_valid_mouse_mode(mouse_mode, mode_mode_toolbar_name):

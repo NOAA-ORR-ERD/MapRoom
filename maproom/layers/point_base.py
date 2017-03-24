@@ -315,8 +315,8 @@ class PointBaseLayer(ProjectedLayer):
 
         if layer_visibility["points"]:
             renderer.draw_points(self, picker, self.point_size,
-                                      self.get_selected_point_indexes(),
-                                      self.get_selected_point_indexes(state.FLAGGED))
+                                 self.get_selected_point_indexes(),
+                                 self.get_selected_point_indexes(state.FLAGGED))
 
         # the labels
         if layer_visibility["labels"]:

@@ -54,7 +54,7 @@ class MoveControlPointCommand(Command):
         ('dy', 'float'),
         ('snapped_layer', 'layer'),
         ('snapped_cp', 'int'),
-        ]
+    ]
 
     def __init__(self, layer, drag, anchor, dx, dy, snapped_layer, snapped_cp, about_center=False):
         Command.__init__(self, layer)
@@ -131,7 +131,7 @@ class UnlinkControlPointCommand(Command):
     serialize_order = [
         ('layer', 'layer'),
         ('anchor', 'int'),
-        ]
+    ]
 
     def __init__(self, layer, anchor):
         Command.__init__(self, layer)
@@ -165,7 +165,7 @@ class RotateObjectCommand(Command):
         ('drag', 'int'),
         ('dx', 'float'),
         ('dy', 'float'),
-        ]
+    ]
 
     def __init__(self, layer, drag, dx, dy):
         Command.__init__(self, layer)
@@ -223,7 +223,7 @@ class DrawVectorObjectCommand(Command):
         ('cp1', 'point'),
         ('cp2', 'point'),
         ('style', 'style'),
-        ]
+    ]
 
     def __init__(self, event_layer, cp1, cp2, style):
         Command.__init__(self, event_layer)
@@ -412,7 +412,7 @@ class DrawLineCommand(DrawVectorObjectCommand):
         ('style', 'style'),
         ('snapped_layer', 'layer'),
         ('snapped_cp', 'int'),
-        ]
+    ]
 
     def __init__(self, event_layer, cp1, cp2, style, snapped_layer, snapped_cp):
         DrawVectorObjectCommand.__init__(self, event_layer, cp1, cp2, style)
@@ -452,7 +452,7 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
         ('layer', 'layer'),
         ('points', 'points'),
         ('style', 'style'),
-        ]
+    ]
 
     def __init__(self, event_layer, points, style):
         Command.__init__(self, event_layer)
@@ -489,7 +489,7 @@ class AddTextCommand(DrawVectorObjectCommand):
         ('style', 'style'),
         ('screen_width', 'int'),
         ('screen_height', 'int'),
-        ]
+    ]
 
     def __init__(self, event_layer, point, style, screen_width, screen_height):
         Command.__init__(self, event_layer)
@@ -513,7 +513,7 @@ class AddIconCommand(DrawVectorObjectCommand):
         ('layer', 'layer'),
         ('point', 'point'),
         ('style', 'style'),
-        ]
+    ]
 
     def __init__(self, event_layer, point, style):
         Command.__init__(self, event_layer)

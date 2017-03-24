@@ -749,7 +749,7 @@ class FillStyleField(InfoField):
 
     def create_control(self):
         c = wx.combo.BitmapComboBox(self.parent, -1, "", size=(self.default_width, -1),
-                             style=wx.CB_READONLY)
+                                    style=wx.CB_READONLY)
         for i, s in LayerStyle.fill_styles.iteritems():
             c.Append(s[0])
 
@@ -906,7 +906,7 @@ class FontStyleField(InfoField):
     def create_control(self):
         names = LayerStyle.get_font_names()
         c = FontComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
-                             style=wx.CB_READONLY)
+                         style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
 
@@ -962,7 +962,7 @@ class MarkerField(InfoField):
     def create_control(self):
         names = [m[0] for m in LayerStyle.marker_styles]
         c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names,
-                             style=wx.CB_READONLY)
+                        style=wx.CB_READONLY)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
 
@@ -1510,7 +1510,7 @@ class InfoPanel(PANELTYPE):
         "Radius": WholeLinePropertyField,
         "Circumference": WholeLinePropertyField,
         "Area": WholeLinePropertyField,
-        }
+    }
 
     def create_fields(self, layer, fields):
         self.sizer.AddSpacer(self.LABEL_SPACING)

@@ -94,7 +94,7 @@ class ImmediateModeRenderer():
 
             if (picker.is_active):
                 picker.bind_picker_colors_for_lines(layer,
-                                          len(self.world_line_segment_points))
+                                                    len(self.world_line_segment_points))
                 gl.glLineWidth(6)
             else:
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
@@ -759,7 +759,7 @@ class ImmediateModeRenderer():
 
         if (picker.is_active):
             picker.bind_picker_colors_for_lines(layer,
-                                      len(self.world_line_segment_points))
+                                                len(self.world_line_segment_points))
             gl.glLineWidth(6)
         else:
             gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated

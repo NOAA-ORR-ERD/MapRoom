@@ -116,7 +116,7 @@ class TriangleLayer(PointLayer):
 
     def insert_triangle_at_index(self, index, params):
         entry = np.array([params],
-                       dtype=data_types.TRIANGLE_DTYPE).view(np.recarray)
+                         dtype=data_types.TRIANGLE_DTYPE).view(np.recarray)
         self.triangles = np.insert(self.triangles, index, entry).view(np.recarray)
 
         return index
@@ -260,8 +260,8 @@ class TriangleLayer(PointLayer):
             layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(layer.line_segment_indexes)].view(np.uint32).copy(),
             hole_points_xy)
         return (triangle_points_xy,
-         triangle_points_z,
-         triangles)
+                triangle_points_z,
+                triangles)
 
     def unproject_triangle_points(self, points):
         points.x, points.y = self.manager.project.layer_canvas.projection(points.x, points.y, inverse=True)
@@ -284,9 +284,9 @@ class TriangleLayer(PointLayer):
             if z >= c0[0] and z <= c[0]:
                 perc = (z - c0[0]) / float(c[0] - c0[0])
                 return color_floats_to_int((c0[1] + (c[1] - c0[1]) * perc) / 255.,
-                                    (c0[2] + (c[2] - c0[2]) * perc) / 255.,
-                                    (c0[3] + (c[3] - c0[3]) * perc) / 255.,
-                                    alpha)
+                                           (c0[2] + (c[2] - c0[2]) * perc) / 255.,
+                                           (c0[3] + (c[3] - c0[3]) * perc) / 255.,
+                                           alpha)
             c0 = c
         return color_floats_to_int(c[1] / 255., c[2] / 255., c[3] / 255., alpha)
 
@@ -305,13 +305,13 @@ class TriangleLayer(PointLayer):
                 (-10, 0xf0, 0xeb, 0xc3),
                 (-0.01, 0xf0, 0xeb, 0xc3),
                 (0, 0xd6, 0xea, 0xeb),
-#                (10, 0x9b, 0xd3, 0xe0),
-#                (20, 0x54, 0xc0, 0xdc),
-#                (30, 0x00, 0xa0, 0xcc),
-#                (40, 0x00, 0x6a, 0xa4),
-#                (50, 0x1f, 0x48, 0x8a),
+                #                (10, 0x9b, 0xd3, 0xe0),
+                #                (20, 0x54, 0xc0, 0xdc),
+                #                (30, 0x00, 0xa0, 0xcc),
+                #                (40, 0x00, 0x6a, 0xa4),
+                #                (50, 0x1f, 0x48, 0x8a),
                 (100, 0x00, 0x04, 0x69),
-                )
+            )
 
             for i in range(len(colors)):
                 d = self.points.z[i]

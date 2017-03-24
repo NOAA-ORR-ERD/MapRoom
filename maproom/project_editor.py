@@ -153,7 +153,7 @@ class ProjectEditor(FrameworkEditor):
                     "an error occurred on line %d while processing" % line,
                     "the command '%s':" % cmd.short_name,
                     ""
-                    ]
+                ]
                 header.extend(errors)
                 text = "\n".join(header)
                 self.task.error(text, "Error restoring from command log")

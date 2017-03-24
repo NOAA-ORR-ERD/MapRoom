@@ -4,17 +4,17 @@ convert_units_map = {
         "feet": 1.0,
         "fathoms": 1.0 / 6.0,
         "meters": 0.3048,
-        },
+    },
     "fathoms": {
         "feet": 6.0,
         "fathoms": 1.0,
         "meters": 1.8288,
-        },
+    },
     "meters": {
         "feet": 3.28084,
         "fathoms": 0.546807,
         "meters": 1.0,
-        },
+    },
 }
 
 

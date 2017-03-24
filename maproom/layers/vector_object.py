@@ -203,7 +203,7 @@ class LineVectorObject(VectorObjectLayer):
         ((0, 0), (1, 1), (0.5, 0.5)),  # anchor point is 0 (drag point is 1)
         ((1, 1), (0, 0), (0.5, 0.5)),  # anchor point is 1, etc.
         ((1, 1), (1, 1), (1, 1)),  # center point acts as rigid move
-        ), dtype=np.float32)
+    ), dtype=np.float32)
 
     def calculate_distances(self):
         return haversine_list(self.points[0:self.num_corners])
@@ -476,7 +476,7 @@ class RectangleMixin(object):
         ((0, 1), (0, 1), (0, 0), (0, 0), (0, 1), (0, .5), (0, 0), (0, .5), (0, .5)),
         ((0, 0), (1, 0), (1, 0), (0, 0), (.5, 0), (1, 0), (.5, 0), (0, 0), (.5, 0)),
         ((1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1), (1, 1)),  # center point acts as rigid move
-        ), dtype=np.float32)
+    ), dtype=np.float32)
 
     def compute_constrained_control_points(self, cp):
         x1 = cp[0, 0]

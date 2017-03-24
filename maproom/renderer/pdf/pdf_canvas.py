@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 paper_size_map = {
     wx.PAPER_LETTER: pagesizes.letter,
     wx.PAPER_A4: pagesizes.A4,
-    }
+}
 
 
 class PDFCanvas(BaseCanvas):

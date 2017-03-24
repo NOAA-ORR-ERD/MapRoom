@@ -386,7 +386,7 @@ class Boundaries(object):
                  (tuple(points[0]), tuple(points[num_points - 1]), start_index, boundary_id)]
                 + [(tuple(points[i - 1]), tuple(points[i]), i + start_index, boundary_id) for i in range(1, num_points)]
                 + [(tuple(points[i]), tuple(points[i - 1]), i + start_index, boundary_id) for i in range(1, num_points)]
-                )
+            )
             boundary_points.extend(points)
             boundary_min_max.append((start_index, start_index + num_points - 1))
             start_index += num_points
@@ -507,7 +507,7 @@ def segments_intersect(a, b, c, d):
         dir1 = (d[0] - c[0]) * (a[1] - c[1]) - (a[0] - c[0]) * (d[1] - c[1])
         dir2 = (d[0] - c[0]) * (b[1] - c[1]) - (b[0] - c[0]) * (d[1] - c[1])
         return ((dir1 > 0.0) != (dir2 > 0.0)
-            or (not dir1) != (not dir2))
+                or (not dir1) != (not dir2))
     return False
 
 
@@ -530,7 +530,7 @@ def self_intersection_check(points):
     """
     indices = range(len(points))
     points = ([(tuple(points[i - 1]), tuple(points[i]), i, 0) for i in indices]
-        + [(tuple(points[i]), tuple(points[i - 1]), i, 0) for i in indices])
+              + [(tuple(points[i]), tuple(points[i - 1]), i, 0) for i in indices])
     return general_intersection_check(points, [(0, len(indices) - 1)])
 
 
@@ -575,7 +575,7 @@ def general_intersection_check(points, boundary_min_max):
                 # ignore adjacent edges (note that the index number wraps
                 # around within each closed-loop boundary)
                 if (((seg_id != open_id) or ((boundary_min_max[seg_id][1] - boundary_min_max[seg_id][0]) > abs(index - open_index) > 1))
-                    and segments_intersect(seg_start, seg_end, open_start, open_end)):
+                        and segments_intersect(seg_start, seg_end, open_start, open_end)):
                     seg_prev_index = index - 1
                     if seg_prev_index < boundary_min_max[seg_id][0]:
                         seg_prev_index = boundary_min_max[seg_id][1]

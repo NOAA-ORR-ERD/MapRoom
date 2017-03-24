@@ -202,7 +202,7 @@ def load_bna_file(uri):
         ring_identifiers.append(
             {'name': name,
              'feature_code': feature_code}
-            )
+        )
         last_index = start_index + num_points
         all_polygon_points[start_index:last_index, :] = item_points[0:num_points, :]
         polygon_starts[polygon_index] = start_index
@@ -264,7 +264,7 @@ def load_bna_as_shapely(uri):
         ring_identifiers.append(
             {'name': name,
              'feature_code': feature_code}
-            )
+        )
         if is_polygon:
             geom = Polygon(item_points[0:num_points])
         else:

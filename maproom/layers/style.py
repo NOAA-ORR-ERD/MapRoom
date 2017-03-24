@@ -49,27 +49,27 @@ class LayerStyle(object):
         ("Solid", 0xffff, wx.SOLID),
         ("Dashed", 0xcccc, wx.LONG_DASH),
         ("Dotted", 0xaaaa, wx.DOT),
-        ]
+    ]
 
     marker_styles = [
         ("None", None, False),
         ("Arrow", marker_arrow, False),
         ("Filled Arrow", marker_arrow, True),
-        ]
+    ]
 
     fill_styles = OrderedDict([
         (0, ("No Fill", None,)),
         (1, ("Solid Color", None,)),
         (2, ("50%", fill_50)),
         (3, ("Hatched", hatched)),
-        ])
+    ])
 
     text_format_styles = [
         ("Plain Text", None),
         ("HTML", None),
         ("RST Markup", None),
         ("Markdown", None),
-        ]
+    ]
 
     fonts = None  # Will be initialized in call to get_font_names
 
@@ -84,33 +84,33 @@ class LayerStyle(object):
     stylev1_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'fill_color',
-        ]
+    ]
 
     stylev2_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style',
-        ]
+    ]
 
     stylev3_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size'
-        ]
+    ]
 
     stylev4_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size',
         'text_format'
-        ]
+    ]
 
     stylev5_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
         'line_width', 'line_start_marker', 'line_end_marker',
         'fill_color', 'fill_style', 'font', 'font_size',
         'text_format', 'icon_marker'
-        ]
+    ]
 
     stylev6_serialization_order = [
         'line_color', 'line_stipple', 'line_stipple_factor',
@@ -118,7 +118,7 @@ class LayerStyle(object):
         'fill_color', 'fill_style',
         'text_color', 'font', 'font_size', 'text_format',
         'icon_marker'
-        ]
+    ]
 
     valid = set(stylev6_serialization_order)
 

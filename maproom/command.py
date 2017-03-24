@@ -222,7 +222,7 @@ class Command(object):
     short_name = None
     serialize_order = [
         ('layer', 'layer'),
-        ]
+    ]
 
     def __init__(self, layer=None):
         # Instead of storing a reference to the layer itself, an invariant

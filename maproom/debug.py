@@ -74,7 +74,7 @@ def debug_objects(lm):
         (10, 30),
         (8, 15),
         (17, 10),
-        ])
+    ])
     a.set_style(lm.default_style)
     a.style.fill_style = 0
     lm.insert_layer([3, 999], a)
@@ -86,7 +86,7 @@ def debug_objects(lm):
         (-20, 20),
         (-10, 15),
         (2, 20),
-        ])
+    ])
     a.set_style(lm.default_style)
     a.style.line_stipple = 0
     a.style.fill_color = a.style.default_colors[2]

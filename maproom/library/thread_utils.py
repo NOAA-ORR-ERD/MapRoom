@@ -174,13 +174,13 @@ class WMSRequestServer(UnskippableURLRequest):
         if self.is_valid():
             crs, bbox = self.get_bbox(corrected, wr, pr)
             img = self.wms.getmap(layers=corrected,
-#                             styles=styles,
-                             srs=crs,
-                             bbox=bbox,
-                             size=size,
-                             format='image/png',
-                             transparent=True
-                             )
+                                  #                             styles=styles,
+                                  srs=crs,
+                                  bbox=bbox,
+                                  size=size,
+                                  format='image/png',
+                                  transparent=True
+                                  )
             data = img.read()
         else:
             data = blank_png

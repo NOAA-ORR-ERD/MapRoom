@@ -78,7 +78,7 @@ class Grid(ScreenLayer):
             s = self.grid.format_lon_line_label(longitude)
             size = renderer.get_drawn_string_dimensions(s)
             renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5),
-                                             (s_p[0], screen_rect[1][1]))
+                                      (s_p[0], screen_rect[1][1]))
             """
             for offset in xrange( 200 ):
                 renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] + offset * 2 ), s )
@@ -95,7 +95,7 @@ class Grid(ScreenLayer):
             s = self.grid.format_lat_line_label(latitude)
             size = renderer.get_drawn_string_dimensions(s)
             renderer.draw_screen_line((screen_rect[0][0], s_p[1]),
-                                             (screen_rect[1][0] - size[0] - 5, s_p[1]))
+                                      (screen_rect[1][0] - size[0] - 5, s_p[1]))
             renderer.draw_screen_string(
                 (screen_rect[1][0] - size[0] - 3, s_p[1] - size[1] / 2 - 1), s)
 

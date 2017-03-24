@@ -234,7 +234,7 @@ class BackgroundTileDownloader(BackgroundHttpMultiDownloader, HostCache):
         "local": TileServerInitRequest,
         "url": URLTileServerInitRequest,
         "wmts": WMTSTileServerInitRequest,
-        }
+    }
 
     def __init__(self, host, cache_root):
         HostCache.__init__(self, host, cache_root)
