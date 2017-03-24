@@ -1,8 +1,4 @@
-
-
-
-
-class BaseRenderer():
+class BaseRenderer(object):
     NUM_COLOR_CHANNELS = 4  # i.e. RGBA
 
     def __init__(self, canvas, layer):
