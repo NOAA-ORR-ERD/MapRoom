@@ -24,26 +24,26 @@ def parse_int_string(nputstr=""):
         try:
             # typically tokens are plain old integers
             selection.append(int(i))
-        except:
+        except ValueError:
             # if not, then it might be a range
             try:
-               token = [int(k.strip()) for k in i.split('-')]
-               if len(token) > 1:
-                  token.sort()
-                  # we have items seperated by a dash
-                  # try to build a valid range
-                  first = token[0]
-                  last = token[len(token)-1]
-                  for x in range(first, last+1):
-                     selection.append(x)
-            except:
-               # not an int and not a range...
-               invalid.add(i)
+                token = [int(k.strip()) for k in i.split('-')]
+                if len(token) > 1:
+                    token.sort()
+                    # we have items seperated by a dash
+                    # try to build a valid range
+                    first = token[0]
+                    last = token[len(token)-1]
+                    for x in range(first, last+1):
+                        selection.append(x)
+            except ValueError:
+                # not an int and not a range...
+                invalid.add(i)
     # Report invalid tokens before returning valid selection
     if invalid:
         error = u"Invalid range: " + " ".join([unicode(i) for i in invalid])
-    #ordered = list(selection)
-    #ordered.sort()
+    # ordered = list(selection)
+    # ordered.sort()
     return selection, error
 
 
