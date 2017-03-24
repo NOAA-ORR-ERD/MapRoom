@@ -16,7 +16,7 @@ class MaproomPlugin(FrameworkPlugin):
     TASK_FACTORIES = 'envisage.ui.tasks.tasks'
     PREFERENCES_PANES = 'envisage.ui.tasks.preferences_panes'
 
-    #### 'IPlugin' interface ##################################################
+    # 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
     id = 'omnivore.tasks'
@@ -24,7 +24,7 @@ class MaproomPlugin(FrameworkPlugin):
     # The plugin's name (suitable for displaying to the user).
     name = 'MapRoom'
 
-    #### Contributions to extension points made by this plugin ################
+    # Contributions to extension points made by this plugin ################
 
     task_factories = List(contributes_to=TASK_FACTORIES)
     preferences_panes = List(contributes_to=PREFERENCES_PANES)

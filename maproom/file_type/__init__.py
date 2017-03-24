@@ -75,7 +75,7 @@ from traits.api import List
 class MaproomFileRecognizerPlugin(Plugin):
     """ A plugin that contributes to the omnivore.file_type.recognizer extension point. """
 
-    #### 'IPlugin' interface ##################################################
+    # 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
     id = 'maproom.file_type.builtin'

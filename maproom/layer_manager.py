@@ -720,7 +720,7 @@ class LayerManager(BaseDocument):
     def count_raster_layers(self):
         # fixme -- what  in the world are these used for?
         # and if there is a need, maybe it should be more  like
-        ## count_layer_of_type(self, layer_type="")
+        # count_layer_of_type(self, layer_type="")
         n = 0
         for layer in self.flatten():
             if (hasattr(layer, "images") and layer.images is not None):

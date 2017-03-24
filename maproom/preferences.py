@@ -22,12 +22,12 @@ class MaproomPreferences(PreferencesHelper):
     """ The preferences helper for the Framework application.
     """
 
-    #### 'PreferencesHelper' interface ########################################
+    # 'PreferencesHelper' interface ########################################
 
     # The path to the preference node that contains the preferences.
     preferences_path = 'maproom'
 
-    #### Preferences ##########################################################
+    # Preferences ##########################################################
 
     # Lat/lon degree display format
     coordinate_display_format = Enum(
@@ -63,14 +63,14 @@ class MaproomPreferencesPane(PreferencesPane):
     """ The preferences pane for the Framework application.
     """
 
-    #### 'PreferencesPane' interface ##########################################
+    # 'PreferencesPane' interface ##########################################
 
     # The factory to use for creating the preferences model object.
     model_factory = MaproomPreferences
 
     category = Str('MapRoom')
 
-    #### 'FrameworkPreferencesPane' interface ################################
+    # 'FrameworkPreferencesPane' interface ################################
 
     view = View(
         VGroup(HGroup(Item('coordinate_display_format'),

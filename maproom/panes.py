@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 class LayerSelectionPane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.layer_selection_pane'
     name = 'Layers'
@@ -32,7 +32,7 @@ class LayerSelectionPane(FrameworkPane):
 
 
 class LayerInfoPane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.layer_info_pane'
     name = 'Current Layer'
@@ -43,7 +43,7 @@ class LayerInfoPane(FrameworkPane):
 
 
 class SelectionInfoPane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.selection_info_pane'
     name = 'Current Selection'
@@ -54,7 +54,7 @@ class SelectionInfoPane(FrameworkPane):
 
 
 class TriangulatePane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.triangulate_pane'
     name = 'Triangulate'
@@ -65,7 +65,7 @@ class TriangulatePane(FrameworkPane):
 
 
 class MergePointsPane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.merge_points_pane'
     name = 'Merge Points'
@@ -76,7 +76,7 @@ class MergePointsPane(FrameworkPane):
 
 
 class UndoHistoryPane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.undo_history_pane'
     name = 'Undo History'
@@ -225,7 +225,7 @@ class DownloadPanel(DownloadControl):
 
 
 class SidebarPane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.sidebar'
     name = 'Sidebar'
@@ -254,7 +254,7 @@ class SidebarPane(FrameworkPane):
 
 
 class HtmlHelpPane(FrameworkPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.html_help_pane'
     name = 'HTML Help'
@@ -290,7 +290,7 @@ class HtmlHelpPane(FrameworkPane):
 
 
 class RSTHelpPane(HtmlHelpPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.rst_markup_help_pane'
     name = 'RST Help'
@@ -304,7 +304,7 @@ class RSTHelpPane(HtmlHelpPane):
 
 
 class MarkdownHelpPane(HtmlHelpPane):
-    #### TaskPane interface ###################################################
+    # TaskPane interface ###################################################
 
     id = 'maproom.markdown_help_pane'
     name = 'Markdown Help'

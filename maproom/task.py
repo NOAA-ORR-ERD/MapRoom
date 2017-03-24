@@ -49,7 +49,7 @@ class MaproomProjectTask(FrameworkTask):
 
     about_application = ""
 
-    #### Task interface #######################################################
+    # Task interface #######################################################
 
     name = 'MapRoom Project File'
 
@@ -61,7 +61,7 @@ class MaproomProjectTask(FrameworkTask):
 
     start_new_editor_in_new_window = True
 
-    #### 'IAbout' interface ###################################################
+    # 'IAbout' interface ###################################################
 
     about_title = Str('MapRoom')
 
@@ -73,11 +73,11 @@ class MaproomProjectTask(FrameworkTask):
 
     about_image = Instance(ImageResource, ImageResource('maproom_large'))
 
-    #### 'IErrorReporter' interface ###########################################
+    # 'IErrorReporter' interface ###########################################
 
     error_email_to = Str('rob.mcmullen@noaa.gov')
 
-    #### Menu events ##########################################################
+    # Menu events ##########################################################
 
     # Layer selection event placed here instead of in the ProjectEditor
     # because the trait events don't seem to be triggered in the

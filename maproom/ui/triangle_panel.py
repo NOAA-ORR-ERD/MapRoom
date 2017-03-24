@@ -32,11 +32,11 @@ class TrianglePanel(wx.Panel):
 
         box = wx.StaticBox(self, label="Quality Mesh Minimum Angle")
         s = wx.StaticBoxSizer(box, wx.VERTICAL)
-##        t = wx.StaticText(self, label="You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.", pos=(0, 0))
-##        s.Add(t, 0, wx.ALIGN_TOP | wx.ALL, 5)
-#
-#        t = wx.StaticText(self, label="Minimum angle:")
-#        s.Add(t, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        #  # t = wx.StaticText(self, label="You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.", pos=(0, 0))
+        #  # s.Add(t, 0, wx.ALIGN_TOP | wx.ALL, 5)
+
+        # t = wx.StaticText(self, label="Minimum angle:")
+        # s.Add(t, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         s2 = wx.BoxSizer(wx.HORIZONTAL)
         self.angle_text_box = wx.TextCtrl(self, 0, "", size=(100, -1))
         self.angle_text_box.SetHelpText("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
