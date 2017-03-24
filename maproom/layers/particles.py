@@ -28,7 +28,7 @@ from point_base import PointBaseLayer
 
 class ParticleFolder(Folder):
     """Layer for vector annotation image
-    
+
     """
     name = Unicode("Particles")
 
@@ -109,7 +109,7 @@ class ParticleFolder(Folder):
         if self.start_index > index:
             self.start_index = index
 
-    def update_timestep_visibility(self,  project):
+    def update_timestep_visibility(self, project):
         # Folders will automatically set their children's visiblity state to
         # the parent state
         steps = self.get_particle_layers()

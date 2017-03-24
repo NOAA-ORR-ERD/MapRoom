@@ -52,7 +52,7 @@ def get_rect(w, h):
     # just some indexes to keep track of which byte is which
     R, G, B, A = range(4)
 
-    red, green, blue, alpha = (35, 142,  35, 128)
+    red, green, blue, alpha = (35, 142, 35, 128)
     # initialize all pixel values to the values passed in
     arr[:,:,R] = red
     arr[:,:,G] = green
@@ -60,10 +60,10 @@ def get_rect(w, h):
     arr[:,:,A] = alpha
 
     # Set the alpha for the border pixels to be fully opaque
-    arr[0,   0:w, A] = wx.ALPHA_OPAQUE  # first row
-    arr[h - 1, 0:w, A] = wx.ALPHA_OPAQUE  # last row
-    arr[0:h, 0,   A] = wx.ALPHA_OPAQUE  # first col
-    arr[0:h, w - 1, A] = wx.ALPHA_OPAQUE  # last col
+    arr[0,0:w,A] = wx.ALPHA_OPAQUE  # first row
+    arr[h-1,0:w,A] = wx.ALPHA_OPAQUE  # last row
+    arr[0:h,0,A] = wx.ALPHA_OPAQUE  # first col
+    arr[0:h,w-1,A] = wx.ALPHA_OPAQUE  # last col
 
     return arr
 
@@ -221,9 +221,9 @@ class OffScreenHTML(object):
 
 if __name__ == "__main__":
     HTML = """<h1> A Title </h1>
-    
+
     <p>This is a simple test of rendering a little text with an html renderer</p>
-    
+
     <p>
     Now another paragraph, with a bunch more text in it. This is a test
     that will show if it can take care of the basic rendering for us, and
