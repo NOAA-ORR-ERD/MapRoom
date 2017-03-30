@@ -129,7 +129,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = Str("particle")
 
-    layer_info_panel = ["Status Code Color"]
+    layer_info_panel = ["Status Code Color", "Outline color", "Outline transparency"]
 
     status_codes = Any  # numpy list matching array size of points
 

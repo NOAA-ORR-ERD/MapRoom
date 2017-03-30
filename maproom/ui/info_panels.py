@@ -581,6 +581,14 @@ class TextAlphaField(LineAlphaField):
         return LayerStyle(text_color=color)
 
 
+class OutlineAlphaField(LineAlphaField):
+    def get_layer_color(self, layer):
+        return layer.style.outline_color
+
+    def get_layer_style(self, layer, color):
+        return LayerStyle(outline_color=color)
+
+
 class ColorPickerField(InfoField):
     same_line = True
 
@@ -623,6 +631,14 @@ class FillColorField(ColorPickerField):
 
     def get_value(self, layer):
         return layer.style.fill_color
+
+
+class OutlineColorField(ColorPickerField):
+    def get_style(self, color):
+        return LayerStyle(outline_color=color)
+
+    def get_value(self, layer):
+        return layer.style.outline_color
 
 
 class TextColorField(ColorPickerField):
@@ -1484,6 +1500,8 @@ class InfoPanel(PANELTYPE):
         "End marker": EndMarkerField,
         "Fill color": FillColorField,
         "Fill style": FillStyleField,
+        "Outline color": OutlineColorField,
+        "Outline transparency": OutlineAlphaField,
         "Text color": TextColorField,  # Same as Line Color except for the label
         "Text transparency": TextAlphaField,
         "Font": FontStyleField,

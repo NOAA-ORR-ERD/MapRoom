@@ -33,6 +33,8 @@ class LayerStyle(object):
 
     default_text_color = color_floats_to_int(0, 0, 0, 1.0)
 
+    default_outline_color = color_floats_to_int(1.0, 0.5, 1.0, 0.75)
+
     default_colors = [
         color_floats_to_int(0, 0, 1.0, 1),
         color_floats_to_int(0, 0.75, 0, 1),
@@ -118,7 +120,15 @@ class LayerStyle(object):
         'icon_marker'
     ]
 
-    valid = set(stylev6_serialization_order)
+    stylev7_serialization_order = [
+        'line_color', 'line_stipple', 'line_stipple_factor',
+        'line_width', 'line_start_marker', 'line_end_marker',
+        'fill_color', 'fill_style', 'outline_color',
+        'text_color', 'font', 'font_size', 'text_format',
+        'icon_marker'
+    ]
+
+    valid = set(stylev7_serialization_order)
 
     def __init__(self, **kwargs):
         if len(kwargs):
@@ -141,6 +151,7 @@ class LayerStyle(object):
             self.line_end_marker = 0
             self.fill_color = self.default_fill_color  # 4 byte including alpha
             self.fill_style = 1
+            self.outline_color = self.default_outline_color  # 4 byte including alpha
             self.text_color = self.default_text_color  # 4 byte including alpha
             self.font = ""
             self.font_size = self.default_font_size
@@ -148,8 +159,8 @@ class LayerStyle(object):
             self.icon_marker = 320  # Shapes/Cross
 
     def __str__(self):
-        args = [self.get_str(i) for i in self.stylev6_serialization_order]
-        return "stylev6:%s" % ",".join(args)
+        args = [self.get_str(i) for i in self.stylev7_serialization_order]
+        return "stylev7:%s" % ",".join(args)
 
     def get_str(self, k):
         v = getattr(self, k)

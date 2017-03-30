@@ -133,7 +133,8 @@ class ImmediateModeRenderer():
                     picker,
                     point_size,
                     selected_point_indexes=[],
-                    flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
+                    flagged_point_indexes=[],
+                    style=None):  # flagged_line_segment_indexes not yet used
         #log.debug("in Point_and_line_set_renderer.render_points, layer:%s, picker:%s"%(layer, picker) )
 
         if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
@@ -148,10 +149,14 @@ class ImmediateModeRenderer():
             else:
                 # To make the points stand out better, especially when rendered on top
                 # of line segments, draw translucent white rings under them.
-                gl.glPointSize(point_size + 4)
-                gl.glColor(1, 1, 1, 0.75)
-                gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
-                gl.glColor(1, 1, 1, 1)
+                if style is not False:
+                    gl.glPointSize(point_size + 4)
+                    if style is not None:
+                        r, g, b, a = int_to_color_floats(style.outline_color)
+                        gl.glColor(r, g, b, a)
+                    else:
+                        gl.glColor(1, 1, 1, 0.75)
+                    gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
 
                 # Now set actual color
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
