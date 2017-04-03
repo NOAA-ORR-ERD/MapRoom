@@ -1,6 +1,9 @@
 
 from omnivore.utils.runtime import get_all_subclasses
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class UndoStack(list):
     def __init__(self, *args, **kwargs):
@@ -251,17 +254,69 @@ class Command(object):
             return self.__class__.__name__
         return self.short_name
 
-    def coalesce(self, next_command):
+    def can_coalesce(self, next_command):
         return False
+
+    def coalesce_merge(self, next_command):
+        raise NotImplementedError
+
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__ and self.can_coalesce(next_command):
+            self.coalesce_merge(next_command)
+            return True
 
     def is_recordable(self):
         return True
 
+    def perform_on_layer(self, editor, layer, lm, lf):
+        raise NotImplementedError
+
+    def perform_on_parent(self, editor, layer, lm, lf):
+        return self.perform_on_layer(editor, layer, lm, lf)
+
+    def get_affected_layers(self, layer, lm):
+        """If any layers are affected by the change to this layer, return them
+        here in the order that they should be changed.
+
+        Defaults to all children of the layer.
+        """
+        return lm.get_layer_children(layer)
+
     def perform(self, editor):
-        pass
+        lm = editor.layer_manager
+        self.undo_info = undo = UndoInfo()
+        undo.data = []
+        layer = lm.get_layer_by_invariant(self.layer)
+        lf = undo.flags.add_layer_flags(layer)
+        log.debug("%s: perform_on_parent: %s" % (self, layer))
+        layer_undo_info = self.perform_on_parent(editor, layer, lm, lf)
+        undo.data.append((layer.invariant, layer_undo_info))
+        children = self.get_affected_layers(layer, lm)
+        for layer in children:
+            log.debug("%s: perform_on_layer: %s" % (self, layer))
+            lf = undo.flags.add_layer_flags(layer)
+            layer_undo_info = self.perform_on_layer(editor, layer, lm, lf)
+            undo.data.append((layer.invariant, layer_undo_info))
+        return undo
+
+    def undo_on_layer(self, editor, layer, lm, layer_undo_info):
+        raise NotImplementedError
+
+    def undo_on_parent(self, editor, layer, lm, layer_undo_info):
+        return self.undo_on_layer(editor, layer, lm, lf)
 
     def undo(self, editor):
-        pass
+        lm = editor.layer_manager
+
+        # Do the layers in reverse order, as that seems the most common case.
+        # Special cases will require subclassing
+        for invariant, layer_undo_info in reversed(self.undo_info.data):
+            layer = lm.get_layer_by_invariant(invariant)
+            if invariant == self.layer:
+                self.undo_on_parent(editor, layer, lm, layer_undo_info)
+            else:
+                self.undo_on_layer(editor, layer, lm, layer_undo_info)
+        return self.undo_info
 
 
 class Batch(Command):
