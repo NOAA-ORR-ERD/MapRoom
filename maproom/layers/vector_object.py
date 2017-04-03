@@ -1347,7 +1347,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
-    layer_info_panel = ["Layer name"]
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
 
