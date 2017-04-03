@@ -38,7 +38,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Status Code Color"]
+    layer_info_panel = ["Start time", "End time", "Status Code Color", "Outline color", "Outline transparency"]
 
     @property
     def status_code_names(self):
