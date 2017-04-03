@@ -478,30 +478,32 @@ class StyleChangeCommand(Command):
     def __str__(self):
         return "Layer Style"
 
-    def coalesce(self, next_command):
-        if next_command.__class__ == self.__class__:
-            if next_command.layer == self.layer and next_command.style.has_same_keywords(self.style):
-                self.style = next_command.style
-                return True
+    def can_coalesce(self, next_command):
+        return next_command.style.has_same_keywords(self.style)
 
-    def perform(self, editor):
-        lm = editor.layer_manager
-        layer = lm.get_layer_by_invariant(self.layer)
-        self.undo_info = undo = UndoInfo()
-        undo.data = (layer.style.get_copy(), self.style, lm.default_style)
-        lf = undo.flags.add_layer_flags(layer)
+    def coalesce_merge(self, next_command):
+        self.style = next_command.style
+
+    def perform_on_layer(self, editor, layer, lm, lf):
         lf.layer_display_properties_changed = True
+        layer_undo_info = (layer.style.get_copy(), self.style)
         layer.set_style(self.style)
-        lm.update_default_style(self.style)
-        return undo
+        return layer_undo_info
 
-    def undo(self, editor):
-        lm = editor.layer_manager
-        layer = lm.get_layer_by_invariant(self.layer)
-        old_style, style, default_style = self.undo_info.data
+    def perform_on_parent(self, editor, layer, lm, lf):
+        saved_style = lm.default_style.get_copy()
+        lm.update_default_style(self.style)
+        layer_undo_info = self.perform_on_layer(editor, layer, lm, lf)
+        return (saved_style, layer_undo_info)
+
+    def undo_on_layer(self, editor, layer, lm, layer_undo_info):
+        old_style, style = layer_undo_info
         layer.set_style(old_style)
-        lm.update_default_style(default_style)
-        return self.undo_info
+
+    def undo_on_parent(self, editor, layer, lm, parent_undo_info):
+        saved_style, layer_undo_info = parent_undo_info
+        self.undo_on_layer(editor, layer, lm, layer_undo_info)
+        lm.update_default_style(saved_style)
 
 
 class TextCommand(Command):
