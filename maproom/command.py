@@ -261,7 +261,7 @@ class Command(object):
         raise NotImplementedError
 
     def coalesce(self, next_command):
-        if next_command.__class__ == self.__class__ and self.can_coalesce(next_command):
+        if next_command.__class__ == self.__class__ and next_command.layer == self.layer and self.can_coalesce(next_command):
             self.coalesce_merge(next_command)
             return True
 
