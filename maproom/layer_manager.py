@@ -657,6 +657,18 @@ class LayerManager(BaseDocument):
 
         return ret
 
+    # returns a list of all generations of layers of a root or folder layer
+    def get_layer_descendants(self, layer):
+        mi = self.get_multi_index_of_layer(layer)
+        if mi is None:
+            return []
+        l = self.get_layer_by_multi_index(mi)
+        if not isinstance(l, list):
+            return []
+
+        ret = self.flatten_recursive(l)
+        return ret[1:]
+
     def get_layer_parents(self, layer):
         """Return a list of parent layers, starting from the immediate parent
         and continuing to older ancestors but ignoring the root layer

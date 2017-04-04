@@ -278,9 +278,9 @@ class Command(object):
         """If any layers are affected by the change to this layer, return them
         here in the order that they should be changed.
 
-        Defaults to all children of the layer.
+        Defaults to all descendants of the layer.
         """
-        return lm.get_layer_children(layer)
+        return lm.get_layer_descendants(layer)
 
     def perform(self, editor):
         lm = editor.layer_manager
@@ -291,12 +291,14 @@ class Command(object):
         log.debug("%s: perform_on_parent: %s" % (self, layer))
         layer_undo_info = self.perform_on_parent(editor, layer, lm, lf)
         undo.data.append((layer.invariant, layer_undo_info))
+        log.debug("%s: parent undo: %s" % (self, undo.data[-1]))
         children = self.get_affected_layers(layer, lm)
         for layer in children:
             log.debug("%s: perform_on_layer: %s" % (self, layer))
             lf = undo.flags.add_layer_flags(layer)
             layer_undo_info = self.perform_on_layer(editor, layer, lm, lf)
             undo.data.append((layer.invariant, layer_undo_info))
+            log.debug("%s: layer undo: %s" % (self, undo.data[-1]))
         return undo
 
     def undo_on_layer(self, editor, layer, lm, layer_undo_info):
