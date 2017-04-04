@@ -1471,7 +1471,7 @@ class InfoPanel(PANELTYPE):
 
     def display_fields(self, layer, fields, different_layer, selection_changed, has_focus):
         if self.current_fields == fields:
-            log.debug("reusing current fields")
+            log.debug("reusing current fields, sel_changed=%s layer=%d" % (layer, selection_changed))
             self.set_fields(layer, fields, different_layer, selection_changed, has_focus)
         else:
             log.debug("creating fields")
@@ -1587,8 +1587,10 @@ class InfoPanel(PANELTYPE):
                 if field.is_displayed(layer):
                     if different_layer or selection_changed:
                         if field.is_editable_control(has_focus):
+                            log.debug("skipping field %s; has focus" % field_name)
                             field.is_valid()
                         else:
+                            log.debug("updating field %s" % field_name)
                             field.fill_data(layer)
                         if field.wants_focus():
                             focus = field

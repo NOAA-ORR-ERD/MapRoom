@@ -540,7 +540,13 @@ class ProjectEditor(FrameworkEditor):
         # Without checking for the current text field it is reformatted every
         # time, moving the cursor position to the beginning and generally
         # being annoying
-        current = self.window.control.FindFocus()
+        if editable_properties_changed:
+            # except this prevents undo/redo from refreshing the state of the
+            # control, and on undo text fields need to be refreshed regardless
+            # of the cursor position.
+            current = None
+        else:
+            current = self.window.control.FindFocus()
 
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
@@ -659,6 +665,7 @@ class ProjectEditor(FrameworkEditor):
             if lf.layer_display_properties_changed:
                 b.need_rebuild[layer] = False
                 b.refresh_needed = True
+                b.editable_properties_changed = True
             if lf.layer_contents_added or lf.layer_contents_deleted:
                 b.need_rebuild[layer] = False
                 b.refresh_needed = True
