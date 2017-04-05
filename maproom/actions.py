@@ -2,7 +2,7 @@ import wx
 import json
 
 # Enthought library imports.
-from pyface.api import ImageResource, GUI, FileDialog, YES, NO, OK, CANCEL
+from pyface.api import ImageResource, GUI, FileDialog, OK
 from pyface.action.api import Action, ActionItem
 from pyface.tasks.action.api import EditorAction
 from traits.api import Any
@@ -129,10 +129,7 @@ class RevertProjectAction(EditorAction):
 
     def perform(self, event):
         message = "Revert project from\n\n%s?" % self.active_editor.document.metadata.uri
-        result = event.task.confirm(message=message, default=NO, title='Revert Project?')
-        if result == CANCEL:
-            return
-        elif result == YES:
+        if event.task.confirm(message=message, title='Revert Project?'):
             self.active_editor.load_omnivore_document(self.active_editor.document)
 
 

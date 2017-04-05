@@ -3,7 +3,6 @@
 from traits.api import Any
 from traits.api import Str
 from traits.api import Unicode
-from pyface.api import YES
 
 from ..library import rect
 
@@ -86,7 +85,7 @@ class RasterLayer(ProjectedLayer):
                 message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
 
             if message is not None:
-                if (task.confirm(message) != YES):
+                if not task.confirm(message):
                     self.load_error_string = "Projection conflict"
                     return
 

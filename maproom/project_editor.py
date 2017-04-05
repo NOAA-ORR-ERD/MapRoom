@@ -8,7 +8,6 @@ import json
 import wx
 
 # Enthought library imports.
-from pyface.api import YES
 from traits.api import Any
 from traits.api import Bool
 from traits.api import Dict
@@ -886,7 +885,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             m = None
 
-        if m is not None and self.task.confirm(m, default=YES) != YES:
+        if m is not None and not self.task.confirm(m):
             return
 
         cmd = DeleteLayerCommand(layer)
@@ -913,8 +912,7 @@ class ProjectEditor(FrameworkEditor):
         elif error is not None:
             sel_layer.highlight_exception(error)
             if save_message:
-                answer = self.task.confirm(error.message, "Layer Contains Problems; Save Anyway?")
-                all_ok = (answer == YES)
+                all_ok = self.task.confirm(error.message, "Layer Contains Problems; Save Anyway?")
             else:
                 self.task.error(error.message, "Layer Contains Problems")
         else:
@@ -947,8 +945,7 @@ class ProjectEditor(FrameworkEditor):
         elif messages:
             if save_message:
                 msg = "Layers Contains Problems; Save Anyway?"
-                answer = self.task.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
-                all_ok = (answer == YES)
+                all_ok = self.task.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
             else:
                 msg = "Layers With Problems"
                 self.task.information("\n\n".join(messages), msg)

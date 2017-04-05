@@ -6,7 +6,6 @@ import os
 # Enthought library imports.
 from pyface.api import GUI
 from pyface.api import ImageResource
-from pyface.api import YES
 from pyface.action.api import Separator
 from pyface.tasks.action.api import SMenu
 from pyface.tasks.action.api import SchemaAddition
@@ -368,7 +367,7 @@ class MaproomProjectTask(FrameworkTask):
             FrameworkTask.new(self, source, **kwargs)
 
     def allow_different_task(self, guess, other_task):
-        return self.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
+        return self.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text))
 
     def restore_toolbars(self, window):
         # Omnivore framework calls this after every file load, normally to
