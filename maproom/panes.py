@@ -242,8 +242,8 @@ class SidebarPane(FrameworkPane):
 
     def create_contents(self, parent):
         control = SpringTabs(parent, self.task, popup_direction="left")
-        control.addTab("Flagged Points", self.flagged_cb)
-        control.addTab("Downloads", self.download_cb)
+        control.add_tab("Flagged Points", self.flagged_cb)
+        control.add_tab("Downloads", self.download_cb)
         return control
 
     def refresh_active(self):
