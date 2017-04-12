@@ -1,10 +1,10 @@
 from traits.api import HasTraits, provides
 
-from omnivore.file_type.i_file_recognizer import IFileRecognizer
+from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 # replaced with the UGRID_Recognizer
 # @provides(IFileRecognizer)
-# class HDF5Recognizer(HasTraits):
+# class HDF5Recognizer(RecognizerBase):
 #     """Recognizer for HDF5
 
 #     """
@@ -20,7 +20,7 @@ from omnivore.file_type.i_file_recognizer import IFileRecognizer
 
 
 @provides(IFileRecognizer)
-class UGRID_Recognizer(HasTraits):
+class UGRID_Recognizer(RecognizerBase):
     """Recognizer for UGRID netcdf files
 
     These can be HDF (netcdf4) or CDF (netcdf3)
@@ -42,7 +42,7 @@ class UGRID_Recognizer(HasTraits):
 
 
 @provides(IFileRecognizer)
-class NC_ParticleRecognizer(HasTraits):
+class NC_ParticleRecognizer(RecognizerBase):
     """Recognizer for nc_particles file.
 
     These can be HDF (netcdf4) or CDF (netcdf3)

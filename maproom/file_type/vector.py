@@ -4,14 +4,14 @@ ogr.UseExceptions()
 
 from traits.api import HasTraits, provides
 
-from omnivore.file_type.i_file_recognizer import IFileRecognizer
+from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 import logging
 log = logging.getLogger(__name__)
 
 
 @provides(IFileRecognizer)
-class OGRRecognizer(HasTraits):
+class OGRRecognizer(RecognizerBase):
     """Check to see if OGR can open this as a vector shapefile.
 
     """

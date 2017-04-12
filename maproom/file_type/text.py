@@ -1,12 +1,12 @@
 from traits.api import HasTraits, provides
 
-from omnivore.file_type.i_file_recognizer import IFileRecognizer
+from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 from maproom.serializer import magic_template
 
 
 @provides(IFileRecognizer)
-class MapRoomProjectRecognizer(HasTraits):
+class MapRoomProjectRecognizer(RecognizerBase):
     """Finds project files using magic text at the beginning of the file
     
     """
@@ -21,7 +21,7 @@ class MapRoomProjectRecognizer(HasTraits):
 
 
 @provides(IFileRecognizer)
-class MapRoomCommandRecognizer(HasTraits):
+class MapRoomCommandRecognizer(RecognizerBase):
     """Finds command log files using magic text at the beginning of the file
     
     """
@@ -36,7 +36,7 @@ class MapRoomCommandRecognizer(HasTraits):
 
 
 @provides(IFileRecognizer)
-class VerdatRecognizer(HasTraits):
+class VerdatRecognizer(RecognizerBase):
     """Finds verdat files -- looks for the "DOGS" in the header.
     
     """
@@ -51,7 +51,7 @@ class VerdatRecognizer(HasTraits):
 
 
 @provides(IFileRecognizer)
-class BNARecognizer(HasTraits):
+class BNARecognizer(RecognizerBase):
     """Finds bna files -- simply looks for extension
     
     """
@@ -69,7 +69,7 @@ class BNARecognizer(HasTraits):
 
 
 @provides(IFileRecognizer)
-class BSBRecognizer(HasTraits):
+class BSBRecognizer(RecognizerBase):
     """Finds BSB files -- simply looks for extension
     
     """

@@ -4,14 +4,14 @@ gdal.UseExceptions()
 
 from traits.api import HasTraits, provides
 
-from omnivore.file_type.i_file_recognizer import IFileRecognizer
+from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 import logging
 log = logging.getLogger(__name__)
 
 
 @provides(IFileRecognizer)
-class GDALRecognizer(HasTraits):
+class GDALRecognizer(RecognizerBase):
     """Check to see if GDAL can open this as a raster file.
 
     Some vector files can be opened by GDAL but these are not recognized by
