@@ -46,7 +46,7 @@ class Scale(ScreenLayer):
     y_offset = 20
 
     def get_visibility_dict(self):
-        prefs = self.manager.project.task.get_preferences()
+        prefs = self.manager.project.task.preferences
         d = dict()
         d["layer"] = prefs.show_scale
         return d

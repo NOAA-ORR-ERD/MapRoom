@@ -161,7 +161,7 @@ class MouseHandler(object):
     def update_status_text(self, proj_p=None, obj=True, zoom=False, instructions=""):
         c = self.layer_canvas
         e = c.project
-        prefs = e.task.get_preferences()
+        prefs = e.task.preferences
         items = []
         if proj_p is not None:
             items.append(format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format))
@@ -330,7 +330,7 @@ class MouseHandler(object):
 
         world_point = c.get_world_point_from_screen_point(screen_point)
 
-        prefs = e.task.get_preferences()
+        prefs = e.task.preferences
 
         zoom = 1.25
         zoom_speed = prefs.zoom_speed

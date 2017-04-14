@@ -91,7 +91,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         return mode
 
     def do_jump_coords(self):
-        prefs = self.project.task.get_preferences()
+        prefs = self.project.task.preferences
         from ui.dialogs import JumpCoordsDialog
         dialog = JumpCoordsDialog(self, prefs.coordinate_display_format)
         if dialog.ShowModalWithFocus() == wx.ID_OK:

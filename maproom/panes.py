@@ -202,7 +202,7 @@ class DownloadPanel(DownloadControl):
     # and pull out the paths from the preferences
     @property
     def path(self):
-        prefs = self.task.get_preferences()
+        prefs = self.task.preferences
         if prefs.download_directory:
             return prefs.download_directory
         return os.getcwd()
@@ -210,7 +210,7 @@ class DownloadPanel(DownloadControl):
     @path.setter
     def path(self, value):
         if value:
-            prefs = self.task.get_preferences()
+            prefs = self.task.preferences
             prefs.download_directory = value
 
     def refresh_view(self):
