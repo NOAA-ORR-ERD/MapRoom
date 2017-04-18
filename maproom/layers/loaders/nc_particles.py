@@ -35,11 +35,14 @@ class nc_particles_file_loader():
         path = fs.getsyspath(relpath)
         self.reader = nc_particles.Reader(path)
         self.current_timestep = 0  # fixme## hard coded limit!!!!!
+        self.status_id = "status_codes"
         try:
-            attributes = self.reader.get_attributes("status_codes")
+            attributes = self.reader.get_attributes(self.status_id)
         except KeyError:
             # try "status" instead
-            attributes = self.reader.get_attributes("status")
+            self.status_id = "status"
+            attributes = self.reader.get_attributes(self.status_id)
+        log.debug("Using '%s' for status code identifier" % self.status_id)
         meanings = attributes['flag_meanings']
         self.status_code_map = dict()
         if "," in meanings:
@@ -65,9 +68,9 @@ class nc_particles_file_loader():
         data = self.reader.get_timestep(self.current_timestep, variables=['latitude', 'longitude'])
         time = self.reader.times[self.current_timestep]
         points = np.c_[data['longitude'], data['latitude']]
-        if 'status_codes' in self.reader.variables:
-            data = self.reader.get_timestep(self.current_timestep, variables=['status_codes'])
-            status_codes = np.array(data['status_codes'], dtype=np.uint32)
+        if self.status_id in self.reader.variables:
+            data = self.reader.get_timestep(self.current_timestep, variables=[self.status_id])
+            status_codes = np.array(data[self.status_id], dtype=np.uint32)
         else:
             status_codes = np.zeros(np.alen(data['longitude']), dtype=np.uint32)
         abslon = np.absolute(points[:,0])
