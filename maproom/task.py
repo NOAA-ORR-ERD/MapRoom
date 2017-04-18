@@ -232,7 +232,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.OpenLogAction(),
         ]
 
-    def get_actions_Menu_View_ViewZoomGroup(self):
+    def get_actions_Menu_View_ZoomGroup(self):
         return [
             actions.ZoomInAction(),
             actions.ZoomOutAction(),
@@ -240,12 +240,12 @@ class MaproomProjectTask(FrameworkTask):
             actions.ZoomToLayer(),
         ]
 
-    def get_actions_Menu_View_ViewChangeGroup(self):
+    def get_actions_Menu_View_ChangeGroup(self):
         return [
             actions.JumpToCoordsAction(),
         ]
 
-    def get_actions_Menu_View_ViewDebugGroup(self):
+    def get_actions_Menu_View_DebugGroup(self):
         return [
             actions.BoundingBoxAction(),
             actions.PickerFramebufferAction(),
@@ -316,7 +316,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.DeleteSelectionAction(),
         ]
 
-    def get_actions_Tool_View_ViewConfigGroup(self):
+    def get_actions_Tool_View_ConfigGroup(self):
         return [
             actions.ZoomInAction(),
             actions.ZoomOutAction(),
@@ -324,7 +324,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.ZoomToLayer(),
         ]
 
-    def get_actions_Tool_View_ViewChangeGroup(self):
+    def get_actions_Tool_View_ChangeGroup(self):
         return [
             actions.RaiseToTopAction(),
             actions.RaiseLayerAction(),
