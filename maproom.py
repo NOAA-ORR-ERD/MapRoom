@@ -59,6 +59,12 @@ def main(argv):
         _ = logging.getLogger(toolkit)
         _.setLevel(logging.WARNING)
 
+    # Override location of help pages so we don't get the framework user guide
+    from traits.trait_base import get_resource_path
+    import omnivore.help
+    omnivore.help.help_dirs = ["maproom/help"]
+    omnivore.help.root_resource_path = get_resource_path(1)
+
     plugins = [ MaproomPlugin() ]
     
     import maproom.file_type
