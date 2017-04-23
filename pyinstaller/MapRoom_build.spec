@@ -38,6 +38,7 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 
 if sys.platform == "darwin":
+    icon = '../resources/maproom.icns'
     exe = EXE(pyz,
         a.scripts,
         exclude_binaries=True,
@@ -57,7 +58,7 @@ if sys.platform == "darwin":
     app = BUNDLE(coll,
        name="%s.app" % appname,
        bundle_identifier="gov.noaa.maproom",
-       icon='../resources/maproom.icns')
+       icon=icon)
 
 elif sys.platform == "win32":
     if bundle:

@@ -13,7 +13,7 @@ elif sys.platform == 'darwin':
     win = False
     mac = True
     exe = ".app"
-    onefile = False
+    onefile = True
 else:  # linux
     win = False
     mac = False
@@ -82,12 +82,21 @@ if win:
     else:
         print "One-folder build at: dist/%s" % build_target
 elif mac:
+    contents = "%s/Contents" % build_app
+    print "Copying new Info.plist"
+    shutil.copyfile("Info.plist", "%s/Info.plist" % contents)
+
+    print "Fixing duplicate wxPython libs"
+    dup = "%s/MacOS/libwx_osx_cocoau-3.0.dylib" % contents
+    os.unlink(dup)
+    os.symlink("libwx_osx_cocoau-3.0.0.2.0.dylib", dup)
+
+    print "Fixing missing symlink to geos library"
+    os.symlink("libgeos_c.1.dylib", "%s/MacOS/libgeos_c.dylib" % contents)
+
     print "Copying %s -> %s & removing architectures other than x86_64" % (build_app, dest_app)
     #shutil.copytree(build_app, dest_app, True)
     run(['/usr/bin/ditto', '-arch', 'x86_64', build_app, dest_app])
-
-    print "Copying new Info.plist"
-    shutil.copyfile("Info.plist", "%s/Contents/Info.plist" % dest_app)
 
     print "Zipping %s" % dest_zip
     run(['tar', 'cfj', dest_zip, '-C', dest_dir, final_app])
