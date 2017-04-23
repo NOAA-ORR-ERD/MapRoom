@@ -23,7 +23,7 @@ os.environ["ETS_DEBUG"] = "True"
 
 # Framework imports.
 from omnivore import get_image_path
-from omnivore.framework.application import run, setup_frozen_logging
+from omnivore.app_init import run, setup_frozen_logging
 
 # Local imports.
 from maproom.pane_layout import task_id_with_pane_layout
