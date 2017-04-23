@@ -57,7 +57,7 @@ if sys.platform == "darwin":
     app = BUNDLE(coll,
        name="%s.app" % appname,
        bundle_identifier="gov.noaa.maproom",
-       icon='../maproom/icons/maproom.icns')
+       icon='../resources/maproom.icns')
 
 elif sys.platform == "win32":
     if bundle:
