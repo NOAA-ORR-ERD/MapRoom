@@ -31,6 +31,15 @@ Overview
   * OWSLib
 
 
+Virtualenv
+==========
+
+It is recommended to use a virtualenv to minimize pollution in the site-
+packages directory::
+
+    virtualenv /noaa/virtualenv/maproom
+    echo 'export LD_LIBRARY_PATH="$VIRTUAL_ENV/lib"' >> $VIRTUAL_ENV/bin/activate
+
 Normal pip install
 ==================
 
@@ -41,7 +50,8 @@ Note that on Mac, libjpeg must be installed before pillow using the `Homebrew pa
 Other platforms do not need this dependency.  This combination of library
 versions is known to work::
 
-    pip install numpy==1.10.1 PyOpenGL==3.1.1a1 PyOpenGL_accelerate==3.1.1a1 pyproj==1.9.4 Cython==0.23.4 Pillow=3.0.0 reportlab=3.2.0 omnivore
+    pip install numpy==1.12.1 PyOpenGL==3.1.1a1 PyOpenGL_accelerate==3.1.1a1 pyproj==1.9.4 Cython==0.25.2 Pillow=3.0.0 reportlab=3.2.0 "jsonpickle>=0.9.4" "bson<1.0.0" configobj pyparsing markdown requests python-dateutil
+
 
 PyOpenGL_accelerate is currently not used on all platforms because a paint
 event is apparently being triggered before the window is realized on screen,
@@ -55,8 +65,22 @@ Manual Install
 wxPython
 --------
 
-On ubuntu, wxPython fails to compile the python modules due to some formatting
-warnings being treated as errors.  Changing the CFLAGS is required::
+wxPython is not in PyPI so it has to be built by hand:
+
+    cd wxPython-src-3.0.2.0
+    mkdir bld
+    cd bld/
+    ../configure --prefix=/noaa/virtualenv/maproom --with-opengl
+    make -j8
+    make install
+    cd ../wxPython/
+
+Generic linux/unix can use this::
+
+    python setup.py install --prefix=/noaa/virtualenv/maproom
+
+but on ubuntu, wxPython fails to compile the python modules due to some
+formatting warnings being treated as errors.  Changing the CFLAGS is required::
 
     CFLAGS=-Wno-error=format-security CPPFLAGS=-Wno-error=format-security python setup.py install
 
@@ -67,9 +91,10 @@ GDAL
 GDAL must be built by hand, after numpy is installed::
 
     cd gdal-1.11.3/
-    ./configure --prefix=$VIRTUAL_ENV
+    ./configure --prefix=$VIRTUAL_ENV --with-python
     make -j3
     make install
+
     cd swig/python/
     python setup.py install
 
