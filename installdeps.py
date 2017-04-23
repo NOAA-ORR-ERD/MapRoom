@@ -5,6 +5,7 @@ import sys
 
 using_conda = "Continuum Analytics" in sys.version or "conda" in sys.version
 needs_netcdf = not sys.platform.startswith("win")
+develop_instead_of_link = False
 
 deps = [
     [".", 'pytriangle-1.6.1', 'python setup.py install'],
@@ -21,7 +22,7 @@ deps = [
     ['https://github.com/robmcmullen/omnivore.git', '.', None], # don't build extensions for omnivore since we are only using the pure python part
 ]
 
-if needs_netcdf and not using_conda and False:
+if needs_netcdf and not using_conda:
     # extra stuff isn't available through pypi or not easily built by hand
     deps.extend([
         ['https://github.com/MacPython/gattai.git',],
@@ -39,7 +40,7 @@ link_map = {
 # hack to overwrite files so I don't have to keep patching my git copy of
 # pyface
 overrides = {
-    "pyface/toolkit.py": """
+    "deps/pyface/pyface/toolkit.py": """
 from pyface.base_toolkit import Toolkit
 toolkit_object = Toolkit('wx', 'pyface.ui.wx')
 """,
@@ -48,9 +49,10 @@ toolkit_object = Toolkit('wx', 'pyface.ui.wx')
 
 real_call = subprocess.call
 def git(args):
-    real_args = ['git']
-    real_args.extend(args)
-    real_call(real_args)
+    if sys.platform != "win32":
+        real_args = ['git']
+        real_args.extend(args)
+        real_call(real_args)
 
 dry_run = False
 if dry_run:
@@ -106,8 +108,10 @@ for dep in deps:
         os.chdir(repodir)
         os.chdir(builddir)
         subprocess.call(command.split())
+        if "install" not in command and develop_instead_of_link:
+            subprocess.call(["python", "setup.py", "develop"])
 
-    if link:
+    if link and sys.platform != "win32":
         os.chdir(linkdir)
         name = link_map.get(repodir, repodir)
         if name is None:
@@ -118,7 +122,10 @@ for dep in deps:
                 os.unlink(name)
             os.symlink(src, name)
 
+os.chdir(linkdir)
 for path, text in overrides.iteritems():
     print "Replacing %s" % path
     with open(path, "w") as fh:
         fh.write(text)
+
+subprocess.call(["python", "setup_library.py", "build_ext", "--inplace"])
