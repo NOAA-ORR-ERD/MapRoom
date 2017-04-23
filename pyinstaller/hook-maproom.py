@@ -2,9 +2,103 @@
 """
 
 """
+DEBUG = True
 
 import os
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
+from PyInstaller.utils.hooks import string_types, get_package_paths, exec_statement
+
+import logging
+logger = logging.getLogger(__name__)
+
+# Need special version for traitsui because it raises a RuntimeError when
+# hitting the traitsui.qt package and doesn't scan any further.
+def is_package(package):
+    return True
+
+def collect_submodules(package, filter=lambda name: True):
+    # Accept only strings as packages.
+    if not isinstance(package, string_types):
+        raise ValueError
+
+    logger.debug('Collecting submodules for %s' % package)
+    # Skip a module which is not a package.
+    if not is_package(package):
+        logger.debug('collect_submodules - Module %s is not a package.' % package)
+        return []
+
+    # Determine the filesystem path to the specified package.
+    pkg_base, pkg_dir = get_package_paths(package)
+
+    # Walk the package. Since this performs imports, do it in a separate
+    # process.
+    names = exec_statement("""
+        import sys
+        import pkgutil
+
+        def ignore_err(name, err):
+            # Can't print anything because printing is captured as module names
+            # print ("error importing %s: %s" % (name, err))
+            pass
+
+        # ``pkgutil.walk_packages`` doesn't walk subpackages of zipped files
+        # per https://bugs.python.org/issue14209. This is a workaround.
+        def walk_packages(path=None, prefix='', onerror=ignore_err):
+            def seen(p, m={{}}):
+                if p in m:
+                    return True
+                m[p] = True
+
+            for importer, name, ispkg in pkgutil.iter_modules(path, prefix):
+                if not name.startswith(prefix):   ## Added
+                    name = prefix + name          ## Added
+                yield importer, name, ispkg
+
+                if ispkg:
+                    try:
+                        __import__(name)
+                    except ImportError, e:
+                        if onerror is not None:
+                            onerror(name, e)
+                    except Exception, e:
+                        if onerror is not None:
+                            onerror(name, e)
+                        else:
+                            raise
+                    else:
+                        path = getattr(sys.modules[name], '__path__', None) or []
+
+                        # don't traverse path items we've seen before
+                        path = [p for p in path if not seen(p)]
+
+                        ## Use Py2 code here. It still works in Py3.
+                        for item in walk_packages(path, name+'.', onerror):
+                            yield item
+                        ## This is the original Py3 code.
+                        #yield from walk_packages(path, name+'.', onerror)
+
+        for module_loader, name, ispkg in walk_packages([{}], '{}.'):
+            print(name)
+        """.format(
+                  # Use repr to escape Windows backslashes.
+                  repr(pkg_dir), package))
+
+    # Include the package itself in the results.
+    mods = {package}
+    # Filter through the returend submodules.
+    for name in names.split():
+        if filter(name):
+            mods.add(name)
+
+    logger.debug("collect_submodules - Found submodules: %s", mods)
+    return list(mods)
+
+def qt_filter(pymod):
+    if ".tests" in pymod or ".qt" in pymod or ".null" in pymod:
+        logger.debug("qt_filter: skipping %s" % pymod)
+        return False
+    return True
+
 
 subpkgs = [
     "traits",
@@ -14,10 +108,12 @@ subpkgs = [
     "maproom",
 ]
 
-hiddenimports = []
+hiddenimports = ["netCDF4_utils"]
 for s in subpkgs:
-    hiddenimports.extend(collect_submodules(s))
-#print hiddenimports
+    hiddenimports.extend(collect_submodules(s, qt_filter))
+
+if DEBUG:
+    print "\n".join(sorted(hiddenimports))
 
 subpkgs = [
     "traitsui",
@@ -25,7 +121,34 @@ subpkgs = [
     "omnivore",
     "maproom",
 ]
+
 datas = []
+skipped = []
+maproom_allowed = set([
+    "templates/RNCProdCat_latest.bna",
+    "renderer/gl/font.png",
+    ])
 for s in subpkgs:
-    datas.extend(collect_data_files(s))
-#print datas
+    possible = collect_data_files(s)
+    # Filter out stuff.  Handle / and \ for path separators!
+    for src, dest in possible:
+        include = True
+        pathcheck = src.replace("\\", "/")
+        if src.endswith(".pyx") or src.endswith(".c") or src.endswith(".h") or src.endswith(".orig") or src.endswith(".sav"):
+            include = False
+        elif "maproom/maproom/"in pathcheck:
+            _, mpath = pathcheck.split("maproom/maproom/", 1)
+            if mpath in maproom_allowed or mpath.startswith("icons/"):
+                include = True
+            else:
+                include = False
+
+        if include:
+            datas.append((src, dest))
+        else:
+            skipped.append((src, dest))
+
+if DEBUG:
+    print "\n".join(["%s -> %s" % d for d in datas])
+    print "SKIPPED:"
+    print "\n".join(["%s -> %s" % d for d in skipped])
