@@ -95,7 +95,6 @@ def load_layers_from_url(url, mime, manager=None):
 def get_loader(metadata):
     for loader in loaders:
         log.debug("trying loader %s" % loader.name)
-        print("trying loader %s" % loader.name)
         if loader.can_load(metadata):
             log.debug(" loading using loader %s!" % loader.name)
             return loader

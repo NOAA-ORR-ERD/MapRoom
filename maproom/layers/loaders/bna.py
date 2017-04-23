@@ -224,11 +224,9 @@ def save_bna_file(f, layer):
     progress_log.info("TICKS=%d" % np.alen(layer.points))
     progress_log.info("Saving BNA...")
     for i, p in enumerate(layer.iter_rings()):
-        print "polygon #%d" % i
         polygon = p[0]
         count = np.alen(polygon)
         ident = p[1]
-        print ident
         f.write('"%s","%s", %d\n' % (ident['name'], ident['feature_code'], count + 1))  # extra point for closed polygon
         for j in range(count):
             f.write("%s,%s\n" % (polygon[j][0], polygon[j][1]))

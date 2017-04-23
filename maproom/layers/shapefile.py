@@ -102,11 +102,11 @@ class PolygonShapefileLayer(PolygonLayer):
         """Get the Shapely geometry given the polygon object index from the
         PolygonLayer metadata
         """
-        print "obj_index=%d" % object_index, self.ring_identifiers
+        # print "obj_index=%d" % object_index, self.ring_identifiers
         ident = self.ring_identifiers[object_index]
         gi = ident['geom_index']
         possible = [i for i in self.ring_identifiers if i['geom_index'] == gi]
-        print "possible matching geom_index %d" % gi, possible
+        # print "possible matching geom_index %d" % gi, possible
         found = None
         for ident in possible:
             if sub_index == ident['sub_index'] and ring_index == ident['ring_index']:

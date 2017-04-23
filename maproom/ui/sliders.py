@@ -187,7 +187,6 @@ class TextSlider(wx.PyPanel):
 
     def OnTextChanged(self, event):
         event.Skip()
-        print event.String
         if event.String.strip() != "":
             try:
                 value = origValue = float(event.String)
@@ -205,7 +204,6 @@ class TextSlider(wx.PyPanel):
 
     def OnSliderChanged(self, event):
         event.Skip()
-        print "slider", self.sliderCtrl.GetValue()
         self.textCtrl.Value = self.sliderCtrl.GetValue()
 
     Value = property(GetValue, SetValue)

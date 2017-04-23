@@ -106,8 +106,6 @@ def get_dataset(uri):
     gdal.PushErrorHandler("CPLQuietErrorHandler")
 
     fs, relpath = opener.parse(uri)
-    print "GDAL:", relpath
-    print "GDAL:", fs
     if not fs.hassyspath(relpath):
         raise RuntimeError("Only file URIs are supported for GDAL: %s" % uri)
     file_path = fs.getsyspath(relpath)
