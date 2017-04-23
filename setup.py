@@ -77,7 +77,6 @@ ext_modules = [bitmap, shape, tree, tessellator, render]
 full_version = Version.VERSION
 spaceless_version = Version.VERSION.replace(" ", "_")
 
-import omnivore
 import maproom
 
 BUILD_APP = False
@@ -107,6 +106,7 @@ win_dist_dir = os.path.join(base_dist_dir, "win")
 mac_dist_dir = os.path.join(base_dist_dir, "mac")
 
 if BUILD_APP:
+    import omnivore
     includes = []
     excludes = []
     
@@ -330,6 +330,10 @@ try:
             'docutils',
             'markdown',
             'reportlab',
+            'docutils',
+            'pyparsing',
+            'requests',
+            'python-dateutil',
             ],
         data_files=data_files,
         packages=find_packages(),
