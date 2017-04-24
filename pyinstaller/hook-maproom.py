@@ -1,15 +1,30 @@
 #!/usr/bin/env python
-"""
+"""Calculate dependencies for MapRoom (and the Omnivore framework)
 
+NOTE! When debugging, this must be run from the directory level above
+pyinstaller so the script can find the symlinked dependency
+directories.
 """
 DEBUG = True
 
 import os
+import sys
+
 from PyInstaller.utils.hooks import collect_submodules, collect_data_files
 from PyInstaller.utils.hooks import string_types, get_package_paths, exec_statement
 
 import logging
 logger = logging.getLogger(__name__)
+
+# Anaconda distributions use pythonw if the app needs access to the screen
+# and some of the imports will trigger this. So we have to hack the exec
+# functions in PyInstaller.compat to use pythonw instdea of plain ol python.
+if "CONDA_PREFIX" in os.environ:
+    logger.debug("Using pythonw in this hook for conda support")
+    save_exec = sys.executable
+    sys.executable = "pythonw"
+else:
+    save_exec = None
 
 # Need special version for traitsui because it raises a RuntimeError when
 # hitting the traitsui.qt package and doesn't scan any further.
@@ -152,3 +167,9 @@ if DEBUG:
     print "\n".join(["%s -> %s" % d for d in datas])
     print "SKIPPED:"
     print "\n".join(["%s -> %s" % d for d in skipped])
+
+# Restore sys.executable if changed because using pythonw causes failures
+# further along in the process, and this is the only place where this hack
+# is needed.
+if save_exec is not None:
+    sys.executable = save_exec
