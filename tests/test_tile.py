@@ -14,7 +14,7 @@ class TestTileCoordinates(object):
 
     def test_coord_to_tile(self):
         x, y = self.host.world_to_tile_num(0, 50.5, 89.0)
-        assert (x, y), (0 == 0)
+        assert (x, y) == (0, 0)
 
     def test_tile_to_coord(self):
         wr = self.host.tile_num_to_world_lb_rt(0, 0, 0)
