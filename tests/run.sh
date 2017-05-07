@@ -1,12 +1,11 @@
 #!/bin/bash
 
-ARGS=--cov=maproom
 case $PATH in
 	*conda*)
-        ./py.testw $ARGS
+        ./py.testw
         ;;
     *)
-	    py.test $ARGS
+	    py.test
 	    ;;
 esac
 RESULT=$?
