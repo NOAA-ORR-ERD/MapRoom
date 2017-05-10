@@ -308,6 +308,9 @@ class DeleteLayerCommand(Command):
             links.extend(lm.remove_all_links_to_layer(child))
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
+        new_selected_layer = parents[-1]
+        lf = undo.flags.add_layer_flags(new_selected_layer)
+        lf.select_layer = True
 
         # Only remove the reference to the layer in the layer manager, leave
         # all the layer info around so that it can be undone
@@ -327,6 +330,8 @@ class DeleteLayerCommand(Command):
         lm.insert_children(layer, children)
         lm.restore_all_links_to_layer(layer, links)
         restore_layers(editor, parent_layer_data)
+        lf = self.undo_info.flags.add_layer_flags(layer)
+        lf.select_layer = True
         return self.undo_info
 
 
