@@ -867,8 +867,8 @@ class ProjectEditor(FrameworkEditor):
     def clickable_object_is_ugrid_line(self):
         return self.layer_canvas.picker.is_ugrid_line(self.clickable_object_mouse_is_over)
 
-    def clickable_object_is_polygon_fill(self):
-        return self.layer_canvas.picker.is_polygon_fill(self.clickable_object_mouse_is_over)
+    def clickable_object_is_interior(self):
+        return self.layer_canvas.picker.is_interior(self.clickable_object_mouse_is_over)
 
     def clickable_object_is_polygon_point(self):
         return self.layer_canvas.picker.is_polygon_point(self.clickable_object_mouse_is_over)

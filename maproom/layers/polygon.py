@@ -396,7 +396,7 @@ class RNCLoaderLayer(PolygonLayer):
     layer_info_panel = ["Polygon count"]
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
-        return canvas.picker.is_polygon_fill_type(object_type)
+        return canvas.picker.is_interior_type(object_type)
 
     def get_highlight_lines(self, object_type, object_index):
         points, polygon_id = self.get_ring(object_index)

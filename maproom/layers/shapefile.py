@@ -121,7 +121,7 @@ class PolygonShapefileLayer(PolygonLayer):
         return poly.exterior.coords, poly.interiors
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
-        return canvas.picker.is_polygon_fill_type(object_type)
+        return canvas.picker.is_interior_type(object_type)
 
     def get_highlight_lines(self, object_type, object_index):
         points, holes = self.get_polygons(object_index)

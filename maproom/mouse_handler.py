@@ -179,7 +179,7 @@ class MouseHandler(object):
                     obj_text = "Point %s on %s" % (object_index + 1, layer.name)
                 elif c.picker.is_ugrid_line_type(object_type):
                     obj_text = "Line %s on %s" % (object_index + 1, layer.name)
-                elif c.picker.is_polygon_fill_type(object_type):
+                elif c.picker.is_interior_type(object_type):
                     obj_text = "Polygon %s on %s" % (object_index + 1, layer.name)
             except TypeError:
                 pass
@@ -251,9 +251,9 @@ class MouseHandler(object):
             elif (e.clickable_object_is_ugrid_line()):
                 world_point = c.get_world_point_from_screen_point(event.GetPosition())
                 self.right_clicked_on_line_segment(event, layer, object_index, world_point)
-            elif (e.clickable_object_is_polygon_fill()):
+            else:  # anything else is the interior of the layer
                 world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                self.right_clicked_on_polygon_fill(event, layer, object_index, world_point)
+                self.right_clicked_on_interior(event, layer, object_index, world_point)
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
             self.right_clicked_on_different_layer(event, e.clickable_object_in_layer)
@@ -270,7 +270,7 @@ class MouseHandler(object):
     def right_clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         pass
 
-    def right_clicked_on_polygon_fill(self, event, layer, polygon_index, world_point):
+    def right_clicked_on_interior(self, event, layer, polygon_index, world_point):
         pass
 
     def right_clicked_on_empty_space(self, event, layer, world_point):
@@ -764,9 +764,9 @@ class ObjectSelectionMode(MouseHandler):
             elif (e.clickable_object_is_ugrid_line()):
                 world_point = c.get_world_point_from_screen_point(event.GetPosition())
                 self.clicked_on_line_segment(event, layer, object_index, world_point)
-            elif (e.clickable_object_is_polygon_fill()):
+            else:  # anything else is the interior
                 world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                self.clicked_on_polygon_fill(event, layer, object_index, world_point)
+                self.clicked_on_interior(event, layer, object_index, world_point)
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
             self.clicked_on_different_layer(event, e.clickable_object_in_layer)
@@ -885,7 +885,7 @@ class ObjectSelectionMode(MouseHandler):
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         pass
 
-    def clicked_on_polygon_fill(self, event, layer, polygon_index, world_point):
+    def clicked_on_interior(self, event, layer, polygon_index, world_point):
         pass
 
     def clicked_on_empty_space(self, event, layer, world_point):
@@ -1327,7 +1327,7 @@ class ControlPointEditMode(ObjectSelectionMode):
             self.can_snap = False
             c.hide_from_picker(None)
 
-    def clicked_on_polygon_fill(self, event, layer, ignored_index, world_point):
+    def clicked_on_interior(self, event, layer, ignored_index, world_point):
         # Clicking on filled portion of polygon corresponds to clicking on the
         # center point: rigid body translation
         log.debug("center point: %s" % layer.center_point_index)

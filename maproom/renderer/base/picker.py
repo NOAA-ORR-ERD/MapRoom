@@ -44,7 +44,7 @@ class NullPicker(object):
         return False
 
     @staticmethod
-    def is_polygon_fill(obj):
+    def is_interior(obj):
         return False
 
     @staticmethod

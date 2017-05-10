@@ -230,10 +230,10 @@ class Picker(object):
         return object_type == LINES_PICKER_OFFSET
 
     @staticmethod
-    def is_polygon_fill(obj):
+    def is_interior(obj):
         (layer, object_type, object_index) = obj
         return type == FILL_PICKER_OFFSET
 
     @staticmethod
-    def is_polygon_fill_type(object_type):
+    def is_interior_type(object_type):
         return object_type == FILL_PICKER_OFFSET
