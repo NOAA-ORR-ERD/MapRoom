@@ -558,7 +558,8 @@ class DebugAnnotationLayersAction(EditorAction):
     def after(self, project):
         import debug
         lm = project.layer_manager
-        debug.debug_objects(lm)
+        undo = debug.debug_objects(lm)
+        project.process_flags(undo.flags)
         project.update_default_visibility()
         project.layer_metadata_changed(None)
         project.layer_canvas.zoom_to_fit()

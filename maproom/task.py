@@ -138,7 +138,7 @@ class MaproomProjectTask(FrameworkTask):
     def _extra_actions_default(self):
         layer_menu = self.create_menu("Menu", "Layer", "LayerCreateGroup", "LayerStackGroup", "LayerUtilGroup", "LayerDeleteGroup", "LayerCheckGroup")
         tools_menu = self.create_menu("Menu", "Tools", "ToolsActionGroup", "ToolsManageGroup")
-        actions = [
+        additions = [
             # Menubar additions
             SchemaAddition(factory=lambda: layer_menu,
                            path='MenuBar',
@@ -148,8 +148,10 @@ class MaproomProjectTask(FrameworkTask):
                            path='MenuBar',
                            after="Edit",
                            ),
+            SchemaAddition(factory=actions.DebugAnnotationLayersAction,
+                           path='MenuBar/Help/Debug'),
         ]
-        return actions
+        return additions
 
     def pane_layout_initial_visibility(self):
         return pane_layout.pane_initially_visible()
