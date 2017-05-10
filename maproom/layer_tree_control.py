@@ -10,6 +10,28 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class IndexableTree(treectrl.CustomTreeCtrl):
+    def get_item_by_indexes(self, *args):
+        args = list(args)  # copy since it could be an iterator or unmodifiable
+        print(args)
+        if args[0] > 0:
+            raise IndexError("Invalid root index")
+        parent = self.GetRootItem()
+        log.debug("root @ %s: %s" % (args[0:1], parent.GetText()))
+        parent = self.GetRootItem()
+        used = []
+        for level, index in enumerate(args[1:]):
+            # sanity check first
+            if index >= self.GetChildrenCount(parent):
+                raise IndexError("Invalid index at %s" % str(used))
+            item, cookie = self.GetFirstChild(parent)
+            for i in range(1, index):
+                item, cookie = self.GetNextChild(item, cookie)
+            parent = item
+            log.debug("child @ %s: %s" % (args[0:level + 2], parent.GetText()))
+        return parent
+
+
 class LayerTreeControl(wx.Panel):
 
     dragged_item = None
@@ -17,7 +39,7 @@ class LayerTreeControl(wx.Panel):
     def __init__(self, parent, project, size=(-1, -1)):
         wx.Panel.__init__(self, parent, wx.ID_ANY, size=size)
 
-        self.tree = treectrl.CustomTreeCtrl(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE,
+        self.tree = IndexableTree(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE,
                                             agwStyle=treectrl.TR_HIDE_ROOT | treectrl.TR_NO_LINES | treectrl.TR_HAS_BUTTONS)
         self.project = project
 
@@ -53,6 +75,7 @@ class LayerTreeControl(wx.Panel):
         if (item is None):
             return None
         (layer, ) = self.tree.GetItemPyData(item).Data
+
 
         return layer
 
@@ -263,6 +286,9 @@ class LayerTreeControl(wx.Panel):
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         self.project.refresh()
+        lm = self.project.layer_manager
+        sel = lm.get_multi_index_of_layer(layer)
+        log.debug("Multi-index of selected layer: %s" % sel)
 
     def raise_selected_layer(self):
         self.move_selected_layer(-1)
