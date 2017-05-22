@@ -18,7 +18,7 @@ import panes
 # is only updated when quitting the application; if the application is killed
 # (or crashes!) the saved state is not updated.
 
-task_id_with_pane_layout = 'maproom.project.v8'
+task_id_with_pane_layout = 'maproom.project.v9'
 
 
 def pane_layout():
