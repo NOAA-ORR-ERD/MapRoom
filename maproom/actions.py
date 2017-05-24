@@ -606,7 +606,7 @@ class ManageWMSAction(EditorAction):
 
     def perform(self, event):
         hosts = BackgroundWMSDownloader.get_known_hosts()
-        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
+        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: a.label_helper(), prompt_for_wms, "Manage WMS Servers", default_helper=lambda a,v: a.default_helper(v))
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundWMSDownloader.set_known_hosts(items)
