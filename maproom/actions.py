@@ -605,11 +605,13 @@ class ManageWMSAction(EditorAction):
     name = 'Manage WMS Servers...'
 
     def perform(self, event):
-        dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_hosts(), lambda a: getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
+        hosts = BackgroundWMSDownloader.get_known_hosts()
+        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundWMSDownloader.set_known_hosts(items)
             event.task.remember_wms()
+            self.active_editor.layer_manager.update_map_server_ids("wms", hosts, items)
             self.active_editor.refresh(True)
         dlg.Destroy()
 
@@ -624,6 +626,7 @@ class ManageTileServersAction(EditorAction):
             items = dlg.get_items()
             BackgroundTileDownloader.set_known_hosts(items)
             event.task.remember_tile_servers()
+            self.active_editor.layer_manager.update_map_server_ids("tiles", hosts, items)
             self.active_editor.refresh(True)
         dlg.Destroy()
 

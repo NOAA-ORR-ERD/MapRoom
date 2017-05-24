@@ -491,6 +491,13 @@ class LayerManager(BaseDocument):
         layers.reverse()
         return layers
 
+    def get_layers_of_type(self, layer_type):
+        layers = []
+        for layer in self.flatten():
+            if layer.type == layer_type:
+                layers.append(layer)
+        return layers
+
     ##### Layer info
 
     def has_user_created_layers(self):
@@ -573,6 +580,28 @@ class LayerManager(BaseDocument):
         import functools
         callback = functools.partial(self.post_event, event)
         return callback
+
+    ##### Layer modification
+
+    def update_map_server_ids(self, layer_type, before, after):
+        """Change map server IDs after the server list has been reordered.
+        """
+        affected = self.get_layers_of_type(layer_type)
+        log.debug("affected layers of %s: %s" % (layer_type, str(affected)))
+        for i, layer in enumerate(after):
+            if layer.default:
+                default = i
+                break
+        else:
+            default = 0
+        for layer in affected:
+            old_id = layer.map_server_id
+            old_host = before[old_id]
+            try:
+                new_id = after.index(old_host)
+            except ValueError:
+                new_id = default
+            layer.map_server_id = new_id
 
     ##### Add layers
 
