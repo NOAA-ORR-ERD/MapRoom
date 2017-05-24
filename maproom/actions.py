@@ -619,7 +619,7 @@ class ManageTileServersAction(EditorAction):
 
     def perform(self, event):
         hosts = BackgroundTileDownloader.get_known_hosts()
-        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: getattr(a, 'name'), prompt_for_tile, "Manage Tile Servers")
+        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: a.label_helper(), prompt_for_tile, "Manage Tile Servers", default_helper=lambda a,v: a.default_helper(v))
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundTileDownloader.set_known_hosts(items)

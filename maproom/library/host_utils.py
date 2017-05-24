@@ -90,6 +90,15 @@ class SortableHost(object):
     def __eq__(self, other):
         return self.url == other.url
 
+    def label_helper(self):
+        extra = " (default)" if self.default else ""
+        return self.name + extra
+
+    def default_helper(self, value=None):
+        if value is not None:
+            self.default = value
+        return self.default
+
 
 class WMSHost(SortableHost):
     def __init__(self, name="", url="", version="1.3.0", strip_prefix="", default_layer_indexes=None):
