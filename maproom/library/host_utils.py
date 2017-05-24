@@ -6,6 +6,8 @@ import math
 import glob
 from copy import deepcopy
 
+import jsonpickle
+
 import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -64,6 +66,24 @@ class HostCache(object):
 
 
 class SortableHost(object):
+    def __init__(self, name="", default=False):
+        self.name = name
+        self.default = default
+
+    def __getstate__(self):
+        return self.__dict__
+
+    def __setstate__(self, state):
+        """Custom jsonpickle state restore routine
+
+        The use of jsonpickle to recreate objects doesn't go through __init__,
+        so there will be missing attributes when restoring old versions of the
+        json. Once a version gets out in the wild and additional attributes are
+        added to a segment, a default value should be applied here.
+        """
+        self.default = state.pop('default', False)
+        self.__dict__.update(state)
+
     def __lt__(self, other):
         return self.name < other.name
 
@@ -73,7 +93,7 @@ class SortableHost(object):
 
 class WMSHost(SortableHost):
     def __init__(self, name="", url="", version="1.3.0", strip_prefix="", default_layer_indexes=None):
-        self.name = name
+        SortableHost.__init__(self, name)
         if url.endswith("?"):
             url = url[:-1]
         self.url = url
@@ -110,7 +130,7 @@ class TileHost(SortableHost):
     known_suffixes = ['.png', '']
 
     def __init__(self, name="host", url_list=[], strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False):
-        self.name = name
+        SortableHost.__init__(self, name)
         self.urls = []
         for url in url_list:
             if url.endswith("?"):
@@ -125,6 +145,12 @@ class TileHost(SortableHost):
         self.tile_size = tile_size
         self.suffix = suffix
         self.reverse_coords = reverse_coords
+
+    def __str__(self):
+        return " ".join([self.name, "%d urls" % self.num_urls, str(self.default)])
+
+    def __repr__(self):
+        return " ".join([self.name, "%d urls" % self.num_urls, str(self.default)])
 
     def __hash__(self):
         return hash(self.urls[0])
@@ -243,3 +269,33 @@ class OpenTileHost(TileHost):
 
 class WMTSTileHost(TileHost):
     request_type = "wmts"
+
+# jsonpickle doesn't handle the case of an object being serialized without
+# __getstate__ to then be restored with __setstate__. __setstate__ is never
+# called because the json data does not have the "py/state" key. Only by adding
+# a custom handler can we support both formats to go through __setstate__
+class ExtraAttributeHandler(jsonpickle.handlers.BaseHandler):
+    def flatten(self, obj, data):
+        data["py/state"] = obj.__getstate__()
+        return data
+
+    def restore(self, data):
+        # use jsonpickle convenience function to find the class
+        cls = jsonpickle.unpickler.loadclass(data["py/object"])
+        restored = cls.__new__(cls)
+
+        # restore using py/state if serialized with __getstate__, or from the
+        # flattened dict if the data was written out by a version of the class
+        # before using __getstate__
+        if "py/state" in data:
+            state = data["py/state"]
+        else:
+            state = {k:v for k,v in data.iteritems() if not k.startswith("py/")}
+        restored.__setstate__(state)
+        return restored
+
+ExtraAttributeHandler.handles(SortableHost)
+ExtraAttributeHandler.handles(TileHost)
+ExtraAttributeHandler.handles(LocalTileHost)
+ExtraAttributeHandler.handles(OpenTileHost)
+ExtraAttributeHandler.handles(WMTSTileHost)
