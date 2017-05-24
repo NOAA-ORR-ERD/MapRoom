@@ -502,6 +502,10 @@ class MaproomProjectTask(FrameworkTask):
     def get_known_wms_names(self):
         return [s.name for s in BackgroundWMSDownloader.get_known_hosts()]
 
+    def get_default_wms_id(self):
+        index, host = BackgroundWMSDownloader.get_default_host()
+        return index
+
     def remember_tile_servers(self, host=None):
         if host is not None:
             BackgroundTileDownloader.add_wms_host(host)
@@ -534,3 +538,7 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_known_tile_server_names(self):
         return [s.name for s in BackgroundTileDownloader.get_known_hosts()]
+
+    def get_default_tile_server_id(self):
+        index, host = BackgroundTileDownloader.get_default_host()
+        return index

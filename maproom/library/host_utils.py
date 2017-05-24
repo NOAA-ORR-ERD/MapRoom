@@ -33,6 +33,13 @@ class HostCache(object):
         return cls.cached_known_hosts
 
     @classmethod
+    def get_default_host(cls):
+        for i, h in enumerate(cls.get_known_hosts()):
+            if h.default:
+                return i, h
+        return None, None
+
+    @classmethod
     def get_host_by_name(cls, name):
         for h in cls.get_known_hosts():
             if h.name == name:
@@ -101,8 +108,8 @@ class SortableHost(object):
 
 
 class WMSHost(SortableHost):
-    def __init__(self, name="", url="", version="1.3.0", strip_prefix="", default_layer_indexes=None):
-        SortableHost.__init__(self, name)
+    def __init__(self, name="", url="", version="1.3.0", strip_prefix="", default_layer_indexes=None, default=False):
+        SortableHost.__init__(self, name, default)
         if url.endswith("?"):
             url = url[:-1]
         self.url = url
@@ -138,8 +145,8 @@ class WMSHost(SortableHost):
 class TileHost(SortableHost):
     known_suffixes = ['.png', '']
 
-    def __init__(self, name="host", url_list=[], strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False):
-        SortableHost.__init__(self, name)
+    def __init__(self, name="host", url_list=[], strip_prefix="", tile_size=256, suffix=".png", reverse_coords=False, default=False):
+        SortableHost.__init__(self, name, default)
         self.urls = []
         for url in url_list:
             if url.endswith("?"):
@@ -265,8 +272,8 @@ class TileHost(SortableHost):
 class LocalTileHost(TileHost):
     request_type = "local"
 
-    def __init__(self, name, tile_size=256):
-        TileHost.__init__(self, name, [""], tile_size=tile_size)
+    def __init__(self, name, tile_size=256, default=False):
+        TileHost.__init__(self, name, [""], tile_size=tile_size, default=default)
 
     def __hash__(self):
         return hash(self.name)

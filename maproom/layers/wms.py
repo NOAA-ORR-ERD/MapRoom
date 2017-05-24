@@ -30,7 +30,7 @@ class WMSLayer(ProjectedLayer):
 
     selection_info_panel = ["Map server", "Map layer"]
 
-    map_server_id = Int(0)
+    map_server_id = Int
 
     map_layers = Any(None)  # holds a set of names representing shown overlay layers
 
@@ -49,6 +49,13 @@ class WMSLayer(ProjectedLayer):
     download_status_text = Any(None)
 
     checkerboard_when_loading = False
+
+    ##### Traits
+
+    def _map_server_id_default(self):
+        return self.manager.project.task.get_default_wms_id()
+
+    ##### Serialization
 
     def map_server_id_to_json(self):
         # get a representative URL to use as the reference in the project file

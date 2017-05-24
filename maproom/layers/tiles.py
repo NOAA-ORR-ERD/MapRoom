@@ -29,7 +29,7 @@ class TileLayer(ProjectedLayer):
 
     selection_info_panel = ["Tile server"]
 
-    map_server_id = Int(0)
+    map_server_id = Int
 
     image_data = Any(None)
 
@@ -48,6 +48,13 @@ class TileLayer(ProjectedLayer):
     download_status_text = Any(None)
 
     checkerboard_when_loading = False
+
+    ##### Traits
+
+    def _map_server_id_default(self):
+        return self.manager.project.task.get_default_tile_server_id()
+
+    ##### Serialization
 
     def map_server_id_to_json(self):
         # get a representative URL to use as the reference in the project file
