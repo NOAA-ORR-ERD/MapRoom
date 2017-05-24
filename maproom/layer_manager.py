@@ -83,6 +83,15 @@ class LayerManager(BaseDocument):
     def _undo_stack_default(self):
         return UndoStack()
 
+    ##### Python special methods
+
+    def __str__(self):
+        root = self.get_layer_by_multi_index([0])
+        layers = self.get_children(root)
+        return str(layers)
+
+    ##### Creation/destruction
+
     @classmethod
     def create(cls, project):
         """Convenience function to create a new, empty LayerManager
@@ -116,16 +125,19 @@ class LayerManager(BaseDocument):
             debug.debug_objects(self)
         return self
 
-    def __str__(self):
-        root = self.get_layer_by_multi_index([0])
-        layers = self.get_children(root)
-        return str(layers)
+    def destroy(self):
+        # fixme: why do layers need a destroy() method???
+        for layer in self.flatten():
+            layer.destroy()
+        self.layers = []
 
-    def get_to_json_attrs(self):
-        return [(m[0:-8], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-8]) and m.endswith("_to_json")]
+    def destroy_recursive(self, layer):
+        if (layer.is_folder()):
+            for item in self.get_layer_children(layer):
+                self.destroy_recursive(item)
+        self.delete_undo_operations_for_layer(layer)
 
-    def get_from_json_attrs(self):
-        return [(m[0:-10], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-10]) and m.endswith("_from_json")]
+    ##### Debug functions
 
     def debug_invariant(self):
         layers = self.flatten()
@@ -133,8 +145,113 @@ class LayerManager(BaseDocument):
         for layer in layers:
             print "  %s: invariant=%d" % (layer, layer.invariant)
 
+    ##### Serialization
+
+    def get_to_json_attrs(self):
+        return [(m[0:-8], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-8]) and m.endswith("_to_json")]
+
+    def get_from_json_attrs(self):
+        return [(m[0:-10], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-10]) and m.endswith("_from_json")]
+
+    def control_point_links_to_json(self):
+        # json can't handle dictionaries with tuples as their keys, so have
+        # to compress
+        cplist = []
+        for entry, (truth, locked) in self.control_point_links.iteritems():
+            # retain compatibility with old versions, only add locked flag if
+            # present
+            if locked:
+                cplist.append((entry, truth, locked))
+            else:
+                cplist.append((entry, truth))
+        return cplist
+
+    def control_point_links_from_json(self, json_data):
+        cplist = json_data['control_point_links']
+        cpdict = {}
+        for item in cplist:
+            try:
+                entry, truth, locked = item
+            except ValueError:
+                entry, truth = item
+                locked = False
+            cpdict[tuple(entry)] = (tuple(truth), locked)
+        self.control_point_links = cpdict
+
+    ##### Multi-index calculations
+
+    def get_insertion_multi_index(self, before=None, after=None, first_child_of=None, last_child_of=None):
+        if first_child_of is not None:
+            mi = self.get_multi_index_of_layer(first_child_of)
+            mi.append(1)
+        elif last_child_of is not None:
+            mi = self.get_multi_index_of_layer(last_child_of)
+            children = self.get_layer_children(last_child_of)
+            mi.append(len(children) + 1)
+        elif before is not None:
+            mi = self.get_multi_index_of_layer(before)
+        elif after is not None:
+            mi = self.get_multi_index_of_layer(after)
+            mi[-1] += 1
+        else:
+            mi = None
+        return mi
+
+    def get_multi_index_of_layer(self, layer):
+        return self.get_multi_index_of_layer_recursive(layer, self.layers)
+
+    def get_multi_index_of_layer_recursive(self, layer, tree):
+        for i, item in enumerate(tree):
+            if (isinstance(item, Layer)):
+                if (item == layer):
+                    # in the case of folders, we return the multi-index to the parent,
+                    # since the folder "layer" itself is just a pseudo-layer
+                    if layer.is_folder():
+                        return []
+                    else:
+                        return [i]
+            else:
+                result = self.get_multi_index_of_layer_recursive(layer, item)
+                if (result is not None):
+                    r = [i]
+                    r.extend(result)
+
+                    return r
+
+        return None
+
+    def get_layer_multi_index_from_file_path(self, file_path):
+        for layer in self.flatten():
+            if (layer.file_path == file_path):
+                return self.get_multi_index_of_layer(layer)
+        #
+        return None
+
+    ##### Boundary calculations
+
+    def recalc_all_bounds(self):
+        # calculate bound starting at leaf layers and working back up to folder
+        # layers
+        for layer in reversed(self.flatten()):
+            layer.update_bounds()
+
+    def accumulate_layer_bounds(self, layers):
+        result = rect.NONE_RECT
+
+        for layer in layers:
+            if (result == rect.NONE_RECT):
+                result = layer.bounds
+            else:
+                result = rect.accumulate_rect(result, layer.bounds)
+
+        return result
+
+    ##### Style
+
     def update_default_style(self, style):
         self.default_style.copy_from(style)
+
+    ##### Flatten
 
     def flatten(self):
         return self.flatten_recursive(self.layers)
@@ -169,14 +286,10 @@ class LayerManager(BaseDocument):
 
         return result
 
-    def recalc_all_bounds(self):
-        # calculate bound starting at leaf layers and working back up to folder
-        # layers
-        for layer in reversed(self.flatten()):
-            layer.update_bounds()
+    ##### Invariant handling
 
-    # Invariant handling: invariants are unique identifiers for each layer that
-    # don't change when the layer is renamed or reordered
+    # invariants are unique identifiers for each layer that don't change when
+    # the layer is renamed or reordered
 
     def get_next_invariant(self, invariant=None):
         if invariant is None:
@@ -198,204 +311,17 @@ class LayerManager(BaseDocument):
             self.next_invariant = invariant
         return self.next_invariant
 
+    def get_invariant_offset(self):
+        return self.next_invariant - 1
+
+    ##### Locate layers
+
     def get_layer_by_invariant(self, invariant):
         layers = self.flatten()
         for layer in layers:
             if layer.invariant == invariant:
                 return layer
         return None
-
-    def get_invariant_offset(self):
-        return self.next_invariant - 1
-
-    def has_user_created_layers(self):
-        """Returns true if all the layers can be recreated automatically
-
-        If any layer has any user-created data, this will return False.
-        """
-        for layer in self.flatten():
-            if not layer.skip_on_insert:
-                return True
-        return False
-
-    def destroy(self):
-        # fixme: why do layers need a destroy() method???
-        for layer in self.flatten():
-            layer.destroy()
-        self.layers = []
-
-    def dispatch_event(self, event, value=True):
-        log.debug("dispatching event %s = %s" % (event, value))
-        setattr(self, event, value)
-
-    def post_event(self, event_name, *args):
-        log.debug("event: %s.  args=%s" % (event_name, str(args)))
-
-    def get_event_callback(self, event):
-        import functools
-        callback = functools.partial(self.post_event, event)
-        return callback
-
-    def add_layers(self, layers, is_project, editor):
-        parent = None
-        if is_project:
-            # remove all other layers so the project can be inserted in the
-            # correct order
-            existing = self.flatten()
-            for layer in existing:
-                if not layer.is_root():
-                    self.remove_layer(layer)
-
-            # layers are inserted from the beginning, so reverse loaded layers
-            # so they won't show up backwards
-            layers.reverse()
-        else:
-            if layers[0].is_folder():
-                parent = layers.pop(0)
-                self.insert_loaded_layer(parent, editor)
-
-        for layer in layers:
-            layer.check_projection(editor.task)
-            if not layer.load_error_string:
-                self.insert_loaded_layer(layer, editor, last_child_of=parent)
-        return layers
-
-    def check_layer(self, layer, window):
-        if layer is not None:
-            try:
-                layer.check_for_problems(window)
-            except Exception, e:
-                if hasattr(e, 'points'):
-                    return e
-                else:
-                    raise
-        return None
-
-    def load_all_from_json(self, json, batch_flags=None):
-        order = []
-        if json[0] == "extra json data":
-            extra_json = json[1]
-            json = json[2:]
-        else:
-            extra_json = None
-        for serialized_data in json:
-            try:
-                loaded = Layer.load_from_json(serialized_data, self, batch_flags)
-                index = serialized_data['index']
-                order.append((index, loaded))
-                log.debug("processed json from layer %s" % loaded)
-            except RuntimeError, e:
-                batch_flags.messages.append("ERROR: %s" % str(e))
-        order.sort()
-        log.debug("load_all_from_json: order: %s" % str(order))
-
-        for attr, from_json in self.get_from_json_attrs():
-            try:
-                from_json(extra_json)
-            except KeyError:
-                message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
-                log.warning(message)
-                batch_flags.messages.append("WARNING: %s" % message)
-
-        return order, extra_json
-
-    def add_all(self, layer_order, editor=None):
-        existing = self.flatten()
-        for layer in existing:
-            if not layer.is_root():
-                self.remove_layer(layer)
-        layers = []
-        log.debug("layer order: %s" % str(layer_order))
-        for mi, layer_list in layer_order:
-            for layer in layer_list:
-                log.debug("adding %s at %s" % (str(layer), str(mi)))
-                if editor is not None:
-                    layer.check_projection(editor.task)
-                if len(mi) > 1:
-                    # check to see if it's a folder layer, and if so it would
-                    # have been serialized with a 0 as the last multi index.
-                    # On insert, this barfs, so strip it off.
-                    if mi[-1] == 0:
-                        mi = mi[:-1]
-                # LEGACY:
-                if layer.invariant == -999:
-                    log.warning("old json format: invariant not set for %s" % layer)
-                    layer.invariant = self.get_next_invariant()
-                self.insert_loaded_layer(layer, mi=mi, skip_invariant=True)
-                layers.append(layer)
-
-                # Automatically adjust next_invariant to reflect highest
-                # invariant seen
-                if layer.invariant >= self.next_invariant:
-                    self.next_invariant = layer.invariant + 1
-        self.recalc_all_bounds()
-        return layers
-
-    def save_all(self, file_path, extra_json_data=None):
-        log.debug("saving layers in project file: " + file_path)
-        layer_info = self.flatten_with_indexes()
-        log.debug("layers are " + str(self.layers))
-        log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
-        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
-        project = []
-        if extra_json_data is None:
-            extra_json_data = {}
-        for attr, to_json in self.get_to_json_attrs():
-            extra_json_data[attr] = to_json()
-        project.append("extra json data")
-        project.append(extra_json_data)
-        for index, layer in layer_info:
-            log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
-            data = layer.serialize_json(index)
-            if data is not None:
-                try:
-                    text = json.dumps(data)
-                except Exception, e:
-                    log.error("JSON failure, layer %s: %s" % (layer.name, repr(data)))
-                    return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
-
-                project.append(data)
-
-        try:
-            with fsopen(file_path, "wb") as fh:
-                fh.write("# -*- MapRoom project file -*-\n")
-                text = json.dumps(project, indent=4)
-                processed = collapse_json(text, 12)
-                fh.write(processed)
-                fh.write("\n")
-        except Exception, e:
-            return "Failed saving %s: %s" % (file_path, e)
-        return ""
-
-    def save_layer(self, layer, file_path, loader=None):
-        if layer is not None:
-            error = loaders.save_layer(layer, file_path, loader)
-            if not error:
-                layer.name = os.path.basename(layer.file_path)
-            return error
-        return "No selected layer."
-
-    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
-        self.dispatch_event('layer_loaded', layer)
-        if mi is None:
-            mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
-        self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
-        return mi
-
-    def insert_json(self, json_data, editor, mi, old_invariant_map=None):
-        mi = list(mi)  # operate on a copy, otherwise changes get returned
-        layer = Layer.load_from_json(json_data, self)[0]
-        if old_invariant_map is not None:
-            old_invariant_map[json_data['invariant']] = layer
-        self.dispatch_event('layer_loaded', layer)
-        self.insert_layer(mi, layer)
-        if json_data['children']:
-            mi.append(1)
-            for c in json_data['children']:
-                self.insert_json(c, editor, mi, old_invariant_map)
-                mi[-1] = mi[-1] + 1
-        layer.update_bounds()
-        return layer
 
     def find_default_insert_layer(self):
         # By default, lat/lon layers stay at the top and other layers will
@@ -429,115 +355,6 @@ class LayerManager(BaseDocument):
             event_layer = self.get_folder_of_layer(event_layer)
         return None
 
-    def get_insertion_multi_index(self, before=None, after=None, first_child_of=None, last_child_of=None):
-        if first_child_of is not None:
-            mi = self.get_multi_index_of_layer(first_child_of)
-            mi.append(1)
-        elif last_child_of is not None:
-            mi = self.get_multi_index_of_layer(last_child_of)
-            children = self.get_layer_children(last_child_of)
-            mi.append(len(children) + 1)
-        elif before is not None:
-            mi = self.get_multi_index_of_layer(before)
-        elif after is not None:
-            mi = self.get_multi_index_of_layer(after)
-            mi[-1] += 1
-        else:
-            mi = None
-        return mi
-
-    def insert_children(self, in_layer, children):
-        """Insert a list of children as children of the speficied folder
-
-        The list of children should be generated from :func:`get_children`
-        """
-        log.debug("before: layers are " + str(self.layers))
-        mi = self.get_multi_index_of_layer(in_layer)
-        mi.append(1)
-        log.debug("inserting children " + str(children) + " using multi_index = " + str(mi))
-        for layer in children:
-            if isinstance(layer, list):
-                child = layer[0]
-                self.insert_layer(mi, child, child.invariant)
-                self.insert_children(child, layer[1:])
-            else:
-                self.insert_layer(mi, layer, layer.invariant)
-            mi[-1] += 1
-        log.debug("after: layers are " + str(self.layers))
-
-    def insert_layer(self, at_multi_index, layer, invariant=None, skip_invariant=False):
-        if (at_multi_index is None or at_multi_index == []):
-            at_multi_index = self.find_default_insert_layer()
-
-        log.debug("before: layers are " + str(self.layers))
-        log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
-        if (not isinstance(layer, list)):
-            if layer.transient_edit_layer:
-                layer.invariant = self.transient_invariant
-            elif not skip_invariant:
-                # Layers being loaded from a project file will have their
-                # invariants already saved, so don't mess with them.
-                layer.invariant = self.get_next_invariant(invariant)
-            if layer.is_folder() and not layer.is_root():
-                layer = [layer]
-        self.insert_layer_recursive(at_multi_index, layer, self.layers)
-        log.debug("after: layers are " + str(self.layers))
-
-    def insert_layer_recursive(self, at_multi_index, layer, tree):
-        if (len(at_multi_index) == 1):
-            tree.insert(at_multi_index[0], layer)
-        else:
-            item = tree[at_multi_index[0]]
-            self.insert_layer_recursive(at_multi_index[1:], layer, item)
-
-    def replace_layer(self, at_multi_index, layer):
-        """Replace a layer with another
-
-        Returns a tuple containing the replaced layer as the first component
-        and a list (possibly empty) of its children as the second component.
-        """
-        if (at_multi_index is None or at_multi_index == []):
-            at_multi_index = self.find_default_insert_layer()
-
-        log.debug("before: layers are " + str(self.layers))
-        log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
-        if (not isinstance(layer, list)):
-            if layer.is_folder() and not layer.is_root():
-                layer = [layer]
-        replaced = self.replace_layer_recursive(at_multi_index, layer, self.layers)
-        log.debug("after: layers are " + str(self.layers))
-        if isinstance(replaced, list):
-            return replaced[0], replaced[1:]
-        return replaced, []
-
-    def replace_layer_recursive(self, at_multi_index, layer, tree):
-        if (len(at_multi_index) == 1):
-            replaced = tree[at_multi_index[0]]
-            tree[at_multi_index[0]] = layer
-            return replaced
-        else:
-            item = tree[at_multi_index[0]]
-            return self.replace_layer_recursive(at_multi_index[1:], layer, item)
-
-    # FIXME: layer removal commands should return the hierarchy of layers
-    # removed so that the operation can be undone correctly.
-    def remove_layer(self, layer):
-        mi = self.get_multi_index_of_layer(layer)
-        self.remove_layer_at_multi_index(mi)
-
-    def remove_layer_at_multi_index(self, at_multi_index):
-        self.remove_layer_recursive(at_multi_index, self.layers)
-
-    def remove_layer_recursive(self, at_multi_index, tree):
-        index = at_multi_index[0]
-        if (len(at_multi_index) == 1):
-            layer = tree[index]
-            del tree[index]
-            return layer
-        else:
-            sublist = tree[index]
-            return self.remove_layer_recursive(at_multi_index[1:], sublist)
-
     def get_folder_of_layer(self, layer):
         """Returns the containing folder of the specified layer
 
@@ -560,34 +377,11 @@ class LayerManager(BaseDocument):
         else:
             return self.get_layer_by_multi_index_recursive(at_multi_index[1:], item)
 
-    def get_multi_index_of_layer(self, layer):
-        return self.get_multi_index_of_layer_recursive(layer, self.layers)
-
     def get_layer_by_name(self, name):
         layers = self.flatten()
         for layer in layers:
             if layer.name == name:
                 return layer
-        return None
-
-    def get_multi_index_of_layer_recursive(self, layer, tree):
-        for i, item in enumerate(tree):
-            if (isinstance(item, Layer)):
-                if (item == layer):
-                    # in the case of folders, we return the multi-index to the parent,
-                    # since the folder "layer" itself is just a pseudo-layer
-                    if layer.is_folder():
-                        return []
-                    else:
-                        return [i]
-            else:
-                result = self.get_multi_index_of_layer_recursive(layer, item)
-                if (result is not None):
-                    r = [i]
-                    r.extend(result)
-
-                    return r
-
         return None
 
     def find_dependent_layer(self, layer, dependent_type):
@@ -607,36 +401,6 @@ class LayerManager(BaseDocument):
             if child.transient_edit_layer:
                 return child
         return None
-
-    def replace_transient_layer(self, layer, editor, **kwargs):
-        old = self.find_transient_layer()
-        if old:
-            insertion_index = self.get_multi_index_of_layer(old)
-            self.remove_layer_at_multi_index(insertion_index)
-        else:
-            insertion_index = None
-        self.insert_loaded_layer(layer, editor, **kwargs)
-        return old, insertion_index
-
-    # fixme -- why wouldn't is_raisable, etc be an attribute of the layer???
-    def is_raisable(self, layer):
-        if not layer.is_root():
-            mi = self.get_multi_index_of_layer(layer)
-            if mi is not None:
-                return mi[len(mi) - 1] >= 2
-        return False
-
-    def is_lowerable(self, layer):
-        if not layer.is_root():
-            mi = self.get_multi_index_of_layer(layer)
-            if mi is not None:
-                n = mi[len(mi) - 1]
-                mi2 = mi[: len(mi) - 1]
-                parent_list = self.get_layer_by_multi_index(mi2)
-                total = len(parent_list)
-
-                return n < (total - 1)
-        return False
 
     # returns a list of the child layers of a root or folder layer
     def get_layer_children(self, layer):
@@ -707,19 +471,68 @@ class LayerManager(BaseDocument):
 
         return ret
 
-    def get_layer_multi_index_from_file_path(self, file_path):
-        for layer in self.flatten():
-            if (layer.file_path == file_path):
-                return self.get_multi_index_of_layer(layer)
-        #
-        return None
-
     def get_layer_by_flattened_index(self, index):
         flattened = self.flatten()
         if index < len(flattened):
             return flattened[index]
 
         return None
+
+    def get_visible_layers(self, layer_visibility, only_visible_layers=True):
+        layers = []
+        for layer in self.flatten():
+            if (only_visible_layers and not layer_visibility[layer]["layer"]):
+                continue
+            layers.append(layer)
+        return layers
+
+    def get_mergeable_layers(self):
+        layers = [layer for layer in self.flatten() if layer.find_merge_layer_class(layer) is not None]
+        layers.reverse()
+        return layers
+
+    ##### Layer info
+
+    def has_user_created_layers(self):
+        """Returns true if all the layers can be recreated automatically
+
+        If any layer has any user-created data, this will return False.
+        """
+        for layer in self.flatten():
+            if not layer.skip_on_insert:
+                return True
+        return False
+
+    def check_layer(self, layer, window):
+        if layer is not None:
+            try:
+                layer.check_for_problems(window)
+            except Exception, e:
+                if hasattr(e, 'points'):
+                    return e
+                else:
+                    raise
+        return None
+
+    # fixme -- why wouldn't is_raisable, etc be an attribute of the layer???
+    def is_raisable(self, layer):
+        if not layer.is_root():
+            mi = self.get_multi_index_of_layer(layer)
+            if mi is not None:
+                return mi[len(mi) - 1] >= 2
+        return False
+
+    def is_lowerable(self, layer):
+        if not layer.is_root():
+            mi = self.get_multi_index_of_layer(layer)
+            if mi is not None:
+                n = mi[len(mi) - 1]
+                mi2 = mi[: len(mi) - 1]
+                parent_list = self.get_layer_by_multi_index(mi2)
+                total = len(parent_list)
+
+                return n < (total - 1)
+        return False
 
     def count_layers(self):
         n = 0
@@ -749,24 +562,19 @@ class LayerManager(BaseDocument):
         #
         return n
 
-    def get_visible_layers(self, layer_visibility, only_visible_layers=True):
-        layers = []
-        for layer in self.flatten():
-            if (only_visible_layers and not layer_visibility[layer]["layer"]):
-                continue
-            layers.append(layer)
-        return layers
+    def dispatch_event(self, event, value=True):  # refactor out
+        log.debug("dispatching event %s = %s" % (event, value))
+        setattr(self, event, value)
 
-    def accumulate_layer_bounds(self, layers):
-        result = rect.NONE_RECT
+    def post_event(self, event_name, *args):  # refactor out
+        log.debug("event: %s.  args=%s" % (event_name, str(args)))
 
-        for layer in layers:
-            if (result == rect.NONE_RECT):
-                result = layer.bounds
-            else:
-                result = rect.accumulate_rect(result, layer.bounds)
+    def get_event_callback(self, event):  # refactor out
+        import functools
+        callback = functools.partial(self.post_event, event)
+        return callback
 
-        return result
+    ##### Add layers
 
     def add_layer(self, type=None, editor=None, before=None, after=None):
         if type == "grid":
@@ -782,35 +590,191 @@ class LayerManager(BaseDocument):
             GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
         return layer
 
-    def get_mergeable_layers(self):
-        layers = [layer for layer in self.flatten() if layer.find_merge_layer_class(layer) is not None]
-        layers.reverse()
+    def add_layers(self, layers, is_project, editor):
+        parent = None
+        if is_project:
+            # remove all other layers so the project can be inserted in the
+            # correct order
+            existing = self.flatten()
+            for layer in existing:
+                if not layer.is_root():
+                    self.remove_layer(layer)
+
+            # layers are inserted from the beginning, so reverse loaded layers
+            # so they won't show up backwards
+            layers.reverse()
+        else:
+            if layers[0].is_folder():
+                parent = layers.pop(0)
+                self.insert_loaded_layer(parent, editor)
+
+        for layer in layers:
+            layer.check_projection(editor.task)
+            if not layer.load_error_string:
+                self.insert_loaded_layer(layer, editor, last_child_of=parent)
         return layers
 
-    def control_point_links_to_json(self):
-        # json can't handle dictionaries with tuples as their keys, so have
-        # to compress
-        cplist = []
-        for entry, (truth, locked) in self.control_point_links.iteritems():
-            # retain compatibility with old versions, only add locked flag if
-            # present
-            if locked:
-                cplist.append((entry, truth, locked))
-            else:
-                cplist.append((entry, truth))
-        return cplist
+    def add_all(self, layer_order, editor=None):
+        existing = self.flatten()
+        for layer in existing:
+            if not layer.is_root():
+                self.remove_layer(layer)
+        layers = []
+        log.debug("layer order: %s" % str(layer_order))
+        for mi, layer_list in layer_order:
+            for layer in layer_list:
+                log.debug("adding %s at %s" % (str(layer), str(mi)))
+                if editor is not None:
+                    layer.check_projection(editor.task)
+                if len(mi) > 1:
+                    # check to see if it's a folder layer, and if so it would
+                    # have been serialized with a 0 as the last multi index.
+                    # On insert, this barfs, so strip it off.
+                    if mi[-1] == 0:
+                        mi = mi[:-1]
+                # LEGACY:
+                if layer.invariant == -999:
+                    log.warning("old json format: invariant not set for %s" % layer)
+                    layer.invariant = self.get_next_invariant()
+                self.insert_loaded_layer(layer, mi=mi, skip_invariant=True)
+                layers.append(layer)
 
-    def control_point_links_from_json(self, json_data):
-        cplist = json_data['control_point_links']
-        cpdict = {}
-        for item in cplist:
-            try:
-                entry, truth, locked = item
-            except ValueError:
-                entry, truth = item
-                locked = False
-            cpdict[tuple(entry)] = (tuple(truth), locked)
-        self.control_point_links = cpdict
+                # Automatically adjust next_invariant to reflect highest
+                # invariant seen
+                if layer.invariant >= self.next_invariant:
+                    self.next_invariant = layer.invariant + 1
+        self.recalc_all_bounds()
+        return layers
+
+    def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
+        self.dispatch_event('layer_loaded', layer)
+        if mi is None:
+            mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
+        self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
+        return mi
+
+    def insert_json(self, json_data, editor, mi, old_invariant_map=None):
+        mi = list(mi)  # operate on a copy, otherwise changes get returned
+        layer = Layer.load_from_json(json_data, self)[0]
+        if old_invariant_map is not None:
+            old_invariant_map[json_data['invariant']] = layer
+        self.dispatch_event('layer_loaded', layer)
+        self.insert_layer(mi, layer)
+        if json_data['children']:
+            mi.append(1)
+            for c in json_data['children']:
+                self.insert_json(c, editor, mi, old_invariant_map)
+                mi[-1] = mi[-1] + 1
+        layer.update_bounds()
+        return layer
+
+    def insert_children(self, in_layer, children):
+        """Insert a list of children as children of the speficied folder
+
+        The list of children should be generated from :func:`get_children`
+        """
+        log.debug("before: layers are " + str(self.layers))
+        mi = self.get_multi_index_of_layer(in_layer)
+        mi.append(1)
+        log.debug("inserting children " + str(children) + " using multi_index = " + str(mi))
+        for layer in children:
+            if isinstance(layer, list):
+                child = layer[0]
+                self.insert_layer(mi, child, child.invariant)
+                self.insert_children(child, layer[1:])
+            else:
+                self.insert_layer(mi, layer, layer.invariant)
+            mi[-1] += 1
+        log.debug("after: layers are " + str(self.layers))
+
+    def insert_layer(self, at_multi_index, layer, invariant=None, skip_invariant=False):
+        if (at_multi_index is None or at_multi_index == []):
+            at_multi_index = self.find_default_insert_layer()
+
+        log.debug("before: layers are " + str(self.layers))
+        log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
+        if (not isinstance(layer, list)):
+            if layer.transient_edit_layer:
+                layer.invariant = self.transient_invariant
+            elif not skip_invariant:
+                # Layers being loaded from a project file will have their
+                # invariants already saved, so don't mess with them.
+                layer.invariant = self.get_next_invariant(invariant)
+            if layer.is_folder() and not layer.is_root():
+                layer = [layer]
+        self.insert_layer_recursive(at_multi_index, layer, self.layers)
+        log.debug("after: layers are " + str(self.layers))
+
+    def insert_layer_recursive(self, at_multi_index, layer, tree):
+        if (len(at_multi_index) == 1):
+            tree.insert(at_multi_index[0], layer)
+        else:
+            item = tree[at_multi_index[0]]
+            self.insert_layer_recursive(at_multi_index[1:], layer, item)
+
+    ##### Replace layers
+
+    def replace_layer(self, at_multi_index, layer):
+        """Replace a layer with another
+
+        Returns a tuple containing the replaced layer as the first component
+        and a list (possibly empty) of its children as the second component.
+        """
+        if (at_multi_index is None or at_multi_index == []):
+            at_multi_index = self.find_default_insert_layer()
+
+        log.debug("before: layers are " + str(self.layers))
+        log.debug("inserting layer " + str(layer) + " using multi_index = " + str(at_multi_index))
+        if (not isinstance(layer, list)):
+            if layer.is_folder() and not layer.is_root():
+                layer = [layer]
+        replaced = self.replace_layer_recursive(at_multi_index, layer, self.layers)
+        log.debug("after: layers are " + str(self.layers))
+        if isinstance(replaced, list):
+            return replaced[0], replaced[1:]
+        return replaced, []
+
+    def replace_layer_recursive(self, at_multi_index, layer, tree):
+        if (len(at_multi_index) == 1):
+            replaced = tree[at_multi_index[0]]
+            tree[at_multi_index[0]] = layer
+            return replaced
+        else:
+            item = tree[at_multi_index[0]]
+            return self.replace_layer_recursive(at_multi_index[1:], layer, item)
+
+    def replace_transient_layer(self, layer, editor, **kwargs):
+        old = self.find_transient_layer()
+        if old:
+            insertion_index = self.get_multi_index_of_layer(old)
+            self.remove_layer_at_multi_index(insertion_index)
+        else:
+            insertion_index = None
+        self.insert_loaded_layer(layer, editor, **kwargs)
+        return old, insertion_index
+
+    ##### Remove layers
+
+    # FIXME: layer removal commands should return the hierarchy of layers
+    # removed so that the operation can be undone correctly.
+    def remove_layer(self, layer):
+        mi = self.get_multi_index_of_layer(layer)
+        self.remove_layer_at_multi_index(mi)
+
+    def remove_layer_at_multi_index(self, at_multi_index):
+        self.remove_layer_recursive(at_multi_index, self.layers)
+
+    def remove_layer_recursive(self, at_multi_index, tree):
+        index = at_multi_index[0]
+        if (len(at_multi_index) == 1):
+            layer = tree[index]
+            del tree[index]
+            return layer
+        else:
+            sublist = tree[index]
+            return self.remove_layer_recursive(at_multi_index[1:], sublist)
+
+    ##### Control points: links between layers
 
     def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None, locked=False):
         """Links a control point to a truth (master) layer
@@ -905,11 +869,81 @@ class LayerManager(BaseDocument):
             log.debug("control_point_links: restoring %s from %s" % (dep, truth))
             self.control_point_links[dep] = (truth, locked)
 
-    def destroy_recursive(self, layer):
-        if (layer.is_folder()):
-            for item in self.get_layer_children(layer):
-                self.destroy_recursive(item)
-        self.delete_undo_operations_for_layer(layer)
+    ##### Layer load
+
+    def load_all_from_json(self, json, batch_flags=None):
+        order = []
+        if json[0] == "extra json data":
+            extra_json = json[1]
+            json = json[2:]
+        else:
+            extra_json = None
+        for serialized_data in json:
+            try:
+                loaded = Layer.load_from_json(serialized_data, self, batch_flags)
+                index = serialized_data['index']
+                order.append((index, loaded))
+                log.debug("processed json from layer %s" % loaded)
+            except RuntimeError, e:
+                batch_flags.messages.append("ERROR: %s" % str(e))
+        order.sort()
+        log.debug("load_all_from_json: order: %s" % str(order))
+
+        for attr, from_json in self.get_from_json_attrs():
+            try:
+                from_json(extra_json)
+            except KeyError:
+                message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
+                log.warning(message)
+                batch_flags.messages.append("WARNING: %s" % message)
+
+        return order, extra_json
+
+    ##### Layer save
+
+    def save_all(self, file_path, extra_json_data=None):
+        log.debug("saving layers in project file: " + file_path)
+        layer_info = self.flatten_with_indexes()
+        log.debug("layers are " + str(self.layers))
+        log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
+        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
+        project = []
+        if extra_json_data is None:
+            extra_json_data = {}
+        for attr, to_json in self.get_to_json_attrs():
+            extra_json_data[attr] = to_json()
+        project.append("extra json data")
+        project.append(extra_json_data)
+        for index, layer in layer_info:
+            log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
+            data = layer.serialize_json(index)
+            if data is not None:
+                try:
+                    text = json.dumps(data)
+                except Exception, e:
+                    log.error("JSON failure, layer %s: %s" % (layer.name, repr(data)))
+                    return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
+
+                project.append(data)
+
+        try:
+            with fsopen(file_path, "wb") as fh:
+                fh.write("# -*- MapRoom project file -*-\n")
+                text = json.dumps(project, indent=4)
+                processed = collapse_json(text, 12)
+                fh.write(processed)
+                fh.write("\n")
+        except Exception, e:
+            return "Failed saving %s: %s" % (file_path, e)
+        return ""
+
+    def save_layer(self, layer, file_path, loader=None):
+        if layer is not None:
+            error = loaders.save_layer(layer, file_path, loader)
+            if not error:
+                layer.name = os.path.basename(layer.file_path)
+            return error
+        return "No selected layer."
 
 
 # def test():
