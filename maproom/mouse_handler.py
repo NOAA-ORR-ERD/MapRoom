@@ -158,7 +158,7 @@ class MouseHandler(object):
                     log.debug("snapping to layer %s type %s oi %s %s %s" % (layer, object_type, object_index, before, position))
         return position
 
-    def update_status_text(self, proj_p=None, obj=True, zoom=False, instructions=""):
+    def update_status_text(self, proj_p=None, obj=None, zoom=False, instructions=""):
         c = self.layer_canvas
         e = c.project
         prefs = e.task.preferences
@@ -172,12 +172,9 @@ class MouseHandler(object):
         e.task.status_bar.message = " ".join(items)
 
         obj_text = ""
-        if obj:
-            try:
-                (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-                obj_text = layer.clickable_object_info(c.picker, object_type, object_index)
-            except TypeError:
-                pass
+        if obj is not None:
+            (layer, object_type, object_index) = obj
+            obj_text = layer.clickable_object_info(c.picker, object_type, object_index)
         e.task.status_bar.debug = obj_text
 
     def process_mouse_motion_up(self, event):
@@ -188,11 +185,15 @@ class MouseHandler(object):
         c.release_mouse()
         # print "mouse is not down"
         self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
+        obj = None
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
             c.project.clickable_object_in_layer = layer
-            if (c.project.layer_tree_control.is_selected_layer(layer)):
-                c.project.clickable_object_mouse_is_over = self.current_object_under_mouse
+            sel = c.project.layer_tree_control.get_selected_layer()
+            if (layer == sel):
+                obj = c.project.clickable_object_mouse_is_over = self.current_object_under_mouse
+            elif sel.show_unselected_layer_info_for(layer):
+                obj = self.current_object_under_mouse
             else:
                 c.project.clickable_object_mouse_is_over = None
             self.is_over_object = True
@@ -202,7 +203,7 @@ class MouseHandler(object):
             self.is_over_object = False
         mouselog.debug("object under mouse: %s, on current layer: %s" % (self.current_object_under_mouse, c.project.clickable_object_mouse_is_over is not None))
 
-        self.update_status_text(proj_p, True, True, self.get_help_text())
+        self.update_status_text(proj_p, obj, True, self.get_help_text())
 
     def process_mouse_motion_down(self, event):
         # c = self.layer_canvas
@@ -354,7 +355,7 @@ class MouseHandler(object):
 
         p = event.GetPosition()
         proj_p = c.get_world_point_from_screen_point(p)
-        self.update_status_text(proj_p, True, True)
+        self.update_status_text(proj_p, self.current_object_under_mouse, True)
 
     def process_mouse_leave(self, event):
         # this messes up object dragging when the mouse goes outside the window
@@ -777,7 +778,7 @@ class ObjectSelectionMode(MouseHandler):
                     world_point = c.get_world_point_from_screen_point(event.GetPosition())
                     self.clicked_on_empty_space(event, layer, world_point)
 
-        self.update_status_text(proj_p, True, False, self.get_help_text())
+        self.update_status_text(proj_p, None, True, self.get_help_text())
 
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
@@ -821,7 +822,7 @@ class ObjectSelectionMode(MouseHandler):
                     c.project.process_command(cmd)
                     c.render(event)
 
-            self.update_status_text(proj_p, True, False, self.get_help_text())
+            self.update_status_text(proj_p, None, True, self.get_help_text())
         else:
             self.dragged_on_empty_space(event)
 

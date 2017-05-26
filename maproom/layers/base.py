@@ -121,6 +121,13 @@ class Layer(HasTraits):
     def interior_object_info(self, object_index):
         return "Polygon %s on %s" % (object_index + 1, self.name)
 
+    def show_unselected_layer_info_for(self, layer):
+        """Whether or not the selected layer allows for other layers
+        that are being moused-over to show info about the object the mouse
+        is over.
+        """
+        return False
+
     def get_info_panel_text(self, prop):
         # Subclasses should define this to return values for any properties in
         # layer_info_panel that are read-only and can be represented as strings

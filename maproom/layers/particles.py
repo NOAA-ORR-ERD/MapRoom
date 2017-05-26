@@ -209,6 +209,9 @@ class ParticleLayer(PointBaseLayer):
             sctext = ""
         return "Point %s%s %s" % (object_index + 1, sctext, self.name)
 
+    def show_unselected_layer_info_for(self, layer):
+        return layer.type == self.type
+
     def set_data(self, f_points, status_codes, status_code_names):
         PointBaseLayer.set_data(self, f_points)
         # force status codes to fall into range of valid colors
