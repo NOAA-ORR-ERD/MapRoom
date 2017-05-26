@@ -238,7 +238,7 @@ class LineVectorObject(VectorObjectLayer):
         y = np.copy(self.points.y[0:self.num_corners]) - world_pt[1]
         d = (x * x) + (y * y)
         cp = np.argmin(d)
-        return cp
+        return int(cp)
 
     def find_anchor_of(self, point_index):
         if point_index > self.center_point_index:

@@ -164,6 +164,7 @@ class LayerManager(BaseDocument):
                 cplist.append((entry, truth, locked))
             else:
                 cplist.append((entry, truth))
+            log.debug(("cplinks:", entry, truth, locked, cplist[-1]))
         return cplist
 
     def control_point_links_from_json(self, json_data):
@@ -950,7 +951,15 @@ class LayerManager(BaseDocument):
                 try:
                     text = json.dumps(data)
                 except Exception, e:
-                    log.error("JSON failure, layer %s: %s" % (layer.name, repr(data)))
+                    log.error("JSON failure, layer %s: data=%s" % (layer.name, repr(data)))
+                    errors = []
+                    for k, v in data.iteritems():
+                        small = {k: v}
+                        try:
+                            _ = json.dumps(small)
+                        except Exception:
+                            errors.append((k, v))
+                    log.error("JSON failures at: %s" % ", ".join(["%s: %s" % (k, v) for k, v in errors]))
                     return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
 
                 project.append(data)
