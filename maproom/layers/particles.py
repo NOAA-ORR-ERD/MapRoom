@@ -131,6 +131,8 @@ class ParticleLayer(PointBaseLayer):
 
     layer_info_panel = ["Status Code Color", "Outline color", "Outline transparency"]
 
+    pickable = True  # this is a layer that supports picking
+
     status_codes = Any  # numpy list matching array size of points
 
     status_code_names = Any
@@ -196,6 +198,16 @@ class ParticleLayer(PointBaseLayer):
 
     # def set_layer_style_defaults(self):
     #     ## this should do something different for particles
+
+    def point_object_info(self, object_index):
+        sc = self.status_codes[object_index]
+        try:
+            name = self.status_code_names[sc]
+            name, _ = name.rsplit(" ", 1)
+            sctext = ", %s," % name
+        except:
+            sctext = ""
+        return "Point %s%s %s" % (object_index + 1, sctext, self.name)
 
     def set_data(self, f_points, status_codes, status_code_names):
         PointBaseLayer.set_data(self, f_points)
