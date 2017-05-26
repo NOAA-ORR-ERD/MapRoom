@@ -99,6 +99,28 @@ class Layer(HasTraits):
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
 
+    def clickable_object_info(self, picker, object_type, object_index):
+        """Return info about the object of given type and index.
+
+        Typically used to show information about the object under the cursor
+        """
+        if picker.is_ugrid_point_type(object_type):
+            return self.point_object_info(object_index)
+        elif picker.is_ugrid_line_type(object_type):
+            return self.line_object_info(object_index)
+        elif picker.is_interior_type(object_type):
+            return self.interior_object_info(object_index)
+        return ""
+
+    def point_object_info(self, object_index):
+        return "Point %s on %s" % (object_index + 1, self.name)
+
+    def line_object_info(self, object_index):
+        return "Line %s on %s" % (object_index + 1, self.name)
+
+    def interior_object_info(self, object_index):
+        return "Polygon %s on %s" % (object_index + 1, self.name)
+
     def get_info_panel_text(self, prop):
         # Subclasses should define this to return values for any properties in
         # layer_info_panel that are read-only and can be represented as strings

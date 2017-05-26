@@ -175,12 +175,7 @@ class MouseHandler(object):
         if obj:
             try:
                 (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-                if c.picker.is_ugrid_point_type(object_type):
-                    obj_text = "Point %s on %s" % (object_index + 1, layer.name)
-                elif c.picker.is_ugrid_line_type(object_type):
-                    obj_text = "Line %s on %s" % (object_index + 1, layer.name)
-                elif c.picker.is_interior_type(object_type):
-                    obj_text = "Polygon %s on %s" % (object_index + 1, layer.name)
+                obj_text = layer.clickable_object_info(c.picker, object_type, object_index)
             except TypeError:
                 pass
         e.task.status_bar.debug = obj_text
