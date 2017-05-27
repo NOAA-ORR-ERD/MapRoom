@@ -98,5 +98,8 @@ elif mac:
     #shutil.copytree(build_app, dest_app, True)
     run(['/usr/bin/ditto', '-arch', 'x86_64', build_app, dest_app])
 
+    print "Signing (with self-signed cert)"
+    run(["codesign", "-s", "test1", "--deep", dest_app])
+
     print "Zipping %s" % dest_zip
     run(['tar', 'cfj', dest_zip, '-C', dest_dir, final_app])
