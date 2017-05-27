@@ -283,6 +283,13 @@ class RenameLayerCommand(Command):
         return self.undo_info
 
 
+def iter_children(children):
+    for child in children:
+        if isinstance(child, list):
+            iter_children(child)
+        else:
+            yield child
+
 class DeleteLayerCommand(Command):
     short_name = "del_layer"
     serialize_order = [
@@ -304,7 +311,7 @@ class DeleteLayerCommand(Command):
         children = lm.get_children(layer)
         parents = layer.parents_affected_by_move()
         links = lm.remove_all_links_to_layer(layer)
-        for child in children:
+        for child in iter_children(children):
             links.extend(lm.remove_all_links_to_layer(child))
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
