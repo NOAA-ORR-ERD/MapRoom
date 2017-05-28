@@ -315,7 +315,11 @@ class DeleteLayerCommand(Command):
             links.extend(lm.remove_all_links_to_layer(child))
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
-        new_selected_layer = parents[-1]
+        try:
+            new_selected_layer = parents[-1]
+        except IndexError:
+            # only parent is root, so select layer above
+            new_selected_layer = lm.get_previous_sibling(layer)
         lf = undo.flags.add_layer_flags(new_selected_layer)
         lf.select_layer = True
 

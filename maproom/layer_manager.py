@@ -221,6 +221,13 @@ class LayerManager(BaseDocument):
 
         return None
 
+    def get_multi_index_of_previous_sibling(self, layer):
+        mi = self.get_multi_index_of_layer(layer)
+        if mi[-1] == 0:  # at root of a subtree
+            mi = mi[0:-1]
+        mi[-1] = mi[-1] - 1
+        return mi
+
     def get_layer_multi_index_from_file_path(self, file_path):
         for layer in self.flatten():
             if (layer.file_path == file_path):
@@ -447,6 +454,11 @@ class LayerManager(BaseDocument):
                 parents.append(l)
                 mi.pop()
         return parents
+
+    def get_previous_sibling(self, layer):
+          mi = self.get_multi_index_of_previous_sibling(layer)
+          l = self.get_layer_by_multi_index(mi)
+          return l
 
     def get_children(self, layer):
         """Return a list containing the hierarchy starting at the specified
