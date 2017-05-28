@@ -592,6 +592,8 @@ class OutlineAlphaField(LineAlphaField):
 class ColorPickerField(InfoField):
     same_line = True
 
+    default_width = 40
+
     def get_value(self, layer):
         return ""
 
@@ -1194,7 +1196,7 @@ class StatusCodeColorField(InfoField):
             c = csel.ColourSelect(self.ctrl, -1, "", color, size=(self.default_width, -1))
             c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
             hbox.Add(c, 0, wx.ALIGN_CENTER)
-            sizer.Add(hbox, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
+            sizer.Add(hbox, self.vertical_proportion, wx.EXPAND | wx.LEFT, self.panel.SIDE_SPACING)
             ctrls[id(c)] = code
         self.color_ctrls = ctrls
         self.ctrl.Fit()
