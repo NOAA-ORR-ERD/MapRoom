@@ -286,7 +286,8 @@ class RenameLayerCommand(Command):
 def iter_children(children):
     for child in children:
         if isinstance(child, list):
-            iter_children(child)
+            for c in iter_children(child):
+                yield c
         else:
             yield child
 
