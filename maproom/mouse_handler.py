@@ -131,6 +131,9 @@ class MouseHandler(object):
     def get_help_text(self):
         return ""
 
+    def get_long_help_text(self):
+        return ""
+
     def process_mouse_down(self, event):
         return
 
@@ -204,6 +207,8 @@ class MouseHandler(object):
         mouselog.debug("object under mouse: %s, on current layer: %s" % (self.current_object_under_mouse, c.project.clickable_object_mouse_is_over is not None))
 
         self.update_status_text(proj_p, obj, True, self.get_help_text())
+        e = c.project
+        e.long_status.show_status_text(self.get_long_help_text())
 
     def process_mouse_motion_down(self, event):
         # c = self.layer_canvas
@@ -582,12 +587,12 @@ class RNCSelectionMode(PanMode):
             num = "0"
         return name, num, filename, url
 
-    def get_help_text(self):
+    def get_long_help_text(self):
         rnc = self.get_rnc_object()
         if rnc is not None:
             layer, object_type, object_index = rnc
             name, num, filename, url = self.parse_rnc_object(rnc)
-            return "   RNC #%s: %s" % (num, name)
+            return "RNC #%s: %s" % (num, name)
         return ""
 
     def get_cursor(self):

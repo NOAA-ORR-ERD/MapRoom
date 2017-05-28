@@ -17,6 +17,7 @@ from traits.api import on_trait_change
 
 from omnivore.framework.editor import FrameworkEditor
 from omnivore.framework.errors import ProgressCancelError
+from omnivore.utils.wx.springtabs import PopupStatusBar
 
 # Local imports.
 from layer_canvas import LayerCanvas
@@ -409,6 +410,7 @@ class ProjectEditor(FrameworkEditor):
 
         # Base-class constructor.
         self.layer_canvas = LayerCanvas(parent, project=self)
+        self.long_status = PopupStatusBar(self.layer_canvas)
 
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
