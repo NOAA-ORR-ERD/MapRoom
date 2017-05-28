@@ -204,8 +204,11 @@ class DownloadPanel(DownloadControl):
     def path(self):
         prefs = self.task.preferences
         if prefs.download_directory:
-            return prefs.download_directory
-        return os.getcwd()
+            path = prefs.download_directory
+        else:
+            path = self.task.window.application.user_data_dir
+        log.debug("download path: %s" % path)
+        return path
 
     @path.setter
     def path(self, value):

@@ -2,7 +2,6 @@ import os
 
 # Enthought library imports.
 from envisage.ui.tasks.api import PreferencesPane
-from apptools.preferences.api import PreferencesHelper
 from traits.api import Bool
 from traits.api import Directory
 from traits.api import Enum
@@ -11,6 +10,8 @@ from traits.api import Str
 from traitsui.api import HGroup, VGroup, Item, Label, \
     View, RangeEditor
 
+from omnivore.framework.preferences import FrameworkPreferences
+
 # fixme:
 # Some hard_coded stuff just to put it in a central place -- should be handled smarter
 
@@ -18,7 +19,7 @@ from traitsui.api import HGroup, VGroup, Item, Label, \
 DEFAULT_PROJECTION_STRING = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +over +no_defs"
 
 
-class MaproomPreferences(PreferencesHelper):
+class MaproomPreferences(FrameworkPreferences):
     """ The preferences helper for the Framework application.
     """
 
@@ -54,9 +55,21 @@ class MaproomPreferences(PreferencesHelper):
     grid_spacing_high = 200
     grid_spacing = Range(low=grid_spacing_low, high=grid_spacing_high, value=100)
 
-    download_directory = Directory(os.getcwd())
+    download_directory = Directory("")
 
-    bsb_directory = Directory(os.getcwd())
+    bsb_directory = Directory("")
+
+    def _download_directory_default(self):
+      path = os.path.join(self.application.user_data_dir, "Downloads")
+      if not os.path.exists(path):
+          os.makedirs(path)
+      return path
+
+    def _bsb_directory_default(self):
+      path = os.path.join(self.application.user_data_dir, "BSB")
+      if not os.path.exists(path):
+          os.makedirs(path)
+      return path
 
 
 class MaproomPreferencesPane(PreferencesPane):
