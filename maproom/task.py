@@ -361,15 +361,19 @@ class MaproomProjectTask(FrameworkTask):
             if self.active_editor and not self.active_editor.load_in_new_tab(source.metadata):
                 editor = self.active_editor
                 editor.load_omnivore_document(source, **kwargs)
-                self._active_editor_changed()
+                #self._active_editor_changed()  # FIXME: unneeded now?
             else:
                 editor = self.get_editor()
                 self.editor_area.add_editor(editor)
                 self.editor_area.activate_editor(editor)
                 editor.load_omnivore_document(source, **kwargs)
+
+                # Only restore perspective on a new window, otherwise it causes
+                # an unnecessary update and incorrectly replaces existing pane
+                # names
+                self.window.application.restore_perspective(self.window, self)
             self.activated()
             self.window.application.successfully_loaded_event = source.metadata.uri
-            self.window.application.restore_perspective(self.window, self)
         else:
             FrameworkTask.new(self, source, **kwargs)
 
