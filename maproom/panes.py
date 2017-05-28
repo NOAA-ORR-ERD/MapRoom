@@ -7,7 +7,7 @@ from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 # Enthought library imports.
 
 from omnivore.framework.panes import FrameworkPane, FrameworkFixedPane
-from omnivore.utils.wx.springtabs import SpringTabs
+from omnivore.utils.wx.popuputil import SpringTabs
 from omnivore.utils.wx.download_manager import DownloadControl
 
 from layer_tree_control import LayerTreeControl

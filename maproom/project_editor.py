@@ -17,7 +17,7 @@ from traits.api import on_trait_change
 
 from omnivore.framework.editor import FrameworkEditor
 from omnivore.framework.errors import ProgressCancelError
-from omnivore.utils.wx.springtabs import PopupStatusBar
+from omnivore.utils.wx.popuputil import PopupStatusBar
 
 # Local imports.
 from layer_canvas import LayerCanvas
