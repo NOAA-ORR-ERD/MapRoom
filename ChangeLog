@@ -1,3 +1,40 @@
+05/30/2017
+---------------------------
+Released 3.1b33
+- RM Fixed #750: added better defaults for download directories
+- RM Fixed import change in framework: springtabs -> popuputil
+- RM Fixed #749: moved RNC title to web-browser-like popup status bar
+- RM Removed unnecessary perspective load, speeding file load & preventing overwrite of pane captions
+- RM Layer info pane now puts layer name in title bar
+- RM Fixed color button widths in info_panels to be the same width as status code color buttons
+- RM Fixed #757: fix to correctly handle recursion with yield statements
+- RM Refs #757: after layer delete, select previous sibling (if available)
+- RM Refs #757: now handles arbitrarily nested children in lists of lists of lists...
+- RM Added self-signed cert for code signing on macOS
+- RM Fixed #754: added point labeling for any particle layer when a particle layer is selected
+- RM Refs #754: added point labeling for selected particle layer
+- RM Moved text generation for clickable object into layer so output can be customized by layer
+- RM Fixed #756: convert control point to python int rather than int64
+- RM Fixed #753: added default lookup for tile server (and WMS server because it's similar)
+- RM Refs #753: added default indicator on WMS manager
+- RM Fixed #755: updating the map server ids after the list changes
+- RM Refactor: reordered and grouped related methods together in the layer_manager
+- RM Refs #753: added visible "default" label for default tile server
+- RM Refs #753: added default attribute to hosts
+- RM Fixed #752: updated code for new pane subclass from framework
+- RM Use new error logger from framework
+- RM Fixed #745: changed polygon fill checks to interior checks when clicking
+- RM Experimental tree control access by list indexes
+- RM Fixed #748: force parent layer to be selected when deleting
+- RM Added debug menu item to create sample annotation layer
+- RM Added test for gnome particles file with bad data
+- RM Added automatic pytest/coverage HTML reports with pytest.ini
+- RM Minor test fixes
+- RM Fixed pyinstaller builds on conda needing pythonw when running the maproom hook
+- RM Fixed app name appearing in Mac menubar with change in framework init code
+- RM Fixed MacOS app build
+- RM Removed some debug prints
+
 04/22/2017
 ---------------------------
 Released 3.1b32
