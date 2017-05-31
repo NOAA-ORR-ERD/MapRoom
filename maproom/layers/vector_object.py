@@ -98,7 +98,7 @@ class VectorObjectLayer(LineLayer):
         return LineLayer.get_info_panel_text(self, prop)
 
     def set_layer_style_defaults(self):
-        self.style.line_color = self.manager.default_style.line_color
+        self.style.copy_from(self.manager.get_default_style_for(self))
 
     def set_visibility_when_selected(self, layer_visibility):
         layer_visibility['points'] = True
@@ -422,10 +422,6 @@ class FillableVectorObject(LineVectorObject):
 
     # Fillable objects should (in general) display their center control point
     display_center_control_point = True
-
-    def set_layer_style_defaults(self):
-        self.style.line_color = self.manager.default_style.line_color
-        self.style.fill_color = self.manager.default_style.fill_color
 
     def remove_from_master_control_points(self, drag, anchor):
         # linked control points only possible with lines, so skip the test to
@@ -1406,3 +1402,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
         if self.manager.project.layer_tree_control.get_selected_layer() == self:
             renderer.draw_points(self, picker, self.point_size)
+
+
+# List for style defaults: each class of object has its own default style
+styleable_vector_objects = [LineVectorObject(), RectangleVectorObject(), EllipseVectorObject(), PolylineObject(), PolygonObject(), OverlayTextObject(), OverlayIconObject()]

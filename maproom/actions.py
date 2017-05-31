@@ -18,6 +18,7 @@ from mouse_commands import ViewportCommand, NormalizeLongitudeCommand
 from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
+from layers.vector_object import styleable_vector_objects
 
 import logging
 log = logging.getLogger(__name__)
@@ -141,10 +142,10 @@ class DefaultStyleAction(EditorAction):
         GUI.invoke_later(self.show_dialog, self.active_editor)
 
     def show_dialog(self, project):
-        dialog = StyleDialog(project)
+        dialog = StyleDialog(project, styleable_vector_objects)
         status = dialog.ShowModal()
         if status == wx.ID_OK:
-            project.layer_manager.update_default_style(dialog.get_style())
+            project.layer_manager.update_default_styles(dialog.get_styles())
 
 
 class BoundingBoxAction(EditorAction):

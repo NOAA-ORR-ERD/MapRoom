@@ -491,8 +491,8 @@ class StyleChangeCommand(Command):
         return layer_undo_info
 
     def perform_on_parent(self, editor, layer, lm, lf):
-        saved_style = lm.default_style.get_copy()
-        lm.update_default_style(self.style)
+        saved_style = lm.get_default_style_for(layer)
+        lm.update_default_style_for(layer, self.style)
         layer_undo_info = self.perform_on_layer(editor, layer, lm, lf)
         return (saved_style, layer_undo_info)
 
@@ -503,7 +503,7 @@ class StyleChangeCommand(Command):
     def undo_on_parent(self, editor, layer, lm, parent_undo_info):
         saved_style, layer_undo_info = parent_undo_info
         self.undo_on_layer(editor, layer, lm, layer_undo_info)
-        lm.update_default_style(saved_style)
+        lm.update_default_style_for(layer, saved_style)
 
 
 class TextCommand(Command):

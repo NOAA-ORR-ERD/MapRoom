@@ -1,4 +1,5 @@
 import time
+import types
 
 import wx
 import wx.lib.sized_controls as sc
@@ -13,6 +14,9 @@ from ..mock import MockProject
 from ..library.thread_utils import BackgroundWMSDownloader
 from ..library.tile_utils import BackgroundTileDownloader
 from ..library.host_utils import WMSHost, OpenTileHost
+
+import logging
+log = logging.getLogger(__name__)
 
 
 class FindPointDialog(sc.SizedDialog):
@@ -181,26 +185,53 @@ class IconDialog(wx.Dialog):
 
 
 class StyleDialog(wx.Dialog):
-    def __init__(self, project):
+    def __init__(self, project, vector_objects):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))
         self.lm = project.layer_manager
 
         self.mock_project = MockProject(add_tree_control=True)
         self.mock_project.control = None
-        self.layer = self.mock_project.layer_tree_control.get_selected_layer()
-        self.layer.style.copy_from(self.lm.default_style)
-        self.layer.layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Marplot icon"]
+        self.other = self.mock_project.layer_tree_control.get_selected_layer()
+        self.other.style.copy_from(self.lm.get_default_style_for("other"))
+        self.other.type = "other"
+        self.other.name = "other"
+        self.other.layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Marplot icon"]
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        def set_style_override(self, style):
+            self.style.copy_from(style)
+
+        self.vector_objects = list(vector_objects)
+        self.vector_objects.append(self.other)
+        for v in self.vector_objects:
+            self.mock_project.layer_manager.insert_layer([2], v)
+            v.style = self.lm.get_default_style_for(v)
+            v.set_style = types.MethodType(set_style_override, v)
+            try:
+                i = v.layer_info_panel.index("Layer name")
+                del v.layer_info_panel[i]
+            except ValueError:
+                pass
+        self.obj_list = wx.ListBox(self, -1, choices=[v.name for v in self.vector_objects])
+        self.obj_list.Bind(wx.EVT_LISTBOX, self.on_category)
+        hbox.Add(self.obj_list, 1, wx.EXPAND, 0)
 
         # Can't import from the top level because info_panels imports this
         # file, creating a circular import loop
         from info_panels import LayerInfoPanel
         self.info = LayerInfoPanel(self, self.mock_project)
-        self.info.display_panel_for_layer(self.mock_project, self.layer)
+        self.info.display_panel_for_layer(self.mock_project, self.other)
 
-        # Force the minimum client area to be big enough so there's no scrollbar
+        # Use the "other" layer so it has the most style items to force the
+        # minimum client area to be big enough so there's no scrollbar
         vsiz = (400, self.info.GetBestVirtualSize()[1] + 50)
         self.info.SetMinSize(vsiz)
         self.info.Layout()
+        hbox.Add(self.info, 4, wx.EXPAND, 0)
+
+        # reset to first item in list
+        self.obj_list.SetSelection(2)
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
@@ -211,13 +242,24 @@ class StyleDialog(wx.Dialog):
         btnsizer.Realize()
 
         sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(self.info, 1, wx.EXPAND, 0)
+        sizer.Add(hbox, 1, wx.EXPAND, 0)
         sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         self.SetSizer(sizer)
         self.Fit()
 
-    def get_style(self):
-        return self.layer.style
+    def use_layer(self, index):
+        layer = self.vector_objects[index]
+        self.mock_project.layer_tree_control.layer = layer
+        return layer
+
+    def get_styles(self):
+        d = {v.type: v.style.get_copy() for v in self.vector_objects}
+        return d
+
+    def on_category(self, evt):
+        index = evt.GetSelection()
+        layer = self.use_layer(index)
+        self.info.display_panel_for_layer(self.mock_project, layer)
 
 
 class WMSDialog(ObjectEditDialog):

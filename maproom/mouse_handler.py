@@ -1355,10 +1355,10 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         cp2 = c.get_world_point_from_projected_point(p2)
         layer = c.project.layer_tree_control.get_selected_layer()
         if (layer is not None):
-            cmd = self.get_vector_object_command(layer, cp1, cp2, layer.manager.default_style)
+            cmd = self.get_vector_object_command(layer, cp1, cp2)
             e.process_command(cmd, ControlPointEditMode)
 
-    def get_vector_object_command(self, layer, cp1, cp2, style):
+    def get_vector_object_command(self, layer, cp1, cp2, style=None):
         return self.vector_object_command(layer, cp1, cp2, style)
 
 
@@ -1448,7 +1448,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
             self.show_distance_between_screen_points("Path length", c.mouse_down_position, c.mouse_move_position)
         self.render_snapped_point(renderer)
 
-    def get_vector_object_command(self, layer, cp1, cp2, style):
+    def get_vector_object_command(self, layer, cp1, cp2, style=None):
         return self.vector_object_command(layer, cp1, cp2, style, *self.snapped_point)
 
 
@@ -1505,7 +1505,7 @@ class AddPolylineMode(MouseHandler):
         if len(self.points) > 1:
             layer = e.layer_tree_control.get_selected_layer()
             if (layer is not None):
-                cmd = self.vector_object_command(layer, self.points, layer.manager.default_style)
+                cmd = self.vector_object_command(layer, self.points)
                 e.process_command(cmd, ControlPointEditMode)
 
     def render_overlay(self, renderer):
@@ -1551,10 +1551,10 @@ class AddOverlayMode(MouseHandler):
         layer = e.layer_tree_control.get_selected_layer()
         if (layer is not None):
             cp = self.get_world_point(event)
-            cmd = self.get_vector_object_command(layer, cp, layer.manager.default_style)
+            cmd = self.get_vector_object_command(layer, cp)
             e.process_command(cmd, ControlPointEditMode)
 
-    def get_vector_object_command(self, layer, cp, style):
+    def get_vector_object_command(self, layer, cp, style=None):
         return self.vector_object_command(layer, cp, style)
 
 
@@ -1564,7 +1564,7 @@ class AddOverlayTextMode(AddOverlayMode):
     menu_item_tooltip = "Add a new text overlay"
     vector_object_command = AddTextCommand
 
-    def get_vector_object_command(self, layer, cp, style):
+    def get_vector_object_command(self, layer, cp, style=None):
         return self.vector_object_command(layer, cp, style, 300, 250)
 
 

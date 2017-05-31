@@ -213,7 +213,23 @@ class RotateObjectCommand(Command):
         return self.undo_info
 
 
-class DrawVectorObjectCommand(Command):
+class StyledCommand(Command):
+    short_name = "_base_styled_object"
+    ui_name = None
+    vector_object_class = None
+    serialize_order = [
+        ('layer', 'layer'),
+        ('style', 'style'),
+    ]
+
+    def __init__(self, event_layer, style=None):
+        Command.__init__(self, event_layer)
+        if style is not None:
+            style = style.get_copy()  # Make sure not sharing objects
+        self.style = style
+
+
+class DrawVectorObjectCommand(StyledCommand):
     short_name = "vector_object"
     ui_name = None
     vector_object_class = None
@@ -224,11 +240,10 @@ class DrawVectorObjectCommand(Command):
         ('style', 'style'),
     ]
 
-    def __init__(self, event_layer, cp1, cp2, style):
-        Command.__init__(self, event_layer)
+    def __init__(self, event_layer, cp1, cp2, style=None):
+        StyledCommand.__init__(self, event_layer, style)
         self.cp1 = cp1
         self.cp2 = cp2
-        self.style = style.get_copy()  # Make sure not sharing objects
 
     def __str__(self):
         return self.ui_name
@@ -337,8 +352,8 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         halfway = ((self.cp1[0] + self.cp2[0]) / 2.0, (self.cp1[1] + self.cp2[1]) / 2.0)
         line = OverlayLineObject(manager=lm)
         line.set_opposite_corners(self.cp1, halfway)
-        self.style.line_start_marker = 2
         line.set_style(self.style)
+        line.style.line_start_marker = 2  # Turn on arrow
         kwargs = {'first_child_of': layer}
         lm.insert_loaded_layer(line, editor, **kwargs)
         lf = undo.flags.add_layer_flags(line)
@@ -346,8 +361,8 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
 
         #text = RectangleVectorObject(manager=lm)
         text = OverlayTextObject(manager=lm)
-        text.set_opposite_corners(halfway, self.cp2)
         text.set_style(self.style)
+        text.set_opposite_corners(halfway, self.cp2)
         c = editor.layer_canvas
         sp1 = c.get_screen_point_from_world_point(halfway)
         sp2 = c.get_screen_point_from_world_point(self.cp2)
@@ -453,19 +468,18 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
         ('style', 'style'),
     ]
 
-    def __init__(self, event_layer, points, style):
-        Command.__init__(self, event_layer)
+    def __init__(self, event_layer, points, style=None):
+        StyledCommand.__init__(self, event_layer, style)
         self.points = points
-        self.init_style(style)
 
-    def init_style(self, style):
-        self.style = style.get_copy()  # Make sure not sharing objects
-        self.style.fill_style = 0  # Turn off fill by default because it's a polyLINE
+    def check_style(self, layer):
+        layer.style.fill_style = 0  # force unfilled because it's a polyLINE
 
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
         layer.set_points(self.points)
         layer.set_style(self.style)
+        self.check_style(layer)
         return layer
 
 
@@ -474,8 +488,8 @@ class DrawPolygonCommand(DrawPolylineCommand):
     ui_name = "Polygon"
     vector_object_class = PolygonObject
 
-    def init_style(self, style):
-        self.style = style.get_copy()  # Make sure not sharing objects
+    def check_style(self, style):
+        pass  # allow filled/unfilled according to style
 
 
 class AddTextCommand(DrawVectorObjectCommand):
@@ -490,10 +504,9 @@ class AddTextCommand(DrawVectorObjectCommand):
         ('screen_height', 'int'),
     ]
 
-    def __init__(self, event_layer, point, style, screen_width, screen_height):
-        Command.__init__(self, event_layer)
+    def __init__(self, event_layer, point, style=None, screen_width=-1, screen_height=-1):
+        StyledCommand.__init__(self, event_layer, style)
         self.point = point
-        self.style = style.get_copy()  # Make sure not sharing objects
         self.screen_width = screen_width
         self.screen_height = screen_height
 
@@ -514,10 +527,9 @@ class AddIconCommand(DrawVectorObjectCommand):
         ('style', 'style'),
     ]
 
-    def __init__(self, event_layer, point, style):
-        Command.__init__(self, event_layer)
+    def __init__(self, event_layer, point, style=None):
+        StyledCommand.__init__(self, event_layer, style)
         self.point = point
-        self.style = style.get_copy()  # Make sure not sharing objects
 
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)

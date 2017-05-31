@@ -13,6 +13,7 @@ from layers import RootLayer
 from layers import Scale
 from layers import TriangleLayer
 from layers import loaders
+from layers import LayerStyle
 from command import UndoStack
 
 # Enthought library imports.
@@ -49,6 +50,8 @@ class LayerManager(BaseDocument):
     layers = List(Any)
 
     next_invariant = Int(0)
+
+    default_styles = Any
 
     layer_loaded = Event
 
@@ -111,7 +114,7 @@ class LayerManager(BaseDocument):
         # changes, modify next_invariant to match! next_invariant = 1 - (# of
         # calls to insert_layer)
         self.next_invariant = -2
-        self.default_style = LayerStyle()
+        self.default_styles = {"other": LayerStyle()} # minimal default styles
         layer = RootLayer(manager=self)
         self.insert_layer([0], layer)
         grid = Grid(manager=self)
@@ -178,6 +181,23 @@ class LayerManager(BaseDocument):
                 locked = False
             cpdict[tuple(entry)] = (tuple(truth), locked)
         self.control_point_links = cpdict
+
+    def default_styles_to_json(self):
+        # json can't handle dictionaries with tuples as their keys, so have
+        # to compress
+        sdict = {}
+        for name, style in self.default_styles.iteritems():
+            sdict[name] = str(style)
+        return sdict
+
+    def default_styles_from_json(self, json_data):
+        sdict = json_data['default_styles']
+        d = {}
+        for name, style_str in sdict.iteritems():
+            style = LayerStyle()
+            style.parse(style_str)
+            d[name] = style
+        self.update_default_styles(d)
 
     ##### Multi-index calculations
 
@@ -256,8 +276,36 @@ class LayerManager(BaseDocument):
 
     ##### Style
 
-    def update_default_style(self, style):
-        self.default_style.copy_from(style)
+    def update_default_styles(self, styles):
+        self.default_styles = styles
+
+        # Make sure "other" is a valid style
+        try:
+            s = LayerStyle()
+            s.parse(str(self.default_styles["other"]))
+        except Exception:
+            log.warning("Invalid style for other, using default")
+            self.default_styles["other"] = LayerStyle() # minimal default styles
+        for type_name in sorted(styles.keys()):
+            style = self.default_styles[type_name]
+            log.debug("style %s: %s" % (type_name, str(style)))
+
+    def update_default_style_for(self, layer, style):
+        if hasattr(layer, "type"):
+            type_name = layer.type
+        else:
+            type_name = layer
+        log.debug("updating default style for %s: %s" % (type_name, str(style)))
+        self.default_styles[type_name] = style.get_copy()
+
+    def get_default_style_for(self, layer):
+        if hasattr(layer, "type"):
+            type_name = layer.type
+        else:
+            type_name = layer
+        style = self.default_styles.get(type_name, self.default_styles["other"])
+        log.debug("get default style for: %s: %s" % (type_name, str(style)))
+        return style.get_copy()
 
     ##### Flatten
 
