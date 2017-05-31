@@ -224,11 +224,9 @@ class StyledCommand(Command):
 
     def __init__(self, event_layer, style=None):
         Command.__init__(self, event_layer)
-        print "StyledCommand:", style, self.vector_object_class
         if style is not None:
             style = style.get_copy()  # Make sure not sharing objects
         self.style = style
-        print "StyledCommand: style =", style
 
 
 class DrawVectorObjectCommand(StyledCommand):
@@ -450,8 +448,7 @@ class DrawLineCommand(DrawVectorObjectCommand):
     def perform_post(self, editor, lm, layer, undo):
         if self.snapped_layer is not None:
             sl = lm.get_layer_by_invariant(self.snapped_layer)
-            print "sl", sl
-            print "snapped_cp", self.snapped_cp
+            log.debug("snapped layer: %s, cp=%d" % (sl, self.snapped_cp))
             # The control point is always 1 because it's only possible to snap
             # to the endpoint
             lm.set_control_point_link(layer, 1, sl, self.snapped_cp)
