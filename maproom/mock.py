@@ -31,8 +31,9 @@ class MockWindow(object):
 
 
 class MockTask(object):
-    def __init__(self, window):
+    def __init__(self, window, default_styles):
         self.window = window
+        self.default_styles = default_styles
         HostCache.set_known_hosts(default_tile_hosts)
 
     def get_tile_server_id_from_url(self, url):
@@ -52,9 +53,9 @@ class MockTree(object):
 
 
 class MockProject(object):
-    def __init__(self, add_tree_control=False):
+    def __init__(self, add_tree_control=False, default_styles=None):
         self.window = MockWindow()
-        self.task = MockTask(self.window)
+        self.task = MockTask(self.window, default_styles)
         self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager.create(self)
         if add_tree_control:

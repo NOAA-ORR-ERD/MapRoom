@@ -29,6 +29,7 @@ import toolbar
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
 from library.known_hosts import default_wms_hosts, default_tile_hosts
+from layers import LayerStyle, parse_styles_from_json, styles_to_json
 
 import actions
 from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction, SaveAsImageAction
@@ -163,7 +164,7 @@ class MaproomProjectTask(FrameworkTask):
     def activated(self):
         FrameworkTask.activated(self)
 
-        self.init_threaded_processing()
+        self.one_time_init_driver()
 
         # This trait can't be set as a decorator on the method because
         # active_editor can be None during the initialization process.  Set
@@ -446,13 +447,50 @@ class MaproomProjectTask(FrameworkTask):
 
     # class attributes
 
-    wms_extra_loaded = False
+    extra_json_loaded = False
+
+    _fallback_styles = {
+        "other": LayerStyle(),
+        "ui": LayerStyle(line_stipple=0xaaaa, line_width=1, line_color=LayerStyle.default_line_color, fill_style=0),
+        "triangle": LayerStyle(line_width=1),
+    }
+
+    _default_styles = {}
+
+    @property
+    def default_styles(self):
+        d = {}
+        for type_name, style in self._default_styles.iteritems():
+            d[type_name] = style.get_copy()
+        return d
+
+    def default_styles_read_only(self, type_name):
+        return self._default_styles.get(type_name, self._default_styles["other"])
 
     @classmethod
-    def init_extra_servers(cls, application):
-        if cls.wms_extra_loaded is False:
+    def replace_default_styles(cls, styles):
+        if styles:
+            cls._default_styles = styles
+        else:
+            cls._default_styles = {}
+        for type_name, style in cls._fallback_styles.iteritems():
+            if type_name not in cls._default_styles:
+                cls._default_styles[type_name] = style.get_copy()
+
+    @classmethod
+    def override_default_styles(cls, styles):
+        if styles:
+            for type_name, style in styles.iteritems():
+                cls._default_styles[type_name] = style.get_copy()
+
+    def one_time_init_driver(self):
+        self.init_extra_json(self.window.application)
+
+    @classmethod
+    def init_extra_json(cls, application):
+        if cls.extra_json_loaded is False:
             # try once
-            cls.wms_extra_loaded = True
+            cls.extra_json_loaded = True
 
             hosts = application.get_json_data("wms_servers")
             if hosts is None:
@@ -464,17 +502,23 @@ class MaproomProjectTask(FrameworkTask):
                 hosts = default_tile_hosts
             BackgroundTileDownloader.set_known_hosts(hosts)
 
+            data = application.get_json_data("styles")
+            if data is not None:
+                styles = parse_styles_from_json(data)
+            else:
+                styles = None
+            cls.replace_default_styles(styles)
+
+    def remember_styles(self, override_styles=None):
+        self.override_default_styles(override_styles)
+        data = styles_to_json(self._default_styles)
+        self.window.application.save_json_data("styles", data)
+
     def remember_wms(self, host=None):
         if host is not None:
             BackgroundWMSDownloader.add_wms_host(host)
         hosts = BackgroundWMSDownloader.get_known_hosts()
         self.window.application.save_json_data("wms_servers", hosts)
-
-    def init_threaded_processing(self):
-        self.init_extra_servers(self.window.application)
-#        if "OpenStreetMap Test" not in self.get_known_wms_names():
-#            BackgroundWMSDownloader.add_wms("OpenStreetMap Test", "http://ows.terrestris.de/osm/service?", "1.1.1")
-#            self.remember_wms()
 
     def stop_threaded_processing(self):
         log.debug("Stopping threaded services...")

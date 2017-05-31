@@ -13,7 +13,7 @@ from layers import RootLayer
 from layers import Scale
 from layers import TriangleLayer
 from layers import loaders
-from layers import LayerStyle
+from layers import LayerStyle, parse_styles_from_json, styles_to_json
 from command import UndoStack
 
 # Enthought library imports.
@@ -114,7 +114,7 @@ class LayerManager(BaseDocument):
         # changes, modify next_invariant to match! next_invariant = 1 - (# of
         # calls to insert_layer)
         self.next_invariant = -2
-        self.default_styles = {"other": LayerStyle()} # minimal default styles
+        self.default_styles = self.project.task.default_styles
         layer = RootLayer(manager=self)
         self.insert_layer([0], layer)
         grid = Grid(manager=self)
@@ -183,20 +183,11 @@ class LayerManager(BaseDocument):
         self.control_point_links = cpdict
 
     def default_styles_to_json(self):
-        # json can't handle dictionaries with tuples as their keys, so have
-        # to compress
-        sdict = {}
-        for name, style in self.default_styles.iteritems():
-            sdict[name] = str(style)
-        return sdict
+        return styles_to_json(self.default_styles)
 
     def default_styles_from_json(self, json_data):
         sdict = json_data['default_styles']
-        d = {}
-        for name, style_str in sdict.iteritems():
-            style = LayerStyle()
-            style.parse(style_str)
-            d[name] = style
+        d = parse_styles_from_json(sdict)
         self.update_default_styles(d)
 
     ##### Multi-index calculations

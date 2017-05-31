@@ -142,15 +142,23 @@ class VectorObjectLayer(LineLayer):
 
         """
 
+    def get_renderer_colors(self):
+        """Hook to allow subclasses to override style colors
+        """
+        line_color = self.style.line_color
+        r, g, b, a = int_to_color_floats(line_color)
+        point_color = color_floats_to_int(r, g, b, 1.0)
+        return point_color, line_color
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
 
         """
         projected_point_data = self.compute_projected_point_data()
         r, g, b, a = int_to_color_floats(self.style.line_color)
-        point_color = color_floats_to_int(r, g, b, 1.0)
+        point_color, line_color = self.get_renderer_colors()
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
-        self.rasterize(renderer, projected_point_data, self.points.z, point_color, self.style.line_color)
+        self.rasterize(renderer, projected_point_data, self.points.z, point_color, line_color)
         self.rebuild_image(renderer)
         self.rebuild_needed = False
 
@@ -1347,10 +1355,14 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
 
-    def default_style_override(self, style):
-        style.line_stipple = 0xaaaa
-        style.line_width = 1
-        style.fill_style = 0
+    def get_renderer_colors(self):
+        """Hook to allow subclasses to override style colors
+        """
+        style = self.manager.project.task.default_styles_read_only("ui")
+        line_color = style.line_color
+        r, g, b, a = int_to_color_floats(line_color)
+        point_color = color_floats_to_int(r, g, b, 1.0)
+        return point_color, line_color
 
     def set_data_from_bounds(self, bounds):
         log.debug("SETTING BOUNDARY BOX!!! %s %s" % (self, bounds))
@@ -1396,7 +1408,8 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         if self.manager.project.layer_tree_control.get_selected_layer() == self:
-            renderer.outline_object(self, picker, self.style)
+            style = self.manager.project.task.default_styles_read_only("ui")
+            renderer.outline_object(self, picker, style)
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))

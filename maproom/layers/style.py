@@ -284,3 +284,18 @@ class LayerStyle(object):
         mask = (red == 255) & (green == 255) & (blue == 255)
         arr[:,:,:3][mask] = [r, g, b]
         return arr
+
+def parse_styles_from_json(sdict):
+    d = {}
+    for name, style_str in sdict.iteritems():
+        style = LayerStyle()
+        style.parse(style_str)
+        d[name] = style
+    return d
+
+def styles_to_json(style_dict):
+    j = {}
+    for name, style in style_dict.iteritems():
+        j[name] = str(style)
+    return j
+

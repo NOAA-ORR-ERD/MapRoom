@@ -14,7 +14,7 @@ from tiles import TileLayer
 from particles import ParticleLayer
 from vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayScalableImageObject, OverlayTextObject, OverlayIconObject, PolylineObject, PolygonObject, AnnotationLayer, ArrowTextBoxLayer, ArrowTextIconLayer
 from shapefile import PolygonShapefileLayer
-from style import LayerStyle
+from style import LayerStyle, parse_styles_from_json, styles_to_json
 import state
 
 

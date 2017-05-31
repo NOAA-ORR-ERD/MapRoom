@@ -98,7 +98,6 @@ class Layer(HasTraits):
         if self.use_color_cycling:
             style.use_next_default_color()
         log.debug("_style_default for %s: %s" % (self.type, str(style)))
-        self.default_style_override(style)
         return style
 
     def __repr__(self):
@@ -383,9 +382,6 @@ class Layer(HasTraits):
 
     def is_zoomable(self):
         return self.bounds != rect.NONE_RECT
-
-    def default_style_override(self, style):
-        pass
 
     def set_style(self, style):
         # Hook for subclasses to change colors and styles

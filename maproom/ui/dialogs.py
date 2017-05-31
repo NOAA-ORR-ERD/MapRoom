@@ -189,7 +189,7 @@ class StyleDialog(wx.Dialog):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))
         self.lm = project.layer_manager
 
-        self.mock_project = MockProject(add_tree_control=True)
+        self.mock_project = MockProject(add_tree_control=True, default_styles=self.lm.default_styles)
         self.mock_project.control = None
         self.other = self.mock_project.layer_tree_control.get_selected_layer()
         self.other.type = "other"
@@ -231,7 +231,9 @@ class StyleDialog(wx.Dialog):
         hbox.Add(self.info, 4, wx.EXPAND, 0)
 
         # reset to first item in list
-        self.obj_list.SetSelection(2)
+        self.obj_list.SetSelection(0)
+
+        self.savebtn = wx.CheckBox(self, -1, "Save style defaults for future projects")
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
@@ -243,6 +245,7 @@ class StyleDialog(wx.Dialog):
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(hbox, 1, wx.EXPAND, 0)
+        sizer.Add(self.savebtn, 0, wx.EXPAND | wx.ALL, 10)
         sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         self.SetSizer(sizer)
         self.Fit()
@@ -260,6 +263,10 @@ class StyleDialog(wx.Dialog):
         index = evt.GetSelection()
         layer = self.use_layer(index)
         self.info.display_panel_for_layer(self.mock_project, layer)
+
+    @property
+    def save_for_future(self):
+        return self.savebtn.IsChecked()
 
 
 class WMSDialog(ObjectEditDialog):

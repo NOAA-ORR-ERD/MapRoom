@@ -66,9 +66,6 @@ class TriangleLayer(PointLayer):
             return self.triangles is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def default_style_override(self, style):
-        style.line_width = 1
-
     def set_data(self, f_points, f_depths, f_triangles):
         n = np.alen(f_points)
         self.points = self.make_points(n)
