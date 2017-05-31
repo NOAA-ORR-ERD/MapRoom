@@ -101,8 +101,8 @@ class PointBaseLayer(ProjectedLayer):
 
     def set_style(self, style):
         ProjectedLayer.set_style(self, style)
-        if style.line_color is not None:
-            self.set_color(style.line_color)
+        if self.style.line_color is not None and self.points is not None:
+            self.set_color(self.style.line_color)
 
     def make_points(self, count):
         return np.repeat(
