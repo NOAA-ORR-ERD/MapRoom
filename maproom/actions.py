@@ -18,7 +18,7 @@ from mouse_commands import ViewportCommand, NormalizeLongitudeCommand
 from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
-from layers.vector_object import styleable_vector_objects
+from layers import styleable_vector_objects
 
 import logging
 log = logging.getLogger(__name__)

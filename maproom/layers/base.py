@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 class Layer(HasTraits):
     """Base Layer class with some abstract methods.
     """
-    next_default_color_index = 0
+    use_color_cycling = False
 
     new_layer_index = 0
 
@@ -94,7 +94,12 @@ class Layer(HasTraits):
     selection_info_panel = []
 
     def _style_default(self):
-        return LayerStyle()
+        style = self.manager.get_default_style_for(self)
+        if self.use_color_cycling:
+            style.use_next_default_color()
+        log.debug("_style_default for %s: %s" % (self.type, str(style)))
+        self.default_style_override(style)
+        return style
 
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
@@ -379,14 +384,18 @@ class Layer(HasTraits):
     def is_zoomable(self):
         return self.bounds != rect.NONE_RECT
 
-    def set_layer_style_defaults(self):
-        self.style.use_next_default_color()
+    def default_style_override(self, style):
+        pass
 
     def set_style(self, style):
         # Hook for subclasses to change colors and styles
         if style is None:
             style = self.manager.get_default_style_for(self)
+            log.debug("style not specified, using default for %s: %s" % (self.type, style))
+        else:
+            log.debug("using style for %s: %s" % (self.type, style))
         self.style.copy_from(style)
+        log.debug(" after copy for %s: %s" % (self.type, self.style))
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT

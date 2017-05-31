@@ -405,7 +405,7 @@ class LayerManager(BaseDocument):
         None is returned if the top-level annotation layer is also grouped.
         """
         while not event_layer.is_root():
-            if event_layer.type == "annotation":
+            if event_layer.is_folder():
                 if not event_layer.grouped:
                     return event_layer
             event_layer = self.get_folder_of_layer(event_layer)

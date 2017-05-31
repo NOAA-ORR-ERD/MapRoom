@@ -80,9 +80,7 @@ class PointLayer(PointBaseLayer):
 
     def set_data(self, f_points, f_depths, f_line_segment_indexes, style=None):
         n = np.alen(f_points)
-        if style is None:
-            self.set_layer_style_defaults()
-        else:
+        if style is not None:
             self.style = style
         self.points = self.make_points(n)
         if (n > 0):

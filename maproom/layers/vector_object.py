@@ -51,6 +51,9 @@ class VectorObjectLayer(LineLayer):
     rotation = Float(0.0)
 
     # class attributes
+
+    use_color_cycling = False
+
     center_point_index = 0
 
     display_center_control_point = False
@@ -96,9 +99,6 @@ class VectorObjectLayer(LineLayer):
             km = self.calculate_distances()
             return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
         return LineLayer.get_info_panel_text(self, prop)
-
-    def set_layer_style_defaults(self):
-        self.style.copy_from(self.manager.get_default_style_for(self))
 
     def set_visibility_when_selected(self, layer_visibility):
         layer_visibility['points'] = True
@@ -1347,10 +1347,10 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
 
-    def set_layer_style_defaults(self):
-        self.style.line_stipple = 0xaaaa
-        self.style.line_width = 1
-        self.style.fill_style = 0
+    def default_style_override(self, style):
+        style.line_stipple = 0xaaaa
+        style.line_width = 1
+        style.fill_style = 0
 
     def set_data_from_bounds(self, bounds):
         log.debug("SETTING BOUNDARY BOX!!! %s %s" % (self, bounds))
@@ -1404,5 +1404,23 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
             renderer.draw_points(self, picker, self.point_size)
 
 
-# List for style defaults: each class of object has its own default style
-styleable_vector_objects = [LineVectorObject(), RectangleVectorObject(), EllipseVectorObject(), PolylineObject(), PolygonObject(), OverlayTextObject(), OverlayIconObject()]
+class ArrowTextBoxLayer(AnnotationLayer):
+    """Layer for predefined group of text box and arrow pointing to lat/lon
+
+    """
+    name = Unicode("Arrow Text Box")
+
+    type = Str("arrowtextbox")
+
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+
+
+class ArrowTextIconLayer(AnnotationLayer):
+    """Layer for predefined group of text box and arrow pointing to lat/lon
+
+    """
+    name = Unicode("Arrow Text Icon")
+
+    type = Str("arrowtexticon")
+
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Marplot icon"]

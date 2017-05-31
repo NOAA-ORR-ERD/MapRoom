@@ -59,7 +59,6 @@ class PointBaseLayer(ProjectedLayer):
 
     def new_points(self, num=0):
         # fixme: this should be done differently...
-        self.set_layer_style_defaults()
         self.points = self.make_points(num)
 
     def empty(self):  # fixme: make a property?
@@ -82,11 +81,8 @@ class PointBaseLayer(ProjectedLayer):
 
     def set_data(self, f_points, style=None):
         n = np.alen(f_points)
-        if style is None:
-            self.set_layer_style_defaults()
-        else:
+        if style is not None:
             self.style = style
-        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points

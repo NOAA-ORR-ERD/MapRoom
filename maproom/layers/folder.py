@@ -78,7 +78,6 @@ class BoundedFolder(LineLayer, Folder):
             points = [(l, b), (r, b), (r, t), (l, t)]
         f_points = np.asarray(points, dtype=np.float32)
         n = np.alen(f_points)
-        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         log.debug("SET_DATA_FROM_BOUNDS:start %s" % self)
         if (n > 0):

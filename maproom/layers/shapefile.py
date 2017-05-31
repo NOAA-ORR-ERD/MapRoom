@@ -25,6 +25,8 @@ class PolygonShapefileLayer(PolygonLayer):
 
     geometry = List
 
+    use_color_cycling = True
+
     layer_info_panel = ["Layer name", "Shapefile Objects", "Polygon count"]
 
     def __str__(self):
@@ -43,9 +45,8 @@ class PolygonShapefileLayer(PolygonLayer):
         """
         return len(self.geometry) == 0
 
-    def set_layer_style_defaults(self):
-        self.style.use_next_default_color()
-        self.style.line_width = 1
+    def defaults_style_override(self, style):
+        style.line_width = 1
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT

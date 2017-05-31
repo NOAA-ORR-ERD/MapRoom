@@ -1,6 +1,6 @@
 
 from command import Command, UndoInfo
-from layers.vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayTextObject, OverlayIconObject, OverlayLineObject, PolylineObject, PolygonObject, AnnotationLayer
+from layers.vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayTextObject, OverlayIconObject, OverlayLineObject, PolylineObject, PolygonObject, AnnotationLayer, ArrowTextBoxLayer, ArrowTextIconLayer
 
 
 def update_parent_bounds(layer, undo):
@@ -224,9 +224,11 @@ class StyledCommand(Command):
 
     def __init__(self, event_layer, style=None):
         Command.__init__(self, event_layer)
+        print "StyledCommand:", style, self.vector_object_class
         if style is not None:
             style = style.get_copy()  # Make sure not sharing objects
         self.style = style
+        print "StyledCommand: style =", style
 
 
 class DrawVectorObjectCommand(StyledCommand):
@@ -339,20 +341,22 @@ class DrawCircleCommand(DrawVectorObjectCommand):
 class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
     short_name = "arrow_text_obj"
     ui_name = "Arrow Text Box"
-    vector_object_class = AnnotationLayer
+    vector_object_class = ArrowTextBoxLayer
 
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
+        layer.set_style(self.style)
         return layer
 
     def perform_post(self, editor, lm, layer, undo):
         layer.grouped = True
         layer.name = self.ui_name
+        style = layer.style  # use annotation layer parent style
 
         halfway = ((self.cp1[0] + self.cp2[0]) / 2.0, (self.cp1[1] + self.cp2[1]) / 2.0)
         line = OverlayLineObject(manager=lm)
         line.set_opposite_corners(self.cp1, halfway)
-        line.set_style(self.style)
+        line.set_style(style)
         line.style.line_start_marker = 2  # Turn on arrow
         kwargs = {'first_child_of': layer}
         lm.insert_loaded_layer(line, editor, **kwargs)
@@ -361,7 +365,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
 
         #text = RectangleVectorObject(manager=lm)
         text = OverlayTextObject(manager=lm)
-        text.set_style(self.style)
+        text.set_style(style)
         text.set_opposite_corners(halfway, self.cp2)
         c = editor.layer_canvas
         sp1 = c.get_screen_point_from_world_point(halfway)
@@ -394,12 +398,13 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
 class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
     short_name = "arrow_text_icon_obj"
     ui_name = "Arrow Text Icon"
+    vector_object_class = ArrowTextIconLayer
 
     def perform_post(self, editor, lm, layer, undo):
         DrawArrowTextBoxCommand.perform_post(self, editor, lm, layer, undo)
         icon = OverlayIconObject(manager=lm)
         icon.set_location_and_size(self.cp1, 32, 32)
-        icon.set_style(self.style)
+        icon.set_style(layer.style)
         kwargs = {'first_child_of': layer}
         lm.insert_loaded_layer(icon, editor, **kwargs)
         lf = undo.flags.add_layer_flags(icon)

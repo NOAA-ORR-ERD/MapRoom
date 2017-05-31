@@ -196,9 +196,6 @@ class ParticleLayer(PointBaseLayer):
         else:
             self.status_code_colors = None
 
-    # def set_layer_style_defaults(self):
-    #     ## this should do something different for particles
-
     def point_object_info(self, object_index):
         sc = self.status_codes[object_index]
         try:

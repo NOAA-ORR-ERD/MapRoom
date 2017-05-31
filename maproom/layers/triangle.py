@@ -29,6 +29,8 @@ class TriangleLayer(PointLayer):
 
     visibility_items = ["points", "triangles", "labels"]
 
+    use_color_cycling = True
+
     layer_info_panel = ["Layer name", "Triangle count", "Show depth shading"]
 
     def __str__(self):
@@ -64,13 +66,11 @@ class TriangleLayer(PointLayer):
             return self.triangles is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def set_layer_style_defaults(self):
-        self.style.use_next_default_color()
-        self.style.line_width = 1
+    def default_style_override(self, style):
+        style.line_width = 1
 
     def set_data(self, f_points, f_depths, f_triangles):
         n = np.alen(f_points)
-        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[

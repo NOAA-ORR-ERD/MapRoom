@@ -192,7 +192,6 @@ class StyleDialog(wx.Dialog):
         self.mock_project = MockProject(add_tree_control=True)
         self.mock_project.control = None
         self.other = self.mock_project.layer_tree_control.get_selected_layer()
-        self.other.style.copy_from(self.lm.get_default_style_for("other"))
         self.other.type = "other"
         self.other.name = "other"
         self.other.layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Marplot icon"]
@@ -206,6 +205,7 @@ class StyleDialog(wx.Dialog):
         self.vector_objects.append(self.other)
         for v in self.vector_objects:
             self.mock_project.layer_manager.insert_layer([2], v)
+            v.manager = self.lm
             v.style = self.lm.get_default_style_for(v)
             v.set_style = types.MethodType(set_style_override, v)
             try:
