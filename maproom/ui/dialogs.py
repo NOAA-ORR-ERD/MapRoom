@@ -233,7 +233,7 @@ class StyleDialog(wx.Dialog):
         # reset to first item in list
         self.obj_list.SetSelection(0)
 
-        self.savebtn = wx.CheckBox(self, -1, "Save style defaults for future projects")
+        self.savebtn = wx.CheckBox(self, -1, "Save these styles as the default for future projects")
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)

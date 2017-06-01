@@ -135,7 +135,7 @@ class RevertProjectAction(EditorAction):
 
 
 class DefaultStyleAction(EditorAction):
-    name = 'Default Style...'
+    name = 'Default Styles...'
     tooltip = 'Choose the line, fill and font styles'
 
     def perform(self, event):
