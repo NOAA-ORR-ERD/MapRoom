@@ -1,3 +1,18 @@
+06/01/2017
+---------------------------
+Released 3.1b34
+- RM Added missing circle object from styles and reordered to match toolbar
+- RM Fixed tests for new default style usage
+- RM Fixed #765: use first entry in hosts list if no default WMS server explicitly set
+- RM Minor label changes for default style UI
+- RM Fixed #643: added option to save defaults for future projects
+- RM Removed some debug prints in vector_object_commands
+- RM Refs #643: added styling for compound annotation layers
+- RM Refs #643: added default styles per layer type
+- RM Added check for existence of point before trying to set line color
+- RM Removed default debug logging level from host_utils & thread_utils
+- RM Fixed release-and-tag script to use correct pyinstaller script
+
 05/30/2017
 ---------------------------
 Released 3.1b33
