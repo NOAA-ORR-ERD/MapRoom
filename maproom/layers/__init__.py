@@ -19,4 +19,4 @@ import state
 
 
 # List for style defaults: each class of object has its own default style
-styleable_vector_objects = [LineVectorObject(), RectangleVectorObject(), EllipseVectorObject(), PolylineObject(), PolygonObject(), OverlayTextObject(), OverlayIconObject(), ArrowTextBoxLayer(), ArrowTextIconLayer()]
+styleable_vector_objects = [LineVectorObject(), PolylineObject(), RectangleVectorObject(), EllipseVectorObject(), CircleVectorObject(), PolygonObject(), OverlayTextObject(), OverlayIconObject(), ArrowTextBoxLayer(), ArrowTextIconLayer()]
