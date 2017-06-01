@@ -36,7 +36,8 @@ class HostCache(object):
         for i, h in enumerate(cls.get_known_hosts()):
             if h.default:
                 return i, h
-        return None, None
+        # No default set, so use the first entry in the list
+        return 0, cls.get_known_hosts()[0]
 
     @classmethod
     def get_host_by_name(cls, name):
