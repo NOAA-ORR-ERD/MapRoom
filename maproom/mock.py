@@ -3,8 +3,7 @@ import os
 from omnivore.utils.file_guess import FileGuess
 
 from layer_manager import LayerManager
-from layers import Layer
-from layers import loaders
+from layers import Layer, loaders, LayerStyle
 from library.Boundary import Boundaries
 from library.projection import NullProjection
 from library.host_utils import HostCache
@@ -31,8 +30,10 @@ class MockWindow(object):
 
 
 class MockTask(object):
-    def __init__(self, window, default_styles):
+    def __init__(self, window, default_styles=None):
         self.window = window
+        if default_styles is None:
+            default_styles = {"other": LayerStyle()}
         self.default_styles = default_styles
         HostCache.set_known_hosts(default_tile_hosts)
 
@@ -160,3 +161,6 @@ class MockManager(object):
     def get_outer_boundary(self, layer):
         boundaries = Boundaries(layer)
         return boundaries.get_outer_boundary()
+
+    def get_default_style_for(self, layer):
+        return LayerStyle()

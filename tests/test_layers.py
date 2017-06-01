@@ -26,14 +26,12 @@ class TestBasic(object):
         
         a = OverlayTextObject(manager=lm)
         a.set_location((6.6637485204,-1.40163099748))
-        a.set_style(lm.default_style)
         lm.insert_layer([3, 1], a)
         
         a = RectangleVectorObject(manager=lm)
         a.set_opposite_corners(
             (-16.6637485204,-1.40163099748),
             (9.65688930428,-19.545688433))
-        a.set_style(lm.default_style)
         lm.insert_layer([3, 2], a)
         
         a2 = AnnotationLayer(manager=lm)
@@ -47,7 +45,6 @@ class TestBasic(object):
             (8, -5),
             (-17, -10),
             ])
-        a.set_style(lm.default_style)
         a.style.fill_style = 0
         lm.insert_layer([3, 3, 1], a)
         
