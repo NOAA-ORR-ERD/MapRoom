@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from ..renderer import color_floats_to_int, int_to_color_uint8
+from ..renderer import color_floats_to_int, color_ints_to_int, int_to_color_uint8
 
 from maproom.library.marplot_icons import get_numpy_bitmap
 
@@ -41,6 +41,15 @@ class LayerStyle(object):
         color_floats_to_int(0.5, 0, 1.0, 1),
         color_floats_to_int(1.0, 0.5, 0, 1),
         color_floats_to_int(0.5, 0.5, 0, 1),
+        color_ints_to_int(31, 119, 180),
+        color_ints_to_int(22, 120, 22),
+        color_ints_to_int(214, 39, 40),
+        color_ints_to_int(148, 103, 189),
+        color_ints_to_int(140, 86, 75),
+        color_ints_to_int(227, 119, 194),
+        color_ints_to_int(127, 127, 127),
+        color_ints_to_int(188, 189, 34),
+        color_ints_to_int(23, 190, 207),
     ]
     default_color_index = 0
 

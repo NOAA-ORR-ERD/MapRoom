@@ -29,6 +29,34 @@ def color_floats_to_int(red, green, blue, alpha):
         dtype=np.uint8,
     ).view(np.uint32)[0]
 
+def color_ints_to_int(red, green, blue, alpha=255):
+    """
+    Given individual channel values for a color from 0 to 255, return that
+    color as a single integer RGBA value.
+
+    :param red: red channel value
+    :type red: float
+    :param green: green channel value
+    :type green: float
+    :param blue: blue channel value
+    :type blue: float
+    :param alpha: alpha channel value
+    :type alpha: float
+    :return: combined RGBA color value
+    :rtype: uint32
+    """
+    CHANNEL_MAX = 255
+
+    return np.array(
+        (
+            int(min(red, CHANNEL_MAX)),
+            int(min(green, CHANNEL_MAX)),
+            int(min(blue, CHANNEL_MAX)),
+            int(min(alpha, CHANNEL_MAX)),
+        ),
+        dtype=np.uint8,
+    ).view(np.uint32)[0]
+
 
 def alpha_from_int(color):
     c = np.uint32(color)  # handle plain python integer being passed in
