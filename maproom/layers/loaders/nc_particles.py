@@ -66,7 +66,7 @@ class nc_particles_file_loader():
         #     data = self.reader.get_timestep(self.current_timestep, variables=['latitude', 'longitude'])
         #     self.current_timestep += 1
         data = self.reader.get_timestep(self.current_timestep, variables=['latitude', 'longitude'])
-        time = self.reader.times[self.current_timestep]
+        timecode = self.reader.times[self.current_timestep]
         points = np.c_[data['longitude'], data['latitude']]
         if self.status_id in self.reader.variables:
             data = self.reader.get_timestep(self.current_timestep, variables=[self.status_id])
@@ -76,7 +76,7 @@ class nc_particles_file_loader():
         abslon = np.absolute(points[:,0])
         abslat = np.absolute(points[:,1])
         bogus = np.where((abslon > 1e3) | (abslat > 1e3))
-        log.debug("Loaded timestep %s @ %s, %d points, %d bogus" % (self.current_timestep, time, len(points), len(bogus[0])))
+        log.debug("Loaded timestep %s @ %s, %d points, %d bogus" % (self.current_timestep, timecode, len(points), len(bogus[0])))
         if len(bogus[0] > 0):
             log.debug("Bogus values: %s" % points[bogus[0]])
             short = "(Timestep %d) # points: %d" % (self.current_timestep + 1, len(bogus[0]))
@@ -92,7 +92,7 @@ class nc_particles_file_loader():
 
         self.current_timestep += 1
 
-        return (points, status_codes, self.status_code_map, time, warning)
+        return (points, status_codes, self.status_code_map, timecode, warning)
 
 
 class ParticleLoader(BaseLayerLoader):
@@ -124,13 +124,15 @@ class ParticleLoader(BaseLayerLoader):
         warnings = []
         layers = []
         # loop through all the time steps in the file.
-        for (points, status_codes, code_map, time, warning) in nc_particles_file_loader(metadata.uri):
+        for (points, status_codes, code_map, timecode, warning) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
-            layer.name = time.isoformat().rsplit(':', 1)[0]
+            layer.name = timecode.isoformat().rsplit(':', 1)[0]
+            print timecode, type(timecode), layer.name, timecode.tzinfo
             progress_log.info("Finished loading %s" % layer.name)
             layer.set_data(points, status_codes, code_map)
+            layer.set_datetime(timecode)
             layers.append(layer)
             if warning:
                 layer.load_warning_details = warning[1]

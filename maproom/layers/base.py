@@ -1,4 +1,6 @@
 import sys
+import time
+import datetime
 
 from fs.errors import ResourceNotFoundError
 
@@ -82,6 +84,10 @@ class Layer(HasTraits):
     load_warning_details = Str
 
     manager = Any
+
+    start_time = Float(0.0)
+
+    end_time = Float(0.0)
 
     pickable = False  # is this a layer that support picking?
 
@@ -335,6 +341,39 @@ class Layer(HasTraits):
             layers = [layer]
         log.debug("returning layers: %s" % str(layers))
         return layers
+
+    ##### time support
+
+    def start_time_to_json(self):
+        return self.start_time
+
+    def start_time_from_json(self, json_data):
+        jd = json_data['start_time']
+        # check for float or datetime?
+        self.start_time = jd
+
+    def end_time_to_json(self):
+        return self.end_time
+
+    def end_time_from_json(self, json_data):
+        jd = json_data['end_time']
+        # check for float or datetime?
+        self.end_time = jd
+
+    def parse_time_to_float(self, t):
+        if t is None:
+            t = 0.0
+        elif isinstance(t, datetime.datetime):
+            t = time.mktime(t.timetuple())
+        else:
+            t = float(t)
+        return t
+
+    def set_datetime(self, start, end=None):
+        self.start_time = self.parse_time_to_float(start)
+        self.end_time = self.parse_time_to_float(end)
+
+    #####
 
     def set_dependent_of(self, layer):
         self.dependent_of = layer.invariant

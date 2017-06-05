@@ -550,6 +550,25 @@ class LayerManager(BaseDocument):
                 layers.append(layer)
         return layers
 
+    def get_timestamped_layers(self, layer_visibility, only_visible_layers=True):
+        possible = self.get_visible_layers(layer_visibility, only_visible_layers)
+        layers = []
+        earliest_time = 0.0
+        latest_time = 0.0
+        for layer in possible:
+            if layer.start_time > 0.0:
+                layers.append(layer)
+                if earliest_time == 0.0 or layer.start_time < earliest_time:
+                    earliest_time = layer.start_time
+                if layer.start_time > latest_time:
+                    latest_time = layer.start_time
+                if layer.end_time > latest_time and layer.end_time > layer.start_time:
+                    latest_time = layer.end_time
+        if latest_time == 0.0:
+            latest_time = earliest_time
+        return layers, earliest_time, latest_time
+
+
     ##### Layer info
 
     def has_user_created_layers(self):

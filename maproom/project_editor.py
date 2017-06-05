@@ -418,6 +418,8 @@ class ProjectEditor(FrameworkEditor):
         self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
         self.undo_history = self.window.get_dock_pane('maproom.undo_history_pane').control
         self.sidebar = self.window.get_dock_pane('maproom.sidebar')
+        self.timeline = self.window.get_dock_pane('maproom.timeline_pane').control
+        self.timeline.recalc_view()
 
         log.debug("LayerEditor: task=%s" % self.task)
 
@@ -434,6 +436,7 @@ class ProjectEditor(FrameworkEditor):
     def layers_changed(self):
         log.debug("layers_changed called!!!")
         self.layer_tree_control.rebuild()
+        self.timeline.recalc_view()
 
     def update_layer_menu_ui(self, sel_layer):
         if sel_layer is not None:
@@ -562,6 +565,7 @@ class ProjectEditor(FrameworkEditor):
         self.update_layer_menu_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
         self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
+        self.timeline.recalc_view()
         self.last_refresh = time.clock()
         self.control.Refresh()
 

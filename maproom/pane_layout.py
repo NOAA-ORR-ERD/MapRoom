@@ -18,7 +18,7 @@ import panes
 # is only updated when quitting the application; if the application is killed
 # (or crashes!) the saved state is not updated.
 
-task_id_with_pane_layout = 'maproom.project.v9'
+task_id_with_pane_layout = 'maproom.project.v10'
 
 
 def pane_layout():
@@ -40,6 +40,9 @@ def pane_layout():
             PaneItem('maproom.markdown_help_pane'),
             PaneItem('maproom.sidebar'),
         ),
+        bottom=HSplitter(
+            PaneItem('maproom.timeline_pane'),
+        ),
     )
 
 
@@ -58,6 +61,7 @@ def pane_initially_visible():
         'maproom.rst_markup_help_pane': False,
         'maproom.markdown_help_pane': False,
         'maproom.sidebar': True,
+        'maproom.timeline_pane': True,
     }
 
 
@@ -76,5 +80,6 @@ def pane_create():
         panes.HtmlHelpPane(),
         panes.RSTHelpPane(),
         panes.MarkdownHelpPane(),
-        panes.SidebarPane()
+        panes.SidebarPane(),
+        panes.TimelinePane(),
     ]

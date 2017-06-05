@@ -1,5 +1,8 @@
 import os
 import cgi
+import time
+import datetime
+import calendar
 
 import wx
 from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
@@ -9,6 +12,7 @@ from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 from omnivore.framework.panes import FrameworkPane, FrameworkFixedPane
 from omnivore.utils.wx.popuputil import SpringTabs
 from omnivore.utils.wx.download_manager import DownloadControl
+from omnivore.utils.wx.zoomruler import ZoomRuler
 
 from layer_tree_control import LayerTreeControl
 from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
@@ -18,6 +22,78 @@ from ui.undo_panel import UndoHistoryPanel
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class TimelinePanel(ZoomRuler):
+    def __init__(self, parent, task, **kwargs):
+        ZoomRuler.__init__(self, parent, **kwargs)
+        self.task = task
+        self.editor = None
+ 
+    def get_timeline_info(self):
+        if self.editor is not None:
+            layers, start, end = self.editor.layer_manager.get_timestamped_layers(self.editor.layer_visibility)
+        else:
+            layers = []
+            start = end = 0.0
+        if start == 0.0:
+            today = datetime.datetime.today()
+            noon = today.replace(hour=12, minute=0, second=0, tzinfo=None)
+            start = calendar.timegm(noon.timetuple())
+        if end < start:
+            end = start
+
+        today = datetime.datetime.fromtimestamp(start)
+        noon = today.replace(hour=12, minute=0, second=0, tzinfo=None)
+        day_before = noon - datetime.timedelta(days=1)
+        start = calendar.timegm(day_before.timetuple())
+
+        today = datetime.datetime.fromtimestamp(end)
+        noon = today.replace(hour=12, minute=0, second=0, tzinfo=None)
+        day_after = noon + datetime.timedelta(days=1)
+        end = calendar.timegm(day_after.timetuple())
+        print "DATES:", start, day_before, end, day_after
+        info = {
+            "format": "month",
+            "earliest_time": start,
+            "latest_time": end,
+            "marks": [(l.start_time, l.end_time, l) for l in layers],
+        }
+        print info
+        return info
+
+    def recalc_view(self):
+        self.editor = self.task.active_editor
+        self.rebuild(self)
+
+    def refresh_view(self):
+        editor = self.task.active_editor
+        if editor is not None:
+            if self.editor != editor:
+                self.recalc_view()
+            else:
+                self.Refresh()
+
+
+class TimelinePane(FrameworkPane):
+    # TaskPane interface ###################################################
+
+    id = 'maproom.timeline_pane'
+    name = 'Timeline'
+
+    caption_visible = False
+    movable = False
+
+    def create_contents(self, parent):
+        control = TimelinePanel(parent, self.task)
+        return control
+
+    def get_new_info(self):
+        info = FrameworkPane.get_new_info(self)
+        info.LeftDockable(False)
+        info.RightDockable(False)
+        info.DockFixed(True)
+        return info
 
 
 class LayerSelectionPane(FrameworkPane):
