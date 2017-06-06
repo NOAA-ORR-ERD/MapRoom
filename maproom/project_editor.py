@@ -505,7 +505,6 @@ class ProjectEditor(FrameworkEditor):
         pane.name = layer_name
         self.update_undo_redo()
         self.sidebar.refresh_active()
-        self.window._aui_manager.Update()
 
     def update_info_panels(self, layer, force=False):
         sel_layer = self.layer_tree_control.get_selected_layer()

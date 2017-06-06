@@ -63,10 +63,12 @@ class TimelinePanel(ZoomRuler):
         return info
 
     def recalc_view(self):
+        log.debug("timeline recalc_view")
         self.editor = self.task.active_editor
         self.rebuild(self)
 
     def refresh_view(self):
+        log.debug("timeline refresh_view")
         editor = self.task.active_editor
         if editor is not None:
             if self.editor != editor:
@@ -91,7 +93,7 @@ class TimelinePanel(ZoomRuler):
 
     def selection_cleared_callback(self):
         if self.editor is not None:
-            self.editor.refresh()
+            self.Refresh()
 
 
 class TimelinePane(FrameworkPane):
