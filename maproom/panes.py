@@ -74,6 +74,25 @@ class TimelinePanel(ZoomRuler):
             else:
                 self.Refresh()
 
+    def selection_finished_callback(self):
+        if self.editor is not None:
+            layers = self.ruler.marks_in_selection()
+            self.editor.set_layer_visibility(layers)
+            self.editor.layer_tree_control.rebuild()
+
+    def over_item_callback(self, pos, item):
+        self.editor.task.status_bar.message = str(item)
+
+    def not_over_item_callback(self, pos):
+        self.editor.task.status_bar.message = ""
+
+    def selected_item_callback(self, item):
+        self.editor.layer_tree_control.select_layer(item)
+
+    def selection_cleared_callback(self):
+        if self.editor is not None:
+            self.editor.refresh()
+
 
 class TimelinePane(FrameworkPane):
     # TaskPane interface ###################################################

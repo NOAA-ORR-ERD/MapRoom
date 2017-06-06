@@ -222,6 +222,15 @@ class ProjectEditor(FrameworkEditor):
                     log.warning("adding default visibility for layer %s" % layer)
                 self.layer_visibility[layer] = layer.get_visibility_dict()
 
+    def set_layer_visibility(self, visible_layers):
+        for layer in self.layer_manager.flatten():
+            if layer.skip_on_insert:
+                # skip static layers like scale and grid
+                continue
+            state = layer in visible_layers
+            self.layer_visibility[layer]['layer'] = state
+        self.refresh()
+
     def rebuild_document_properties(self):
         self.layer_manager = self.document
         self.update_default_visibility()
@@ -565,7 +574,7 @@ class ProjectEditor(FrameworkEditor):
         self.update_layer_menu_ui(sel_layer)
         self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
         self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
-        self.timeline.recalc_view()
+        self.timeline.refresh_view()
         self.last_refresh = time.clock()
         self.control.Refresh()
 
