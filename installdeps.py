@@ -8,25 +8,25 @@ needs_netcdf = not sys.platform.startswith("win")
 develop_instead_of_link = False
 
 deps = [
-    [".", 'pytriangle-1.6.1', 'python setup.py install'],
-    ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', 'post_gnome',],
+    [".", {'builddir': 'pytriangle-1.6.1', 'command': 'python setup.py install'}],
+    ['https://github.com/NOAA-ORR-ERD/GnomeTools.git', {'builddir': 'post_gnome'}],
     ['https://github.com/robmcmullen/OWSLib.git',],
     ['https://github.com/fathat/glsvg.git',],
     ['https://github.com/robmcmullen/pyugrid.git',],
     ['https://github.com/robmcmullen/traits.git',],
-    ['https://github.com/robmcmullen/pyface.git',],
+    ['https://github.com/robmcmullen/pyface.git', {'branch':'omnivore'}],
     ['https://github.com/robmcmullen/traitsui.git',],
     ['https://github.com/enthought/apptools.git',],
     ['https://github.com/robmcmullen/envisage.git',],
     ['https://github.com/robmcmullen/pyfilesystem.git',],
-    ['https://github.com/robmcmullen/omnivore.git', '.', None], # don't build extensions for omnivore since we are only using the pure python part
+    ['https://github.com/robmcmullen/omnivore.git', {'builddir': '.', 'command': ""}], # don't build extensions for omnivore since we are only using the pure python part
 ]
 
 if needs_netcdf and not using_conda:
     # extra stuff isn't available through pypi or not easily built by hand
     deps.extend([
         ['https://github.com/MacPython/gattai.git',],
-        ['https://github.com/robmcmullen/mac-builds.git', 'packages/netCDF4', 'gattai netcdf.gattai'],
+        ['https://github.com/robmcmullen/mac-builds.git', {'builddir': 'packages/netCDF4', 'command': 'gattai netcdf.gattai'}],
         ])
 
 
@@ -37,18 +37,9 @@ link_map = {
     "gattai": None,
 }
 
-# hack to overwrite files so I don't have to keep patching my git copy of
-# pyface
-overrides = {
-    "deps/pyface/pyface/toolkit.py": """
-from pyface.base_toolkit import Toolkit
-toolkit_object = Toolkit('wx', 'pyface.ui.wx')
-""",
-}
-
 
 real_call = subprocess.call
-def git(args):
+def git(args, branch=None):
     if sys.platform != "win32":
         real_args = ['git']
         real_args.extend(args)
@@ -67,16 +58,21 @@ if using_conda:
     # let conda manage the dependencies rather than using pip. setup.py can't
     # seem to find dependencies installed via conda and will try to install
     # them again.
-    command_extra_args = " --no-deps"
+    #setup = "python setup.py --no-deps "
+    setup = "python setup.py "
 else:
-    command_extra_args = ""
+    setup = "python setup.py "
 
 linkdir = os.getcwd()
 topdir = os.path.join(os.getcwd(), "deps")
 
 for dep in deps:
     os.chdir(topdir)
-    repourl = dep[0]
+    try:
+        repourl, options = dep
+    except ValueError:
+        repourl = dep[0]
+        options = {}
     if repourl.startswith("http"):
         print "UPDATING %s" % repourl
         _, repo = os.path.split(repourl)
@@ -88,24 +84,21 @@ for dep in deps:
             git(['clone', repourl])
     else:
         repodir = repourl
-    if len(dep) == 1:
-        builddir = "."
-        command = "python setup.py build_ext --inplace" + command_extra_args
-        link = repodir
-    elif len(dep) == 2:
-        builddir = dep[1]
-        command = "python setup.py build_ext --inplace" + command_extra_args
-        link = repodir
+
+    builddir = options.get('builddir', ".")
+
+    command = options.get('command',
+        setup + "build_ext --inplace")
+    link = repodir
+    if "install" in command:
+        link = None
     else:
-        builddir = dep[1]
-        command = dep[2]
-        if command and "install" in command:
-            link = None
-        else:
-            link = repodir
+        link = repodir
     if command:
         os.chdir(topdir)
         os.chdir(repodir)
+        if 'branch' in options:
+            git(['checkout', options['branch']])
         os.chdir(builddir)
         subprocess.call(command.split())
         if "install" not in command and develop_instead_of_link:
@@ -123,9 +116,4 @@ for dep in deps:
             os.symlink(src, name)
 
 os.chdir(linkdir)
-for path, text in overrides.iteritems():
-    print "Replacing %s" % path
-    with open(path, "w") as fh:
-        fh.write(text)
-
 subprocess.call(["python", "setup_library.py", "build_ext", "--inplace"])
