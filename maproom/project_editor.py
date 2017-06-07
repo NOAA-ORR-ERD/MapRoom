@@ -229,6 +229,7 @@ class ProjectEditor(FrameworkEditor):
                 continue
             state = layer in visible_layers
             self.layer_visibility[layer]['layer'] = state
+        self.layer_tree_control.update_checked_from_visibility()
         self.refresh()
 
     def rebuild_document_properties(self):

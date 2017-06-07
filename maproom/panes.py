@@ -80,7 +80,13 @@ class TimelinePanel(ZoomRuler):
         if self.editor is not None:
             layers = self.ruler.marks_in_selection()
             self.editor.set_layer_visibility(layers)
-            self.editor.layer_tree_control.rebuild()
+            self.editor.layer_tree_control.Refresh()
+
+    def item_activation_callback(self, item):
+        if self.editor is not None:
+            layers = [item]
+            self.editor.set_layer_visibility(layers)
+            self.editor.layer_tree_control.Refresh()
 
     def over_item_callback(self, pos, item):
         self.editor.task.status_bar.message = str(item)
