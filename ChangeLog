@@ -1,3 +1,18 @@
+06/08/2017
+---------------------------
+Released 3.1b35
+- RM Fixed #767: added missing call to draw markers for overlay line
+- RM Added missing checks for valid editor in timeline callbacks
+- RM Fixed #772: only consider visibility changes on timestamped layers
+- RM Fixed #766: added dateutil parsing of layer name
+- RM Changed to full-width highlights in tree. Less mouse movement to select since you don't have to be inside the box
+- RM Refs #619: added double click to select only that layer
+- RM Fixed installdeps to be able to check out a branch
+- RM Refs #619: fixed refresh that was rescaling the timeline
+- RM Refs #619: added mouse selection/processing to timeline
+- RM Refs #619: added start/stop times to base layer abstract class
+- RM Fixed #733: added 9 new colors to default color cycle
+
 06/01/2017
 ---------------------------
 Released 3.1b34
