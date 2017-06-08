@@ -90,13 +90,16 @@ class TimelinePanel(ZoomRuler):
             self.editor.layer_tree_control.Refresh()
 
     def over_item_callback(self, pos, item):
-        self.editor.task.status_bar.message = str(item)
+        if self.editor is not None:
+            self.editor.task.status_bar.message = str(item)
 
     def not_over_item_callback(self, pos):
-        self.editor.task.status_bar.message = ""
+        if self.editor is not None:
+            self.editor.task.status_bar.message = ""
 
     def selected_item_callback(self, item):
-        self.editor.layer_tree_control.select_layer(item)
+        if self.editor is not None:
+            self.editor.layer_tree_control.select_layer(item)
 
     def selection_cleared_callback(self):
         if self.editor is not None:
