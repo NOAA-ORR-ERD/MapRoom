@@ -847,6 +847,10 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
         self.points.x[2] = (self.points[0].x + self.points[1].x) / 2
         self.points.y[2] = (self.points[0].y + self.points[1].y) / 2
 
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        OverlayMixin.render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker)
+        LineVectorObject.render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker)
+
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         pass
 
