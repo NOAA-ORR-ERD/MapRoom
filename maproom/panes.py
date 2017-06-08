@@ -32,7 +32,7 @@ class TimelinePanel(ZoomRuler):
  
     def get_timeline_info(self):
         if self.editor is not None:
-            layers, start, end = self.editor.layer_manager.get_timestamped_layers(self.editor.layer_visibility)
+            layers, start, end = self.editor.layer_manager.get_timestamped_layers(self.editor.layer_visibility, False)
         else:
             layers = []
             start = end = 0.0
@@ -78,8 +78,9 @@ class TimelinePanel(ZoomRuler):
 
     def selection_finished_callback(self):
         if self.editor is not None:
-            layers = self.ruler.marks_in_selection()
-            self.editor.set_layer_visibility(layers)
+            selected_layers = self.ruler.marks_in_selection()
+            timestamped_layers = self.ruler.all_marks()
+            self.editor.set_layer_visibility(selected_layers, timestamped_layers)
             self.editor.layer_tree_control.Refresh()
 
     def item_activation_callback(self, item):

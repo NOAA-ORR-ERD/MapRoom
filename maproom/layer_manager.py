@@ -568,6 +568,14 @@ class LayerManager(BaseDocument):
             latest_time = earliest_time
         return layers, earliest_time, latest_time
 
+    def get_untimestamped_layers(self):
+        layers = []
+        for layer in self.flatten():
+            if layer.start_time > 0.0:
+                continue
+            layers.append(layer)
+        return layers
+
 
     ##### Layer info
 

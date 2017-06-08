@@ -222,8 +222,10 @@ class ProjectEditor(FrameworkEditor):
                     log.warning("adding default visibility for layer %s" % layer)
                 self.layer_visibility[layer] = layer.get_visibility_dict()
 
-    def set_layer_visibility(self, visible_layers):
-        for layer in self.layer_manager.flatten():
+    def set_layer_visibility(self, visible_layers, layers=None):
+        if layers is None:
+            layers = self.layer_manager.flatten()
+        for layer in layers:
             if layer.skip_on_insert:
                 # skip static layers like scale and grid
                 continue
