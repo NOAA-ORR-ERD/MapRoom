@@ -348,17 +348,31 @@ class Layer(HasTraits):
         return self.start_time
 
     def start_time_from_json(self, json_data):
-        jd = json_data['start_time']
-        # check for float or datetime?
-        self.start_time = jd
+        if 'start_time' not in json_data:
+            self.start_time = self.start_time_from_json_guess(json_data)
+        else:
+            jd = json_data['start_time']
+            # check for float or datetime?
+            self.start_time = jd
+
+    def start_time_from_json_guess(self, json_data):
+        # default is to set it to n/a
+        return 0.0
 
     def end_time_to_json(self):
         return self.end_time
 
     def end_time_from_json(self, json_data):
-        jd = json_data['end_time']
-        # check for float or datetime?
-        self.end_time = jd
+        if 'end_time' not in json_data:
+            self.end_time = self.end_time_from_json_guess(json_data)
+        else:
+            jd = json_data['end_time']
+            # check for float or datetime?
+            self.end_time = jd
+
+    def end_time_from_json_guess(self, json_data):
+        # default is to set it to n/a
+        return 0.0
 
     def parse_time_to_float(self, t):
         if t is None:

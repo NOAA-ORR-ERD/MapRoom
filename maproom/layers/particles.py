@@ -8,6 +8,8 @@ Also there's nothing currently preventing other layer types being moved into
 a particle folder.
 """
 import sys
+from dateutil import parser as date_parser
+import calendar
 
 import numpy as np
 
@@ -21,8 +23,8 @@ from ..renderer import color_floats_to_int
 from folder import Folder
 from point_base import PointBaseLayer
 
-# import logging
-# log = logging.getLogger(__name__)
+import logging
+log = logging.getLogger(__name__)
 # progress_log = logging.getLogger("progress")
 
 
@@ -157,6 +159,19 @@ class ParticleLayer(PointBaseLayer):
         return status_code_colors
 
     # JSON Serialization
+
+    def start_time_from_json_guess(self, json_data):
+        # start time is missing because this is an old version of the project
+        # file, but if it's in the standard format, we can guess from the title
+        name = json_data['name']
+        try:
+            dt = date_parser.parse(name)
+            log.info("Guessed date %s from %s for %s" % (str(dt), name, self))
+        except ValueError:
+            log.info("Can't parse %s to get default date for %s" % (name, self))
+            raise KeyError
+        t = calendar.timegm(dt.timetuple())
+        return t
 
     def status_codes_to_json(self):
         if self.status_codes is not None:
