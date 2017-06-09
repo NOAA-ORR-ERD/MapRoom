@@ -110,11 +110,35 @@ class MaproomProjectTask(FrameworkTask):
             import OpenGL.GL as gl
             desc += "  PyOpenGL %s\n" % OpenGL.__version__
             desc += "  OpenGL %s\n" % gl.glGetString(gl.GL_VERSION)
+            desc += "  OpenGL Vendor: %s\n" % gl.glGetString(gl.GL_VENDOR)
+            desc += "  OpenGL Renderer: %s\n" % gl.glGetString(gl.GL_RENDERER)
+            desc += "  GLSL primary: %s\n" % gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
+            num_glsl = gl.glGetInteger(gl.GL_NUM_SHADING_LANGUAGE_VERSIONS)
+            desc += "  GLSL supported: "
+            for i in range(num_glsl):
+                v = gl.glGetStringi(gl.GL_SHADING_LANGUAGE_VERSION, i)
+                desc += v + ", "
+            desc += "\n"
         except:
             pass
         try:
             import pyproj
             desc += "  PyProj %s\n" % pyproj.__version__
+        except:
+            pass
+        try:
+            import netCDF4
+            desc += "  netCDF4 %s\n" % netCDF4.__version__
+        except:
+            pass
+        try:
+            import shapely
+            desc += "  Shapely %s\n" % shapely.__version__
+        except:
+            pass
+        try:
+            import omnivore
+            desc += "  Omnivore %s\n" % omnivore.__version__
         except:
             pass
         return desc
