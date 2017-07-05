@@ -1,6 +1,7 @@
 import sys
 import time
 import datetime
+import calendar
 
 from fs.errors import ResourceNotFoundError
 
@@ -378,7 +379,7 @@ class Layer(HasTraits):
         if t is None:
             t = 0.0
         elif isinstance(t, datetime.datetime):
-            t = time.mktime(t.timetuple())
+            t = calendar.timegm(t.timetuple())
         else:
             t = float(t)
         return t
