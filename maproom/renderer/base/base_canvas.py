@@ -134,7 +134,7 @@ class BaseCanvas(object):
             return self.picker.get_object_at_mouse_position(screen_point)
         return None
 
-    def get_selected_layer(self):
+    def get_edit_layer(self):
         # Subclasses should return the selected layer, to be used to render the
         # selected layer's control points above all others, regardless of the
         # stacking order of the layers
@@ -163,7 +163,7 @@ class BaseCanvas(object):
         if not self.begin_rendering_screen(p_r, s_r):
             return
 
-        selected = self.get_selected_layer()
+        selected = self.get_edit_layer()
         all_layers = list(enumerate(self.project.layer_manager.flatten()))
         all_layers.reverse()
 

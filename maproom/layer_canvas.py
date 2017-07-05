@@ -48,8 +48,8 @@ class LayerCanvas(renderer.ScreenCanvas):
                 self.remove_renderer_for_layer(layer)
         self.update_renderers()
 
-    def get_selected_layer(self):
-        return self.project.layer_tree_control.get_selected_layer()
+    def get_edit_layer(self):
+        return self.project.layer_tree_control.get_edit_layer()
 
     def set_mouse_handler(self, mode):
         self.release_mouse()

@@ -288,7 +288,7 @@ class ProjectEditor(FrameworkEditor):
             self.task._active_editor_tab_change(None)
 
     def get_savepoint(self):
-        layer = self.layer_tree_control.get_selected_layer()
+        layer = self.layer_tree_control.get_edit_layer()
         cmd = SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
         return cmd
 
@@ -312,7 +312,7 @@ class ProjectEditor(FrameworkEditor):
     def save_layer(self, path, loader=None):
         """ Saves the contents of the current layer in an appropriate file
         """
-        layer = self.layer_tree_control.get_selected_layer()
+        layer = self.layer_tree_control.get_edit_layer()
         if layer is None:
             return
 
@@ -338,7 +338,7 @@ class ProjectEditor(FrameworkEditor):
     def get_numpy_image(self):
         # Deselect all layers because it's designed to be used as post-
         # processing image
-        self.layer_tree_control.select_layer(None)
+        self.layer_tree_control.set_edit_layer(None)
         self.layer_canvas.render()  # force update including deselected layer
         return self.layer_canvas.get_canvas_as_image()
 
@@ -360,7 +360,7 @@ class ProjectEditor(FrameworkEditor):
         self.print_preview()
 
     def save_as_pdf(self, path=None):
-        self.layer_tree_control.select_layer(None)
+        self.layer_tree_control.set_edit_layer(None)
         pdf_canvas = renderer.PDFCanvas(project=self, path=path)
         pdf_canvas.copy_viewport_from(self.layer_canvas)
         pdf_canvas.update_renderers()
@@ -450,17 +450,17 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
         self.timeline.recalc_view()
 
-    def update_layer_menu_ui(self, sel_layer):
-        if sel_layer is not None:
-            self.can_copy = sel_layer.can_copy()
+    def update_layer_menu_ui(self, edit_layer):
+        if edit_layer is not None:
+            self.can_copy = edit_layer.can_copy()
             self.can_paste = True
             self.can_paste_style = self.clipboard_style is not None
-            self.layer_can_save = sel_layer.can_save()
-            self.layer_can_save_as = sel_layer.can_save_as()
-            self.layer_selected = not sel_layer.is_root()
-            self.layer_zoomable = sel_layer.is_zoomable()
-            self.layer_above = self.layer_manager.is_raisable(sel_layer)
-            self.layer_below = self.layer_manager.is_lowerable(sel_layer)
+            self.layer_can_save = edit_layer.can_save()
+            self.layer_can_save_as = edit_layer.can_save_as()
+            self.layer_selected = not edit_layer.is_root()
+            self.layer_zoomable = edit_layer.is_zoomable()
+            self.layer_above = self.layer_manager.is_raisable(edit_layer)
+            self.layer_below = self.layer_manager.is_lowerable(edit_layer)
         else:
             self.can_copy = False
             self.can_paste = False
@@ -472,31 +472,31 @@ class ProjectEditor(FrameworkEditor):
             self.layer_above = False
             self.layer_below = False
 
-    def update_layer_selection_ui(self, sel_layer=None):
-        if sel_layer is None:
-            sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
+    def update_layer_selection_ui(self, edit_layer=None):
+        if edit_layer is None:
+            edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
             # leave mouse_mode set to current setting
-            self.mouse_mode_toolbar = sel_layer.mouse_mode_toolbar
+            self.mouse_mode_toolbar = edit_layer.mouse_mode_toolbar
             self.mouse_mode_factory = toolbar.get_valid_mouse_mode(self.mouse_mode_factory, self.mouse_mode_toolbar)
         else:
             self.mouse_mode_factory = PanMode
-        self.update_layer_menu_ui(sel_layer)
+        self.update_layer_menu_ui(edit_layer)
         self.layer_canvas.set_mouse_handler(self.mouse_mode_factory)
         self.multiple_layers = self.layer_manager.count_layers() > 1
-        self.update_info_panels(sel_layer)
-        self.update_layer_contents_ui(sel_layer)
-        self.task.layer_selection_changed = sel_layer
+        self.update_info_panels(edit_layer)
+        self.update_layer_contents_ui(edit_layer)
+        self.task.layer_selection_changed = edit_layer
 
-    def update_layer_contents_ui(self, sel_layer=None):
-        if sel_layer is None:
-            sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            self.layer_has_points = sel_layer.has_points()
-            self.layer_has_selection = sel_layer.has_selection()
-            self.layer_has_flagged = sel_layer.has_flagged()
-            self.layer_has_boundaries = sel_layer.has_boundaries()
-            layer_name = sel_layer.name
+    def update_layer_contents_ui(self, edit_layer=None):
+        if edit_layer is None:
+            edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            self.layer_has_points = edit_layer.has_points()
+            self.layer_has_selection = edit_layer.has_selection()
+            self.layer_has_flagged = edit_layer.has_flagged()
+            self.layer_has_boundaries = edit_layer.has_boundaries()
+            layer_name = edit_layer.name
         else:
             self.layer_has_points = False
             self.layer_has_selection = False
@@ -510,8 +510,8 @@ class ProjectEditor(FrameworkEditor):
         self.sidebar.refresh_active()
 
     def update_info_panels(self, layer, force=False):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer == layer:
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer == layer:
             self.layer_info.display_panel_for_layer(self, layer, force)
             self.selection_info.display_panel_for_layer(self, layer, force)
         else:
@@ -571,11 +571,11 @@ class ProjectEditor(FrameworkEditor):
         if not sys.platform.startswith('darwin'):
             self.control.Update()
 
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        self.update_layer_contents_ui(sel_layer)
-        self.update_layer_menu_ui(sel_layer)
-        self.layer_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
-        self.selection_info.display_panel_for_layer(self, sel_layer, editable_properties_changed, has_focus=current)
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        self.update_layer_contents_ui(edit_layer)
+        self.update_layer_menu_ui(edit_layer)
+        self.layer_info.display_panel_for_layer(self, edit_layer, editable_properties_changed, has_focus=current)
+        self.selection_info.display_panel_for_layer(self, edit_layer, editable_properties_changed, has_focus=current)
         self.timeline.refresh_view()
         self.last_refresh = time.clock()
         self.control.Refresh()
@@ -740,7 +740,7 @@ class ProjectEditor(FrameworkEditor):
         if b.fast_viewport_refresh_needed:
             self.layer_canvas.render()
         if b.select_layer:
-            self.layer_tree_control.select_layer(b.select_layer)
+            self.layer_tree_control.set_edit_layer(b.select_layer)
 
         if b.errors:
             self.task.error("\n".join(b.errors))
@@ -768,9 +768,9 @@ class ProjectEditor(FrameworkEditor):
             data_obj = wx.TextDataObject()
             data_obj.SetText(text)
         else:
-            sel_layer = self.layer_tree_control.get_selected_layer()
-            if sel_layer is not None:
-                json_data = sel_layer.serialize_json(-999, children=True)
+            edit_layer = self.layer_tree_control.get_edit_layer()
+            if edit_layer is not None:
+                json_data = edit_layer.serialize_json(-999, children=True)
                 text = json.dumps(json_data, indent=4)
                 print "clipboard object: json data", text
                 data_obj = wx.CustomDataObject("maproom")
@@ -783,61 +783,61 @@ class ProjectEditor(FrameworkEditor):
         print "Found data object %s" % data_obj
         text = data_obj.GetData()
         print "value:", text
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = PasteLayerCommand(sel_layer, text, self.layer_canvas.world_center)
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = PasteLayerCommand(edit_layer, text, self.layer_canvas.world_center)
             self.process_command(cmd)
 
     def copy_style(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            self.__class__.clipboard_style = sel_layer.style.get_copy()
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            self.__class__.clipboard_style = edit_layer.style.get_copy()
             self.can_paste_style = True
 
     def paste_style(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
             style = self.clipboard_style
             if style is not None:
-                cmd = StyleChangeCommand(sel_layer, style)
+                cmd = StyleChangeCommand(edit_layer, style)
                 self.process_command(cmd)
 
     def clear_selection(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            sel_layer.clear_all_selections()
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            edit_layer.clear_all_selections()
             self.update_layer_contents_ui()
             self.refresh()
 
     def delete_selection(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = sel_layer.delete_all_selected_objects()
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = edit_layer.delete_all_selected_objects()
             self.process_command(cmd)
 
     def clear_all_flagged(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            sel_layer.clear_flagged(refresh=False)
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            edit_layer.clear_flagged(refresh=False)
             self.update_layer_contents_ui()
             self.refresh()
 
     def select_all_flagged(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            sel_layer.select_flagged(refresh=False)
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            edit_layer.select_flagged(refresh=False)
             self.update_layer_contents_ui()
             self.refresh()
 
     def select_boundary(self):
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is None:
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is None:
             return
 
         error = None
         try:
-            progress_log.info("START=Finding outer boundary for %s" % sel_layer.name)
-            status = sel_layer.select_outer_boundary()
+            progress_log.info("START=Finding outer boundary for %s" % edit_layer.name)
+            status = edit_layer.select_outer_boundary()
         except ProgressCancelError:
             error = "cancel"
         except Exception:
@@ -848,9 +848,9 @@ class ProjectEditor(FrameworkEditor):
         if error == "cancel":
             return
         elif error is not None:
-            self.task.error(error, sel_layer.name)
+            self.task.error(error, edit_layer.name)
         elif status is None:
-            self.task.error("No complete boundary", sel_layer.name)
+            self.task.error("No complete boundary", edit_layer.name)
         else:
             self.update_layer_contents_ui()
             self.refresh()
@@ -896,7 +896,7 @@ class ProjectEditor(FrameworkEditor):
 
     def delete_selected_layer(self, layer=None):
         if layer is None:
-            layer = self.layer_tree_control.get_selected_layer()
+            layer = self.layer_tree_control.get_edit_layer()
         if layer is None:
             self.window.status_bar.message = "Selected layer to delete!."
             return
@@ -914,13 +914,13 @@ class ProjectEditor(FrameworkEditor):
 
     def check_for_errors(self, save_message=False):
         error = None
-        sel_layer = self.layer_tree_control.get_selected_layer()
-        if sel_layer is None:
+        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is None:
             return
 
         try:
-            progress_log.info("START=Checking layer %s" % sel_layer.name)
-            error = self.layer_manager.check_layer(sel_layer, self.window)
+            progress_log.info("START=Checking layer %s" % edit_layer.name)
+            error = self.layer_manager.check_layer(edit_layer, self.window)
         except ProgressCancelError:
             error = "cancel"
         finally:
@@ -931,14 +931,14 @@ class ProjectEditor(FrameworkEditor):
         if error == "cancel":
             all_ok = False
         elif error is not None:
-            sel_layer.highlight_exception(error)
+            edit_layer.highlight_exception(error)
             if save_message:
                 all_ok = self.task.confirm(error.message, "Layer Contains Problems; Save Anyway?")
             else:
                 self.task.error(error.message, "Layer Contains Problems")
         else:
-            sel_layer.clear_flagged(refresh=True)
-            self.task.information("Layer %s OK" % sel_layer.name, "No Problems Found")
+            edit_layer.clear_flagged(refresh=True)
+            self.task.information("Layer %s OK" % edit_layer.name, "No Problems Found")
         return all_ok
 
     def check_all_layers_for_errors(self, save_message=False):

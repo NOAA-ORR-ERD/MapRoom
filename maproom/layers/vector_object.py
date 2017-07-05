@@ -1411,13 +1411,13 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         log.log(5, "Rendering annotation layer group %s!!! pick=%s" % (self.name, picker))
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-        if self.manager.project.layer_tree_control.get_selected_layer() == self:
+        if self.manager.project.layer_tree_control.get_edit_layer() == self:
             style = self.manager.project.task.default_styles_read_only("ui")
             renderer.outline_object(self, picker, style)
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
-        if self.manager.project.layer_tree_control.get_selected_layer() == self:
+        if self.manager.project.layer_tree_control.get_edit_layer() == self:
             renderer.draw_points(self, picker, self.point_size)
 
 

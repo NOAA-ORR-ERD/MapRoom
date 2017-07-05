@@ -225,9 +225,9 @@ class ZoomToLayer(EditorAction):
     image = ImageResource('zoom_to_layer')
 
     def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = ViewportCommand(sel_layer)
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = ViewportCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 
@@ -364,9 +364,9 @@ class ToPolygonLayerAction(EditorAction):
     enabled_name = 'layer_has_boundaries'
 
     def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = ToPolygonLayerCommand(sel_layer)
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = ToPolygonLayerCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 
@@ -376,9 +376,9 @@ class ToVerdatLayerAction(EditorAction):
     enabled_name = 'layer_has_boundaries'
 
     def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = ToVerdatLayerCommand(sel_layer)
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = ToVerdatLayerCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 
@@ -595,12 +595,12 @@ class DuplicateLayerAction(EditorAction):
     enabled_name = 'can_copy'
 
     def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            json_data = sel_layer.serialize_json(-999, True)
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            json_data = edit_layer.serialize_json(-999, True)
             if json_data:
                 text = json.dumps(json_data)
-                cmd = PasteLayerCommand(sel_layer, text, self.active_editor.layer_canvas.world_center)
+                cmd = PasteLayerCommand(edit_layer, text, self.active_editor.layer_canvas.world_center)
                 self.active_editor.process_command(cmd)
 
 
@@ -655,7 +655,7 @@ class NormalizeLongitudeAction(EditorAction):
     tooltip = 'Adjust longitudes so the map lies between 0 and 360W'
 
     def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = NormalizeLongitudeCommand(sel_layer)
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = NormalizeLongitudeCommand(edit_layer)
             self.active_editor.process_command(cmd)

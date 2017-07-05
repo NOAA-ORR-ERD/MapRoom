@@ -70,7 +70,7 @@ class LayerTreeControl(wx.Panel):
         self.project = project
         self.rebuild()
 
-    def get_selected_layer(self):
+    def get_edit_layer(self):
         item = self.tree.GetSelection()
         if (item is None):
             return None
@@ -79,14 +79,14 @@ class LayerTreeControl(wx.Panel):
 
         return layer
 
-    def is_selected_layer(self, layer):
+    def is_edit_layer(self, layer):
         item = self.tree.GetSelection()
         if (item is None):
             return False
         (selected, ) = self.tree.GetItemPyData(item).Data
         return layer == selected
 
-    def select_layer(self, layer):
+    def set_edit_layer(self, layer):
         if self.project is None:
             return
         self.project.clear_all_selections(False)
@@ -94,9 +94,9 @@ class LayerTreeControl(wx.Panel):
         if (layer is None):
             self.tree.UnselectAll()
         else:
-            self.select_layer_recursive(layer, self.tree.GetRootItem())
+            self.set_edit_layer_recursive(layer, self.tree.GetRootItem())
 
-    def select_layer_recursive(self, layer, item):
+    def set_edit_layer_recursive(self, layer, item):
         (item_layer, ) = self.tree.GetItemPyData(item).Data
 
         if (item_layer == layer):
@@ -114,7 +114,7 @@ class LayerTreeControl(wx.Panel):
         child, cookie = self.tree.GetFirstChild(item)
 
         while (n > 0):
-            if (self.select_layer_recursive(layer, child)):
+            if (self.set_edit_layer_recursive(layer, child)):
                 return True
 
             child = self.tree.GetNextSibling(child)
@@ -151,7 +151,7 @@ class LayerTreeControl(wx.Panel):
         if self.project is None:
             # Wait till there's an active project
             return
-        selected = self.get_selected_layer()
+        selected = self.get_edit_layer()
         expanded_state = self.get_expanded_state()
         lm = self.project.layer_manager
         self.tree.DeleteAllItems()
@@ -160,7 +160,7 @@ class LayerTreeControl(wx.Panel):
         self.add_layers_recursive(lm.layers, None, expanded_state)
         # self.Thaw()
         if selected:
-            self.select_layer(selected)
+            self.set_edit_layer(selected)
             self.project.update_layer_selection_ui(selected)
 
     def add_layers_recursive(self, layer_tree, parent, expanded_state):
@@ -282,7 +282,7 @@ class LayerTreeControl(wx.Panel):
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
-        layer = self.get_selected_layer()
+        layer = self.get_edit_layer()
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         self.project.refresh()
@@ -325,7 +325,7 @@ class LayerTreeControl(wx.Panel):
         lm.remove_layer_at_multi_index(mi_source)
         lm.insert_layer(mi_target, source_layer)
         self.project.clear_all_selections(False)
-        self.select_layer(layer)
+        self.set_edit_layer(layer)
         self.rebuild()
 
     def mouse_pressed(self, event):

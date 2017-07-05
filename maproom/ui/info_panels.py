@@ -169,7 +169,7 @@ class BooleanLabelField(SimplePropertyField):
         self.toggle.SetToggle(vis)
 
     def on_toggled(self, evt):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         self.set_visibility(layer, evt.GetIsDown())
@@ -247,7 +247,7 @@ class TextEditField(InfoField):
         return self.ctrl.GetValue()
 
     def on_text_changed(self, evt):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         self.process_text_change(layer)
@@ -256,7 +256,7 @@ class TextEditField(InfoField):
         layer.name = self.ctrl.GetValue()
         self.panel.ignore_next_update = True
         # a side effect of select_layer() is to make sure the layer name is up-to-date
-        self.panel.project.layer_tree_control.select_layer(layer)
+        self.panel.project.layer_tree_control.set_edit_layer(layer)
 
     def initial_text_input(self, text):
         self.ctrl.SetValue(text)
@@ -410,7 +410,7 @@ class AnchorPointField(InfoField):
         return c
 
     def anchor_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -478,7 +478,7 @@ class DepthUnitField(DropDownField):
         return layer.depth_unit
 
     def drop_down_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         layer.depth_unit = self.ctrl.GetString(self.ctrl.GetSelection())
@@ -499,7 +499,7 @@ class FlaggedPointsField(DropDownField):
         return self.get_choices(layer)[0]
 
     def drop_down_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         c = self.ctrl
@@ -551,7 +551,7 @@ class LineAlphaField(FloatSliderField):
         return t
 
     def slider_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         c = self.ctrl
@@ -611,7 +611,7 @@ class ColorPickerField(InfoField):
         color = [float(c / 255.0) for c in event.GetValue()]
         color.append(1.0)
         int_color = color_floats_to_int(*color)
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         style = self.get_style(int_color)
@@ -722,7 +722,7 @@ class LineStyleField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -747,7 +747,7 @@ class LineWidthField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -774,7 +774,7 @@ class FillStyleField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -801,7 +801,7 @@ class MultiLineTextField(InfoField):
             self.ctrl.ChangeValue(text)
 
     def on_text_changed(self, evt):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         self.process_text_change(layer)
@@ -867,7 +867,7 @@ class TextFormatField(InfoField):
                 pane.visible = (index == item)
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -928,7 +928,7 @@ class FontStyleField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -953,7 +953,7 @@ class FontSizeField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -984,7 +984,7 @@ class MarkerField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1028,7 +1028,7 @@ class MarplotIconField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         marker = self.get_marker(layer)
@@ -1137,7 +1137,7 @@ class ParticleField(InfoField):
         return c
 
     def timestep_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         index = event.GetSelection()
@@ -1213,7 +1213,7 @@ class StatusCodeColorField(InfoField):
         color = [float(c / 255.0) for c in event.GetValue()]
         color.append(1.0)
         int_color = color_floats_to_int(*color)
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         layers = layer.get_selected_particle_layers(self.panel.project)
@@ -1236,7 +1236,7 @@ class MapServerField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1274,7 +1274,7 @@ class MapOverlayField(InfoField):
         return c
 
     def overlay_selected(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1295,7 +1295,7 @@ class MapOverlayField(InfoField):
         self.ctrl.PopupMenu(popup, event.GetPosition())
 
     def on_menu(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         downloader = layer.get_downloader(layer.map_server_id)
@@ -1362,7 +1362,7 @@ class ServerReloadField(InfoField):
         return c
 
     def on_press(self, event):
-        layer = self.panel.project.layer_tree_control.get_selected_layer()
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)

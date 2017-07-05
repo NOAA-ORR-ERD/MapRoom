@@ -49,7 +49,7 @@ class MockTree(object):
     def __init__(self):
         self.layer = Layer()
 
-    def get_selected_layer(self):
+    def get_edit_layer(self):
         return self.layer
 
 

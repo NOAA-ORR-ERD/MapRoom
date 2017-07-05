@@ -695,7 +695,7 @@ class LayerManager(BaseDocument):
         self.insert_loaded_layer(layer, editor, before, after)
         self.dispatch_event('layers_changed')
         if editor is not None:
-            GUI.invoke_later(editor.layer_tree_control.select_layer, layer)
+            GUI.invoke_later(editor.layer_tree_control.set_edit_layer, layer)
         return layer
 
     def add_layers(self, layers, is_project, editor):

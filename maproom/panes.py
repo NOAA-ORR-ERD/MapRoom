@@ -106,7 +106,7 @@ class TimelinePanel(ZoomRuler):
 
     def selected_item_callback(self, item):
         if self.editor is not None:
-            self.editor.layer_tree_control.select_layer(item)
+            self.editor.layer_tree_control.set_edit_layer(item)
 
     def selection_cleared_callback(self):
         if self.editor is not None:
@@ -270,7 +270,7 @@ class FlaggedPointPanel(wx.ListBox):
     def process_index(self, index):
         point_index = self.point_indexes[index]
         editor = self.task.active_editor
-        layer = editor.layer_tree_control.get_selected_layer()
+        layer = editor.layer_tree_control.get_edit_layer()
         print point_index, layer
         editor.layer_canvas.do_center_on_point_index(layer, point_index)
 
@@ -282,7 +282,7 @@ class FlaggedPointPanel(wx.ListBox):
         editor = self.task.active_editor
         if editor is not None:
             self.editor = editor
-            layer = editor.layer_tree_control.get_selected_layer()
+            layer = editor.layer_tree_control.get_edit_layer()
             try:
                 points = layer.get_flagged_point_indexes()
             except AttributeError:
