@@ -4,8 +4,12 @@ import os
 import sys
 
 using_conda = "Continuum Analytics" in sys.version or "conda" in sys.version
-needs_netcdf = not sys.platform.startswith("win")
-develop_instead_of_link = False
+if sys.platform.startswith("win"):
+    needs_netcdf = False
+    develop_instead_of_link = True
+else:
+    needs_netcdf = True
+    develop_instead_of_link = False
 
 deps = [
     [".", {'builddir': 'pytriangle-1.6.1', 'command': 'python setup.py install'}],
