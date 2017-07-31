@@ -44,10 +44,9 @@ link_map = {
 
 real_call = subprocess.call
 def git(args, branch=None):
-    if sys.platform != "win32":
-        real_args = ['git']
-        real_args.extend(args)
-        real_call(real_args)
+    real_args = ['git']
+    real_args.extend(args)
+    real_call(real_args)
 
 dry_run = False
 if dry_run:

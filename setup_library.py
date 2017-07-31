@@ -10,9 +10,8 @@ python setup_library.py build_ext --inplace
 """
 
 
-from distutils.core import setup
-from distutils.extension import Extension
 from Cython.Distutils import build_ext
+from setuptools import setup, find_packages, Extension
 
 import sys
 
