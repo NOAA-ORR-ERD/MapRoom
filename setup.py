@@ -379,7 +379,7 @@ try:
             'pyproj',
             'cython',
             'shapely',
-            'pytest',
+            'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
             'coverage',
             'pytest-cov',
             'docutils',
