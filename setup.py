@@ -378,7 +378,7 @@ try:
             'pyopengl_accelerate',
             'pyproj',
             'cython',
-            'shapely',
+            'shapely<1.6',
             'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
             'coverage',
             'pytest-cov',
@@ -389,6 +389,7 @@ try:
             'pyparsing',
             'requests',
             'python-dateutil',
+            'netCDF4',
             'omnivore-framework',
             ],
         data_files=data_files,
