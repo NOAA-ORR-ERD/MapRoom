@@ -332,6 +332,7 @@ try:
             'pyparsing',
             'requests',
             'python-dateutil',
+            'omnivore-framework',
             ],
         data_files=data_files,
         packages=find_packages(),

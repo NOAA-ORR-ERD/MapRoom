@@ -17,13 +17,6 @@ deps = [
     ['https://github.com/robmcmullen/OWSLib.git',],
     ['https://github.com/fathat/glsvg.git',],
     ['https://github.com/robmcmullen/pyugrid.git',],
-    ['https://github.com/robmcmullen/traits.git',],
-    ['https://github.com/robmcmullen/pyface.git', {'branch':'omnivore'}],
-    ['https://github.com/robmcmullen/traitsui.git',],
-    ['https://github.com/enthought/apptools.git',],
-    ['https://github.com/robmcmullen/envisage.git',],
-    ['https://github.com/robmcmullen/pyfilesystem.git',],
-    ['https://github.com/robmcmullen/omnivore.git', {'builddir': '.', 'command': ""}], # don't build extensions for omnivore since we are only using the pure python part
 ]
 
 if needs_netcdf and not using_conda:
@@ -36,7 +29,6 @@ if needs_netcdf and not using_conda:
 
 link_map = {
     "OWSLib": "owslib",
-    "pyfilesystem": "fs",
     "GnomeTools": "post_gnome",
     "gattai": None,
 }
