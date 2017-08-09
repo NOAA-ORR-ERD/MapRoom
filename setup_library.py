@@ -39,16 +39,19 @@ print gl_libraries
 bitmap = Extension("maproom.library.Bitmap",
                    sources=["maproom/library/Bitmap.pyx"],
                    include_dirs=[numpy.get_include()],
+                   extra_compile_args = ["-O3" ],
                    )
 
 shape = Extension("maproom.library.Shape",
                   sources=["maproom/library/Shape.pyx"],
                   include_dirs=[numpy.get_include()],
+                  extra_compile_args = ["-O3" ],
                   )
 
 tree = Extension("maproom.library.scipy_ckdtree",
                  sources=["maproom/library/scipy_ckdtree.pyx"],
                  include_dirs=[numpy.get_include()],
+                 extra_compile_args = ["-O3" ],
                  )
 
 tessellator = Extension("maproom.renderer.gl.Tessellator",
@@ -56,6 +59,7 @@ tessellator = Extension("maproom.renderer.gl.Tessellator",
                         include_dirs=gl_include_dirs,
                         library_dirs=gl_library_dirs,
                         libraries=gl_libraries,
+                        extra_compile_args = ["-O3" ],
                         )
 
 render = Extension("maproom.renderer.gl.Render",
@@ -63,6 +67,7 @@ render = Extension("maproom.renderer.gl.Render",
                    include_dirs=gl_include_dirs,
                    library_dirs=gl_library_dirs,
                    libraries=gl_libraries,
+                   extra_compile_args = ["-O3" ],
                    )
 
 ext_modules = [bitmap, shape, tree, tessellator, render]
