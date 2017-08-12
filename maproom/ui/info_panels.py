@@ -1,6 +1,6 @@
 import sys
 import wx
-import wx.combo
+import wx.adv
 import wx.lib.buttons as buttons
 from wx.lib.expando import ExpandoTextCtrl
 import wx.lib.colourselect as csel
@@ -651,7 +651,7 @@ class TextColorField(ColorPickerField):
         return layer.style.text_color
 
 
-class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
+class PenStyleComboBox(wx.adv.OwnerDrawnComboBox):
 
     # Overridden from OwnerDrawnComboBox, called to draw each
     # item in the list
@@ -668,7 +668,7 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
         pen = wx.Pen(dc.GetTextForeground(), 1, penStyle)
         dc.SetPen(pen)
 
-        if flags & wx.combo.ODCB_PAINTING_CONTROL:
+        if flags & wx.adv.ODCB_PAINTING_CONTROL:
             # for painting the control itself
             dc.DrawLine(r.x + 5, r.y + r.height / 2, r.x + r.width - 5, r.y + r.height / 2)
 
@@ -685,16 +685,16 @@ class PenStyleComboBox(wx.combo.OwnerDrawnComboBox):
     def OnDrawBackground(self, dc, rect, item, flags):
         # If the item is selected, or its item # iseven, or we are painting the
         # combo control itself, then use the default rendering.
-        if (item & 1 == 0 or flags & (wx.combo.ODCB_PAINTING_CONTROL |
-                                      wx.combo.ODCB_PAINTING_SELECTED)):
-            wx.combo.OwnerDrawnComboBox.OnDrawBackground(self, dc, rect, item, flags)
+        if (item & 1 == 0 or flags & (wx.adv.ODCB_PAINTING_CONTROL |
+                                      wx.adv.ODCB_PAINTING_SELECTED)):
+            wx.adv.OwnerDrawnComboBox.OnDrawBackground(self, dc, rect, item, flags)
             return
 
         # Otherwise, draw every other background with different colour.
         bgCol = wx.Colour(240, 240, 250)
         dc.SetBrush(wx.Brush(bgCol))
         dc.SetPen(wx.Pen(bgCol))
-        dc.DrawRectangleRect(rect)
+        dc.DrawRectangle(rect)
 
     # Overridden from OwnerDrawnComboBox, should return the height
     # needed to display an item in the popup, or -1 for default
@@ -765,7 +765,7 @@ class FillStyleField(InfoField):
         self.ctrl.SetSelection(index)
 
     def create_control(self):
-        c = wx.combo.BitmapComboBox(self.parent, -1, "", size=(self.default_width, -1),
+        c = wx.adv.BitmapComboBox(self.parent, -1, "", size=(self.default_width, -1),
                                     style=wx.CB_READONLY)
         for i, s in LayerStyle.fill_styles.iteritems():
             c.Append(s[0])
@@ -876,7 +876,7 @@ class TextFormatField(InfoField):
         self.process_command(cmd)
 
 
-class FontComboBox(wx.combo.OwnerDrawnComboBox):
+class FontComboBox(wx.adv.OwnerDrawnComboBox):
     # Overridden from OwnerDrawnComboBox, called to draw each
     # item in the list
     def OnDrawItem(self, dc, rect, item, flags):
@@ -891,7 +891,7 @@ class FontComboBox(wx.combo.OwnerDrawnComboBox):
         font = wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False, face)
         dc.SetFont(font)
 
-        if flags & wx.combo.ODCB_PAINTING_CONTROL:
+        if flags & wx.adv.ODCB_PAINTING_CONTROL:
             # for painting the control itself
             dc.DrawText(face, r.x + 5, (r.y + 5) + ((r.height / 2) - dc.GetCharHeight()) / 2)
 
@@ -1041,8 +1041,8 @@ class MarplotIconField(InfoField):
             self.fill_data(layer)
 
 
-class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
-    """Popup for wx.combo.ComboCtrl, based on wxPython demo and converted to
+class ListBoxComboPopup(wx.ListBox, wx.ComboPopup):
+    """Popup for wx.adv.ComboCtrl, based on wxPython demo and converted to
     the ListBox rather than the full ListCtrl
     """
 
@@ -1055,7 +1055,7 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
 
         # Need to call this last so the ComboCtrl recognizes that this is of
         # type ComboPopup
-        wx.combo.ComboPopup.__init__(self)
+        wx.ComboPopup.__init__(self)
 
     def OnMotion(self, evt):
         if evt.LeftIsDown():
@@ -1097,7 +1097,7 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
         ev = wx.CommandEvent(commandType=wx.EVT_COMBOBOX.typeId)
         ev.SetInt(self.GetSelection())
         self.GetEventHandler().ProcessEvent(ev)
-        wx.combo.ComboPopup.OnDismiss(self)
+        wx.ComboPopup.OnDismiss(self)
 
     # Return final size of popup. Called on every popup, just prior to OnPopup.
     # minWidth = preferred minimum width for window
@@ -1105,7 +1105,7 @@ class ListBoxComboPopup(wx.ListBox, wx.combo.ComboPopup):
     # maxHeight = max height for window, as limited by screen size
     #   and should only be rounded down, if necessary.
     def GetAdjustedSize(self, minWidth, prefHeight, maxHeight):
-        return wx.combo.ComboPopup.GetAdjustedSize(self, InfoField.popup_width, prefHeight, maxHeight)
+        return wx.ComboPopup.GetAdjustedSize(self, InfoField.popup_width, prefHeight, maxHeight)
 
     SetItems = wx.ListBox.Set
 
@@ -1130,7 +1130,7 @@ class ParticleField(InfoField):
         self.ctrl.SetText(names[selected])
 
     def create_control(self):
-        c = wx.combo.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width, -1))
+        c = wx.adv.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width, -1))
         self.popup = ListBoxComboPopup()
         c.SetPopupControl(self.popup)
         c.Bind(wx.EVT_COMBOBOX, self.timestep_changed)

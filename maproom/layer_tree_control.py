@@ -179,8 +179,7 @@ class LayerTreeControl(wx.Panel):
 
     def add_layer(self, layer, parent, expanded_state):
         log.debug("LAYER_TREE: adding layer = " + str(layer.name))
-        data = wx.TreeItemData()
-        data.SetData((layer, ))
+        data = (layer, )
         if (parent is None):
             return self.tree.AddRoot(layer.name, data=data)
 

@@ -375,7 +375,7 @@ class MouseHandler(object):
 
     def process_key_char(self, event):
         keycode = event.GetKeyCode()
-        text = event.GetUniChar()
+        text = event.GetUnicodeKey()
         log.debug("process_key_char: char=%s, key=%s, modifiers=%s" % (text, keycode, bin(event.GetModifiers())))
         handled = False
         c = self.layer_canvas

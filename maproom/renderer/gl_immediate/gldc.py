@@ -204,7 +204,7 @@ class GLDC(object):
         print "DRAWRECTANGLEPOINTSIZE!", pt, sz
         self.DrawRectangle(pt[0], pt[1], sz[0], sz[1])
 
-    def DrawRectangleRect(self, rect):
+    def DrawRectangle(self, rect):
         pass
 
     def DrawRotatedText(self, text, x, y, angle):
@@ -252,7 +252,7 @@ class GLDC(object):
             r, g, b, a = color.Get(True)
             self.fill_color = r / 255., g / 255., b / 255., a / 255.
 
-    def SetClippingRect(self, rect):
+    def SetClippingRegion(self, rect):
         pass
 
     def SetClippingRegion(self, x, y, width, height):
