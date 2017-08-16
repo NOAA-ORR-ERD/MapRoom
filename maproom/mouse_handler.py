@@ -126,7 +126,7 @@ class MouseHandler(object):
         self.use_every_nth_wheel_scroll = 5
 
     def get_cursor(self):
-        return wx.StockCursor(wx.CURSOR_ARROW)
+        return wx.Cursor(wx.CURSOR_ARROW)
 
     def get_help_text(self):
         return ""
@@ -503,7 +503,7 @@ class PanMode(MouseHandler):
     def get_cursor(self):
         c = self.layer_canvas
         if not self.is_panning and self.is_over_object:
-            return wx.StockCursor(wx.CURSOR_ARROW)
+            return wx.Cursor(wx.CURSOR_ARROW)
         if c.mouse_is_down:
             return self.layer_canvas.hand_closed_cursor
         return self.layer_canvas.hand_cursor
@@ -601,7 +601,7 @@ class RNCSelectionMode(PanMode):
         else:
             rnc = self.get_rnc_object()
             if rnc is not None:
-                return wx.StockCursor(wx.CURSOR_ARROW)
+                return wx.Cursor(wx.CURSOR_ARROW)
         return self.layer_canvas.hand_cursor
 
     def process_mouse_motion_up(self, event):
@@ -922,8 +922,8 @@ class PointSelectionMode(ObjectSelectionMode):
             if (self.current_object_under_mouse is not None):
                 if e.clickable_object_mouse_is_over is not None:
                     if e.clickable_object_is_ugrid_line() or e.clickable_object_is_ugrid_point():
-                        return wx.StockCursor(wx.CURSOR_HAND)
-                return wx.StockCursor(wx.CURSOR_ARROW)
+                        return wx.Cursor(wx.CURSOR_HAND)
+                return wx.Cursor(wx.CURSOR_ARROW)
         if c.mouse_is_down:
             return self.layer_canvas.hand_closed_cursor
         return self.layer_canvas.hand_cursor
@@ -1002,10 +1002,10 @@ class PointEditMode(ObjectSelectionMode):
         e = self.layer_canvas.project
         if e.clickable_object_mouse_is_over is not None:
             if e.clickable_object_is_ugrid_line():
-                return wx.StockCursor(wx.CURSOR_BULLSEYE)
+                return wx.Cursor(wx.CURSOR_BULLSEYE)
             else:
-                return wx.StockCursor(wx.CURSOR_HAND)
-        return wx.StockCursor(wx.CURSOR_PENCIL)
+                return wx.Cursor(wx.CURSOR_HAND)
+        return wx.Cursor(wx.CURSOR_PENCIL)
 
     def clicked_on_point(self, event, layer, point_index):
         c = self.layer_canvas
@@ -1039,7 +1039,7 @@ class PointEditMode(ObjectSelectionMode):
             e.clear_all_selections(False)
             cmd = SplitLineCommand(layer, line_segment_index, world_point)
             e.process_command(cmd)
-            c.forced_cursor = wx.StockCursor(wx.CURSOR_HAND)
+            c.forced_cursor = wx.Cursor(wx.CURSOR_HAND)
 #            if not vis:
 #                e.task.status_bar.message = "Split line in hidden layer %s" % layer.name
 #            else:
@@ -1076,8 +1076,8 @@ class LineEditMode(PointEditMode):
     def get_cursor(self):
         e = self.layer_canvas.project
         if e.clickable_object_mouse_is_over is not None:
-            return wx.StockCursor(wx.CURSOR_HAND)
-        return wx.StockCursor(wx.CURSOR_PENCIL)
+            return wx.Cursor(wx.CURSOR_HAND)
+        return wx.Cursor(wx.CURSOR_PENCIL)
 
     def clicked_on_point(self, event, layer, point_index):
         c = self.layer_canvas
@@ -1161,7 +1161,7 @@ class RectSelectMode(MouseHandler):
     normalize_mouse_coordinates = True
 
     def get_cursor(self):
-        return wx.StockCursor(wx.CURSOR_CROSS)
+        return wx.Cursor(wx.CURSOR_CROSS)
 
     def is_snappable_to_layer(self, layer):
         return False
@@ -1309,8 +1309,8 @@ class ControlPointEditMode(ObjectSelectionMode):
     def get_cursor(self):
         e = self.layer_canvas.project
         if e.clickable_object_mouse_is_over is not None:
-            return wx.StockCursor(wx.CURSOR_HAND)
-        return wx.StockCursor(wx.CURSOR_ARROW)
+            return wx.Cursor(wx.CURSOR_HAND)
+        return wx.Cursor(wx.CURSOR_ARROW)
 
     def clicked_on_point(self, event, layer, point_index):
         c = self.layer_canvas
@@ -1464,7 +1464,7 @@ class AddPolylineMode(MouseHandler):
         self.cursor_point = None
 
     def get_cursor(self):
-        return wx.StockCursor(wx.CURSOR_CROSS)
+        return wx.Cursor(wx.CURSOR_CROSS)
 
     def process_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
@@ -1542,7 +1542,7 @@ class AddOverlayMode(MouseHandler):
     vector_object_command = None
 
     def get_cursor(self):
-        return wx.StockCursor(wx.CURSOR_CROSS)
+        return wx.Cursor(wx.CURSOR_CROSS)
 
     def process_mouse_up(self, event):
         # After the first point, mouse up events add points
