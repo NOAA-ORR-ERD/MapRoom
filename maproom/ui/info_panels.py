@@ -609,7 +609,6 @@ class ColorPickerField(InfoField):
 
     def color_changed(self, event):
         color = [float(c / 255.0) for c in event.GetValue()]
-        color.append(1.0)
         int_color = color_floats_to_int(*color)
         layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
