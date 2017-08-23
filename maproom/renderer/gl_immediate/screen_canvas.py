@@ -139,7 +139,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             wx.CallAfter(self.project.task.error, err, "OpenGL Error")
 
     def on_resize(self, event):
-        if not self.GetContext():
+        if not self.is_canvas_initialized:
             return
 
         event.Skip()
