@@ -47,7 +47,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         project = kwargs.pop('project')
         kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
                                 glcanvas.WX_GL_DOUBLEBUFFER,
-                                glcanvas.WX_GL_MIN_ALPHA, 8, )
+                                )
 
         glcanvas.GLCanvas.__init__(self, *args, **kwargs)
 
