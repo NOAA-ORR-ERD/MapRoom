@@ -54,10 +54,10 @@
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
 loaders = []
-from bna import BNALoader, RNCLoader, BNAShapefileLoader
+from bna import BNALoader, BNAShapefileLoader, RNCLoader
 loaders.append(BNALoader())
-loaders.append(RNCLoader())
 loaders.append(BNAShapefileLoader())
+loaders.append(RNCLoader())
 from bsb import BSBLoader
 loaders.append(BSBLoader())
 from gdal import GDALLoader
@@ -66,8 +66,9 @@ from logfile import CommandLogLoader
 loaders.append(CommandLogLoader())
 from nc_particles import ParticleLoader
 loaders.append(ParticleLoader())
-from project import ProjectLoader
+from project import ProjectLoader, ZipProjectLoader
 loaders.append(ProjectLoader())
+loaders.append(ZipProjectLoader())
 from shapefile import ShapefileLoader
 loaders.append(ShapefileLoader())
 from ugrid import UGridLoader

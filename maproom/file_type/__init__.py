@@ -53,7 +53,8 @@
 #           cog.outl("recognizers.append(%s())" % name)
 # ]]]*/
 recognizers = []
-from binary import NC_ParticleRecognizer, UGRID_Recognizer
+from binary import MapRoomZipProjectRecognizer, NC_ParticleRecognizer, UGRID_Recognizer
+recognizers.append(MapRoomZipProjectRecognizer())
 recognizers.append(NC_ParticleRecognizer())
 recognizers.append(UGRID_Recognizer())
 from image import GDALRecognizer

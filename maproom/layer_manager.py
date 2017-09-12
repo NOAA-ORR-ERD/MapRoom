@@ -1,5 +1,6 @@
 import os
 import json
+import zipfile
 
 from fs.opener import fsopen
 
@@ -997,6 +998,10 @@ class LayerManager(BaseDocument):
         order.sort()
         log.debug("load_all_from_json: order: %s" % str(order))
 
+        self.load_extra_json_attrs(extra_json, batch_flags)
+        return order, extra_json
+
+    def load_extra_json_attrs(self, extra_json, batch_flags):
         for attr, from_json in self.get_from_json_attrs():
             try:
                 from_json(extra_json)
@@ -1005,11 +1010,82 @@ class LayerManager(BaseDocument):
                 log.warning(message)
                 batch_flags.messages.append("WARNING: %s" % message)
 
+    def load_all_from_zip(self, zf, batch_flags=None):
+        order = []
+        text = zf.read("extra json data")
+        extra_json = json.loads(text)
+        for info in zf.infolist():
+            print("info: %s" % info.filename)
+            if info.filename.endswith("json layer description"):
+                text = zf.read(info.filename)
+                serialized_data = json.loads(text)
+                try:
+                    loaded = Layer.load_from_json(serialized_data, self, batch_flags)
+                    index = serialized_data['index']
+                    order.append((index, loaded))
+                    log.debug("processed json from layer %s" % loaded)
+                except RuntimeError, e:
+                    batch_flags.messages.append("ERROR: %s" % str(e))
+        order.sort()
+        log.debug("load_all_from_zip: order: %s" % str(order))
+
+        self.load_extra_json_attrs(extra_json, batch_flags)
         return order, extra_json
 
     ##### Layer save
 
     def save_all(self, file_path, extra_json_data=None):
+        return self.save_all_zip(file_path, extra_json_data)
+
+    def save_all_zip(self, file_path, extra_json_data=None):
+        """Save all layers into a zip file that includes any referenced images,
+        shapefiles, etc. so the file becomes portable and usable on other
+        systems.
+
+        """
+        log.debug("saving layers in project file: " + file_path)
+        layer_info = self.flatten_with_indexes()
+        log.debug("layers are " + str(self.layers))
+        log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
+        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
+
+        if extra_json_data is None:
+            extra_json_data = {}
+        for attr, to_json in self.get_to_json_attrs():
+            extra_json_data[attr] = to_json()
+        log.debug("extra json data")
+        log.debug(str(extra_json_data))
+        try:
+            zf = zipfile.ZipFile(file_path, mode='w', compression=zipfile.ZIP_DEFLATED)
+            zf.writestr("extra json data", json.dumps(extra_json_data))
+            for index, layer in layer_info:
+                log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
+                data = layer.serialize_json(index)
+                if data is not None:
+                    try:
+                        text = json.dumps(data, indent=4)
+                    except Exception, e:
+                        log.error("JSON failure, layer %s: data=%s" % (layer.name, repr(data)))
+                        errors = []
+                        for k, v in data.iteritems():
+                            small = {k: v}
+                            try:
+                                _ = json.dumps(small)
+                            except Exception:
+                                errors.append((k, v))
+                        log.error("JSON failures at: %s" % ", ".join(["%s: %s" % (k, v) for k, v in errors]))
+                        return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
+
+                    zip_path = "/".join([str(a) for a in index]) + "/json layer description"
+                    processed = collapse_json(text, 12)
+                    zf.writestr(zip_path, processed)
+        except RuntimeError, e:
+            return "Failed saving %s: %s" % (file_path, e)
+        finally:
+            zf.close()
+        return ""
+
+    def save_all_text(self, file_path, extra_json_data=None):
         log.debug("saving layers in project file: " + file_path)
         layer_info = self.flatten_with_indexes()
         log.debug("layers are " + str(self.layers))
