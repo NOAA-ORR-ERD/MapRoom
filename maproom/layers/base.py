@@ -110,6 +110,10 @@ class Layer(HasTraits):
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
 
+    def test_contents_equal(self, other):
+        """Test routine to compare layers"""
+        return self.type == other.type
+
     def clickable_object_info(self, picker, object_type, object_index):
         """Return info about the object of given type and index.
 

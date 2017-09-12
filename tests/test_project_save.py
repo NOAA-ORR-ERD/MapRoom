@@ -75,6 +75,22 @@ class TestBasicLoad(object):
         print(json_manager)
         print(zip_manager)
 
+        for layer in json_manager.flatten():
+            try:
+                layer.manager
+            except AttributeError:
+                continue
+            print layer
+            mi = json_manager.get_multi_index_of_layer(layer)
+            print mi
+            other = zip_manager.get_layer_by_multi_index(mi)
+            print other
+            try:
+                other.manager
+            except AttributeError:
+                continue
+            print("%s: %s" % (mi, layer.test_contents_equal(other)))
+
 class TestTileLayer(object):
     project_file = "a.mrp"
     
