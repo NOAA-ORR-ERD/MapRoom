@@ -57,17 +57,23 @@ class TestBasic(object):
         a1, a2 = self.save_setup()
         a1.update_bounds()
         a2.update_bounds()
-        self.manager.save_all("test.mrp")
+        self.manager.save_all_text("test.mrp")
+        self.manager.save_all_zip("test.mrpz")
 
 class TestBasicLoad(object):
-    logfile = "test.mrp"
-    
     def setup(self):
-        self.project = MockProject()
-        self.manager = self.project.layer_manager
+        self.json_project = MockProject()
+        self.zip_project = MockProject()
     
     def test_load(self):
-        self.project.load_file(self.logfile, "application/x-maproom-project-json")
+        self.json_project.load_file("test.mrp", "application/x-maproom-project-json")
+        json_manager = self.json_project.layer_manager
+
+        self.zip_project.load_file("test.mrpz", "application/x-maproom-project-zip")
+        zip_manager = self.zip_project.layer_manager
+
+        print(json_manager)
+        print(zip_manager)
 
 class TestTileLayer(object):
     project_file = "a.mrp"
@@ -94,7 +100,7 @@ if __name__ == "__main__":
     
     t = TestBasic()
     t.setup()
-    t.test_save()
+    t.test_save_with_bounds()
     
     t = TestBasicLoad()
     t.setup()
