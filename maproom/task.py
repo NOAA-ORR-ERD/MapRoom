@@ -196,6 +196,7 @@ class MaproomProjectTask(FrameworkTask):
         self.on_trait_change(self.mode_toolbar_changed, 'active_editor.mouse_mode_toolbar')
 
     def prepare_destroy(self):
+        self.on_trait_change(self.mode_toolbar_changed, 'active_editor.mouse_mode_toolbar', remove=True)
         self.window.application.remember_perspectives(self.window)
         self.stop_threaded_processing()
 
