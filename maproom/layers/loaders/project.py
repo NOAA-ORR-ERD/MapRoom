@@ -3,6 +3,7 @@ import json
 import zipfile
 
 from fs.opener import fsopen
+
 from common import BaseLoader
 
 import logging
@@ -59,7 +60,7 @@ class ZipProjectLoader(BaseLoader):
                     pass
                 else:
                     log.debug("found extra json data")
-                    layer_data, extra = manager.load_all_from_zip(zf, batch_flags)
+                    layer_data, extra = manager.load_all_from_zip(metadata.syspath, zf, batch_flags)
                     layers = manager.add_all(layer_data)
                     batch_flags.layers.extend(layers)
                     return extra

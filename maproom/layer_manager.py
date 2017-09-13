@@ -27,7 +27,7 @@ from pyface.api import GUI
 
 from omnivore.framework.document import BaseDocument
 from omnivore.utils.jsonutil import collapse_json
-
+from omnivore.utils.fileutil import ExpandZip
 
 import logging
 log = logging.getLogger(__name__)
@@ -47,6 +47,11 @@ class LayerManager(BaseDocument):
     purpose at present is to hold the folder name.
     """
     project = Any
+
+    # if the project is loaded from a zip file, the ExpandZip object is stored
+    # here so the unpacked directory can be referenced when re-saving the
+    # project
+    zip_file_source = Any
 
     layers = List(Any)
 
@@ -1010,7 +1015,8 @@ class LayerManager(BaseDocument):
                 log.warning(message)
                 batch_flags.messages.append("WARNING: %s" % message)
 
-    def load_all_from_zip(self, zf, batch_flags=None):
+    def load_all_from_zip(self, archive_path, zf, batch_flags=None):
+        expanded_zip = ExpandZip(zf, ["extra json data", "json layer description"])
         order = []
         text = zf.read("extra json data")
         extra_json = json.loads(text)
@@ -1019,8 +1025,16 @@ class LayerManager(BaseDocument):
             if info.filename.endswith("json layer description"):
                 text = zf.read(info.filename)
                 serialized_data = json.loads(text)
+                if 'url' in serialized_data:
+                    # recreate the url to point to the the file in the temp dir
+                    # resulting from expanding the zipfile. The project save
+                    # code can then get the pathname of the file from the
+                    # file_path member of the layer
+                    relname = serialized_data['url']
+                    serialized_data['url'] = os.path.join(expanded_zip.root, relname)
+                    log.debug("layer url %s" % serialized_data['url'])
                 try:
-                    loaded = Layer.load_from_json(serialized_data, self, batch_flags, zf)
+                    loaded = Layer.load_from_json(serialized_data, self, batch_flags)
                     index = serialized_data['index']
                     order.append((index, loaded))
                     log.debug("processed json from layer %s" % loaded)
@@ -1030,6 +1044,7 @@ class LayerManager(BaseDocument):
         log.debug("load_all_from_zip: order: %s" % str(order))
 
         self.load_extra_json_attrs(extra_json, batch_flags)
+        self.zip_file_source = expanded_zip
         return order, extra_json
 
     ##### Layer save
@@ -1063,31 +1078,26 @@ class LayerManager(BaseDocument):
                 log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
                 data = layer.serialize_json(index)
                 if data is not None:
-                    if layer.has_extra_zip_data:
-                        # only store extra files for layers that aren't
-                        # encoded entirely in the JSON
-                        paths = layer.extra_files_to_serialize()
-                        if paths:
-                            # point to reparented data file
-                            basename = os.path.basename(paths[0])
-                            data['zip file'] = file_path
-                            data['zip main'] = zip_root + basename
-                            data['zip namelist'] = []
+                    # only store extra files for layers that aren't
+                    # encoded entirely in the JSON
+                    paths = layer.extra_files_to_serialize()
+                    if paths:
+                        # point to reparented data file
+                        basename = os.path.basename(paths[0])
+                        data['url'] = zip_root + basename
 
-                            # save all files into zip file
-                            for p in paths:
-                                basename = os.path.basename(p)
-                                archive_name = zip_root + basename
-                                data['zip namelist'].append(archive_name)
-                                if "://" in p:
-                                    # handle URI format
-                                    fs, relpath = opener.parse(p)
-                                    if fs.hassyspath(relpath):
-                                        p = fs.getsyspath(relpath)
-                                    else:
-                                        raise RuntimeError("Can't yet handle URIs not on local filesystem")
-
-                                zf.write(p, archive_name, zipfile.ZIP_STORED)
+                        # save all files into zip file
+                        for p in paths:
+                            basename = os.path.basename(p)
+                            if "://" in p:
+                                # handle URI format
+                                fs, relpath = opener.parse(p)
+                                if fs.hassyspath(relpath):
+                                    p = fs.getsyspath(relpath)
+                                else:
+                                    raise RuntimeError("Can't yet handle URIs not on local filesystem")
+                            archive_name = zip_root + basename
+                            zf.write(p, archive_name, zipfile.ZIP_STORED)
 
                     try:
                         text = json.dumps(data, indent=4)

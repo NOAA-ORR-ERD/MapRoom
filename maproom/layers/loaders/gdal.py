@@ -28,6 +28,7 @@ class GDALLoader(BaseLayerLoader):
     def load_layers(self, metadata, manager):
         layer = RasterLayer(manager=manager)
 
+        log.info("Loading from %s" % metadata.uri)
         progress_log.info("Loading from %s" % metadata.uri)
         (layer.load_error_string, layer.image_data) = load_image_file(metadata.uri)
         if (layer.load_error_string == ""):
@@ -36,6 +37,8 @@ class GDALLoader(BaseLayerLoader):
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
             layer.update_bounds()
+        else:
+            log.error("GDAL load error: %s" % layer.load_error_string)
         return [layer]
 
     def can_save_layer(self, layer):

@@ -34,7 +34,7 @@ class Layer(HasTraits):
 
     new_layer_index = 0
 
-    has_extra_zip_data = False
+    restore_from_url = False
 
     # Traits
 
@@ -253,12 +253,6 @@ class Layer(HasTraits):
         if self.file_path:
             json['url'] = self.file_path
             json['mime'] = self.mime
-        if self.has_extra_zip_data:
-            paths = self.extra_files_to_serialize()
-            if paths:
-                # point to reparented data file
-                basename = os.path.basename(paths[0])
-                data['extra zip data'] = [os.path.basename(p) for p in paths]
 
         update = {}
         for attr, to_json in self.get_to_json_attrs():
@@ -344,21 +338,11 @@ class Layer(HasTraits):
         return cls.type_to_class_defs[type_string]
 
     @classmethod
-    def load_from_json(cls, json_data, manager, batch_flags=None, zf=None):
+    def load_from_json(cls, json_data, manager, batch_flags=None):
         t = json_data['type']
         kls = cls.type_to_class(t)
         log.debug("load_from_json: found type %s, class=%s" % (t, kls))
-        if 'zip main' in json_data:
-            from maproom.layers import loaders
-
-            log.debug("Loading layers from zip path %s" % json_data['zip main'])
-            print("archived in zip: %s" % str(json_data['zip namelist']))
-            try:
-
-                loader, layers = loaders.load_layers_from_zip(json_data['zip main'], json_data['mime'], manager)
-            except ResourceNotFoundError:
-                raise RuntimeError("Failed loading from %s" % json_data['url'])
-        elif 'url' in json_data and not json_data['has encoded data']:
+        if 'url' in json_data and kls.restore_from_url:
             from maproom.layers import loaders
 
             log.debug("Loading layers from url %s" % json_data['url'])
