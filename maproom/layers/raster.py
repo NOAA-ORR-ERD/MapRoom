@@ -43,6 +43,12 @@ class RasterLayer(ProjectedLayer):
         """
         return self.image_data is None
 
+    def extra_files_to_serialize(self):
+        """Pathnames to any files that need to be included in the maproom
+        project file that can't be recreated with JSON
+        """
+        return [self.file_path]
+
     def get_allowable_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
         """

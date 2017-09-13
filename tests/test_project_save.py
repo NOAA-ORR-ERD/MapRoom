@@ -9,6 +9,25 @@ from maproom.mouse_commands import *
 from maproom.menu_commands import *
 from maproom.layers import *
 
+
+def compare_layer_managers(lm1, lm2):
+    for layer in lm1.flatten():
+        try:
+            layer.manager
+        except AttributeError:
+            continue
+        print layer
+        mi = lm1.get_multi_index_of_layer(layer)
+        print mi
+        other = lm2.get_layer_by_multi_index(mi)
+        print other
+        try:
+            other.manager
+        except AttributeError:
+            continue
+        print("%s: %s" % (mi, layer.test_contents_equal(other)))
+
+
 class TestBasic(object):
     logfile = "../TestData/CommandLog/verdat1.mrc"
     
@@ -75,21 +94,30 @@ class TestBasicLoad(object):
         print(json_manager)
         print(zip_manager)
 
-        for layer in json_manager.flatten():
-            try:
-                layer.manager
-            except AttributeError:
-                continue
-            print layer
-            mi = json_manager.get_multi_index_of_layer(layer)
-            print mi
-            other = zip_manager.get_layer_by_multi_index(mi)
-            print other
-            try:
-                other.manager
-            except AttributeError:
-                continue
-            print("%s: %s" % (mi, layer.test_contents_equal(other)))
+        compare_layer_managers(self.json_manager, self.zip_manager)
+
+class TestImageLayer(TestBasicLoad):
+    def setup(self):
+        self.project = MockProject()
+        self.manager = self.project.layer_manager
+
+        lm = self.manager
+        self.project.load_file("../TestData/ChartsAndImages/12205_7.KAP", "image/x-gdal")
+
+        a1 = AnnotationLayer(manager=lm)
+        lm.insert_layer([3], a1)
+        
+        a = OverlayTextObject(manager=lm)
+        a.set_location((6.6637485204,-1.40163099748))
+        lm.insert_layer([3, 1], a)
+
+        self.manager.save_all_zip("test_image.maproom")
+
+    def test_load_image(self):
+        self.zip_project = MockProject()
+        self.zip_project.load_file("test_image.maproom", "application/x-maproom-project-zip")
+        zip_manager = self.zip_project.layer_manager
+        compare_layer_managers(self.manager, zip_manager)
 
 class TestTileLayer(object):
     project_file = "a.mrp"
@@ -114,10 +142,15 @@ class TestTileLayer(object):
 if __name__ == "__main__":
     import time
     
-    t = TestBasic()
-    t.setup()
-    t.test_save_with_bounds()
+    # t = TestBasic()
+    # t.setup()
+    # t.test_save_with_bounds()
     
-    t = TestBasicLoad()
+    # t = TestBasicLoad()
+    # t.setup()
+    # t.test_load()
+
+    t = TestImageLayer()
     t.setup()
-    t.test_load()
+    t.test_load_image()
+

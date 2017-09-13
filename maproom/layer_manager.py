@@ -2,7 +2,7 @@ import os
 import json
 import zipfile
 
-from fs.opener import fsopen
+from fs.opener import opener, fsopen
 
 import library.rect as rect
 
@@ -1020,7 +1020,7 @@ class LayerManager(BaseDocument):
                 text = zf.read(info.filename)
                 serialized_data = json.loads(text)
                 try:
-                    loaded = Layer.load_from_json(serialized_data, self, batch_flags)
+                    loaded = Layer.load_from_json(serialized_data, self, batch_flags, zf)
                     index = serialized_data['index']
                     order.append((index, loaded))
                     log.debug("processed json from layer %s" % loaded)
@@ -1059,9 +1059,36 @@ class LayerManager(BaseDocument):
             zf = zipfile.ZipFile(file_path, mode='w', compression=zipfile.ZIP_DEFLATED)
             zf.writestr("extra json data", json.dumps(extra_json_data))
             for index, layer in layer_info:
+                zip_root = "/".join([str(a) for a in index]) + "/"
                 log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
                 data = layer.serialize_json(index)
                 if data is not None:
+                    if layer.has_extra_zip_data:
+                        # only store extra files for layers that aren't
+                        # encoded entirely in the JSON
+                        paths = layer.extra_files_to_serialize()
+                        if paths:
+                            # point to reparented data file
+                            basename = os.path.basename(paths[0])
+                            data['zip file'] = file_path
+                            data['zip main'] = zip_root + basename
+                            data['zip namelist'] = []
+
+                            # save all files into zip file
+                            for p in paths:
+                                basename = os.path.basename(p)
+                                archive_name = zip_root + basename
+                                data['zip namelist'].append(archive_name)
+                                if "://" in p:
+                                    # handle URI format
+                                    fs, relpath = opener.parse(p)
+                                    if fs.hassyspath(relpath):
+                                        p = fs.getsyspath(relpath)
+                                    else:
+                                        raise RuntimeError("Can't yet handle URIs not on local filesystem")
+
+                                zf.write(p, archive_name, zipfile.ZIP_STORED)
+
                     try:
                         text = json.dumps(data, indent=4)
                     except Exception, e:
@@ -1076,13 +1103,16 @@ class LayerManager(BaseDocument):
                         log.error("JSON failures at: %s" % ", ".join(["%s: %s" % (k, v) for k, v in errors]))
                         return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
 
-                    zip_path = "/".join([str(a) for a in index]) + "/json layer description"
+                    zip_path = zip_root + "json layer description"
                     processed = collapse_json(text, 12)
                     zf.writestr(zip_path, processed)
+
         except RuntimeError, e:
             return "Failed saving %s: %s" % (file_path, e)
         finally:
             zf.close()
+        zf = zipfile.ZipFile(file_path)
+        print("\n".join(zf.namelist()))
         return ""
 
     def save_all_text(self, file_path, extra_json_data=None):
