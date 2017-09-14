@@ -1,6 +1,7 @@
 import os
 import json
 import zipfile
+import functools
 
 from fs.opener import opener, fsopen
 
@@ -1045,6 +1046,7 @@ class LayerManager(BaseDocument):
 
         self.load_extra_json_attrs(extra_json, batch_flags)
         self.zip_file_source = expanded_zip
+        self.add_cleanup_function(functools.partial(expanded_zip.cleanup))
         return order, extra_json
 
     ##### Layer save
