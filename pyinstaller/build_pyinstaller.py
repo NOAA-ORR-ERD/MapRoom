@@ -86,10 +86,11 @@ elif mac:
     print "Copying new Info.plist"
     shutil.copyfile("Info.plist", "%s/Info.plist" % contents)
 
-    print "Fixing duplicate wxPython libs"
-    dup = "%s/MacOS/libwx_osx_cocoau-3.0.dylib" % contents
-    os.unlink(dup)
-    os.symlink("libwx_osx_cocoau-3.0.0.2.0.dylib", dup)
+    dup = "%s/MacOS/libwx_osx_cocoau-3.0.dylib" % contents    
+    if os.path.exists(dup):
+        print "Fixing duplicate wxPython libs"
+        os.unlink(dup)
+        os.symlink("libwx_osx_cocoau-3.0.0.2.0.dylib", dup)
 
     print "Fixing missing symlink to geos library"
     os.symlink("libgeos_c.1.dylib", "%s/MacOS/libgeos_c.dylib" % contents)
