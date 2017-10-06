@@ -39,3 +39,31 @@ def test_spurious_values():
             assert "spurious" in str(warnings)
     assert i == 36
 
+if __name__ == "__main__":
+    import sys
+    from post_gnome import nc_particles
+
+    for testfile in sys.argv[1:]:
+        reader = nc_particles.Reader(testfile)
+        print("\n\n\n%s *****************" % testfile)
+        status_id = "status_codes"
+        try:
+            attributes = reader.get_attributes(status_id)
+        except KeyError:
+            # try "status" instead
+            status_id = "status"
+            attributes = reader.get_attributes(status_id)
+        print("Using '%s' for status code identifier" % status_id)
+        meanings = attributes['flag_meanings']
+        print("Meanings: %s" % str(meanings))
+        print("Variables: %s" % str(reader.variables))
+
+        data = reader.get_timestep(0, variables=reader.variables)
+        for variable in reader.variables:
+            print variable
+            if variable in data:
+                d = data[variable]
+                print d.dtype, d
+            else:
+                print "NOT IN DATA"
+            print
