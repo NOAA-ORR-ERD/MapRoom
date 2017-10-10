@@ -321,7 +321,7 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_actions_Menu_Tools_ToolsActionGroup(self):
         return [
-            actions.TimelineAction(),
+#            actions.TimelineAction(),
         ]
 
     def get_actions_Menu_Tools_ToolsManageGroup(self):
