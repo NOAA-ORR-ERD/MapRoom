@@ -202,8 +202,8 @@ def get_wx_bitmap(icon_num):
     import cStringIO
 
     data = marplot_icon_data[icon_num]
-    image = wx.ImageFromStream(cStringIO.StringIO(data))
-    bitmap = wx.BitmapFromImage(image)
+    image = wx.Image(cStringIO.StringIO(data))
+    bitmap = wx.Bitmap(image)
     return bitmap
 
 

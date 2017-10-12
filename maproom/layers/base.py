@@ -34,6 +34,8 @@ class Layer(HasTraits):
 
     new_layer_index = 0
 
+    restore_from_url = False
+
     # Traits
 
     name = Unicode("Empty Layer")
@@ -109,6 +111,10 @@ class Layer(HasTraits):
 
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
+
+    def test_contents_equal(self, other):
+        """Test routine to compare layers"""
+        return self.type == other.type
 
     def clickable_object_info(self, picker, object_type, object_index):
         """Return info about the object of given type and index.
@@ -214,6 +220,15 @@ class Layer(HasTraits):
         """ Restore the state of the layer given the data previously generated
         by get_undo_info
         """
+
+    def extra_files_to_serialize(self):
+        """Pathnames on the local filesystem to any files that need to be
+        included in the maproom project file that can't be recreated with JSON.
+
+        If this list is used, the first path in list must correspond to the
+        path named with the file_path trait.
+        """
+        return []
 
     def serialize_json(self, index, children=False):
         """Create json representation that can restore layer.
@@ -327,7 +342,7 @@ class Layer(HasTraits):
         t = json_data['type']
         kls = cls.type_to_class(t)
         log.debug("load_from_json: found type %s, class=%s" % (t, kls))
-        if 'url' in json_data and not json_data['has encoded data']:
+        if 'url' in json_data and kls.restore_from_url:
             from maproom.layers import loaders
 
             log.debug("Loading layers from url %s" % json_data['url'])

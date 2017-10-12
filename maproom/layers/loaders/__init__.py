@@ -27,16 +27,16 @@
 #cwd = os.getcwd()
 #cog.msg("working dir : %s" % cwd)
 #path = os.path.dirname(os.path.join(cwd, cog.inFile))
-# sys.path[0:0] = [path] # include current dir so it finds local gdal.py file
+#sys.path[0:0] = [path] # include current dir so it finds local gdal.py file
 #cog.msg("scanning dir: %s" % path)
-# top = os.path.abspath(os.path.join(path, "../../..")) # so absolute imports of omnivore will work
-# sys.path.append(top)
+#top = os.path.abspath(os.path.join(path, "../../..")) # so absolute imports of omnivore will work
+#sys.path.append(top)
 #cog.msg("top dir     : %s" % top)
 #import glob
 #cog.outl("loaders = []")
 #source_files = glob.glob(os.path.join(path, "*.py"))
-# source_files.sort()
-# for filename in source_files:
+#source_files.sort()
+#for filename in source_files:
 #    if filename.endswith("__init__.py"):
 #        continue
 #    modname = filename.rstrip(".py").split("/")[-1]
@@ -54,10 +54,10 @@
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
 loaders = []
-from bna import BNALoader, RNCLoader, BNAShapefileLoader
+from bna import BNALoader, BNAShapefileLoader, RNCLoader
 loaders.append(BNALoader())
-loaders.append(RNCLoader())
 loaders.append(BNAShapefileLoader())
+loaders.append(RNCLoader())
 from bsb import BSBLoader
 loaders.append(BSBLoader())
 from gdal import GDALLoader
@@ -66,8 +66,9 @@ from logfile import CommandLogLoader
 loaders.append(CommandLogLoader())
 from nc_particles import ParticleLoader
 loaders.append(ParticleLoader())
-from project import ProjectLoader
+from project import ProjectLoader, ZipProjectLoader
 loaders.append(ProjectLoader())
+loaders.append(ZipProjectLoader())
 from shapefile import ShapefileLoader
 loaders.append(ShapefileLoader())
 from ugrid import UGridLoader

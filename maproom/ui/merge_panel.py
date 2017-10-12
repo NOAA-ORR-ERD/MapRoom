@@ -114,7 +114,7 @@ class MergePointsPanel(wx.Panel):
         )
         self.find_button.SetDefault()
         self.find_button_id = wx.NewId()
-        self.find_button.SetToolTipString("Click Find Duplicates to display a list of possible duplicate points, grouped into pairs and displayed as point index numbers. Click on a pair to highlight its points on the map.")
+        self.find_button.SetToolTip("Click Find Duplicates to display a list of possible duplicate points, grouped into pairs and displayed as point index numbers. Click on a pair to highlight its points on the map.")
         self.sizer.Add(
             self.find_button, 0,
             wx.ALIGN_LEFT | wx.ALL,
@@ -150,7 +150,7 @@ class MergePointsPanel(wx.Panel):
             self.merge_button_id,
             "Step 2: Merge"
         )
-        self.merge_button.SetToolTipString("Click Merge to merge each pair into a single point. Pairs that cannot be merged automatically are indicated in red and will be skipped during merging. (You can merge such points manually.)")
+        self.merge_button.SetToolTip("Click Merge to merge each pair into a single point. Pairs that cannot be merged automatically are indicated in red and will be skipped during merging. (You can merge such points manually.)")
         self.merge_button.Enable(False)
         self.button_sizer.Add(self.merge_button, 0, wx.LEFT, border=self.SPACING)
 

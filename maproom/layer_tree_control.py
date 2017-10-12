@@ -74,7 +74,7 @@ class LayerTreeControl(wx.Panel):
         item = self.tree.GetSelection()
         if (item is None):
             return None
-        (layer, ) = self.tree.GetItemPyData(item).Data
+        (layer, ) = self.tree.GetItemData(item)
 
 
         return layer
@@ -83,7 +83,7 @@ class LayerTreeControl(wx.Panel):
         item = self.tree.GetSelection()
         if (item is None):
             return False
-        (selected, ) = self.tree.GetItemPyData(item).Data
+        (selected, ) = self.tree.GetItemData(item)
         return layer == selected
 
     def set_edit_layer(self, layer):
@@ -97,7 +97,7 @@ class LayerTreeControl(wx.Panel):
             self.set_edit_layer_recursive(layer, self.tree.GetRootItem())
 
     def set_edit_layer_recursive(self, layer, item):
-        (item_layer, ) = self.tree.GetItemPyData(item).Data
+        (item_layer, ) = self.tree.GetItemData(item)
 
         if (item_layer == layer):
             self.tree.SelectItem(item, True)
@@ -130,7 +130,7 @@ class LayerTreeControl(wx.Panel):
     def get_expanded_state_recursive(self, item, state):
         if item is None:
             return
-        (item_layer, ) = self.tree.GetItemPyData(item).Data
+        (item_layer, ) = self.tree.GetItemData(item)
         state[item_layer] = item.IsExpanded()
         if (not self.tree.ItemHasChildren(item)):
             return
@@ -179,8 +179,7 @@ class LayerTreeControl(wx.Panel):
 
     def add_layer(self, layer, parent, expanded_state):
         log.debug("LAYER_TREE: adding layer = " + str(layer.name))
-        data = wx.TreeItemData()
-        data.SetData((layer, ))
+        data = (layer, )
         if (parent is None):
             return self.tree.AddRoot(layer.name, data=data)
 
@@ -225,7 +224,7 @@ class LayerTreeControl(wx.Panel):
     def update_checked_from_visibility_recursive(self, item):
         if item is None:
             return
-        (layer, ) = self.tree.GetItemPyData(item).Data
+        (layer, ) = self.tree.GetItemData(item)
         checked = self.project.layer_visibility[layer]["layer"]
         self.tree.CheckItem2(item, checked, True)
         if (not self.tree.ItemHasChildren(item)):
@@ -240,7 +239,7 @@ class LayerTreeControl(wx.Panel):
             n -= 1
 
     def handle_item_checked(self, event):
-        (layer, ) = self.tree.GetItemPyData(event.GetItem()).Data
+        (layer, ) = self.tree.GetItemData(event.GetItem())
         item = event.GetItem()
         checked = self.tree.IsItemChecked(item)
         layer.set_visibility_when_checked(checked, self.project.layer_visibility)
@@ -249,7 +248,7 @@ class LayerTreeControl(wx.Panel):
         event.Skip()
 
     def handle_begin_drag(self, event):
-        (layer, ) = self.tree.GetItemPyData(event.GetItem()).Data
+        (layer, ) = self.tree.GetItemData(event.GetItem())
         item = event.GetItem()
         if not layer.is_root():
             event.Allow()
@@ -264,8 +263,8 @@ class LayerTreeControl(wx.Panel):
         if item is None or not item.IsOk():
             return
 
-        (target_layer, ) = self.tree.GetItemPyData(item).Data
-        (source_layer, ) = self.tree.GetItemPyData(local_dragged_item).Data
+        (target_layer, ) = self.tree.GetItemData(item)
+        (source_layer, ) = self.tree.GetItemData(local_dragged_item)
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(source_layer)
         mi_target = lm.get_multi_index_of_layer(target_layer)
@@ -304,7 +303,7 @@ class LayerTreeControl(wx.Panel):
 
     def move_selected_layer(self, delta, to_extreme=False):
         item = self.tree.GetSelection()
-        (layer, ) = self.tree.GetItemPyData(item).Data
+        (layer, ) = self.tree.GetItemData(item)
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(layer)
         mi_target = mi_source[: len(mi_source) - 1]

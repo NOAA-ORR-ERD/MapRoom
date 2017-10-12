@@ -42,11 +42,17 @@ class LineLayer(PointLayer):
     layer_info_panel = ["Layer name", "Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     def __str__(self):
+        return PointLayer.__str__(self) + ", %d lines" % self.num_lines
+
+    @property
+    def num_lines(self):
         try:
-            lines = len(self.line_segment_indexes)
+            return len(self.line_segment_indexes)
         except TypeError:
-            lines = 0
-        return PointLayer.__str__(self) + ", %d lines" % lines
+            return 0
+
+    def test_contents_equal(self, other):
+        return self.num_lines == other.num_lines and PointLayer.test_contents_equal(self, other)
 
     def new(self):
         super(LineLayer, self).new()

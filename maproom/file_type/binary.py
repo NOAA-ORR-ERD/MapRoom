@@ -1,3 +1,7 @@
+import zipfile
+
+from fs.opener import opener
+
 from traits.api import HasTraits, provides
 
 from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
@@ -17,6 +21,23 @@ from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 #         byte_stream = guess.bytes
 #         if byte_stream[0:8] == "\211HDF\r\n\032\n":
 #             return self.id
+
+
+@provides(IFileRecognizer)
+class MapRoomZipProjectRecognizer(RecognizerBase):
+    """Recognizer for MapRoom format ZIP files
+    
+    """
+    id = "application/x-maproom-project-zip"
+
+    def identify(self, guess):
+        fs, relpath = opener.parse(guess.metadata.uri)
+        if not fs.hassyspath(relpath):
+            return None
+        file_path = fs.getsyspath(relpath)
+        if zipfile.is_zipfile(file_path):
+            return self.id
+        return None
 
 
 @provides(IFileRecognizer)

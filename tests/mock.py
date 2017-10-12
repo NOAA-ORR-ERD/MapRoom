@@ -31,4 +31,7 @@ from numpy.testing import assert_almost_equal
 
 from pyugrid.ugrid import UGrid
 
+# use Omnivore hack to force wx toolkit for pyface
+import omnivore.app_init
+
 from maproom.mock import *

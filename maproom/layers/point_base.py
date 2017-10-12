@@ -39,11 +39,17 @@ class PointBaseLayer(ProjectedLayer):
     selection_info_panel = []
 
     def __str__(self):
+        return "%s layer '%s': %d points" % (self.type, self.name, self.num_points)
+
+    @property
+    def num_points(self):
         try:
-            points = len(self.points)
+            return len(self.points)
         except TypeError:
-            points = 0
-        return "%s layer '%s': %d points" % (self.type, self.name, points)
+            return 0
+
+    def test_contents_equal(self, other):
+        return self.num_points == other.num_points and ProjectedLayer.test_contents_equal(self, other)
 
     def get_info_panel_text(self, prop):
         if prop == "Point count":

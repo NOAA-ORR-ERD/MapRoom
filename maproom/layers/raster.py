@@ -20,6 +20,12 @@ class RasterLayer(ProjectedLayer):
     """Layer for raster images
     
     """
+    # class attributes
+
+    restore_from_url = True
+
+    # Traits
+
     name = Unicode("Raster Layer")
 
     type = Str("image")
@@ -29,6 +35,12 @@ class RasterLayer(ProjectedLayer):
     layer_info_panel = ["Layer name", "Transparency", "Raster size", "Memory used"]
 
     selection_info_panel = []
+
+    def test_contents_equal(self, other):
+        """Test routine to compare layers"""
+        if self.image_data is not None and other.image_data is not None:
+            return self.image_data.x == other.image_data.x and self.image_data.y == other.image_data.y and ProjectedLayer.test_contents_equal(self, other)
+        return ProjectedLayer.test_contents_equal(self, other)
 
     def get_info_panel_text(self, prop):
         if prop == "Raster size":
@@ -42,6 +54,12 @@ class RasterLayer(ProjectedLayer):
         to determine if we can save this layer.
         """
         return self.image_data is None
+
+    def extra_files_to_serialize(self):
+        """Pathnames to any files that need to be included in the maproom
+        project file that can't be recreated with JSON
+        """
+        return [self.file_path]
 
     def get_allowable_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer

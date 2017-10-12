@@ -47,7 +47,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         project = kwargs.pop('project')
         kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
                                 glcanvas.WX_GL_DOUBLEBUFFER,
-                                glcanvas.WX_GL_MIN_ALPHA, 8, )
+                                )
 
         glcanvas.GLCanvas.__init__(self, *args, **kwargs)
 
@@ -139,7 +139,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             wx.CallAfter(self.project.task.error, err, "OpenGL Error")
 
     def on_resize(self, event):
-        if not self.GetContext():
+        if not self.is_canvas_initialized:
             return
 
         event.Skip()
@@ -192,7 +192,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.set_cursor()
 
     def on_mouse_leave(self, event):
-        self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+        self.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
         self.mouse_handler.process_mouse_leave(event)
 
     def on_key_down(self, event):

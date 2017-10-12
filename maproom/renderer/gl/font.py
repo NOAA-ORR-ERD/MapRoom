@@ -12,7 +12,8 @@ def load_font_texture_with_alpha():
     image = wx.Image(font_path, wx.BITMAP_TYPE_PNG)
     width = image.GetWidth()
     height = image.GetHeight()
-    buffer = np.frombuffer(image.GetDataBuffer(), np.uint8).reshape(
+    data = image.GetData()
+    buffer = np.frombuffer(data, np.uint8).reshape(
         (width, height, 3),
     )
 
