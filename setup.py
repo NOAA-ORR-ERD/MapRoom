@@ -395,7 +395,7 @@ try:
             'requests',
             'python-dateutil',
             'netCDF4',
-            'omnivore-framework',
+            'omnivore-framework>=1.0rc7',
             ],
         data_files=data_files,
         packages=find_packages(),
