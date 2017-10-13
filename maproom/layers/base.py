@@ -297,6 +297,7 @@ class Layer(HasTraits):
         log.debug("Restoring JSON data using %s" % name)
         method(json_data, batch_flags)
         self.update_bounds()
+        log.debug("Restored JSON data: %s" % self.debug_info())
 
     def unserialize_json_version1(self, json_data, batch_flags):
         """Restore layer from json representation.
@@ -355,6 +356,9 @@ class Layer(HasTraits):
                 loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
             except ResourceNotFoundError:
                 raise RuntimeError("Failed loading from %s" % json_data['url'])
+
+            # need to restore other metadata that isn't part of the URL load
+            layers[0].unserialize_json(json_data, batch_flags)
         else:
             log.debug("Loading layers from json encoded data")
             layer = kls(manager=manager)

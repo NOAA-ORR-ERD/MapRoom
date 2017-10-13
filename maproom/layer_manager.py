@@ -766,8 +766,10 @@ class LayerManager(BaseDocument):
                 if layer.invariant == -999:
                     log.warning("old json format: invariant not set for %s" % layer)
                     layer.invariant = self.get_next_invariant()
+                log.debug("loaded invariant: %s" % layer.invariant)
                 self.insert_loaded_layer(layer, mi=mi, skip_invariant=True)
                 layers.append(layer)
+                log.debug("inserted invariant: %s" % layer.invariant)
 
                 # Automatically adjust next_invariant to reflect highest
                 # invariant seen
