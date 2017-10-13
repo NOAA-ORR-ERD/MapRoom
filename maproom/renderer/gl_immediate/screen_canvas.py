@@ -86,11 +86,13 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         # Callbacks are not set immediately because they depend on the OpenGL
         # context being set on the canvas, which can't happen until the window
         # is realized.
-        self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
+        self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
-        self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
-        self.Bind(wx.EVT_RIGHT_DOWN, self.on_right_mouse_down)
-        self.Bind(wx.EVT_RIGHT_UP, self.on_right_mouse_up)
+        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
+        self.Bind(wx.EVT_MIDDLE_UP, self.on_middle_up)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.on_right_down)
+        self.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
         self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_mouse_leave)
@@ -145,7 +147,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         event.Skip()
         self.render(event)
 
-    def on_mouse_down(self, event):
+    def on_left_down(self, event):
         self.SetFocus()  # why would it not be focused?
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
@@ -165,19 +167,36 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             mode.process_mouse_motion_up(event)
         self.set_cursor(mode)
 
-    def on_mouse_up(self, event):
+    def on_left_up(self, event):
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         mode.process_mouse_up(event)
         self.set_cursor(mode)
 
-    def on_right_mouse_down(self, event):
+    def on_middle_down(self, event):
+        mode = self.get_effective_tool_mode(event)
+        self.forced_cursor = None
+        self.mouse_is_down = True
+        self.selection_box_is_being_defined = False
+        self.mouse_down_position = event.GetPosition()
+        self.mouse_move_position = self.mouse_down_position
+        mode.process_middle_mouse_down(event)
+        self.set_cursor(mode)
+
+    def on_middle_up(self, event):
+        mode = self.get_effective_tool_mode(event)
+        self.forced_cursor = None
+        self.mouse_is_down = False
+        mode.process_middle_mouse_up(event)
+        self.set_cursor(mode)
+
+    def on_right_down(self, event):
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         mode.process_right_mouse_down(event)
         self.set_cursor(mode)
 
-    def on_right_mouse_up(self, event):
+    def on_right_up(self, event):
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         mode.process_right_mouse_up(event)

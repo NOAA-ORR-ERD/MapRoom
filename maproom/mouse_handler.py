@@ -135,7 +135,22 @@ class MouseHandler(object):
         return ""
 
     def process_mouse_down(self, event):
-        return
+        # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_canvas
+        self.reset_early_mouse_params()
+        self.first_mouse_down_position = event.GetPosition()
+        effective_mode = c.get_effective_tool_mode(event)
+        log.debug("effective mode: %s" % effective_mode)
+        if effective_mode.__class__ == PanMode:
+            self.pending_selection = None
+            self.is_panning = True
+        else:
+            self.pending_selection = self.current_object_under_mouse
+            self.is_panning = False
+            self.process_left_down(event)
+
+    def process_left_down(self, event):
+        pass
 
     def get_world_point(self, event):
         c = self.layer_canvas
@@ -211,13 +226,34 @@ class MouseHandler(object):
         e.long_status.show_status_text(self.get_long_help_text())
 
     def process_mouse_motion_down(self, event):
-        # c = self.layer_canvas
-        # p = event.GetPosition()
-        # proj_p = c.get_world_point_from_screen_point(p)
-        # d_x = p[0] - c.mouse_down_position[0]
-        # d_y = c.mouse_down_position[1] - p[1]
-        # print "nop: d_x = " + str( d_x ) + ", d_y = " + str( d_x )
-        pass
+        if self.is_panning:
+            c = self.layer_canvas
+            e = c.project
+            p = event.GetPosition()
+            d_x = p[0] - c.mouse_down_position[0]
+            d_y = c.mouse_down_position[1] - p[1]
+            # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+            if (d_x != 0 or d_y != 0):
+                # the user has panned the map
+                d_x_p = d_x * c.projected_units_per_pixel
+                d_y_p = d_y * c.projected_units_per_pixel
+                center = (c.projected_point_center[0] - d_x_p,
+                          c.projected_point_center[1] - d_y_p)
+                c.mouse_down_position = p
+
+                cmd = ViewportCommand(None, center, c.projected_units_per_pixel)
+                e.process_command(cmd)
+                event.Skip()
+        else:
+            if self.pending_selection is not None:
+                self.process_mouse_motion_with_selection(event)
+            if not self.is_panning:
+                if not self.check_early_mouse_release(event):
+                    self.is_panning = True
+                return
+
+    def process_mouse_motion_with_selection(self, event):
+        event.Skip()
 
     def dragged_on_empty_space(self, event):
         pass
@@ -281,6 +317,19 @@ class MouseHandler(object):
         pass
 
     def process_right_mouse_up(self, event):
+        event.Skip()
+
+    def process_middle_mouse_down(self, event):
+        c = self.layer_canvas
+        self.reset_early_mouse_params()
+        self.first_mouse_down_position = event.GetPosition()
+        effective_mode = c.get_effective_tool_mode(event)
+        print("EFFECTIVEMODE: %s" % effective_mode)
+        if effective_mode.__class__ == PanMode:
+            self.pending_selection = None
+            self.is_panning = True
+
+    def process_middle_mouse_up(self, event):
         event.Skip()
 
     def process_mouse_wheel_scroll(self, event):
@@ -508,38 +557,6 @@ class PanMode(MouseHandler):
             return self.layer_canvas.hand_closed_cursor
         return self.layer_canvas.hand_cursor
 
-    def process_mouse_down(self, event):
-        # Mouse down only sets the initial point, after that it is ignored
-        self.reset_early_mouse_params()
-        self.first_mouse_down_position = event.GetPosition()
-        self.pending_selection = self.current_object_under_mouse
-        self.is_panning = False
-
-    def process_mouse_motion_down(self, event):
-        if self.pending_selection is not None:
-            return
-        if not self.is_panning:
-            if not self.check_early_mouse_release(event):
-                self.is_panning = True
-            return
-        c = self.layer_canvas
-        e = c.project
-        p = event.GetPosition()
-        d_x = p[0] - c.mouse_down_position[0]
-        d_y = c.mouse_down_position[1] - p[1]
-        # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
-        if (d_x != 0 or d_y != 0):
-            # the user has panned the map
-            d_x_p = d_x * c.projected_units_per_pixel
-            d_y_p = d_y * c.projected_units_per_pixel
-            center = (c.projected_point_center[0] - d_x_p,
-                      c.projected_point_center[1] - d_y_p)
-            c.mouse_down_position = p
-
-            cmd = ViewportCommand(None, center, c.projected_units_per_pixel)
-            e.process_command(cmd)
-            event.Skip()
-
     def process_mouse_up(self, event):
         c = self.layer_canvas
         if (not c.mouse_is_down):
@@ -609,13 +626,13 @@ class RNCSelectionMode(PanMode):
         self.is_over_object = self.get_rnc_object() is not None
         self.layer_canvas.project.refresh()
 
-    def process_mouse_motion_down(self, event):
-        if not self.is_panning:
-            if self.check_early_mouse_release(event):
-                return
-            self.is_panning = True
-        else:
-            PanMode.process_mouse_motion_down(self, event)
+    # def process_mouse_motion_down(self, event):
+    #     if not self.is_panning:
+    #         if self.check_early_mouse_release(event):
+    #             return
+    #         self.is_panning = True
+    #     else:
+    #         PanMode.process_mouse_motion_down(self, event)
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
@@ -696,13 +713,13 @@ class PolygonSelectionMode(PanMode):
         self.is_over_object = self.get_rnc_object() is not None
         self.layer_canvas.project.refresh()
 
-    def process_mouse_motion_down(self, event):
-        if not self.is_panning:
-            if self.check_early_mouse_release(event):
-                return
-            self.is_panning = True
-        else:
-            PanMode.process_mouse_motion_down(self, event)
+    # def process_mouse_motion_down(self, event):
+    #     if not self.is_panning:
+    #         if self.check_early_mouse_release(event):
+    #             return
+    #         self.is_panning = True
+    #     else:
+    #         PanMode.process_mouse_motion_down(self, event)
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
@@ -749,7 +766,7 @@ class ObjectSelectionMode(MouseHandler):
             text += ", Ctrl for rotate"
         return text
 
-    def process_mouse_down(self, event):
+    def process_left_down(self, event):
         c = self.layer_canvas
         e = c.project
         proj_p = None
@@ -785,7 +802,7 @@ class ObjectSelectionMode(MouseHandler):
 
         self.update_status_text(proj_p, None, True, self.get_help_text())
 
-    def process_mouse_motion_down(self, event):
+    def process_mouse_motion_with_selection(self, event):
         c = self.layer_canvas
         e = c.project
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
@@ -1166,7 +1183,7 @@ class RectSelectMode(MouseHandler):
     def is_snappable_to_layer(self, layer):
         return False
 
-    def process_mouse_down(self, event):
+    def process_left_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
         # unless it is released too soon.
         if not self.after_first_mouse_up:
@@ -1466,7 +1483,7 @@ class AddPolylineMode(MouseHandler):
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_CROSS)
 
-    def process_mouse_down(self, event):
+    def process_left_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_canvas
         if len(self.points) == 0:

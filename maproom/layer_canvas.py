@@ -77,13 +77,13 @@ class LayerCanvas(renderer.ScreenCanvas):
         if (event is not None):
             try:
                 self.is_alt_key_down = event.AltDown()
-                # print self.is_alt_key_down
             except:
                 pass
             try:
                 middle_down = event.MiddleIsDown()
             except:
                 pass
+        log.debug("alt key: %s middle down: %s evt %s" % (self.is_alt_key_down, middle_down, event))
         if self.is_alt_key_down or middle_down:
             mode = self.default_pan_mode
         else:
