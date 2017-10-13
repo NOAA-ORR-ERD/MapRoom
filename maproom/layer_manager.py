@@ -155,6 +155,21 @@ class LayerManager(BaseDocument):
         for layer in layers:
             print "  %s: invariant=%d" % (layer, layer.invariant)
 
+    def debug_structure(self):
+        lines = self.debug_structure_recursive(self.layers)
+        return "\n".join(lines)
+
+    def debug_structure_recursive(self, tree, indent=""):
+        result = []
+
+        for item in tree:
+            if (isinstance(item, Layer)):
+                result.append(indent + str(self.get_multi_index_of_layer(item)) + " " + item.debug_info(indent))
+            else:
+                result.extend(self.debug_structure_recursive(item, indent + "    "))
+
+        return result
+
     ##### Serialization
 
     def get_to_json_attrs(self):

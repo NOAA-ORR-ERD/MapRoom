@@ -112,6 +112,11 @@ class Layer(HasTraits):
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
 
+    def debug_info(self, indent=""):
+        lines = []
+        lines.append("%s (%x) invariant=%s dependent_of=%s" % (self.name, id(self), self.invariant, self.dependent_of))
+        return ("\n%s" % indent).join(lines)
+
     def test_contents_equal(self, other):
         """Test routine to compare layers"""
         return self.type == other.type

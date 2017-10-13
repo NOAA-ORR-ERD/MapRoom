@@ -659,3 +659,14 @@ class NormalizeLongitudeAction(EditorAction):
         if edit_layer is not None:
             cmd = NormalizeLongitudeCommand(edit_layer)
             self.active_editor.process_command(cmd)
+
+
+class DebugLayerManagerAction(EditorAction):
+    name = 'Show Layer Manager Info'
+    tooltip = 'Show a debug output describing the currently displayed layers'
+
+    def perform(self, event):
+        lm = self.active_editor.layer_manager
+        text = lm.debug_structure()
+        print(text)
+

@@ -362,6 +362,11 @@ class MaproomProjectTask(FrameworkTask):
             actions.DeleteLayerAction(),
         ]
 
+    def get_actions_Menu_Help_DebugTaskGroup(self):
+        return [
+            actions.DebugLayerManagerAction(),
+            ]
+
     def get_editor(self, guess=None):
         """ Opens a new empty window
         """
