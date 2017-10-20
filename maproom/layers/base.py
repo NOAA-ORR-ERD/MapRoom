@@ -461,6 +461,16 @@ class Layer(HasTraits):
     def is_zoomable(self):
         return self.bounds != rect.NONE_RECT
 
+    @property
+    def style_name(self):
+        if hasattr(self, "style_as"):
+            type_name = self.style_as
+        elif hasattr(self, "type"):
+            type_name = self.type
+        else:
+            type_name = self
+        return type_name
+
     def set_style(self, style):
         # Hook for subclasses to change colors and styles
         if style is None:

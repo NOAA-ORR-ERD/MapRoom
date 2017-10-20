@@ -148,6 +148,8 @@ class DefaultStyleAction(EditorAction):
             project.layer_manager.update_default_styles(dialog.get_styles())
             if dialog.save_for_future:
                 project.task.remember_styles(project.layer_manager.default_styles)
+            if dialog.apply_to_current:
+                project.layer_manager.apply_default_styles()
 
 
 class BoundingBoxAction(EditorAction):

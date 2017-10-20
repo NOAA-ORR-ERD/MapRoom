@@ -240,6 +240,8 @@ class StyleDialog(wx.Dialog):
 
         self.savebtn = wx.CheckBox(self, -1, "Save these styles as the default for future projects")
 
+        self.applybtn = wx.CheckBox(self, -1, "Apply these styles to existing layers")
+
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
         btn.SetDefault()
@@ -251,6 +253,7 @@ class StyleDialog(wx.Dialog):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(hbox, 1, wx.EXPAND, 0)
         sizer.Add(self.savebtn, 0, wx.EXPAND | wx.ALL, 10)
+        sizer.Add(self.applybtn, 0, wx.EXPAND | wx.ALL, 10)
         sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         self.SetSizer(sizer)
         self.Fit()
@@ -272,6 +275,10 @@ class StyleDialog(wx.Dialog):
     @property
     def save_for_future(self):
         return self.savebtn.IsChecked()
+
+    @property
+    def apply_to_current(self):
+        return self.applybtn.IsChecked()
 
 
 class WMSDialog(ObjectEditDialog):

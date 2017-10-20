@@ -304,23 +304,24 @@ class LayerManager(BaseDocument):
             log.debug("style %s: %s" % (type_name, str(style)))
 
     def update_default_style_for(self, layer, style):
-        if hasattr(layer, "type"):
-            type_name = layer.type
-        else:
-            type_name = layer
-        log.debug("updating default style for %s: %s" % (type_name, str(style)))
-        self.default_styles[type_name] = style.get_copy()
+        log.debug("updating default style for %s: %s" % (layer.style_name, str(style)))
+        self.default_styles[layer.style_name] = style.get_copy()
 
     def get_default_style_for(self, layer):
-        if hasattr(layer, "style_as"):
-            type_name = layer.style_as
-        elif hasattr(layer, "type"):
-            type_name = layer.type
-        else:
-            type_name = layer
-        style = self.default_styles.get(type_name, self.default_styles["other"])
-        log.debug("get default style for: %s: %s" % (type_name, str(style)))
+        style = self.default_styles.get(layer.style_name, self.default_styles["other"])
+        log.debug("get default style for: %s: %s" % (layer.style_name, str(style)))
         return style.get_copy()
+
+    def apply_default_styles(self):
+        # for each layer, change the current style to that of the default style
+        # for the type of layer
+        for layer in self.flatten():
+            try:
+                style = self.default_styles[layer.style_name]
+            except KeyError:
+                log.debug("No style for %s" % layer)
+                continue
+            layer.style = style.get_copy()
 
     ##### Flatten
 
