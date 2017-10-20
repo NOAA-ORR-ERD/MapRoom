@@ -33,7 +33,7 @@ class LayerStyle(object):
 
     default_text_color = color_floats_to_int(0, 0, 0, 1.0)
 
-    default_outline_color = color_floats_to_int(1.0, 0.5, 1.0, 0.75)
+    default_outline_color = color_floats_to_int(1.0, 0.5, 1.0, 0.0)
 
     default_colors = [
         color_floats_to_int(0, 0, 1.0, 1),

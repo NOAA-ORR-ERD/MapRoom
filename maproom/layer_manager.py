@@ -312,7 +312,9 @@ class LayerManager(BaseDocument):
         self.default_styles[type_name] = style.get_copy()
 
     def get_default_style_for(self, layer):
-        if hasattr(layer, "type"):
+        if hasattr(layer, "style_as"):
+            type_name = layer.style_as
+        elif hasattr(layer, "type"):
             type_name = layer.type
         else:
             type_name = layer

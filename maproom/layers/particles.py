@@ -36,6 +36,8 @@ class ParticleFolder(Folder):
 
     type = Str("particles")
 
+    style_as = "particle"
+
     start_index = Int(0)
 
     end_index = Int(sys.maxint)

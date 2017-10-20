@@ -185,7 +185,9 @@ class IconDialog(wx.Dialog):
 
 
 class StyleDialog(wx.Dialog):
-    def __init__(self, project, vector_objects):
+    displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon"]
+
+    def __init__(self, project, layers):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))
         self.lm = project.layer_manager
 
@@ -194,26 +196,29 @@ class StyleDialog(wx.Dialog):
         self.other = self.mock_project.layer_tree_control.get_edit_layer()
         self.other.type = "other"
         self.other.name = "other"
-        self.other.layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Marplot icon"]
+        self.other.layer_info_panel = self.displayed_style_types
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
 
         def set_style_override(self, style):
             self.style.copy_from(style)
 
-        self.vector_objects = list(vector_objects)
-        self.vector_objects.append(self.other)
-        for v in self.vector_objects:
+        self.styleable_layers = list(layers)
+        self.styleable_layers.append(self.other)
+        for v in self.styleable_layers:
             self.mock_project.layer_manager.insert_layer([2], v)
             v.manager = self.lm
             v.style = self.lm.get_default_style_for(v)
             v.set_style = types.MethodType(set_style_override, v)
-            try:
-                i = v.layer_info_panel.index("Layer name")
-                del v.layer_info_panel[i]
-            except ValueError:
-                pass
-        self.obj_list = wx.ListBox(self, -1, choices=[v.name for v in self.vector_objects])
+
+            # Restrict subset of styles displayed in dialog to the set shown
+            # above in displayed_style_types
+            valid_style_types = []
+            for name in v.layer_info_panel:
+                if name in self.displayed_style_types:
+                    valid_style_types.append(name)
+            v.layer_info_panel = valid_style_types
+        self.obj_list = wx.ListBox(self, -1, choices=[v.name for v in self.styleable_layers])
         self.obj_list.Bind(wx.EVT_LISTBOX, self.on_category)
         hbox.Add(self.obj_list, 1, wx.EXPAND, 0)
 
@@ -251,12 +256,12 @@ class StyleDialog(wx.Dialog):
         self.Fit()
 
     def use_layer(self, index):
-        layer = self.vector_objects[index]
+        layer = self.styleable_layers[index]
         self.mock_project.layer_tree_control.layer = layer
         return layer
 
     def get_styles(self):
-        d = {v.type: v.style.get_copy() for v in self.vector_objects}
+        d = {v.type: v.style.get_copy() for v in self.styleable_layers}
         return d
 
     def on_category(self, evt):
