@@ -473,13 +473,14 @@ class Layer(HasTraits):
 
     def set_style(self, style):
         # Hook for subclasses to change colors and styles
+        log.debug(" befory style copy for %s: %s" % (self.type, self.style))
         if style is None:
             style = self.manager.get_default_style_for(self)
             log.debug("style not specified, using default for %s: %s" % (self.type, style))
         else:
             log.debug("using style for %s: %s" % (self.type, style))
         self.style.copy_from(style)
-        log.debug(" after copy for %s: %s" % (self.type, self.style))
+        log.debug(" after style copy for %s: %s" % (self.type, self.style))
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT

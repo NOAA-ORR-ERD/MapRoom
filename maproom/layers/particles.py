@@ -21,6 +21,7 @@ from traits.api import Unicode
 from ..renderer import color_floats_to_int
 
 from folder import Folder
+from base import ProjectedLayer
 from point_base import PointBaseLayer
 
 import logging
@@ -60,6 +61,7 @@ class ParticleFolder(Folder):
 
     @property
     def status_code_colors(self):
+        log.debug("Creating status code colors for %s" % self)
         status_code_names = self.status_code_names
         status_code_colors = ParticleLayer.create_status_code_color_map(status_code_names)
         return status_code_colors
@@ -232,6 +234,7 @@ class ParticleLayer(PointBaseLayer):
         self.status_codes = status_codes
         self.status_code_names = dict(status_code_names)
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
+        log.debug("setting status code colors to: %s" % self.status_code_colors)
         colors = np.zeros(np.alen(f_points), dtype=np.uint32)
         for code, color in self.status_code_colors.iteritems():
             index = np.where(self.status_codes == code)
@@ -244,6 +247,12 @@ class ParticleLayer(PointBaseLayer):
         return [self]
 
     def set_status_code_color(self, code, color):
+        log.debug("Setting status code %s color: %x" % (code, color))
         index = np.where(self.status_codes == code)
         self.points.color[index] = color
         self.status_code_colors[code] = color
+
+    def set_style(self, style):
+        # Style changes in particle layer only affect the outline color; point
+        # colors are controlled by the status colors
+        ProjectedLayer.set_style(self, style)
