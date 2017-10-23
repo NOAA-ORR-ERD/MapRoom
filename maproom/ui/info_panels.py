@@ -1113,7 +1113,10 @@ class ListBoxComboPopup(wx.ComboPopup):
         return wx.ComboPopup.GetAdjustedSize(self, InfoField.popup_width, prefHeight, maxHeight)
 
     def SetItems(self, stuff):
-        self.lc.SetItems(stuff)
+        if stuff:
+            self.lc.SetItems(stuff)
+        else:
+            self.lc.Clear()
 
     def SetSelection(self, index):
         self.lc.SetSelection(index)
@@ -1133,11 +1136,13 @@ class ParticleField(InfoField):
 
     def fill_data(self, layer):
         names = self.get_valid_timestep_names(layer)
+        self.popup.SetItems(names)
         if names:
-            self.popup.SetItems(names)
             selected = self.get_timestep_index(layer)
             self.popup.SetSelection(selected)
             self.ctrl.SetText(names[selected])
+        else:
+            self.ctrl.SetText("")
 
     def create_control(self):
         c = wx.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width, -1))
