@@ -75,7 +75,7 @@ class LayerTreeControl(wx.Panel):
         if (item is None):
             return None
         (layer, ) = self.tree.GetItemData(item)
-
+        log.debug("current edit layer: %s", layer)
 
         return layer
 

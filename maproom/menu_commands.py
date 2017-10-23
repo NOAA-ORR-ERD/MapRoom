@@ -321,6 +321,10 @@ class DeleteLayerCommand(Command):
         except IndexError:
             # only parent is root, so select layer above
             new_selected_layer = lm.get_previous_sibling(layer)
+        # previous sibling may be a folder (or even nested folders), so skip up
+        # to the uppermost layer in that hierarchy if so
+        while not hasattr(new_selected_layer, "parents_affected_by_move"):
+            new_selected_layer = new_selected_layer[0]
         lf = undo.flags.add_layer_flags(new_selected_layer)
         lf.select_layer = True
 
