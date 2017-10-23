@@ -1133,10 +1133,11 @@ class ParticleField(InfoField):
 
     def fill_data(self, layer):
         names = self.get_valid_timestep_names(layer)
-        self.popup.SetItems(names)
-        selected = self.get_timestep_index(layer)
-        self.popup.SetSelection(selected)
-        self.ctrl.SetText(names[selected])
+        if names:
+            self.popup.SetItems(names)
+            selected = self.get_timestep_index(layer)
+            self.popup.SetSelection(selected)
+            self.ctrl.SetText(names[selected])
 
     def create_control(self):
         c = wx.ComboCtrl(self.parent, style=wx.CB_READONLY, size=(self.default_width, -1))

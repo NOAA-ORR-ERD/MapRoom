@@ -284,6 +284,7 @@ class LayerTreeControl(wx.Panel):
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
         layer = self.get_edit_layer()
+        log.debug("Currently selected layer: %s" % layer)
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         self.project.refresh()
