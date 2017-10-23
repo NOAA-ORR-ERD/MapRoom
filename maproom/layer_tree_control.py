@@ -94,6 +94,7 @@ class LayerTreeControl(wx.Panel):
         if (layer is None):
             self.tree.UnselectAll()
         else:
+            self.tree.CalculatePositions()
             self.set_edit_layer_recursive(layer, self.tree.GetRootItem())
 
     def set_edit_layer_recursive(self, layer, item):
@@ -101,6 +102,7 @@ class LayerTreeControl(wx.Panel):
 
         if (item_layer == layer):
             self.tree.SelectItem(item, True)
+            self.tree.EnsureVisible(item)
             # also make sure the layer's name is up-to-date
             self.tree.SetItemText(item, layer.name)
             layer.set_visibility_when_selected(self.project.layer_visibility[layer])
