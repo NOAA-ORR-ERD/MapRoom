@@ -1,3 +1,4 @@
+import sys
 import wx
 import json
 
@@ -484,7 +485,21 @@ class DeleteSelectionAction(EditorAction):
     image = ImageResource('delete_selection.png')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.delete_selection)
+        # FIXME: OS X hack! DELETE key in the menu overrides any text field
+        # usage, so we have to catch it here and force the textctrl to do the
+        # delete programmatically
+        active = wx.Window.FindFocus()
+        if sys.platform == "darwin" and hasattr(active, "EmulateKeyPress"):
+            # EmulateKeyPress on wx.TextCtrl requires an actual KeyEvent
+            # which I haven't been able to create. Workaround: simulate what
+            # the delete key should do
+            start, end = active.GetSelection()
+            if start == end:
+                active.Remove(start, end + 1)
+            else:
+                active.Remove(start, end)
+        else:
+            GUI.invoke_later(self.active_editor.delete_selection)
 
 
 class ClearFlaggedAction(EditorAction):
