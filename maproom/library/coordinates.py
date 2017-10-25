@@ -302,3 +302,16 @@ def lat_lon_from_format_string(lat_lon_string):
         return lat_lon_from_decimal_degrees(lat_lon_string)
     except Exception, e:
         raise ValueError(e)
+
+
+def lat_or_lon_from_format_string(lat_lon_string):
+    lat_lon_string = lat_lon_string.replace(u"°", "")
+    try:
+        if lat_lon_string.find(u"″") != -1:
+            return degrees_minutes_seconds_to_float(lat_lon_string)
+        elif lat_lon_string.find(u"′") != -1:
+            return degrees_minutes_to_float(lat_lon_string)
+
+        return degrees_to_float(lat_lon_string)
+    except Exception, e:
+        raise ValueError(e)

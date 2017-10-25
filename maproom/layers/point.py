@@ -47,7 +47,7 @@ class PointLayer(PointBaseLayer):
 
     layer_info_panel = ["Layer name", "Point count", "Flagged points", "Default depth", "Depth unit", "Color"]
 
-    selection_info_panel = ["Selected points", "Point index", "Point depth", "Point coordinates"]
+    selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]
 
     # Trait setters/getters
     def _get_depth_unit(self):

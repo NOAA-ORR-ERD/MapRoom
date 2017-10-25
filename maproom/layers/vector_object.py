@@ -195,7 +195,7 @@ class LineVectorObject(VectorObjectLayer):
 
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency"]
 
-    selection_info_panel = ["Anchor coordinates", "Path length"]
+    selection_info_panel = ["Anchor latitude", "Anchor longitude", "Path length"]
 
     corners_from_flat = np.asarray((0, 1, 2, 3), dtype=np.uint8)
     lines = np.asarray(((0, 1),), dtype=np.uint8)
@@ -501,7 +501,7 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
 
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
-    selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
+    selection_info_panel = ["Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
     def get_width_height(self):
         if self.empty():
@@ -628,7 +628,7 @@ class CircleVectorObject(EllipseVectorObject):
 
     type = Str("circle_obj")
 
-    selection_info_panel = ["Anchor coordinates", "Radius", "Circumference", "Area"]
+    selection_info_panel = ["Anchor latitude", "Anchor longitude", "Radius", "Circumference", "Area"]
 
     def get_radius(self):
         p = self.points
@@ -1256,7 +1256,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
 
     layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
-    selection_info_panel = ["Anchor coordinates", "Area"]
+    selection_info_panel = ["Anchor latitude", "Anchor longitude", "Area"]
 
     def get_area(self):
         """Adapted from http://stackoverflow.com/questions/4681737
@@ -1357,7 +1357,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
-    selection_info_panel = ["Anchor coordinates", "Width", "Height", "Area"]
+    selection_info_panel = ["Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
     def get_renderer_colors(self):
         """Hook to allow subclasses to override style colors

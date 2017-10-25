@@ -344,7 +344,7 @@ class PointDepthField(TextEditField):
                     self.process_command(cmd)
 
 
-class PointCoordinatesField(TextEditField):
+class PointCoordinateField(TextEditField):
     def is_displayed(self, layer):
         return layer.get_num_points_selected() > 0
 
@@ -362,11 +362,15 @@ class PointCoordinatesField(TextEditField):
             return ""
         prefs = self.panel.project.task.preferences
         coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
-        return coords_text
+        lat_text, long_text = coords_text.split(", ")
+        if "long" in self.field_name:
+            return long_text
+        else:
+            return lat_text
 
     def parse_from_string(self):
         text = self.ctrl.GetValue()
-        c = coordinates.lat_lon_from_format_string(text)
+        c = coordinates.lat_or_lon_from_format_string(text)
         return c
 
     def get_command(self, layer, index, dx, dy):
@@ -377,13 +381,17 @@ class PointCoordinatesField(TextEditField):
             new_point = self.parse_from_string()
             index = self.get_point_index(layer)
             current_point = (layer.points.x[index], layer.points.y[index])
-            x_diff = new_point[0] - current_point[0]
-            y_diff = new_point[1] - current_point[1]
+            if "long" in self.field_name:
+                x_diff = new_point - current_point[0]
+                y_diff = 0.0
+            else:
+                x_diff = 0.0
+                y_diff = new_point - current_point[1]
             cmd = self.get_command(layer, index, x_diff, y_diff)
             self.process_command(cmd)
 
 
-class AnchorCoordinatesField(PointCoordinatesField):
+class AnchorCoordinateField(PointCoordinateField):
     def is_displayed(self, layer):
         return True
 
@@ -1497,7 +1505,8 @@ class InfoPanel(PANELTYPE):
         "Layer name": LayerNameField,
         "Depth unit": DepthUnitField,
         "Default depth": DefaultDepthField,
-        "Point coordinates": PointCoordinatesField,
+        "Point latitude": PointCoordinateField,
+        "Point longitude": PointCoordinateField,
         "Point depth": PointDepthField,
         "Point index": PointIndexesField,
         "Point count": PointVisibilityField,
@@ -1528,7 +1537,8 @@ class InfoPanel(PANELTYPE):
         "Start time": ParticleStartField,
         "End time": ParticleEndField,
         "Status Code Color": StatusCodeColorField,
-        "Anchor coordinates": AnchorCoordinatesField,
+        "Anchor latitude": AnchorCoordinateField,
+        "Anchor longitude": AnchorCoordinateField,
         "Anchor point": AnchorPointField,
         "Map server": MapServerField,
         "Tile server": MapServerField,
