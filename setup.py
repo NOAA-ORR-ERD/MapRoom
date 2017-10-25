@@ -383,7 +383,7 @@ try:
             'pyopengl_accelerate',
             'pyproj',
             'cython',
-            'shapely<1.6',
+            'shapely',
             'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
             'coverage',
             'pytest-cov',
