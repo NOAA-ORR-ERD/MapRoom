@@ -106,6 +106,7 @@ class MouseHandler(object):
     menu_item_name = "Generic Mouse Handler"
     menu_item_tooltip = "Tooltip for generic mouse handler"
     editor_trait_for_enabled = ""
+    toolbar_group = "other"
 
     mouse_too_close_pixel_tolerance = 5
 
@@ -545,6 +546,7 @@ class PanMode(MouseHandler):
     menu_item_name = "Pan Mode"
     menu_item_tooltip = "Scroll the viewport by holding down the mouse"
     editor_trait_for_enabled = ""
+    toolbar_group = "view"
 
     def __init__(self, layer_canvas):
         MouseHandler.__init__(self, layer_canvas)
@@ -582,6 +584,7 @@ class RNCSelectionMode(PanMode):
     menu_item_name = "RNC Chart Selection Mode"
     menu_item_tooltip = "Select an RNC chart to download"
     editor_trait_for_enabled = ""
+    toolbar_group = "select"
 
     def get_rnc_object(self):
         c = self.layer_canvas
@@ -677,6 +680,7 @@ class PolygonSelectionMode(PanMode):
     menu_item_name = "Polygon Selection Mode"
     menu_item_tooltip = "Select a polygon"
     editor_trait_for_enabled = ""
+    toolbar_group = "select"
 
     def get_rnc_object(self):
         c = self.layer_canvas
@@ -759,6 +763,7 @@ class ObjectSelectionMode(MouseHandler):
 
     This is a precursor to an object-based control system of mouse modes
     """
+    toolbar_group = "select"
 
     def get_help_text(self):
         text = "Click & drag to move control point, press Shift to resize about object center"
@@ -1016,6 +1021,7 @@ class PointEditMode(ObjectSelectionMode):
     menu_item_name = "Point Edit Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
     editor_trait_for_enabled = "layer_has_points"
+    toolbar_group = "edit"
 
     def get_cursor(self):
         e = self.layer_canvas.project
@@ -1091,6 +1097,7 @@ class LineEditMode(PointEditMode):
     menu_item_name = "Line Edit Mode"
     menu_item_tooltip = "Edit and add lines in the current layer"
     editor_trait_for_enabled = "layer_has_points"
+    toolbar_group = "edit"
 
     def get_cursor(self):
         e = self.layer_canvas.project
@@ -1255,6 +1262,7 @@ class RulerMode(RectSelectMode):
     icon = "ruler.png"
     menu_item_name = "Measure Distance"
     menu_item_tooltip = "Measure the great-circle distance between two points"
+    toolbar_group = "view"
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
@@ -1274,6 +1282,7 @@ class ZoomRectMode(RectSelectMode):
     icon = "zoom_box.png"
     menu_item_name = "Zoom Mode"
     menu_item_tooltip = "Zoom in to increase magnification of the current layer"
+    toolbar_group = "view"
 
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
@@ -1291,6 +1300,7 @@ class CropRectMode(RectSelectMode):
     icon = "crop.png"
     menu_item_name = "Crop Mode"
     menu_item_tooltip = "Crop the current layer"
+    toolbar_group = "view"
 
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
@@ -1364,6 +1374,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     dim_background_outside_selection = False
     normalize_mouse_coordinates = False
     vector_object_command = None
+    toolbar_group = "annotation"
 
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
@@ -1476,6 +1487,7 @@ class AddPolylineMode(MouseHandler):
     menu_item_name = "Add Polyline"
     menu_item_tooltip = "Add a new polyline"
     vector_object_command = DrawPolylineCommand
+    toolbar_group = "annotation"
 
     def __init__(self, *args, **kwargs):
         MouseHandler.__init__(self, *args, **kwargs)
@@ -1559,6 +1571,7 @@ class AddPolygonMode(AddPolylineMode):
 
 class AddOverlayMode(MouseHandler):
     vector_object_command = None
+    toolbar_group = "annotation"
 
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_CROSS)

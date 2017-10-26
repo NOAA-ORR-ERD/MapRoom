@@ -8,16 +8,18 @@ import mouse_handler as modes
 
 valid_mouse_modes = {
     'VectorLayerToolBar': [
-        modes.PointSelectionMode,
+        modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
+        modes.PointSelectionMode,
         modes.PointEditMode,
         modes.LineEditMode,
     ],
     'PolygonLayerToolBar': [
-        modes.PolygonSelectionMode,
+        modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
+        modes.PolygonSelectionMode,
         modes.CropRectMode,
     ],
     'AnnotationLayerToolBar': [
@@ -42,8 +44,10 @@ valid_mouse_modes = {
         modes.RulerMode,
     ],
     'RNCToolBar': [
-        modes.RNCSelectionMode,
+        modes.PanMode,
         modes.ZoomRectMode,
+        modes.RulerMode,
+        modes.RNCSelectionMode,
     ],
 }
 
@@ -56,6 +60,12 @@ def get_valid_mouse_mode(mouse_mode, mode_mode_toolbar_name):
     """
     valid = valid_mouse_modes.get(mode_mode_toolbar_name, valid_mouse_modes['BaseLayerToolBar'])
     if mouse_mode not in valid:
+        group = mouse_mode.toolbar_group
+        if group == "select":
+            # find another select mode
+            for m in valid:
+                if m.toolbar_group == "select":
+                    return m
         return valid[0]
     return mouse_mode
 
