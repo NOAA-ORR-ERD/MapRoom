@@ -8,25 +8,25 @@ import mouse_handler as modes
 
 valid_mouse_modes = {
     'VectorLayerToolBar': [
+        modes.PointSelectionMode,
         modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
-        modes.PointSelectionMode,
         modes.PointEditMode,
         modes.LineEditMode,
     ],
     'PolygonLayerToolBar': [
+        modes.PolygonSelectionMode,
         modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
-        modes.PolygonSelectionMode,
         modes.CropRectMode,
     ],
     'AnnotationLayerToolBar': [
+        modes.ControlPointEditMode,
         modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
-        modes.ControlPointEditMode,
         modes.AddLineMode,
         modes.AddPolylineMode,
         modes.AddRectangleMode,
@@ -44,10 +44,10 @@ valid_mouse_modes = {
         modes.RulerMode,
     ],
     'RNCToolBar': [
+        modes.RNCSelectionMode,
         modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
-        modes.RNCSelectionMode,
     ],
 }
 
