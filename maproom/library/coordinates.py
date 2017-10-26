@@ -2,6 +2,8 @@
 import re
 import math
 
+from .lat_lon_parser import parse
+
 
 def haversine(lon1, lat1, lon2=None, lat2=None, r=6371.0):
     if lon2 is None:
@@ -161,60 +163,6 @@ def check_min_sec(value):
         raise ValueError("Value not in minutes or seconds range")
 
 
-def degrees_minutes_seconds_to_float(degrees):
-    # handle with spaces or without
-    values = re.split(u"[°′″]", degrees.strip().replace(" ", ""))
-    dir = ""
-    if len(values) == 3:
-        degrees, minutes, seconds = values
-    else:
-        degrees, minutes, seconds, dir = values
-    m = float(minutes.strip())
-    check_min_sec(m)
-    s = float(seconds.strip())
-    check_min_sec(s)
-
-    result = float(degrees.strip())
-    result += m / 60.0
-    result += s / 3600.0
-    check_degrees(result)
-
-    if dir in ["W", "S"]:
-        result *= -1
-
-    return result
-
-
-def degrees_minutes_to_float(degrees):
-    degrees, minutes, dir = degrees.strip().split(" ")
-    m = float(minutes.strip())
-    check_min_sec(m)
-
-    result = float(degrees.strip())
-    result += m / 60.0
-    check_degrees(result)
-
-    if dir.upper() in ["W", "S"]:
-        result *= -1
-
-    return result
-
-
-def degrees_to_float(degrees):
-    values = degrees.strip().split(" ")
-    dir = ""
-    if len(values) == 2:
-        dir = values[1]
-    degrees = values[0]
-    result = float(degrees.strip())
-    check_degrees(result)
-    dir = dir.strip()
-    if dir.upper() in ["W", "S"]:
-        result *= -1
-
-    return result
-
-
 def format_lat_lon_degrees_minutes_seconds(longitude, latitude):
     lon = u"%d°%d′%d″%s" % \
         float_to_degrees_minutes_seconds(longitude, directions=("E", "W"))
@@ -275,43 +223,12 @@ def format_lon_line_label(longitude):
     return u" %d° %d' %s " % (degrees, minutes, direction)
 
 
-def lat_lon_from_degrees_minutes(lat_lon_string):
-    lat_lon_string = lat_lon_string.replace(u"°", "").replace(u"′", "")
-    lon, lat = lat_lon_string.split(",")
-    return (degrees_minutes_to_float(lat), degrees_minutes_to_float(lon))
-
-
-def lat_lon_from_degrees_minutes_seconds(lat_lon_string):
-    lon, lat = lat_lon_string.split(",")
-    return (degrees_minutes_seconds_to_float(lat), degrees_minutes_seconds_to_float(lon))
-
-
-def lat_lon_from_decimal_degrees(lat_lon_string):
-    lat_lon_string = lat_lon_string.replace(u"°", "")
-    lon, lat = lat_lon_string.split(",")
-    return (degrees_to_float(lat), degrees_to_float(lon))
-
-
 def lat_lon_from_format_string(lat_lon_string):
-    try:
-        if lat_lon_string.find(u"″") != -1:
-            return lat_lon_from_degrees_minutes_seconds(lat_lon_string)
-        elif lat_lon_string.find(u"′") != -1:
-            return lat_lon_from_degrees_minutes(lat_lon_string)
-
-        return lat_lon_from_decimal_degrees(lat_lon_string)
-    except Exception, e:
-        raise ValueError(e)
+    lon, lat = lat_lon_string.split(",")
+    dlon = parse(lon.strip())
+    dlat = parse(lat.strip())
+    return (dlat, dlon)
 
 
 def lat_or_lon_from_format_string(lat_lon_string):
-    lat_lon_string = lat_lon_string.replace(u"°", "")
-    try:
-        if lat_lon_string.find(u"″") != -1:
-            return degrees_minutes_seconds_to_float(lat_lon_string)
-        elif lat_lon_string.find(u"′") != -1:
-            return degrees_minutes_to_float(lat_lon_string)
-
-        return degrees_to_float(lat_lon_string)
-    except Exception, e:
-        raise ValueError(e)
+    return parse(lat_lon_string)
