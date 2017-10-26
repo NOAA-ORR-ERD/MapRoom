@@ -479,8 +479,6 @@ class PanMode(MouseHandler):
 
     def get_cursor(self):
         c = self.layer_canvas
-        if not self.is_panning and self.is_over_object:
-            return wx.Cursor(wx.CURSOR_ARROW)
         if c.mouse_is_down:
             return self.layer_canvas.hand_closed_cursor
         return self.layer_canvas.hand_cursor
@@ -542,13 +540,7 @@ class RNCSelectionMode(PanMode):
         return ""
 
     def get_cursor(self):
-        if self.is_panning:
-            return PanMode.get_cursor(self)
-        else:
-            rnc = self.get_rnc_object()
-            if rnc is not None:
-                return wx.Cursor(wx.CURSOR_ARROW)
-        return self.layer_canvas.hand_cursor
+        return wx.Cursor(wx.CURSOR_ARROW)
 
     def process_mouse_motion_up(self, event):
         MouseHandler.process_mouse_motion_up(self, event)
@@ -866,15 +858,11 @@ class PointSelectionMode(ObjectSelectionMode):
     def get_cursor(self):
         c = self.layer_canvas
         e = c.project
-        if not self.is_panning:
-            if (self.current_object_under_mouse is not None):
-                if e.clickable_object_mouse_is_over is not None:
-                    if e.clickable_object_is_ugrid_line() or e.clickable_object_is_ugrid_point():
-                        return wx.Cursor(wx.CURSOR_HAND)
-                return wx.Cursor(wx.CURSOR_ARROW)
-        if c.mouse_is_down:
-            return self.layer_canvas.hand_closed_cursor
-        return self.layer_canvas.hand_cursor
+        if (self.current_object_under_mouse is not None):
+            if e.clickable_object_mouse_is_over is not None:
+                if e.clickable_object_is_ugrid_line() or e.clickable_object_is_ugrid_point():
+                    return wx.Cursor(wx.CURSOR_HAND)
+        return wx.Cursor(wx.CURSOR_ARROW)
 
     def clicked_on_empty_space(self, event, layer, world_point):
         # Mouse down only sets the initial point, after that it is ignored
