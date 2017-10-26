@@ -140,7 +140,7 @@ class MouseHandler(object):
         self.reset_early_mouse_params()
         self.first_mouse_down_position = event.GetPosition()
         effective_mode = c.get_effective_tool_mode(event)
-        log.debug("effective mode: %s" % effective_mode)
+        log.debug("process_mouse_down: %s" % effective_mode)
         if effective_mode.__class__ == PanMode:
             self.pending_selection = None
             self.is_panning = True
@@ -203,6 +203,7 @@ class MouseHandler(object):
         c.release_mouse()
         # print "mouse is not down"
         self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
+        log.debug("process_mouse_motion_up: object under mouse: %s" % str(self.current_object_under_mouse))
         obj = None
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
@@ -226,8 +227,10 @@ class MouseHandler(object):
         e.long_status.show_status_text(self.get_long_help_text())
 
     def process_mouse_motion_down(self, event):
+        c = self.layer_canvas
+        effective_mode = c.get_effective_tool_mode(event)
+        log.debug("process_mouse_motion_down: panning=%s mode=%s" % (self.is_panning, effective_mode))
         if self.is_panning:
-            c = self.layer_canvas
             e = c.project
             p = event.GetPosition()
             d_x = p[0] - c.mouse_down_position[0]
@@ -247,7 +250,7 @@ class MouseHandler(object):
         else:
             if self.pending_selection is not None:
                 self.process_mouse_motion_with_selection(event)
-            if not self.is_panning:
+            if effective_mode.__class__ == PanMode and not self.is_panning:
                 if not self.check_early_mouse_release(event):
                     self.is_panning = True
                 return
@@ -324,7 +327,6 @@ class MouseHandler(object):
         self.reset_early_mouse_params()
         self.first_mouse_down_position = event.GetPosition()
         effective_mode = c.get_effective_tool_mode(event)
-        print("EFFECTIVEMODE: %s" % effective_mode)
         if effective_mode.__class__ == PanMode:
             self.pending_selection = None
             self.is_panning = True
