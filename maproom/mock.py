@@ -29,6 +29,12 @@ class MockWindow(object):
         pass
 
 
+class MockPreferences(object):
+    def __init__(self):
+        self.show_initial_annotation = False
+        self.show_initial_tile = False
+
+
 class MockTask(object):
     def __init__(self, window, default_styles=None):
         self.window = window
@@ -36,6 +42,7 @@ class MockTask(object):
             default_styles = {"other": LayerStyle()}
         self.default_styles = default_styles
         HostCache.set_known_hosts(default_tile_hosts)
+        self.preferences = MockPreferences()
 
     def get_tile_server_id_from_url(self, url):
         index, host = HostCache.get_host_by_url(url)
