@@ -14,6 +14,8 @@ from layers import LineLayer
 from layers import RootLayer
 from layers import Scale
 from layers import TriangleLayer
+from layers import AnnotationLayer
+from layers import TileLayer
 from layers import loaders
 from layers import LayerStyle, parse_styles_from_json, styles_to_json
 from command import UndoStack
@@ -103,7 +105,7 @@ class LayerManager(BaseDocument):
     ##### Creation/destruction
 
     @classmethod
-    def create(cls, project):
+    def create(cls, project, initial_layers=True):
         """Convenience function to create a new, empty LayerManager
 
         Since classes that use Traits can't seem to use an __init__ method,
@@ -120,14 +122,33 @@ class LayerManager(BaseDocument):
         # added layer will use 1.  If the number of default layers added below
         # changes, modify next_invariant to match! next_invariant = 1 - (# of
         # calls to insert_layer)
+        index = 0
         self.next_invariant = -2
         self.default_styles = self.project.task.default_styles
         layer = RootLayer(manager=self)
-        self.insert_layer([0], layer)
+        self.insert_layer([index], layer)
+
+        index += 1
         grid = Grid(manager=self)
-        self.insert_layer([1], grid)
+        self.insert_layer([index], grid)
+        
+        index += 1
         scale = Scale(manager=self)
-        self.insert_layer([2], scale)
+        self.insert_layer([index], scale)
+
+        if initial_layers:
+            prefs = self.project.task.preferences
+            if prefs.show_initial_annotation:
+                index += 1
+                annotation = AnnotationLayer(manager=self)
+                annotation.new()
+                self.insert_layer([index], annotation)
+
+            if prefs.show_initial_tile:
+                index += 1
+                tile = TileLayer(manager=self)
+                tile.new()
+                self.insert_layer([index], tile)
 
         # Add hook to create layer instances for debugging purposes
         if "--debug-objects" in self.project.window.application.command_line_args:

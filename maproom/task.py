@@ -386,8 +386,7 @@ class MaproomProjectTask(FrameworkTask):
         that will load a new file or create a new view of the existing editor,
         respectively.
         """
-        log.debug("In new...")
-        log.debug(" active editor is: %s" % self.active_editor)
+        log.debug("new: source=%s active editor=%s" % (source, self.active_editor))
         if hasattr(source, 'document_id'):
             if self.active_editor and not self.active_editor.load_in_new_tab(source.metadata):
                 editor = self.active_editor

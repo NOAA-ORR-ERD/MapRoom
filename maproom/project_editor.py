@@ -112,7 +112,7 @@ class ProjectEditor(FrameworkEditor):
         metadata = document.metadata
         loader = loaders.get_loader(metadata)
         if hasattr(loader, "load_project"):
-            document = LayerManager.create(self)
+            document = LayerManager.create(self, initial_layers=False)
             document.metadata = metadata.clone_traits()
             batch_flags = BatchStatus()
             print "FIXME: Add load project command that clears all layers"
@@ -160,6 +160,7 @@ class ProjectEditor(FrameworkEditor):
             self.perform_batch_flags(None, batch_flags)
             self.view_document(self.document)
         else:
+            log.debug("loading %s" % metadata)
             cmd = LoadLayersCommand(metadata)
             self.process_command(cmd)
             layers = cmd.undo_info.affected_layers()

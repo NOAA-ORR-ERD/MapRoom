@@ -47,6 +47,12 @@ class MaproomPreferences(FrameworkPreferences):
     # display scale legend by default
     show_scale = Bool(True)
 
+    # display initial annotation layer by default
+    show_initial_annotation = Bool(True)
+
+    # display initial tile layer by default
+    show_initial_tile = Bool(True)
+
     # check for layer errors on file save
     check_errors_on_save = Bool(True)
 
@@ -97,6 +103,12 @@ class MaproomPreferencesPane(PreferencesPane):
                       show_labels=False),
                HGroup(Item('show_scale'),
                       Label('Show Scale Layer'),
+                      show_labels=False),
+               HGroup(Item('show_initial_annotation'),
+                      Label('Add Annotation Layer to New Project'),
+                      show_labels=False),
+               HGroup(Item('show_initial_tile'),
+                      Label('Add Tile Layer to New Project'),
                       show_labels=False),
                HGroup(Item('check_errors_on_save'),
                       Label('Check for layer errors on save'),
