@@ -1405,9 +1405,6 @@ class DownloadStatusField(ExpandableErrorField):
                 color = "#FF8080"
         else:
             text = "Waiting for server"
-        if color is None:
-            attr = self.panel.GetDefaultAttributes()
-            color = attr.colBg
         return text, color
 
     def create_control(self):
