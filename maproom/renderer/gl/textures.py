@@ -307,17 +307,17 @@ class TileImageData(ImageData):
         z = self.zoom_level
         x1, y1 = tl
         x2, y2 = br
-        x1 = max(x1 - 1, 0)
+        x1 = x1 - 1  # one tile west, may be negative if across dateline
         y1 = max(y1 - 1, 0)
         n = (2 << (z - 1)) - 1
-        x2 = min(x2 + 1, n)
+        x2 = x2 + 1  # one tile east, may be > n if across dateline
         y2 = min(y2 + 1, n)
-        for x in [x1, x2]:
+        for x in [x1, x2]:  # west and east borders
             for y in range(y1, y2 + 1):
                 tile = (x, y)
                 if tile not in self.requested:
                     needed.append(tile)
-        for y in [y1, y2]:
+        for y in [y1, y2]:  # north and south borders
             for x in range(x1 + 1, x2):
                 tile = (x, y)
                 if tile not in self.requested:

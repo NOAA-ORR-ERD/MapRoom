@@ -206,6 +206,7 @@ class TileHost(SortableHost):
         # x values not clamped to allow wrapping across the dateline
         ytile = max(ytile, 0)
         ytile = min(ytile, n - 1)
+        log.debug("lon,lat=(%f,%f): tile x,y=(%d,%d)" % (lon, lat, xtile, ytile))
 
         return (xtile, ytile)
 
@@ -220,6 +221,7 @@ class TileHost(SortableHost):
         lon2 = ((x + 1) * 360.0 / n) - 180.0
         lat1 = math.atan(math.sinh(math.pi * (1.0 - (2.0 * (y + 1) / n)))) * self.rad2deg
         lat2 = math.atan(math.sinh(math.pi * (1.0 - (2.0 * y / n)))) * self.rad2deg
+        log.debug("tile (%d,%d) lb=(%f,%f) rt=(%f,%f)" % (x, y, lon1, lat1, lon2, lat2))
         return ((lon1, lat1), (lon2, lat2))
 
     def get_tile_init_request(self, cache_root):
@@ -235,10 +237,10 @@ class TileHost(SortableHost):
 
     def get_tile_url(self, zoom, x, y):
         url = self.get_next_url()
-        if self.reverse_coords:
-            x, y = y, x
         n = 2 << (zoom - 1)
         x = x % n  # use modulo to wrap around
+        if self.reverse_coords:
+            x, y = y, x
         return "%s/%s/%s/%s%s" % (url, zoom, x, y, self.suffix)
 
     def get_tile_cache_dir(self, cache_root):
