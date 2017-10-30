@@ -1162,6 +1162,8 @@ class LayerManager(BaseDocument):
 
         except RuntimeError, e:
             return "Failed saving %s: %s" % (file_path, e)
+        except Exception, e:
+            return "Failed saving %s: %s" % (file_path, e)
         finally:
             zf.close()
         zf = zipfile.ZipFile(file_path)
