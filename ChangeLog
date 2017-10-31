@@ -1,3 +1,12 @@
+10/30/2017
+---------------------------
+Released 3.1b38
+- RM Fixed project save tests to handle zip file projects
+- RM Fixed #803: fixed some missing handling of negative tile numbers
+- RM Fixed error when saving over an existing file; was attempting to use regular file open with a URL
+- RM Catch general exception in save_all_zip
+- RM Fixed #801: extra call to GetDefaultAttributes in get_error_text was causing a segfault
+
 10/26/2017
 ---------------------------
 Released 3.1b37
