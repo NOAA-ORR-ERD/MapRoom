@@ -50,6 +50,8 @@ class VectorObjectLayer(LineLayer):
 
     rotation = Float(0.0)
 
+    border_width = Int(10)
+
     # class attributes
 
     use_color_cycling = False
@@ -76,6 +78,16 @@ class VectorObjectLayer(LineLayer):
         except KeyError:
             self.rotation = 0.0
 
+    def border_width_to_json(self):
+        return self.border_width
+
+    def border_width_from_json(self, json_data):
+        # Ignore when border width isn't present
+        try:
+            self.border_width = json_data['border_width']
+        except KeyError:
+            self.border_width = 10  # FIXME: add application preference
+
 # control point links are not used when restoring from disk, only on copied
 # layers when pasting them back.
 
@@ -99,6 +111,9 @@ class VectorObjectLayer(LineLayer):
             km = self.calculate_distances()
             return "%s, %s" % (km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
         return LineLayer.get_info_panel_text(self, prop)
+
+    def set_border_width(self, width):
+        self.border_width = width
 
     def set_visibility_when_selected(self, layer_visibility):
         layer_visibility['points'] = True
@@ -1004,12 +1019,6 @@ class OverlayScalableImageObject(OverlayImageObject):
     def text_height_from_json(self, json_data):
         self.text_height = json_data['text_height']
 
-    def border_width_to_json(self):
-        return self.border_width
-
-    def border_width_from_json(self, json_data):
-        self.border_width = json_data['border_width']
-
     def set_style(self, style):
         OverlayImageObject.set_style(self, style)
         self.rebuild_needed = True  # Force rebuild to change image color
@@ -1093,9 +1102,7 @@ class OverlayTextObject(OverlayScalableImageObject):
 
     user_text = Unicode("<b>New Label</b>")
 
-    border_width = Int(10)
-
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
 
@@ -1355,9 +1362,15 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
+
+    def set_border_width(self, width):
+        self.border_width = width
+        children = self.manager.get_layer_children(self)
+        for layer in children:
+            layer.set_border_width(width)
 
     def get_renderer_colors(self):
         """Hook to allow subclasses to override style colors
@@ -1429,7 +1442,7 @@ class ArrowTextBoxLayer(AnnotationLayer):
 
     type = Str("arrowtextbox")
 
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
 
 class ArrowTextIconLayer(AnnotationLayer):
@@ -1440,4 +1453,4 @@ class ArrowTextIconLayer(AnnotationLayer):
 
     type = Str("arrowtexticon")
 
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Marplot icon"]
+    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Marplot icon"]

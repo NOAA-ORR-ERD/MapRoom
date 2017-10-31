@@ -628,3 +628,43 @@ class StatusCodeColorCommand(Command):
             layer.points.color = colors
             layer.status_code_colors = status_code_colors
         return self.undo_info
+
+
+class BorderWidthCommand(Command):
+    short_name = "border_width"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('width', 'int'),
+    ]
+
+    def __init__(self, layer, width):
+        Command.__init__(self, layer)
+        self.width = width
+
+    def __str__(self):
+        return "Set Anchor Point"
+
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer:
+                self.width = next_command.width
+                return True
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = (layer.border_width,)
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_display_properties_changed = True
+        layer.set_border_width(self.width)
+        layer.rebuild_needed = True
+        return undo
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        old_width, = self.undo_info.data
+        layer.set_border_width(old_width)
+        layer.rebuild_needed = True
+        return self.undo_info

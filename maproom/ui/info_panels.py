@@ -12,7 +12,7 @@ import dialogs
 from ..layers import state, LayerStyle
 from ..library import coordinates
 from ..library.textparse import parse_int_string, int_list_to_string
-from ..mouse_commands import StyleChangeCommand, StatusCodeColorCommand, SetAnchorCommand, ChangeDepthCommand, MovePointsCommand, TextCommand
+from ..mouse_commands import StyleChangeCommand, StatusCodeColorCommand, SetAnchorCommand, ChangeDepthCommand, MovePointsCommand, TextCommand, BorderWidthCommand
 from ..menu_commands import RenameLayerCommand
 from ..vector_object_commands import MoveControlPointCommand
 from ..renderer import color_floats_to_int, int_to_color_floats
@@ -736,6 +736,44 @@ class LineStyleField(InfoField):
         line_style = LayerStyle.line_styles[item]
         style = LayerStyle(line_stipple=line_style[1])
         cmd = StyleChangeCommand(layer, style)
+        self.process_command(cmd)
+
+
+class BorderWidthField(InfoField):
+    same_line = True
+    display_widths = [str(s) for s in range(21)]
+
+    def fill_data(self, layer):
+        try:
+            index = self.display_widths.index(str(layer.border_width))
+            self.ctrl.SetSelection(index)
+        except ValueError:
+            self.ctrl.ChangeValue(str(layer.border_width))
+            pass
+
+    def create_control(self):
+        c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=self.display_widths)
+        c.Bind(wx.EVT_COMBOBOX, self.width_from_list)
+        c.Bind(wx.EVT_TEXT, self.width_from_text)
+        return c
+
+    def width_from_list(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        item = self.display_widths[event.GetSelection()]
+        cmd = BorderWidthCommand(layer, int(item))
+        self.process_command(cmd)
+
+    def width_from_text(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        try:
+            width = int(self.ctrl.GetValue())
+        except ValueError:
+            width = 0
+        cmd = BorderWidthCommand(layer, width)
         self.process_command(cmd)
 
 
@@ -1515,6 +1553,7 @@ class InfoPanel(PANELTYPE):
         "Line transparency": LineAlphaField,
         "Fill transparency": FillAlphaField,
         "Color": ColorField,
+        "Border width": BorderWidthField,
         "Line color": ColorField,
         "Line style": LineStyleField,
         "Line width": LineWidthField,
