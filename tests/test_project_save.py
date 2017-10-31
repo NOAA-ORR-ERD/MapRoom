@@ -94,9 +94,9 @@ class TestBasicLoad(object):
         print(json_manager)
         print(zip_manager)
 
-        compare_layer_managers(self.json_manager, self.zip_manager)
+        compare_layer_managers(json_manager, zip_manager)
 
-class TestImageLayer(TestBasicLoad):
+class TestImageLayer(object):
     def setup(self):
         self.project = MockProject()
         self.manager = self.project.layer_manager
@@ -131,7 +131,7 @@ class TestTileLayer(object):
         t = TileLayer(manager=lm)
         t.map_server_id = 5  # arbitrary
         lm.insert_layer([3], t)
-        lm.save_all(self.project_file)
+        lm.save_all_text(self.project_file)
     
     def test_load(self):
         self.project.load_file(self.project_file, "application/x-maproom-project-json")
