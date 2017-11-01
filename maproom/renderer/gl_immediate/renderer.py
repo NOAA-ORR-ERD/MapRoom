@@ -336,7 +336,7 @@ class ImmediateModeRenderer():
                 self.image_textures.vbo_texture_coordinates.bind()
                 gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-            gl.glDrawArrays(gl.GL_QUADS, 0, 4)
+            gl.glDrawArrays(gl.GL_QUADS, 0, 8)
 
             if texture:
                 self.image_textures.vbo_texture_coordinates.unbind()

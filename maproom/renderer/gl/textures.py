@@ -378,9 +378,9 @@ class ImageTextures(object):
     def load(self, image_data):
         texcoord_data = np.zeros(
             (1, ),
-            dtype=data_types.TEXTURE_COORDINATE_DTYPE,
+            dtype=data_types.TEXTURE_COORDINATE_DUPLICATE_DTYPE,
         ).view(np.recarray)
-        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1, 8)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1, 16)
 
         for i, image in enumerate(image_data):
             self.textures.append(gl.glGenTextures(1))
@@ -423,9 +423,9 @@ class ImageTextures(object):
 
             vertex_data = np.zeros(
                 (1, ),
-                dtype=data_types.QUAD_VERTEX_DTYPE,
+                dtype=data_types.QUAD_VERTEX_DUPLICATE_DTYPE,
             ).view(np.recarray)
-            vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1, 8)
+            vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1, 16)
             # we fill the vbo_vertexes data in reproject() below
             self.vbo_vertexes.append(gl_vbo.VBO(vertex_raw))
 
@@ -437,6 +437,16 @@ class ImageTextures(object):
         texcoord_data.v_rt = 0
         texcoord_data.u_rb = 1.0
         texcoord_data.v_rb = 1.0
+
+        # The prime coordinates are the duplicates 360 degrees east
+        texcoord_data.uprime_lb = 0
+        texcoord_data.vprime_lb = 1.0
+        texcoord_data.uprime_lt = 0
+        texcoord_data.vprime_lt = 0
+        texcoord_data.uprime_rt = 1.0
+        texcoord_data.vprime_rt = 0
+        texcoord_data.uprime_rb = 1.0
+        texcoord_data.vprime_rb = 1.0
 
         self.vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
 
@@ -460,16 +470,17 @@ class ImageTextures(object):
     def set_projection(self, image_data, projection):
         log.debug("set_projection: image_list=%s" % str(list(image_data)))
         for i, image in enumerate(image_data):
+            raw = self.vbo_vertexes[i].data
+            vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DUPLICATE_DTYPE, type=np.recarray)
+
             log.debug("  world rect #%d: %s" % (i, str(image.world_rect)))
             lb, lt, rt, rb = image.world_rect
+
+            # original copy is in the -360 to 0 range
             lb_projected = projection(lb[0], lb[1])
             lt_projected = projection(lt[0], lt[1])
             rt_projected = projection(rt[0], rt[1])
             rb_projected = projection(rb[0], rb[1])
-
-            log.debug("  projected #%d: %s" % (i, str((lb_projected, lt_projected, rt_projected, rb_projected))))
-            raw = self.vbo_vertexes[i].data
-            vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = lb_projected[0]
             vertex_data.y_lb = lb_projected[1]
             vertex_data.x_lt = lt_projected[0]
@@ -478,6 +489,22 @@ class ImageTextures(object):
             vertex_data.y_rt = rt_projected[1]
             vertex_data.x_rb = rb_projected[0]
             vertex_data.y_rb = rb_projected[1]
+            log.debug("  projected #%d: %s" % (i, str((lb_projected, lt_projected, rt_projected, rb_projected))))
+
+            # The same texture is duplicated at +360, so two copies will appear
+            # if the map is zoomed out far enough
+            lbprime_projected = projection(lb[0] + 360, lb[1])
+            ltprime_projected = projection(lt[0] + 360, lt[1])
+            rtprime_projected = projection(rt[0] + 360, rt[1])
+            rbprime_projected = projection(rb[0] + 360, rb[1])
+            vertex_data.xprime_lb = lbprime_projected[0]
+            vertex_data.yprime_lb = lbprime_projected[1]
+            vertex_data.xprime_lt = ltprime_projected[0]
+            vertex_data.yprime_lt = ltprime_projected[1]
+            vertex_data.xprime_rt = rtprime_projected[0]
+            vertex_data.yprime_rt = rtprime_projected[1]
+            vertex_data.xprime_rb = rbprime_projected[0]
+            vertex_data.yprime_rb = rbprime_projected[1]
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
 

@@ -58,11 +58,31 @@ QUAD_VERTEX_DTYPE = np.dtype(
      ("x_rt", np.float32), ("y_rt", np.float32),
      ("x_rb", np.float32), ("y_rb", np.float32)]
 )
+QUAD_VERTEX_DUPLICATE_DTYPE = np.dtype(
+    [("x_lb", np.float32), ("y_lb", np.float32),
+     ("x_lt", np.float32), ("y_lt", np.float32),
+     ("x_rt", np.float32), ("y_rt", np.float32),
+     ("x_rb", np.float32), ("y_rb", np.float32),
+     ("xprime_lb", np.float32), ("yprime_lb", np.float32),
+     ("xprime_lt", np.float32), ("yprime_lt", np.float32),
+     ("xprime_rt", np.float32), ("yprime_rt", np.float32),
+     ("xprime_rb", np.float32), ("yprime_rb", np.float32)]
+)
 TEXTURE_COORDINATE_DTYPE = np.dtype(
     [("u_lb", np.float32), ("v_lb", np.float32),
      ("u_lt", np.float32), ("v_lt", np.float32),
      ("u_rt", np.float32), ("v_rt", np.float32),
      ("u_rb", np.float32), ("v_rb", np.float32)]
+)
+TEXTURE_COORDINATE_DUPLICATE_DTYPE = np.dtype(
+    [("u_lb", np.float32), ("v_lb", np.float32),
+     ("u_lt", np.float32), ("v_lt", np.float32),
+     ("u_rt", np.float32), ("v_rt", np.float32),
+     ("u_rb", np.float32), ("v_rb", np.float32),
+     ("uprime_lb", np.float32), ("vprime_lb", np.float32),
+     ("uprime_lt", np.float32), ("vprime_lt", np.float32),
+     ("uprime_rt", np.float32), ("vprime_rt", np.float32),
+     ("uprime_rb", np.float32), ("vprime_rb", np.float32)]
 )
 
 
