@@ -58,7 +58,7 @@ class BaseLayerLoader(BaseLoader):
     def can_save_layer(self, layer):
         return layer.type in self.layer_types
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         raise NotImplementedError
 
     def save_layer(self, uri, layer):

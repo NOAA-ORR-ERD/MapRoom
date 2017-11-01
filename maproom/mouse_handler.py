@@ -522,8 +522,7 @@ class RNCSelectionMode(PanMode):
         name = layer.ring_identifiers[object_index]['name']
         if ";" in name:
             name, filename, url = name.split(";")
-            if "_" in filename:
-                num, _ = filename.split("_", 1)
+            num, _ = filename.split("_", 1)
         else:
             name = "Invalid RNC"
             filename = ""
@@ -570,10 +569,15 @@ class RNCSelectionMode(PanMode):
                 layer, object_type, object_index = rnc
                 name, num, filename, url = self.parse_rnc_object(rnc)
                 if url:
+                    p = self.get_world_point(event)
+                    if p[0] > 0:
+                        regime = 360
+                    else:
+                        regime = 0
                     # submit download to downloader!
-                    log.info("LOADING RNC MAP #%s from %s" % (num, url))
+                    log.info("LOADING RNC MAP #%s from %s in %d - %d" % (num, url, regime - 360, regime))
                     e = c.project
-                    e.download_rnc(url, filename, num)
+                    e.download_rnc(url, filename, num, regime)
 
         self.is_panning = False
 
@@ -606,20 +610,6 @@ class PolygonSelectionMode(PanMode):
             if layer.can_highlight_clickable_object(c, object_type, object_index):
                 return layer, object_type, object_index
         return None
-
-    def parse_rnc_object(self, rnc):
-        layer, object_type, object_index = rnc
-        name = layer.ring_identifiers[object_index]['name']
-        if ";" in name:
-            name, filename, url = name.split(";")
-            if "_" in filename:
-                num, _ = filename.split("_", 1)
-        else:
-            name = "Invalid RNC"
-            filename = ""
-            url = None
-            num = "0"
-        return name, num, filename, url
 
     def get_help_text(self):
         rnc = self.get_rnc_object()

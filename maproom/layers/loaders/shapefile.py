@@ -102,7 +102,7 @@ class ShapefileLoader(BaseLayerLoader):
 
     layer_class = PolygonShapefileLayer
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         layer = self.layer_class(manager=manager)
 
         layer.load_error_string, geometry_list = load_shapely(metadata.uri)

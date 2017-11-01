@@ -107,7 +107,7 @@ class ParticleLoader(BaseLayerLoader):
     extensions = [".nc"]
     name = "nc_particles"
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         """
         load the nc_particles file
 

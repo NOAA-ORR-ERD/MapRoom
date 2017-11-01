@@ -288,6 +288,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.NewCompassRoseLayerAction(),
             actions.NewLonLatLayerAction(),
             actions.NewRNCLayerAction(),
+            actions.NewRNCLayer360Action(),
         ]
 
     def get_actions_Menu_Layer_LayerStackGroup(self):
@@ -386,7 +387,7 @@ class MaproomProjectTask(FrameworkTask):
         that will load a new file or create a new view of the existing editor,
         respectively.
         """
-        log.debug("new: source=%s active editor=%s" % (source, self.active_editor))
+        log.debug("new: source=%s active editor=%s, kwargs=%s" % (source, self.active_editor, str(kwargs)))
         if hasattr(source, 'document_id'):
             if self.active_editor and not self.active_editor.load_in_new_tab(source.metadata):
                 editor = self.active_editor

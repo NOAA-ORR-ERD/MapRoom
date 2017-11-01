@@ -290,13 +290,23 @@ class NewTileLayerAction(EditorAction):
 
 
 class NewRNCLayerAction(EditorAction):
-    name = 'New RNC Download Selection Layer'
-    tooltip = 'Create new layer for downloading RNC images'
+    name = 'New RNC Download Selection Layer (-360 - 0)'
+    tooltip = 'Create new layer for downloading RNC images in the -360 to 0 map regime'
 
     def perform(self, event):
         from maproom.templates import get_template_path
         path = get_template_path("RNCProdCat_*.bna")
-        event.task.window.application.load_file(path, event.task)
+        event.task.window.application.load_file(path, event.task, regime=0)
+
+
+class NewRNCLayer360Action(EditorAction):
+    name = 'New RNC Download Selection Layer (0 - 360)'
+    tooltip = 'Create new layer for downloading RNC images in the 0 to 360 map regime'
+
+    def perform(self, event):
+        from maproom.templates import get_template_path
+        path = get_template_path("RNCProdCat_*.bna")
+        event.task.window.application.load_file(path, event.task, regime=360)
 
 
 class DeleteLayerAction(EditorAction):

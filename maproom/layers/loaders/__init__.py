@@ -102,12 +102,12 @@ def get_loader(metadata):
     return None
 
 
-def load_layers(metadata, manager=None):
+def load_layers(metadata, manager=None, **kwargs):
     for loader in loaders:
         log.debug("trying loader %s" % loader.name)
         if loader.can_load(metadata):
             log.debug(" loading using loader %s!" % loader.name)
-            layers = loader.load_layers(metadata, manager=manager)
+            layers = loader.load_layers(metadata, manager=manager, **kwargs)
             log.debug(" loaded layers: \n  %s" % "\n  ".join([str(a) for a in layers]))
             return loader, layers
     return None, None

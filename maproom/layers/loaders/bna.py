@@ -26,14 +26,14 @@ class BNALoader(BaseLayerLoader):
 
     layer_class = PolygonLayer
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         layer = self.layer_class(manager=manager)
 
         (layer.load_error_string,
          f_ring_points,
          f_ring_starts,
          f_ring_counts,
-         f_ring_identifiers) = load_bna_file(metadata.uri)
+         f_ring_identifiers) = load_bna_file(metadata.uri, kwargs.get("regime", 0))
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
             layer.set_data(f_ring_points, f_ring_starts, f_ring_counts,
@@ -78,7 +78,7 @@ class BNAShapefileLoader(BNALoader):
 
     layer_class = PolygonShapefileLayer
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         layer = self.layer_class(manager=manager)
 
         try:
@@ -102,7 +102,7 @@ class BNAShapefileLoader(BNALoader):
             write_layer_as_shapefile(filename, layer, desc)
 
 
-def parse_bna_file(uri):
+def parse_bna_file(uri, regime=0):
     f = fsopen(uri, "r")
     s = f.read()
     f.close()
@@ -174,7 +174,7 @@ def parse_bna_file(uri):
     return items, total_points
 
 
-def load_bna_file(uri):
+def load_bna_file(uri, regime):
     """
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
@@ -204,7 +204,9 @@ def load_bna_file(uri):
              'feature_code': feature_code}
         )
         last_index = start_index + num_points
-        all_polygon_points[start_index:last_index, :] = item_points[0:num_points, :]
+        p = item_points[0:num_points]
+        p[:,0] += regime
+        all_polygon_points[start_index:last_index, :] = p
         polygon_starts[polygon_index] = start_index
         polygon_counts[polygon_index] = num_points
         polygon_index += 1
@@ -240,7 +242,7 @@ def save_bna_file(f, layer):
     progress_log.info("Saved BNA")
 
 
-def load_bna_as_shapely(uri):
+def load_bna_as_shapely(uri, regime):
     """
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
@@ -262,10 +264,12 @@ def load_bna_as_shapely(uri):
             {'name': name,
              'feature_code': feature_code}
         )
+        p = item_points[0:num_points]
+        p[:,0] += regime
         if is_polygon:
-            geom = Polygon(item_points[0:num_points])
+            geom = Polygon(p)
         else:
-            geom = LineString(item_points[0:num_points])
+            geom = LineString(p)
         add_maproom_attributes_to_shapely_geom(geom, name, feature_code)
         geometry_list.append(geom)
 

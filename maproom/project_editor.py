@@ -111,6 +111,8 @@ class ProjectEditor(FrameworkEditor):
         """
         metadata = document.metadata
         loader = loaders.get_loader(metadata)
+        regime = kwargs.get("regime", 0)
+        log.debug("load_omnivore_document: doc=%s loader=%s kwargs=%s" % (document, loader, str(kwargs)))
         if hasattr(loader, "load_project"):
             document = LayerManager.create(self, initial_layers=False)
             document.metadata = metadata.clone_traits()
@@ -124,7 +126,7 @@ class ProjectEditor(FrameworkEditor):
             self.layer_tree_control.rebuild()
             self.perform_batch_flags(None, batch_flags)
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
-            cmd = ViewportCommand(None, center, units_per_pixel)
+            cmd = ViewportCommand(None, center, units_per_pixel, regime)
             self.process_command(cmd)
 
             # Clear modified flag
@@ -161,14 +163,14 @@ class ProjectEditor(FrameworkEditor):
             self.view_document(self.document)
         else:
             log.debug("loading %s" % metadata)
-            cmd = LoadLayersCommand(metadata)
+            cmd = LoadLayersCommand(metadata, regime)
             self.process_command(cmd)
             layers = cmd.undo_info.affected_layers()
             if len(layers) == 1:
-                cmd = ViewportCommand(layers[0])
+                cmd = ViewportCommand(layers[0], regime=regime)
             else:
                 center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
-                cmd = ViewportCommand(None, center, units_per_pixel)
+                cmd = ViewportCommand(None, center, units_per_pixel, regime=regime)
             self.process_command(cmd)
 
     def parse_extra_json(self, json, batch_flags):
@@ -379,9 +381,9 @@ class ProjectEditor(FrameworkEditor):
             if error is None:
                 log.debug("loaded RNC map %s for map %s" % (req.path, req.extra_data))
                 prefs = self.task.preferences
-                kap = extract_from_zip(req.path, req.extra_data, prefs.bsb_directory)
+                kap = extract_from_zip(req.path, req.extra_data[0], prefs.bsb_directory)
                 if kap:
-                    self.window.application.load_file(kap, self.task)
+                    self.window.application.load_file(kap, self.task, regime=req.extra_data[1])
                 else:
                     self.task.error("The metadata in %s\nhas a problem: map %s doesn't exist" % (req.path, req.extra_data))
             else:
@@ -397,12 +399,12 @@ class ProjectEditor(FrameworkEditor):
             if os.path.exists(path):
                 return path
 
-    def download_rnc(self, url, filename, map_id):
+    def download_rnc(self, url, filename, map_id, regime):
         kap = self.check_rnc_map(url, filename, map_id)
         if not kap:
-            self.download_file(url, None, self.process_rnc_download, filename)
+            self.download_file(url, None, self.process_rnc_download, (filename, regime))
         else:
-            self.window.application.load_file(kap, self.task)
+            self.window.application.load_file(kap, self.task, regime=regime)
 
     def download_file(self, url, filename, callback, extra_data):
         if filename is None:

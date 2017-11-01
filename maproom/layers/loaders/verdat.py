@@ -27,7 +27,7 @@ class VerdatLoader(BaseLayerLoader):
 
     points_per_tick = 5000
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         layer = LineLayer(manager=manager)
 
         progress_log.info("Loading from %s" % metadata.uri)

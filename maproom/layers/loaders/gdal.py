@@ -25,7 +25,7 @@ class GDALLoader(BaseLayerLoader):
     def can_load(self, metadata):
         return metadata.mime.startswith("image/")
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         layer = RasterLayer(manager=manager)
 
         log.info("Loading from %s" % metadata.uri)

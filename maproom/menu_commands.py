@@ -27,11 +27,13 @@ class LoadLayersCommand(Command):
     short_name = "load"
     serialize_order = [
         ('metadata', 'file_metadata'),
+        ('regime', 'int'),
     ]
 
-    def __init__(self, metadata):
+    def __init__(self, metadata, regime=0):
         Command.__init__(self)
         self.metadata = metadata
+        self.regime = regime
 
     def __str__(self):
         return "Load Layers From %s" % self.metadata.uri
@@ -45,7 +47,7 @@ class LoadLayersCommand(Command):
             loader.load_query(self.metadata, lm)
         try:
             progress_log.info("START=Loading %s" % self.metadata.uri)
-            layers = loader.load_layers(self.metadata, manager=lm)
+            layers = loader.load_layers(self.metadata, manager=lm, regime=self.regime)
         except ProgressCancelError, e:
             undo.flags.success = False
             undo.flags.errors = [e.message]

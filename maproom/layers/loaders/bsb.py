@@ -40,7 +40,7 @@ class BSBLoader(BaseLoader):
             for index in selections:
                 self.selected.append(bsb.info.images[index].filename)
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         if not self.selected:
             raise ProgressCancelError("No files selected from BSB")
         layers = []

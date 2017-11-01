@@ -27,7 +27,7 @@ class UGridLoader(BaseLayerLoader):
             return found.pop()
         return None
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         layers = []
 
         fs, relpath = opener.parse(metadata.uri)
