@@ -1025,6 +1025,13 @@ class LayerManager(BaseDocument):
             log.debug("control_point_links: restoring %s from %s" % (dep, truth))
             self.control_point_links[dep] = (truth, locked)
 
+    def get_all_control_point_links_copy(self):
+        return self.control_point_links.copy()
+
+    def restore_all_control_point_links(self, copy):
+        self.control_point_links = copy.copy()
+
+
     ##### Layer load
 
     def load_all_from_json(self, json, batch_flags=None):

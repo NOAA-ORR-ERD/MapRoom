@@ -581,18 +581,25 @@ class SetAnchorCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        undo.data = (layer.anchor_point_index, self.anchor)
+        all_links = lm.get_all_control_point_links_copy()
+        linked = lm.remove_control_point_links(layer, layer.anchor_point_index)
+        print("old linked: %s" % linked)
+        undo.data = (layer.anchor_point_index, self.anchor, all_links)
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_display_properties_changed = True
         layer.set_anchor_index(self.anchor)
+        for other in linked:
+            (dep, dep_cp), (truth, truth_cp), locked = other
+            lm.set_control_point_link((self.layer, self.anchor), (truth, truth_cp))
         layer.rebuild_needed = True
         return undo
 
     def undo(self, editor):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
-        old_anchor, anchor = self.undo_info.data
+        old_anchor, anchor, all_links = self.undo_info.data
         layer.set_anchor_index(old_anchor)
+        lm.restore_all_control_point_links(all_links)
         layer.rebuild_needed = True
         return self.undo_info
 
