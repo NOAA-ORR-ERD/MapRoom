@@ -62,6 +62,8 @@ class VectorObjectLayer(LineLayer):
 
     control_point_color = color_floats_to_int(0, 0, 0, 1.0)
 
+    control_point_names = [""]
+
     def can_copy(self):
         return True
 
@@ -216,6 +218,8 @@ class LineVectorObject(VectorObjectLayer):
     lines = np.asarray(((0, 1),), dtype=np.uint8)
     num_corners = 2
     center_point_index = 2
+
+    control_point_names = ["start", "end", "middle"]
 
     # return the anchor point of the index point. E.g. anchor_of[0] = 1
     anchor_of = np.asarray((1, 0, 2), dtype=np.uint8)
@@ -478,6 +482,8 @@ class RectangleMixin(object):
     lines = np.asarray(((0, 1), (1, 2), (2, 3), (3, 0)), dtype=np.uint8)
     num_corners = 4
     center_point_index = 8
+
+    control_point_names = ["lower left", "lower right", "upper right", "upper left", "bottom", "right", "top", "left", "center"]
 
     # return the anchor point of the index point. E.g. anchor_of[0] = 2
     anchor_of = np.asarray((2, 3, 0, 1, 6, 7, 4, 5, 8), dtype=np.uint8)

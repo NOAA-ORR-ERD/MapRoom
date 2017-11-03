@@ -408,6 +408,7 @@ class AnchorPointField(InfoField):
     same_line = True
 
     def fill_data(self, layer):
+        self.ctrl.Set(layer.control_point_names)
         self.ctrl.SetSelection(layer.anchor_point_index)
 
     def create_control(self):
