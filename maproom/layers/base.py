@@ -114,7 +114,7 @@ class Layer(HasTraits):
 
     def debug_info(self, indent=""):
         lines = []
-        lines.append("%s (%x) invariant=%s dependent_of=%s" % (self.name, id(self), self.invariant, self.dependent_of))
+        lines.append("%s (%x) invariant=%s dependent_of=%s grouped=%s" % (self.name, id(self), self.invariant, self.dependent_of, self.grouped))
         return ("\n%s" % indent).join(lines)
 
     def test_contents_equal(self, other):
@@ -245,6 +245,7 @@ class Layer(HasTraits):
             'index': index,
             'invariant': self.invariant,
             'type': self.type,
+            'grouped': self.grouped,
             'version': 1,
             'has encoded data': False,
             'name': self.name,
@@ -311,6 +312,7 @@ class Layer(HasTraits):
             # handle legacy case where invariant wasn't saved.  Restore of any
             # linked control points will be broken in cases like this
             self.invariant = json_data['invariant']
+        self.grouped = json_data.get('grouped', False)
         self.style = LayerStyle()
         self.style.parse(json_data['style'])
         if 'url' in json_data:
