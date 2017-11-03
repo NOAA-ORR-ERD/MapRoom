@@ -269,6 +269,7 @@ class DrawVectorObjectCommand(StyledCommand):
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         lf.layer_loaded = True
+        lf.collapse = True
 
         parent_layer_data = update_parent_bounds(layer, undo)
 

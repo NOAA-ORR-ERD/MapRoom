@@ -448,9 +448,14 @@ class ProjectEditor(FrameworkEditor):
         self.layer_visibility[layer] = layer.get_visibility_dict()
 
     @on_trait_change('layer_manager:layers_changed')
-    def layers_changed(self):
+    def layers_changed(self, batch_status):
         log.debug("layers_changed called!!!")
+        try:
+            collapse = batch_status.collapse
+        except AttributeError:
+            collapse = {}
         self.layer_tree_control.rebuild()
+        self.layer_tree_control.collapse_layers(collapse)
         self.timeline.recalc_view()
 
     def update_layer_menu_ui(self, edit_layer):
@@ -706,6 +711,8 @@ class ProjectEditor(FrameworkEditor):
                 b.layers_changed = True
             if lf.layer_metadata_changed:
                 b.metadata_changed = True
+            if lf.collapse:
+                b.collapse[layer] = True
 
         # Update the folders after all the children are moved. Also, need to
         # update the folders from children to parent because child folder
@@ -735,7 +742,7 @@ class ProjectEditor(FrameworkEditor):
                 self.layer_manager.layer_contents_changed = layer
 
         if b.layers_changed:
-            self.layer_manager.layers_changed = True
+            self.layer_manager.layers_changed = b
         if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True
         if b.refresh_needed:

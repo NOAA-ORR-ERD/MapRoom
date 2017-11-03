@@ -86,6 +86,16 @@ class LayerTreeControl(wx.Panel):
         (selected, ) = self.tree.GetItemData(item)
         return layer == selected
 
+    def walk_tree(self, item=None):
+        if item is None:
+            item = self.tree.GetRootItem()
+        current = []
+        current.append(item)
+        if item.HasChildren():
+            for child in item.GetChildren():
+                current.extend(self.walk_tree(child))
+        return current
+
     def set_edit_layer(self, layer):
         if self.project is None:
             return
@@ -123,6 +133,15 @@ class LayerTreeControl(wx.Panel):
             n -= 1
 
         return False
+
+    def collapse_layers(self, collapse):
+        items = self.walk_tree()
+        for item in items:
+            (item_layer, ) = self.tree.GetItemData(item)
+            log.debug("collapse_layers: checking %s: %s" % (item_layer, item_layer in collapse.keys()))
+            if item_layer in collapse.keys():
+                log.debug("COLLAPSING %s" % item_layer)
+                wx.CallAfter(self.tree.Collapse, item)
 
     def get_expanded_state(self):
         state = dict()
@@ -193,15 +212,12 @@ class LayerTreeControl(wx.Panel):
             # drop target for dropping inside a folder
             item.SetHasPlus(True)
 
-        if layer in expanded_state:
-            expanded = expanded_state[layer]
-            if expanded:
-                item.Expand()
-            else:
-                item.Collapse()
+        expanded = expanded_state.get(layer, True)  # expand by default if not listed
+        log.debug("tree expansion: %s for %s" % (expanded, str(layer.name)))
+        if expanded:
+            self.tree.Expand(item)
         else:
-            # expand by default if not listed
-            item.Expand()
+            self.tree.Collapse(item)
 
         return item
 

@@ -141,6 +141,9 @@ class LayerStatus(object):
         # ...needs to be selected after the command finishes
         self.select_layer = False
 
+        # True if the item should be shown collapsed in the tree list
+        self.collapse = False
+
 
 class BatchStatus(object):
     def __init__(self):
@@ -150,6 +153,9 @@ class BatchStatus(object):
         # rebuild flags for each layer; value is whether or not it needs full
         # refresh (False) or in-place, fast refresh (True)
         self.need_rebuild = {}
+
+        # force the layer to be collapsed when inserted into the tree list
+        self.collapse = {}
 
         # The last layer marked as selected will show up here
         self.select_layer = None
