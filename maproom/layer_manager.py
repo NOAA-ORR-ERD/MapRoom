@@ -128,6 +128,14 @@ class LayerManager(BaseDocument):
         layer = RootLayer(manager=self)
         self.insert_layer([index], layer)
 
+        if initial_layers:
+            prefs = self.project.task.preferences
+            if prefs.show_initial_annotation:
+                index += 1
+                annotation = AnnotationLayer(manager=self)
+                annotation.new()
+                self.insert_layer([index], annotation)
+
         index += 1
         grid = Grid(manager=self)
         self.insert_layer([index], grid)
@@ -138,12 +146,6 @@ class LayerManager(BaseDocument):
 
         if initial_layers:
             prefs = self.project.task.preferences
-            if prefs.show_initial_annotation:
-                index += 1
-                annotation = AnnotationLayer(manager=self)
-                annotation.new()
-                self.insert_layer([index], annotation)
-
             if prefs.show_initial_tile:
                 index += 1
                 tile = TileLayer(manager=self)
