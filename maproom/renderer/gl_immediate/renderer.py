@@ -93,8 +93,7 @@ class ImmediateModeRenderer():
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             if (picker.is_active):
-                picker.bind_picker_colors_for_lines(layer,
-                                                    len(self.world_line_segment_points))
+                picker.bind_picker_colors_for_lines(layer, len(self.world_line_segment_points), self.canvas.project.layer_manager)
                 gl.glLineWidth(6)
             else:
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
@@ -143,8 +142,7 @@ class ImmediateModeRenderer():
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             if (picker.is_active):
-                picker.bind_picker_colors_for_points(layer,
-                                                     len(self.vbo_point_xys.data))
+                picker.bind_picker_colors_for_points(layer, len(self.vbo_point_xys.data), self.canvas.project.layer_manager)
                 gl.glPointSize(point_size + 8)
             else:
                 # To make the points stand out better, especially when rendered on top
@@ -726,7 +724,7 @@ class ImmediateModeRenderer():
             return
 
         if (picker.is_active):
-            fill_color = picker.get_polygon_picker_colors(layer, 1)[0]
+            fill_color = picker.get_polygon_picker_colors(layer, 1, self.canvas.project.layer_manager)[0]
         else:
             fill_color = self.get_fill_properties(style)
         if fill_color is None:
@@ -763,8 +761,7 @@ class ImmediateModeRenderer():
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
         if (picker.is_active):
-            picker.bind_picker_colors_for_lines(layer,
-                                                len(self.world_line_segment_points))
+            picker.bind_picker_colors_for_lines(layer, len(self.world_line_segment_points), self.canvas.project.layer_manager)
             gl.glLineWidth(6)
         else:
             gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
