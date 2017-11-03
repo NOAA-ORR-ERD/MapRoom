@@ -1450,8 +1450,46 @@ class ArrowTextBoxLayer(AnnotationLayer):
 
     layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
+    selection_info_panel = ["Anchor point", "Text format", "Overlay text", "Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
-class ArrowTextIconLayer(AnnotationLayer):
+    def get_layer_of_anchor(self):
+        return self.get_text_box()
+
+    def get_text_box(self):
+        children = self.manager.get_layer_children(self)
+        for layer in children:
+            if hasattr(layer, "user_text"):
+                return layer
+        return None
+
+    @property
+    def anchor_point_index(self):
+        textbox = self.get_text_box()
+        if textbox is not None:
+            return textbox.anchor_point_index
+        return 0
+
+    def set_anchor_index(self, anchor):
+        textbox = self.get_text_box()
+        if textbox is not None:
+            textbox.set_anchor_index(anchor)
+
+    @property
+    def user_text(self):
+        textbox = self.get_text_box()
+        if textbox is not None:
+            return textbox.user_text
+        return ""
+
+    @user_text.setter
+    def user_text(self, value):
+        textbox = self.get_text_box()
+        if textbox is not None:
+            textbox.user_text = value
+
+
+
+class ArrowTextIconLayer(ArrowTextBoxLayer):
     """Layer for predefined group of text box and arrow pointing to lat/lon
 
     """

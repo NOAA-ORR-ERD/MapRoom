@@ -423,6 +423,8 @@ class AnchorPointField(InfoField):
         if (layer is None):
             return
         item = event.GetSelection()
+        if layer.is_folder():
+            layer = layer.get_layer_of_anchor()
         cmd = SetAnchorCommand(layer, item)
         self.process_command(cmd)
 
