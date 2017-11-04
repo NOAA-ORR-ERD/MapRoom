@@ -94,14 +94,21 @@ class BoundedFolder(LineLayer, Folder):
             self.line_segment_indexes.state = 0
         log.debug("SET_DATA_FROM_BOUNDS:end %s" % self)
 
+    def use_layer_for_bounding_rect(self, layer):
+        # Defaults to using all layers in boundary rect calculation
+        return True
+
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
         log.debug("COMPUTE_BOUNDING_RECT:before %s %s" % (self, self.bounds))
 
         children = self.manager.get_layer_children(self)
         for layer in children:
-            log.debug("  CHILD %s %s" % (layer, layer.bounds))
-            bounds = rect.accumulate_rect(bounds, layer.bounds)
+            if self.use_layer_for_bounding_rect(layer):
+                log.debug("  CHILD %s %s" % (layer, layer.bounds))
+                bounds = rect.accumulate_rect(bounds, layer.bounds)
+            else:
+                log.debug("  not using %s for boundary rect" % layer)
 
         log.debug("COMPUTE_BOUNDING_RECT:after %s %s" % (self, bounds))
         self.set_data_from_bounds(bounds)

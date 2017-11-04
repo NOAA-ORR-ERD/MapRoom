@@ -1498,3 +1498,7 @@ class ArrowTextIconLayer(ArrowTextBoxLayer):
     type = Str("arrowtexticon")
 
     layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Marplot icon"]
+
+    def use_layer_for_bounding_rect(self, layer):
+        # Defaults to using all layers in boundary rect calculation
+        return not isinstance(layer, OverlayIconObject)
