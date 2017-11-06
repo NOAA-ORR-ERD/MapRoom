@@ -242,7 +242,7 @@ def save_bna_file(f, layer):
     progress_log.info("Saved BNA")
 
 
-def load_bna_as_shapely(uri, regime):
+def load_bna_as_shapely(uri, regime=0):
     """
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
