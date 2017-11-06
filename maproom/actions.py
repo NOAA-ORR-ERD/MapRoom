@@ -44,7 +44,7 @@ class SaveProjectAction(EditorAction):
     enabled_name = 'dirty'  # enabled based on state of task.active_editor.dirty
 
     def perform(self, event):
-        self.active_editor.save(None)
+        self.active_editor.save()
 
 
 class SaveProjectAsAction(EditorAction):
@@ -54,9 +54,7 @@ class SaveProjectAsAction(EditorAction):
     image = ImageResource('file_save_as')
 
     def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom")
-        if dialog.open() == OK:
-            self.active_editor.save(dialog.path)
+        self.active_editor.save(prompt=True)
 
 
 class SaveCommandLogAction(EditorAction):

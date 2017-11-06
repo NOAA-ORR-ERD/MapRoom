@@ -8,6 +8,7 @@ import json
 import wx
 
 # Enthought library imports.
+from pyface.api import FileDialog, OK
 from traits.api import Any
 from traits.api import Bool
 from traits.api import Dict
@@ -242,11 +243,17 @@ class ProjectEditor(FrameworkEditor):
         self.update_default_visibility()
         self.layer_canvas.zoom_to_fit()
 
-    def save(self, path=None):
+    def save(self, path=None, prompt=False):
         """ Saves the contents of the editor in a maproom project file
         """
         if path is None:
             path = self.document.uri
+        if prompt or not path:
+            dialog = FileDialog(parent=self.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom")
+            if dialog.open() == OK:
+                path = dialog.path
+            else:
+                return
         if not path:
             path = "%s.maproom" % self.name
 
