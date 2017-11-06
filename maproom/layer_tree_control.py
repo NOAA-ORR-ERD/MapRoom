@@ -212,7 +212,7 @@ class LayerTreeControl(wx.Panel):
             # drop target for dropping inside a folder
             item.SetHasPlus(True)
 
-        expanded = expanded_state.get(layer, True)  # expand by default if not listed
+        expanded = expanded_state.get(layer, not layer.grouped)  # expand if not grouped
         log.debug("tree expansion: %s for %s" % (expanded, str(layer.name)))
         if expanded:
             self.tree.Expand(item)
