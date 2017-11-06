@@ -80,6 +80,16 @@ class PolygonLayer(PointLayer):
             return self.rings is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
+    def color_array(self):
+        # set up feature code to color map
+        green = color_floats_to_int(0.25, 0.5, 0, 0.75)
+        blue = color_floats_to_int(0.0, 0.0, 0.5, 0.75)
+        gray = color_floats_to_int(0.5, 0.5, 0.5, 0.75)
+        mapbounds = color_floats_to_int(0.9, 0.9, 0.9, 0.15)
+        spillable = color_floats_to_int(0.0, 0.2, 0.5, 0.15)
+        color_array = np.array((0, green, blue, gray, mapbounds, spillable), dtype=np.uint32)
+        return color_array
+
     def set_data(self, f_ring_points, f_ring_starts, f_ring_counts,
                  f_ring_identifiers, f_ring_groups=None, style=None):
         if style is not None:
@@ -108,14 +118,7 @@ class PolygonLayer(PointLayer):
                 self.rings.group = np.asarray(f_ring_groups, dtype=np.uint32)
             self.point_adjacency_array = data_types.make_point_adjacency_array(n_points)
 
-            # set up feature code to color map
-            green = color_floats_to_int(0.25, 0.5, 0, 0.75)
-            blue = color_floats_to_int(0.0, 0.0, 0.5, 0.75)
-            gray = color_floats_to_int(0.5, 0.5, 0.5, 0.75)
-            mapbounds = color_floats_to_int(0.9, 0.9, 0.9, 0.15)
-            spillable = color_floats_to_int(0.0, 0.2, 0.5, 0.15)
-            color_array = np.array((0, green, blue, gray, mapbounds, spillable), dtype=np.uint32)
-
+            color_array = self.color_array()
             total = 0
             for p in xrange(n_rings):
                 c = self.rings.count[p]
@@ -392,6 +395,16 @@ class RNCLoaderLayer(PolygonLayer):
     mouse_mode_toolbar = Str("RNCToolBar")
 
     layer_info_panel = ["Polygon count"]
+
+    def color_array(self):
+        # set up feature code to color map
+        green = color_floats_to_int(0.25, 0.5, 0, 0.10)
+        blue = color_floats_to_int(0.0, 0.0, 0.5, 0.10)
+        gray = color_floats_to_int(0.5, 0.5, 0.5, 0.10)
+        mapbounds = color_floats_to_int(0.9, 0.9, 0.9, 0.15)
+        spillable = color_floats_to_int(0.0, 0.2, 0.5, 0.15)
+        color_array = np.array((0, green, blue, gray, mapbounds, spillable), dtype=np.uint32)
+        return color_array
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
         return canvas.picker.is_interior_type(object_type)
