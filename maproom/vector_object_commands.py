@@ -2,6 +2,9 @@
 from command import Command, UndoInfo
 from layers.vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayTextObject, OverlayIconObject, OverlayLineObject, PolylineObject, PolygonObject, AnnotationLayer, ArrowTextBoxLayer, ArrowTextIconLayer
 
+import logging
+log = logging.getLogger(__name__)
+
 
 def update_parent_bounds(layer, undo):
     affected = layer.parents_affected_by_move()
