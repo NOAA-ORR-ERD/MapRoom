@@ -249,7 +249,9 @@ class ProjectEditor(FrameworkEditor):
         if path is None:
             path = self.document.uri
         if prompt or not path:
-            dialog = FileDialog(parent=self.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom")
+            default_dir = ""
+            default_file = ""
+            dialog = FileDialog(parent=self.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom", default_directory=default_dir, default_filename=default_file)
             if dialog.open() == OK:
                 path = dialog.path
             else:
