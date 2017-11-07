@@ -71,6 +71,8 @@ class ProjectEditor(FrameworkEditor):
 
     layer_has_boundaries = Bool
 
+    layer_is_groupable = Bool
+
     clickable_object_mouse_is_over = Any
 
     clickable_object_in_layer = Any
@@ -513,12 +515,14 @@ class ProjectEditor(FrameworkEditor):
             self.layer_has_selection = edit_layer.has_selection()
             self.layer_has_flagged = edit_layer.has_flagged()
             self.layer_has_boundaries = edit_layer.has_boundaries()
+            self.layer_is_groupable = edit_layer.has_groupable_objects()
             layer_name = edit_layer.name
         else:
             self.layer_has_points = False
             self.layer_has_selection = False
             self.layer_has_flagged = False
             self.layer_has_boundaries = False
+            self.layer_is_groupable = False
             layer_name = "Current Layer"
         log.debug("has_points=%s, has_selection = %s, has_flagged=%s, has_boundaries = %s" % (self.layer_has_points, self.layer_has_selection, self.layer_has_flagged, self.layer_has_boundaries))
         pane = self.window.get_dock_pane('maproom.layer_info_pane')

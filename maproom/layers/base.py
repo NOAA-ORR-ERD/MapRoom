@@ -546,6 +546,9 @@ class Layer(HasTraits):
     def has_boundaries(self):
         return False
 
+    def has_groupable_objects(self):
+        return False
+
     def display_properties(self):
         return []
 

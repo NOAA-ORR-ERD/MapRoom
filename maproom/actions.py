@@ -357,6 +357,26 @@ class LowerLayerAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer)
 
 
+class GroupLayerAction(EditorAction):
+    name = 'Group layer children together'
+    tooltip = 'Group all children of the selected layer into a single unit'
+    enabled_name = 'layer_is_groupable'
+    image = ImageResource('shape_group.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.group_children)
+
+
+class UngroupLayerAction(EditorAction):
+    name = 'Explode group into separate layers'
+    tooltip = 'Remove grouping and display child layers'
+    enabled_name = 'layer_is_groupable'
+    image = ImageResource('shape_ungroup.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.ungroup_children)
+
+
 class TriangulateLayerAction(EditorAction):
     name = 'Triangulate Layer'
     tooltip = 'Create triangular mesh'

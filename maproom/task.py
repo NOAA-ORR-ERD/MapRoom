@@ -359,6 +359,8 @@ class MaproomProjectTask(FrameworkTask):
             actions.RaiseLayerAction(),
             actions.LowerLayerAction(),
             actions.LowerToBottomAction(),
+            actions.GroupLayerAction(),
+            actions.UngroupLayerAction(),
             actions.TriangulateLayerAction(),
             actions.DeleteLayerAction(),
         ]

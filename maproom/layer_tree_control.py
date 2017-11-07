@@ -47,6 +47,7 @@ class LayerTreeControl(wx.Panel):
         self.tree.Bind(treectrl.EVT_TREE_BEGIN_DRAG, self.handle_begin_drag)
         self.tree.Bind(treectrl.EVT_TREE_END_DRAG, self.handle_end_drag)
         self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
+        self.tree.Bind(treectrl.EVT_TREE_ITEM_EXPANDING, self.handle_item_expanding)
 
         """
         self.state_image_list = wx.ImageList( self.IMAGE_SIZE, self.IMAGE_SIZE )
@@ -167,13 +168,16 @@ class LayerTreeControl(wx.Panel):
     def clear_all_items(self):
         self.tree.DeleteAllItems()
 
-    def rebuild(self):
+    def rebuild(self, expand=None):
         # rebuild the tree from the layer manager's data
         if self.project is None:
             # Wait till there's an active project
             return
         selected = self.get_edit_layer()
         expanded_state = self.get_expanded_state()
+        if expand is not None:
+            for layer in expand:
+                expanded_state[layer] = True
         lm = self.project.layer_manager
         self.tree.DeleteAllItems()
         # self.Freeze()
@@ -192,6 +196,11 @@ class LayerTreeControl(wx.Panel):
         folder_node = self.add_layer(layer_tree[0], parent, expanded_state)
         # import code; code.interact( local = locals() )
 
+        if layer_tree[0].grouped:
+            # don't display any layers within a grouped layer. Have to ungroup
+            # to see those.
+            return
+
         for item in layer_tree[1:]:
             if (isinstance(item, Layer)):
                 self.add_layer(item, folder_node, expanded_state)
@@ -207,7 +216,7 @@ class LayerTreeControl(wx.Panel):
         vis = self.project.layer_visibility[layer]
         item = self.tree.AppendItem(parent, layer.pretty_name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
         self.tree.CheckItem2(item, vis["layer"])
-        if layer.is_folder():
+        if layer.is_folder() and not layer.grouped:
             # Force the appearance of expand button on folders to be used as
             # drop target for dropping inside a folder
             item.SetHasPlus(True)
@@ -264,6 +273,14 @@ class LayerTreeControl(wx.Panel):
         self.update_checked_from_visibility_recursive(item)
         self.project.refresh()
         event.Skip()
+
+    def handle_item_expanding(self, event):
+        (layer, ) = self.tree.GetItemData(event.GetItem())
+        log.debug("Attempting to expand %s" % layer)
+        if layer.grouped:
+            event.Veto()
+        else:
+            event.Skip()
 
     def handle_begin_drag(self, event):
         (layer, ) = self.tree.GetItemData(event.GetItem())
@@ -345,6 +362,20 @@ class LayerTreeControl(wx.Panel):
         self.project.clear_all_selections(False)
         self.set_edit_layer(layer)
         self.rebuild()
+
+    def group_children(self):
+        item = self.tree.GetSelection()
+        (layer, ) = self.tree.GetItemData(item)
+        if not layer.grouped:
+            layer.grouped = True
+            self.rebuild()
+
+    def ungroup_children(self):
+        item = self.tree.GetSelection()
+        (layer, ) = self.tree.GetItemData(item)
+        if layer.grouped:
+            layer.grouped = False
+            self.rebuild(expand=[layer])
 
     def mouse_pressed(self, event):
         # If a selected item is clicked, unselect it so that it will be

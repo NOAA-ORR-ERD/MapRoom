@@ -1372,6 +1372,9 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
+    def has_groupable_objects(self):
+        return True
+
     def set_border_width(self, width):
         self.border_width = width
         children = self.manager.get_layer_children(self)
