@@ -114,7 +114,7 @@ class LayerTreeControl(wx.Panel):
             self.tree.SelectItem(item, True)
             self.tree.EnsureVisible(item)
             # also make sure the layer's name is up-to-date
-            self.tree.SetItemText(item, layer.name)
+            self.tree.SetItemText(item, layer.pretty_name)
             layer.set_visibility_when_selected(self.project.layer_visibility[layer])
 
             return True
@@ -205,7 +205,7 @@ class LayerTreeControl(wx.Panel):
             return self.tree.AddRoot(layer.name, data=data)
 
         vis = self.project.layer_visibility[layer]
-        item = self.tree.AppendItem(parent, layer.name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
+        item = self.tree.AppendItem(parent, layer.pretty_name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
         self.tree.CheckItem2(item, vis["layer"])
         if layer.is_folder():
             # Force the appearance of expand button on folders to be used as

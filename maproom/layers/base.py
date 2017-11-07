@@ -112,6 +112,15 @@ class Layer(HasTraits):
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
 
+    @property
+    def pretty_name(self):
+        if self.grouped:
+            # prefix = u"\U0001F512"  # unicode lock symbol, not supported well
+            prefix = u"\u271a"  # bold plus sign
+        else:
+            prefix = ""
+        return prefix + self.name
+
     def debug_info(self, indent=""):
         lines = []
         lines.append("%s (%x) invariant=%s dependent_of=%s grouped=%s" % (self.name, id(self), self.invariant, self.dependent_of, self.grouped))
