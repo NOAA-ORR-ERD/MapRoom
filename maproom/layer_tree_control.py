@@ -398,12 +398,12 @@ class LayerTreeControl(wx.Panel):
         self.set_edit_layer(layer)
         self.rebuild()
 
-    def group_children(self):
+    def group_children(self, layer):
         if not layer.grouped:
             layer.grouped = True
             self.rebuild()
 
-    def ungroup_children(self):
+    def ungroup_children(self, layer):
         if layer.grouped:
             layer.grouped = False
             self.rebuild(expand=[layer])
