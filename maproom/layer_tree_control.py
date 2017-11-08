@@ -3,7 +3,7 @@ import wx
 import omnivore.utils.wx.customtreectrl as treectrl
 
 from layers import Layer
-from menu_commands import MoveLayerCommand
+from menu_commands import MoveLayerCommand, RenameLayerCommand
 from . import actions
 
 
@@ -40,8 +40,7 @@ class LayerTreeControl(wx.Panel):
     def __init__(self, parent, project, size=(-1, -1)):
         wx.Panel.__init__(self, parent, wx.ID_ANY, size=size)
 
-        self.tree = IndexableTree(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE,
-                                            agwStyle=treectrl.TR_HIDE_ROOT | treectrl.TR_NO_LINES | treectrl.TR_HAS_BUTTONS | treectrl.TR_FULL_ROW_HIGHLIGHT)
+        self.tree = IndexableTree(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE, agwStyle=treectrl.TR_HIDE_ROOT | treectrl.TR_NO_LINES | treectrl.TR_HAS_BUTTONS | treectrl.TR_FULL_ROW_HIGHLIGHT | treectrl.TR_EDIT_LABELS)
         self.project = project
 
         self.tree.Bind(treectrl.EVT_TREE_ITEM_CHECKED, self.handle_item_checked)
@@ -49,6 +48,8 @@ class LayerTreeControl(wx.Panel):
         self.tree.Bind(treectrl.EVT_TREE_END_DRAG, self.handle_end_drag)
         self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
         self.tree.Bind(treectrl.EVT_TREE_ITEM_EXPANDING, self.handle_item_expanding)
+        self.tree.Bind(wx.EVT_LEFT_DCLICK, self.handle_start_rename)
+        self.tree.Bind(treectrl.EVT_TREE_END_LABEL_EDIT, self.handle_process_rename)
 
         """
         self.state_image_list = wx.ImageList( self.IMAGE_SIZE, self.IMAGE_SIZE )
@@ -97,6 +98,13 @@ class LayerTreeControl(wx.Panel):
             for child in item.GetChildren():
                 current.extend(self.walk_tree(child))
         return current
+
+    def get_item_of_layer(self, layer):
+        for item in self.walk_tree():
+            (item_layer, ) = self.tree.GetItemData(item)
+            if item_layer == layer:
+                return item
+        return None
 
     def set_edit_layer(self, layer):
         if self.project is None:
@@ -326,6 +334,32 @@ class LayerTreeControl(wx.Panel):
         sel = lm.get_multi_index_of_layer(layer)
         log.debug("Multi-index of selected layer: %s" % sel)
 
+    def handle_start_rename(self, event):
+        (clicked_item, flags) = self.tree.HitTest(event.GetPosition())
+        (layer, ) = self.tree.GetItemData(clicked_item)
+        if clicked_item and (flags & treectrl.TREE_HITTEST_ONITEMLABEL):
+            log.debug("start rename: %s (manually starting label edit)"% self.tree.GetItemText(clicked_item) + "\n")
+            self.tree.EditLabel(clicked_item)
+        event.Skip()
+
+    def start_rename(self, layer):
+        item = self.get_item_of_layer(layer)
+        if item is not None:
+            self.tree.EditLabel(item)
+
+    def handle_process_rename(self, event):
+        clicked_item = event.GetItem()
+        (layer, ) = self.tree.GetItemData(clicked_item)
+        log.debug("process rename: %s %s %s" %(layer, event.IsEditCancelled(), event.GetLabel()))
+        # show how to reject edit, we'll not allow any digits
+        name = event.GetLabel().strip()
+        if name:
+            log.debug("new name: %s" % name)
+            cmd = RenameLayerCommand(layer, name)
+            self.project.process_command(cmd)
+        else:
+            event.Veto()
+
     def raise_selected_layer(self):
         self.move_selected_layer(-1)
 
@@ -364,18 +398,12 @@ class LayerTreeControl(wx.Panel):
         self.set_edit_layer(layer)
         self.rebuild()
 
-    def group_children(self, layer=None):
-        if layer is None:
-            item = self.tree.GetSelection()
-            (layer, ) = self.tree.GetItemData(item)
+    def group_children(self):
         if not layer.grouped:
             layer.grouped = True
             self.rebuild()
 
-    def ungroup_children(self, layer=None):
-        if layer is None:
-            item = self.tree.GetSelection()
-            (layer, ) = self.tree.GetItemData(item)
+    def ungroup_children(self):
         if layer.grouped:
             layer.grouped = False
             self.rebuild(expand=[layer])
@@ -409,7 +437,7 @@ class LayerTreeControl(wx.Panel):
         event.Skip()
 
     def get_popup_actions(self):
-        return [actions.GroupLayerPopupAction, actions.UngroupLayerPopupAction,]
+        return [actions.RenameLayerPopupAction, None, actions.GroupLayerPopupAction, actions.UngroupLayerPopupAction,]
 
     def on_context_menu(self, event):
         # If a selected item is clicked, unselect it so that it will be
