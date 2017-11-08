@@ -437,7 +437,7 @@ class LayerTreeControl(wx.Panel):
         event.Skip()
 
     def get_popup_actions(self):
-        return [actions.RenameLayerPopupAction, None, actions.GroupLayerPopupAction, actions.UngroupLayerPopupAction,]
+        return [actions.RenameLayerAction, None, actions.GroupLayerAction, actions.UngroupLayerAction,]
 
     def on_context_menu(self, event):
         # If a selected item is clicked, unselect it so that it will be

@@ -23,6 +23,24 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class LayerAction(EditorAction):
+    """Superclass for actions that operate on layers.
+
+    Provides a common framework for usage in menubars and popup menus
+    """
+    def _update_popup_enabled(self, popup_data):
+        layer = popup_data['layer']
+        self.enabled = self.is_enabled(layer)
+
+    def is_enabled(self, layer):
+        return True
+
+    def get_layer(self, event):
+        if hasattr(event, 'popup_data'):
+            return event.popup_data['layer']
+        return self.active_editor.layer_tree_control.get_edit_layer()
+
+
 class NewProjectAction(Action):
     """ An action for creating a new empty file that can be edited by a particular task
     """
@@ -160,7 +178,7 @@ class BoundingBoxAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
-    def _update_checked(self, ui_state, popup_data):
+    def _update_checked(self, ui_state):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_bounding_boxes
 
@@ -176,7 +194,7 @@ class PickerFramebufferAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
-    def _update_checked(self, ui_state, popup_data):
+    def _update_checked(self, ui_state):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_picker_framebuffer
 
@@ -695,14 +713,14 @@ class DebugLayerManagerAction(EditorAction):
 
 
 
-class GroupLayerAction(EditorAction):
+class GroupLayerAction(LayerAction):
     name = 'Group Sublayers'
     tooltip = 'Group all children of the selected layer into a single unit'
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_group.png')
 
-    def get_layer(self, event):
-        return self.active_editor.layer_tree_control.get_edit_layer()
+    def is_enabled(self, layer):
+        return layer.has_groupable_objects() and not layer.grouped
 
     def perform(self, event):
         layer = self.get_layer(event)
@@ -710,27 +728,14 @@ class GroupLayerAction(EditorAction):
             GUI.invoke_later(self.active_editor.layer_tree_control.group_children, layer)
 
 
-class GroupLayerPopupAction(GroupLayerAction):
-    def _update_enabled(self, ui_state, popup_data):
-        if popup_data is not None:
-            layer = popup_data['layer']
-            state = layer.has_groupable_objects() and not layer.grouped
-        else:
-            state = False
-        self.enabled = state
-
-    def get_layer(self, event):
-        return event.popup_data['layer']
-
-
-class UngroupLayerAction(EditorAction):
+class UngroupLayerAction(LayerAction):
     name = 'Ungroup Into Sublayers'
     tooltip = 'Remove grouping and display child layers'
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_ungroup.png')
 
-    def get_layer(self, event):
-        return self.active_editor.layer_tree_control.get_edit_layer()
+    def is_enabled(self, layer):
+        return layer.has_groupable_objects() and layer.grouped
 
     def perform(self, event):
         layer = self.get_layer(event)
@@ -738,32 +743,11 @@ class UngroupLayerAction(EditorAction):
             GUI.invoke_later(self.active_editor.layer_tree_control.ungroup_children, layer)
 
 
-class UngroupLayerPopupAction(UngroupLayerAction):
-    def _update_enabled(self, ui_state, popup_data):
-        if popup_data is not None:
-            layer = popup_data['layer']
-            state = layer.has_groupable_objects() and layer.grouped
-        else:
-            state = False
-        self.enabled = state
-
-    def get_layer(self, event):
-        return event.popup_data['layer']
-
-
-class RenameLayerAction(EditorAction):
+class RenameLayerAction(LayerAction):
     name = 'Rename Layer'
     tooltip = 'Rename layer'
-
-    def get_layer(self, event):
-        return self.active_editor.layer_tree_control.get_edit_layer()
 
     def perform(self, event):
         layer = self.get_layer(event)
         if layer is not None:
             GUI.invoke_later(self.active_editor.layer_tree_control.start_rename, layer)
-
-
-class RenameLayerPopupAction(RenameLayerAction):
-    def get_layer(self, event):
-        return event.popup_data['layer']
