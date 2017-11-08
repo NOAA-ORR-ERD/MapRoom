@@ -935,9 +935,10 @@ class ProjectEditor(FrameworkEditor):
         cmd = DeleteLayerCommand(layer)
         self.process_command(cmd)
 
-    def check_for_errors(self, save_message=False):
+    def check_for_errors(self, edit_layer=None, save_message=False):
         error = None
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        if edit_layer is None:
+            edit_layer = self.layer_tree_control.get_edit_layer()
         if edit_layer is None:
             return
 

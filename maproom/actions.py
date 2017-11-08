@@ -28,17 +28,27 @@ class LayerAction(EditorAction):
 
     Provides a common framework for usage in menubars and popup menus
     """
-    def _update_popup_enabled(self, popup_data):
+    def _update_popup_enabled(self, ui_state, popup_data):
         layer = popup_data['layer']
-        self.enabled = self.is_enabled(layer)
+        self.enabled = self.is_popup_enabled(ui_state, layer)
 
-    def is_enabled(self, layer):
+    def is_popup_enabled(self, ui_state, layer):
+        if self.enabled_name:
+            return getattr(ui_state, self.enabled_name)
         return True
 
     def get_layer(self, event):
         if hasattr(event, 'popup_data'):
             return event.popup_data['layer']
         return self.active_editor.layer_tree_control.get_edit_layer()
+
+    def perform(self, event):
+        layer = self.get_layer(event)
+        if layer is not None:
+            self.perform_on_layer(layer, event)
+
+    def perform_on_layer(self, layer, event):
+        log.warning("Missing perform_on_layer method for %s" % self.name)
 
 
 class NewProjectAction(Action):
@@ -235,17 +245,18 @@ class ZoomToFit(EditorAction):
         self.active_editor.process_command(cmd)
 
 
-class ZoomToLayer(EditorAction):
+class ZoomToLayer(LayerAction):
     name = 'Zoom to Layer'
     tooltip = 'Set magnification to show current layer'
     enabled_name = 'layer_zoomable'
     image = ImageResource('zoom_to_layer')
 
-    def perform(self, event):
-        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
-        if edit_layer is not None:
-            cmd = ViewportCommand(edit_layer)
-            self.active_editor.process_command(cmd)
+    def is_popup_enabled(self, ui_state, layer):
+        return layer.is_zoomable()
+
+    def perform_on_layer(self, layer, event):
+        cmd = ViewportCommand(layer)
+        self.active_editor.process_command(cmd)
 
 
 class NewVectorLayerAction(EditorAction):
@@ -323,54 +334,69 @@ class NewRNCLayer360Action(EditorAction):
         event.task.window.application.load_file(path, event.task, regime=360)
 
 
-class DeleteLayerAction(EditorAction):
+class DeleteLayerAction(LayerAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
     enabled_name = 'layer_selected'
     image = ImageResource('delete_layer')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.delete_selected_layer)
+    def is_popup_enabled(self, ui_state, layer):
+        return True  # layer may not be selected using context menu
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.delete_selected_layer, layer)
 
 
-class RaiseLayerAction(EditorAction):
+class RaiseLayerAction(LayerAction):
     name = 'Raise Layer'
     tooltip = 'Move layer up in the stacking order'
     enabled_name = 'layer_above'
     image = ImageResource('raise.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.raise_selected_layer)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_raisable(layer)
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.raise_selected_layer, layer)
 
 
-class RaiseToTopAction(EditorAction):
+class RaiseToTopAction(LayerAction):
     name = 'Raise Layer To Top'
     tooltip = 'Move layer to the top'
     enabled_name = 'layer_above'
     image = ImageResource('raise_to_top.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.raise_to_top)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_raisable(layer)
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.raise_to_top, layer)
 
 
-class LowerToBottomAction(EditorAction):
+class LowerToBottomAction(LayerAction):
     name = 'Lower Layer To Bottom'
     tooltip = 'Move layer to the bottom'
     enabled_name = 'layer_below'
     image = ImageResource('lower_to_bottom.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.lower_to_bottom)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_lowerable(layer)
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.lower_to_bottom, layer)
 
 
-class LowerLayerAction(EditorAction):
+class LowerLayerAction(LayerAction):
     name = 'Lower Layer'
     tooltip = 'Move layer down in the stacking order'
     enabled_name = 'layer_below'
     image = ImageResource('lower.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_lowerable(layer)
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer, layer)
 
 
 class TriangulateLayerAction(EditorAction):
@@ -563,14 +589,14 @@ class FindPointsAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_canvas.do_find_points)
 
 
-class CheckSelectedLayerAction(EditorAction):
+class CheckSelectedLayerAction(LayerAction):
     name = 'Check Layer For Errors'
     accelerator = 'Ctrl+E'
     enabled_name = 'layer_selected'
     tooltip = 'Check for valid layer construction'
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.check_for_errors)
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.check_for_errors, layer)
 
 
 class CheckAllLayersAction(EditorAction):
@@ -629,20 +655,21 @@ class PasteStyleAction(EditorAction):
         self.active_editor.paste_style()
 
 
-class DuplicateLayerAction(EditorAction):
-    name = 'Duplicate'
+class DuplicateLayerAction(LayerAction):
+    name = 'Duplicate Layer'
     accelerator = 'Ctrl+D'
     tooltip = 'Duplicate the current layer'
     enabled_name = 'can_copy'
 
-    def perform(self, event):
-        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
-        if edit_layer is not None:
-            json_data = edit_layer.serialize_json(-999, True)
-            if json_data:
-                text = json.dumps(json_data)
-                cmd = PasteLayerCommand(edit_layer, text, self.active_editor.layer_canvas.world_center)
-                self.active_editor.process_command(cmd)
+    def is_popup_enabled(self, ui_state, layer):
+        return hasattr(layer, "center_point_index")  # only vector layers
+
+    def perform_on_layer(self, layer, event):
+        json_data = edit_layer.serialize_json(-999, True)
+        if json_data:
+            text = json.dumps(json_data)
+            cmd = PasteLayerCommand(edit_layer, text, self.active_editor.layer_canvas.world_center)
+            self.active_editor.process_command(cmd)
 
 
 class ManageWMSAction(EditorAction):
@@ -719,13 +746,11 @@ class GroupLayerAction(LayerAction):
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_group.png')
 
-    def is_enabled(self, layer):
+    def is_popup_enabled(self, ui_state, layer):
         return layer.has_groupable_objects() and not layer.grouped
 
-    def perform(self, event):
-        layer = self.get_layer(event)
-        if layer is not None:
-            GUI.invoke_later(self.active_editor.layer_tree_control.group_children, layer)
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.group_children, layer)
 
 
 class UngroupLayerAction(LayerAction):
@@ -734,20 +759,16 @@ class UngroupLayerAction(LayerAction):
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_ungroup.png')
 
-    def is_enabled(self, layer):
+    def is_popup_enabled(self, ui_state, layer):
         return layer.has_groupable_objects() and layer.grouped
 
-    def perform(self, event):
-        layer = self.get_layer(event)
-        if layer is not None:
-            GUI.invoke_later(self.active_editor.layer_tree_control.ungroup_children, layer)
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.ungroup_children, layer)
 
 
 class RenameLayerAction(LayerAction):
     name = 'Rename Layer'
     tooltip = 'Rename layer'
 
-    def perform(self, event):
-        layer = self.get_layer(event)
-        if layer is not None:
-            GUI.invoke_later(self.active_editor.layer_tree_control.start_rename, layer)
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.start_rename, layer)

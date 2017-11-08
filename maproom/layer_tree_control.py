@@ -360,21 +360,22 @@ class LayerTreeControl(wx.Panel):
         else:
             event.Veto()
 
-    def raise_selected_layer(self):
-        self.move_selected_layer(-1)
+    def raise_selected_layer(self, layer=None):
+        self.move_selected_layer(-1, layer)
 
-    def raise_to_top(self):
-        self.move_selected_layer(-1, True)
+    def raise_to_top(self, layer=None):
+        self.move_selected_layer(-1, layer, True)
 
-    def lower_to_bottom(self):
-        self.move_selected_layer(1, True)
+    def lower_to_bottom(self, layer=None):
+        self.move_selected_layer(1, layer, True)
 
-    def lower_selected_layer(self):
-        self.move_selected_layer(1)
+    def lower_selected_layer(self, layer=None):
+        self.move_selected_layer(1, layer)
 
-    def move_selected_layer(self, delta, to_extreme=False):
-        item = self.tree.GetSelection()
-        (layer, ) = self.tree.GetItemData(item)
+    def move_selected_layer(self, delta, layer=None, to_extreme=False):
+        if layer is None:
+            item = self.tree.GetSelection()
+            (layer, ) = self.tree.GetItemData(item)
         lm = self.project.layer_manager
         mi_source = lm.get_multi_index_of_layer(layer)
         mi_target = mi_source[: len(mi_source) - 1]
@@ -437,7 +438,23 @@ class LayerTreeControl(wx.Panel):
         event.Skip()
 
     def get_popup_actions(self):
-        return [actions.RenameLayerAction, None, actions.GroupLayerAction, actions.UngroupLayerAction,]
+        return [
+            actions.RenameLayerAction,
+            None,
+            actions.GroupLayerAction,
+            actions.UngroupLayerAction,
+            None,
+            actions.RaiseToTopAction,
+            actions.RaiseLayerAction,
+            actions.LowerLayerAction,
+            actions.LowerToBottomAction,
+            None,
+            actions.DuplicateLayerAction,
+            actions.CheckSelectedLayerAction,
+            actions.ZoomToLayer,
+            None,
+            actions.DeleteLayerAction,
+            ]
 
     def on_context_menu(self, event):
         # If a selected item is clicked, unselect it so that it will be
