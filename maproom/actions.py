@@ -696,7 +696,7 @@ class DebugLayerManagerAction(EditorAction):
 
 
 class GroupLayerAction(EditorAction):
-    name = 'Group layer children together'
+    name = 'Group Sublayers'
     tooltip = 'Group all children of the selected layer into a single unit'
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_group.png')
@@ -724,7 +724,7 @@ class GroupLayerPopupAction(GroupLayerAction):
 
 
 class UngroupLayerAction(EditorAction):
-    name = 'Explode group into separate layers'
+    name = 'Ungroup Into Sublayers'
     tooltip = 'Remove grouping and display child layers'
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_ungroup.png')
