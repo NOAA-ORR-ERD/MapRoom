@@ -4,13 +4,11 @@ import json
 
 # Enthought library imports.
 from pyface.api import ImageResource, GUI, FileDialog, OK
-from pyface.action.api import Action, ActionItem
-from pyface.tasks.action.api import EditorAction
 from traits.api import Any
 from traits.api import Str
 from traits.api import on_trait_change
 
-from omnivore.framework.actions import TaskDynamicSubmenuGroup
+from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, TaskDynamicSubmenuGroup
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 import pane_layout
@@ -162,7 +160,7 @@ class BoundingBoxAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
-    def _update_checked(self):
+    def _update_checked(self, ui_state, popup_data):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_bounding_boxes
 
@@ -178,7 +176,7 @@ class PickerFramebufferAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
-    def _update_checked(self):
+    def _update_checked(self, ui_state, popup_data):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_picker_framebuffer
 
@@ -363,8 +361,27 @@ class GroupLayerAction(EditorAction):
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_group.png')
 
+    def get_layer(self, event):
+        return None
+
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.group_children)
+        layer = self.get_layer(event)
+        GUI.invoke_later(self.active_editor.layer_tree_control.group_children, layer)
+
+
+class GroupLayerPopupAction(GroupLayerAction):
+    def _update_enabled(self, ui_state, popup_data):
+        print("OHERUCHROEUHSROEHUROHEUROEHURHOERUCHOEHUROEHURCHOEURCH")
+        print(popup_data)
+        if popup_data is not None:
+            layer = popup_data['layer']
+            state = layer.has_groupable_objects() and not layer.grouped
+        else:
+            state = False
+        self.enabled = state
+
+    def get_layer(self, event):
+        return event.popup_data['layer']
 
 
 class UngroupLayerAction(EditorAction):
@@ -373,8 +390,26 @@ class UngroupLayerAction(EditorAction):
     enabled_name = 'layer_is_groupable'
     image = ImageResource('shape_ungroup.png')
 
+    def get_layer(self, event):
+        return None
+
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.ungroup_children)
+        layer = self.get_layer(event)
+        GUI.invoke_later(self.active_editor.layer_tree_control.ungroup_children, layer)
+
+
+class UngroupLayerPopupAction(UngroupLayerAction):
+    def _update_enabled(self, ui_state, popup_data):
+        print(popup_data)
+        if popup_data is not None:
+            layer = popup_data['layer']
+            state = layer.has_groupable_objects() and layer.grouped
+        else:
+            state = False
+        self.enabled = state
+
+    def get_layer(self, event):
+        return event.popup_data['layer']
 
 
 class TriangulateLayerAction(EditorAction):

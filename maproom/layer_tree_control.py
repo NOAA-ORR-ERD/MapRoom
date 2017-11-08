@@ -4,6 +4,7 @@ import omnivore.utils.wx.customtreectrl as treectrl
 
 from layers import Layer
 from menu_commands import MoveLayerCommand
+from . import actions
 
 
 import logging
@@ -56,7 +57,7 @@ class LayerTreeControl(wx.Panel):
         """
 
         self.tree.Bind(wx.EVT_LEFT_DOWN, self.mouse_pressed)
-        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.mouse_pressed)
+        self.tree.Bind(wx.EVT_RIGHT_DOWN, self.on_context_menu)
         # self.Bind( wx.EVT_RIGHT_UP, self.mouse_right_released )
         if sys.platform.startswith("win"):
             self.tree.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
@@ -363,16 +364,18 @@ class LayerTreeControl(wx.Panel):
         self.set_edit_layer(layer)
         self.rebuild()
 
-    def group_children(self):
-        item = self.tree.GetSelection()
-        (layer, ) = self.tree.GetItemData(item)
+    def group_children(self, layer=None):
+        if layer is None:
+            item = self.tree.GetSelection()
+            (layer, ) = self.tree.GetItemData(item)
         if not layer.grouped:
             layer.grouped = True
             self.rebuild()
 
-    def ungroup_children(self):
-        item = self.tree.GetSelection()
-        (layer, ) = self.tree.GetItemData(item)
+    def ungroup_children(self, layer=None):
+        if layer is None:
+            item = self.tree.GetSelection()
+            (layer, ) = self.tree.GetItemData(item)
         if layer.grouped:
             layer.grouped = False
             self.rebuild(expand=[layer])
@@ -404,3 +407,21 @@ class LayerTreeControl(wx.Panel):
             return
 
         event.Skip()
+
+    def get_popup_actions(self):
+        return [actions.GroupLayerPopupAction, actions.UngroupLayerPopupAction,]
+
+    def on_context_menu(self, event):
+        # If a selected item is clicked, unselect it so that it will be
+        # selected again. This allows the user to click on an
+        # already-selected layer to display its properties, for instance.
+        (clicked_item, flags) = self.tree.HitTest(event.GetPosition())
+        if clicked_item is None:
+            return
+
+        (layer, ) = self.tree.GetItemData(clicked_item)
+        log.debug("context menu: layer=%s" % layer)
+        actions = self.get_popup_actions()
+        popup_data = {'layer': layer}
+        if actions:
+            self.project.popup_context_menu_from_actions(self.tree, actions, popup_data)

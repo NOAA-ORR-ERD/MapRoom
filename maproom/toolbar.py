@@ -98,7 +98,7 @@ class MouseHandlerBaseAction(EditorAction):
         self.active_editor.update_layer_selection_ui()
 
     @on_trait_change('active_editor.mouse_mode_factory')
-    def _update_checked(self):
+    def _update_checked(self, ui_state, popup_data):
         if self.active_editor:
             self.checked = self.active_editor.mouse_mode_factory == self.handler
 
