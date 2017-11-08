@@ -251,7 +251,7 @@ class ProjectEditor(FrameworkEditor):
         if path is None:
             path = self.document.uri
         if prompt or not path:
-            default_dir = ""
+            default_dir = self.best_file_save_dir
             default_file = ""
             dialog = FileDialog(parent=self.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom", default_directory=default_dir, default_filename=default_file)
             if dialog.open() == OK:
@@ -296,7 +296,7 @@ class ProjectEditor(FrameworkEditor):
             self.dirty = self.layer_manager.undo_stack.is_dirty()
 
             # Push URL to top of recent files list
-            self.window.application.successfully_loaded_event = self.layer_manager.metadata.uri
+            self.window.application.successfully_saved_event = self.layer_manager.metadata.uri
 
             # refresh window name in case filename has changed
             self.task._active_editor_tab_change(None)
