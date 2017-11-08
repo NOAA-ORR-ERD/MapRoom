@@ -27,7 +27,7 @@ class PolygonShapefileLayer(PolygonLayer):
 
     use_color_cycling = True
 
-    layer_info_panel = ["Layer name", "Shapefile Objects", "Polygon count"]
+    layer_info_panel = ["Shapefile Objects", "Polygon count"]
 
     def __str__(self):
         num = len(self.geometry)

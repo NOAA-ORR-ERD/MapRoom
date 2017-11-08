@@ -210,7 +210,7 @@ class LineVectorObject(VectorObjectLayer):
 
     type = Str("line_obj")
 
-    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency"]
+    layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency"]
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Path length"]
 
@@ -520,7 +520,7 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
 
     type = Str("rectangle_obj")
 
-    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
@@ -710,7 +710,7 @@ class ScaledImageObject(RectangleVectorObject):
 
     type = Str("scaled_image_obj")
 
-    layer_info_panel = ["Layer name", "Transparency"]
+    layer_info_panel = ["Transparency"]
 
     image_data = Any
 
@@ -891,7 +891,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
     type = Str("overlay_image_obj")
 
-    layer_info_panel = ["Layer name", "Transparency"]
+    layer_info_panel = ["Transparency"]
 
     image_data = Any
 
@@ -1108,7 +1108,7 @@ class OverlayTextObject(OverlayScalableImageObject):
 
     user_text = Unicode("<b>New Label</b>")
 
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
 
@@ -1144,7 +1144,7 @@ class OverlayIconObject(OverlayScalableImageObject):
 
     type = Str("overlay_icon_obj")
 
-    layer_info_panel = ["Layer name", "Marplot icon", "Color", "Transparency"]
+    layer_info_panel = ["Marplot icon", "Color", "Transparency"]
 
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
 
@@ -1267,7 +1267,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
 
     type = Str("polygon_obj")
 
-    layer_info_panel = ["Layer name", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Area"]
 
@@ -1368,7 +1368,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
@@ -1451,7 +1451,7 @@ class ArrowTextBoxLayer(AnnotationLayer):
 
     type = Str("arrowtextbox")
 
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
+    layer_info_panel = ["Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Anchor point", "Text format", "Overlay text", "Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
@@ -1500,7 +1500,7 @@ class ArrowTextIconLayer(ArrowTextBoxLayer):
 
     type = Str("arrowtexticon")
 
-    layer_info_panel = ["Layer name", "Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Marplot icon"]
+    layer_info_panel = ["Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Marplot icon"]
 
     def use_layer_for_bounding_rect(self, layer):
         # Defaults to using all layers in boundary rect calculation

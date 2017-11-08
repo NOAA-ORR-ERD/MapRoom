@@ -45,7 +45,7 @@ class PointLayer(PointBaseLayer):
 
     visibility_items = ["points", "labels"]
 
-    layer_info_panel = ["Layer name", "Point count", "Flagged points", "Default depth", "Depth unit", "Color"]
+    layer_info_panel = ["Point count", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]
 

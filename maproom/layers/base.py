@@ -98,7 +98,7 @@ class Layer(HasTraits):
 
     visibility_items = []
 
-    layer_info_panel = ["Layer name"]
+    layer_info_panel = []
 
     selection_info_panel = []
 

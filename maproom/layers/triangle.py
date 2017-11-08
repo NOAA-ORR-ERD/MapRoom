@@ -31,7 +31,7 @@ class TriangleLayer(PointLayer):
 
     use_color_cycling = True
 
-    layer_info_panel = ["Layer name", "Triangle count", "Show depth shading"]
+    layer_info_panel = ["Triangle count", "Show depth shading"]
 
     def __str__(self):
         try:

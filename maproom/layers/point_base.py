@@ -34,7 +34,7 @@ class PointBaseLayer(ProjectedLayer):
 
     visibility_items = ["points"]
 
-    layer_info_panel = ["Layer name", "Point count"]
+    layer_info_panel = ["Point count"]
 
     selection_info_panel = []
 

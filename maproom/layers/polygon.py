@@ -39,7 +39,7 @@ class PolygonLayer(PointLayer):
 
     visibility_items = ["points", "polygons"]
 
-    layer_info_panel = ["Layer name", "Polygon count"]
+    layer_info_panel = ["Polygon count"]
 
     selection_info_panel = []
 

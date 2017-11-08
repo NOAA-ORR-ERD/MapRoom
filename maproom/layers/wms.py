@@ -26,7 +26,7 @@ class WMSLayer(ProjectedLayer):
 
     type = Str("wms")
 
-    layer_info_panel = ["Layer name", "Transparency", "Server status", "Server reload", "Map status"]
+    layer_info_panel = ["Transparency", "Server status", "Server reload", "Map status"]
 
     selection_info_panel = ["Map server", "Map layer"]
 

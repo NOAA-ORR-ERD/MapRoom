@@ -32,7 +32,7 @@ class RasterLayer(ProjectedLayer):
 
     image_data = Any
 
-    layer_info_panel = ["Layer name", "Transparency", "Raster size", "Memory used"]
+    layer_info_panel = ["Transparency", "Raster size", "Memory used"]
 
     selection_info_panel = []
 
