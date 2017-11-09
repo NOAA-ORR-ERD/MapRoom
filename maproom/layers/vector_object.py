@@ -1118,6 +1118,9 @@ class OverlayTextObject(OverlayScalableImageObject):
     def user_text_from_json(self, json_data):
         self.user_text = json_data['user_text']
 
+    def get_text_box(self):
+        return self
+
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
         bg = int_to_color_uint8(self.style.fill_color)

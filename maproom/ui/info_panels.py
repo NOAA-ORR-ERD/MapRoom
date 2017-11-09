@@ -881,6 +881,7 @@ class OverlayTextField(MultiLineTextField):
 
     def process_text_change(self, layer):
         text = self.ctrl.GetValue()
+        layer = layer.get_text_box()  # it might be a sublayer
         cmd = TextCommand(layer, text)
         self.process_command(cmd)
 
