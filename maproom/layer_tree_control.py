@@ -336,10 +336,11 @@ class LayerTreeControl(wx.Panel):
 
     def handle_start_rename(self, event):
         (clicked_item, flags) = self.tree.HitTest(event.GetPosition())
-        (layer, ) = self.tree.GetItemData(clicked_item)
-        if clicked_item and (flags & treectrl.TREE_HITTEST_ONITEMLABEL):
-            log.debug("start rename: %s (manually starting label edit)"% self.tree.GetItemText(clicked_item) + "\n")
-            self.tree.EditLabel(clicked_item)
+        if clicked_item is not None:
+            (layer, ) = self.tree.GetItemData(clicked_item)
+            if clicked_item and (flags & treectrl.TREE_HITTEST_ONITEMLABEL):
+                log.debug("start rename: %s (manually starting label edit)"% self.tree.GetItemText(clicked_item) + "\n")
+                self.tree.EditLabel(clicked_item)
         event.Skip()
 
     def start_rename(self, layer):
