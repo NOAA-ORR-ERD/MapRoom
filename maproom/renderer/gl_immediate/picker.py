@@ -34,7 +34,7 @@ class Picker(object):
 
     is_active = True
 
-    def __init__(self, select_group_object=False):
+    def __init__(self, select_group_object=True):
         # self.colored_objects = {} # renderer -> ( index, original color )
         gl_fbo.glInitFramebufferObjectEXT()
         self.picker_map = None
@@ -153,7 +153,6 @@ class Picker(object):
            # separately selectable.
             parent = layer_manager.get_folder_of_layer(layer)
             if parent is not None and parent.grouped:
-                print("GROEUNHESRCPHROHEPROHEP", parent, layer)
                 layer = parent
         start_range = self.picker_block_start
         end_range = self.picker_block_start + object_count
