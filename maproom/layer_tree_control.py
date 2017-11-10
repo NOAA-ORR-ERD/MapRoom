@@ -356,7 +356,7 @@ class LayerTreeControl(wx.Panel):
         if name:
             log.debug("new name: %s" % name)
             cmd = RenameLayerCommand(layer, name)
-            self.project.process_command(cmd)
+            wx.CallAfter(self.project.process_command, cmd)
         else:
             event.Veto()
 
