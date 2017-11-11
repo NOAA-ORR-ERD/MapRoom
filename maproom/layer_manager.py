@@ -996,6 +996,7 @@ class LayerManager(BaseDocument):
         """
         layers = []
         for dep, (truth, locked) in self.control_point_links.iteritems():
+            log.debug("control_point_links: update %s child of %s" % (dep, truth))
             truth_layer, truth_cp = self.get_layer_by_invariant(truth[0]), truth[1]
             dep_layer, dep_cp = self.get_layer_by_invariant(dep[0]), dep[1]
             dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)

@@ -419,7 +419,7 @@ class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
     def undo_post(self, editor, lm, layer, undo):
         DrawArrowTextBoxCommand.undo_post(self, editor, lm, layer, undo)
         # remove point linked to the icon object.
-        lm.remove_control_point_links(self.save_line, 0)
+        lm.remove_control_point_links(self.save_line, 0, force=True)
 
 
 class DrawLineCommand(DrawVectorObjectCommand):
