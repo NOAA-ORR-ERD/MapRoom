@@ -49,6 +49,7 @@ class LayerTreeControl(wx.Panel):
         self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
         self.tree.Bind(treectrl.EVT_TREE_ITEM_EXPANDING, self.handle_item_expanding)
         self.tree.Bind(wx.EVT_LEFT_DCLICK, self.handle_start_rename)
+        self.tree.Bind(treectrl.EVT_TREE_BEGIN_LABEL_EDIT, self.handle_check_item_name)
         self.tree.Bind(treectrl.EVT_TREE_END_LABEL_EDIT, self.handle_process_rename)
 
         """
@@ -343,6 +344,12 @@ class LayerTreeControl(wx.Panel):
                 self.tree.EditLabel(clicked_item)
         event.Skip()
 
+    def handle_check_item_name(self, event):
+        item = event.GetItem()
+        (layer, ) = self.tree.GetItemData(item)
+        event.SetLabel(layer.name)
+        event.Skip()
+
     def start_rename(self, layer):
         item = self.get_item_of_layer(layer)
         if item is not None:
@@ -352,7 +359,6 @@ class LayerTreeControl(wx.Panel):
         clicked_item = event.GetItem()
         (layer, ) = self.tree.GetItemData(clicked_item)
         log.debug("process rename: %s %s %s" %(layer, event.IsEditCancelled(), event.GetLabel()))
-        # show how to reject edit, we'll not allow any digits
         name = event.GetLabel().strip()
         if name:
             log.debug("new name: %s" % name)

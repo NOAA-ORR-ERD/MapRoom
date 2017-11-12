@@ -128,7 +128,7 @@ class MouseHandler(object):
         c.release_mouse()
         # print "mouse is not down"
         self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
-        log.debug("process_mouse_motion_up: object under mouse: %s" % str(self.current_object_under_mouse))
+        log.debug("process_mouse_motion_up: object under mouse: %s" % (unicode(self.current_object_under_mouse).encode("utf-8")))
         obj = None
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse

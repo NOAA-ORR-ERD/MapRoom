@@ -312,7 +312,7 @@ class SerializedCommand(object):
                 values = c.get_args(value)
             except KeyError:
                 values = [value]
-            string_values = [quote(str(v)) for v in values]
+            string_values = [quote(unicode(v).encode("utf-8")) for v in values]
             output.append(" ".join(string_values))
 
         text = " ".join(output)

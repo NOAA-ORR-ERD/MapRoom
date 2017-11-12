@@ -30,11 +30,15 @@ log = logging.getLogger(__name__)
 class Layer(HasTraits):
     """Base Layer class with some abstract methods.
     """
+    # Class attributes
+
     use_color_cycling = False
 
     new_layer_index = 0
 
     restore_from_url = False
+
+    grouped_indicator_prefix = u"\u271a"  # a bold plus
 
     # Traits
 
@@ -115,8 +119,7 @@ class Layer(HasTraits):
     @property
     def pretty_name(self):
         if self.grouped:
-            # prefix = u"\U0001F512"  # unicode lock symbol, not supported well
-            prefix = u"\u271a"  # bold plus sign
+            prefix = self.grouped_indicator_prefix
         else:
             prefix = ""
         return prefix + self.name
