@@ -1,8 +1,10 @@
 from pyface.api import ImageResource
 from pyface.action.api import Group
-from pyface.tasks.action.api import SToolBar, EditorAction
+from pyface.tasks.action.api import SToolBar
 from traits.api import Any
 from traits.api import on_trait_change
+
+from omnivore.framework.enthought_api import EditorAction
 
 import mouse_handler as modes
 
@@ -97,10 +99,8 @@ class MouseHandlerBaseAction(EditorAction):
         self.active_editor.mouse_mode_factory = self.handler
         self.active_editor.update_layer_selection_ui()
 
-    @on_trait_change('active_editor.mouse_mode_factory')
-    def _update_checked(self, ui_state, popup_data):
-        if self.active_editor:
-            self.checked = self.active_editor.mouse_mode_factory == self.handler
+    def _update_checked(self, ui_state):
+        self.checked = self.active_editor.mouse_mode_factory == self.handler
 
 
 def get_toolbar_group(toolbar_name):
