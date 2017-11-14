@@ -104,6 +104,11 @@ class ProjectEditor(FrameworkEditor):
     def create(self, parent):
         self.control = self._create_control(parent)
 
+    def init_blank_document(self, doc):
+        # This gets called only when a new editor is created without a document
+        # and is the only place to select an initial layer in this case.
+        wx.CallAfter(self.layer_tree_control.select_initial_layer)
+
     def load_in_new_tab(self, metadata):
         if metadata.mime == "application/x-maproom-project-json":
             return self.layer_manager.has_user_created_layers()
@@ -127,6 +132,7 @@ class ProjectEditor(FrameworkEditor):
                 self.parse_extra_json(extra, batch_flags)
             self.layer_tree_control.clear_all_items()
             self.layer_tree_control.rebuild()
+            self.layer_tree_control.select_initial_layer()
             self.perform_batch_flags(None, batch_flags)
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
             cmd = ViewportCommand(None, center, units_per_pixel, regime)

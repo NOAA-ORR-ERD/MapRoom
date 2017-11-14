@@ -408,6 +408,7 @@ class MaproomProjectTask(FrameworkTask):
             self.activated()
             self.window.application.successfully_loaded_event = source.metadata.uri
         else:
+            log.debug("starting empty task")
             FrameworkTask.new(self, source, **kwargs)
 
     def allow_different_task(self, guess, other_task):

@@ -107,6 +107,19 @@ class LayerTreeControl(wx.Panel):
                 return item
         return None
 
+    def select_initial_layer(self):
+        fallback = None
+        for item in self.walk_tree():
+            (item_layer, ) = self.tree.GetItemData(item)
+            if item_layer.skip_on_insert:
+                if fallback is None:
+                    fallback = item
+            else:
+                self.tree.SelectItem(item)
+                return
+        if fallback is not None:
+            self.tree.SelectItem(fallback)
+
     def set_edit_layer(self, layer):
         if self.project is None:
             return
