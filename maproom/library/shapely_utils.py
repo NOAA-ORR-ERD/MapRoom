@@ -22,8 +22,6 @@ def get_dataset(uri):
     """
 
     fs, relpath = opener.parse(uri)
-    print "OGR:", relpath
-    print "OGR:", fs
     if not fs.hassyspath(relpath):
         raise RuntimeError("Only file URIs are supported for OGR: %s" % uri)
     file_path = fs.getsyspath(relpath)
@@ -45,10 +43,8 @@ def convert_dataset(dataset):
     layer = dataset.GetLayer()
     for feature in layer:
         geom = feature.GetGeometryRef()
-        print geom
         wkt = geom.ExportToWkt()
         g = loads(wkt)
-        print g
         add_maproom_attributes_to_shapely_geom(g)
         geometry_list.append(g)
     return geometry_list
@@ -91,9 +87,8 @@ def load_shapely(uri):
     try:
         error, source = get_fiona(uri)
         for f in source:
-            print f
             g = shape(f['geometry'])
-            print g.geom_type, g
+            #print g.geom_type, g
             add_maproom_attributes_to_shapely_geom(g)
             geometry_list.append(g)
     except (DriverLoadFailure, ImportError):
@@ -192,7 +187,7 @@ def shapely_to_polygon(geom_list):
             polygon = [(x, y), (x + 0.0005, y + .001), (x + 0.001, y)]
             add_polygon(geom_index, 0, polygon, geom.geom_type, feature_code, group)
         else:
-            print 'unknown type: ', geom.geom_type
+            log.error("unknown type: %s" % str(geom.geom_type))
 
     return ("",
             np.asarray(polygon_points),
