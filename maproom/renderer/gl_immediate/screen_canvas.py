@@ -55,6 +55,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.is_canvas_initialized = False
         self.is_gl_driver_ok = False
         self.gl_driver_error_message = None
+        self.pending_render_count = 0
 
         BaseCanvas.__init__(self, project)
 
@@ -503,6 +504,20 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             return False
         self.SetCurrent(self.shared_context)  # Needed every time for OS X
         return True
+
+    def render(self, event=None):
+        # Force render to happen after all wx event processing because multiple
+        # renders may stack up
+        self.pending_render_count += 1
+        wx.CallAfter(self.render_callback)
+
+    def render_callback(self):
+        log.debug("pending renders: %d" % self.pending_render_count)
+        if self.pending_render_count > 0:
+            BaseCanvas.render(self)
+            self.pending_render_count = 0
+        else:
+            log.debug("optimized out a render!!!!")
 
     def render_overlay(self):
         self.overlay.prepare_to_render_screen_objects()
