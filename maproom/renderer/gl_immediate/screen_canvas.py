@@ -1,3 +1,10 @@
+import sys
+if sys.platform.startswith("win"):
+    # Windows seems to have no delay between the call to refresh and the
+    # CallAfter, so calls will still stack up without a delay
+    time_delay_refresh = 200  # milliseconds
+else:
+    time_delay_refresh = 0
 
 import wx
 import wx.glcanvas as glcanvas
@@ -509,7 +516,10 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         # Force render to happen after all wx event processing because multiple
         # renders may stack up
         self.pending_render_count += 1
-        wx.CallAfter(self.render_callback)
+        if time_delay_refresh > 0:
+            wx.CallLater(time_delay_refresh, self.render_callback)
+        else:
+            wx.CallAfter(self.render_callback)
 
     def render_callback(self):
         log.debug("pending renders: %d" % self.pending_render_count)
