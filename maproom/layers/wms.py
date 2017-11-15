@@ -50,6 +50,12 @@ class WMSLayer(ProjectedLayer):
 
     checkerboard_when_loading = False
 
+    # class attributes
+
+    groupable = False
+
+    add_at_bottom = True
+
     ##### Traits
 
     def _map_server_id_default(self):

@@ -22,6 +22,10 @@ class Graticule(ScreenLayer):
 
     skip_on_insert = True
 
+    # class attributes
+
+    groupable = False
+
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)
 

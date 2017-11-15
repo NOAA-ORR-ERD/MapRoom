@@ -254,6 +254,21 @@ class LayerManager(BaseDocument):
             mi = None
         return mi
 
+    def get_multi_index_of_first_bottom_layer(self, at_bottom):
+        found = None
+        for layer in reversed(self.flatten()):  # bottom up
+            if at_bottom and layer.add_at_bottom:
+                found = layer
+            elif not at_bottom and not layer.groupable:
+                found = layer
+            else:
+                break
+        if found is None:
+            found = [100000000]  # there better be fewer than one hundred million layers...
+        else:
+            found = self.get_multi_index_of_layer(found)
+        return found
+
     def get_multi_index_of_layer(self, layer):
         return self.get_multi_index_of_layer_recursive(layer, self.layers)
 
@@ -807,7 +822,10 @@ class LayerManager(BaseDocument):
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
         self.dispatch_event('layer_loaded', layer)
         if mi is None:
-            mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
+            if before is None and after is None and not layer.groupable:
+                mi = self.get_multi_index_of_first_bottom_layer(layer.add_at_bottom)
+            else:
+                mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
         return mi
 

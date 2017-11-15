@@ -132,6 +132,10 @@ class CompassRose(ScreenLayer):
 
     skip_on_insert = True
 
+    # class attributes
+
+    groupable = False
+
     x_offset = 10
     y_offset = 50
 

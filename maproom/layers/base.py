@@ -40,6 +40,16 @@ class Layer(HasTraits):
 
     grouped_indicator_prefix = u"\u271a"  # a bold plus
 
+    # False means it is a layer without bounds like grid, scale, tile, etc.
+    # These types of layers can not be added to any group and will always be
+    # added to the root level of the layer tree, below any groupable layers but
+    # above any ungroupable layers.
+    groupable = True  
+
+    # add_at_bottom only applies to ungroupable layers; insert at the bottom of
+    # the layer tree, below other ungroupable layers.
+    add_at_bottom = False  # True implies ungroupable
+
     # Traits
 
     name = Unicode("Empty Layer")
