@@ -45,6 +45,7 @@ class MouseHandler(object):
         self.can_snap = False
         self.is_over_object = False
         self.current_object_under_mouse = None
+        self.last_object_under_mouse = None
 
         # Optional (only OS X at this point) mouse wheel event filter
         self.wheel_scroll_count = 0
@@ -543,8 +544,11 @@ class RNCSelectionMode(PanMode):
 
     def process_mouse_motion_up(self, event):
         MouseHandler.process_mouse_motion_up(self, event)
-        self.is_over_object = self.get_rnc_object() is not None
-        self.layer_canvas.project.refresh()
+        over = self.get_rnc_object()
+        self.is_over_object = over is not None
+        if over != self.last_object_under_mouse:
+            self.layer_canvas.project.refresh()
+            self.last_object_under_mouse = over
 
     # def process_mouse_motion_down(self, event):
     #     if not self.is_panning:
@@ -593,7 +597,7 @@ class RNCSelectionMode(PanMode):
                 renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
-class PolygonSelectionMode(PanMode):
+class PolygonSelectionMode(RNCSelectionMode):
     """Mouse mode to select rings
     """
     icon = "select.png"
@@ -601,15 +605,6 @@ class PolygonSelectionMode(PanMode):
     menu_item_tooltip = "Select a polygon"
     editor_trait_for_enabled = ""
     toolbar_group = "select"
-
-    def get_rnc_object(self):
-        c = self.layer_canvas
-        e = c.project
-        if e.clickable_object_mouse_is_over is not None:
-            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-            if layer.can_highlight_clickable_object(c, object_type, object_index):
-                return layer, object_type, object_index
-        return None
 
     def get_help_text(self):
         rnc = self.get_rnc_object()
@@ -620,18 +615,8 @@ class PolygonSelectionMode(PanMode):
             return "   Geom %s: %s" % (str(geom), layer.name)
         return ""
 
-    def process_mouse_motion_up(self, event):
-        MouseHandler.process_mouse_motion_up(self, event)
-        self.is_over_object = self.get_rnc_object() is not None
-        self.layer_canvas.project.refresh()
-
-    # def process_mouse_motion_down(self, event):
-    #     if not self.is_panning:
-    #         if self.check_early_mouse_release(event):
-    #             return
-    #         self.is_panning = True
-    #     else:
-    #         PanMode.process_mouse_motion_down(self, event)
+    def get_long_help_text(self):
+        return ""
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
@@ -651,17 +636,6 @@ class PolygonSelectionMode(PanMode):
                 c.render(event)
 
         self.is_panning = False
-
-    def render_overlay(self, renderer):
-        # draw outline of polygon object that's currently being moused-over
-        rnc = self.get_rnc_object()
-        if rnc is not None:
-            c = self.layer_canvas
-            layer, object_type, object_index = rnc
-            wp_list = layer.get_highlight_lines(object_type, object_index)
-            for wp in wp_list:
-                sp = [c.get_screen_point_from_world_point(w) for w in wp]
-                renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
 
 
 class ObjectSelectionMode(MouseHandler):
