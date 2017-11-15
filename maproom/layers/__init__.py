@@ -3,7 +3,7 @@
 from base import Layer, EmptyLayer
 from line import LineLayer, LineEditLayer
 from folder import RootLayer, Folder
-from grid import Grid
+from grid import Graticule
 from scale import Scale
 from compass_rose import CompassRose
 from triangle import TriangleLayer

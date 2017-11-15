@@ -7,7 +7,7 @@ from fs.opener import opener, fsopen
 
 import library.rect as rect
 
-from layers import Grid
+from layers import Graticule
 from layers import Layer
 from layers import LayerStyle
 from layers import LineLayer
@@ -137,7 +137,7 @@ class LayerManager(BaseDocument):
                 self.insert_layer([index], annotation)
 
         index += 1
-        grid = Grid(manager=self)
+        grid = Graticule(manager=self)
         self.insert_layer([index], grid)
         
         index += 1
@@ -734,7 +734,7 @@ class LayerManager(BaseDocument):
 
     def add_layer(self, type=None, editor=None, before=None, after=None):
         if type == "grid":
-            layer = Grid(manager=self)
+            layer = Graticule(manager=self)
         elif type == "triangle":
             layer = TriangleLayer(manager=self)
         else:

@@ -7,7 +7,7 @@ from command import Command, UndoInfo
 from layers import AnnotationLayer
 from layers import CompassRose
 from layers import EmptyLayer
-from layers import Grid
+from layers import Graticule
 from layers import LineEditLayer
 from layers import LineLayer
 from layers import PolygonLayer
@@ -124,7 +124,7 @@ class AddLayerCommand(Command):
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
         if self.type == "grid":
-            layer = Grid(manager=lm)
+            layer = Graticule(manager=lm)
         elif self.type == "compass_rose":
             layer = CompassRose(manager=lm)
         elif self.type == "triangle":

@@ -13,12 +13,10 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Grid(ScreenLayer):
-    """Root layer
-
-    Only one root layer per project.
+class Graticule(ScreenLayer):
+    """Graticule
     """
-    name = Unicode("Lon/Lat Grid")
+    name = Unicode("Graticule")
 
     type = Str("grid")
 

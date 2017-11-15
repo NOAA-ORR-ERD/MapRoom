@@ -270,7 +270,7 @@ class NewVectorLayerAction(EditorAction):
 
 
 class NewLonLatLayerAction(EditorAction):
-    name = 'New Lon/Lat Layer'
+    name = 'New Graticule Layer'
     tooltip = 'Create new longitude/latitude grid layer'
 
     def perform(self, event):
