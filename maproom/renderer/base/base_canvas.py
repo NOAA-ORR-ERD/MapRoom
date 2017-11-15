@@ -74,7 +74,8 @@ class BaseCanvas(object):
             del self.layer_renderers[layer]
 
     def rebuild_renderers(self):
-        for layer in self.project.layer_manager.flatten():
+        layers = list(self.layer_renderers)  # shallow copy; we'll be deleting from the list
+        for layer in layers:
             self.remove_renderer_for_layer(layer)
         self.update_renderers()
 
@@ -154,6 +155,7 @@ class BaseCanvas(object):
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
         t0 = time.clock()
+        print("RENDERING at %f" % t0)
         self.update_renderers()
 
         s_r = self.get_screen_rect()
