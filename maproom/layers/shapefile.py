@@ -119,7 +119,11 @@ class PolygonShapefileLayer(PolygonLayer):
 
     def get_polygons(self, object_index):
         poly, ident = self.get_geometry_from_object_index(object_index, 0, 0)
-        return poly.exterior.coords, poly.interiors
+        try:
+            return poly.exterior.coords, poly.interiors
+        except AttributeError:
+            # LineString or LinearRing
+            return poly.coords, []
 
     def can_highlight_clickable_object(self, canvas, object_type, object_index):
         return canvas.picker.is_interior_type(object_type)
