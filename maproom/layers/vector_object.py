@@ -321,9 +321,6 @@ class LineVectorObject(VectorObjectLayer):
         side effect!)
         """
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
-        # find lower left coords & width/height to determine scale change
-        old_origin = np.copy(p.xy[0])  # without copy it will be changed below
-        orig_wh = p.xy[self.anchor_of[0]] - old_origin
 
         if about_center:
             dx *= 2
@@ -355,12 +352,11 @@ class LineVectorObject(VectorObjectLayer):
             self.points[0:offset].x -= new_center[0] - orig_center[0]
             self.points[0:offset].y -= new_center[1] - orig_center[1]
 
-        new_origin = np.copy(p.xy[0])  # see above re use of copy
-        scaled_wh = p.xy[self.anchor_of[0]] - new_origin
-        scale = scaled_wh / orig_wh
-        self.rescale_after_bounding_box_change(old_origin, new_origin, scale)
+        # force children to fit inside the new bounding box
+        temp_bounds = self.compute_bounding_rect_from_points(self.points)
+        self.fit_to_bounding_box(self.bounds, temp_bounds)
 
-    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
+    def fit_to_bounding_box(self, current_bounds, new_bounds):
         pass
 
     def rotating_selected_objects(self, world_dx, world_dy):
@@ -855,6 +851,14 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
         else:
             LineVectorObject.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
 
+    def fit_to_bounding_box(self, current_bounds, new_bounds):
+        # Recalculate screen size based on new bounds. The points array will
+        # have already been resized so it's just a matter of adjusting the
+        # screen dimensions to match the resizing.
+        scale, old_origin, new_origin = rect.get_transform(current_bounds, new_bounds)
+        self.screen_dx *= scale[0][0]
+        self.screen_dy *= scale[1][1]
+
     def calc_control_points_from_screen(self, canvas):
         p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
         anchor = canvas.get_numpy_screen_point_from_world_point(p[0]['xy'])
@@ -1093,6 +1097,14 @@ class OverlayScalableImageObject(OverlayImageObject):
 
         self.move_bounding_box_point(drag, anchor, dx, dy, about_center, ax, ay)
 
+    def fit_to_bounding_box(self, current_bounds, new_bounds):
+        # Recalculate screen size based on new bounds. The points array will
+        # have already been resized so it's just a matter of adjusting the
+        # screen dimensions to match the resizing.
+        scale, old_origin, new_origin = rect.get_transform(current_bounds, new_bounds)
+        self.text_width *= scale[0][0]
+        self.text_height *= scale[1][1]
+
 
 class OverlayTextObject(OverlayScalableImageObject):
     """Texture mapped image object that is fixed in size relative to the screen
@@ -1233,11 +1245,8 @@ class PolylineMixin(object):
         points[0:offset] = cp
         self.update_bounds()
 
-    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
-        offset = self.center_point_index + 1
-        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
-        points = ((p.xy[offset:] - old_origin) * scale) + new_origin
-        p.xy[offset:] = points
+    def fit_to_bounding_box(self, current_bounds, new_bounds):
+        pass
 
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
@@ -1409,28 +1418,36 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         affected.append(self)
         return affected
 
-    def rescale_after_bounding_box_change(self, old_origin, new_origin, scale):
+    def fit_to_bounding_box(self, current_bounds, new_bounds):
         layers = self.manager.get_layer_children(self)
-        print "SCALING SUB-OBJECTS!!!", self, layers
-        anchor = 0
+        print "FITTING SUB-OBJECTS TO NEW BOUNDING BOX!!!", self, layers
+        print "  old bounds: %s" % str(current_bounds)
+        print "  new bounds: %s" % str(new_bounds)
+        scale, old_origin, new_origin = rect.get_transform(current_bounds, new_bounds)
+        print(" scale: %s" % str(scale))
+        print(" old origin: %s" % str(old_origin))
+        print(" new origin: %s" % str(new_origin))
         for layer in layers:
-            drag = layer.anchor_of[anchor]
+            print("fitting layer: %s, bounds=%s" % (layer, layer.bounds))
+            # fit the child layer in the new bounding box by a linear transform
+            # of the child bounding box in the proportion of the parent
+            # bounding box change
+            current_sublayer_bounds = layer.copy_bounds()
             p = layer.points.view(data_types.POINT_XY_VIEW_DTYPE)
-            p_anchor = ((p.xy[0] - old_origin) * scale) + new_origin
-            p_drag = ((p.xy[drag] - old_origin) * scale) + new_origin
-#            print "p", p
-#            print "p_ancor", p_anchor
-#            print "p_drag", p_drag
-            dx = p_drag[0] - p.xy[drag][0]
-            dy = p_drag[1] - p.xy[drag][1]
-            ax = p_anchor[0] - p.xy[0][0]
-            ay = p_anchor[1] - p.xy[0][1]
-            layer.move_bounding_box_point(drag, anchor, dx, dy, False, ax, ay)
-            layer.update_bounds()
-#        offset = self.center_point_index + 1
-#        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
-#        points = ((p.xy[offset:] - old_origin) * scale) + new_origin
-#        p.xy[offset:] = points
+            print(" before: %s" % str(p.xy))
+            points = (p.xy[:] - old_origin).dot(scale) + new_origin
+            p.xy[:] = points
+            print(" after: %s" % str(p.xy))
+
+            # set new bounding rect
+            layer.bounds = self.compute_bounding_rect_from_points(layer.points)
+
+            # recursively fit children
+            layer.fit_to_bounding_box(current_sublayer_bounds, layer.bounds)
+            # offset = self.center_point_index + 1
+            # p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+            # points = ((p.xy[offset:] - old_origin) * scale) + new_origin
+            # p.xy[offset:] = points
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering annotation layer group %s!!! pick=%s" % (self.name, picker))

@@ -100,6 +100,7 @@ class MoveControlPointCommand(Command):
             lf.layer_items_moved = True
             child_layer_data.append((la.invariant, la.get_undo_info()))
 
+        log.debug("\n\n\nBegin moving control point: layer=%s children=%s" % (layer, str(affected)))
         layer.move_control_point(self.drag, self.anchor, self.dx, self.dy, self.about_center)
         linked_layer_data = update_linked_layers(lm, layer, undo)
 
@@ -112,6 +113,7 @@ class MoveControlPointCommand(Command):
             # print "sl", sl
             # print "snapped_cp", self.snapped_cp
             lm.set_control_point_link(layer, self.drag, sl, self.snapped_cp)
+        log.debug("Finished moving control point\n\n\n")
         return undo
 
     def undo(self, editor):
