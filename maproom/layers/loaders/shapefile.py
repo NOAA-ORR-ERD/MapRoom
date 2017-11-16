@@ -3,7 +3,7 @@ import os
 from osgeo import ogr, osr
 
 from maproom.library.shapely_utils import load_shapely
-from maproom.layers import PolygonShapefileLayer
+from maproom.layers import PolygonShapefileLayer, PointLayer
 
 from common import BaseLayerLoader
 
@@ -100,19 +100,33 @@ class ShapefileLoader(BaseLayerLoader):
 
     name = "Shapefile"
 
-    layer_class = PolygonShapefileLayer
-
     def load_layers(self, metadata, manager, **kwargs):
-        layer = self.layer_class(manager=manager)
+        """May return one or two layers; points are placed in a separate layer
+        so they can be rendered and operated on like a regular points layer
+        """
+        layers = []
+        layer = PolygonShapefileLayer(manager=manager)
 
-        layer.load_error_string, geometry_list = load_shapely(metadata.uri)
-        progress_log.info("Creating layer...")
+        layer.load_error_string, geometry_list, point_list = load_shapely(metadata.uri)
         if (layer.load_error_string == ""):
-            layer.set_geometry(geometry_list)
-            layer.file_path = metadata.uri
-            layer.name = os.path.split(layer.file_path)[1]
-            layer.mime = self.mime
-        return [layer]
+            if geometry_list:
+                progress_log.info("Creating polygon layer...")
+                layer.set_geometry(geometry_list)
+                layer.file_path = metadata.uri
+                layer.name = os.path.split(layer.file_path)[1]
+                layer.mime = self.mime
+                layers.append(layer)
+            if len(point_list) > 0:
+                progress_log.info("Creating point layer...")
+                layer = PointLayer(manager=manager)
+                layer.set_data(point_list)
+                layer.file_path = metadata.uri
+                layer.name = os.path.split(layer.file_path)[1]
+                layer.mime = self.mime
+                layers.append(layer)
+        else:
+            layers.append(layer)  # to return the load error string
+        return layers
 
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)

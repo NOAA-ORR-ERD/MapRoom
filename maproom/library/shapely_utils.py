@@ -38,15 +38,23 @@ def get_dataset(uri):
     return "", dataset
 
 
-def convert_dataset(dataset):
+def convert_dataset(dataset, point_list):
     geometry_list = []
     layer = dataset.GetLayer()
     for feature in layer:
         geom = feature.GetGeometryRef()
         wkt = geom.ExportToWkt()
         g = loads(wkt)
-        add_maproom_attributes_to_shapely_geom(g)
-        geometry_list.append(g)
+        if g.geom_type == "Point":
+            points = list(g.coords)
+            example = points[0]
+            if len(example) > 2:
+                points = [(p[0], p[1]) for p in points]
+
+            point_list.extend(points)
+        else:
+            add_maproom_attributes_to_shapely_geom(g)
+            geometry_list.append(g)
     return geometry_list
 
 
@@ -84,23 +92,33 @@ def get_fiona(uri):
 
 def load_shapely(uri):
     geometry_list = []
+    point_list = accumulator(block_shape=(2,), dtype=np.float64)
     try:
+        # Try fiona first
         error, source = get_fiona(uri)
         for f in source:
             g = shape(f['geometry'])
-            #print g.geom_type, g
-            add_maproom_attributes_to_shapely_geom(g)
-            geometry_list.append(g)
+            if g.geom_type == "Point":
+                points = list(geom.coords)
+                example = points[0]
+                if len(example) > 2:
+                    points = [(p[0], p[1]) for p in points]
+
+                point_list.extend(points)
+            else:
+                add_maproom_attributes_to_shapely_geom(g)
+                geometry_list.append(g)
     except (DriverLoadFailure, ImportError):
+        # use GDAL instead
         source = None
         error, dataset = get_dataset(uri)
         if not error:
-            geometry_list = convert_dataset(dataset)
+            geometry_list = convert_dataset(dataset, point_list)
 
     if error:
-        return (error, None)
+        return (error, None, None)
 
-    return ("", geometry_list)
+    return ("", geometry_list, np.asarray(point_list))
 
 
 def add_maproom_attributes_to_shapely_geom(geom, name="", feature_code=0):
@@ -119,6 +137,7 @@ def shapely_to_polygon(geom_list):
     polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
     polygon_starts = accumulator(block_shape=(1,), dtype=np.uint32)
     polygon_counts = accumulator(block_shape=(1,), dtype=np.uint32)
+    point_points = accumulator(block_shape=(2,), dtype=np.float64)
     ring_identifiers = []
     ring_groups = []
     total_points_scoping_hack = [0]
@@ -156,8 +175,20 @@ def shapely_to_polygon(geom_list):
         ring_identifiers.append(pi)
         ring_groups.append(group)
 
+    def add_points(points, feature_code, group):
+        if len(points) < 1:
+            return
+
+        # we're only interested in 2D points
+        example = points[0]
+        if len(example) > 2:
+            points = [(p[0], p[1]) for p in points]
+
+        point_points.extend(points)
+
     group = 0
-    for geom_index, geom in enumerate(geom_list):
+    geom_index = 0
+    for geom in geom_list:
         feature_code = 0
         group += 1
 
@@ -183,17 +214,25 @@ def shapely_to_polygon(geom_list):
         elif geom.geom_type == 'Point':
             # polygon layer doesn't currently support points, so fake it by
             # creating tiny little triangles for each point
-            x, y = geom.coords[0]
-            polygon = [(x, y), (x + 0.0005, y + .001), (x + 0.001, y)]
-            add_polygon(geom_index, 0, polygon, geom.geom_type, feature_code, group)
+            # x, y = geom.coords[0]
+            # polygon = [(x, y), (x + 0.0000005, y + .000001), (x + 0.000001, y), (x, y)]
+            # add_polygon(geom_index, 0, polygon, geom.geom_type, feature_code, group)
+            points = list(geom.coords)
+            #print "point", points
+            #add_point(points, feature_code, group)
+            group -= 1  # points are not in a group, so skip them
+            geom_index -= 1  # skip points in the geometry index
         else:
             log.error("unknown type: %s" % str(geom.geom_type))
+
+        geom_index += 1
 
     return ("",
             np.asarray(polygon_points),
             np.asarray(polygon_starts)[:,0],
             np.asarray(polygon_counts)[:,0],
-            ring_identifiers, ring_groups)
+            ring_identifiers, ring_groups,
+            )
 
 
 def rebuild_geometry_list(geometry_list, changes):

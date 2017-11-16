@@ -45,7 +45,7 @@ class PointLayer(PointBaseLayer):
 
     visibility_items = ["points", "labels"]
 
-    layer_info_panel = ["Point count", "Flagged points", "Default depth", "Depth unit", "Color"]
+    layer_info_panel = ["Point count", "Flagged points", "Default depth", "Depth unit", "Color", "Outline color", "Outline transparency"]
 
     selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]
 
@@ -78,7 +78,7 @@ class PointLayer(PointBaseLayer):
                 self.select_point(p, state.FLAGGED)
             self.manager.dispatch_event('refresh_needed')
 
-    def set_data(self, f_points, f_depths, f_line_segment_indexes, style=None):
+    def set_data(self, f_points, f_depths=0.0, style=None):
         n = np.alen(f_points)
         if style is not None:
             self.style = style
@@ -88,14 +88,6 @@ class PointLayer(PointBaseLayer):
             self.points.z[0:n] = f_depths
             self.points.color = self.style.line_color
             self.points.state = 0
-
-            n = np.alen(f_line_segment_indexes)
-            self.line_segment_indexes = self.make_line_segment_indexes(n)
-            self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
-                0: n
-            ] = f_line_segment_indexes
-            self.line_segment_indexes.color = self.style.line_color
-            self.line_segment_indexes.state = 0
 
         self.update_bounds()
 
