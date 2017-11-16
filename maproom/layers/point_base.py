@@ -116,8 +116,7 @@ class PointBaseLayer(ProjectedLayer):
         return self.points.copy().view(np.recarray)
 
     def copy_bounds(self):
-        ((l, b), (r, t)) = self.bounds
-        return ((l, b), (r, t))
+        return rect.copy(self.bounds)
 
     def get_undo_info(self):
         """ Return a copy of any data needed to restore the state of the layer
@@ -148,21 +147,21 @@ class PointBaseLayer(ProjectedLayer):
             self.points = jd
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
-        bounds = rect.NONE_RECT
-
         if (self.points is not None and len(self.points) > 0):
             if (mark_type == state.CLEAR):
                 points = self.points
             else:
                 points = self.points[self.get_selected_point_indexes(mark_type)]
-            # fixme -- could be more eficient numpy-wise
-            l = points.x.min()
-            r = points.x.max()
-            b = points.y.min()
-            t = points.y.max()
-            bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
+            return self.compute_bounding_rect_from_points(points)
+        return rect.NONE_RECT
 
-        return bounds
+    def compute_bounding_rect_from_points(self, points):
+        # fixme -- could be more eficient numpy-wise
+        l = points.x.min()
+        r = points.x.max()
+        b = points.y.min()
+        t = points.y.max()
+        return ((l, b), (r, t))
 
     def get_state(self, index):
         # fixme -- is this needed -- should all points have a state?
