@@ -91,11 +91,15 @@ class TextDeserializer(object):
         log.debug("unserialize: short_name=%s, args=%s" % (short_name, text_args))
         cmd_cls = Serializer.get_command(short_name)
         cmd_args = []
-        for name, stype in cmd_cls.serialize_order:
+        for name, stype, default_val in [(n[0], n[1], n[2] if len(n) > 2 else None) for n in cmd_cls.serialize_order]:
             log.debug("  name=%s, type=%s" % (name, stype))
             converter = SerializedCommand.get_converter(stype)
-            arg = converter.instance_from_args(text_args, manager, self)
-            log.debug("  converter=%s: %s" % (converter.__class__.__name__, repr(arg)))
+            try:
+                arg = converter.instance_from_args(text_args, manager, self)
+                log.debug("  converter=%s: %s" % (converter.__class__.__name__, repr(arg)))
+            except IndexError:
+                arg = default_val
+                log.debug("  converter=%s: %s (using default value)" % (converter.__class__.__name__, repr(arg)))
             cmd_args.append(arg)
         log.debug("COMMAND: %s(%s)" % (cmd_cls.__name__, ",".join([repr(a) for a in cmd_args])))
         cmd = cmd_cls(*cmd_args)

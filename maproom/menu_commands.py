@@ -27,7 +27,7 @@ class LoadLayersCommand(Command):
     short_name = "load"
     serialize_order = [
         ('metadata', 'file_metadata'),
-        ('regime', 'int'),
+        ('regime', 'int', 0),
     ]
 
     def __init__(self, metadata, regime=0):
