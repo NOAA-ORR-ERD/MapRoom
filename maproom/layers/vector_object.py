@@ -1178,6 +1178,10 @@ class OverlayIconObject(OverlayScalableImageObject):
 
     min_size = Int(10)
 
+    def fit_to_bounding_box(self, current_bounds, new_bounds):
+        # Don't do anything... The icon shouldn't scale with the parent scaling
+        pass
+
     def get_image_array(self):
         return self.style.get_numpy_image_from_icon()
 
