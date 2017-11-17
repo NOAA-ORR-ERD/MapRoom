@@ -65,7 +65,7 @@ class MockProject(object):
         self.window = MockWindow()
         self.task = MockTask(self.window, default_styles)
         self.layer_canvas = MockCanvas()
-        self.layer_manager = LayerManager.create(self)
+        self.layer_manager = LayerManager.create(self, initial_layers=False)
         if add_tree_control:
             self.layer_tree_control = MockTree()
             self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
