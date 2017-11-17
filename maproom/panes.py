@@ -52,14 +52,14 @@ class TimelinePanel(ZoomRuler):
         noon = today.replace(hour=12, minute=0, second=0, tzinfo=None)
         day_after = noon + datetime.timedelta(days=1)
         end = calendar.timegm(day_after.timetuple())
-        print "DATES:", start, day_before, end, day_after
+        # print "DATES:", start, day_before, end, day_after
         info = {
             "format": "month",
             "earliest_time": start,
             "latest_time": end,
             "marks": [(l.start_time, l.end_time, l) for l in layers],
         }
-        print info
+        # print info
         return info
 
     def recalc_view(self):

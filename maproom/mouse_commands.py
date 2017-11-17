@@ -2,6 +2,9 @@ import numpy as np
 
 from command import Command, UndoInfo
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class ViewportCommand(Command):
     short_name = "viewport"
@@ -583,7 +586,7 @@ class SetAnchorCommand(Command):
         self.undo_info = undo = UndoInfo()
         all_links = lm.get_all_control_point_links_copy()
         linked = lm.remove_control_point_links(layer, layer.anchor_point_index)
-        print("old linked: %s" % linked)
+        log.debug("old linked: %s" % linked)
         undo.data = (layer.anchor_point_index, self.anchor, all_links)
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_display_properties_changed = True

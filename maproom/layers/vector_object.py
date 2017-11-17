@@ -1431,24 +1431,24 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     def fit_to_bounding_box(self, current_bounds, new_bounds):
         layers = self.manager.get_layer_children(self)
-        print "FITTING SUB-OBJECTS TO NEW BOUNDING BOX!!!", self, layers
-        print "  old bounds: %s" % str(current_bounds)
-        print "  new bounds: %s" % str(new_bounds)
+        # print "FITTING SUB-OBJECTS TO NEW BOUNDING BOX!!!", self, layers
+        # print "  old bounds: %s" % str(current_bounds)
+        # print "  new bounds: %s" % str(new_bounds)
         scale, old_origin, new_origin = rect.get_transform(current_bounds, new_bounds)
-        print(" scale: %s" % str(scale))
-        print(" old origin: %s" % str(old_origin))
-        print(" new origin: %s" % str(new_origin))
+        # print(" scale: %s" % str(scale))
+        # print(" old origin: %s" % str(old_origin))
+        # print(" new origin: %s" % str(new_origin))
         for layer in layers:
-            print("fitting layer: %s, bounds=%s" % (layer, layer.bounds))
+            # print("fitting layer: %s, bounds=%s" % (layer, layer.bounds))
             # fit the child layer in the new bounding box by a linear transform
             # of the child bounding box in the proportion of the parent
             # bounding box change
             current_sublayer_bounds = layer.copy_bounds()
             p = layer.points.view(data_types.POINT_XY_VIEW_DTYPE)
-            print(" before: %s" % str(p.xy))
+            # print(" before: %s" % str(p.xy))
             points = (p.xy[:] - old_origin).dot(scale) + new_origin
             p.xy[:] = points
-            print(" after: %s" % str(p.xy))
+            # print(" after: %s" % str(p.xy))
 
             # set new bounding rect
             layer.bounds = self.compute_bounding_rect_from_points(layer.points)

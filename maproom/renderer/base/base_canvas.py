@@ -155,7 +155,7 @@ class BaseCanvas(object):
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
         t0 = time.clock()
-        print("RENDERING at %f" % t0)
+        log.debug("RENDERING at %f" % t0)
         self.update_renderers()
 
         s_r = self.get_screen_rect()
