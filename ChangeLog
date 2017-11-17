@@ -1,3 +1,62 @@
+11/16/2017
+---------------------------
+Released 3.1b39
+- RM Don't load initial layers in the mock layer manager
+- RM Fixed test cases to add default value for serialized commands if loading old version of command log
+- RM Replaced deprecated call to wx.EmptyBitmap
+- RM Removed some debug prints
+- RM Refs #799: fixed arrow text icon object so the icon remains the same size regardless of parent scaling
+- RM Refs #799: flagged anchor point is no longer displayed for arrow + text objects
+- RM Added immediately flag for rendering so non-windows can get fast dynamic updating on control point movement
+- RM Refs #799: Fixed movement of control point 1 on line
+- RM Fixed #817: added fit_to_bounding_box to force sublayers to fit correctly
+- RM rect: added copy and get_transform, updated point_base to use
+- RM Fixed #821: points in a shapefile are now added in a separate layer
+- RM Fixed #787: added check for LineString in polygon highlighting
+- RM Fixed #820: ungroupable layers (graticule, tile, etc.) are added at the bottom
+- RM Changed "grid" to "graticule"
+- RM Fixed #819: added check to see if mouse move would highlight the same polygon and skip refresh if so
+- RM Fixed #769: added delay before calling refresh_callback, necessary for Windows
+- RM Refs #769: added wx callback & counter for render call to eliminate multiple redraws
+- RM Refs #769: added debug print to show each rendering call
+- RM Refs #787: remove prints, added logging
+- RM Refs #802: added select_initial_layer to layer tree control & call it when loading a file or on a blank document
+- RM toolbar: fixed intermediate trait errors by using omnivore's replacement EditorAction
+- RM docs: added step-by-step description of how a file is loaded
+- RM Fixed unicode error with tree editing when label is marked with the unicode symbol for a grouped layer
+- RM Fixed #815: needed to force removal of locked control point
+- RM layer_tree_control: check that we're actually on an item before attempting to rename
+- RM layer_tree_control: fixed segfault when customtreectrl text edit loses focus
+- RM Refs #799: picker now selects parent object by default
+- RM Ref #799: fixed arrow text box layer to update screen when editing text for its text sublayer
+- RM Added more commands to layer tree context menu
+- RM Refs #799: Added LayerAction to use the framework's new on_popup_menu_update
+- RM Refs #799: better menu item titles for group/ungroup
+- RM Refs #799: Fixed missing layer argument to group/ungroup children
+- RM Fixed #814: removed layer name from info panel
+- RM Fixed #813: added last loaded and saved dirs in omnivore framework
+- RM Fixed #763: added rename to popup menu
+- RM Refs #763: added context menu to layer_tree_control with group/ungroup
+- RM Refs #799: added toolbar items for grouping/ungrouping annotation layers
+- RM layers: added pretty_name property that adds a symbol before grouped layers
+- RM vector_object_command: Fixed missing logger
+- RM Refs #813: added placeholder default dir/filename for save as
+- RM Fixed #812: moved call to FileDialog into project_editor; added check for blank filename
+- RM Refs #799: default expansion state of grouped objects is collapsed
+- RM Fixed #811: made RNC loader layer more transparent
+- RM Corrected load_bna_as_shapely to have default regime of 0
+- RM Refs #799: exclude icon in boundary rect calculation for ArrowTextIconLayer
+- RM Refs #799: added (not default yet, though) picker that selects parent objects when a grouped sub-object is selected
+- RM Refs #799: arrow text compound objects start collapsed in the tree list
+- RM Fixed #810: changed default annotation layer to start as the top layer
+- RM layers: 'grouped' attribute not being saved/restored from json
+- RM Refs #799: added text editing to folder layer of the arrow text box & arrow text icon objects
+- RM Refs #799: added user friendly names for control points
+- RM Fixed #774: anchor point now moves the connected line in text/line combo vector objects
+- RM Fixed #806: added new menu item to load RNC downloader chart in the 0 - 360 range
+- RM Fixed #805: added duplicate chart (a GDAL image) in the 0 - 360 range
+- RM Fixed #768: added border width parameter to text vector objects
+
 10/30/2017
 ---------------------------
 Released 3.1b38
