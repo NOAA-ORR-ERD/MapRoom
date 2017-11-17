@@ -147,7 +147,7 @@ class OffScreenHTML(object):
         """
         Render the html source to the bitmap
         """
-        bitmap = wx.EmptyBitmap(width, self.height)
+        bitmap = wx.Bitmap(width, self.height)
         dc = self.setup(source, bitmap, face, size)
 
         # Calculate the height of the final rendered text
@@ -160,7 +160,7 @@ class OffScreenHTML(object):
 
         if ylast > self.height:
             self.height = ylast
-            bitmap = wx.EmptyBitmap(width, self.height)
+            bitmap = wx.Bitmap(width, self.height)
             dc = self.setup(source, bitmap, face, size)
 
         # NOTE: no built-in way to get the bounding width from wx; i.e.  no
