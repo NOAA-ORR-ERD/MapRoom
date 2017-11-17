@@ -900,6 +900,8 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
 
+    show_flagged_anchor_point = Bool(True)
+
     # Screen y coords are backwards from world y coords (screen y increases
     # downward)
     screen_offset_from_center = np.asarray(
@@ -911,6 +913,12 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
     def anchor_point_index_from_json(self, json_data):
         self.anchor_point_index = json_data['anchor_point_index']
+
+    def show_flagged_anchor_point_to_json(self):
+        return self.show_flagged_anchor_point
+
+    def show_flagged_anchor_point_from_json(self, json_data):
+        self.show_flagged_anchor_point = json_data.get('show_flagged_anchor_point', False)
 
     def can_anchor_point_move(self):
         return True
@@ -981,7 +989,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
         renderer.draw_image(self, picker, alpha)
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
-        if self.anchor_point_index != self.center_point_index:
+        if self.show_flagged_anchor_point and self.anchor_point_index != self.center_point_index:
             flagged = [self.anchor_point_index]
         else:
             flagged = []

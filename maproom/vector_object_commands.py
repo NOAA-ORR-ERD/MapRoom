@@ -368,7 +368,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         lf.layer_loaded = True
 
         #text = RectangleVectorObject(manager=lm)
-        text = OverlayTextObject(manager=lm)
+        text = OverlayTextObject(manager=lm, show_flagged_anchor_point=False)
         text.set_style(style)
         text.set_opposite_corners(halfway, self.cp2)
         c = editor.layer_canvas
