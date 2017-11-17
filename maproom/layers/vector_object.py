@@ -833,21 +833,19 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
         s1 = c.get_numpy_screen_point_from_world_point(p1)
         s2 = c.get_numpy_screen_point_from_world_point(p2)
         s = s2 - s1
-        print "Screen point", s
-        self.screen_dx, self.screen_dy = list(s)
+        self.screen_dx, self.screen_dy = s[0], s[1]
 
     def move_bounding_box_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
+        log.debug("OverlayLine: move_bounding_box_point: delta=%s" % str((dx, dy)))
         if drag == 1:
-            # special case if dragging the screen-space point!
             c = self.manager.project.layer_canvas
-            p = self.points
-            sx = p.x[1] + dx
-            sy = p.y[1] + dy
-            s1 = c.get_numpy_screen_point_from_world_point((p.x[0], p.y[0]))
-            s2 = c.get_numpy_screen_point_from_world_point((sx, sy))
+            self.points[1].x += dx
+            self.points[1].y += dy
+            s1 = c.get_numpy_screen_point_from_world_point((self.points[0].x, self.points[0].y))
+            s2 = c.get_numpy_screen_point_from_world_point((self.points[1].x, self.points[1].y))
             s = s2 - s1
-            print "Moving screen point to", s
-            self.screen_dx, self.screen_dy = list(s)
+            log.debug("OverlayLine: Screen point: %s -> %s" % (str(s1), str(s2)))
+            self.screen_dx, self.screen_dy = s[0], s[1]
         else:
             LineVectorObject.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
 
@@ -865,6 +863,7 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
         xs = anchor[0] + self.screen_dx
         ys = anchor[1] + self.screen_dy
         w = canvas.get_numpy_world_point_from_screen_point((xs, ys))
+        log.debug("OverlayLine: calc_control: anchor=%s, screen=%s" % (anchor, (xs, ys)))
         # print "world point for anchor %d" % i, w
         # p[i]['xy'] = w  # Doesn't work!
         self.points.x[1] = w[0]
