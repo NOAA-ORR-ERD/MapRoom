@@ -62,6 +62,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.is_canvas_initialized = False
         self.is_gl_driver_ok = False
         self.gl_driver_error_message = None
+        self.use_pending_render = True
         self.pending_render_count = 0
 
         BaseCanvas.__init__(self, project)
@@ -512,18 +513,23 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.SetCurrent(self.shared_context)  # Needed every time for OS X
         return True
 
-    def render(self, event=None):
+    def render(self, event=None, immediately=False):
         # Force render to happen after all wx event processing because multiple
         # renders may stack up
-        self.pending_render_count += 1
-        if time_delay_refresh > 0:
-            wx.CallLater(time_delay_refresh, self.render_callback)
+        immediately = immediately and time_delay_refresh == 0
+        if self.use_pending_render and not immediately:
+            self.pending_render_count += 1
+            if time_delay_refresh > 0:
+                wx.CallLater(time_delay_refresh, self.render_callback)
+            else:
+                wx.CallAfter(self.render_callback)
         else:
-            wx.CallAfter(self.render_callback)
+            self.render_callback(immediately=True)
 
-    def render_callback(self):
-        log.debug("pending renders: %d" % self.pending_render_count)
-        if self.pending_render_count > 0:
+    def render_callback(self, immediately=False):
+        log.debug("immediately: %s pending renders: %d" % (immediately, self.pending_render_count))
+        if immediately or self.pending_render_count > 0:
+            log.debug("rendering")
             BaseCanvas.render(self)
             self.pending_render_count = 0
         else:

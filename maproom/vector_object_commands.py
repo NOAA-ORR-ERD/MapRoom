@@ -89,7 +89,7 @@ class MoveControlPointCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
         old_links = layer.remove_from_master_control_points(self.drag, self.anchor)
-        undo.flags.refresh_needed = True
+        undo.flags.fast_viewport_refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
         lf.layer_contents_added = True

@@ -576,17 +576,19 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.rebuild()
 
     @on_trait_change('layer_manager:refresh_needed')
-    def refresh(self, editable_properties_changed=False):
-        log.debug("refresh called; editable_properties_changed=%s" % editable_properties_changed)
+    def refresh(self, batch_flags=None):
+        log.debug("refresh called; batch_flags=%s" % batch_flags)
         if self.control is None:
             return
+        if batch_flags is None:
+            batch_flags = BatchStatus()
 
         # current control with focus is used to prevent usability issues with
         # text field editing in the calls to the info panel displays below.
         # Without checking for the current text field it is reformatted every
         # time, moving the cursor position to the beginning and generally
         # being annoying
-        if editable_properties_changed:
+        if batch_flags.editable_properties_changed:
             # except this prevents undo/redo from refreshing the state of the
             # control, and on undo text fields need to be refreshed regardless
             # of the cursor position.
@@ -601,8 +603,8 @@ class ProjectEditor(FrameworkEditor):
         edit_layer = self.layer_tree_control.get_edit_layer()
         self.update_layer_contents_ui(edit_layer)
         self.update_layer_menu_ui(edit_layer)
-        self.layer_info.display_panel_for_layer(self, edit_layer, editable_properties_changed, has_focus=current)
-        self.selection_info.display_panel_for_layer(self, edit_layer, editable_properties_changed, has_focus=current)
+        self.layer_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
+        self.selection_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
         self.timeline.refresh_view()
         self.last_refresh = time.clock()
         self.control.Refresh()
@@ -764,10 +766,10 @@ class ProjectEditor(FrameworkEditor):
             self.layer_manager.layers_changed = b
         if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True
-        if b.refresh_needed:
-            self.layer_manager.refresh_needed = b.editable_properties_changed
         if b.fast_viewport_refresh_needed:
-            self.layer_canvas.render()
+            self.layer_canvas.render(immediately=True)
+        if b.refresh_needed:
+            self.layer_manager.refresh_needed = b
         if b.select_layer:
             self.layer_tree_control.set_edit_layer(b.select_layer)
 
