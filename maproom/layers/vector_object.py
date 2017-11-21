@@ -1164,9 +1164,9 @@ class OverlayTextObject(OverlayScalableImageObject):
     def get_image_array(self):
         from maproom.library.numpy_images import OffScreenHTML
         bg = int_to_color_uint8(self.style.fill_color)
-        h = OffScreenHTML(bg)
+        h = OffScreenHTML(self.text_width, self.text_height, bg)
         c = int_to_html_color_string(self.style.text_color)
-        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format, self.text_width)
+        arr = h.get_numpy(self.user_text, c, self.style.font, self.style.font_size, self.style.text_format)
         return arr
 
     def render_overlay(self, renderer, w_r, p_r, s_r, layer_visibility, picker):

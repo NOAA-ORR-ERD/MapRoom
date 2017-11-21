@@ -22,6 +22,9 @@ import cgi
 
 from pyface.api import ImageResource
 
+import logging
+log = logging.getLogger(__name__)
+
 
 def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
     image = ImageResource(icon_path)
@@ -118,10 +121,14 @@ class OffScreenHTML(object):
     This version uses a wx.GCDC, so you can have an alpha background.
 
     Works on OS-X, may need an explicite alpha bitmap on other platforms
+
+    Specifying a height of -1 will return an image that contains the entire
+    height of the text
     """
 
-    def __init__(self, bg=(255, 255, 255)):
-        self.height = 100
+    def __init__(self, width=200, height=100, bg=(255, 255, 255)):
+        self.width = int(width)
+        self.height = int(height)
 
         self.hr = wx.html.HtmlDCRenderer()
 
@@ -143,11 +150,11 @@ class OffScreenHTML(object):
 
         return DC
 
-    def render(self, source, face, size, width):
+    def render(self, source, face, size):
         """
         Render the html source to the bitmap
         """
-        bitmap = wx.Bitmap(width, self.height)
+        bitmap = wx.Bitmap(self.width, 100)
         dc = self.setup(source, bitmap, face, size)
 
         # Calculate the height of the final rendered text
@@ -157,19 +164,22 @@ class OffScreenHTML(object):
             if y == ylast:
                 break
             ylast = y
-
-        if ylast > self.height:
-            self.height = ylast
-            bitmap = wx.Bitmap(width, self.height)
-            dc = self.setup(source, bitmap, face, size)
-
-        # NOTE: no built-in way to get the bounding width from wx; i.e.  no
-        # analogue to GetTotalHeight
+        if ylast < self.height:
+            ylast = self.height
+        bitmap = wx.Bitmap(self.width, ylast)
+        dc = self.setup(source, bitmap, face, size)
         self.hr.Render(0, 0, [])
-        return bitmap.Width, self.hr.GetTotalHeight(), bitmap
 
-    def get_numpy(self, text, c=None, face="", size=12, text_format=0, width_in_pixels=200):
-        if width_in_pixels < 1:
+        if self.height < 0:
+            h = self.hr.GetTotalHeight()
+        else:
+            # NOTE: no built-in way to get the bounding width from wx; i.e.  no
+            # analogue to GetTotalHeight
+            h = self.height
+        return self.width, h, bitmap
+
+    def get_numpy(self, text, c=None, face="", size=12, text_format=0):
+        if self.width < 1:
             return self.get_blank()
 
         if text_format == 0:
@@ -180,8 +190,9 @@ class OffScreenHTML(object):
             text = markdown_text_formatter(text)
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
-        w, h, bitmap = self.render(text, face, size, width_in_pixels)
-        if h > 0:
+        w, h, bitmap = self.render(text, face, size)
+        log.debug("bitmap:", w, h, self.width, self.height, bitmap.Width, bitmap.Height)
+        if h > 0 and w > 0:
             sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
             arr = np.empty((h, w, 4), np.uint8)
             sub.CopyToBuffer(arr, format=wx.BitmapBufferFormat_RGBA)
