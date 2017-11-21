@@ -833,7 +833,7 @@ class FillStyleField(InfoField):
 
 class MultiLineTextField(InfoField):
     def create_control(self):
-        c = wx.TextCtrl(self.parent, style=wx.TE_MULTILINE)
+        c = wx.TextCtrl(self.parent, style=wx.TE_MULTILINE, size=(-1,100))
         c.Bind(wx.EVT_TEXT, self.on_text_changed)
         c.SetEditable(True)
         return c
@@ -1571,7 +1571,7 @@ class InfoPanel(PANELTYPE):
         "Text transparency": TextAlphaField,
         "Font": FontStyleField,
         "Font size": FontSizeField,
-        "Overlay text": OverlayTextField,
+        "Text": OverlayTextField,
         "Text format": TextFormatField,
         "Marplot icon": MarplotIconField,
         "Start time": ParticleStartField,

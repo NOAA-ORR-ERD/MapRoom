@@ -1148,7 +1148,7 @@ class OverlayTextObject(OverlayScalableImageObject):
 
     layer_info_panel = ["Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
-    selection_info_panel = ["Anchor point", "Text format", "Overlay text"]
+    selection_info_panel = ["Text", "Text format", "Anchor point"]
 
     def user_text_to_json(self):
         return self.user_text
@@ -1511,7 +1511,7 @@ class ArrowTextBoxLayer(AnnotationLayer):
 
     layer_info_panel = ["Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
-    selection_info_panel = ["Anchor point", "Text format", "Overlay text", "Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
+    selection_info_panel = ["Text", "Text format", "Anchor point", "Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
     def get_layer_of_anchor(self):
         return self.get_text_box()
