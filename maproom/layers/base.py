@@ -208,6 +208,12 @@ class Layer(HasTraits):
     def is_renderable(self):
         return True
 
+    @property
+    def is_overlay(self):
+        # flag if overlay layer, that is: layer that has some items in pixel
+        # coordinates, not word coordinates.
+        return False
+
     def can_copy(self):
         return False
 
@@ -481,6 +487,9 @@ class Layer(HasTraits):
                 parent = self.manager.get_folder_of_layer(parent)
         else:
             self.bounds = self.compute_bounding_rect()
+
+    def update_overlay_bounds(self):
+        pass
 
     def is_zoomable(self):
         return self.bounds != rect.NONE_RECT

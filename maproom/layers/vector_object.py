@@ -64,6 +64,9 @@ class VectorObjectLayer(LineLayer):
 
     control_point_names = [""]
 
+    def __str__(self):
+        return "%s layer '%s' (%s): %d points bb: %s" % (self.type, unicode(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.num_points, str(self.bounds))
+
     def can_copy(self):
         return True
 
@@ -752,6 +755,10 @@ class OverlayMixin(object):
     zooming in and out doesn't change its size.
     """
 
+    @property
+    def is_overlay(self):
+        return True
+
     def calc_control_points_from_screen(self, canvas):
         pass
 
@@ -762,10 +769,22 @@ class OverlayMixin(object):
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
         self.update_bounds(True)
 
+    def update_overlay_bounds(self):
+        self.bounds = self.compute_bounding_rect()
+
     def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         self.update_world_control_points(renderer)
+
+    def rebuild_renderer(self, renderer, in_place=False):
+        """Update renderer
+
+        """
+        self.update_bounds(False)
+        self.update_world_control_points(renderer)
+        self.update_bounds(False)
+        VectorObjectLayer.rebuild_renderer(self, renderer, in_place)
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Marker rendering occurs in screen coordinates
@@ -1460,8 +1479,16 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
             # points = ((p.xy[offset:] - old_origin) * scale) + new_origin
             # p.xy[offset:] = points
 
+    def rebuild_renderer(self, renderer, in_place=False):
+        """Update renderer
+
+        """
+        self.update_overlay_bounds()
+        RectangleVectorObject.rebuild_renderer(self, renderer, in_place)
+
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering annotation layer group %s!!! pick=%s" % (self.name, picker))
+        # set new bounding rect every time
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         if self.manager.project.layer_tree_control.get_edit_layer() == self:

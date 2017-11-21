@@ -766,6 +766,12 @@ class ProjectEditor(FrameworkEditor):
             self.layer_manager.layers_changed = b
         if b.metadata_changed:
             self.layer_manager.layer_metadata_changed = True
+
+        overlay_affected = self.layer_manager.recalc_overlay_bounds()
+        if overlay_affected:
+            b.refresh_needed = True
+            b.fast_viewport_refresh_needed = False
+
         if b.fast_viewport_refresh_needed:
             self.layer_canvas.render(immediately=True)
         if b.refresh_needed:

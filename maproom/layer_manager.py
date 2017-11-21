@@ -314,6 +314,28 @@ class LayerManager(BaseDocument):
         for layer in reversed(self.flatten()):
             layer.update_bounds()
 
+    def recalc_overlay_bounds(self):
+        # overlay layers need to adjust their world-space boinding box after a
+        # viewport zoom, starting at leaf layers and working back up to folder
+        # layers
+        affected = []
+        for layer in reversed(self.flatten()):
+            if layer.is_overlay:
+                print("Updating overlay bounds for %s" % str(layer))
+                layer.update_overlay_bounds()
+            elif layer.is_folder() and not layer.is_root():
+                print("Updating overlay bounds for %s" % str(layer))
+                layer.compute_bounding_rect()
+                layer.update_overlay_bounds()
+            else:
+                continue
+            self.layer_contents_changed = layer
+            # layer.update_overlay_bounds()
+            # self.layer_contents_changed = layer
+            affected.append(layer)
+            print("  updated to: %s" % str(layer))
+        return affected
+
     def accumulate_layer_bounds(self, layers):
         result = rect.NONE_RECT
 

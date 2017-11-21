@@ -99,6 +99,11 @@ class BoundedFolder(LineLayer, Folder):
         return True
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
+        bounds = self.compute_bounding_rect_from_children()
+        self.set_data_from_bounds(bounds)
+        return bounds
+
+    def compute_bounding_rect_from_children(self):
         bounds = rect.NONE_RECT
         log.debug("COMPUTE_BOUNDING_RECT:before %s %s" % (self, self.bounds))
 
@@ -111,5 +116,7 @@ class BoundedFolder(LineLayer, Folder):
                 log.debug("  not using %s for boundary rect" % layer)
 
         log.debug("COMPUTE_BOUNDING_RECT:after %s %s" % (self, bounds))
-        self.set_data_from_bounds(bounds)
         return bounds
+
+    def update_overlay_bounds(self):
+        self.bounds = self.compute_bounding_rect_from_children()
