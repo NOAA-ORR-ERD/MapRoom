@@ -1130,6 +1130,7 @@ class OverlayScalableImageObject(OverlayImageObject):
         scale, old_origin, new_origin = rect.get_transform(current_bounds, new_bounds)
         self.text_width *= scale[0][0]
         self.text_height *= scale[1][1]
+        self.rebuild_needed = True  # Force rebuild to re-flow text
 
 
 class OverlayTextObject(OverlayScalableImageObject):
