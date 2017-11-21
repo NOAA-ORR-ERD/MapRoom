@@ -321,10 +321,10 @@ class LayerManager(BaseDocument):
         affected = []
         for layer in reversed(self.flatten()):
             if layer.is_overlay:
-                print("Updating overlay bounds for %s" % str(layer))
+                log.debug("Updating overlay bounds for %s" % str(layer))
                 layer.update_overlay_bounds()
             elif layer.is_folder() and not layer.is_root():
-                print("Updating overlay bounds for %s" % str(layer))
+                log.debug("Updating overlay bounds for %s" % str(layer))
                 layer.compute_bounding_rect()
                 layer.update_overlay_bounds()
             else:
@@ -333,7 +333,7 @@ class LayerManager(BaseDocument):
             # layer.update_overlay_bounds()
             # self.layer_contents_changed = layer
             affected.append(layer)
-            print("  updated to: %s" % str(layer))
+            log.debug("  updated to: %s" % str(layer))
         return affected
 
     def accumulate_layer_bounds(self, layers):
