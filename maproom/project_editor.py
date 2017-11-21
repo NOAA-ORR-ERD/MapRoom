@@ -1011,7 +1011,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             for layer in self.layer_manager.flatten():
                 layer.clear_flagged()
-            self.layer_manager.dispatch_event('refresh_needed')
+            self.layer_manager.refresh_needed = None
             if not save_message:
                 self.task.information("Layers OK", "No Problems Found")
         return all_ok
