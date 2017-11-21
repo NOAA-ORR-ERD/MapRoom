@@ -1146,6 +1146,8 @@ class OverlayTextObject(OverlayScalableImageObject):
 
     user_text = Unicode("<b>New Label</b>")
 
+    border_width = Int(4)
+
     layer_info_panel = ["Text color", "Font", "Font size", "Text transparency", "Border width", "Line style", "Line width", "Line color", "Line transparency", "Fill style", "Fill color", "Fill transparency"]
 
     selection_info_panel = ["Text", "Text format", "Anchor point"]
