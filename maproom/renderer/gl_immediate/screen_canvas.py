@@ -112,12 +112,16 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         # Prevent flashing on Windows by doing nothing on an erase background event.
         # fixme -- I think you can pass a flag to the Window instead...
-        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
         self.Bind(wx.EVT_SIZE, self.on_resize)
+
+    def on_erase(self, event):
+        log.debug("on_erase: called!")
 
     def on_draw(self, event):
         if self.native.IsShownOnScreen():
             if not self.is_canvas_initialized:
+                log.debug("on_draw: first time! creating shared context")
                 self.SetCurrent(self.shared_context)
 
                 # this has to be here because the window has to exist before creating
@@ -133,10 +137,11 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
                 wx.CallAfter(self.set_callbacks)
                 self.is_canvas_initialized = True
             if self.is_gl_driver_ok:
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+                log.debug("on_draw: calling render")
                 self.render()
             else:
                 self.render_error()
+        event.Skip()
 
     def render_error(self):
         if self.gl_driver_error_message is None:
@@ -530,6 +535,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         log.debug("immediately: %s pending renders: %d" % (immediately, self.pending_render_count))
         if immediately or self.pending_render_count > 0:
             log.debug("rendering")
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             BaseCanvas.render(self)
             self.pending_render_count = 0
         else:
