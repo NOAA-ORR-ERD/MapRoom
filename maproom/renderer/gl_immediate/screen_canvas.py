@@ -109,6 +109,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
         self.Bind(wx.EVT_TIMER, self.on_timer)
+        self.Bind(wx.EVT_SET_FOCUS, self.on_set_focus)
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
 
         # Prevent flashing on Windows by doing nothing on an erase background event.
         # fixme -- I think you can pass a flag to the Window instead...
@@ -117,6 +119,14 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def on_erase(self, event):
         log.debug("on_erase: called!")
+
+    def on_set_focus(self, event):
+        log.debug("on_set_focus: called!")
+        event.Skip()
+
+    def on_kill_focus(self, event):
+        log.debug("on_kill_focus: called!")
+        event.Skip()
 
     def on_draw(self, event):
         if self.native.IsShownOnScreen():
