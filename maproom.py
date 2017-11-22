@@ -35,6 +35,27 @@ import multiprocessing
 multiprocessing.freeze_support()
 import markdown.util as markdown_utils
 
+def trace_calls(frame, event, arg):
+    if event != 'call':
+        return
+    co = frame.f_code
+    func_name = co.co_name
+    if func_name == 'write':
+        # Ignore write() calls from print statements
+        return
+    func_line_no = frame.f_lineno
+    func_filename = co.co_filename
+    caller = frame.f_back
+    caller_line_no = caller.f_lineno
+    caller_filename = caller.f_code.co_filename
+    f = caller_filename + func_filename
+    if "trait_notifiers.py" in f or "trait_handlers" in f or "has_traits" in f or "logging" in f or "envisage" in f or "sre_" in f:
+        return
+    print 'Call to %s on line %s of %s from line %s of %s' % \
+        (func_name, func_line_no, func_filename,
+         caller_line_no, caller_filename)
+    return
+
 def main(argv):
     """ Run the application.
     """
@@ -55,7 +76,13 @@ def main(argv):
     
     import maproom.file_type
     plugins.extend(maproom.file_type.plugins)
-    
+
+    if "--trace" in argv:
+        import sys
+        i = argv.index("--trace")
+        argv.pop(i)
+        sys.settrace(trace_calls)
+
     import maproom
     image_path = [get_image_path("icons", maproom)]
     run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task=task_id_with_pane_layout, application_name="MapRoom")
