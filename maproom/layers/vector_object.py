@@ -976,7 +976,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
             renderer.set_image_projection(self.image_data, projection)
 
     def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
-        self.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
+        self.move_bounding_box_point(drag, anchor, dx, dy, about_center, ax, ay)
         if self.image_data is not None:
             c = self.manager.project.layer_canvas
             renderer = c.get_renderer(self)
@@ -1084,44 +1084,6 @@ class OverlayScalableImageObject(OverlayImageObject):
             # p[i]['xy'] = w  # Doesn't work!
             self.points.x[i] = w[0]
             self.points.y[i] = w[1]
-
-    def move_control_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
-        # Note: center point drag is rigid body move so text box size is only
-        # recalculated if dragging some other control point
-        # print "BEFORE: move_cp: text w,h", self.text_width, self.text_height
-        if drag < self.center_point_index:
-            c = self.manager.project.layer_canvas
-            p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
-            d = np.copy(p.xy[drag])
-            d += (dx, dy)
-            a = np.copy(p.xy[anchor])
-            a += (ax, ay)
-
-            d_s = c.get_numpy_screen_point_from_world_point(d)
-            a_s = c.get_numpy_screen_point_from_world_point(a)
-
-            min_border = (2 * self.border_width)
-            if drag < self.num_corners:
-                # Dragging a corner changes both width and heiht
-                self.text_width = abs(d_s[0] - a_s[0]) - min_border
-                self.text_height = abs(d_s[1] - a_s[1]) - min_border
-            else:
-                # Dragging an edge only changes one dimension
-                oc = self.screen_offset_from_center[drag]
-                if abs(oc[1]) > 0:
-                    self.text_height = abs(d_s[1] - a_s[1]) - min_border
-                else:
-                    self.text_width = abs(d_s[0] - a_s[0]) - min_border
-            if self.text_width < min_border:
-                self.text_width = min_border
-                dx = 0
-            if self.text_height < min_border:
-                self.text_height = min_border
-                dy = 0
-#            print " AFTER: move_cp: text w,h", self.text_width, self.text_height
-            self.rebuild_needed = True  # Force rebuild to re-flow text
-
-        self.move_bounding_box_point(drag, anchor, dx, dy, about_center, ax, ay)
 
     def fit_to_bounding_box(self, current_bounds, new_bounds):
         # Recalculate screen size based on new bounds. The points array will
