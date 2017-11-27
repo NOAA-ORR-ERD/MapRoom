@@ -398,6 +398,9 @@ try:
             'omnivore-framework>=1.0rc9',
             'wxpython>=4.0.0b2',
             ],
+        setup_requires=[
+            'packaging',
+        ],
         data_files=data_files,
         packages=find_packages(),
         package_data=package_data,
