@@ -38,6 +38,8 @@ class Picker(object):
         # self.colored_objects = {} # renderer -> ( index, original color )
         gl_fbo.glInitFramebufferObjectEXT()
         self.picker_map = None
+        self.picker_blocks = []
+        self.picker_block_start = None
 
         # whether or not selecting a member object of a group selects the whole
         # group (True) or the sub-object (False)
