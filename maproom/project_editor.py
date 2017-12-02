@@ -640,7 +640,8 @@ class ProjectEditor(FrameworkEditor):
             # bunch of UI stuff gets called, cascading through a lot of trait
             # handlers and causing UI sizing and redrawing. Preventing the
             # immediate updates with the Freeze/Thaw pair seems to fix it.
-            self.window.control.Freeze()
+            if sys.platform == "darwin":
+                self.window.control.Freeze()
 
             b = BatchStatus()
             undo = self.process_batch_command(command, b)
@@ -653,7 +654,8 @@ class ProjectEditor(FrameworkEditor):
                 self.mouse_mode_factory = new_mouse_mode
                 self.update_layer_selection_ui()
         finally:
-            self.window.control.Thaw()
+            if sys.platform == "darwin":
+                self.window.control.Thaw()
         return undo
 
     def process_flags(self, flags):
