@@ -113,13 +113,13 @@ class MouseHandler(object):
             items.append("Zoom level=%.2f" % c.zoom_level)
         if instructions:
             items.append(instructions)
-        e.task.status_bar.message = " ".join(items)
+        e.status_message = " ".join(items)
 
         obj_text = ""
         if obj is not None:
             (layer, object_type, object_index) = obj
             obj_text = layer.clickable_object_info(c.picker, object_type, object_index)
-        e.task.status_bar.debug = obj_text
+        e.debug_message = obj_text
 
     def process_mouse_motion_up(self, event):
         c = self.layer_canvas
@@ -137,7 +137,7 @@ class MouseHandler(object):
             sel = c.project.layer_tree_control.get_edit_layer()
             if (layer == sel):
                 obj = c.project.clickable_object_mouse_is_over = self.current_object_under_mouse
-            elif sel.show_unselected_layer_info_for(layer):
+            elif sel is not None and sel.show_unselected_layer_info_for(layer):
                 obj = self.current_object_under_mouse
             else:
                 c.project.clickable_object_mouse_is_over = None
@@ -451,7 +451,7 @@ class MouseHandler(object):
     def show_distance(self, text, km):
         c = self.layer_canvas
         s = "%s: %s, %s" % (text, km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
-        c.project.task.status_bar.message = s
+        c.project.status_message = s
 
     def show_width_height(self, sp, spx, spy):
         c = self.layer_canvas
@@ -461,7 +461,7 @@ class MouseHandler(object):
         p3 = c.get_world_point_from_screen_point(spy)
         hkm = haversine(p1, p3)
         s = "Width: %s, %s  Height: %s, %s" % (km_to_rounded_string(wkm), mi_to_rounded_string(wkm * .621371), km_to_rounded_string(hkm), mi_to_rounded_string(hkm * .621371))
-        c.project.task.status_bar.message = s
+        c.project.status_message = s
 
 
 class PanMode(MouseHandler):
@@ -942,7 +942,7 @@ class PointEditMode(ObjectSelectionMode):
             e.process_command(cmd)
             c.forced_cursor = wx.Cursor(wx.CURSOR_HAND)
 #            if not vis:
-#                e.task.status_bar.message = "Split line in hidden layer %s" % layer.name
+#                e.status_message = "Split line in hidden layer %s" % layer.name
 #            else:
 #                layer.select_point(point_index)
 
@@ -1011,7 +1011,7 @@ class LineEditMode(PointEditMode):
 
         e.refresh()
         if message:
-            e.task.status_bar.message = message
+            e.status_message = message
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_canvas

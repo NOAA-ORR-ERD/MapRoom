@@ -98,11 +98,11 @@ class TimelinePanel(ZoomRuler):
 
     def over_item_callback(self, pos, item):
         if self.editor is not None:
-            self.editor.task.status_bar.message = str(item)
+            self.editor.status_message = str(item)
 
     def not_over_item_callback(self, pos):
         if self.editor is not None:
-            self.editor.task.status_bar.message = ""
+            self.editor.status_message = ""
 
     def selected_item_callback(self, item):
         if self.editor is not None:

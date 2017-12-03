@@ -570,7 +570,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.SwapBuffers()
 
         def update_status(message):
-            self.project.task.status_bar.debug = message
+            self.project.debug_message = message
         wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
 
         if (event is not None):
