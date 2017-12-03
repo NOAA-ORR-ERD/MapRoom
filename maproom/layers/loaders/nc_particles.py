@@ -129,7 +129,7 @@ class ParticleLoader(BaseLayerLoader):
             layer.file_path = metadata.uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
             layer.name = timecode.isoformat().rsplit(':', 1)[0]
-            print timecode, type(timecode), layer.name, timecode.tzinfo
+            # print timecode, type(timecode), layer.name, timecode.tzinfo
             progress_log.info("Finished loading %s" % layer.name)
             layer.set_data(points, status_codes, code_map)
             layer.set_datetime(timecode)
@@ -139,6 +139,17 @@ class ParticleLoader(BaseLayerLoader):
                 warnings.append("%s %s" % (layer.name, warning[0]))
         progress_log.info("Finished loading %s" % metadata.uri)
         layers.reverse()
+
+        # The end time for each time step defaults to the start time of the
+        # subsequent step
+        end_time = layers[0].start_time
+        for layer in layers[1:]:
+            layer.end_time = end_time
+            end_time = layer.start_time
+
+        for layer in layers:
+            print(layer)
+
         layers[0:0] = [parent]
         if warnings:
             warnings[0:0] = ["The following layers have spurious values. Those values have been removed.\n"]
