@@ -78,7 +78,7 @@ class TimelinePanel(ZoomRuler):
 
     def marks_to_display_as_selected(self):
         sel_marks = self.marks_in_selection()
-        for value, data in self._marks.iteritems():
+        for start, end, data in self._marks:
             if self.editor.layer_visibility[data]['layer']:
                 sel_marks.add(data)
         return sel_marks
