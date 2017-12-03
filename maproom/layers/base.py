@@ -126,6 +126,9 @@ class Layer(HasTraits):
     def __repr__(self):
         return "%s (%x)" % (self.name, id(self))
 
+    def __str__(self):
+        return "%s layer '%s' (%s) %s" % (self.type, unicode(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
+
     @property
     def pretty_name(self):
         if self.grouped:
@@ -441,6 +444,28 @@ class Layer(HasTraits):
     def set_datetime(self, start, end=None):
         self.start_time = self.parse_time_to_float(start)
         self.end_time = self.parse_time_to_float(end)
+
+    def pretty_time(self, t):
+        d = datetime.datetime.utcfromtimestamp(t)
+        if t > 0:
+            return d.isoformat()
+        return "inf"
+
+    def pretty_time_range(self):
+        s = self.pretty_time(self.start_time)
+        e = self.pretty_time(self.end_time)
+        if s == "inf" and e == "inf":
+            text = "(always shown)"
+        else:
+            if s == "inf":
+                text = "(inf->"
+            else:
+                text = "[%s->" % s
+            if e == "inf":
+                text += "inf)"
+            else:
+                text += "%s)" % e
+        return text
 
     #####
 

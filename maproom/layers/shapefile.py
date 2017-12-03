@@ -9,6 +9,7 @@ from ..library import rect
 from ..library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from ..library.shapely_utils import rebuild_geometry_list
 
+from base import Layer
 from polygon import PolygonLayer
 import state
 
@@ -29,9 +30,11 @@ class PolygonShapefileLayer(PolygonLayer):
 
     layer_info_panel = ["Shapefile Objects", "Polygon count"]
 
+    selection_info_panel = ["Start time", "End time"]
+
     def __str__(self):
         num = len(self.geometry)
-        return "ShapefileLayer %s: %d objects" % (self.name, num)
+        return BaseLayer.__str__(self) + ", %d objects" % num
 
     def get_info_panel_text(self, prop):
         if prop == "Shapefile Objects":

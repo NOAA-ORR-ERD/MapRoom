@@ -65,7 +65,7 @@ class VectorObjectLayer(LineLayer):
     control_point_names = [""]
 
     def __str__(self):
-        return "%s layer '%s' (%s): %d points bb: %s" % (self.type, unicode(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.num_points, str(self.bounds))
+        return LineLayer.__str__(self) + ", bb: %s" % str(self.bounds)
 
     def can_copy(self):
         return True

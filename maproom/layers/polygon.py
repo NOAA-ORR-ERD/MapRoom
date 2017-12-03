@@ -45,14 +45,10 @@ class PolygonLayer(PointLayer):
 
     def __str__(self):
         try:
-            points = len(self.points)
-        except:
-            points = 0
-        try:
             rings = len(self.rings)
         except:
             rings = 0
-        return "PolygonLayer %s: %d points, %d rings" % (self.name, points, rings)
+        return PointLayer.__str__(self) + ", %d rings" % rings
 
     def get_info_panel_text(self, prop):
         if prop == "Polygon count":

@@ -39,7 +39,7 @@ class PointBaseLayer(ProjectedLayer):
     selection_info_panel = []
 
     def __str__(self):
-        return "%s layer '%s' (%s): %d points" % (self.type, unicode(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.num_points)
+        return ProjectedLayer.__str__(self) + ", %d points" % (self.num_points)
 
     @property
     def num_points(self):
