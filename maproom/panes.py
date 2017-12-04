@@ -62,20 +62,6 @@ class TimelinePanel(ZoomRuler):
         # print info
         return info
 
-    def recalc_view(self):
-        log.debug("timeline recalc_view")
-        self.editor = self.task.active_editor
-        self.rebuild(self)
-
-    def refresh_view(self):
-        log.debug("timeline refresh_view")
-        editor = self.task.active_editor
-        if editor is not None:
-            if self.editor != editor:
-                self.recalc_view()
-            else:
-                self.Refresh()
-
     def marks_to_display_as_selected(self):
         sel_marks = self.marks_in_selection()
         for start, end, data in self._marks:
@@ -112,6 +98,60 @@ class TimelinePanel(ZoomRuler):
         if self.editor is not None:
             self.Refresh()
 
+    def playback_start_callback(self):
+        self.GetParent().play.SetLabel("Pause")
+
+    def playback_pause_callback(self):
+        self.GetParent().play.SetLabel("Play")
+
+    def playback_callback(self, current_time):
+        log.debug("playback for time: %f" % current_time)
+        selected_layers = self.ruler.marks_after(current_time)
+        timestamped_layers = self.ruler.all_marks()
+        self.editor.set_layer_visibility(selected_layers, timestamped_layers)
+        self.editor.layer_tree_control.Refresh()
+
+
+
+class TimelinePlaybackPanel(wx.Panel):
+    def __init__(self, parent, task, *args, **kwargs):
+        wx.Panel.__init__(self, parent, *args, **kwargs)
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        self.play = wx.Button(self, -1, "Play")
+        self.play.Bind(wx.EVT_BUTTON, self.on_play)
+        sizer.Add(self.play, 0, wx.EXPAND)
+
+        self.date = wx.TextCtrl(self, -1)
+        sizer.Add(self.date, 0, wx.EXPAND)
+
+        self.timeline = TimelinePanel(self, task)
+        sizer.Add(self.timeline, 1, wx.EXPAND|wx.LEFT, 5)
+
+        self.SetSizer(sizer)
+
+    def recalc_view(self):
+        log.debug("timeline recalc_view")
+        self.timeline.editor = self.timeline.task.active_editor
+        self.timeline.rebuild(self.timeline)
+
+    def refresh_view(self):
+        log.debug("timeline refresh_view")
+        editor = self.timeline.task.active_editor
+        if editor is not None:
+            if self.timeline.editor != editor:
+                self.recalc_view()
+            else:
+                self.Refresh()
+
+    def on_play(self, evt):
+        log.debug("timeline play")
+        if self.timeline.is_playing:
+            self.timeline.pause_playback()
+        else:
+            self.timeline.start_playback()
+
 
 class TimelinePane(FrameworkPane):
     # TaskPane interface ###################################################
@@ -123,7 +163,7 @@ class TimelinePane(FrameworkPane):
     movable = False
 
     def create_contents(self, parent):
-        control = TimelinePanel(parent, self.task)
+        control = TimelinePlaybackPanel(parent, self.task)
         return control
 
     def get_new_info(self):
