@@ -344,6 +344,8 @@ class LayerTreeControl(wx.Panel):
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         self.project.refresh()
+        self.project.status_message = str(layer)
+        print(str(layer))
         lm = self.project.layer_manager
         sel = lm.get_multi_index_of_layer(layer)
         log.debug("Multi-index of selected layer: %s" % sel)
@@ -422,7 +424,15 @@ class LayerTreeControl(wx.Panel):
     def group_children(self, layer):
         if not layer.grouped:
             layer.grouped = True
+            self.enforce_group_attributes(layer)
             self.rebuild()
+
+    def enforce_group_attributes(self, parent):
+        # sync up child attributes that need to be taken from the parent
+        lm = self.project.layer_manager
+        for child in lm.get_children(parent):
+            child.start_time = parent.start_time
+            child.end_time = parent.end_time
 
     def ungroup_children(self, layer):
         if layer.grouped:
@@ -460,6 +470,8 @@ class LayerTreeControl(wx.Panel):
     def get_popup_actions(self):
         return [
             actions.RenameLayerAction,
+            actions.StartTimeAction,
+            actions.EndTimeAction,
             None,
             actions.GroupLayerAction,
             actions.UngroupLayerAction,

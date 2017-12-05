@@ -69,11 +69,10 @@ class TimelinePanel(ZoomRuler):
                 sel_marks.add(data)
         return sel_marks
 
-    def selection_finished_callback(self):
+    def selection_finished_callback(self, selected_ranges):
         if self.editor is not None:
-            selected_layers = self.ruler.marks_in_selection()
-            timestamped_layers = self.ruler.all_marks()
-            self.editor.set_layer_visibility(selected_layers, timestamped_layers)
+            selected_layers = self.editor.layer_manager.get_visible_layers_in_ranges(selected_ranges)
+            self.editor.set_layer_visibility(selected_layers)
             self.editor.layer_tree_control.Refresh()
 
     def item_activation_callback(self, item):
@@ -106,9 +105,8 @@ class TimelinePanel(ZoomRuler):
 
     def playback_callback(self, current_time):
         log.debug("playback for time: %f" % current_time)
-        selected_layers = self.ruler.marks_after(current_time)
-        timestamped_layers = self.ruler.all_marks()
-        self.editor.set_layer_visibility(selected_layers, timestamped_layers)
+        selected_layers = self.editor.layer_manager.get_visible_layers_at_time(self.editor.layer_visibility, current_time)
+        self.editor.set_layer_visibility(selected_layers)
         self.editor.layer_tree_control.Refresh()
 
 

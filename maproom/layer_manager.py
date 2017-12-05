@@ -661,6 +661,44 @@ class LayerManager(BaseDocument):
             layers.append(layer)
         return layers
 
+    def get_visible_layers_at_time(self, layer_visibility, time):
+        layers = []
+        for layer in self.flatten():
+            if layer.start_time == 0 or (layer.start_time <= time and (layer.end_time == 0.0 or time < layer.end_time)):
+                layers.append(layer)
+                print("True: %s <= %s < %s: %s" % (layer.start_time, time, layer.end_time, str(layer)))
+            else:
+                print("False: %s outside %s-%s: %s" % (time, layer.start_time, layer.end_time, str(layer)))
+        return layers
+
+    def get_visible_layers_in_ranges(self, ranges):
+        layers = []
+        for layer in self.flatten():
+            if layer.start_time == 0:
+                layers.append(layer)
+            else:
+                for start, end in ranges:
+                    if layer.start_time <= start and (layer.end_time == 0.0 or start < layer.end_time):
+                        layers.append(layer)
+                        break
+        return layers
+
+    def get_playback_layers(self, skip_layer=None, tree=None):
+        # layers = [layer for layer in self.flatten()[1:] if layer != skip_layer]
+        # return layers
+
+        result = []
+        if tree is None: tree = self.layers
+        for item in tree:
+            if (isinstance(item, Layer)):
+                if not (item.is_root() or item == skip_layer):
+                    result.append(item)
+                if item.grouped:
+                    # skip grouped children
+                    return result
+            else:
+                result.extend(self.get_playback_layers(skip_layer, item))
+        return result
 
     ##### Layer info
 

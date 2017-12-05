@@ -20,6 +20,7 @@ from vector_object_commands import get_parent_layer_data
 from vector_object_commands import restore_layers
 
 import logging
+log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
@@ -747,3 +748,67 @@ class SavepointCommand(Command):
         undo = UndoInfo()
         undo.flags.refresh_needed = True
         return undo
+
+
+class StartTimeCommand(Command):
+    short_name = "start_time"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('time', 'float'),
+    ]
+
+    def __init__(self, layer, time):
+        Command.__init__(self, layer)
+        self.time = time
+
+    def __str__(self):
+        return "Start Time: %s" % self.time
+
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer:
+                self.time = next_command.time
+                return True
+
+    def set_time(self, layer, time=None):
+        if time is None:
+            time = self.time
+        last_time = layer.start_time
+        layer.start_time = time
+        return last_time
+
+    def perform_recursive(self, editor, layer, undo):
+        data = []
+        children = editor.layer_manager.get_children(layer)
+        children[0:0] = [layer]
+        for child in children:
+            last_time = self.set_time(child)
+            log.debug("setting time %s to %s" % (self.time, child))
+            data.append((child.invariant, last_time))
+            lf = undo.flags.add_layer_flags(layer)
+            lf.layer_metadata_changed = True
+        undo.data = tuple(data)
+
+    def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        self.perform_recursive(editor, layer, undo)
+        return self.undo_info
+
+    def undo(self, editor):
+        for invariant, time in self.undo_info.data:
+            layer = editor.layer_manager.get_layer_by_invariant(invariant)
+            self.set_time(layer, time)
+        return self.undo_info
+
+
+class EndTimeCommand(StartTimeCommand):
+    short_name = "end_time"
+
+    def __str__(self):
+        return "End Time: %s" % self.time
+
+    def set_time(self, layer):
+        last_time = layer.start_time
+        layer.start_time = self.time
+        return last_time

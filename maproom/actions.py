@@ -12,7 +12,7 @@ from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, T
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 import pane_layout
-from menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand
+from menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand
 from mouse_commands import ViewportCommand, NormalizeLongitudeCommand
 from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
@@ -772,3 +772,37 @@ class RenameLayerAction(LayerAction):
 
     def perform_on_layer(self, layer, event):
         GUI.invoke_later(self.active_editor.layer_tree_control.start_rename, layer)
+
+
+class StartTimeAction(LayerAction):
+    name = 'Start Time'
+    tooltip = 'Set time that layer becomes active'
+    dialog_info = 'Set start time of %s\nto start time of:'
+    cmd = StartTimeCommand
+
+    def get_time(self, layer):
+        return layer.start_time
+
+    def perform_on_layer(self, layer, event):
+        layers = self.active_editor.layer_manager.get_playback_layers(layer)
+        dlg = wx.SingleChoiceDialog(
+                self.active_editor.layer_tree_control, self.dialog_info % layer.name, self.name,
+                [a.name for a in layers],
+                wx.CHOICEDLG_STYLE
+                )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            source_layer = layers[dlg.GetSelection()]
+            print('You selected: %s\n' % source_layer)
+            cmd = self.cmd(layer, self.get_time(source_layer))
+            self.active_editor.process_command(cmd)
+
+
+class EndTimeAction(StartTimeAction):
+    name = 'End Time'
+    tooltip = 'Set time that layer stops being active'
+    dialog_info = 'Set end time of %s\nto end time of:'
+    cmd = EndTimeCommand
+
+    def get_time(self, layer):
+        return layer.end_time
