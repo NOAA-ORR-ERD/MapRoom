@@ -250,6 +250,7 @@ class ProjectEditor(FrameworkEditor):
         self.layer_manager = self.document
         self.update_default_visibility()
         self.layer_canvas.zoom_to_fit()
+        self.timeline.recalc_view()
 
     def save(self, path=None, prompt=False):
         """ Saves the contents of the editor in a maproom project file
