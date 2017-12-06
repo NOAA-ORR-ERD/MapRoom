@@ -107,7 +107,6 @@ class ProjectEditor(FrameworkEditor):
     def init_blank_document(self, doc, window_opening=False, **kwargs):
         # This gets called only when a new editor is created without a document
         # and is the only place to select an initial layer in this case.
-        import traceback; traceback.print_stack()
         if not window_opening:
             self.layer_manager.create_initial_layers()
             self.update_default_visibility()
