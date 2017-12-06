@@ -107,6 +107,9 @@ class ProjectEditor(FrameworkEditor):
     def init_blank_document(self, doc):
         # This gets called only when a new editor is created without a document
         # and is the only place to select an initial layer in this case.
+        import traceback; traceback.print_stack()
+        self.layer_manager.create_initial_layers()
+        self.update_default_visibility()
         wx.CallAfter(self.layer_tree_control.select_initial_layer)
 
     def load_in_new_tab(self, metadata):
@@ -122,7 +125,7 @@ class ProjectEditor(FrameworkEditor):
         regime = kwargs.get("regime", 0)
         log.debug("load_omnivore_document: doc=%s loader=%s kwargs=%s" % (document, loader, str(kwargs)))
         if hasattr(loader, "load_project"):
-            document = LayerManager.create(self, initial_layers=False)
+            document = LayerManager.create(self)
             document.metadata = metadata.clone_traits()
             batch_flags = BatchStatus()
             print "FIXME: Add load project command that clears all layers"

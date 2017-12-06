@@ -105,7 +105,7 @@ class LayerManager(BaseDocument):
     ##### Creation/destruction
 
     @classmethod
-    def create(cls, project, initial_layers=True):
+    def create(cls, project):
         """Convenience function to create a new, empty LayerManager
 
         Since classes that use Traits can't seem to use an __init__ method,
@@ -128,14 +128,6 @@ class LayerManager(BaseDocument):
         layer = RootLayer(manager=self)
         self.insert_layer([index], layer)
 
-        if initial_layers:
-            prefs = self.project.task.preferences
-            if prefs.show_initial_annotation:
-                index += 1
-                annotation = AnnotationLayer(manager=self)
-                annotation.new()
-                self.insert_layer([index], annotation)
-
         index += 1
         grid = Graticule(manager=self)
         self.insert_layer([index], grid)
@@ -144,19 +136,25 @@ class LayerManager(BaseDocument):
         scale = Scale(manager=self)
         self.insert_layer([index], scale)
 
-        if initial_layers:
-            prefs = self.project.task.preferences
-            if prefs.show_initial_tile:
-                index += 1
-                tile = TileLayer(manager=self)
-                tile.new()
-                self.insert_layer([index], tile)
-
         # Add hook to create layer instances for debugging purposes
         if "--debug-objects" in self.project.window.application.command_line_args:
             import debug
             debug.debug_objects(self)
+
         return self
+
+    def create_initial_layers(self):
+        prefs = self.project.task.preferences
+        if prefs.show_initial_annotation:
+            annotation = AnnotationLayer(manager=self)
+            annotation.new()
+            self.insert_layer([1], annotation)
+
+        prefs = self.project.task.preferences
+        if prefs.show_initial_tile:
+            tile = TileLayer(manager=self)
+            tile.new()
+            self.insert_layer([9999999], tile)
 
     def destroy(self):
         # fixme: why do layers need a destroy() method???

@@ -119,6 +119,10 @@ class TileLayer(ProjectedLayer):
 
     def zoom_changed(self, canvas):
         log.debug("ZOOM CHANGED: %d" % canvas.zoom_level)
+        print(canvas.project.layer_manager)
+        print("thinks the base is:")
+        print(self.manager)
+        sys.exit()
         self.image_data.update_tiles(canvas.zoom_level, self.current_world, self.manager, (self, self.map_server_id))
         self.change_count += 1  # Force info panel update
         canvas.project.update_info_panels(self, True)
