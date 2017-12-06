@@ -370,7 +370,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.DebugLayerManagerAction(),
             ]
 
-    def get_editor(self, guess=None):
+    def get_editor(self, guess=None, **kwargs):
         """ Opens a new empty window
         """
         editor = ProjectEditor()

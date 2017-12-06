@@ -104,12 +104,13 @@ class ProjectEditor(FrameworkEditor):
     def create(self, parent):
         self.control = self._create_control(parent)
 
-    def init_blank_document(self, doc):
+    def init_blank_document(self, doc, window_opening=False, **kwargs):
         # This gets called only when a new editor is created without a document
         # and is the only place to select an initial layer in this case.
         import traceback; traceback.print_stack()
-        self.layer_manager.create_initial_layers()
-        self.update_default_visibility()
+        if not window_opening:
+            self.layer_manager.create_initial_layers()
+            self.update_default_visibility()
         wx.CallAfter(self.layer_tree_control.select_initial_layer)
 
     def load_in_new_tab(self, metadata):
