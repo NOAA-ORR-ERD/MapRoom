@@ -85,7 +85,8 @@ def main(argv):
 
     import maproom
     image_path = [get_image_path("icons", maproom)]
-    run(plugins=plugins, image_path=image_path, use_eggs=False, startup_task=task_id_with_pane_layout, application_name="MapRoom")
+    template_path = [get_image_path("templates", maproom)]
+    run(plugins=plugins, image_path=image_path, template_path=template_path, use_eggs=False, startup_task=task_id_with_pane_layout, application_name="MapRoom")
 
     logging.shutdown()
 

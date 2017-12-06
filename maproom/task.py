@@ -47,7 +47,7 @@ class MaproomProjectTask(FrameworkTask):
 
     new_file_text = 'MapRoom Project'
 
-    about_application = ""
+    about_application = "template://default_project.maproom"
 
     # Task interface #######################################################
 
