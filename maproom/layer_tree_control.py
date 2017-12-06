@@ -345,7 +345,6 @@ class LayerTreeControl(wx.Panel):
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         self.project.refresh()
         self.project.status_message = str(layer)
-        print(str(layer))
         lm = self.project.layer_manager
         sel = lm.get_multi_index_of_layer(layer)
         log.debug("Multi-index of selected layer: %s" % sel)

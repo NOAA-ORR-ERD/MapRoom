@@ -677,8 +677,8 @@ class LayerManager(BaseDocument):
             if layer.start_time == 0:
                 layers.append(layer)
             else:
-                for start, end in ranges:
-                    if layer.start_time <= start and (layer.end_time == 0.0 or start < layer.end_time):
+                for begin, end in ranges:
+                    if (layer.start_time >= begin and layer.start_time < end) or (layer.end_time >= begin and layer.end_time < end) or (layer.start_time < begin and (layer.end_time == 0.0 or layer.end_time >= end)):
                         layers.append(layer)
                         break
         return layers
