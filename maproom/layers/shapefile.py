@@ -34,7 +34,7 @@ class PolygonShapefileLayer(PolygonLayer):
 
     def __str__(self):
         num = len(self.geometry)
-        return BaseLayer.__str__(self) + ", %d objects" % num
+        return Layer.__str__(self) + ", %d objects" % num
 
     def get_info_panel_text(self, prop):
         if prop == "Shapefile Objects":
