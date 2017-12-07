@@ -184,6 +184,7 @@ class ProjectEditor(FrameworkEditor):
                 center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
                 cmd = ViewportCommand(None, center, units_per_pixel, regime=regime)
             self.process_command(cmd)
+        document.read_only = document.metadata.check_read_only()
 
     def parse_extra_json(self, json, batch_flags):
         # handle old version which was a two element list

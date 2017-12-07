@@ -67,7 +67,7 @@ class SaveProjectAction(EditorAction):
     accelerator = 'Ctrl+S'
     tooltip = 'Save the current project'
     image = ImageResource('file_save')
-    enabled_name = 'dirty'  # enabled based on state of task.active_editor.dirty
+    enabled_name = 'can_save'  # enabled based on state of task.active_editor.dirty
 
     def perform(self, event):
         self.active_editor.save()
