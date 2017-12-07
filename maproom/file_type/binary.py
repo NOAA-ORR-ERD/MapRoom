@@ -33,10 +33,17 @@ class MapRoomZipProjectRecognizer(RecognizerBase):
     def identify(self, guess):
         fs, relpath = opener.parse(guess.metadata.uri)
         if not fs.hassyspath(relpath):
+            # try as a uri
+            if zipfile.is_zipfile(guess.get_stream()):
+                return self.id
             return None
         file_path = fs.getsyspath(relpath)
         if zipfile.is_zipfile(file_path):
             return self.id
+        # try as a uri
+        if zipfile.is_zipfile(guess.bytes):
+            return self.id
+
         return None
 
 

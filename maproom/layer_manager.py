@@ -1143,7 +1143,7 @@ class LayerManager(BaseDocument):
                 log.warning(message)
                 batch_flags.messages.append("WARNING: %s" % message)
 
-    def load_all_from_zip(self, archive_path, zf, batch_flags=None):
+    def load_all_from_zip(self, zf, batch_flags=None):
         expanded_zip = ExpandZip(zf, ["extra json data", "json layer description"])
         order = []
         text = zf.read("extra json data")
