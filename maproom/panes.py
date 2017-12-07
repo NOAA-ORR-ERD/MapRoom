@@ -133,6 +133,7 @@ class TimelinePlaybackPanel(wx.Panel):
         log.debug("timeline recalc_view")
         self.timeline.editor = self.timeline.task.active_editor
         self.timeline.rebuild(self.timeline)
+        self.play.Enable(self.timeline.can_play)
 
     def refresh_view(self):
         log.debug("timeline refresh_view")
@@ -142,6 +143,7 @@ class TimelinePlaybackPanel(wx.Panel):
                 self.recalc_view()
             else:
                 self.Refresh()
+        self.play.Enable(self.timeline.can_play)
 
     def on_play(self, evt):
         log.debug("timeline play")
