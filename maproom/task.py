@@ -203,6 +203,7 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions_Menu_File_NewGroup(self):
         return [
             actions.NewProjectAction(),
+            actions.NewEmptyProjectAction(),
         ]
 
     def get_actions_Menu_File_SaveGroup(self):

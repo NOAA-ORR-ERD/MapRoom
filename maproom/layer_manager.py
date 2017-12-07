@@ -143,19 +143,6 @@ class LayerManager(BaseDocument):
 
         return self
 
-    def create_initial_layers(self):
-        prefs = self.project.task.preferences
-        if prefs.show_initial_annotation:
-            annotation = AnnotationLayer(manager=self)
-            annotation.new()
-            self.insert_layer([1], annotation)
-
-        prefs = self.project.task.preferences
-        if prefs.show_initial_tile:
-            tile = TileLayer(manager=self)
-            tile.new()
-            self.insert_layer([9999999], tile)
-
     def destroy(self):
         # fixme: why do layers need a destroy() method???
         for layer in self.flatten():

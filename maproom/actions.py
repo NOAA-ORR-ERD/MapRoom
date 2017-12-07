@@ -54,7 +54,18 @@ class LayerAction(EditorAction):
 class NewProjectAction(Action):
     """ An action for creating a new empty file that can be edited by a particular task
     """
-    name = 'New Project'
+    name = 'New Default Project'
+    tooltip = 'Open a new copy of the default project'
+
+    def perform(self, event=None):
+        task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
+        event.task.window.application.load_file(task.about_application, task)
+
+
+class NewEmptyProjectAction(Action):
+    """ An action for creating a new empty file that can be edited by a particular task
+    """
+    name = 'New Empty Project'
     tooltip = 'Open an empty grid to create new layers'
 
     def perform(self, event=None):

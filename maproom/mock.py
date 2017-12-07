@@ -31,8 +31,7 @@ class MockWindow(object):
 
 class MockPreferences(object):
     def __init__(self):
-        self.show_initial_annotation = False
-        self.show_initial_tile = False
+        pass
 
 
 class MockTask(object):
