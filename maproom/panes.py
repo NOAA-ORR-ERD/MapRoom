@@ -13,6 +13,7 @@ from omnivore.framework.panes import FrameworkPane, FrameworkFixedPane
 from omnivore.utils.wx.popuputil import SpringTabs
 from omnivore.utils.wx.download_manager import DownloadControl
 from omnivore.utils.wx.zoomruler import ZoomRuler
+from omnivore.utils.textutil import pretty_seconds, parse_pretty_seconds
 
 from layer_tree_control import LayerTreeControl
 from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
@@ -110,6 +111,91 @@ class TimelinePanel(ZoomRuler):
         self.editor.layer_tree_control.Refresh()
 
 
+wxEVT_TIME_STEP_MODIFIED = wx.NewEventType()
+EVT_TIME_STEP_MODIFIED = wx.PyEventBinder(wxEVT_TIME_STEP_MODIFIED, 1)
+
+class TimeStepEvent(wx.CommandEvent):
+    def __init__(self, evtType, evtId, step=None, rate=None, **kwargs):
+        wx.CommandEvent.__init__(self, evtType, evtId, **kwargs)
+        self._step = step
+        self._rate = rate
+
+    def GetStep(self):
+        return self._step
+
+    def GetRate(self):
+        return self._rate
+
+class TimeStepPopup(wx.PopupTransientWindow):
+    def __init__(self, parent, step_value, step_rate, style):
+        wx.PopupTransientWindow.__init__(self, parent, style)
+        panel = wx.Panel(self)
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        step_values = ['10m', '20m', '30m', '40m', '45m', '60m', '90m', '120m', '3hr', '4hr', '5hr', '6hr', '8hr', '10hr', '12hr', '16h', '24hr', '36hr', '48hr', '3d', '4d', '5d', '6d', '7d', '2wk', '3wk', '4wk']
+        step_values_as_seconds = [parse_pretty_seconds(a) for a in step_values]
+        cb = wx.ComboBox(self, 500, choices=step_values, style=wx.CB_DROPDOWN)
+        try:
+            i = step_values_as_seconds.index(step_value)
+            cb.SetSelection(i)
+        except ValueError:
+            cb.ChangeValue(pretty_seconds(step_value))
+        cb.Bind(wx.EVT_COMBOBOX, self.on_combo)
+        cb.Bind(wx.EVT_TEXT, self.on_text)
+        cb.Bind(wx.EVT_TEXT_ENTER, self.on_text_enter)
+        sizer.Add(cb, 1, wx.ALL, 5)
+        self.step_ctrl = cb
+
+        st = wx.StaticText(panel, -1, "every")
+        sizer.Add(st, 0, wx.ALL, 5)
+
+        rate_values = ['100ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
+        cb = wx.ComboBox(self, 500, '1s', choices=rate_values, style=wx.CB_DROPDOWN)
+        self.Bind(wx.EVT_COMBOBOX, self.on_combo, cb)
+        self.Bind(wx.EVT_TEXT, self.on_text, cb)
+        self.Bind(wx.EVT_TEXT_ENTER, self.on_text_enter, cb)
+        sizer.Add(cb, 1, wx.ALL, 5)
+
+        panel.SetSizer(sizer)
+        sizer.Fit(panel)
+        sizer.Fit(self)
+        self.Layout()
+
+    def on_combo(self, evt):
+        # When the user selects something, we go here.
+        self.verify_and_send_event(evt)
+
+    # Capture events every time a user hits a key in the text entry field.
+    def on_text(self, evt):
+        self.verify_and_send_event(evt)
+        evt.Skip()
+
+    # Capture events when the user types something into the control then
+    # hits ENTER.
+    def on_text_enter(self, evt):
+        self.verify_and_send_event(evt)
+        evt.Skip()
+
+    def verify_and_send_event(self, evt):
+        cb = evt.GetEventObject()
+        val = evt.GetString()
+        try:
+            if cb == self.step_ctrl:
+                step = parse_pretty_seconds(val)
+                rate = None
+            else:
+                step = None
+                rate = parse_pretty_seconds(val)
+        except ValueError:
+            pass
+        else:
+            self.send_event(step, rate)
+
+    def send_event(self, step, rate):
+        e = TimeStepEvent(wxEVT_TIME_STEP_MODIFIED, self.GetId(), step, rate)
+        e.SetEventObject(self)
+        self.GetEventHandler().ProcessEvent(e)
+
 
 class TimelinePlaybackPanel(wx.Panel):
     def __init__(self, parent, task, *args, **kwargs):
@@ -121,19 +207,22 @@ class TimelinePlaybackPanel(wx.Panel):
         self.play.Bind(wx.EVT_BUTTON, self.on_play)
         sizer.Add(self.play, 0, wx.EXPAND)
 
-        self.date = wx.TextCtrl(self, -1)
-        sizer.Add(self.date, 0, wx.EXPAND)
+        self.steps = wx.Button(self, -1, "MM", style=wx.BU_EXACTFIT)
+        self.steps.Bind(wx.EVT_BUTTON, self.on_steps)
+        sizer.Add(self.steps, 0, wx.EXPAND)
 
         self.timeline = TimelinePanel(self, task)
         sizer.Add(self.timeline, 1, wx.EXPAND|wx.LEFT, 5)
 
         self.SetSizer(sizer)
 
+        self.Bind(EVT_TIME_STEP_MODIFIED, self.on_set_steps)
+
     def recalc_view(self):
         log.debug("timeline recalc_view")
         self.timeline.editor = self.timeline.task.active_editor
         self.timeline.rebuild(self.timeline)
-        self.play.Enable(self.timeline.can_play)
+        self.update_ui()
 
     def refresh_view(self):
         log.debug("timeline refresh_view")
@@ -143,7 +232,12 @@ class TimelinePlaybackPanel(wx.Panel):
                 self.recalc_view()
             else:
                 self.Refresh()
+        self.update_ui()
+
+    def update_ui(self):
         self.play.Enable(self.timeline.can_play)
+        label = "%s / %s" % (pretty_seconds(self.timeline.step_value), pretty_seconds(self.timeline.step_rate))
+        self.steps.SetLabel(label)
 
     def on_play(self, evt):
         log.debug("timeline play")
@@ -151,6 +245,28 @@ class TimelinePlaybackPanel(wx.Panel):
             self.timeline.pause_playback()
         else:
             self.timeline.start_playback()
+
+    def on_steps(self, evt):
+        win = TimeStepPopup(self, self.timeline.step_value, self.timeline.step_rate, wx.SIMPLE_BORDER)
+
+        # Show the popup right below or above the button
+        # depending on available screen space...
+        btn = evt.GetEventObject()
+        pos = btn.ClientToScreen( (0,0) )
+        sz =  btn.GetSize()
+        win.Position(pos, (0, sz[1]))
+
+        win.Popup()
+
+    def on_set_steps(self, evt):
+        step = evt.GetStep()
+        rate = evt.GetRate()
+        print("step=%s rate=%s" % (step, rate))
+        if step is not None:
+            self.timeline.step_value = step
+        if rate is not None:
+            self.timeline.step_rate = rate
+        self.update_ui()
 
 
 class TimelinePane(FrameworkPane):
