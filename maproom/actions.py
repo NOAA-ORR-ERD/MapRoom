@@ -59,7 +59,7 @@ class NewProjectAction(Action):
 
     def perform(self, event=None):
         task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
-        event.task.window.application.load_file(task.about_application, task)
+        wx.CallAfter(event.task.window.application.load_file, task.about_application, task)
 
 
 class NewEmptyProjectAction(Action):
@@ -70,7 +70,7 @@ class NewEmptyProjectAction(Action):
 
     def perform(self, event=None):
         task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
-        task.new()
+        wx.CallAfter(task.new)
 
 
 class SaveProjectAction(EditorAction):
