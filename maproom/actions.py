@@ -94,6 +94,17 @@ class SaveProjectAsAction(EditorAction):
         self.active_editor.save(prompt=True)
 
 
+class SaveProjectTemplateAction(EditorAction):
+    name = 'Save Project as Template...'
+    tooltip = 'Save the current project as a template that can be reused'
+    image = ImageResource('file_save_as')
+
+    def perform(self, event):
+        name = event.task.prompt("Enter name for this template", "Save Project as Template", self.active_editor.layer_manager.root_name)
+        if name is not None:
+            self.active_editor.save_as_template(name)
+
+
 class SaveCommandLogAction(EditorAction):
     name = 'Save Command Log...'
     tooltip = 'Save a copy of the command log'

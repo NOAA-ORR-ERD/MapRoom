@@ -210,6 +210,7 @@ class MaproomProjectTask(FrameworkTask):
         return [
             actions.SaveProjectAction(),
             actions.SaveProjectAsAction(),
+            actions.SaveProjectTemplateAction(),
             actions.SaveCommandLogAction(),
             actions.SaveLayerAction(),
             SMenu(actions.SaveLayerGroup(),

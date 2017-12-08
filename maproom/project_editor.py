@@ -278,20 +278,7 @@ class ProjectEditor(FrameworkEditor):
             if not self.check_all_layers_for_errors(True):
                 return
 
-        try:
-            progress_log.info("START=Saving %s" % path)
-
-            cmd = self.get_savepoint()
-            u = UndoStack()
-            u.add_command(cmd)
-            text = str(u.serialize())
-            vis = self.layer_visibility_to_json()
-            error = self.layer_manager.save_all(path, {"commands": text, "layer_visibility": vis})
-        except ProgressCancelError, e:
-            error = e.message
-        finally:
-            progress_log.info("END")
-
+        error = self.save_project(path)
         if error:
             self.task.error(error)
         else:
@@ -312,6 +299,30 @@ class ProjectEditor(FrameworkEditor):
 
             # refresh window name in case filename has changed
             self.task._active_editor_tab_change(None)
+
+    def save_project(self, path):
+        try:
+            progress_log.info("START=Saving %s" % path)
+
+            cmd = self.get_savepoint()
+            u = UndoStack()
+            u.add_command(cmd)
+            text = str(u.serialize())
+            vis = self.layer_visibility_to_json()
+            error = self.layer_manager.save_all(path, {"commands": text, "layer_visibility": vis})
+        except ProgressCancelError, e:
+            error = e.message
+        finally:
+            progress_log.info("END")
+
+        return error
+
+    def save_as_template(self, name):
+        path = self.window.application.get_user_dir_filename("project_templates", name)
+        if not os.path.exists(path) or self.task.confirm("Replace existing template %s?" % name, "Replace Template"):
+            error = self.save_project(path)
+            if error:
+                self.task.error(error)
 
     def get_savepoint(self):
         layer = self.layer_tree_control.get_edit_layer()
