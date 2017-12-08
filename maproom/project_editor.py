@@ -114,7 +114,9 @@ class ProjectEditor(FrameworkEditor):
         # toplevel window. If this happens during app init, allow the initial
         # notebook tab to be replaced with the command line project or the
         # default project.
-        return self.window.application.application_initialization_finished
+        if metadata.mime == "application/x-maproom-project-json":
+            return self.window.application.application_initialization_finished
+        return False
 
     def load_omnivore_document(self, document, layer=False, **kwargs):
         """ Loads the data from the Omnivore document
