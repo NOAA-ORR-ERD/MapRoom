@@ -444,8 +444,18 @@ class ProjectEditor(FrameworkEditor):
         self.document = self.layer_manager = LayerManager.create(self)
         self.layer_visibility = self.get_default_visibility()
 
-        # Base-class constructor.
-        self.layer_canvas = LayerCanvas(parent, project=self)
+        # Mac can occasionally fail to get an OpenGL context, so creation of
+        # the layer canvas can fail. Attempting to work around by giving it
+        # more chances to work.
+        attempts = 3
+        while attempts > 0:
+            attempts -= 1
+            try:
+                self.layer_canvas = LayerCanvas(parent, project=self)
+                attempts = 0
+            except wx.wxAssertionError:
+                log.error("Failed initializing OpenGL context. Trying %d more times" % attempts)
+                time.sleep(1)
         self.long_status = PopupStatusBar(self.layer_canvas)
 
         # Tree/Properties controls referenced from MapController
