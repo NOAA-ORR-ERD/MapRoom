@@ -134,7 +134,7 @@ class TimeStepPopup(wx.PopupTransientWindow):
 
         step_values = ['10m', '20m', '30m', '40m', '45m', '60m', '90m', '120m', '3hr', '4hr', '5hr', '6hr', '8hr', '10hr', '12hr', '16h', '24hr', '36hr', '48hr', '3d', '4d', '5d', '6d', '7d', '2wk', '3wk', '4wk']
         step_values_as_seconds = [parse_pretty_seconds(a) for a in step_values]
-        cb = wx.ComboBox(self, 500, choices=step_values, style=wx.CB_DROPDOWN)
+        cb = wx.ComboBox(panel, 500, choices=step_values, style=wx.CB_DROPDOWN)
         try:
             i = step_values_as_seconds.index(step_value)
             cb.SetSelection(i)
@@ -150,10 +150,10 @@ class TimeStepPopup(wx.PopupTransientWindow):
         sizer.Add(st, 0, wx.ALL, 5)
 
         rate_values = ['100ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
-        cb = wx.ComboBox(self, 500, '1s', choices=rate_values, style=wx.CB_DROPDOWN)
-        self.Bind(wx.EVT_COMBOBOX, self.on_combo, cb)
-        self.Bind(wx.EVT_TEXT, self.on_text, cb)
-        self.Bind(wx.EVT_TEXT_ENTER, self.on_text_enter, cb)
+        cb = wx.ComboBox(panel, 500, '1s', choices=rate_values, style=wx.CB_DROPDOWN)
+        cb.Bind(wx.EVT_COMBOBOX, self.on_combo)
+        cb.Bind(wx.EVT_TEXT, self.on_text)
+        cb.Bind(wx.EVT_TEXT_ENTER, self.on_text_enter)
         sizer.Add(cb, 1, wx.ALL, 5)
 
         panel.SetSizer(sizer)
@@ -247,11 +247,14 @@ class TimelinePlaybackPanel(wx.Panel):
             self.timeline.start_playback()
 
     def on_steps(self, evt):
+        btn = evt.GetEventObject()
+        wx.CallAfter(self.on_steps_cb, btn)
+
+    def on_steps_cb(self, btn):
         win = TimeStepPopup(self, self.timeline.step_value, self.timeline.step_rate, wx.SIMPLE_BORDER)
 
         # Show the popup right below or above the button
         # depending on available screen space...
-        btn = evt.GetEventObject()
         pos = btn.ClientToScreen( (0,0) )
         sz =  btn.GetSize()
         win.Position(pos, (0, sz[1]))
