@@ -87,6 +87,8 @@ class MaproomProjectTask(FrameworkTask):
     # MaproomTask rather than in itself.
     layer_selection_changed = Event
 
+    templates_changed = Event
+
     def _about_version_default(self):
         import Version
         return Version.VERSION
@@ -204,6 +206,8 @@ class MaproomProjectTask(FrameworkTask):
         return [
             actions.NewProjectAction(),
             actions.NewEmptyProjectAction(),
+            SMenu(actions.LoadProjectTemplateGroup(),
+                  id='LoadProjectTemplate', name="New Project From Template"),
         ]
 
     def get_actions_Menu_File_SaveGroup(self):

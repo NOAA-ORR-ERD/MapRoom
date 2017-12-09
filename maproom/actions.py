@@ -105,6 +105,30 @@ class SaveProjectTemplateAction(EditorAction):
             self.active_editor.save_as_template(name)
 
 
+class LoadProjectTemplateGroup(TaskDynamicSubmenuGroup):
+    id = 'LoadProjectTemplateGroup'
+
+    event_name = Str('templates_changed')
+
+    def _get_items(self, layer=None):
+        items = []
+        names = self.task.window.application.get_available_user_data('project_templates')
+        print(names)
+        for name in sorted(names):
+            action = LoadProjectTemplateAction(name=name)
+            items.append(ActionItem(action=action))
+        return items
+
+
+class LoadProjectTemplateAction(Action):
+    name = '<load template>'
+    tooltip = 'Open project template'
+
+    def perform(self, event=None):
+        uri = event.task.window.application.get_user_dir_filename('project_templates', self.name)
+        wx.CallAfter(event.task.window.application.load_file, uri, event.task)
+
+
 class SaveCommandLogAction(EditorAction):
     name = 'Save Command Log...'
     tooltip = 'Save a copy of the command log'

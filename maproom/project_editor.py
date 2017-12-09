@@ -323,6 +323,8 @@ class ProjectEditor(FrameworkEditor):
             error = self.save_project(path)
             if error:
                 self.task.error(error)
+            else:
+                self.task.templates_changed = True  # update template submenu
 
     def get_savepoint(self):
         layer = self.layer_tree_control.get_edit_layer()
