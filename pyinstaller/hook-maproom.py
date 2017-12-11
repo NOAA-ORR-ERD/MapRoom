@@ -141,6 +141,7 @@ datas = []
 skipped = []
 maproom_allowed = set([
     "templates/RNCProdCat_latest.bna",
+    "templates/default_project.maproom",
     "renderer/gl/font.png",
     ])
 for s in subpkgs:
