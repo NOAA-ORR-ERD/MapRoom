@@ -30,7 +30,7 @@ class PolygonShapefileLayer(PolygonLayer):
 
     layer_info_panel = ["Shapefile Objects", "Polygon count"]
 
-    selection_info_panel = ["Start time", "End time"]
+    selection_info_panel = []
 
     def __str__(self):
         num = len(self.geometry)
