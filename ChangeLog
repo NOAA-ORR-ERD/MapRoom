@@ -1,3 +1,36 @@
+12/11/2017
+---------------------------
+Released 4.0rc1
+- RM Updated tests to remove initial_layers keyword arg from layer manager creation
+- RM Added submenu to list known templates for creating new project
+- RM Added menu item to save current project as a template for later reuse
+- RM Refs #785: fixed non-project files being loaded into new tabs instead into a project
+- RM Refs #834: attempts to fix focus issue on Mac
+- RM Fixed #833: added wrapper around OpenGL context creation to hopefully catch the problem.
+- RM MacOS: fixed crash when loading default project. Needed CallAfter
+- RM Fixed #785: if application is still in init process, allow notebook tab to be replaced
+- RM Refs #785: added new menu item to open default project along with empty project
+- RM Added popup to set step rate & step value for playback
+- RM timeline: fixed play button to be enabled only when there are events in the timeline
+- RM Fixed save action to be disabled on a read-only file (like the default template)
+- RM Refs #800: added zipfile abstraction fixes to allow load from template
+- RM Refs #833: removed some debug prints
+- RM Refs #833: WIP to make the default file load from a template instead of hardcoding into LayerManager
+- RM Refs #833: added kwargs to MaproomProjectTask.new to handle window_opening flag
+- RM Refs #833: WIP debugging application initialization
+- RM Fixed bad reference to parent class
+- RM Refs #818: fixed layer visibility due to range select of timeline
+- RM Fixed #818: add playback that turns on and off layers using current time, start time and end time
+- RM Fixed timeline not being updated when loading a project file
+- RM Refs #818: added basic functionality for play/pause using timeline
+- RM Refs #816: handle change in mark data with zoomruler now supporting end timestamps
+- RM Refs #816: default end time of particle layer is start time of subsequent timestep
+- RM Added time range to __str__ of layers
+- RM Changed calls to status bar to follow new usage in framework
+- RM added a few missing attribute initialization calls to picker
+- RM Fixed #826: freeze/thaw around the OpenGL canvas flickers on windows
+- RM Moved to versioning utilities from packaging because it can support "rc" versions
+
 11/16/2017
 ---------------------------
 Released 3.1b39
