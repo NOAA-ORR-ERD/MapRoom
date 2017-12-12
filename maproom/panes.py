@@ -114,6 +114,7 @@ class TimelinePanel(ZoomRuler):
 wxEVT_TIME_STEP_MODIFIED = wx.NewEventType()
 EVT_TIME_STEP_MODIFIED = wx.PyEventBinder(wxEVT_TIME_STEP_MODIFIED, 1)
 
+
 class TimeStepEvent(wx.CommandEvent):
     def __init__(self, evtType, evtId, step=None, rate=None, **kwargs):
         wx.CommandEvent.__init__(self, evtType, evtId, **kwargs)
@@ -126,10 +127,14 @@ class TimeStepEvent(wx.CommandEvent):
     def GetRate(self):
         return self._rate
 
-class TimeStepPopup(wx.PopupTransientWindow):
-    def __init__(self, parent, step_value, step_rate, style):
-        wx.PopupTransientWindow.__init__(self, parent, style)
+
+class TimeStepPanelMixin(object):
+    def setup_panel(self, step_value, step_rate):
         panel = wx.Panel(self)
+        vsizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.add_header(panel, vsizer)
+
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         step_values = ['10m', '20m', '30m', '40m', '45m', '60m', '90m', '120m', '3hr', '4hr', '5hr', '6hr', '8hr', '10hr', '12hr', '16h', '24hr', '36hr', '48hr', '3d', '4d', '5d', '6d', '7d', '2wk', '3wk', '4wk']
@@ -150,16 +155,33 @@ class TimeStepPopup(wx.PopupTransientWindow):
         sizer.Add(st, 0, wx.ALL, 5)
 
         rate_values = ['100ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
-        cb = wx.ComboBox(panel, 500, '1s', choices=rate_values, style=wx.CB_DROPDOWN)
+        rate_values_as_seconds = [parse_pretty_seconds(a) for a in rate_values]
+        cb = wx.ComboBox(panel, 500, choices=rate_values, style=wx.CB_DROPDOWN)
+        try:
+            i = rate_values_as_seconds.index(step_rate)
+            cb.SetSelection(i)
+        except ValueError:
+            cb.ChangeValue(pretty_seconds(rate_value))
         cb.Bind(wx.EVT_COMBOBOX, self.on_combo)
         cb.Bind(wx.EVT_TEXT, self.on_text)
         cb.Bind(wx.EVT_TEXT_ENTER, self.on_text_enter)
         sizer.Add(cb, 1, wx.ALL, 5)
+        self.rate_ctrl = cb
 
-        panel.SetSizer(sizer)
-        sizer.Fit(panel)
-        sizer.Fit(self)
+        vsizer.Add(sizer, 1, wx.ALL, 0)
+
+        self.add_footer(panel, vsizer)
+
+        panel.SetSizer(vsizer)
+        vsizer.Fit(panel)
+        vsizer.Fit(self)
         self.Layout()
+
+    def add_header(self, parent, sizer):
+        pass
+
+    def add_footer(self, parent, sizer):
+        pass
 
     def on_combo(self, evt):
         # When the user selects something, we go here.
@@ -194,7 +216,57 @@ class TimeStepPopup(wx.PopupTransientWindow):
     def send_event(self, step, rate):
         e = TimeStepEvent(wxEVT_TIME_STEP_MODIFIED, self.GetId(), step, rate)
         e.SetEventObject(self)
-        self.GetEventHandler().ProcessEvent(e)
+        print "sending", e, "to", self.GetEventHandler()
+        self.GetParent().GetEventHandler().ProcessEvent(e)
+
+
+class TimeStepPopup(wx.PopupTransientWindow, TimeStepPanelMixin):
+    def __init__(self, parent, step_value, step_rate, style):
+        wx.PopupTransientWindow.__init__(self, parent, style)
+        self.setup_panel(step_value, step_rate)
+
+    def show_relative_to(self, btn):
+        # Show the popup right below or above the button
+        # depending on available screen space...
+        pos = btn.ClientToScreen( (0,0) )
+        sz =  btn.GetSize()
+        self.Position(pos, (0, sz[1]))
+        self.Popup()
+
+
+class TimeStepDialog(wx.Dialog, TimeStepPanelMixin):
+    def __init__(self, parent, step_value, step_rate, style):
+        wx.Dialog.__init__(self, parent, -1, "Time Step Rate")
+        self.setup_panel(step_value, step_rate)
+
+    def add_header(self, parent, sizer):
+        t = wx.StaticText(parent, -1, "Choose step rate")
+        sizer.Add(t, 0, wx.ALL, 5)
+
+    def add_footer(self, parent, sizer):
+        btnsizer = wx.StdDialogButtonSizer()
+        btn = wx.Button(parent, wx.ID_OK)
+        btn.SetDefault()
+        btnsizer.AddButton(btn)
+        btn = wx.Button(parent, wx.ID_CANCEL)
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+
+    def on_combo(self, evt):
+        evt.Skip()
+
+    def on_text(self, evt):
+        evt.Skip()
+
+    def on_text_enter(self, evt):
+        evt.Skip()
+
+    def show_relative_to(self, btn):
+        if self.ShowModal() == wx.ID_OK:
+            step = parse_pretty_seconds(self.step_ctrl.GetValue())
+            rate = parse_pretty_seconds(self.rate_ctrl.GetValue())
+            wx.CallAfter(self.send_event, step, rate)
 
 
 class TimelinePlaybackPanel(wx.Panel):
@@ -251,15 +323,11 @@ class TimelinePlaybackPanel(wx.Panel):
         wx.CallAfter(self.on_steps_cb, btn)
 
     def on_steps_cb(self, btn):
-        win = TimeStepPopup(self, self.timeline.step_value, self.timeline.step_rate, wx.SIMPLE_BORDER)
-
-        # Show the popup right below or above the button
-        # depending on available screen space...
-        pos = btn.ClientToScreen( (0,0) )
-        sz =  btn.GetSize()
-        win.Position(pos, (0, sz[1]))
-
-        win.Popup()
+        if True:
+            win = TimeStepDialog(self, self.timeline.step_value, self.timeline.step_rate, wx.SIMPLE_BORDER)
+        else:  # popup works on linux but not mac or windows
+            win = TimeStepPopup(self, self.timeline.step_value, self.timeline.step_rate, wx.SIMPLE_BORDER)
+        win.show_relative_to(btn)
 
     def on_set_steps(self, evt):
         step = evt.GetStep()
