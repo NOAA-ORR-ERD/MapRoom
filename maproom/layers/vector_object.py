@@ -482,7 +482,7 @@ class RectangleMixin(object):
     num_corners = 4
     center_point_index = 8
 
-    control_point_names = ["lower left", "lower right", "upper right", "upper left", "bottom", "right", "top", "left", "center"]
+    control_point_names = ["lower left", "lower right", "upper right", "upper left", "center bottom", "center right", "center top", "center left", "center"]
 
     # return the anchor point of the index point. E.g. anchor_of[0] = 2
     anchor_of = np.asarray((2, 3, 0, 1, 6, 7, 4, 5, 8), dtype=np.uint8)
