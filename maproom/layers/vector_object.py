@@ -1136,9 +1136,11 @@ class OverlayTextObject(OverlayScalableImageObject):
         renderer.prepare_to_render_projected_objects()
         renderer.fill_object(self, picker, self.style)
         renderer.outline_object(self, picker, self.style)
-        renderer.prepare_to_render_screen_objects()
-        alpha = alpha_from_int(self.style.text_color)
-        renderer.draw_image(self, picker, alpha)
+        if not picker.is_active:
+            # Only render text when we're not drawing the picker framebuffer
+            renderer.prepare_to_render_screen_objects()
+            alpha = alpha_from_int(self.style.text_color)
+            renderer.draw_image(self, picker, alpha)
 
 
 class OverlayIconObject(OverlayScalableImageObject):
