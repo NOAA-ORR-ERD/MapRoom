@@ -24,6 +24,10 @@ class RasterLayer(ProjectedLayer):
 
     restore_from_url = True
 
+    background = True
+
+    opaque = True
+
     # Traits
 
     name = Unicode("Raster Layer")

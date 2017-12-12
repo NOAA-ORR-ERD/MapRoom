@@ -27,7 +27,9 @@ class Scale(ScreenLayer):
 
     # class attributes
 
-    groupable = False
+    bounded = False
+
+    background = True
 
     km_steps = [item for sublist in [[i * math.pow(10, scale) for i in [1, 2, 5]] for scale in range(-3, 5)] for item in sublist]
     km_step_count = len(km_steps)

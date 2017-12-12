@@ -24,7 +24,9 @@ class Graticule(ScreenLayer):
 
     # class attributes
 
-    groupable = False
+    bounded = False
+
+    background = True
 
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)

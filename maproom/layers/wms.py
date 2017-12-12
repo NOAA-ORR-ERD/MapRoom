@@ -52,9 +52,11 @@ class WMSLayer(ProjectedLayer):
 
     # class attributes
 
-    groupable = False
+    bounded = False
 
-    add_at_bottom = True
+    background = True
+
+    opaque = True
 
     ##### Traits
 

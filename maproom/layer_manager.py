@@ -222,7 +222,7 @@ class LayerManager(BaseDocument):
 
     ##### Multi-index calculations
 
-    def get_insertion_multi_index(self, before=None, after=None, first_child_of=None, last_child_of=None):
+    def get_insertion_multi_index(self, before=None, after=None, first_child_of=None, last_child_of=None, background=False, opaque=False, bounded=True):
         if first_child_of is not None:
             mi = self.get_multi_index_of_layer(first_child_of)
             mi.append(1)
@@ -236,23 +236,45 @@ class LayerManager(BaseDocument):
             mi = self.get_multi_index_of_layer(after)
             mi[-1] += 1
         else:
-            mi = None
+            if opaque or background:
+                insert_above = None
+                for layer in reversed(self.flatten()):  # bottom up
+                    if background and layer.background:
+                        if opaque and layer.opaque or not opaque:
+                            insert_above = layer
+                        else:
+                            break
+                    elif bounded and not layer.bounded:
+                        # finite layers go above infinite layers
+                        insert_above = layer
+                    else:
+                        break
+                if insert_above is None:
+                    mi = [100000000]  # there better be fewer than one hundred million layers...
+                else:
+                    mi = self.get_multi_index_of_layer(insert_above)
+            else:
+                mi = None
         return mi
 
-    def get_multi_index_of_first_bottom_layer(self, at_bottom):
-        found = None
-        for layer in reversed(self.flatten()):  # bottom up
-            if at_bottom and layer.add_at_bottom:
-                found = layer
-            elif not at_bottom and not layer.groupable:
-                found = layer
-            else:
-                break
-        if found is None:
-            found = [100000000]  # there better be fewer than one hundred million layers...
-        else:
-            found = self.get_multi_index_of_layer(found)
-        return found
+    # def get_multi_index_for_background_layer(self, background, opaque, bounded):
+    #     #
+    #     insert_above = None
+    #     for layer in reversed(self.flatten()):  # bottom up
+    #         if background and layer.background:
+    #             if opaque and layer.opaque or not opaque:
+    #                 insert_above = layer
+    #             else:
+    #                 break
+    #         elif not background and not layer.bounded:
+    #             insert_above = layer
+    #         else:
+    #             break
+    #     if insert_above is None:
+    #         insert_above = [100000000]  # there better be fewer than one hundred million layers...
+    #     else:
+    #         insert_above = self.get_multi_index_of_layer(insert_above)
+    #     return insert_above
 
     def get_multi_index_of_layer(self, layer):
         return self.get_multi_index_of_layer_recursive(layer, self.layers)
@@ -867,10 +889,7 @@ class LayerManager(BaseDocument):
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
         self.dispatch_event('layer_loaded', layer)
         if mi is None:
-            if before is None and after is None and not layer.groupable:
-                mi = self.get_multi_index_of_first_bottom_layer(layer.add_at_bottom)
-            else:
-                mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of)
+            mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of, layer.background, layer.opaque, layer.bounded)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
         return mi
 

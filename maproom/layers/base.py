@@ -44,11 +44,14 @@ class Layer(HasTraits):
     # These types of layers can not be added to any group and will always be
     # added to the root level of the layer tree, below any groupable layers but
     # above any ungroupable layers.
-    groupable = True  
+    bounded = True
 
-    # add_at_bottom only applies to ungroupable layers; insert at the bottom of
+    # background only applies to ungroupable layers; insert at the bottom of
     # the layer tree, below other ungroupable layers.
-    add_at_bottom = False  # True implies ungroupable
+    background = False  # True implies ungroupable
+
+    # True if an image or other layer where it occludes stuff behind it
+    opaque = False
 
     # Traits
 

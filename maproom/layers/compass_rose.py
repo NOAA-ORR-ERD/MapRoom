@@ -134,7 +134,7 @@ class CompassRose(ScreenLayer):
 
     # class attributes
 
-    groupable = False
+    bounded = False
 
     x_offset = 10
     y_offset = 50
