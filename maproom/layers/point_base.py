@@ -294,6 +294,9 @@ class PointBaseLayer(ProjectedLayer):
         if l > 0 and r > 0:
             self.points.x -= 360.0
 
+    def swap_lat_lon(self):
+        self.points.x, self.points.y = self.points.y, self.points.x.copy()
+
     def compute_projected_point_data(self):
         projection = self.manager.project.layer_canvas.projection
         view = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy.astype(np.float32)

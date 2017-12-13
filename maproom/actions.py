@@ -13,7 +13,7 @@ from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 import pane_layout
 from menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand
-from mouse_commands import ViewportCommand, NormalizeLongitudeCommand
+from mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLonCommand
 from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
@@ -772,6 +772,17 @@ class NormalizeLongitudeAction(EditorAction):
         edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
             cmd = NormalizeLongitudeCommand(edit_layer)
+            self.active_editor.process_command(cmd)
+
+
+class SwapLatLonAction(EditorAction):
+    name = 'Swap Lat && Lon'
+    tooltip = 'Exchange coordinate pairs to repair an incorrectly formatted input file'
+
+    def perform(self, event):
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = SwapLatLonCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 

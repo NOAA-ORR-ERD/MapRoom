@@ -312,7 +312,6 @@ class MaproomProjectTask(FrameworkTask):
             actions.ToVerdatLayerAction(),
             actions.MergeLayersAction(),
             actions.MergePointsAction(),
-            actions.NormalizeLongitudeAction(),
         ]
 
     def get_actions_Menu_Layer_LayerDeleteGroup(self):
@@ -328,6 +327,8 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_actions_Menu_Tools_ToolsActionGroup(self):
         return [
+            actions.NormalizeLongitudeAction(),
+            actions.SwapLatLonAction(),
 #            actions.TimelineAction(),
         ]
 

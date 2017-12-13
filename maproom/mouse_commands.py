@@ -178,6 +178,49 @@ class NormalizeLongitudeCommand(Command):
         return self.undo_info
 
 
+class SwapLatLonCommand(Command):
+    short_name = "swap_lat_lon"
+    serialize_order = [
+        ('layer', 'layer'),
+    ]
+
+    def __str__(self):
+        return "Swap Latitude & Longitude"
+
+    def recurse_perform(self, layer, undo):
+        layer_undo = layer.get_undo_info()
+        layer.swap_lat_lon()
+        undo.data.append((layer.invariant, layer_undo))
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
+        for child in layer.manager.get_layer_children(layer):
+            self.recurse_perform(child, undo)
+
+    def perform(self, editor):
+        c = editor.layer_canvas
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = [c.projected_point_center, c.projected_units_per_pixel]
+        undo.flags.refresh_needed = True
+        self.recurse_perform(layer, undo)
+        undo.flags.add_layer_flags(layer)
+        layer.update_bounds()
+        center, units_per_pixel = c.calc_zoom_to_world_rect(layer.bounds)
+        c.set_viewport(center, units_per_pixel)
+        undo.flags.fast_viewport_refresh_needed = True
+        return undo
+
+    def undo(self, editor):
+        c = editor.layer_canvas
+        center, units_per_pixel = self.undo_info.data[0:2]
+        c.set_viewport(center, units_per_pixel)
+        for invariant, layer_undo in self.undo_info.data[2:]:
+            layer = editor.layer_manager.get_layer_by_invariant(invariant)
+            layer.restore_undo_info(layer_undo)
+        return self.undo_info
+
+
 class ChangeDepthCommand(Command):
     short_name = "depth"
     serialize_order = [
