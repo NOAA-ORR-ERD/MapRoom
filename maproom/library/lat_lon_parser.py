@@ -49,8 +49,12 @@ Degrees, Minutes, Seconds: (really fun!!!)
 
 """
 from __future__ import unicode_literals, absolute_import, division, print_function
+
+import numpy as np
+
 from .unit_conversion import LatLongConverter  # from: https://github.com/NOAA-ORR-ERD/PyNUCOS
 
+from omnivore.utils.textutil import check_for_matching_lines, parse_for_matching_lines
 
 
 # new test version -- much simpler
@@ -88,62 +92,51 @@ def parse(string):
     except ValueError:
         raise ValueError("%s is not a valid coordinate string" % orig_string)
 
-# ######################
-# below is the "old" version -- more complex and less excepting of random junk.
-# still not totally sure which is the better way to go.
 
-# # Some are multiple characters, can't be done with translate
-# replace_list = [('DEG', "°"),
-#                 ('D', "°"),
-#                 ('\N{MASCULINE ORDINAL INDICATOR}', "°"),
-#                 ('N', ""),  # these don't change anything
-#                 ('E', ""),
-#                 ('\N{PRIME}', "'"),  # the "proper" symbol for minutes
-#                 ('\N{DOUBLE PRIME}', '"'),  # the "proper" symbol for seconds
-#                 ]
+re_latlon = r'^\s*([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))\s*[/,|\s]+\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))'
 
-# def parse(string):
-#     """
-#     Attempts to parse a latitude or longitude string
+re_lonlat = r'^\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*[/|,\s]+\s*([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))'
 
-#     Returns the value in floating point degrees
+def parse_coordinate_text(text):
+    mime = None
+    latlon, num_latlon_unmatched = parse_for_matching_lines(text, re_latlon, [1, 2])
+    lonlat, num_lonlat_unmatched = parse_for_matching_lines(text, re_lonlat, [1, 2])
+    if len(latlon) > num_latlon_unmatched or len(lonlat) > num_lonlat_unmatched:
+        latlon = np.asarray(latlon, dtype=np.float64)
+        lonlat = np.asarray(lonlat, dtype=np.float64)
 
-#     If parsing fails, it raises a ValueError
+        latfirst = num_latlon_unmatched / (len(latlon) + num_latlon_unmatched)
+        lonfirst = num_lonlat_unmatched / (len(lonlat) + num_lonlat_unmatched)
+        if latfirst == lonfirst:
+            # sum columns. If negative, that column is likely to be longitude
+            # because of the hemisphere we're operating in.
+            cols = np.sum(latlon, axis=0)
+            if cols[0] < 0.0:
+                mime = "text/lonlat"
+            elif cols[1] < 0.0:
+                mime = "text/latlon"
+            else:
+                # check if one of the columns is > 90 degrees. If so, that's
+                # the longitude
+                cols = np.amax(latlon, axis=0)
+                if cols[0] > 90.0:
+                    mime = "text/lonlat"
+                elif cols[1] > 90.0:
+                    mime = "text/latlon"
+                else:
+                    # guess one...
+                    mime = "text/latlon"
 
-#     NOTE: This is a naive brute-force approach.
-#           I imagine someone that can make regular expressions dance could do better..
-#     """
-#     orig_string = string
-#     # clean up the string:
-#     string = string.strip().upper()  # uppercase everything, then fewer replace options
-#     for swap in replace_list:
-#         string = string.replace(*swap)
+        elif latfirst > lonfirst:
+            mime = "text/latlon"
+        else:
+            mime = "text/lonlat"
 
-#     # change W and S to a negative value
-#     if 'W' in string:
-#         string = '-' + string.replace('W', '')
-#     if 'S' in string:
-#         string = '-' + string.replace('S', '')
-#     try:  # are we done?
-#         val = float(string)
-#         return val
-#     except ValueError:  # that didn't work, keep going.
-#         pass
-
-#     # not very robust in the face of multiple degree symbols, etc
-#     # but very flexible and easy!
-
-#     # All "legitimate" symbols replaced with space
-#     string = string.replace('°', ' ')
-#     string = string.replace('"', ' ')
-#     string = string.replace("'", ' ')
-#     try:
-#         parts = [float(part) for part in string.split()]
-#         return unit_conversion.LatLongConverter.ToDecDeg(*parts)
-#     except ValueError:
-#         raise
-
-#     raise ValueError("%s is not a valid coordinate string" % orig_string)
+    if mime == "text/latlon":
+        return mime, latlon, num_latlon_unmatched
+    elif mime is not None:
+        return "text/lonlat", lonlat, num_lonlat_unmatched
+    return None, [], -1
 
 
 if __name__ == "__main__":

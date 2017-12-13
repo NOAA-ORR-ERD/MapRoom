@@ -470,7 +470,9 @@ class MaproomProjectTask(FrameworkTask):
         return (mime.startswith("image") or
                 mime.startswith("application/x-maproom-") or
                 mime == "application/x-nc_ugrid" or
-                mime == "application/x-nc_particles"
+                mime == "application/x-nc_particles" or
+                mime == "text/latlon" or
+                mime == "text/lonlat"
                 )
 
     @classmethod

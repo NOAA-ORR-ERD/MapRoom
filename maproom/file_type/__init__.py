@@ -59,11 +59,12 @@ recognizers.append(NC_ParticleRecognizer())
 recognizers.append(UGRID_Recognizer())
 from image import GDALRecognizer
 recognizers.append(GDALRecognizer())
-from text import BNARecognizer, BSBRecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, VerdatRecognizer
+from text import BNARecognizer, BSBRecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, PlainTextRecognizer, VerdatRecognizer
 recognizers.append(BNARecognizer())
 recognizers.append(BSBRecognizer())
 recognizers.append(MapRoomCommandRecognizer())
 recognizers.append(MapRoomProjectRecognizer())
+recognizers.append(PlainTextRecognizer())
 recognizers.append(VerdatRecognizer())
 from vector import OGRRecognizer
 recognizers.append(OGRRecognizer())

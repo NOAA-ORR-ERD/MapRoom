@@ -71,6 +71,9 @@ loaders.append(ProjectLoader())
 loaders.append(ZipProjectLoader())
 from shapefile import ShapefileLoader
 loaders.append(ShapefileLoader())
+from text import LatLonTextLoader, LonLatTextLoader
+loaders.append(LatLonTextLoader())
+loaders.append(LonLatTextLoader())
 from ugrid import UGridLoader
 loaders.append(UGridLoader())
 from verdat import VerdatLoader

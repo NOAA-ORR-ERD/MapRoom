@@ -3,7 +3,7 @@ from traits.api import HasTraits, provides
 from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 from maproom.serializer import magic_template
-
+from maproom.library.lat_lon_parser import parse_coordinate_text
 
 @provides(IFileRecognizer)
 class MapRoomProjectRecognizer(RecognizerBase):
@@ -80,3 +80,21 @@ class BSBRecognizer(RecognizerBase):
     def identify(self, guess):
         if guess.metadata.uri.lower().endswith(".bsb"):
             return "application/x-maproom-bsb"
+
+
+@provides(IFileRecognizer)
+class PlainTextRecognizer(RecognizerBase):
+    """Finds plain-text lat/lon or lon/lat files
+    
+    """
+    id = "text/latlon"
+
+    before = "text/plain"
+
+    after = "text/*"
+
+    def identify(self, guess):
+        byte_stream = guess.get_utf8()
+        mime, _, _ = parse_coordinate_text(byte_stream)
+        if mime is not None:
+            return mime
