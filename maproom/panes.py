@@ -290,6 +290,10 @@ class TimelinePlaybackPanel(wx.Panel):
 
         self.Bind(EVT_TIME_STEP_MODIFIED, self.on_set_steps)
 
+    def clear_marks(self):
+        log.debug("timeline clear_marks")
+        self.timeline.clear_marks()
+
     def recalc_view(self):
         log.debug("timeline recalc_view")
         self.timeline.editor = self.timeline.task.active_editor

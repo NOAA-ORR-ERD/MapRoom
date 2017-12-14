@@ -132,6 +132,8 @@ class ProjectEditor(FrameworkEditor):
         if hasattr(loader, "load_project"):
             document = LayerManager.create(self)
             document.metadata = metadata.clone_traits()
+            log.debug("Clearing timeline")
+            self.timeline.clear_marks()
             batch_flags = BatchStatus()
             print "FIXME: Add load project command that clears all layers"
             extra = loader.load_project(metadata, document, batch_flags)
