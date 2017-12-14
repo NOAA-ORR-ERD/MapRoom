@@ -15,9 +15,10 @@ class MapRoomProjectRecognizer(RecognizerBase):
     before = "text/plain"
 
     def identify(self, guess):
-        byte_stream = guess.get_utf8()
-        if byte_stream.startswith("# -*- MapRoom project file -*-"):
-            return self.id
+        if guess.likely_text:
+            byte_stream = guess.get_utf8()
+            if byte_stream.startswith("# -*- MapRoom project file -*-"):
+                return self.id
 
 
 @provides(IFileRecognizer)
@@ -30,9 +31,10 @@ class MapRoomCommandRecognizer(RecognizerBase):
     before = "text/plain"
 
     def identify(self, guess):
-        byte_stream = guess.get_utf8()
-        if byte_stream.startswith(magic_template):
-            return self.id
+        if guess.likely_text:
+            byte_stream = guess.get_utf8()
+            if byte_stream.startswith(magic_template):
+                return self.id
 
 
 @provides(IFileRecognizer)
@@ -45,9 +47,10 @@ class VerdatRecognizer(RecognizerBase):
     before = "text/plain"
 
     def identify(self, guess):
-        byte_stream = guess.get_utf8()
-        if byte_stream.startswith("DOGS"):
-            return "application/x-maproom-verdat"
+        if guess.likely_text:
+            byte_stream = guess.get_utf8()
+            if byte_stream.startswith("DOGS"):
+                return "application/x-maproom-verdat"
 
 
 @provides(IFileRecognizer)
@@ -60,7 +63,7 @@ class BNARecognizer(RecognizerBase):
     before = "text/plain"
 
     def identify(self, guess):
-        if guess.metadata.uri.lower().endswith(".bna"):
+        if guess.likely_text and guess.metadata.uri.lower().endswith(".bna"):
             byte_stream = guess.get_utf8()[:1000]
             lines = byte_stream.splitlines()
             if ".KAP" in lines[0]:
@@ -78,8 +81,9 @@ class BSBRecognizer(RecognizerBase):
     before = "text/plain"
 
     def identify(self, guess):
-        if guess.metadata.uri.lower().endswith(".bsb"):
-            return "application/x-maproom-bsb"
+        if guess.likely_text:
+            if guess.metadata.uri.lower().endswith(".bsb"):
+                return "application/x-maproom-bsb"
 
 
 @provides(IFileRecognizer)
@@ -94,7 +98,8 @@ class PlainTextRecognizer(RecognizerBase):
     after = "text/*"
 
     def identify(self, guess):
-        byte_stream = guess.get_utf8()
-        mime, _, _ = parse_coordinate_text(byte_stream)
-        if mime is not None:
-            return mime
+        if guess.likely_text:
+            byte_stream = guess.get_utf8()
+            mime, _, _ = parse_coordinate_text(byte_stream)
+            if mime is not None:
+                return mime
