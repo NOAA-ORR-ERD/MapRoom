@@ -452,6 +452,13 @@ class BaseCanvas(object):
         self.projected_units_per_pixel = units_per_pixel
         self.zoom_level = self.get_zoom_level(units_per_pixel)
 
+    def set_center(self, center):
+        self.projected_point_center = center
+
+    def set_units_per_pixel(self, units_per_pixel):
+        self.projected_units_per_pixel = units_per_pixel
+        self.zoom_level = self.get_zoom_level(units_per_pixel)
+
     def copy_viewport_from(self, other):
         self.projected_units_per_pixel = other.projected_units_per_pixel
         self.projected_point_center = tuple(other.projected_point_center)

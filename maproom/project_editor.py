@@ -81,6 +81,10 @@ class ProjectEditor(FrameworkEditor):
 
     layer_visibility = Dict()
 
+    # temporary variable set in load process and used in setting the initial
+    # view
+    loaded_project_extra_json = Any
+
     # can_paste_style is set by copy_style if there's a style that can be
     # applied
     can_paste_style = Bool(False)
@@ -132,15 +136,12 @@ class ProjectEditor(FrameworkEditor):
             print "FIXME: Add load project command that clears all layers"
             extra = loader.load_project(metadata, document, batch_flags)
             self.document = self.layer_manager = document
-            if extra is not None:
-                self.parse_extra_json(extra, batch_flags)
+            self.parse_extra_json(extra, batch_flags)
+            self.loaded_project_extra_json = extra
             self.layer_tree_control.clear_all_items()
             self.layer_tree_control.rebuild()
             self.layer_tree_control.select_initial_layer()
             self.perform_batch_flags(None, batch_flags)
-            center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(batch_flags.layers)
-            cmd = ViewportCommand(None, center, units_per_pixel, regime)
-            self.process_command(cmd)
 
             # Clear modified flag
             self.layer_manager.undo_stack.set_save_point()
@@ -188,6 +189,9 @@ class ProjectEditor(FrameworkEditor):
         document.read_only = document.metadata.check_read_only()
 
     def parse_extra_json(self, json, batch_flags):
+        if json is None:
+            json = {}
+
         # handle old version which was a two element list
         try:
             if len(json) == 2 and json[0] == "commands":
@@ -254,8 +258,21 @@ class ProjectEditor(FrameworkEditor):
     def rebuild_document_properties(self):
         self.layer_manager = self.document
         self.update_default_visibility()
-        self.layer_canvas.zoom_to_fit()
         self.timeline.recalc_view()
+
+    def init_view_properties(self):
+        # Set default view
+        self.layer_canvas.zoom_to_fit()
+
+        # Override default view if provided in project file
+        json = self.loaded_project_extra_json
+        if json is not None:
+            if "projected_units_per_pixel" in json:
+                self.layer_canvas.set_units_per_pixel(json["projected_units_per_pixel"])
+            if "projected_point_center" in json:
+                self.layer_canvas.set_center(json["projected_point_center"])
+        self.loaded_project_extra_json = None
+        log.debug("using center: %s, upp=%f" % (str(self.layer_canvas.projected_point_center), self.layer_canvas.projected_units_per_pixel))
 
     def save(self, path=None, prompt=False):
         """ Saves the contents of the editor in a maproom project file
@@ -304,12 +321,8 @@ class ProjectEditor(FrameworkEditor):
         try:
             progress_log.info("START=Saving %s" % path)
 
-            cmd = self.get_savepoint()
-            u = UndoStack()
-            u.add_command(cmd)
-            text = str(u.serialize())
             vis = self.layer_visibility_to_json()
-            error = self.layer_manager.save_all(path, {"commands": text, "layer_visibility": vis})
+            error = self.layer_manager.save_all(path, {"layer_visibility": vis, "projected_point_center": self.layer_canvas.projected_point_center, "projected_units_per_pixel": self.layer_canvas.projected_units_per_pixel})
         except ProgressCancelError, e:
             error = e.message
         finally:
