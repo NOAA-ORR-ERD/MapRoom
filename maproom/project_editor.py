@@ -214,6 +214,17 @@ class ProjectEditor(FrameworkEditor):
         if "commands" in json:
             for cmd in self.layer_manager.undo_stack.unserialize_text(json["commands"], self.layer_manager):
                 self.process_batch_command(cmd, batch_flags)
+        if "timeline" in json:
+            self.timeline.unserialize_json(json["timeline"])
+
+    @property
+    def current_extra_json(self):
+        return {
+            "layer_visibility": self.layer_visibility_to_json(),
+            "projected_point_center": self.layer_canvas.projected_point_center,
+            "projected_units_per_pixel": self.layer_canvas.projected_units_per_pixel,
+            "timeline": self.timeline.serialize_json(),
+            }
 
     def layer_visibility_to_json(self):
         v = dict()
@@ -322,9 +333,7 @@ class ProjectEditor(FrameworkEditor):
     def save_project(self, path):
         try:
             progress_log.info("START=Saving %s" % path)
-
-            vis = self.layer_visibility_to_json()
-            error = self.layer_manager.save_all(path, {"layer_visibility": vis, "projected_point_center": self.layer_canvas.projected_point_center, "projected_units_per_pixel": self.layer_canvas.projected_units_per_pixel})
+            error = self.layer_manager.save_all(path, self.current_extra_json)
         except ProgressCancelError, e:
             error = e.message
         finally:

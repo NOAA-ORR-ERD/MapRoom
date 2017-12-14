@@ -290,6 +290,20 @@ class TimelinePlaybackPanel(wx.Panel):
 
         self.Bind(EVT_TIME_STEP_MODIFIED, self.on_set_steps)
 
+    def serialize_json(self):
+        return {
+            "step_value": self.timeline.step_value,
+            "step_rate": self.timeline.step_rate,
+            "viewport": list(self.timeline.get_viewport()),
+        }
+
+    def unserialize_json(self, json):
+        log.debug(str(json))
+        self.timeline.step_value = json["step_value"]
+        self.timeline.step_rate = json["step_rate"]
+        info = json["viewport"]
+        self.timeline.set_viewport(*info)
+
     def clear_marks(self):
         log.debug("timeline clear_marks")
         self.timeline.clear_marks()
