@@ -3,6 +3,7 @@ import cgi
 import time
 import datetime
 import calendar
+import bisect
 
 import wx
 from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
@@ -31,6 +32,10 @@ class TimelinePanel(ZoomRuler):
         self.task = task
         self.editor = None
  
+    def init_playback(self):
+        ZoomRuler.init_playback(self)
+        self.step_rate = 0  # set as flag to indicate it needs to be updated
+
     def get_timeline_info(self):
         if self.editor is not None:
             layers, start, end = self.editor.layer_manager.get_timestamped_layers(self.editor.layer_visibility, False)
@@ -44,16 +49,27 @@ class TimelinePanel(ZoomRuler):
         if end < start:
             end = start
 
-        today = datetime.datetime.fromtimestamp(start)
-        noon = today.replace(hour=12, minute=0, second=0, tzinfo=None)
-        day_before = noon - datetime.timedelta(days=1)
-        start = calendar.timegm(day_before.timetuple())
+        # Minimum of one hour
+        padding = divmod((end - start) / 10, 60)[0] * 60
+        if padding < 3600:
+            padding = 3600
 
-        today = datetime.datetime.fromtimestamp(end)
-        noon = today.replace(hour=12, minute=0, second=0, tzinfo=None)
-        day_after = noon + datetime.timedelta(days=1)
-        end = calendar.timegm(day_after.timetuple())
-        # print "DATES:", start, day_before, end, day_after
+        t = datetime.datetime.utcfromtimestamp(start)
+        if t.minute < 50:
+            t = t.replace(minute=0, second=0, tzinfo=None)
+        else:
+            t = t.replace(hour=t.hour - 1, minute=0, second=0, tzinfo=None)
+        t -= datetime.timedelta(seconds=padding)
+        start = calendar.timegm(t.timetuple())
+
+        t = datetime.datetime.utcfromtimestamp(end)
+        if t.minute > 10:
+            t = t.replace(hour=t.hour + 1, minute=0, second=0, tzinfo=None)
+        else:
+            t = t.replace(minute=0, second=0, tzinfo=None)
+        t += datetime.timedelta(seconds=padding)
+        end = calendar.timegm(t.timetuple())
+        # print "DATES PROCESSED:", start, end
         info = {
             "format": "month",
             "earliest_time": start,
@@ -128,6 +144,11 @@ class TimeStepEvent(wx.CommandEvent):
         return self._rate
 
 
+step_values = ['10m', '20m', '30m', '40m', '45m', '60m', '90m', '120m', '3hr', '4hr', '5hr', '6hr', '8hr', '10hr', '12hr', '16h', '24hr', '36hr', '48hr', '3d', '4d', '5d', '6d', '7d', '2wk', '3wk', '4wk']
+step_values_as_seconds = [parse_pretty_seconds(a) for a in step_values]
+rate_values = ['100ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
+rate_values_as_seconds = [parse_pretty_seconds(a) for a in rate_values]
+
 class TimeStepPanelMixin(object):
     def setup_panel(self, step_value, step_rate):
         panel = wx.Panel(self)
@@ -137,8 +158,6 @@ class TimeStepPanelMixin(object):
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        step_values = ['10m', '20m', '30m', '40m', '45m', '60m', '90m', '120m', '3hr', '4hr', '5hr', '6hr', '8hr', '10hr', '12hr', '16h', '24hr', '36hr', '48hr', '3d', '4d', '5d', '6d', '7d', '2wk', '3wk', '4wk']
-        step_values_as_seconds = [parse_pretty_seconds(a) for a in step_values]
         cb = wx.ComboBox(panel, 500, choices=step_values, style=wx.CB_DROPDOWN)
         try:
             i = step_values_as_seconds.index(step_value)
@@ -154,8 +173,6 @@ class TimeStepPanelMixin(object):
         st = wx.StaticText(panel, -1, "every")
         sizer.Add(st, 0, wx.ALL, 5)
 
-        rate_values = ['100ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
-        rate_values_as_seconds = [parse_pretty_seconds(a) for a in rate_values]
         cb = wx.ComboBox(panel, 500, choices=rate_values, style=wx.CB_DROPDOWN)
         try:
             i = rate_values_as_seconds.index(step_rate)
@@ -307,11 +324,23 @@ class TimelinePlaybackPanel(wx.Panel):
     def clear_marks(self):
         log.debug("timeline clear_marks")
         self.timeline.clear_marks()
+        self.timeline.step_rate = 0  # Force recalc
 
     def recalc_view(self):
         log.debug("timeline recalc_view")
         self.timeline.editor = self.timeline.task.active_editor
         self.timeline.rebuild(self.timeline)
+        log.debug("step rate %d num %d" % (self.timeline.step_rate, self.timeline.num_marks))
+        if self.timeline.step_rate == 0 and self.timeline.num_marks > 0:
+            if self.timeline.num_marks > 0:
+                interval = (self.timeline.highest_marker_value - self.timeline.lowest_marker_value) / self.timeline.num_marks
+                self.timeline.step_rate = 1
+                log.debug(str((step_values_as_seconds, interval, interval/2, self.timeline._length)))
+                self.timeline.step_value = step_values_as_seconds[bisect.bisect(step_values_as_seconds, interval / 2)]
+            if self.timeline.step_rate == 0:
+                self.timeline.step_rate = 1
+                self.timeline.step_value = 600
+            log.debug("NEW TIMESTEP!!! %d / %d" % (self.timeline.step_value, self.timeline.step_rate))
         self.update_ui()
 
     def refresh_view(self):

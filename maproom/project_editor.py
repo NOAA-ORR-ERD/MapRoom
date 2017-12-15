@@ -526,6 +526,7 @@ class ProjectEditor(FrameworkEditor):
             collapse = {}
         self.layer_tree_control.rebuild()
         self.layer_tree_control.collapse_layers(collapse)
+        self.timeline.clear_marks()
         self.timeline.recalc_view()
 
     def update_layer_menu_ui(self, edit_layer):
