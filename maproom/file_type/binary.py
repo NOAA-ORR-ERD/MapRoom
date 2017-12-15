@@ -40,9 +40,14 @@ class MapRoomZipProjectRecognizer(RecognizerBase):
         file_path = fs.getsyspath(relpath)
         if zipfile.is_zipfile(file_path):
             return self.id
-        # try as a uri
-        if zipfile.is_zipfile(guess.bytes):
-            return self.id
+
+        # attempt to load as a uri
+        try:
+            if zipfile.is_zipfile(guess.bytes):
+                return self.id
+        except TypeError:
+            # if there is an embedded zero in the byte stream, ZipFile fails
+            pass
 
         return None
 
