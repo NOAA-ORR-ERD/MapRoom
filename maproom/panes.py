@@ -178,7 +178,7 @@ class TimeStepPanelMixin(object):
             i = rate_values_as_seconds.index(step_rate)
             cb.SetSelection(i)
         except ValueError:
-            cb.ChangeValue(pretty_seconds(rate_value))
+            cb.ChangeValue(pretty_seconds(step_rate))
         cb.Bind(wx.EVT_COMBOBOX, self.on_combo)
         cb.Bind(wx.EVT_TEXT, self.on_text)
         cb.Bind(wx.EVT_TEXT_ENTER, self.on_text_enter)
