@@ -118,6 +118,7 @@ def qt_filter(pymod):
 subpkgs = [
     "traits",
     "traitsui",
+    "traitsui.wx",
     "pyface",
     "omnivore",
     "maproom",
