@@ -403,28 +403,16 @@ class MouseHandler(object):
         return layer, object_type, object_index
 
     def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
-        (layer, object_type, object_index) = self.get_current_object_info()
-        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
-        return cmd
+        pass
 
     def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
-        if world_d_x == 0 and world_d_y == 0:
-            return
-        (layer, object_type, object_index) = self.get_current_object_info()
-        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
-        return cmd
+        pass
 
     def rotated(self, world_d_x, world_d_y):
-        (layer, object_type, object_index) = self.get_current_object_info()
-        cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
-        return cmd
+        pass
 
     def finished_rotate(self, world_d_x, world_d_y):
-        if world_d_x == 0 and world_d_y == 0:
-            return
-        (layer, object_type, object_index) = self.get_current_object_info()
-        cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
-        return cmd
+        pass
 
     def render_snapped_point(self, renderer):
         """Highlight snapped point when applicable
@@ -638,20 +626,16 @@ class PolygonSelectionMode(RNCSelectionMode):
         self.is_panning = False
 
 
-class ObjectSelectionMode(MouseHandler):
+class SelectionMode(MouseHandler):
     """Processing of mouse events, separate from the rendering window
 
     This is a precursor to an object-based control system of mouse modes
     """
+    icon = "select.png"
     toolbar_group = "select"
 
-    def get_help_text(self):
-        text = "Click & drag to move control point, press Shift to resize about object center"
-        if sys.platform == "darwin":
-            text += ", Cmd for rotate"
-        else:
-            text += ", Ctrl for rotate"
-        return text
+    def get_cursor(self):
+        return wx.Cursor(wx.CURSOR_ARROW)
 
     def process_left_down(self, event):
         c = self.layer_canvas
@@ -803,6 +787,45 @@ class ObjectSelectionMode(MouseHandler):
 
     def select_objects_in_rect(self, event, rect, layer):
         raise RuntimeError("Abstract method")
+
+
+class ObjectSelectionMode(SelectionMode):
+    """Processing of mouse events, separate from the rendering window
+
+    This is a precursor to an object-based control system of mouse modes
+    """
+
+    def get_help_text(self):
+        text = "Click & drag to move control point, press Shift to resize about object center"
+        if sys.platform == "darwin":
+            text += ", Cmd for rotate"
+        else:
+            text += ", Ctrl for rotate"
+        return text
+
+    def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
+        return cmd
+
+    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
+        if world_d_x == 0 and world_d_y == 0:
+            return
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
+        return cmd
+
+    def rotated(self, world_d_x, world_d_y):
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
+        return cmd
+
+    def finished_rotate(self, world_d_x, world_d_y):
+        if world_d_x == 0 and world_d_y == 0:
+            return
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
+        return cmd
 
 
 class PointSelectionMode(ObjectSelectionMode):

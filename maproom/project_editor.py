@@ -26,7 +26,7 @@ from layer_manager import LayerManager
 import renderer
 from layers import loaders
 from command import UndoStack, BatchStatus
-from mouse_handler import PanMode
+import mouse_handler
 from menu_commands import LoadLayersCommand, DeleteLayerCommand, SavepointCommand, PasteLayerCommand
 from mouse_commands import ViewportCommand, StyleChangeCommand
 import toolbar
@@ -99,7 +99,7 @@ class ProjectEditor(FrameworkEditor):
     # and there will be an empty between named toolbars
     mouse_mode_toolbar = Str("")
 
-    mouse_mode_factory = Any(PanMode)
+    mouse_mode_factory = Any(mouse_handler.SelectionMode)
 
     ###########################################################################
     # 'FrameworkEditor' interface.
@@ -559,7 +559,7 @@ class ProjectEditor(FrameworkEditor):
             self.mouse_mode_toolbar = edit_layer.mouse_mode_toolbar
             self.mouse_mode_factory = toolbar.get_valid_mouse_mode(self.mouse_mode_factory, self.mouse_mode_toolbar)
         else:
-            self.mouse_mode_factory = PanMode
+            self.mouse_mode_factory = mouse_handler.SelectionMode
         self.update_layer_menu_ui(edit_layer)
         self.layer_canvas.set_mouse_handler(self.mouse_mode_factory)
         self.multiple_layers = self.layer_manager.count_layers() > 1

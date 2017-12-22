@@ -41,6 +41,7 @@ valid_mouse_modes = {
         modes.AddArrowTextIconMode,
     ],
     'BaseLayerToolBar': [
+        modes.SelectionMode,
         modes.PanMode,
         modes.ZoomRectMode,
         modes.RulerMode,
