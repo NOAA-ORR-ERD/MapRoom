@@ -12,6 +12,7 @@ from dateutil import parser as date_parser
 import calendar
 
 import numpy as np
+import wx
 
 from traits.api import Any
 from traits.api import Int
@@ -23,6 +24,7 @@ from ..renderer import color_floats_to_int
 from folder import Folder
 from base import ProjectedLayer
 from point_base import PointBaseLayer
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -214,6 +216,10 @@ class ParticleLayer(PointBaseLayer):
             self.status_code_colors = dict(jd)
         else:
             self.status_code_colors = None
+
+    def layer_selected_hook(self):
+        self.select_all_points(state.FLAGGED)
+        wx.CallLater(1000, self.clear_flagged, True)
 
     def point_object_info(self, object_index):
         sc = self.status_codes[object_index]

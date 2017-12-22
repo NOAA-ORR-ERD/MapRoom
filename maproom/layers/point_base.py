@@ -183,7 +183,7 @@ class PointBaseLayer(ProjectedLayer):
     def clear_flagged(self, refresh=False):
         self.clear_all_selections(state.FLAGGED)
         if refresh:
-            self.manager.dispatch_event('refresh_needed')
+            self.manager.refresh_needed = None
 
     def has_selection(self):
         return self.get_num_points_selected() > 0
@@ -194,6 +194,11 @@ class PointBaseLayer(ProjectedLayer):
     def select_point(self, point_index, mark_type=state.SELECTED):
         self.points.state[point_index] = self.points.state[point_index] | mark_type
         self.increment_change_count()
+
+    def select_all_points(self, mark_type=state.SELECTED):
+        if (self.points is not None):
+            self.points.state = self.points.state | mark_type
+            self.increment_change_count()
 
     def select_nearest_point(self, world_point):
         c = self.copy_points()

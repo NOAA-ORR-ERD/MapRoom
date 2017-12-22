@@ -343,6 +343,7 @@ class LayerTreeControl(wx.Panel):
         log.debug("Currently selected layer: %s" % layer)
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
+        layer.layer_selected_hook()
         self.project.refresh()
         self.project.status_message = str(layer)
         lm = self.project.layer_manager

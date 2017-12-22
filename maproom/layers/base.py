@@ -204,6 +204,11 @@ class Layer(HasTraits):
     def clear_flagged(self, refresh=False):
         """Clear any items previously flagged with highlight_exception"""
 
+    def layer_selected_hook(self):
+        """Hook to allow layer to display some feedback when the layer
+        selection changes to this layer"""
+        pass
+
     def is_folder(self):
         return False
 
