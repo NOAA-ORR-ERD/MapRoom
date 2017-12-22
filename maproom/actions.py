@@ -711,10 +711,10 @@ class DuplicateLayerAction(LayerAction):
         return hasattr(layer, "center_point_index")  # only vector layers
 
     def perform_on_layer(self, layer, event):
-        json_data = edit_layer.serialize_json(-999, True)
+        json_data = layer.serialize_json(-999, True)
         if json_data:
             text = json.dumps(json_data)
-            cmd = PasteLayerCommand(edit_layer, text, self.active_editor.layer_canvas.world_center)
+            cmd = PasteLayerCommand(layer, text, self.active_editor.layer_canvas.world_center)
             self.active_editor.process_command(cmd)
 
 
