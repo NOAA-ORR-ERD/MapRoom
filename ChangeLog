@@ -1,3 +1,27 @@
+12/22/2017
+---------------------------
+Released 4.0rc2
+- RM Added preference for blinking the selected layer
+- RM Fixed #744: selecting a particle layer flags the points for 1000ms
+- RM Fixed #842: added new SelectionMode base class
+- RM Fixed #844: added missing hidden dependency on traitsui.wx
+- RM Fixed #843: fixed incorrect variable name
+- RM Fixed error in time step panel attempting to set rate of project with no timestamped layers
+- RM file_type: fixed binary zipfile load attempt using bytes as URI
+- RM Fixed #835: added interval calculation to set initial playback rate
+- RM Refs #835: project save files now include step rate/value and position of timeline
+- RM timeline: fixed timeline marks being out of sync because of a refresh called in the middle of load_omnivore_document
+- RM Fixed #838: project files now store viewport info so the same location & zoom are restored on project load
+- RM file_type: added checks for file appearing like it's a text file before trying these recognizers
+- RM Fixed #781: added text file import & SwapLatLonCommand to flip axes if recognized incorrectly
+- RM Refs #781: added initial import of text files
+- RM Fixed #834: turned playback rate popup into a dialog
+- RM Fixed #839: added opaque and background flags to layers
+- RM Fixed #836: text should not be drawn in the picker framebuffer
+- RM Changed control point names to center bottom, center right, etc.
+- RM Fixed shapefile trying to look at particle times for start times
+- RM Added default_project.maproom template to pyinstaller build
+
 12/11/2017
 ---------------------------
 Released 4.0rc1
