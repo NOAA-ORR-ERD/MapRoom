@@ -219,7 +219,7 @@ class ParticleLayer(PointBaseLayer):
 
     def layer_selected_hook(self):
         self.select_all_points(state.FLAGGED)
-        wx.CallLater(1000, self.clear_flagged, True)
+        wx.CallLater(400, self.clear_flagged, True)
 
     def point_object_info(self, object_index):
         sc = self.status_codes[object_index]

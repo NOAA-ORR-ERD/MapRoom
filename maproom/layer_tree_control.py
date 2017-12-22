@@ -64,6 +64,8 @@ class LayerTreeControl(wx.Panel):
         if sys.platform.startswith("win"):
             self.tree.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
 
+        self.user_selected_layer = False
+
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.tree, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
@@ -343,7 +345,10 @@ class LayerTreeControl(wx.Panel):
         log.debug("Currently selected layer: %s" % layer)
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
-        layer.layer_selected_hook()
+        prefs = self.project.task.preferences
+        if prefs.identify_layers and self.user_selected_layer:
+            layer.layer_selected_hook()
+        self.user_selected_layer = False
         self.project.refresh()
         self.project.status_message = str(layer)
         lm = self.project.layer_manager
@@ -450,6 +455,7 @@ class LayerTreeControl(wx.Panel):
 
         (clicked_item, flags) = self.tree.HitTest(event.GetPosition())
 
+        self.user_selected_layer = True
         if clicked_item != selected_item or \
            flags & wx.TREE_HITTEST_ONITEMLABEL == 0:
             return

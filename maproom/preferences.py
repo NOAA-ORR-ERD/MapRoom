@@ -50,6 +50,9 @@ class MaproomPreferences(FrameworkPreferences):
     # check for layer errors on file save
     check_errors_on_save = Bool(True)
 
+    # blink newly selected layer when switching
+    identify_layers = Bool(True)
+
     # minimum number of pixels between grid lines
     grid_spacing_low = 25
     grid_spacing_high = 200
@@ -100,6 +103,9 @@ class MaproomPreferencesPane(PreferencesPane):
                       show_labels=False),
                HGroup(Item('check_errors_on_save'),
                       Label('Check for layer errors on save'),
+                      show_labels=False),
+               HGroup(Item('identify_layers'),
+                      Label('Briefly highlight the selected layer when chosen'),
                       show_labels=False),
                HGroup(Item('download_directory'),
                       Label('Download directory'),
