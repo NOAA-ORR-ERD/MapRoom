@@ -161,7 +161,7 @@ class OffScreenHTML(object):
         y = ylast = 0
         while True:
             y = self.hr.Render(0, 0, [], y, True, y + self.height)
-            if y == ylast:
+            if y == ylast or y < 0:
                 break
             ylast = y
         if ylast < self.height:
@@ -179,7 +179,7 @@ class OffScreenHTML(object):
         return self.width, h, bitmap
 
     def get_numpy(self, text, c=None, face="", size=12, text_format=0):
-        if self.width < 1:
+        if self.width < 1 or self.height < 1:
             return self.get_blank()
 
         if text_format == 0:
@@ -191,7 +191,9 @@ class OffScreenHTML(object):
         if c is not None:
             text = "<font color='%s'>%s</font>" % (c, text)
         w, h, bitmap = self.render(text, face, size)
-        log.debug("bitmap:", w, h, self.width, self.height, bitmap.Width, bitmap.Height)
+        log.debug("bitmap: %s" % str([w, h, self.width, self.height, bitmap.Width, bitmap.Height]))
+        if self.width < 1 or self.height < 1:
+            return self.get_blank()
         if h > 0 and w > 0:
             sub = bitmap.GetSubBitmap(wx.Rect(0, 0, w, h))
             arr = np.empty((h, w, 4), np.uint8)
