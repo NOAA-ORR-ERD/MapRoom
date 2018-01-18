@@ -45,7 +45,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Status Code Color", "Outline color", "Outline transparency"]
+    layer_info_panel = ["Start time", "End time", "Status Code Color", "Outline color"]
 
     @property
     def status_code_names(self):
@@ -137,7 +137,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = Str("particle")
 
-    layer_info_panel = ["Status Code Color", "Outline color", "Outline transparency"]
+    layer_info_panel = ["Status Code Color", "Outline color"]
 
     pickable = True  # this is a layer that supports picking
 

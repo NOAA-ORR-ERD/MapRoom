@@ -579,7 +579,8 @@ class FloatSliderField(InfoField):
         pass
 
 
-class LineAlphaField(FloatSliderField):
+class TransparencyField(FloatSliderField):
+    # Objects use the line alpha value as the object tranparency
     def get_layer_color(self, layer):
         return layer.style.line_color
 
@@ -611,30 +612,6 @@ class LineAlphaField(FloatSliderField):
             c.textCtrl.SetBackgroundColour("#FFFFFF")
         except Exception:
             c.textCtrl.SetBackgroundColour("#FF8080")
-
-
-class FillAlphaField(LineAlphaField):
-    def get_layer_color(self, layer):
-        return layer.style.fill_color
-
-    def get_layer_style(self, layer, color):
-        return LayerStyle(fill_color=color)
-
-
-class TextAlphaField(LineAlphaField):
-    def get_layer_color(self, layer):
-        return layer.style.text_color
-
-    def get_layer_style(self, layer, color):
-        return LayerStyle(text_color=color)
-
-
-class OutlineAlphaField(LineAlphaField):
-    def get_layer_color(self, layer):
-        return layer.style.outline_color
-
-    def get_layer_style(self, layer, color):
-        return LayerStyle(outline_color=color)
 
 
 class ColorPickerField(InfoField):
@@ -1590,9 +1567,7 @@ class InfoPanel(PANELTYPE):
         "Show depth": DepthVisibilityField,
         "Show depth shading": TriangleShadingVisibilityField,
         "Flagged points": FlaggedPointsField,
-        "Transparency": LineAlphaField,
-        "Line transparency": LineAlphaField,
-        "Fill transparency": FillAlphaField,
+        "Transparency": TransparencyField,
         "Color": ColorField,
         "Border width": BorderWidthField,
         "Line color": ColorField,
@@ -1603,9 +1578,7 @@ class InfoPanel(PANELTYPE):
         "Fill color": FillColorField,
         "Fill style": FillStyleField,
         "Outline color": OutlineColorField,
-        "Outline transparency": OutlineAlphaField,
         "Text color": TextColorField,  # Same as Line Color except for the label
-        "Text transparency": TextAlphaField,
         "Font": FontStyleField,
         "Font size": FontSizeField,
         "Text": OverlayTextField,
