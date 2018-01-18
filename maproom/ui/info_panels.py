@@ -4,6 +4,7 @@ import wx.adv
 import wx.lib.buttons as buttons
 from wx.lib.expando import ExpandoTextCtrl
 import wx.lib.colourselect as csel
+import wx.lib.agw.cubecolourdialog as CCD
 
 from pyface.api import ImageResource
 
@@ -20,6 +21,42 @@ from ..library.marplot_icons import marplot_icon_id_to_name
 
 import logging
 log = logging.getLogger(__name__)
+
+
+
+class AlwaysAlphaCCD(CCD.CubeColourDialog):
+    def DoLayout(self):
+        CCD.CubeColourDialog.DoLayout(self)
+        self.mainSizer.Hide(self.showAlpha)
+
+
+class ColorSelectButton(csel.ColourSelect):
+    def OnClick(self, event):
+        # Override to use the CubeColourDialog instead of the standard platform
+        # color dialog
+        data = wx.ColourData()
+        data.SetChooseFull(True)
+        data.SetColour(self.colour)
+        if self.customColours:
+            for idx, clr in enumerate(self.customColours.Colours):
+                if clr is not None:
+                    data.SetCustomColour(idx, clr)
+
+        dlg = AlwaysAlphaCCD(wx.GetTopLevelParent(self), data)
+        changed = dlg.ShowModal() == wx.ID_OK
+
+        if changed:
+            data = dlg.GetColourData()
+            self.SetColour(data.GetColour())
+            if self.customColours:
+                self.customColours.Colours = \
+                    [data.GetCustomColour(idx) for idx in range(0, 16)]
+
+        dlg.Destroy()
+
+        # moved after dlg.Destroy, since who knows what the callback will do...
+        if changed:
+            self.OnChange()
 
 
 class InfoField(object):
@@ -614,7 +651,7 @@ class ColorPickerField(InfoField):
 
     def create_control(self):
         color = (0, 0, 0)
-        c = csel.ColourSelect(self.parent, -1, "", color, size=(self.default_width, -1))
+        c = ColorSelectButton(self.parent, -1, "", color, size=(self.default_width, -1))
         c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
         return c
 
