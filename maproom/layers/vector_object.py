@@ -356,7 +356,7 @@ class LineVectorObject(VectorObjectLayer):
             self.points[0:offset].y -= new_center[1] - orig_center[1]
 
         # force children to fit inside the new bounding box
-        temp_bounds = self.compute_bounding_rect_from_points(self.points)
+        temp_bounds = self.compute_bounding_rect_from_points(self.points[0:offset])
         self.fit_to_bounding_box(self.bounds, temp_bounds)
 
     def fit_to_bounding_box(self, current_bounds, new_bounds):
@@ -1243,7 +1243,12 @@ class PolylineMixin(object):
         self.update_bounds()
 
     def fit_to_bounding_box(self, current_bounds, new_bounds):
-        pass
+        # adjust polyline points; control points have already been moved
+        offset = self.center_point_index + 1
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE)
+        scale, old_origin, new_origin = rect.get_transform(current_bounds, new_bounds)
+        points = (p.xy[offset:] - old_origin).dot(scale) + new_origin
+        p.xy[offset:] = points
 
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
