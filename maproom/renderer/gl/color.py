@@ -77,6 +77,18 @@ def int_to_color_uint8(color):
     return tuple(ints)
 
 
+def int_to_color_ints(color):
+    c = np.uint32(color)  # handle plain python integer being passed in
+    ints = np.frombuffer(c.tostring(), dtype=np.uint8)
+    return tuple(int(255 * c) for c in ints)
+
+
+def int_to_wx_colour(color):
+    import wx
+
+    rgba = int_to_color_ints(color)
+    return wx.Colour(*rgba)
+
 def int_to_html_color_string(color):
     c = np.uint32(color)  # handle plain python integer being passed in
     ints = np.frombuffer(c.tostring(), dtype=np.uint8)

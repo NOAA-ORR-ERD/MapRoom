@@ -16,7 +16,7 @@ from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import StyleChangeCommand, StatusCodeColorCommand, SetAnchorCommand, ChangeDepthCommand, MovePointsCommand, TextCommand, BorderWidthCommand
 from ..menu_commands import RenameLayerCommand
 from ..vector_object_commands import MoveControlPointCommand
-from ..renderer import color_floats_to_int, int_to_color_floats
+from ..renderer import color_floats_to_int, int_to_color_floats, int_to_wx_colour
 from ..library.marplot_icons import marplot_icon_id_to_name
 
 import logging
@@ -31,6 +31,41 @@ class AlwaysAlphaCCD(CCD.CubeColourDialog):
 
 
 class ColorSelectButton(csel.ColourSelect):
+    def MakeBitmap(self):
+        """ Creates a bitmap representation of the current selected colour. """
+
+        bdr = 8
+        width, height = self.GetSize()
+
+        # yes, this is weird, but it appears to work around a bug in wxMac
+        if "wxMac" in wx.PlatformInfo and width == height:
+            height -= 1
+
+        bmp = wx.Bitmap(width-bdr, height-bdr)
+        dc = wx.MemoryDC()
+        dc.SelectObject(bmp)
+        dc.SetFont(self.GetFont())
+        label = self.GetLabel()
+        # Just make a little colored bitmap
+        fg = self.colour
+
+        # bitmaps aren't able to use alpha, so  fake the alpha color on a white
+        # background for the button color
+        blend = tuple(wx.Colour.AlphaBlend(c, 255, fg.alpha / 255.0) for c in fg.Get(False))
+        dc.SetBackground(wx.Brush(blend))
+        dc.Clear()
+
+        if label:
+            # Add a label to it
+            avg = functools.reduce(lambda a, b: a + b, self.colour.Get()) / 3
+            fcolour = avg > 128 and wx.BLACK or wx.WHITE
+            dc.SetTextForeground(fcolour)
+            dc.DrawLabel(label, (0,0, width-bdr, height-bdr),
+                         wx.ALIGN_CENTER)
+
+        dc.SelectObject(wx.NullBitmap)
+        return bmp
+
     def OnClick(self, event):
         # Override to use the CubeColourDialog instead of the standard platform
         # color dialog
@@ -623,8 +658,8 @@ class ColorPickerField(InfoField):
         return ""
 
     def fill_data(self, layer):
-        color = tuple(int(255 * c) for c in int_to_color_floats(self.get_value(layer))[0:3])
-        self.ctrl.SetColour(color)
+        rgba = int_to_wx_colour(self.get_value(layer))
+        self.ctrl.SetColour(rgba)
 
     def create_control(self):
         color = (0, 0, 0)
