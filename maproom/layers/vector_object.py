@@ -1434,15 +1434,16 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
             # fit the child layer in the new bounding box by a linear transform
             # of the child bounding box in the proportion of the parent
             # bounding box change
+            offset = layer.center_point_index + 1
             current_sublayer_bounds = layer.copy_bounds()
             p = layer.points.view(data_types.POINT_XY_VIEW_DTYPE)
             # print(" before: %s" % str(p.xy))
-            points = (p.xy[:] - old_origin).dot(scale) + new_origin
-            p.xy[:] = points
+            points = (p.xy[:offset] - old_origin).dot(scale) + new_origin
+            p.xy[:offset] = points
             # print(" after: %s" % str(p.xy))
 
             # set new bounding rect
-            layer.bounds = self.compute_bounding_rect_from_points(layer.points)
+            layer.bounds = self.compute_bounding_rect_from_points(layer.points[0:offset])
 
             # recursively fit children
             layer.fit_to_bounding_box(current_sublayer_bounds, layer.bounds)
