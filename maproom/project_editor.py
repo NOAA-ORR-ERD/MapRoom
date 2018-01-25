@@ -148,6 +148,7 @@ class ProjectEditor(FrameworkEditor):
             # Clear modified flag
             self.layer_manager.undo_stack.set_save_point()
             self.dirty = self.layer_manager.undo_stack.is_dirty()
+            self.mouse_mode_factory = mouse_handler.PanMode
             self.view_document(self.document)
         elif hasattr(loader, "iter_log"):
             line = 0
