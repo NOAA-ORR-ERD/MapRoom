@@ -68,6 +68,10 @@ class ParticleFolder(Folder):
         status_code_colors = ParticleLayer.create_status_code_color_map(status_code_names)
         return status_code_colors
 
+    @property
+    def status_code_count(self):
+        return {name:1 for name in self.status_code_names}
+
     def start_index_to_json(self):
         return self.start_index
 
@@ -239,6 +243,7 @@ class ParticleLayer(PointBaseLayer):
         # force status codes to fall into range of valid colors
         self.status_codes = status_codes
         self.status_code_names = dict(status_code_names)
+        self.status_code_count = {}
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
         log.debug("setting status code colors to: %s" % self.status_code_colors)
         colors = np.zeros(np.alen(f_points), dtype=np.uint32)
@@ -247,6 +252,7 @@ class ParticleLayer(PointBaseLayer):
             colors[index] = color
             num = len(index[0])
             self.status_code_names[code] += " (%d)" % num
+            self.status_code_count[code] = num
         self.points.color = colors
 
     def get_selected_particle_layers(self, project):

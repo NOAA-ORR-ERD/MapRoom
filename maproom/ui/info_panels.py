@@ -1302,6 +1302,8 @@ class StatusCodeColorField(InfoField):
         sizer = self.ctrl.GetSizer()
         sizer.Clear(True)
         for code in codes:
+            if layer.status_code_count[code] == 0:
+                continue
             hbox = wx.BoxSizer(wx.HORIZONTAL)
             label = wx.StaticText(self.ctrl, label=code_map[code], style=wx.ST_ELLIPSIZE_END)
             hbox.Add(label, 99, wx.ALIGN_CENTER)
