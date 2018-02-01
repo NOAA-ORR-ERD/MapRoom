@@ -470,7 +470,10 @@ class AnchorCoordinateField(PointCoordinateField):
     def get_point_index(self, layer):
         if (layer is None):
             return -1
-        return layer.center_point_index
+        indexes = layer.get_selected_point_indexes()
+        if len(indexes) == 0:
+            return layer.center_point_index
+        return indexes[0]
 
     def get_command(self, layer, index, dx, dy):
         return MoveControlPointCommand(layer, index, index, dx, dy, None, None)

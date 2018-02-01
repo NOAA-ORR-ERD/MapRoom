@@ -101,6 +101,7 @@ class MoveControlPointCommand(Command):
             child_layer_data.append((la.invariant, la.get_undo_info()))
 
         log.debug("\n\n\nBegin moving control point: layer=%s children=%s" % (layer, str(affected)))
+        layer.select_point(self.drag)
         layer.move_control_point(self.drag, self.anchor, self.dx, self.dy, self.about_center)
         linked_layer_data = update_linked_layers(lm, layer, undo)
 
