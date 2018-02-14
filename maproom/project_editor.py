@@ -1072,3 +1072,11 @@ class ProjectEditor(FrameworkEditor):
             if not save_message:
                 self.task.information("Layers OK", "No Problems Found")
         return all_ok
+
+    def editor_summary(self):
+        lines = [FrameworkEditor.editor_summary(self)]
+        lines.append("layer_manager summary:")
+        lines.append(self.layer_manager.debug_structure("    "))
+        lines.append(self.layer_canvas.debug_structure("    "))
+        lines.append(self.layer_manager.undo_stack.debug_structure("    "))
+        return "\n".join(lines)

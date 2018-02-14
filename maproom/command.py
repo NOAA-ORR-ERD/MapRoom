@@ -12,6 +12,13 @@ class UndoStack(list):
         self.save_point_index = 0
         self.batch = self
 
+    def debug_structure(self, indent=""):
+        s = self.serialize()
+        lines = ["command history:"]
+        for c in s.serialized_commands:
+            lines.append(str(c))
+        return ("\n" + indent).join(lines)
+
     def is_dirty(self):
         return self.insert_index != self.save_point_index
 

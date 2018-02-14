@@ -163,9 +163,9 @@ class LayerManager(BaseDocument):
         for layer in layers:
             print "  %s: invariant=%d" % (layer, layer.invariant)
 
-    def debug_structure(self):
-        lines = self.debug_structure_recursive(self.layers)
-        return "\n".join(lines)
+    def debug_structure(self, indent=""):
+        lines = self.debug_structure_recursive(self.layers, indent)
+        return ("\n" + indent).join(lines)
 
     def debug_structure_recursive(self, tree, indent=""):
         result = []

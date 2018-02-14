@@ -46,6 +46,20 @@ class BaseCanvas(object):
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
 
+    def debug_structure(self, indent=""):
+        lines = ["layer_canvas summary:"]
+        s_r = self.get_screen_rect()
+        p_r = self.get_projected_rect_from_screen_rect(s_r)
+        w_r = self.get_world_rect_from_projected_rect(p_r)
+        lines.append("screen rect: %s" % (str(s_r)))
+        lines.append("projection: %s" % (str(self.projection)))
+        lines.append("projected rect: %s" % (str(p_r)))
+        lines.append("projected center: %s" % (str(self.projected_point_center)))
+        lines.append("projected units per pixel: %s" % (str(self.projected_units_per_pixel)))
+        lines.append("zoom_level: %s" % (str(self.zoom_level)))
+        lines.append("world rect: %s" % (str(w_r)))
+        return ("\n" + indent).join(lines)
+
     def init_overlay(self):
         pass
 
