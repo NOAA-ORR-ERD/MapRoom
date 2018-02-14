@@ -43,6 +43,8 @@ def convert_dataset(dataset, point_list):
     layer = dataset.GetLayer()
     for feature in layer:
         geom = feature.GetGeometryRef()
+        if geom is None:
+            continue
         wkt = geom.ExportToWkt()
         g = loads(wkt)
         if g.geom_type == "Point":
@@ -55,6 +57,8 @@ def convert_dataset(dataset, point_list):
         else:
             add_maproom_attributes_to_shapely_geom(g)
             geometry_list.append(g)
+    if not geometry_list:
+        raise ValueError("No GNOME particle data found.")
     return geometry_list
 
 
@@ -113,7 +117,10 @@ def load_shapely(uri):
         source = None
         error, dataset = get_dataset(uri)
         if not error:
-            geometry_list = convert_dataset(dataset, point_list)
+            try:
+                geometry_list = convert_dataset(dataset, point_list)
+            except ValueError, e:
+                error = str(e)
 
     if error:
         return (error, None, None)

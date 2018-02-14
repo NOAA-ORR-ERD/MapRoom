@@ -743,7 +743,7 @@ class ProjectEditor(FrameworkEditor):
         if f.fast_viewport_refresh_needed:
             b.fast_viewport_refresh_needed = True
         if f.errors:
-            b.errors.append("In %s:" % str(cmd))
+            b.errors.append("When processing command '%s', the following errors were encountered:\n" % str(cmd))
             for e in f.errors:
                 b.errors.append("- %s" % e)
             b.errors.append("")
