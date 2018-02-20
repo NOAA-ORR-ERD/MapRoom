@@ -19,7 +19,7 @@ from traits.api import Int
 from traits.api import Str
 from traits.api import Unicode
 
-from ..renderer import color_floats_to_int
+from ..renderer import color_floats_to_int, linear_contour
 
 from folder import Folder
 from base import ProjectedLayer
@@ -141,7 +141,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = Str("particle")
 
-    layer_info_panel = ["Status Code Color", "Outline color"]
+    layer_info_panel = ["Status Code Color", "Outline color", "Contour value"]
 
     pickable = True  # this is a layer that supports picking
 
@@ -150,6 +150,10 @@ class ParticleLayer(PointBaseLayer):
     status_code_names = Any
 
     status_code_colors = Any
+
+    scalar_vars = Any
+
+    current_contour_var = Any(None)
 
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_color_map = {
@@ -238,15 +242,19 @@ class ParticleLayer(PointBaseLayer):
     def show_unselected_layer_info_for(self, layer):
         return layer.type == self.type
 
-    def set_data(self, f_points, status_codes, status_code_names):
+    def set_data(self, f_points, status_codes, status_code_names, scalar_vars):
         PointBaseLayer.set_data(self, f_points)
         # force status codes to fall into range of valid colors
         self.status_codes = status_codes
         self.status_code_names = dict(status_code_names)
         self.status_code_count = {}
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
+        self.scalar_vars = scalar_vars
+        self.set_colors_from_status_codes()
+
+    def set_colors_from_status_codes(self):
         log.debug("setting status code colors to: %s" % self.status_code_colors)
-        colors = np.zeros(np.alen(f_points), dtype=np.uint32)
+        colors = np.zeros(np.alen(self.points), dtype=np.uint32)
         for code, color in self.status_code_colors.iteritems():
             index = np.where(self.status_codes == code)
             colors[index] = color
@@ -254,6 +262,58 @@ class ParticleLayer(PointBaseLayer):
             self.status_code_names[code] += " (%d)" % num
             self.status_code_count[code] = num
         self.points.color = colors
+
+    def set_contour_var(self, var):
+        if var is None:
+            self.set_colors_from_status_codes()
+        else:
+            self.set_colors_from_scalar(var)
+        self.current_contour_var = var
+
+    colormap = (
+        (-10, 0xf0, 0xeb, 0xc3),
+        (-0.01, 0xf0, 0xeb, 0xc3),
+        (0, 0xd6, 0xea, 0xeb),
+        (10, 0x9b, 0xd3, 0xe0),
+        (20, 0x54, 0xc0, 0xdc),
+        (30, 0x00, 0xa0, 0xcc),
+        (40, 0x00, 0x6a, 0xa4),
+        (50, 0x1f, 0x48, 0x8a),
+        (100, 0x00, 0x04, 0x69),
+    )
+
+    def set_colors_from_scalar(self, var):
+        if var not in self.scalar_vars:
+            log.error("%s not in scalar data for layer %s" % (var, self))
+            print self.scalar_vars
+            self.set_colors_from_status_codes()
+            return
+        values = self.scalar_vars[var]
+        print(var, values)
+        lo = float(min(values))
+        hi = float(max(values))
+        r = abs(hi - lo)
+        lo -= .1 * r
+        hi += .1 * r
+        width = abs(hi - lo)
+        if width == 0.0:
+            lo -= 1.0
+            hi += 1.0
+            width = 2.0
+        delta = width / (len(self.colormap) - 1)
+        print width, delta, len(self.colormap), delta * (len(self.colormap) - 1)
+        colormap = []
+        for i, c in enumerate(self.colormap):
+            v = lo + (delta * i)
+            print i, delta, width, v
+            _, r, g, b = c
+            colormap.append((v, r, g, b))
+        colors = linear_contour(values, colormap)
+        print(lo, hi, width, colormap)
+        print(colors)
+        self.points.color = colors
+        self.manager.layer_contents_changed = self
+        self.manager.refresh_needed = None
 
     def get_selected_particle_layers(self, project):
         return [self]

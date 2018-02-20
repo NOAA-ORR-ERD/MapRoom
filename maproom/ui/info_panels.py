@@ -1508,6 +1508,46 @@ class DownloadStatusField(ExpandableErrorField):
         return c
 
 
+class ContourChoiceField(InfoField):
+    same_line = True
+
+    def get_variable_names(self, layer):
+        names = sorted(layer.scalar_vars.keys())
+        names[0:0] = ["none"]
+        return names
+
+    def get_current_index(self, layer, names):
+        current = layer.current_contour_var
+        if current is None or current not in names:
+            selected = 0
+        else:
+            selected = names.index(current)
+        return selected
+
+    def fill_data(self, layer):
+        self.choice_names = self.get_variable_names(layer)
+        self.ctrl.SetItems(self.choice_names)
+        if self.choice_names:
+            selected = self.get_current_index(layer, self.choice_names)
+            self.ctrl.SetSelection(selected)
+
+    def create_control(self):
+        c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=[], style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.variable_changed)
+        return c
+
+    def variable_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        index = event.GetSelection()
+        var = self.choice_names[index]
+        self.change_variable(layer, var)
+
+    def change_variable(self, layer, var):
+        layer.set_contour_var(var)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
@@ -1642,6 +1682,7 @@ class InfoPanel(PANELTYPE):
         "Radius": WholeLinePropertyField,
         "Circumference": WholeLinePropertyField,
         "Area": WholeLinePropertyField,
+        "Contour value": ContourChoiceField,
     }
 
     def create_fields(self, layer, fields):

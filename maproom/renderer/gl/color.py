@@ -96,6 +96,31 @@ def int_to_html_color_string(color):
     return cstr
 
 
+# colormap is an array of 4 elements: (x coord, r, g, b)
+
+def color_interp(value, colormap, alpha):
+    c0 = colormap[0]
+    if value < c0[0]:
+        return color_floats_to_int(c0[1] / 255., c0[2] / 255., c0[3] / 255., alpha)
+    for c in colormap[1:]:
+        if value >= c0[0] and value <= c[0]:
+            perc = (value - c0[0]) / float(c[0] - c0[0])
+            return color_floats_to_int((c0[1] + (c[1] - c0[1]) * perc) / 255.,
+                                       (c0[2] + (c[2] - c0[2]) * perc) / 255.,
+                                       (c0[3] + (c[3] - c0[3]) * perc) / 255.,
+                                       alpha)
+        c0 = c
+    return color_floats_to_int(c[1] / 255., c[2] / 255., c[3] / 255., alpha)
+
+def linear_contour(values, colormap, smooth=True, alpha=1.0):
+    colors = np.zeros(len(values), dtype=np.uint32)
+
+    for i, value in enumerate(values):
+        colors[i] = color_interp(value, colormap, alpha)
+        #colors[i] = color_floats_to_int(1.0, 1.0, 1.0, 1.0)
+    return colors
+
+
 if __name__ == "__main__":
     rgba = (.5, .5, .5, 1)
     i = color_floats_to_int(*rgba)

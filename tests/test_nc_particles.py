@@ -58,12 +58,12 @@ if __name__ == "__main__":
         print("Meanings: %s" % str(meanings))
         print("Variables: %s" % str(reader.variables))
 
-        data = reader.get_timestep(0, variables=reader.variables)
-        for variable in reader.variables:
-            print variable
-            if variable in data:
-                d = data[variable]
-                print d.dtype, d
-            else:
-                print "NOT IN DATA"
-            print
+        for timestep in range(len(reader.times)):
+            data = reader.get_timestep(timestep, variables=reader.variables)
+            for variable in reader.variables:
+                if variable in data:
+                    d = data[variable]
+                    print "timestep %d:" % timestep, variable, d.dtype, d.shape
+                    #print d
+                else:
+                    print variable, "(not in timestep %d)" % timestep

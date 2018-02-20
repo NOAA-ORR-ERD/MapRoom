@@ -87,12 +87,23 @@ class nc_particles_file_loader():
             points = np.delete(points, bogus[0], 0)
             status_codes = np.delete(status_codes, bogus[0], 0)
 
+        scalar_vars = {}
+        data = self.reader.get_timestep(self.current_timestep, variables=self.reader.variables)
+        for var in self.reader.variables:
+            if var in data:
+                d = data[var]
+                print "timestep %d:" % self.current_timestep, var, d.dtype, d.shape
+                if len(d.shape) == 1:
+                    scalar_vars[var] = d.copy()
+            else:
+                log.warning("%s not present in timestep %d" % (var, self.current_timestep))
+
         # if self.current_timestep > 14:
         #     raise StopIteration
 
         self.current_timestep += 1
 
-        return (points, status_codes, self.status_code_map, timecode, warning)
+        return (points, status_codes, self.status_code_map, timecode, warning, scalar_vars)
 
 
 class ParticleLoader(BaseLayerLoader):
@@ -124,14 +135,14 @@ class ParticleLoader(BaseLayerLoader):
         warnings = []
         layers = []
         # loop through all the time steps in the file.
-        for (points, status_codes, code_map, timecode, warning) in nc_particles_file_loader(metadata.uri):
+        for (points, status_codes, code_map, timecode, warning, scalar_vars) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
             layer.name = timecode.isoformat().rsplit(':', 1)[0]
             # print timecode, type(timecode), layer.name, timecode.tzinfo
             progress_log.info("Finished loading %s" % layer.name)
-            layer.set_data(points, status_codes, code_map)
+            layer.set_data(points, status_codes, code_map, scalar_vars)
             layer.set_datetime(timecode)
             layers.append(layer)
             if warning:
