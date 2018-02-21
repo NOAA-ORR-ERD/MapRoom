@@ -1512,7 +1512,7 @@ class ContourChoiceField(InfoField):
     same_line = True
 
     def get_variable_names(self, layer):
-        names = sorted(layer.scalar_vars.keys())
+        names = sorted(layer.scalar_var_names)
         names[0:0] = ["none"]
         return names
 

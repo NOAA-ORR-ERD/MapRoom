@@ -45,7 +45,15 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Status Code Color", "Outline color"]
+    layer_info_panel = ["Start time", "End time", "Contour value", "Outline color", "Status Code Color"]
+
+    @property
+    def scalar_var_names(self):
+        children = self.get_particle_layers()
+        names = set()
+        for c in children:
+            names.update(c.scalar_var_names)
+        return names
 
     @property
     def status_code_names(self):
@@ -60,6 +68,19 @@ class ParticleFolder(Folder):
                 name, _ = name.rsplit(" (", 1)
             summary_names[k] = name
         return summary_names
+
+    @property
+    def current_contour_var(self):
+        children = self.get_particle_layers()
+        if children:
+            current = children[0].current_contour_var
+            for c in children:
+                if c.current_contour_var != current:
+                    current = None
+                    break
+        else:
+            current = None
+        return current
 
     @property
     def status_code_colors(self):
@@ -131,6 +152,11 @@ class ParticleFolder(Folder):
         project.layer_metadata_changed(self)
         project.refresh()
 
+    def set_contour_var(self, var):
+        children = self.get_particle_layers()
+        for c in children:
+            c.set_contour_var(var)
+
 
 class ParticleLayer(PointBaseLayer):
     """Layer for particle files from GNOME, etc.
@@ -141,7 +167,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = Str("particle")
 
-    layer_info_panel = ["Status Code Color", "Outline color", "Contour value"]
+    layer_info_panel = ["Contour value", "Outline color", "Status Code Color"]
 
     pickable = True  # this is a layer that supports picking
 
@@ -171,6 +197,11 @@ class ParticleLayer(PointBaseLayer):
         for k, v in status_code_names.iteritems():
             status_code_colors[k] = cls.status_code_color_map.get(k, color_floats_to_int(1.0, 0, 0, 1.0))
         return status_code_colors
+
+    @property
+    def scalar_var_names(self):
+        names = set(self.scalar_vars.keys())
+        return names
 
     # JSON Serialization
 
