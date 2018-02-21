@@ -155,12 +155,18 @@ class Layer(HasTraits):
         Typically used to show information about the object under the cursor
         """
         if picker.is_ugrid_point_type(object_type):
-            return self.point_object_info(object_index)
+            info = self.point_object_info(object_index)
+            long_info = self.point_object_long_info(object_index)
         elif picker.is_ugrid_line_type(object_type):
-            return self.line_object_info(object_index)
+            info = self.line_object_info(object_index)
+            long_info = self.line_object_long_info(object_index)
         elif picker.is_interior_type(object_type):
-            return self.interior_object_info(object_index)
-        return ""
+            info = self.interior_object_info(object_index)
+            long_info = self.interior_object_long_info(object_index)
+        else:
+            info = ""
+            long_info = ""
+        return info, long_info
 
     def point_object_info(self, object_index):
         return "Point %s on %s" % (object_index + 1, self.name)
@@ -170,6 +176,15 @@ class Layer(HasTraits):
 
     def interior_object_info(self, object_index):
         return "Polygon %s on %s" % (object_index + 1, self.name)
+
+    def point_object_long_info(self, object_index):
+        return ""
+
+    def line_object_long_info(self, object_index):
+        return ""
+
+    def interior_object_long_info(self, object_index):
+        return ""
 
     def show_unselected_layer_info_for(self, layer):
         """Whether or not the selected layer allows for other layers

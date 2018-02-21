@@ -270,6 +270,12 @@ class ParticleLayer(PointBaseLayer):
             sctext = ""
         return "Point %s%s %s" % (object_index + 1, sctext, self.name)
 
+    def point_object_long_info(self, object_index):
+        info = []
+        for n in self.scalar_var_names:
+            info.append("%s: %s" % (n, self.scalar_vars[n][object_index]))
+        return "\n".join(info)
+
     def show_unselected_layer_info_for(self, layer):
         return layer.type == self.type
 

@@ -116,10 +116,15 @@ class MouseHandler(object):
         e.status_message = " ".join(items)
 
         obj_text = ""
+        long_text = ""
         if obj is not None:
             (layer, object_type, object_index) = obj
-            obj_text = layer.clickable_object_info(c.picker, object_type, object_index)
+            obj_text, long_text = layer.clickable_object_info(c.picker, object_type, object_index)
+            if not long_text:
+                long_text = self.get_long_help_text()
+
         e.debug_message = obj_text
+        e.long_status.show_status_text(long_text, multiline=True)
 
     def process_mouse_motion_up(self, event):
         c = self.layer_canvas
@@ -149,8 +154,6 @@ class MouseHandler(object):
         mouselog.debug("object under mouse: %s, on current layer: %s" % (self.current_object_under_mouse, c.project.clickable_object_mouse_is_over is not None))
 
         self.update_status_text(proj_p, obj, True, self.get_help_text())
-        e = c.project
-        e.long_status.show_status_text(self.get_long_help_text())
 
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
