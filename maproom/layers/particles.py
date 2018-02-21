@@ -45,7 +45,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Contour value", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Outline color", "Status Code Color"]
 
     @property
     def scalar_var_names(self):
@@ -70,12 +70,12 @@ class ParticleFolder(Folder):
         return summary_names
 
     @property
-    def current_contour_var(self):
+    def current_scalar_var(self):
         children = self.get_particle_layers()
         if children:
-            current = children[0].current_contour_var
+            current = children[0].current_scalar_var
             for c in children:
-                if c.current_contour_var != current:
+                if c.current_scalar_var != current:
                     current = None
                     break
         else:
@@ -152,10 +152,10 @@ class ParticleFolder(Folder):
         project.layer_metadata_changed(self)
         project.refresh()
 
-    def set_contour_var(self, var):
+    def set_scalar_var(self, var):
         children = self.get_particle_layers()
         for c in children:
-            c.set_contour_var(var)
+            c.set_scalar_var(var)
 
 
 class ParticleLayer(PointBaseLayer):
@@ -167,7 +167,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = Str("particle")
 
-    layer_info_panel = ["Contour value", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Scalar value", "Outline color", "Status Code Color"]
 
     pickable = True  # this is a layer that supports picking
 
@@ -179,7 +179,7 @@ class ParticleLayer(PointBaseLayer):
 
     scalar_vars = Any
 
-    current_contour_var = Any(None)
+    current_scalar_var = Any(None)
 
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_color_map = {
@@ -294,12 +294,12 @@ class ParticleLayer(PointBaseLayer):
             self.status_code_count[code] = num
         self.points.color = colors
 
-    def set_contour_var(self, var):
+    def set_scalar_var(self, var):
         if var is None:
             self.set_colors_from_status_codes()
         else:
             self.set_colors_from_scalar(var)
-        self.current_contour_var = var
+        self.current_scalar_var = var
 
     colormap = (
         (-10, 0xf0, 0xeb, 0xc3),

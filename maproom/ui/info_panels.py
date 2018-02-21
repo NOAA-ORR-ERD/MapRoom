@@ -1508,7 +1508,7 @@ class DownloadStatusField(ExpandableErrorField):
         return c
 
 
-class ContourChoiceField(InfoField):
+class ScalarChoiceField(InfoField):
     same_line = True
 
     def get_variable_names(self, layer):
@@ -1517,7 +1517,7 @@ class ContourChoiceField(InfoField):
         return names
 
     def get_current_index(self, layer, names):
-        current = layer.current_contour_var
+        current = layer.current_scalar_var
         if current is None or current not in names:
             selected = 0
         else:
@@ -1545,7 +1545,7 @@ class ContourChoiceField(InfoField):
         self.change_variable(layer, var)
 
     def change_variable(self, layer, var):
-        layer.set_contour_var(var)
+        layer.set_scalar_var(var)
 
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
@@ -1682,7 +1682,7 @@ class InfoPanel(PANELTYPE):
         "Radius": WholeLinePropertyField,
         "Circumference": WholeLinePropertyField,
         "Area": WholeLinePropertyField,
-        "Contour value": ContourChoiceField,
+        "Scalar value": ScalarChoiceField,
     }
 
     def create_fields(self, layer, fields):
