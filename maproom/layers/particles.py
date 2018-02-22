@@ -20,6 +20,7 @@ from traits.api import Str
 from traits.api import Unicode
 
 from ..renderer import color_floats_to_int, linear_contour
+from ..library import colormap
 
 from folder import Folder
 from base import ProjectedLayer
@@ -348,18 +349,6 @@ class ParticleLayer(PointBaseLayer):
             self.set_colors_from_scalar(var)
         self.current_scalar_var = var
 
-    colormap = (
-        (-10, 0xf0, 0xeb, 0xc3),
-        (-0.01, 0xf0, 0xeb, 0xc3),
-        (0, 0xd6, 0xea, 0xeb),
-        (10, 0x9b, 0xd3, 0xe0),
-        (20, 0x54, 0xc0, 0xdc),
-        (30, 0x00, 0xa0, 0xcc),
-        (40, 0x00, 0x6a, 0xa4),
-        (50, 0x1f, 0x48, 0x8a),
-        (100, 0x00, 0x04, 0x69),
-    )
-
     def set_colors_from_scalar(self, var):
         if var not in self.scalar_vars:
             log.error("%s not in scalar data for layer %s" % (var, self))
@@ -368,27 +357,7 @@ class ParticleLayer(PointBaseLayer):
             return
         values = self.scalar_vars[var]
         print(var, values)
-        lo = float(min(values))
-        hi = float(max(values))
-        r = abs(hi - lo)
-        lo -= .1 * r
-        hi += .1 * r
-        width = abs(hi - lo)
-        if width == 0.0:
-            lo -= 1.0
-            hi += 1.0
-            width = 2.0
-        delta = width / (len(self.colormap) - 1)
-        print width, delta, len(self.colormap), delta * (len(self.colormap) - 1)
-        colormap = []
-        for i, c in enumerate(self.colormap):
-            v = lo + (delta * i)
-            print i, delta, width, v
-            _, r, g, b = c
-            colormap.append((v, r, g, b))
-        colors = linear_contour(values, colormap)
-        print(lo, hi, width, colormap)
-        print(colors)
+        colors = colormap.get_opengl_colors('Greens', values)
         self.points.color = colors
         self.manager.layer_contents_changed = self
         self.manager.refresh_needed = None
