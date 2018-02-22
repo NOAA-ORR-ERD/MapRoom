@@ -351,6 +351,7 @@ class Layer(HasTraits):
             raise
         log.debug("Restoring JSON data using %s" % name)
         method(json_data, batch_flags)
+        self.from_json_sanity_check_after_load(json_data)
         self.update_bounds()
         log.debug("Restored JSON data: %s" % self.debug_info())
 
@@ -381,6 +382,15 @@ class Layer(HasTraits):
                 batch_flags.messages.append("WARNING: %s" % message)
             except TypeError:
                 log.warning("Skipping from_json function %s", from_json)
+
+    def from_json_sanity_check_after_load(self, json_data):
+        """Fix up any errors or missing data after json unserialization
+
+        Subclasses can create missing metadata here if, say, loading an old
+        version of a save file which doesn't have all the data of a newer
+        version.
+        """
+        pass
 
     type_to_class_defs = {}
 

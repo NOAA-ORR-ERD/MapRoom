@@ -177,7 +177,9 @@ class ParticleLayer(PointBaseLayer):
 
     status_code_colors = Any
 
-    scalar_vars = Any
+    status_code_count = Any({})
+
+    scalar_vars = Any({})
 
     current_scalar_var = Any(None)
 
@@ -244,6 +246,17 @@ class ParticleLayer(PointBaseLayer):
         else:
             self.status_code_names = None
 
+    def status_code_count_to_json(self):
+        if self.status_code_count is not None:
+            return self.status_code_count.items()
+
+    def status_code_count_from_json(self, json_data):
+        jd = json_data['status_code_count']
+        if jd is not None:
+            self.status_code_count = dict(jd)
+        else:
+            self.status_code_count = {}
+
     def status_code_colors_to_json(self):
         if self.status_code_colors is not None:
             # force numbers to be python ints, not numpy. JSON can't serialize numpy
@@ -255,6 +268,34 @@ class ParticleLayer(PointBaseLayer):
             self.status_code_colors = dict(jd)
         else:
             self.status_code_colors = None
+
+    def scalar_vars_to_json(self):
+        return self.scalar_vars
+
+    def scalar_vars_from_json(self, json_data):
+        jd = json_data['scalar_vars']
+        if jd is not None:
+            self.scalar_vars = jd
+        else:
+            self.scalar_vars = None
+
+    def current_scalar_var_to_json(self):
+        return self.current_scalar_var
+
+    def current_scalar_var_from_json(self, json_data):
+        self.current_scalar_var = json_data['current_scalar_var']
+
+    def from_json_sanity_check_after_load(self, json_data):
+        if not self.status_code_count:
+            self.status_code_count = {}
+            for k, v in self.status_code_names.iteritems():
+                count = 0
+                if v.endswith(")") and "(" in v:
+                    _, text = v[:-1].rsplit("(", 1)
+                    count = int(text)
+                self.status_code_count[k] = count
+
+    #
 
     def layer_selected_hook(self):
         self.select_all_points(state.FLAGGED)
