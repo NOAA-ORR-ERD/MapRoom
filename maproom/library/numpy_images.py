@@ -49,6 +49,13 @@ def get_numpy_from_data(data):
     return arr
 
 
+def get_bitmap_from_numpy(array):
+    image = wx.Image(array.shape[1], array.shape[0])
+    image.SetData(array.tostring())
+    bmp = wx.Bitmap(image)
+    return bmp
+
+
 def get_rect(w, h):
     arr = np.empty((h, w, 4), np.uint8)
 
