@@ -12,6 +12,8 @@ import sliders
 import dialogs
 from ..layers import state, LayerStyle
 from ..library import coordinates
+from ..library import colormap
+from ..library.colormap.ui_combobox import ColormapComboBox
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import StyleChangeCommand, StatusCodeColorCommand, SetAnchorCommand, ChangeDepthCommand, MovePointsCommand, TextCommand, BorderWidthCommand
 from ..menu_commands import RenameLayerCommand
@@ -1548,6 +1550,26 @@ class ScalarChoiceField(InfoField):
         layer.set_scalar_var(var)
 
 
+class ColormapField(InfoField):
+    same_line = False
+
+    def fill_data(self, layer):
+        self.ctrl.set_selection_by_name(layer.colormap_name)
+
+    def create_control(self):
+        c = ColormapComboBox(self.parent, -1, "", size=(self.default_width, -1), style=wx.CB_READONLY, popup_width=300)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        name = self.ctrl.get_selected_name()
+        print(name)
+        layer.set_colormap(name)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
@@ -1683,6 +1705,7 @@ class InfoPanel(PANELTYPE):
         "Circumference": WholeLinePropertyField,
         "Area": WholeLinePropertyField,
         "Scalar value": ScalarChoiceField,
+        "Colormap": ColormapField,
     }
 
     def create_fields(self, layer, fields):

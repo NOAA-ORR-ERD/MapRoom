@@ -46,7 +46,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Outline color", "Status Code Color"]
 
     @property
     def scalar_var_names(self):
@@ -81,6 +81,15 @@ class ParticleFolder(Folder):
                     break
         else:
             current = None
+        return current
+
+    @property
+    def colormap_name(self):
+        children = self.get_particle_layers()
+        if children:
+            current = children[0].colormap_name
+        else:
+            current = ""
         return current
 
     @property
@@ -157,6 +166,11 @@ class ParticleFolder(Folder):
         children = self.get_particle_layers()
         for c in children:
             c.set_scalar_var(var)
+
+    def set_colormap(self, name):
+        children = self.get_particle_layers()
+        for c in children:
+            c.set_colormap(name)
 
 
 class ParticleLayer(PointBaseLayer):
@@ -370,11 +384,9 @@ class ParticleLayer(PointBaseLayer):
     def set_colors_from_scalar(self, var):
         if var not in self.scalar_vars:
             log.error("%s not in scalar data for layer %s" % (var, self))
-            print self.scalar_vars
             self.set_colors_from_status_codes()
             return
         values = self.scalar_vars[var]
-        print(var, values)
         try:
             colors = colormap.get_opengl_colors(self.colormap_name, values)
         except ValueError:
@@ -384,6 +396,10 @@ class ParticleLayer(PointBaseLayer):
         self.points.color = colors
         self.manager.layer_contents_changed = self
         self.manager.refresh_needed = None
+
+    def set_colormap(self, name):
+        self.colormap_name = name
+        self.set_colors_from_scalar(self.current_scalar_var)
 
     def get_selected_particle_layers(self, project):
         return [self]
