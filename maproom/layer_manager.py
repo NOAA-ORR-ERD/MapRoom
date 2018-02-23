@@ -1238,7 +1238,7 @@ class LayerManager(BaseDocument):
                         try:
                             text = json.dumps(data, indent=4)
                         except Exception, e:
-                            log.error("JSON failure, layer %s: data=%s" % (layer.name, repr(data)))
+                            log.error("JSON failure %s, layer %s: data=%s" % (e, layer.name, repr(data)))
                             errors = []
                             for k, v in data.iteritems():
                                 small = {k: v}

@@ -273,12 +273,22 @@ class ParticleLayer(PointBaseLayer):
             self.status_code_colors = None
 
     def scalar_vars_to_json(self):
-        return self.scalar_vars
+        d = []  # transform since numpy values can't be directly serialized
+        for name, values in self.scalar_vars.iteritems():
+            v = [name, str(values.dtype)]
+            v.extend(values.tolist())
+            d.append(v)
+        return d
 
     def scalar_vars_from_json(self, json_data):
         jd = json_data['scalar_vars']
         if jd is not None:
-            self.scalar_vars = jd
+            self.scalar_vars = {}
+            for item in jd:
+                name = item[0]
+                dtype = item[1]
+                values = item[2:]
+                self.scalar_vars[name] = np.asarray(values, dtype=dtype)
         else:
             self.scalar_vars = None
 
