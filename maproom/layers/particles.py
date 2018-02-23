@@ -184,6 +184,8 @@ class ParticleLayer(PointBaseLayer):
 
     current_scalar_var = Any(None)
 
+    colormap_name = Str
+
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_color_map = {
         7: color_floats_to_int(1.0, 0, 1.0, 1.0),  # off maps
@@ -286,6 +288,12 @@ class ParticleLayer(PointBaseLayer):
     def current_scalar_var_from_json(self, json_data):
         self.current_scalar_var = json_data['current_scalar_var']
 
+    def colormap_name_to_json(self):
+        return self.colormap_name
+
+    def colormap_name_from_json(self, json_data):
+        self.colormap_name = json_data['colormap_name']
+
     def from_json_sanity_check_after_load(self, json_data):
         if not self.status_code_count:
             self.status_code_count = {}
@@ -357,7 +365,12 @@ class ParticleLayer(PointBaseLayer):
             return
         values = self.scalar_vars[var]
         print(var, values)
-        colors = colormap.get_opengl_colors('Greens', values)
+        try:
+            colors = colormap.get_opengl_colors(self.colormap_name, values)
+        except ValueError:
+            prefs = self.manager.project.task.preferences
+            self.colormap_name = prefs.colormap_name
+            colors = colormap.get_opengl_colors(self.colormap_name, values)
         self.points.color = colors
         self.manager.layer_contents_changed = self
         self.manager.refresh_needed = None

@@ -62,6 +62,8 @@ class MaproomPreferences(FrameworkPreferences):
 
     bsb_directory = Directory("")
 
+    colormap_name = Str("gist_heat")
+
     def _download_directory_default(self):
       path = os.path.join(self.application.user_data_dir, "Downloads")
       if not os.path.exists(path):

@@ -13,6 +13,16 @@ def create_scaled_colormap(name, vmin, vmax):
     mapping = scale(norm=norm, cmap=scm)
     return mapping
 
+def get_rgb_colors(name, values, extra_padding=0.1):
+    lo = float(min(values))
+    hi = float(max(values))
+    delta = abs(hi - lo)
+    lo -= .1 * delta
+    hi += .1 * delta
+    mapping = create_scaled_colormap(name, lo, hi)
+    values = mapping.to_rgba(values, bytes=True)
+    return values[:,0:3]
+
 def get_opengl_colors(name, values, extra_padding=0.1):
     lo = float(min(values))
     hi = float(max(values))
