@@ -619,6 +619,31 @@ class FloatSliderField(InfoField):
         pass
 
 
+class XPercentageField(FloatSliderField):
+    def get_value(self, layer):
+        return layer.x_percentage
+
+    def set_value(self, layer, val):
+        layer.x_percentage = val
+
+    def slider_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        c = self.ctrl
+        val = int(c.GetValue()) / 100.0
+        self.set_value(layer, val)
+        layer.manager.layer_contents_changed = layer
+        layer.manager.refresh_needed = None
+
+class YPercentageField(XPercentageField):
+    def get_value(self, layer):
+        return layer.y_percentage
+
+    def set_value(self, layer, val):
+        layer.y_percentage = val
+
+
 class TransparencyField(FloatSliderField):
     # Objects use the line alpha value as the object tranparency
     def get_layer_color(self, layer):
@@ -1706,6 +1731,8 @@ class InfoPanel(PANELTYPE):
         "Area": WholeLinePropertyField,
         "Scalar value": ScalarChoiceField,
         "Colormap": ColormapField,
+        "X location": XPercentageField,
+        "Y location": YPercentageField,
     }
 
     def create_fields(self, layer, fields):

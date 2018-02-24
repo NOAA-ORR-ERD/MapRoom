@@ -3,7 +3,7 @@ import math
 import bisect
 
 # Enthought library imports.
-from traits.api import Unicode, Str
+from traits.api import Unicode, Str, Float
 
 from ..library import rect
 from ..library.coordinates import haversine_at_const_lat, km_to_string, ft_to_string
@@ -23,9 +23,15 @@ class Scale(ScreenLayer):
 
     type = Str("scale")
 
-    skip_on_insert = True
+    x_percentage = Float(0.0)
+
+    y_percentage = Float(0.0)
 
     # class attributes
+
+    layer_info_panel = ["X location", "Y location"]
+
+    skip_on_insert = True
 
     bounded = False
 
@@ -51,6 +57,18 @@ class Scale(ScreenLayer):
     x_offset = 10
     y_offset = 20
 
+    def x_percentage_to_json(self):
+        return self.x_percentage
+
+    def x_percentage_from_json(self, json_data):
+        self.x_percentage = json_data['x_percentage']
+
+    def y_percentage_to_json(self):
+        return self.y_percentage
+
+    def y_percentage_from_json(self, json_data):
+        self.y_percentage = json_data['y_percentage']
+
     def get_visibility_dict(self):
         prefs = self.manager.project.task.preferences
         d = dict()
@@ -75,19 +93,23 @@ class Scale(ScreenLayer):
         log.log(5, "Rendering scale!!! pick=%s" % (picker))
         self.resize(renderer, w_r, s_r)
 
-        x = s_r[0][0] + self.x_offset
-        y = s_r[1][1] - self.y_offset
-
-        s = km_to_string(self.km_length)
-        length = self.km_length / self.km_per_pixel
+        km_label = km_to_string(self.km_length)
+        km_length = self.km_length / self.km_per_pixel
         # print "km_length", self.km_length, "length", length
-        size = renderer.get_drawn_string_dimensions(s)
-        renderer.draw_screen_lines([(x, y - self.tick_length), (x, y), (x + self.tick_spacing + length, y), (x + self.tick_spacing + length, y - self.tick_length)], width=self.line_width)
-        renderer.draw_screen_string((x + self.tick_spacing, y - size[1] - 1), s)
 
-        s = ft_to_string(self.ft_length)
-        length = self.ft_length / self.ft_per_pixel
+        ft_label = ft_to_string(self.ft_length)
+        ft_length = self.ft_length / self.ft_per_pixel
         # print "ft_length", self.ft_length, "length", length
-        size = renderer.get_drawn_string_dimensions(s)
-        renderer.draw_screen_lines([(x, y + self.tick_length), (x, y), (x + self.tick_spacing + length, y), (x + self.tick_spacing + length, y + self.tick_length)], width=self.line_width)
-        renderer.draw_screen_string((x + self.tick_spacing, y + 1), s)
+
+        w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - max(km_length, ft_length)
+        h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset
+
+        x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
+        y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
+
+        size = renderer.get_drawn_string_dimensions(km_label)
+        renderer.draw_screen_lines([(x, y - self.tick_length), (x, y), (x + self.tick_spacing + km_length, y), (x + self.tick_spacing + km_length, y - self.tick_length)], width=self.line_width)
+        renderer.draw_screen_string((x + self.tick_spacing, y - size[1] - 1), km_label)
+        size = renderer.get_drawn_string_dimensions(ft_label)
+        renderer.draw_screen_lines([(x, y + self.tick_length), (x, y), (x + self.tick_spacing + ft_length, y), (x + self.tick_spacing + ft_length, y + self.tick_length)], width=self.line_width)
+        renderer.draw_screen_string((x + self.tick_spacing, y + 1), ft_label)
