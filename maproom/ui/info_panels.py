@@ -608,6 +608,16 @@ class FloatSliderField(InfoField):
     def get_params(self):
         return 0, 100, 100
 
+    def normalize(self, val):
+        minval, maxval, steps = self.get_params()
+        norm = (val - minval) / float(maxval - minval)
+        return norm
+
+    def scale(self, norm):
+        minval, maxval, steps = self.get_params()
+        scaled = norm * (maxval - minval) + minval
+        return scaled
+
     def create_control(self):
         minval, maxval, steps = self.get_params()
         c = sliders.TextSlider(self.parent, -1, minval, minval, maxval, steps)
@@ -621,27 +631,26 @@ class FloatSliderField(InfoField):
 
 class XPercentageField(FloatSliderField):
     def get_value(self, layer):
-        return layer.x_percentage
+        return self.scale(layer.x_percentage)
 
     def set_value(self, layer, val):
-        layer.x_percentage = val
+        layer.x_percentage = self.normalize(val)
 
     def slider_changed(self, event):
         layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
         c = self.ctrl
-        val = int(c.GetValue()) / 100.0
-        self.set_value(layer, val)
+        self.set_value(layer, c.GetValue())
         layer.manager.layer_contents_changed = layer
         layer.manager.refresh_needed = None
 
 class YPercentageField(XPercentageField):
     def get_value(self, layer):
-        return layer.y_percentage
+        return self.scale(layer.y_percentage)
 
     def set_value(self, layer, val):
-        layer.y_percentage = val
+        layer.y_percentage = self.normalize(val)
 
 
 class TransparencyField(FloatSliderField):
