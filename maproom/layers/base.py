@@ -379,7 +379,7 @@ class Layer(HasTraits):
             except KeyError:
                 message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
                 log.warning(message)
-                batch_flags.messages.append("WARNING: %s" % message)
+                #batch_flags.messages.append("WARNING: %s" % message)
             except TypeError:
                 log.warning("Skipping from_json function %s", from_json)
 
