@@ -653,6 +653,17 @@ class YPercentageField(XPercentageField):
         layer.y_percentage = self.normalize(val)
 
 
+class PointSizeField(XPercentageField):
+    def get_params(self):
+        return 1, 16, 15
+
+    def get_value(self, layer):
+        return layer.point_size
+
+    def set_value(self, layer, val):
+        layer.point_size = val
+
+
 class TransparencyField(FloatSliderField):
     # Objects use the line alpha value as the object tranparency
     def get_layer_color(self, layer):
@@ -1742,6 +1753,7 @@ class InfoPanel(PANELTYPE):
         "Colormap": ColormapField,
         "X location": XPercentageField,
         "Y location": YPercentageField,
+        "Point size": PointSizeField,
     }
 
     def create_fields(self, layer, fields):

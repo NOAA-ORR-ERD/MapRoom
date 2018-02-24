@@ -81,12 +81,6 @@ class Layer(HasTraits):
 
     style = Any
 
-    point_size = Float(4.0)
-
-    selected_point_size = Float(15.0)
-
-    selected_line_width = Float(10.0)
-
     bounds = Any(rect.NONE_RECT)
 
     grouped = Bool

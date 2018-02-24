@@ -46,7 +46,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Point size", "Outline color", "Status Code Color"]
 
     @property
     def scalar_var_names(self):
@@ -102,6 +102,20 @@ class ParticleFolder(Folder):
     @property
     def status_code_count(self):
         return {name:1 for name in self.status_code_names}
+
+    @property
+    def point_size(self):
+        children = self.get_particle_layers()
+        sizes = set()
+        for c in children:
+            sizes.add(c.point_size)
+        return max(sizes)
+
+    @point_size.setter
+    def point_size(self, size):
+        children = self.get_particle_layers()
+        for c in children:
+            c.point_size = size
 
     def start_index_to_json(self):
         return self.start_index
@@ -182,7 +196,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = Str("particle")
 
-    layer_info_panel = ["Scalar value", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Scalar value", "Point size", "Outline color", "Status Code Color"]
 
     pickable = True  # this is a layer that supports picking
 

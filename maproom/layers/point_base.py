@@ -8,6 +8,7 @@ import numpy as np
 from traits.api import Any
 from traits.api import Str
 from traits.api import Unicode
+from traits.api import Float
 
 from ..library import rect
 from ..library.depth_utils import convert_units
@@ -31,6 +32,12 @@ class PointBaseLayer(ProjectedLayer):
     type = Str("base_point")
 
     points = Any
+
+    point_size = Float(4.0)
+
+    selected_point_size = Float(15.0)
+
+    selected_line_width = Float(10.0)
 
     visibility_items = ["points"]
 
@@ -145,6 +152,12 @@ class PointBaseLayer(ProjectedLayer):
             self.points = np.array([tuple(i) for i in jd], data_types.POINT_DTYPE).view(np.recarray)
         else:
             self.points = jd
+
+    def point_size_to_json(self):
+        return self.point_size
+
+    def point_size_from_json(self, json_data):
+        self.point_size = json_data.get('point_size', 4.0)
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         if (self.points is not None and len(self.points) > 0):
