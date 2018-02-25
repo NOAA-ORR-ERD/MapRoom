@@ -13,22 +13,26 @@ def create_scaled_colormap(name, vmin, vmax):
     mapping = scale(norm=norm, cmap=scm)
     return mapping
 
-def get_rgb_colors(name, values, extra_padding=0.1):
-    lo = float(min(values))
-    hi = float(max(values))
+def get_rgb_colors(name, values, lo=None, hi=None, extra_padding=0.1):
+    if lo is None:
+        lo = float(min(values))
+    if hi is None:
+        hi = float(max(values))
     delta = abs(hi - lo)
-    lo -= .1 * delta
-    hi += .1 * delta
+    lo -= extra_padding * delta
+    hi += extra_padding * delta
     mapping = create_scaled_colormap(name, lo, hi)
     values = mapping.to_rgba(values, bytes=True)
     return values[:,0:3]
 
-def get_opengl_colors(name, values, extra_padding=0.1):
-    lo = float(min(values))
-    hi = float(max(values))
+def get_opengl_colors(name, values, lo=None, hi=None, extra_padding=0.1):
+    if lo is None:
+        lo = float(min(values))
+    if hi is None:
+        hi = float(max(values))
     delta = abs(hi - lo)
-    lo -= .1 * delta
-    hi += .1 * delta
+    lo -= extra_padding * delta
+    hi += extra_padding * delta
     mapping = create_scaled_colormap(name, lo, hi)
     byte_values = mapping.to_rgba(values, bytes=True)
     return np.array(byte_values).view(np.uint32)[:,0]

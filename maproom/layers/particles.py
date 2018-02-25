@@ -210,6 +210,8 @@ class ParticleLayer(PointBaseLayer):
 
     scalar_vars = Any({})
 
+    scalar_min_max = Any({})
+
     current_scalar_var = Any(None)
 
     colormap_name = Str
@@ -320,6 +322,12 @@ class ParticleLayer(PointBaseLayer):
         else:
             self.scalar_vars = None
 
+    def scalar_min_max_to_json(self):
+        return self.scalar_min_max
+
+    def scalar_min_max_from_json(self, json_data):
+        self.scalar_min_max = json_data['scalar_min_max']
+
     def current_scalar_var_to_json(self):
         return self.current_scalar_var
 
@@ -401,12 +409,13 @@ class ParticleLayer(PointBaseLayer):
             self.set_colors_from_status_codes()
             return
         values = self.scalar_vars[var]
+        lo, hi = self.scalar_min_max[var]
         try:
-            colors = colormap.get_opengl_colors(self.colormap_name, values)
+            colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
         except ValueError:
             prefs = self.manager.project.task.preferences
             self.colormap_name = prefs.colormap_name
-            colors = colormap.get_opengl_colors(self.colormap_name, values)
+            colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
         self.points.color = colors
         self.manager.layer_contents_changed = self
         self.manager.refresh_needed = None

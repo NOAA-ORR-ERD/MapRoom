@@ -88,6 +88,7 @@ class nc_particles_file_loader():
             status_codes = np.delete(status_codes, bogus[0], 0)
 
         scalar_vars = {}
+        scalar_min_max = {}
         data = self.reader.get_timestep(self.current_timestep, variables=self.reader.variables)
         for var in self.reader.variables:
             if var in data:
@@ -95,6 +96,7 @@ class nc_particles_file_loader():
                 print "timestep %d:" % self.current_timestep, var, d.dtype, d.shape
                 if len(d.shape) == 1:
                     scalar_vars[var] = d.copy()
+                    scalar_min_max[var] = (min(d), max(d))
             else:
                 log.warning("%s not present in timestep %d" % (var, self.current_timestep))
 
@@ -103,7 +105,7 @@ class nc_particles_file_loader():
 
         self.current_timestep += 1
 
-        return (points, status_codes, self.status_code_map, timecode, warning, scalar_vars)
+        return (points, status_codes, self.status_code_map, timecode, warning, scalar_vars, scalar_min_max)
 
 
 class ParticleLoader(BaseLayerLoader):
@@ -134,8 +136,9 @@ class ParticleLoader(BaseLayerLoader):
 
         warnings = []
         layers = []
+        folder_min_max = {}
         # loop through all the time steps in the file.
-        for (points, status_codes, code_map, timecode, warning, scalar_vars) in nc_particles_file_loader(metadata.uri):
+        for (points, status_codes, code_map, timecode, warning, scalar_vars, scalar_min_max) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
@@ -148,6 +151,17 @@ class ParticleLoader(BaseLayerLoader):
             if warning:
                 layer.load_warning_details = warning[1]
                 warnings.append("%s %s" % (layer.name, warning[0]))
+
+            # compute scalar vars min and max as we go through the list of
+            # layers
+            for k, v in scalar_min_max.iteritems():
+                lo, hi = v
+                if k in folder_min_max:
+                    flo, fhi = folder_min_max[k]
+                    folder_min_max[k] = (float(min(lo, flo)), float(max(hi, fhi)))
+                else:
+                    folder_min_max[k] = (float(lo), float(hi))
+
         progress_log.info("Finished loading %s" % metadata.uri)
         layers.reverse()
 
@@ -159,6 +173,12 @@ class ParticleLoader(BaseLayerLoader):
             end_time = layer.start_time
 
         for layer in layers:
+            # now we can tell the layer what the overall min/max are because
+            # we've seen all the layers. Note that all layers will point to the
+            # same min/max dictionary, so updating the min/max values will
+            # affect all layers. Which is what we want.
+            layer.scalar_min_max = folder_min_max
+
             print(layer)
 
         layers[0:0] = [parent]
