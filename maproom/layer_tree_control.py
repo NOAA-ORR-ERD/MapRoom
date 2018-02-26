@@ -14,7 +14,6 @@ log = logging.getLogger(__name__)
 class IndexableTree(treectrl.CustomTreeCtrl):
     def get_item_by_indexes(self, *args):
         args = list(args)  # copy since it could be an iterator or unmodifiable
-        print(args)
         if args[0] > 0:
             raise IndexError("Invalid root index")
         parent = self.GetRootItem()

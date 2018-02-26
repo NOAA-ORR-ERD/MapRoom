@@ -545,7 +545,6 @@ class FlaggedPointPanel(wx.ListBox):
         point_index = self.point_indexes[index]
         editor = self.task.active_editor
         layer = editor.layer_tree_control.get_edit_layer()
-        print point_index, layer
         editor.layer_canvas.do_center_on_point_index(layer, point_index)
 
     def set_flagged(self, point_indexes):

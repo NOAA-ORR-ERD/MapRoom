@@ -1611,7 +1611,6 @@ class ColormapField(InfoField):
         if (layer is None):
             return
         name = self.ctrl.get_selected_name()
-        print(name)
         layer.set_colormap(name)
 
 

@@ -592,7 +592,7 @@ class EllipseVectorObject(RectangleVectorObject):
         if True:
             return
         # rotated ellipse bbox from http://stackoverflow.com/questions/87734/how-do-you-calculate-the-axis-aligned-bounding-box-of-an-ellipse
-        print self.initial_rotation, self.rotation
+        log.debug((self.initial_rotation, self.rotation))
         phi = self.rotation * np.pi / 180.0
         sx, sy = self.get_semimajor_axes(self.points)
         ux = sx * math.cos(phi)

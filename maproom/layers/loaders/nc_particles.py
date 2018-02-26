@@ -82,7 +82,6 @@ class nc_particles_file_loader():
             short = "(Timestep %d) # points: %d" % (self.current_timestep + 1, len(bogus[0]))
             details = "%d spurious values in timestep %d\nindexes: %s" % (len(bogus[0]), self.current_timestep + 1, str(bogus[0]))
             warning = (short, details)
-            print bogus[0], points[bogus[0]]
 
             points = np.delete(points, bogus[0], 0)
             status_codes = np.delete(status_codes, bogus[0], 0)
@@ -93,7 +92,7 @@ class nc_particles_file_loader():
         for var in self.reader.variables:
             if var in data:
                 d = data[var]
-                print "timestep %d:" % self.current_timestep, var, d.dtype, d.shape
+                log.debug("timestep %d: %s" % (self.current_timestep, (var, d.dtype, d.shape)))
                 if len(d.shape) == 1:
                     scalar_vars[var] = d.copy()
                     scalar_min_max[var] = (min(d), max(d))
@@ -178,8 +177,6 @@ class ParticleLoader(BaseLayerLoader):
             # same min/max dictionary, so updating the min/max values will
             # affect all layers. Which is what we want.
             layer.scalar_min_max = folder_min_max
-
-            print(layer)
 
         layers[0:0] = [parent]
         if warnings:
