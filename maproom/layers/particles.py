@@ -404,19 +404,19 @@ class ParticleLayer(PointBaseLayer):
         self.current_scalar_var = var
 
     def set_colors_from_scalar(self, var):
-        if var not in self.scalar_vars:
+        if var in self.scalar_vars:
+            values = self.scalar_vars[var]
+            lo, hi = self.scalar_min_max[var]
+            try:
+                colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
+            except ValueError:
+                prefs = self.manager.project.task.preferences
+                self.colormap_name = prefs.colormap_name
+                colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
+            self.points.color = colors
+        else:
             log.error("%s not in scalar data for layer %s" % (var, self))
             self.set_colors_from_status_codes()
-            return
-        values = self.scalar_vars[var]
-        lo, hi = self.scalar_min_max[var]
-        try:
-            colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
-        except ValueError:
-            prefs = self.manager.project.task.preferences
-            self.colormap_name = prefs.colormap_name
-            colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
-        self.points.color = colors
         self.manager.layer_contents_changed = self
         self.manager.refresh_needed = None
 
