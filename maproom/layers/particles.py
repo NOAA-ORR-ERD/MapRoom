@@ -15,7 +15,7 @@ import numpy as np
 import wx
 
 from traits.api import Any
-from traits.api import Int
+from traits.api import Int, Float
 from traits.api import Str
 from traits.api import Unicode
 
@@ -46,7 +46,19 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Point size", "Outline color", "Status Code Color"]
+    x_percentage = Float(1.0)
+
+    y_percentage = Float(0.0)
+
+    legend_pixel_width = Int(20)
+
+    legend_pixel_height = Int(300)
+
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Point size", "Outline color", "Status Code Color", "X location", "Y location"]
+
+    x_offset = 20
+
+    y_offset = 20
 
     @property
     def scalar_var_names(self):
@@ -185,6 +197,26 @@ class ParticleFolder(Folder):
         children = self.get_particle_layers()
         for c in children:
             c.set_colormap(name)
+
+    @property
+    def is_renderable(self):
+        return True
+
+    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        if picker.is_active:
+            return
+        log.log(5, "Rendering legend!!! pick=%s" % (picker))
+
+        if self.current_scalar_var is not None:
+            w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - self.legend_pixel_width
+            h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset - self.legend_pixel_height
+
+            x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
+            y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
+
+            r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
+            colors = colormap.calc_opengl_texture(self.colormap_name)
+            renderer.draw_screen_textured_rect(r, colors)
 
 
 class ParticleLayer(PointBaseLayer):
@@ -397,10 +429,7 @@ class ParticleLayer(PointBaseLayer):
         self.points.color = colors
 
     def set_scalar_var(self, var):
-        if var is None:
-            self.set_colors_from_status_codes()
-        else:
-            self.set_colors_from_scalar(var)
+        var = self.set_colors_from_scalar(var)
         self.current_scalar_var = var
 
     def set_colors_from_scalar(self, var):
@@ -417,8 +446,10 @@ class ParticleLayer(PointBaseLayer):
         else:
             log.error("%s not in scalar data for layer %s" % (var, self))
             self.set_colors_from_status_codes()
+            var = None
         self.manager.layer_contents_changed = self
         self.manager.refresh_needed = None
+        return var
 
     def set_colormap(self, name):
         self.colormap_name = name

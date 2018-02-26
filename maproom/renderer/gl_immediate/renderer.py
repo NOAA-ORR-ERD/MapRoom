@@ -662,6 +662,64 @@ class ImmediateModeRenderer():
         gl.glColor(1.0, 1.0, 1.0, 1.0)
         gl.glEnable(gl.GL_TEXTURE_2D)
 
+    def calc_legend_texture(self, legend):
+        width = legend.shape[0]
+        height = legend.shape[1]
+
+        texture = gl.glGenTextures(1)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, texture)
+        gl.glTexImage2D(
+            gl.GL_TEXTURE_2D,
+            0,
+            gl.GL_RGB,
+            width,
+            height,
+            0,
+            gl.GL_RGBA,
+            gl.GL_UNSIGNED_BYTE,
+            legend.tostring(),
+        )
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+
+        # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
+
+        return texture
+
+    def draw_screen_textured_rect(self, r, texture_array):
+        # Note: differs from draw_screen_rect in that the y values are not
+        # flipped -- you are drawing with OpenGL coords ==> y = 0 is at the
+        # bottom
+        c = self.canvas
+
+        gl.glEnable(gl.GL_TEXTURE_2D)
+        t = self.calc_legend_texture(texture_array)
+        gl.glColor(1.0, 1.0, 1.0, 1.0)
+        gl.glBegin(gl.GL_QUADS)
+        gl.glTexCoord(0, 1)
+        gl.glVertex(r[0][0], r[0][1], 0)
+        gl.glTexCoord(1, 1)
+        gl.glVertex(r[1][0], r[0][1], 0)
+        gl.glTexCoord(1, 0)
+        gl.glVertex(r[1][0], r[1][1], 0)
+        gl.glTexCoord(0, 0)
+        gl.glVertex(r[0][0], r[1][1], 0)
+        gl.glEnd()
+        gl.glColor(0.0, 0.0, 0.0, 1.0)
+        gl.glDisable(gl.GL_TEXTURE_2D)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+        gl.glDeleteTextures([t])
+
+        # Outline the texture box
+        gl.glBegin(gl.GL_LINE_LOOP)
+        gl.glVertex(r[0][0], r[0][1], 0)
+        gl.glVertex(r[1][0], r[0][1], 0)
+        gl.glVertex(r[1][0], r[1][1], 0)
+        gl.glVertex(r[0][0], r[1][1], 0)
+        gl.glEnd()
+
     def get_drawn_string_dimensions(self, text):
         c = self.canvas
         width = 0

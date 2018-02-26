@@ -39,3 +39,11 @@ def get_opengl_colors(name, values, lo=None, hi=None, extra_padding=0.1):
 
 def list_colormaps():
     return sorted(cm.cmap_d.keys())
+
+def calc_opengl_texture(name, length=256, width=1, alpha=0.5):
+    line = np.arange(length, dtype=np.float32) / (length - 1)
+    colors = get_rgb_colors(name, line)
+    array = np.empty((width, length, 4), dtype='uint8')
+    array[:,:,0:3] = colors
+    array[:,:,3] = alpha
+    return array
