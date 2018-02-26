@@ -80,9 +80,12 @@ class LoadLayersCommand(Command):
 
         if undo.flags.success:
             lm.add_layers(layers, False, editor)
+            first = True
             for layer in layers:
                 lf = undo.flags.add_layer_flags(layer)
-                lf.select_layer = True
+                if first:
+                    lf.select_layer = True
+                    first = False
                 lf.layer_loaded = True
 
             undo.flags.layers_changed = True

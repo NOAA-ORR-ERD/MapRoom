@@ -829,6 +829,7 @@ class LayerManager(BaseDocument):
         return layer
 
     def add_layers(self, layers, is_project, editor):
+        layers = layers[:]  # work on copy so we don't mess up the caller's list
         parent = None
         if is_project:
             # remove all other layers so the project can be inserted in the
