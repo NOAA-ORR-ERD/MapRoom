@@ -688,24 +688,26 @@ class ImmediateModeRenderer():
 
         return texture
 
-    def draw_screen_textured_rect(self, r, texture_array):
+    def draw_screen_textured_rect(self, r, texture_array, labels, tick_length=4, label_spacing=4, line_width=1):
         # Note: differs from draw_screen_rect in that the y values are not
         # flipped -- you are drawing with OpenGL coords ==> y = 0 is at the
         # bottom
-        c = self.canvas
+
+        (x1, y1), (x2, y2) = r
+        h = y2 - y1
 
         gl.glEnable(gl.GL_TEXTURE_2D)
         t = self.calc_legend_texture(texture_array)
         gl.glColor(1.0, 1.0, 1.0, 1.0)
         gl.glBegin(gl.GL_QUADS)
         gl.glTexCoord(0, 1)
-        gl.glVertex(r[0][0], r[0][1], 0)
+        gl.glVertex(x1, y1)
         gl.glTexCoord(1, 1)
-        gl.glVertex(r[1][0], r[0][1], 0)
+        gl.glVertex(x2, y1)
         gl.glTexCoord(1, 0)
-        gl.glVertex(r[1][0], r[1][1], 0)
+        gl.glVertex(x2, y2)
         gl.glTexCoord(0, 0)
-        gl.glVertex(r[0][0], r[1][1], 0)
+        gl.glVertex(x1, y2)
         gl.glEnd()
         gl.glColor(0.0, 0.0, 0.0, 1.0)
         gl.glDisable(gl.GL_TEXTURE_2D)
@@ -713,12 +715,30 @@ class ImmediateModeRenderer():
         gl.glDeleteTextures([t])
 
         # Outline the texture box
+        gl.glDisable(gl.GL_LINE_SMOOTH)
+        gl.glLineWidth(line_width)
         gl.glBegin(gl.GL_LINE_LOOP)
-        gl.glVertex(r[0][0], r[0][1], 0)
-        gl.glVertex(r[1][0], r[0][1], 0)
-        gl.glVertex(r[1][0], r[1][1], 0)
-        gl.glVertex(r[0][0], r[1][1], 0)
+        gl.glVertex(x1, y1)
+        gl.glVertex(x2, y1)
+        gl.glVertex(x2, y2)
+        gl.glVertex(x1, y2)
         gl.glEnd()
+
+        # Draw ticks
+        tick_x = x2
+        gl.glBegin(gl.GL_LINES)
+        for perc, text, _, _ in labels:
+            y = y2 - perc * h
+            gl.glVertex(tick_x, y)
+            gl.glVertex(tick_x + tick_length, y)
+        gl.glEnd()
+
+        # Draw labels
+        label_x = tick_x + tick_length + label_spacing
+        for perc, text, lw, lh in labels:
+            # label centered vertically on tick
+            y = y2 - perc * h + (lh / 2)
+            self.draw_screen_string((label_x, y), text, False)
 
     def get_drawn_string_dimensions(self, text):
         c = self.canvas
@@ -733,14 +753,15 @@ class ImmediateModeRenderer():
 
         return (width, height)
 
-    def draw_screen_string(self, point, text):
+    def draw_screen_string(self, point, text, flip=True):
         # fixme: Is this is the right place?
         # fixme: This should be done with shaders anyway.
         # fixme:  if not shaders, Cython could help a lot, too
 
         c = self.canvas
-        # flip y to treat point as normal screen coordinates
-        point = (point[0], rect.height(c.screen_rect) - point[1])
+        if flip:
+            # flip y to treat point as normal screen coordinates
+            point = (point[0], rect.height(c.screen_rect) - point[1])
 
         str_len, tex_id = c.prepare_string_texture(point[0], point[1], text)
 

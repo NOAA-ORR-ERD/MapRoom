@@ -20,7 +20,7 @@ from traits.api import Str
 from traits.api import Unicode
 
 from ..renderer import color_floats_to_int, linear_contour
-from ..library import colormap
+from ..library import colormap, math_utils
 
 from folder import Folder
 from base import ProjectedLayer
@@ -54,6 +54,10 @@ class ParticleFolder(Folder):
 
     legend_pixel_height = Int(300)
 
+    tick_pixel_width = Int(4)
+
+    tick_label_pixel_spacing = Int(4)
+
     layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Point size", "Outline color", "Status Code Color", "X location", "Y location"]
 
     x_offset = 20
@@ -83,14 +87,19 @@ class ParticleFolder(Folder):
         return summary_names
 
     @property
+    def current_min_max(self):
+        children = self.get_particle_layers()
+        if children:
+            current = children[0].current_min_max
+        else:
+            current = None
+        return current
+
+    @property
     def current_scalar_var(self):
         children = self.get_particle_layers()
         if children:
             current = children[0].current_scalar_var
-            for c in children:
-                if c.current_scalar_var != current:
-                    current = None
-                    break
         else:
             current = None
         return current
@@ -140,6 +149,30 @@ class ParticleFolder(Folder):
 
     def end_index_from_json(self, json_data):
         self.end_index = json_data['end_index']
+
+    def x_percentage_to_json(self):
+        return self.x_percentage
+
+    def x_percentage_from_json(self, json_data):
+        self.x_percentage = json_data['x_percentage']
+
+    def y_percentage_to_json(self):
+        return self.y_percentage
+
+    def y_percentage_from_json(self, json_data):
+        self.y_percentage = json_data['y_percentage']
+
+    def legend_pixel_width_to_json(self):
+        return self.legend_pixel_width
+
+    def legend_pixel_width_from_json(self, json_data):
+        self.legend_pixel_width = json_data['legend_pixel_width']
+
+    def legend_pixel_height_to_json(self):
+        return self.legend_pixel_height
+
+    def legend_pixel_height_from_json(self, json_data):
+        self.legend_pixel_height = json_data['legend_pixel_height']
 
     def get_particle_layers(self):
         timesteps = []
@@ -208,7 +241,20 @@ class ParticleFolder(Folder):
         log.log(5, "Rendering legend!!! pick=%s" % (picker))
 
         if self.current_scalar_var is not None:
-            w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - self.legend_pixel_width
+            if self.current_min_max == None:
+                labels1 = []
+            else:
+                labels1 = math_utils.calc_labels(*self.current_min_max)
+
+            label_width = 0
+            labels2 = []
+            for perc, text in labels1:
+                w, h = renderer.get_drawn_string_dimensions(text)
+                labels2.append((perc, text, w, h))
+                label_width = max(label_width, w)
+            label_width += self.tick_label_pixel_spacing
+
+            w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - self.legend_pixel_width - label_width
             h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset - self.legend_pixel_height
 
             x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
@@ -216,7 +262,7 @@ class ParticleFolder(Folder):
 
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
             colors = colormap.calc_opengl_texture(self.colormap_name)
-            renderer.draw_screen_textured_rect(r, colors)
+            renderer.draw_screen_textured_rect(r, colors, labels2, self.tick_pixel_width, self.tick_label_pixel_spacing)
 
 
 class ParticleLayer(PointBaseLayer):
@@ -243,6 +289,8 @@ class ParticleLayer(PointBaseLayer):
     scalar_vars = Any({})
 
     scalar_min_max = Any({})
+
+    current_min_max = Any(None)
 
     current_scalar_var = Any(None)
 
@@ -366,6 +414,12 @@ class ParticleLayer(PointBaseLayer):
     def current_scalar_var_from_json(self, json_data):
         self.current_scalar_var = json_data['current_scalar_var']
 
+    def current_min_max_to_json(self):
+        return self.current_min_max
+
+    def current_min_max_from_json(self, json_data):
+        self.current_min_max = json_data['current_min_max']
+
     def colormap_name_to_json(self):
         return self.colormap_name
 
@@ -436,6 +490,7 @@ class ParticleLayer(PointBaseLayer):
         if var in self.scalar_vars:
             values = self.scalar_vars[var]
             lo, hi = self.scalar_min_max[var]
+            self.current_min_max = lo, hi
             try:
                 colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
             except ValueError:
