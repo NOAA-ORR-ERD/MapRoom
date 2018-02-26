@@ -644,11 +644,12 @@ class ImmediateModeRenderer():
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
-    def draw_screen_rect(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0):
+    def draw_screen_rect(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, flip=True):
         c = self.canvas
-        # flip y to treat rect as normal screen coordinates
-        r = ((r[0][0], rect.height(c.screen_rect) - r[0][1]),
-             (r[1][0], rect.height(c.screen_rect) - r[1][1]))
+        if flip:
+            # flip y to treat rect as normal screen coordinates
+            r = ((r[0][0], rect.height(c.screen_rect) - r[0][1]),
+                 (r[1][0], rect.height(c.screen_rect) - r[1][1]))
 
         gl.glDisable(gl.GL_TEXTURE_2D)
         # don't let texture colors override the fill color
@@ -688,13 +689,16 @@ class ImmediateModeRenderer():
 
         return texture
 
-    def draw_screen_textured_rect(self, r, texture_array, labels, tick_length=4, label_spacing=4, line_width=1):
+    def draw_screen_textured_rect(self, r, texture_array, labels, max_label_width, x_border=10, y_border=10, tick_length=4, label_spacing=4, line_width=1, border=15):
         # Note: differs from draw_screen_rect in that the y values are not
         # flipped -- you are drawing with OpenGL coords ==> y = 0 is at the
         # bottom
 
         (x1, y1), (x2, y2) = r
         h = y2 - y1
+
+        background = ((x1 - x_border, y1 + y_border), (x2 + x_border + tick_length + max_label_width, y2 - y_border))
+        self.draw_screen_rect(background, 1.0, 1.0, 1.0, flip=False)
 
         gl.glEnable(gl.GL_TEXTURE_2D)
         t = self.calc_legend_texture(texture_array)

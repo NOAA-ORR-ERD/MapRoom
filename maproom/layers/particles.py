@@ -262,7 +262,7 @@ class ParticleFolder(Folder):
 
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
             colors = colormap.calc_opengl_texture(self.colormap_name)
-            renderer.draw_screen_textured_rect(r, colors, labels2, self.tick_pixel_width, self.tick_label_pixel_spacing)
+            renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing)
 
 
 class ParticleLayer(PointBaseLayer):
