@@ -94,7 +94,8 @@ class nc_particles_file_loader():
                 d = data[var]
                 log.debug("timestep %d: %s" % (self.current_timestep, (var, d.dtype, d.shape)))
                 if len(d.shape) == 1:
-                    scalar_vars[var] = d.copy()
+                    d = np.delete(d, bogus[0], 0)
+                    scalar_vars[var] = d
                     scalar_min_max[var] = (min(d), max(d))
             else:
                 log.warning("%s not present in timestep %d" % (var, self.current_timestep))
