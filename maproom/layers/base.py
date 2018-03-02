@@ -427,6 +427,12 @@ class Layer(HasTraits):
         log.debug("returning layers: %s" % str(layers))
         return layers
 
+    def dependent_of_to_json(self):
+        return self.dependent_of
+
+    def dependent_of_from_json(self, json_data):
+        self.dependent_of = json_data.get('dependent_of', -1)
+
     ##### time support
 
     def start_time_to_json(self):

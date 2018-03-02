@@ -23,7 +23,7 @@ from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils
 
 from folder import Folder
-from base import ProjectedLayer
+from base import ProjectedLayer, ScreenLayer
 from point_base import PointBaseLayer
 import state
 
@@ -46,23 +46,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    x_percentage = Float(1.0)
-
-    y_percentage = Float(0.0)
-
-    legend_pixel_width = Int(20)
-
-    legend_pixel_height = Int(300)
-
-    tick_pixel_width = Int(4)
-
-    tick_label_pixel_spacing = Int(4)
-
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Point size", "Outline color", "Status Code Color", "X location", "Y location"]
-
-    x_offset = 20
-
-    y_offset = 20
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Point size", "Outline color", "Status Code Color"]
 
     @property
     def scalar_var_names(self):
@@ -150,30 +134,6 @@ class ParticleFolder(Folder):
     def end_index_from_json(self, json_data):
         self.end_index = json_data['end_index']
 
-    def x_percentage_to_json(self):
-        return self.x_percentage
-
-    def x_percentage_from_json(self, json_data):
-        self.x_percentage = json_data['x_percentage']
-
-    def y_percentage_to_json(self):
-        return self.y_percentage
-
-    def y_percentage_from_json(self, json_data):
-        self.y_percentage = json_data['y_percentage']
-
-    def legend_pixel_width_to_json(self):
-        return self.legend_pixel_width
-
-    def legend_pixel_width_from_json(self, json_data):
-        self.legend_pixel_width = json_data['legend_pixel_width']
-
-    def legend_pixel_height_to_json(self):
-        return self.legend_pixel_height
-
-    def legend_pixel_height_from_json(self, json_data):
-        self.legend_pixel_height = json_data['legend_pixel_height']
-
     def get_particle_layers(self):
         timesteps = []
         children = self.manager.get_layer_children(self)
@@ -231,6 +191,72 @@ class ParticleFolder(Folder):
         for c in children:
             c.set_colormap(name)
 
+
+class ParticleLegend(ScreenLayer):
+    """Layer for vector annotation image
+
+    """
+    name = Unicode("Legend")
+
+    type = Str("legend")
+
+    x_percentage = Float(1.0)
+
+    y_percentage = Float(0.0)
+
+    legend_pixel_width = Int(20)
+
+    legend_pixel_height = Int(300)
+
+    tick_pixel_width = Int(4)
+
+    tick_label_pixel_spacing = Int(4)
+
+    layer_info_panel = ["X location", "Y location"]
+
+    source_particle_folder = Any(-1)
+
+    x_offset = 20
+
+    y_offset = 20
+
+    ##### traits defaults
+
+    # these are mutually exclusive, used at different times.
+    # source_particle_folder_default is only used after a project load and
+    # dependent_of_default is used when serializing
+    def _source_particle_folder_default(self):
+        return self.manager.get_layer_by_invariant(self.dependent_of)
+
+    def _dependent_of_default(self):
+        return self.source_particle_folder.invariant
+
+    ##### serialization
+
+    def x_percentage_to_json(self):
+        return self.x_percentage
+
+    def x_percentage_from_json(self, json_data):
+        self.x_percentage = json_data['x_percentage']
+
+    def y_percentage_to_json(self):
+        return self.y_percentage
+
+    def y_percentage_from_json(self, json_data):
+        self.y_percentage = json_data['y_percentage']
+
+    def legend_pixel_width_to_json(self):
+        return self.legend_pixel_width
+
+    def legend_pixel_width_from_json(self, json_data):
+        self.legend_pixel_width = json_data['legend_pixel_width']
+
+    def legend_pixel_height_to_json(self):
+        return self.legend_pixel_height
+
+    def legend_pixel_height_from_json(self, json_data):
+        self.legend_pixel_height = json_data['legend_pixel_height']
+
     @property
     def is_renderable(self):
         return True
@@ -240,11 +266,13 @@ class ParticleFolder(Folder):
             return
         log.log(5, "Rendering legend!!! pick=%s" % (picker))
 
-        if self.current_scalar_var is not None:
-            if self.current_min_max == None:
+        parent = self.source_particle_folder
+
+        if parent.current_scalar_var is not None:
+            if parent.current_min_max == None:
                 labels1 = []
             else:
-                labels1 = math_utils.calc_labels(*self.current_min_max)
+                labels1 = math_utils.calc_labels(*parent.current_min_max)
 
             label_width = 0
             labels2 = []
@@ -261,7 +289,7 @@ class ParticleFolder(Folder):
             y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
 
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
-            colors = colormap.calc_opengl_texture(self.colormap_name)
+            colors = colormap.calc_opengl_texture(parent.colormap_name)
             renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing)
 
 

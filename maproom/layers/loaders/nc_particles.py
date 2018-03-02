@@ -11,7 +11,7 @@ import numpy as np
 from fs.opener import opener
 
 from common import BaseLayerLoader
-from maproom.layers.particles import ParticleLayer, ParticleFolder
+from maproom.layers.particles import ParticleLayer, ParticleFolder, ParticleLegend
 
 import logging
 log = logging.getLogger(__name__)
@@ -179,7 +179,8 @@ class ParticleLoader(BaseLayerLoader):
             # affect all layers. Which is what we want.
             layer.scalar_min_max = folder_min_max
 
-        layers[0:0] = [parent]
+        legend = ParticleLegend(manager=manager, source_particle_folder=parent)
+        layers[0:0] = [parent, legend]
         if warnings:
             warnings[0:0] = ["The following layers have spurious values. Those values have been removed.\n"]
         parent.load_warning_string = "\n  ".join(warnings)
