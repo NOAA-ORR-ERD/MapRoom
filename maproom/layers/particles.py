@@ -502,17 +502,18 @@ class ParticleLayer(PointBaseLayer):
         self.status_code_count = {}
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
         self.scalar_vars = scalar_vars
-        self.set_colors_from_status_codes()
+        self.set_colors_from_status_codes(True)
 
-    def set_colors_from_status_codes(self):
+    def set_colors_from_status_codes(self, update_count=False):
         log.debug("setting status code colors to: %s" % self.status_code_colors)
         colors = np.zeros(np.alen(self.points), dtype=np.uint32)
         for code, color in self.status_code_colors.iteritems():
             index = np.where(self.status_codes == code)
             colors[index] = color
-            num = len(index[0])
-            self.status_code_names[code] += " (%d)" % num
-            self.status_code_count[code] = num
+            if update_count:
+                num = len(index[0])
+                self.status_code_names[code] += " (%d)" % num
+                self.status_code_count[code] = num
         self.points.color = colors
 
     def set_scalar_var(self, var):
