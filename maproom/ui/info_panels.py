@@ -1341,6 +1341,9 @@ class StatusCodeColorField(InfoField):
 
     default_width = 40
 
+    def is_displayed(self, layer):
+        return not layer.is_using_colormap()
+
     def get_value(self, layer):
         pass
 
@@ -1559,8 +1562,10 @@ class ScalarChoiceField(InfoField):
     same_line = True
 
     def get_variable_names(self, layer):
-        names = sorted(layer.scalar_var_names)
-        names[0:0] = ["none"]
+        names = layer.scalar_var_names
+        names.discard("status_codes")
+        names = sorted(names)
+        names[0:0] = ["status codes"]
         return names
 
     def get_current_index(self, layer, names):
@@ -1589,14 +1594,19 @@ class ScalarChoiceField(InfoField):
             return
         index = event.GetSelection()
         var = self.choice_names[index]
-        self.change_variable(layer, var)
+        # self.change_variable(layer, var)
+        wx.CallAfter(self.change_variable, layer, var)
 
     def change_variable(self, layer, var):
         layer.set_scalar_var(var)
+        self.panel.project.update_info_panels(layer, True)
 
 
 class ColormapField(InfoField):
     same_line = False
+
+    def is_displayed(self, layer):
+        return layer.is_using_colormap()
 
     def fill_data(self, layer):
         self.ctrl.set_selection_by_name(layer.colormap_name)

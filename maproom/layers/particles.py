@@ -46,7 +46,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Point size", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Status Code Color", "Outline color", "Point size"]
 
     @property
     def scalar_var_names(self):
@@ -190,6 +190,11 @@ class ParticleFolder(Folder):
         children = self.get_particle_layers()
         for c in children:
             c.set_colormap(name)
+
+    def is_using_colormap(self, var=None):
+        if var is None:
+            var = self.current_scalar_var
+        return var != "status codes" and var in self.scalar_var_names
 
 
 class ParticleLegend(ScreenLayer):
@@ -514,8 +519,13 @@ class ParticleLayer(PointBaseLayer):
         var = self.set_colors_from_scalar(var)
         self.current_scalar_var = var
 
+    def is_using_colormap(self, var=None):
+        if var is None:
+            var = self.current_scalar_var
+        return var != "status codes" and var in self.scalar_var_names
+
     def set_colors_from_scalar(self, var):
-        if var in self.scalar_vars:
+        if self.is_using_colormap(var):
             values = self.scalar_vars[var]
             lo, hi = self.scalar_min_max[var]
             self.current_min_max = lo, hi
