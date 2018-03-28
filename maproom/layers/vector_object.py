@@ -856,8 +856,8 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
 
     def move_bounding_box_point(self, drag, anchor, dx, dy, about_center=False, ax=0.0, ay=0.0):
         log.debug("OverlayLine: move_bounding_box_point: delta=%s" % str((dx, dy)))
-        if drag == 1:
-            c = self.manager.project.layer_canvas
+        c = self.manager.project.layer_canvas
+        if drag == 1:  # moving screen-space point
             self.points[1].x += dx
             self.points[1].y += dy
             s1 = c.get_numpy_screen_point_from_world_point((self.points[0].x, self.points[0].y))
@@ -865,8 +865,18 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
             s = s2 - s1
             log.debug("OverlayLine: Screen point: %s -> %s" % (str(s1), str(s2)))
             self.screen_dx, self.screen_dy = s[0], s[1]
-        else:
-            LineVectorObject.move_bounding_box_point(self, drag, anchor, dx, dy, about_center, ax, ay)
+        else:  # moving world-space point
+            # move world-space anchor point normally
+            self.points[0].x += dx
+            self.points[0].y += dy
+
+            # adjust the screen-space point to conform to the screen deltas
+            s1 = c.get_numpy_screen_point_from_world_point((self.points[0].x, self.points[0].y))
+            s = (s1[0] + self.screen_dx, s1[1] + self.screen_dy)
+            w = c.get_numpy_world_point_from_screen_point(s)
+            self.points[1].x = w[0]
+            self.points[1].y = w[1]
+
 
     def fit_to_bounding_box(self, current_bounds, new_bounds):
         # Recalculate screen size based on new bounds. The points array will
