@@ -1609,7 +1609,7 @@ class ColormapField(InfoField):
         return layer.is_using_colormap()
 
     def fill_data(self, layer):
-        self.ctrl.set_selection_by_name(layer.colormap_name)
+        self.ctrl.set_selection_by_name(layer.colormap.name)
 
     def create_control(self):
         c = ColormapComboBox(self.parent, -1, "", size=(self.default_width, -1), style=wx.CB_READONLY, popup_width=300)

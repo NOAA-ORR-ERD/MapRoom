@@ -5,10 +5,8 @@ import wx.adv
 import numpy as np
 import numpy.random as rand
 
-from . import list_colormaps, get_rgb_colors
+from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap
 
-
-colormap_names = list_colormaps()
 
 class ColormapImage(object):
     def __init__(self, width, height):
@@ -17,23 +15,29 @@ class ColormapImage(object):
 
     def create_image_array(self, width):
         self.width = width
-        self.line = np.arange(width, dtype=np.float32) / (width - 1)
         self.array = np.empty((self.height, width, 3), dtype='uint8')
         self.image = wx.ImageFromBuffer(width, self.height, self.array)
 
-    def calc_bitmap(self, index, width=None):
+    def calc_bitmap(self, colormap, width=None):
         if width is not None:
             if width != self.width:
                 self.create_image_array(width)
-        colors = get_rgb_colors(colormap_names[index], self.line)
+        colors = colormap.calc_rgb_texture(self.width)
         self.array[:,:,:] = colors
         return wx.BitmapFromImage(self.image)
 
 
 class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
     def __init__(self, *args, **kwargs):
-        kwargs['choices'] = colormap_names
+        # self.known_colormaps = dict(builtin_discrete_colormaps)
         popup_width = kwargs.pop('popup_width', 300)
+        self.custom = kwargs.pop('custom_colormaps', {})  # name:colormap
+        # if self.custom:
+        #     self.known_colormaps.update(self.custom)
+        # print self.known_colormaps
+        self.recalc_order()
+        kwargs['choices'] = self.colormap_name_order
+        # self.start_builtin_index = len(self.custom)
         wx.adv.OwnerDrawnComboBox.__init__(self, *args, **kwargs)
 
         self.height = 20
@@ -48,8 +52,13 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
 
         self.SetPopupMinWidth(popup_width)
 
+    def recalc_order(self):
+        self.colormap_name_order = sorted(builtin_discrete_colormaps.keys()) + sorted(builtin_continuous_colormaps.keys())
+        self.discrete_start = 0
+        self.continuous_start = len(builtin_discrete_colormaps)
+
     def index_of(self, name):
-        return colormap_names.index(name)
+        return self.colormap_name_order.index(name)
 
     def set_selection_by_name(self, name):
         try:
@@ -60,7 +69,7 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
 
     def get_selected_name(self):
         index = self.GetSelection()
-        return colormap_names[index]
+        return self.colormap_name_order[index]
 
     # Overridden from OwnerDrawnComboBox, called to draw each
     # item in the list
@@ -71,17 +80,19 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
 
         r = wx.Rect(*rect)  # make a copy
 
+        name = self.colormap_name_order[item]
+        c = get_colormap(name)
         if flags & wx.adv.ODCB_PAINTING_CONTROL:
             width = r.width - 2 * self.internal_spacing
             x = self.internal_spacing
             y = (r.height - self.height) // 2
-            b = self.control_image.calc_bitmap(item, width)
+            b = self.control_image.calc_bitmap(c, width)
             dc.DrawBitmap(b, r.x + x, r.y + y)
         else:
             width = r.width - 2 * self.internal_spacing
-            b = self.dropdown_image.calc_bitmap(item, width)
+            b = self.dropdown_image.calc_bitmap(c, width)
             dc.DrawBitmap(b, r.x + self.bitmap_x, r.y + self.bitmap_y)
-            dc.DrawText(colormap_names[item], r.x + self.bitmap_x, r.y)
+            dc.DrawText(c.name, r.x + self.bitmap_x, r.y)
 
     # Overridden from OwnerDrawnComboBox, called for drawing the
     # background area of each item.

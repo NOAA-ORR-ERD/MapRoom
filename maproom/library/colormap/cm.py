@@ -18,6 +18,9 @@ from ._cm_listed import cmaps as cmaps_listed
 
 cmap_d = {}
 
+cmap_discrete = set()
+cmap_continuous = set()
+
 
 class mpl(object):
     # replacement for an import from matplotlib
@@ -101,6 +104,14 @@ cmap_d.update(cmaps_listed)
 
 locals().update(cmap_d)
 
+for cmapname in datad:
+    spec = datad[cmapname]
+    if 'listed' in spec:
+        print("discrete: %s" % cmapname)
+        cmap_discrete.add(cmapname)
+    else:
+        print("continuous: %s" % cmapname)
+        cmap_continuous.add(cmapname)
 
 # Continue with definitions ...
 

@@ -89,13 +89,8 @@ class ParticleFolder(Folder):
         return current
 
     @property
-    def colormap_name(self):
-        children = self.get_particle_layers()
-        if children:
-            current = children[0].colormap_name
-        else:
-            current = ""
-        return current
+    def colormap(self):  # Raises IndexError if no children
+        return self.get_particle_layers()[0].colormap
 
     @property
     def status_code_colors(self):
@@ -294,7 +289,7 @@ class ParticleLegend(ScreenLayer):
             y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
 
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
-            colors = colormap.calc_opengl_texture(parent.colormap_name)
+            colors = parent.colormap.calc_rgba_texture()
             renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing)
 
 
@@ -327,7 +322,7 @@ class ParticleLayer(PointBaseLayer):
 
     current_scalar_var = Any(None)
 
-    colormap_name = Str
+    colormap = Any
 
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_color_map = {
@@ -350,6 +345,9 @@ class ParticleLayer(PointBaseLayer):
     def scalar_var_names(self):
         names = set(self.scalar_vars.keys())
         return names
+
+    def _colormap_default(self):
+        return colormap.get_colormap("Dark2")
 
     # JSON Serialization
 
@@ -453,11 +451,11 @@ class ParticleLayer(PointBaseLayer):
     def current_min_max_from_json(self, json_data):
         self.current_min_max = json_data['current_min_max']
 
-    def colormap_name_to_json(self):
-        return self.colormap_name
+    def colormap_to_json(self):
+        return self.colormap.name
 
-    def colormap_name_from_json(self, json_data):
-        self.colormap_name = json_data['colormap_name']
+    def colormap_from_json(self, json_data):
+        self.colormap = colormap.get_colormap(json_data['colormap_name'])
 
     def from_json_sanity_check_after_load(self, json_data):
         if not self.status_code_count:
@@ -530,12 +528,8 @@ class ParticleLayer(PointBaseLayer):
             values = self.scalar_vars[var]
             lo, hi = self.scalar_min_max[var]
             self.current_min_max = lo, hi
-            try:
-                colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
-            except ValueError:
-                prefs = self.manager.project.task.preferences
-                self.colormap_name = prefs.colormap_name
-                colors = colormap.get_opengl_colors(self.colormap_name, values, lo, hi)
+            self.colormap.set_bounds(lo, hi)
+            colors = self.colormap.get_opengl_colors(values)
             self.points.color = colors
         else:
             log.error("%s not in scalar data for layer %s" % (var, self))
@@ -546,7 +540,11 @@ class ParticleLayer(PointBaseLayer):
         return var
 
     def set_colormap(self, name):
-        self.colormap_name = name
+        try:
+            self.colormap = colormap.get_colormap(name)
+        except ValueError:
+            prefs = self.manager.project.task.preferences
+            self.colormap = colormap.get_colormap(prefs.colormap_name)
         self.set_colors_from_scalar(self.current_scalar_var)
 
     def get_selected_particle_layers(self, project):
