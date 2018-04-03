@@ -13,7 +13,7 @@ import dialogs
 from ..layers import state, LayerStyle
 from ..library import coordinates
 from ..library import colormap
-from ..library.colormap.ui_combobox import ColormapComboBox
+from ..library.colormap.ui_combobox import ColormapComboBox, DisceteColormapDialog
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import StyleChangeCommand, StatusCodeColorCommand, SetAnchorCommand, ChangeDepthCommand, MovePointsCommand, TextCommand, BorderWidthCommand
 from ..menu_commands import RenameLayerCommand
@@ -147,7 +147,7 @@ class InfoField(object):
                 self.box.AddSpacer(self.panel.LABEL_SPACING)
             self.box.Add(self.ctrl, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT, self.panel.SIDE_SPACING)
             for extra in self.extra_ctrls:
-                hbox.Add(extra, 0, wx.ALIGN_CENTER)
+                self.box.Add(extra, 0, wx.ALIGN_CENTER)
         self.box.AddSpacer(self.panel.VALUE_SPACING)
 
     def create_all_controls(self):
@@ -1612,7 +1612,7 @@ class ColormapField(InfoField):
         self.ctrl.set_selection_by_name(layer.colormap.name)
 
     def create_control(self):
-        c = ColormapComboBox(self.parent, -1, "", size=(self.default_width, -1), style=wx.CB_READONLY, popup_width=300)
+        c = ColormapComboBox(self.parent, -1, "", size=(self.default_width, -1), popup_width=300)
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
         return c
 
@@ -1621,7 +1621,37 @@ class ColormapField(InfoField):
         if (layer is None):
             return
         name = self.ctrl.get_selected_name()
+        wx.CallAfter(self.change_variable, layer, name)
+
+    def change_variable(self, layer, name):
         layer.set_colormap(name)
+        self.panel.project.update_info_panels(layer, True)
+
+
+class DiscreteColormapField(InfoField):
+    display_label = False
+
+    def fill_data(self, layer):
+        pass
+
+    def create_control(self):
+        b = wx.Button(self.parent, -1, "Edit Discrete Colormap")
+        b.Bind(wx.EVT_BUTTON, self.on_edit_colormap)
+        return b
+
+    def on_edit_colormap(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        d = DisceteColormapDialog(self.panel.project.control, layer.colormap)
+        ret = d.ShowModal()
+        if ret != wx.ID_CANCEL:
+            name = d.get_colormap()
+            wx.CallAfter(self.change_variable, layer, name)
+
+    def change_variable(self, layer, name):
+        layer.set_colormap(name)
+        self.panel.project.update_info_panels(layer, True)
 
 
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
@@ -1760,6 +1790,7 @@ class InfoPanel(PANELTYPE):
         "Area": WholeLinePropertyField,
         "Scalar value": ScalarChoiceField,
         "Colormap": ColormapField,
+        "Discrete colormap": DiscreteColormapField,
         "X location": XPercentageField,
         "Y location": YPercentageField,
         "Point size": PointSizeField,

@@ -46,7 +46,7 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Status Code Color", "Outline color", "Point size"]
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Discrete colormap", "Status Code Color", "Outline color", "Point size"]
 
     @property
     def scalar_var_names(self):
@@ -190,6 +190,9 @@ class ParticleFolder(Folder):
         if var is None:
             var = self.current_scalar_var
         return var != "status codes" and var in self.scalar_var_names
+
+    def is_using_discrete_colormap(self, var=None):
+        return self.is_using_colormap() and self.colormap.is_discrete
 
 
 class ParticleLegend(ScreenLayer):

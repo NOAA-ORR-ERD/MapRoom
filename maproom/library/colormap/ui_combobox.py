@@ -37,6 +37,7 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
         # print self.known_colormaps
         self.recalc_order()
         kwargs['choices'] = self.colormap_name_order
+        kwargs['style'] = wx.CB_READONLY
         # self.start_builtin_index = len(self.custom)
         wx.adv.OwnerDrawnComboBox.__init__(self, *args, **kwargs)
 
@@ -112,3 +113,49 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
     # -1 for default/undetermined
     def OnMeasureItemWidth(self, item):
         return self.item_width
+
+
+class DiscreteOnlyColormapComboBox(ColormapComboBox):
+    def recalc_order(self):
+        self.colormap_name_order = sorted(builtin_discrete_colormaps.keys())
+
+
+class DisceteColormapDialog(wx.Dialog):
+    displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon"]
+
+    def __init__(self, parent, current):
+        wx.Dialog.__init__(self, parent, -1, "Edit Discrete Colormaps", size=(500, -1))
+
+        sizer = wx.BoxSizer(wx.VERTICAL)
+
+        self.colormap_list = DiscreteOnlyColormapComboBox(self, -1, "colormap_list", popup_width=300)
+        self.colormap_list.Bind(wx.EVT_COMBOBOX, self.colormap_changed)
+        self.colormap_list.SetSelection(0)
+        sizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
+
+        self.param_panel = wx.Panel(self, -1, name="param_panel")
+        sizer.Add(self.param_panel, 1, wx.EXPAND, 0)
+
+        self.populate_panel(current.name)
+
+        btnsizer = wx.StdDialogButtonSizer()
+        btn = wx.Button(self, wx.ID_OK)
+        btn.SetDefault()
+        btnsizer.AddButton(btn)
+        btn = wx.Button(self, wx.ID_CANCEL)
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+
+        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        self.SetSizer(sizer)
+        self.Fit()
+
+    def populate_panel(self, name):
+        self.colormap_list.set_selection_by_name(name)
+
+    def colormap_changed(self, evt):
+        name = self.colormap_list.get_selected_name()
+        self.populate_panel(name)
+
+    def get_colormap(self):
+        return self.colormap_list.get_selected_name()

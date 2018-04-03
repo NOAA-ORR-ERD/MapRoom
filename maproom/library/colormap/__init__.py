@@ -17,6 +17,8 @@ class ColormapMapping(object):
 
 
 class ScaledColormap(object):
+    is_discrete = False
+
     def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.1):
         self.name = name
         self.cmap = cmap
@@ -61,6 +63,8 @@ class ScaledColormap(object):
 
 
 class DiscreteColormap(ScaledColormap):
+    is_discrete = True
+
     def create_colormap(self):
         #bounds = [13.442, 13.443, 13.445, 13.448]
         bounds = np.linspace(self.lo, self.hi, self.cmap.N + 1)
