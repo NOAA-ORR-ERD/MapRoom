@@ -6,6 +6,7 @@ import numpy as np
 import numpy.random as rand
 
 from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap
+from ...ui.buttons import ColorSelectButton
 
 
 class ColormapImage(object):
@@ -120,7 +121,47 @@ class DiscreteOnlyColormapComboBox(ColormapComboBox):
         self.colormap_name_order = sorted(builtin_discrete_colormaps.keys())
 
 
-class DisceteColormapDialog(wx.Dialog):
+class ColormapEntry(wx.Panel):
+    def __init__(self, parent, num):
+        wx.Panel.__init__(self, parent, -1, name="panel#%d" % num)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+
+        self.text_box = wx.Panel(self, -1)
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        t = wx.StaticText(self.text_box, -1, "Bin Boundary")
+        hbox.Add(t, 0, wx.ALIGN_CENTER_VERTICAL)
+        self.text = wx.TextCtrl(self.text_box, -1, size=(100, 20))
+        hbox.Add(self.text, 1, wx.EXPAND)
+        self.text_box.SetSizer(hbox)
+        self.text_box.Layout()
+        self.sizer.Add(self.text_box, 0, wx.EXPAND)
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+        self.color = ColorSelectButton(self, -1, "", (0, 0, 0), size=(100, 20))
+        hbox.Add(self.color, 1, wx.EXPAND)
+        self.sizer.Add(hbox, 0, wx.EXPAND)
+
+        self.Layout()
+
+    def set_values(self, value, color):
+        if value is None:
+            if self.sizer.GetItem(self.text_box):
+                self.sizer.Detach(self.text_box)
+            self.text_box.Hide()
+        else:
+            self.text.SetValue(str(value))
+            if not self.sizer.GetItem(self.text_box):
+                self.sizer.Insert(0, self.text_box, 0, wx.ALIGN_CENTER_VERTICAL)
+            self.text_box.Show()
+        int_colors = list((color * 255.0).astype(np.uint8))
+        print("color", int_colors)
+        self.color.SetColour(int_colors)
+        self.sizer.Layout()
+        self.Fit()
+
+
+class DiscreteColormapDialog(wx.Dialog):
     displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon"]
 
     def __init__(self, parent, current):
@@ -133,10 +174,17 @@ class DisceteColormapDialog(wx.Dialog):
         self.colormap_list.SetSelection(0)
         sizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
 
+        self.add_hi = wx.Button(self, -1, "Add Bin Above")
+        sizer.Add(self.add_hi, 0, wx.ALL|wx.CENTER, 5)
+
         self.param_panel = wx.Panel(self, -1, name="param_panel")
+        self.param_panel.SetSizer(wx.BoxSizer(wx.VERTICAL))
         sizer.Add(self.param_panel, 1, wx.EXPAND, 0)
 
-        self.populate_panel(current.name)
+        self.add_lo = wx.Button(self, -1, "Add Bin Below")
+        sizer.Add(self.add_lo, 0, wx.ALL|wx.CENTER, 5)
+
+        self.panel_controls = []
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
@@ -148,10 +196,35 @@ class DisceteColormapDialog(wx.Dialog):
 
         sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         self.SetSizer(sizer)
-        self.Fit()
+
+        self.populate_panel(current.name)
 
     def populate_panel(self, name):
         self.colormap_list.set_selection_by_name(name)
+        d = builtin_discrete_colormaps[name]
+        self.bin_borders = d.bin_borders
+        self.bin_colors = d.bin_colors
+        self.bin_borders.append(None)  # alternates color, val, color, val ... color
+        self.create_panel_controls()
+        self.param_panel.GetSizer().Layout()
+        self.Fit()
+        self.Layout()
+
+    def create_panel_controls(self):
+        for i, (val, color) in enumerate(reversed(zip(self.bin_borders, self.bin_colors))):
+            print("creating entry %d for %s,%s" % (i, val, color))
+            try:
+                c = self.panel_controls[i]
+            except IndexError:
+                c = ColormapEntry(self.param_panel, i)
+                self.param_panel.GetSizer().Add(c, 1, wx.EXPAND, 0)
+                self.panel_controls.append(c)
+            c.set_values(val, color)
+            c.Show()
+        i += 1
+        while i < len(self.panel_controls):
+            self.panel_controls[i].Hide()
+            i += 1
 
     def colormap_changed(self, evt):
         name = self.colormap_list.get_selected_name()

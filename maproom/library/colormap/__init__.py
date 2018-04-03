@@ -19,23 +19,28 @@ class ColormapMapping(object):
 class ScaledColormap(object):
     is_discrete = False
 
-    def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.1):
+    def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.0):
         self.name = name
-        self.cmap = cmap
+        self.cmap = self.preprocess_colormap(cmap)
         self.set_bounds(lo, hi, extra_padding)
 
-    def set_bounds(self, lo=None, hi=None, extra_padding=0.1):
+    def preprocess_colormap(self, cmap):
+        return cmap
+
+    def set_bounds(self, lo=None, hi=None, extra_padding=0.0):
         if lo is None:
             lo = 0.0
         if hi is None:
             hi = 1.0
+        self.lo_val = lo
+        self.hi_val = hi
         delta = abs(hi - lo)
-        self.lo = lo - extra_padding * delta
-        self.hi = hi + extra_padding * delta
+        self.lo_padded = lo - extra_padding * delta
+        self.hi_padded = hi + extra_padding * delta
         self.mapping = self.create_colormap()
 
     def create_colormap(self):
-        norm  = colors.Normalize(vmin=self.lo, vmax=self.hi)
+        norm  = colors.Normalize(vmin=self.lo_padded, vmax=self.hi_padded)
         mapping = cm.ScalarMappable(norm=norm, cmap=self.cmap)
         return mapping
 
@@ -48,7 +53,7 @@ class ScaledColormap(object):
         return np.array(byte_values).view(np.uint32)[:,0]
 
     def calc_rgba_texture(self, length=256, width=1, alpha=0.5):
-        line = np.linspace(self.lo, self.hi, length)
+        line = np.linspace(self.lo_padded, self.hi_padded, length)
         colors = self.get_rgb_colors(line)
         if alpha is not None:
             array = np.empty((width, length, 4), dtype='uint8')
@@ -63,23 +68,44 @@ class ScaledColormap(object):
 
 
 class DiscreteColormap(ScaledColormap):
+    # Always have an under and over!
     is_discrete = True
+
+    def preprocess_colormap(self, cmap):
+        c = colors.ListedColormap(cmap.colors[1:-1], cmap.name)
+        c.set_under(cmap.colors[0])
+        c.set_over(cmap.colors[-1])
+        return c
 
     def create_colormap(self):
         #bounds = [13.442, 13.443, 13.445, 13.448]
-        bounds = np.linspace(self.lo, self.hi, self.cmap.N + 1)
+        bounds = np.linspace(self.lo_padded, self.hi_padded, self.cmap.N + 1)
         norm = colors.BoundaryNorm(bounds, self.cmap.N)
         mapping = cm.ScalarMappable(norm=norm, cmap=self.cmap)
         return mapping
 
+    @property
+    def bin_borders(self):
+        bins = list(self.mapping.norm.boundaries)
+        bins[0] = self.lo_val
+        bins[-1] = self.hi_val
+        return bins
+
+    @property
+    def bin_colors(self):
+        c = list(self.cmap.colors)
+        c[0:0] = [self.cmap._rgba_under]
+        c.append(self.cmap._rgba_over)
+        return colors.colorConverter.to_rgba_array(c)
+
+    def set_bins(self, borders, colors):
+        pass
 
 builtin_continuous_colormaps = {name:ScaledColormap(name, cm.get_cmap(name)) for name in sorted(cm.cmap_continuous)}
 
 builtin_discrete_colormaps = {name:DiscreteColormap(name, cm.get_cmap(name)) for name in sorted(cm.cmap_discrete)}
 
-sample_discrete = colors.ListedColormap(['#004400', '#007700', '#00aa00'])
-sample_discrete.set_over('#ff0000')
-sample_discrete.set_under('#0000ff')
+sample_discrete = colors.ListedColormap(['#ff0000', '#004400', '#007700', '#00aa00', '#0000ff'])
 builtin_discrete_colormaps['sample_lat'] = DiscreteColormap('sample_lat', sample_discrete)
 
 def get_colormap(name):
