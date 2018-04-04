@@ -72,10 +72,18 @@ class DiscreteColormap(ScaledColormap):
     is_discrete = True
 
     def preprocess_colormap(self, cmap):
+        self.source_cmap = cmap
+        return self.copy_source_colormap()
+
+    def copy_source_colormap(self):
+        cmap = self.source_cmap
         c = colors.ListedColormap(cmap.colors[1:-1], cmap.name)
         c.set_under(cmap.colors[0])
         c.set_over(cmap.colors[-1])
         return c
+
+    def copy(self):
+        return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val)
 
     def create_colormap(self):
         #bounds = [13.442, 13.443, 13.445, 13.448]
