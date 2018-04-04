@@ -689,7 +689,7 @@ class ImmediateModeRenderer():
 
         return texture
 
-    def draw_screen_textured_rect(self, r, texture_array, labels, max_label_width, x_border=10, y_border=10, tick_length=4, label_spacing=4, line_width=1, border=15):
+    def draw_screen_textured_rect(self, r, texture_array, labels, max_label_width, x_border=10, y_border=10, tick_length=4, label_spacing=4, line_width=1, border=15, up_color=None, down_color=None):
         # Note: differs from draw_screen_rect in that the y values are not
         # flipped -- you are drawing with OpenGL coords ==> y = 0 is at the
         # bottom
@@ -743,6 +743,39 @@ class ImmediateModeRenderer():
             # label centered vertically on tick
             y = y2 - perc * h + (lh / 2)
             self.draw_screen_string((label_x, y), text, False)
+
+        gl.glEnable(gl.GL_LINE_SMOOTH)
+        if up_color is not None:
+            gl.glDisable(gl.GL_TEXTURE_2D)
+            gl.glColor(*up_color)
+            gl.glBegin(gl.GL_TRIANGLES)
+            gl.glVertex(x1, y1 + 4, 0)
+            gl.glVertex(x2, y1 + 4, 0)
+            gl.glVertex((x1 + x2) // 2, y1 + 24, 0)
+            gl.glEnd()
+            gl.glLineWidth(line_width)
+            gl.glColor(0.0, 0.0, 0.0, 1.0)
+            gl.glBegin(gl.GL_LINE_LOOP)
+            gl.glVertex(x1, y1 + 4, 0)
+            gl.glVertex(x2, y1 + 4, 0)
+            gl.glVertex((x1 + x2) // 2, y1 + 24, 0)
+            gl.glEnd()
+
+        if down_color is not None:
+            gl.glDisable(gl.GL_TEXTURE_2D)
+            gl.glColor(*down_color)
+            gl.glBegin(gl.GL_TRIANGLES)
+            gl.glVertex(x1, y2 - 4, 0)
+            gl.glVertex(x2, y2 - 4, 0)
+            gl.glVertex((x1 + x2) // 2, y2 - 24, 0)
+            gl.glEnd()
+            gl.glLineWidth(line_width)
+            gl.glColor(0.0, 0.0, 0.0, 1.0)
+            gl.glBegin(gl.GL_LINE_LOOP)
+            gl.glVertex(x1, y2 - 4, 0)
+            gl.glVertex(x2, y2 - 4, 0)
+            gl.glVertex((x1 + x2) // 2, y2 - 24, 0)
+            gl.glEnd()
 
     def get_drawn_string_dimensions(self, text):
         c = self.canvas

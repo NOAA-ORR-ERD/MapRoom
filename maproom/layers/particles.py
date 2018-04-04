@@ -221,7 +221,7 @@ class ParticleLegend(ScreenLayer):
 
     x_offset = 20
 
-    y_offset = 20
+    y_offset = 40
 
     ##### traits defaults
 
@@ -291,9 +291,10 @@ class ParticleLegend(ScreenLayer):
             x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
             y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
 
+            c = parent.colormap
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
-            colors = parent.colormap.calc_rgba_texture()
-            renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing)
+            colors = c.calc_rgba_texture()
+            renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing, up_color=c.over_rgba, down_color=c.under_rgba)
 
 
 class ParticleLayer(PointBaseLayer):

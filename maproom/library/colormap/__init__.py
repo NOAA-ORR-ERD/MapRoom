@@ -24,6 +24,14 @@ class ScaledColormap(object):
         self.cmap = self.preprocess_colormap(cmap)
         self.set_bounds(lo, hi, extra_padding)
 
+    @property
+    def under_rgba(self):
+        return None
+
+    @property
+    def over_rgba(self):
+        return None
+
     def preprocess_colormap(self, cmap):
         return cmap
 
@@ -76,6 +84,14 @@ class ScaledColormap(object):
 class DiscreteColormap(ScaledColormap):
     # Always have an under and over!
     is_discrete = True
+
+    @property
+    def under_rgba(self):
+        return colors.colorConverter.to_rgba(self.cmap._rgba_under)
+
+    @property
+    def over_rgba(self):
+        return colors.colorConverter.to_rgba(self.cmap._rgba_over)
 
     def preprocess_colormap(self, cmap):
         self.source_cmap = cmap
