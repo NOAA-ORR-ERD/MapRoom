@@ -146,6 +146,7 @@ class ColormapEntry(wx.Panel):
             t = wx.StaticText(self.text_box, -1, "Bin Boundary")
             hbox.Add(t, 0, wx.ALIGN_CENTER_VERTICAL)
             self.text = wx.TextCtrl(self.text_box, -1, size=(100, 20))
+            self.text.Bind(wx.EVT_TEXT, self.on_text_changed)
             hbox.Add(self.text, 1, wx.EXPAND)
             b = wx.Button(self.text_box, -1, "X", style = wx.BU_NOTEXT | wx.BU_EXACTFIT)
             b.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_CLOSE, wx.ART_MENU))
@@ -159,7 +160,8 @@ class ColormapEntry(wx.Panel):
 
     def set_values(self, value, color):
         if value is not None:
-            self.text.SetValue(str(value))
+            self.text.ChangeValue(str(value))
+            self.text.SetBackgroundColour("#FFFFFF")
         int_colors = list((color * 255.0).astype(np.uint8))
         print("color", int_colors)
         self.color.SetColour(int_colors)
@@ -169,6 +171,16 @@ class ColormapEntry(wx.Panel):
 
     def on_remove_entry(self, evt):
         self.dialog.remove_entry(self.entry_num)
+
+    def on_text_changed(self, evt):
+        try:
+            num = float(self.text.GetValue())
+            self.dialog.boundary_changed(self.entry_num, num)
+            self.text.SetBackgroundColour("#FFFFFF")
+        except ValueError:
+            # it's not a float, or it overlaps a neighboring value
+            self.text.SetBackgroundColour("#FF8080")
+
 
 
 class DiscreteColormapDialog(wx.Dialog):
@@ -229,7 +241,7 @@ class DiscreteColormapDialog(wx.Dialog):
         self.bin_borders = list(d.bin_borders)
         self.bin_colors = list(d.bin_colors)
         self.bin_borders[0:0] = [None]  # alternates color, val, color, val ... color
-        self.create_panel_controls()
+        self.update_panel_controls()
 
     def regenerate_colormap(self):
         cmap = colors.ListedColormap(self.bin_colors)
@@ -239,6 +251,7 @@ class DiscreteColormapDialog(wx.Dialog):
         self.working_copy = d
 
     def update_bitmap(self):
+        self.regenerate_colormap()
         bitmap = self.control_image.calc_bitmap(self.working_copy)
         self.colormap_bitmap.SetBitmap(bitmap)
 
@@ -263,10 +276,8 @@ class DiscreteColormapDialog(wx.Dialog):
         self.Fit()
         self.Layout()
 
-        self.update_bitmap()
-
     def update_panel_controls(self):
-        self.regenerate_colormap()
+        self.update_bitmap()
         self.create_panel_controls()
 
     def colormap_changed(self, evt):
@@ -316,3 +327,13 @@ class DiscreteColormapDialog(wx.Dialog):
         self.bin_borders[entry_num:entry_num + 1] = []
         self.bin_colors[entry_num:entry_num + 1] = []
         wx.CallAfter(self.update_panel_controls)
+
+    def boundary_changed(self, entry_num, val):
+        if entry_num == 0:
+            raise ValueError("How are you changing the hidden value?")
+        if entry_num < len(self.bin_borders) - 1 and val >= self.bin_borders[entry_num + 1]:
+            raise ValueError("%f is larger than next larger bin value %f" % (val, self.bin_borders[entry_num + 1]))
+        if entry_num > 1 and val <= self.bin_borders[entry_num - 1]:
+            raise ValueError("%f is larger than next smaller bin value %f" % (val, self.bin_borders[entry_num - 1]))
+        self.bin_borders[entry_num] = val
+        wx.CallAfter(self.update_bitmap)
