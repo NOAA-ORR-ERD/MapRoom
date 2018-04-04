@@ -238,9 +238,14 @@ class DiscreteColormapDialog(wx.Dialog):
         self.populate_panel(current.name)
 
     def populate_panel(self, name):
+        try:
+            d = builtin_discrete_colormaps[name].copy()
+        except KeyError:
+            # not a valid discrete colormap name; start from the first item
+            name = self.colormap_list.colormap_name_order[0]
+            d = builtin_discrete_colormaps[name].copy()
         self.colormap_list.set_selection_by_name(name)
         self.colormap_name.SetValue(name)
-        d = builtin_discrete_colormaps[name].copy()
         self.working_copy = d
         self.bin_borders = list(d.bin_borders)
         self.bin_colors = list(d.bin_colors)

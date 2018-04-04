@@ -118,9 +118,9 @@ class DiscreteColormap(ScaledColormap):
     def set_bins(self, borders, colors):
         pass
 
-builtin_continuous_colormaps = {name:ScaledColormap(name, cm.get_cmap(name)) for name in sorted(cm.cmap_continuous)}
+builtin_continuous_colormaps = {name:ScaledColormap(name, cm.get_cmap(name)) for name in cm.cmap_continuous}
 
-builtin_discrete_colormaps = {name:DiscreteColormap(name, cm.get_cmap(name)) for name in sorted(cm.cmap_discrete)}
+builtin_discrete_colormaps = {name:DiscreteColormap(name, cm.get_cmap(name)) for name in cm.cmap_discrete}
 
 sample_discrete = colors.ListedColormap(['#ff0000', '#004400', '#007700', '#00aa00', '#0000ff'])
 builtin_discrete_colormaps['sample_lat'] = DiscreteColormap('sample_lat', sample_discrete)
