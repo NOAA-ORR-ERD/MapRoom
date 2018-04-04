@@ -27,19 +27,25 @@ class ScaledColormap(object):
     def preprocess_colormap(self, cmap):
         return cmap
 
-    def set_bounds(self, lo=None, hi=None, extra_padding=0.0):
+    def set_bounds(self, lo=None, hi=None, extra_padding=0.0, values=None):
         if lo is None:
             lo = 0.0
         if hi is None:
             hi = 1.0
+        if values is not None:
+            lo = min(values)
+            hi = max(values)
         self.lo_val = lo
         self.hi_val = hi
         delta = abs(hi - lo)
         self.lo_padded = lo - extra_padding * delta
         self.hi_padded = hi + extra_padding * delta
-        self.mapping = self.create_colormap()
+        self.mapping = self.create_colormap(values)
 
-    def create_colormap(self):
+    def set_values(self, values):
+        self.set_bounds(values=values)
+
+    def create_colormap(self, values=None):
         norm  = colors.Normalize(vmin=self.lo_padded, vmax=self.hi_padded)
         mapping = cm.ScalarMappable(norm=norm, cmap=self.cmap)
         return mapping
@@ -85,9 +91,12 @@ class DiscreteColormap(ScaledColormap):
     def copy(self):
         return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val)
 
-    def create_colormap(self):
+    def create_colormap(self, values=None):
         #bounds = [13.442, 13.443, 13.445, 13.448]
-        bounds = np.linspace(self.lo_padded, self.hi_padded, self.cmap.N + 1)
+        if values is None:
+            bounds = np.linspace(self.lo_padded, self.hi_padded, self.cmap.N + 1)
+        else:
+            bounds = values
         norm = colors.BoundaryNorm(bounds, self.cmap.N)
         mapping = cm.ScalarMappable(norm=norm, cmap=self.cmap)
         return mapping

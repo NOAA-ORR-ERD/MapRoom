@@ -5,7 +5,8 @@ import wx.adv
 import numpy as np
 import numpy.random as rand
 
-from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap
+from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap
+from . import colors
 from ...ui.buttons import ColorSelectButton
 
 
@@ -175,6 +176,9 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def __init__(self, parent, current):
         wx.Dialog.__init__(self, parent, -1, "Edit Discrete Colormaps", size=(500, -1))
+        self.bitmap_width = 300
+        self.bitmap_height = 30
+        self.working_copy = None
 
         sizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -182,6 +186,13 @@ class DiscreteColormapDialog(wx.Dialog):
         self.colormap_list.Bind(wx.EVT_COMBOBOX, self.colormap_changed)
         self.colormap_list.SetSelection(0)
         sizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
+
+        self.colormap_name = wx.TextCtrl(self, -1, name="colormap_name")
+        sizer.Add(self.colormap_name, 0, wx.EXPAND, 5)
+
+        self.control_image = ColormapImage(self.bitmap_width, self.bitmap_height)
+        self.colormap_bitmap = wx.StaticBitmap(self, -1, name="colormap_bitmap", size=(self.bitmap_width, self.bitmap_height))
+        sizer.Add(self.colormap_bitmap, 0, wx.EXPAND, 5)
 
         self.add_hi = wx.Button(self, -1, "Add Bin Above")
         self.add_hi.Bind(wx.EVT_BUTTON, self.on_add_above)
@@ -212,12 +223,24 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def populate_panel(self, name):
         self.colormap_list.set_selection_by_name(name)
+        self.colormap_name.SetValue(name)
         d = builtin_discrete_colormaps[name].copy()
-        self.colormap_list.override_control_colormap = d
+        self.working_copy = d
         self.bin_borders = list(d.bin_borders)
         self.bin_colors = list(d.bin_colors)
         self.bin_borders[0:0] = [None]  # alternates color, val, color, val ... color
         self.create_panel_controls()
+
+    def regenerate_colormap(self):
+        cmap = colors.ListedColormap(self.bin_colors)
+        values = self.bin_borders[1:]
+        d = DiscreteColormap(self.colormap_name.GetValue(), cmap)
+        d.set_values(values)
+        self.working_copy = d
+
+    def update_bitmap(self):
+        bitmap = self.control_image.calc_bitmap(self.working_copy)
+        self.colormap_bitmap.SetBitmap(bitmap)
 
     def create_panel_controls(self):
         for i, (val, color) in enumerate(zip(self.bin_borders, self.bin_colors)):
@@ -240,6 +263,12 @@ class DiscreteColormapDialog(wx.Dialog):
         self.Fit()
         self.Layout()
 
+        self.update_bitmap()
+
+    def update_panel_controls(self):
+        self.regenerate_colormap()
+        self.create_panel_controls()
+
     def colormap_changed(self, evt):
         name = self.colormap_list.get_selected_name()
         self.populate_panel(name)
@@ -257,7 +286,7 @@ class DiscreteColormapDialog(wx.Dialog):
         color = np.asarray([.5, .5, .5, 1.0], dtype=np.float32)
         self.bin_borders.append(value)
         self.bin_colors.append(color)
-        wx.CallAfter(self.create_panel_controls)
+        wx.CallAfter(self.update_panel_controls)
 
     def on_add_below(self, evt):
         current = self.bin_borders[1]
@@ -269,7 +298,7 @@ class DiscreteColormapDialog(wx.Dialog):
         color = np.asarray([.5, .5, .5, 1.0], dtype=np.float32)
         self.bin_borders[1:1] = [value]
         self.bin_colors[1:1] = [color]
-        wx.CallAfter(self.create_panel_controls)
+        wx.CallAfter(self.update_panel_controls)
 
     def add_entry(self, entry_num):
         print("adding entry %d" % entry_num)
@@ -280,10 +309,10 @@ class DiscreteColormapDialog(wx.Dialog):
         color = np.asarray([.5, .5, .5, 1.0], dtype=np.float32)
         self.bin_borders[entry_num:entry_num] = [value]
         self.bin_colors[entry_num:entry_num] = [color]
-        wx.CallAfter(self.create_panel_controls)
+        wx.CallAfter(self.update_panel_controls)
 
     def remove_entry(self, entry_num):
         print("removing entry %d" % entry_num)
         self.bin_borders[entry_num:entry_num + 1] = []
         self.bin_colors[entry_num:entry_num + 1] = []
-        wx.CallAfter(self.create_panel_controls)
+        wx.CallAfter(self.update_panel_controls)
