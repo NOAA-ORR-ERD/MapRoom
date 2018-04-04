@@ -7,7 +7,7 @@ import numpy.random as rand
 
 from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap
 from . import colors
-from ...ui.buttons import ColorSelectButton
+from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT
 
 
 class ColormapImage(object):
@@ -133,6 +133,7 @@ class ColormapEntry(wx.Panel):
 
         hbox = wx.BoxSizer(wx.HORIZONTAL)
         self.color = ColorSelectButton(self, -1, "", (0, 0, 0), size=(100, 20))
+        self.color.Bind(EVT_COLORSELECT, self.on_color_changed)
         hbox.Add(self.color, 1, wx.EXPAND)
         self.sizer.Add(hbox, 0, wx.EXPAND)
 
@@ -164,7 +165,7 @@ class ColormapEntry(wx.Panel):
             self.text.SetBackgroundColour("#FFFFFF")
         int_colors = list((color * 255.0).astype(np.uint8))
         print("color", int_colors)
-        self.color.SetColour(int_colors)
+        self.color.SetColor(int_colors)
 
     def on_add_entry(self, evt):
         self.dialog.add_entry(self.entry_num)
@@ -181,6 +182,9 @@ class ColormapEntry(wx.Panel):
             # it's not a float, or it overlaps a neighboring value
             self.text.SetBackgroundColour("#FF8080")
 
+    def on_color_changed(self, evt):
+        float_colors = np.asarray([float(c / 255.0) for c in evt.GetValue()], dtype=np.float32)
+        self.dialog.set_color(self.entry_num, float_colors)
 
 
 class DiscreteColormapDialog(wx.Dialog):
@@ -336,4 +340,8 @@ class DiscreteColormapDialog(wx.Dialog):
         if entry_num > 1 and val <= self.bin_borders[entry_num - 1]:
             raise ValueError("%f is larger than next smaller bin value %f" % (val, self.bin_borders[entry_num - 1]))
         self.bin_borders[entry_num] = val
+        wx.CallAfter(self.update_bitmap)
+
+    def set_color(self, entry_num, color):
+        self.bin_colors[entry_num] = color
         wx.CallAfter(self.update_bitmap)

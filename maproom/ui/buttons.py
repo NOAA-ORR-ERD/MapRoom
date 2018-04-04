@@ -1,9 +1,16 @@
 import wx
+import wx.lib.buttons as buttons
 import wx.lib.colourselect as csel
 import wx.lib.agw.cubecolourdialog as CCD
 
 import logging
 log = logging.getLogger(__name__)
+
+
+EVT_COLORSELECT = csel.EVT_COLOURSELECT
+ColorSelect = csel.ColourSelect
+
+GenBitmapToggleButton = buttons.GenBitmapToggleButton
 
 
 class AlwaysAlphaCCD(CCD.CubeColourDialog):
@@ -12,7 +19,9 @@ class AlwaysAlphaCCD(CCD.CubeColourDialog):
         self.mainSizer.Hide(self.showAlpha)
 
 
-class ColorSelectButton(csel.ColourSelect):
+class ColorSelectButton(ColorSelect):
+    SetColor = ColorSelect.SetColour
+
     def MakeBitmap(self):
         """ Creates a bitmap representation of the current selected colour. """
 

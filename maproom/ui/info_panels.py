@@ -1,10 +1,7 @@
 import sys
 import wx
 import wx.adv
-import wx.lib.buttons as buttons
 from wx.lib.expando import ExpandoTextCtrl
-import wx.lib.colourselect as csel
-import wx.lib.agw.cubecolourdialog as CCD
 
 from pyface.api import ImageResource
 
@@ -644,7 +641,7 @@ class ColorPickerField(InfoField):
     def create_control(self):
         color = (0, 0, 0)
         c = buttons.ColorSelectButton(self.parent, -1, "", color, size=(self.default_width, -1))
-        c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
+        c.Bind(buttons.EVT_COLORSELECT, self.color_changed)
         return c
 
     def color_changed(self, event):
@@ -1292,8 +1289,8 @@ class StatusCodeColorField(InfoField):
             hbox.Add(label, 99, wx.ALIGN_CENTER)
             hbox.AddStretchSpacer(1)
             color = tuple(int(255 * c) for c in int_to_color_floats(code_colors[code])[0:3])
-            c = csel.ColourSelect(self.ctrl, -1, "", color, size=(self.default_width, -1))
-            c.Bind(csel.EVT_COLOURSELECT, self.color_changed)
+            c = buttons.ColorSelect(self.ctrl, -1, "", color, size=(self.default_width, -1))
+            c.Bind(buttons.EVT_COLORSELECT, self.color_changed)
             hbox.Add(c, 0, wx.ALIGN_CENTER)
             sizer.Add(hbox, self.vertical_proportion, wx.EXPAND | wx.LEFT, self.panel.SIDE_SPACING)
             ctrls[id(c)] = code
