@@ -432,12 +432,23 @@ class MouseHandler(object):
             r = ((x1, y1), (x2, y2))
             renderer.draw_screen_box(r, 0.0, 0.0, 0.0, 1.0)
 
-    def show_distance_between_screen_points(self, text, sp1, sp2):
+    def distance_between_screen_points(self, sp1, sp2):
         c = self.layer_canvas
         p1 = c.get_world_point_from_screen_point(sp1)
         p2 = c.get_world_point_from_screen_point(sp2)
         km = haversine(p1, p2)
-        self.show_distance(text, km)
+        return km
+
+    def show_distance_between_screen_points(self, text, sp1, sp2, extra=0):
+        km = self.distance_between_screen_points(sp1, sp2)
+        self.show_distance(text, km + extra)
+
+    def show_cumulative_distance_between_screen_points(self, cum_text, text, sp1, sp2, extra=0):
+        km = self.distance_between_screen_points(sp1, sp2)
+        cum_km = km + extra
+        c = self.layer_canvas
+        s = "%s: %s, %s; %s: %s, %s" % (cum_text, km_to_rounded_string(cum_km), mi_to_rounded_string(cum_km * .621371), text, km_to_rounded_string(km), mi_to_rounded_string(km * .621371))
+        c.project.status_message = s
 
     def show_distance(self, text, km):
         c = self.layer_canvas
@@ -1395,6 +1406,7 @@ class AddPolylineMode(MouseHandler):
         MouseHandler.__init__(self, *args, **kwargs)
         self.points = []
         self.cursor_point = None
+        self.cumulative_distance = 0
 
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_CROSS)
@@ -1403,6 +1415,7 @@ class AddPolylineMode(MouseHandler):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_canvas
         if len(self.points) == 0:
+            self.cumulative_distance = 0
             self.reset_early_mouse_params()
             self.first_mouse_down_position = event.GetPosition()
             cp = self.get_world_point(event)
@@ -1427,9 +1440,17 @@ class AddPolylineMode(MouseHandler):
             return
         self.after_first_mouse_up = True
 
+        self.add_point_at_event(event)
+        c.render(event)
+
+    def add_point_at_event(self, event):
         cp = self.get_world_point(event)
         self.points.append(cp)
-        c.render(event)
+        if len(self.points) > 0:
+            c = self.layer_canvas
+            sp1 = c.get_screen_point_from_world_point(self.points[-1])
+            sp2 = c.get_screen_point_from_world_point(self.points[-2])
+            self.cumulative_distance += self.distance_between_screen_points(sp2, sp1)
 
     def process_right_mouse_down(self, event):
         # Mouse down only sets the initial point, after that it is ignored
@@ -1448,7 +1469,7 @@ class AddPolylineMode(MouseHandler):
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
             renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
-            self.show_distance_between_screen_points("Segment length", sp[-1], cp)
+            self.show_cumulative_distance_between_screen_points("Cumulative length", "Current segment length", sp[-1], cp, self.cumulative_distance)
         self.render_snapped_point(renderer)
 
 
@@ -1465,7 +1486,7 @@ class AddPolygonMode(AddPolylineMode):
         if self.cursor_point is not None and len(sp) > 0:
             cp = c.get_screen_point_from_world_point(self.cursor_point)
             renderer.draw_screen_line(sp[-1], cp, 1.0, 0, 1.0, 1.0, xor=True)
-            self.show_distance_between_screen_points("Segment length", sp[-1], cp)
+            self.show_cumulative_distance_between_screen_points("Cumulative length", "Current segment length", sp[-1], cp, self.cumulative_distance)
             if len(sp) > 2:
                 renderer.draw_screen_line(sp[0], sp[-1], 1.0, 1.0, 0, 1.0, xor=True, stipple_pattern=0xf0f0)
         self.render_snapped_point(renderer)
