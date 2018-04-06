@@ -74,6 +74,7 @@ def parse(string):
 
     orig_string = string
 
+    string = string.strip()
     # change W and S to a negative value
     if string.endswith('W') or string.endswith('w'):
         string = '-' + string[:-1]
