@@ -209,36 +209,24 @@ class DiscreteColormapDialog(wx.Dialog):
         self.bitmap_height = 30
         self.working_copy = None
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        lsizer = wx.BoxSizer(wx.VERTICAL)
 
+        s = wx.StaticText(self, -1, "Known colormaps:")
+        lsizer.Add(s, 0, wx.EXPAND|wx.TOP, 10)
         self.colormap_list = DiscreteOnlyColormapComboBox(self, -1, "colormap_list", popup_width=300)
         self.colormap_list.Bind(wx.EVT_COMBOBOX, self.colormap_changed)
         self.colormap_list.SetSelection(0)
-        sizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
+        lsizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
 
         s = wx.StaticText(self, -1, "Current colormap:")
-        sizer.Add(s, 0, wx.EXPAND|wx.TOP, 10)
+        lsizer.Add(s, 0, wx.EXPAND|wx.TOP, 40)
 
         self.colormap_name = wx.TextCtrl(self, -1, name="colormap_name")
-        sizer.Add(self.colormap_name, 0, wx.EXPAND, 5)
+        lsizer.Add(self.colormap_name, 0, wx.EXPAND, 5)
 
         self.control_image = ColormapImage(self.bitmap_width, self.bitmap_height)
         self.colormap_bitmap = wx.StaticBitmap(self, -1, name="colormap_bitmap", size=(self.bitmap_width, self.bitmap_height))
-        sizer.Add(self.colormap_bitmap, 0, wx.EXPAND, 5)
-
-        self.add_hi = wx.Button(self, -1, "Add Bin Above")
-        self.add_hi.Bind(wx.EVT_BUTTON, self.on_add_above)
-        sizer.Add(self.add_hi, 0, wx.ALL|wx.CENTER, 5)
-
-        self.param_panel = wx.Panel(self, -1, name="param_panel")
-        self.param_panel.SetSizer(wx.BoxSizer(wx.VERTICAL))
-        sizer.Add(self.param_panel, 1, wx.EXPAND, 0)
-
-        self.add_lo = wx.Button(self, -1, "Add Bin Below")
-        self.add_lo.Bind(wx.EVT_BUTTON, self.on_add_below)
-        sizer.Add(self.add_lo, 0, wx.ALL|wx.CENTER, 5)
-
-        self.panel_controls = []
+        lsizer.Add(self.colormap_bitmap, 0, wx.EXPAND, 5)
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
@@ -248,7 +236,27 @@ class DiscreteColormapDialog(wx.Dialog):
         btnsizer.AddButton(btn)
         btnsizer.Realize()
 
-        sizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        lsizer.AddStretchSpacer(1)
+        lsizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+
+        rsizer = wx.BoxSizer(wx.VERTICAL)
+        self.add_hi = wx.Button(self, -1, "Add Bin Above")
+        self.add_hi.Bind(wx.EVT_BUTTON, self.on_add_above)
+        rsizer.Add(self.add_hi, 0, wx.ALL|wx.CENTER, 5)
+
+        self.param_panel = wx.Panel(self, -1, name="param_panel")
+        self.param_panel.SetSizer(wx.BoxSizer(wx.VERTICAL))
+        rsizer.Add(self.param_panel, 1, wx.EXPAND, 0)
+
+        self.add_lo = wx.Button(self, -1, "Add Bin Below")
+        self.add_lo.Bind(wx.EVT_BUTTON, self.on_add_below)
+        rsizer.Add(self.add_lo, 0, wx.ALL|wx.CENTER, 5)
+
+        self.panel_controls = []
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        sizer.Add(lsizer, 0, wx.EXPAND|wx.ALL, 5)
+        sizer.Add(rsizer, 1, wx.EXPAND|wx.ALL, 5)
         self.SetSizer(sizer)
 
         self.populate_panel(current.name)
