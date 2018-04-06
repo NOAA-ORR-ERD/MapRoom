@@ -26,6 +26,7 @@ class ColormapImage(object):
             if width != self.width:
                 self.create_image_array(width)
         if colormap.is_discrete:
+            bgcolor = bgcolor[0:3]
             middle_width = self.width - 2 * self.arrow_width
             middle = colormap.calc_rgb_texture(middle_width)
             self.array[:,self.arrow_width:-self.arrow_width,:] = middle
@@ -105,11 +106,11 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
             width = r.width - 2 * self.internal_spacing
             x = self.internal_spacing
             y = (r.height - self.height) // 2
-            b = self.control_image.calc_bitmap(c, width)
+            b = self.control_image.calc_bitmap(c, width, self.GetParent().GetBackgroundColour())
             dc.DrawBitmap(b, r.x + x, r.y + y)
         else:
             width = r.width - 2 * self.internal_spacing
-            b = self.dropdown_image.calc_bitmap(c, width)
+            b = self.dropdown_image.calc_bitmap(c, width, self.GetParent().GetBackgroundColour())
             dc.DrawBitmap(b, r.x + self.bitmap_x, r.y + self.bitmap_y)
             dc.DrawText(c.name, r.x + self.bitmap_x, r.y)
 
@@ -285,7 +286,7 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def update_bitmap(self):
         self.regenerate_colormap()
-        bitmap = self.control_image.calc_bitmap(self.working_copy)
+        bitmap = self.control_image.calc_bitmap(self.working_copy, bgcolor=self.GetParent().GetBackgroundColour())
         self.colormap_bitmap.SetBitmap(bitmap)
 
     def create_panel_controls(self):
@@ -318,7 +319,7 @@ class DiscreteColormapDialog(wx.Dialog):
         self.populate_panel(name)
 
     def get_colormap(self):
-        return self.colormap_list.get_selected_name()
+        return self.working_copy
 
     def on_add_above(self, evt):
         current = self.bin_borders[-1]
