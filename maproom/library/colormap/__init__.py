@@ -1,5 +1,7 @@
 import numpy as np
 
+from .. import math_utils
+
 from . import colors
 from . import cm
 
@@ -22,7 +24,12 @@ class ScaledColormap(object):
     def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.0):
         self.name = name
         self.cmap = self.preprocess_colormap(cmap)
+        self.mapping = None
+        self.user_defined_bin_bounds = None
         self.set_bounds(lo, hi, extra_padding)
+
+    def __repr__(self):
+        return "ScaledColormap %s, %s-%s" % (self.name, self.lo_val, self.hi_val)
 
     @property
     def under_rgba(self):
@@ -43,17 +50,21 @@ class ScaledColormap(object):
         if values is not None:
             lo = min(values)
             hi = max(values)
+            self.user_defined_bin_bounds = np.asarray(values, dtype=np.float32)
         self.lo_val = lo
         self.hi_val = hi
         delta = abs(hi - lo)
         self.lo_padded = lo - extra_padding * delta
         self.hi_padded = hi + extra_padding * delta
-        self.mapping = self.create_colormap(values)
+        self.mapping = self.create_colormap()
 
     def set_values(self, values):
         self.set_bounds(values=values)
 
-    def create_colormap(self, values=None):
+    def calc_labels(self, lo, hi):
+        return math_utils.calc_labels(lo, hi)
+
+    def create_colormap(self):
         norm  = colors.Normalize(vmin=self.lo_padded, vmax=self.hi_padded)
         mapping = cm.ScalarMappable(norm=norm, cmap=self.cmap)
         return mapping
@@ -85,6 +96,19 @@ class DiscreteColormap(ScaledColormap):
     # Always have an under and over!
     is_discrete = True
 
+    def __repr__(self):
+        return "DiscreteColormap %s, %s-%s, bins=%s" % (self.name, self.lo_val, self.hi_val, self.bin_borders)
+
+    def calc_labels(self, lo, hi):
+        # Return percent, text pairs for each bin boundary
+        bins = self.bin_borders
+        print("BOESUBRCOEUHRCOEUHSOEUHSRCOEUH", bins)
+        labels = []
+        for val in bins:
+            perc = (val - lo) / (hi - lo)
+            labels.append((perc, str(val)))
+        return labels
+
     @property
     def under_rgba(self):
         return colors.colorConverter.to_rgba(self.cmap._rgba_under)
@@ -107,21 +131,28 @@ class DiscreteColormap(ScaledColormap):
     def copy(self):
         return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val)
 
-    def create_colormap(self, values=None):
-        #bounds = [13.442, 13.443, 13.445, 13.448]
-        if values is None:
-            bounds = np.linspace(self.lo_padded, self.hi_padded, self.cmap.N + 1)
+    def create_colormap(self):
+        print("CREATE DISCRETE COLORMAP %s values" % self.name, self.user_defined_bin_bounds)
+        if self.user_defined_bin_bounds is not None:
+            bins = self.user_defined_bin_bounds[:]
+            nbins = (bins - min(bins)) / max(bins)
+            bounds_range = self.hi_val - self.lo_val
+            bounds = (nbins * bounds_range) + self.lo_val
+            print("  NEW DISCRETE COLORMAP bounds", bounds)
         else:
-            bounds = values
+            bounds = np.linspace(self.lo_padded, self.hi_padded, self.cmap.N + 1)
         norm = colors.BoundaryNorm(bounds, self.cmap.N)
         mapping = cm.ScalarMappable(norm=norm, cmap=self.cmap)
         return mapping
 
     @property
     def bin_borders(self):
-        bins = list(self.mapping.norm.boundaries)
-        bins[0] = self.lo_val
-        bins[-1] = self.hi_val
+        if self.mapping is not None:
+            bins = list(self.mapping.norm.boundaries)
+            bins[0] = self.lo_val
+            bins[-1] = self.hi_val
+        else:
+            bins = []
         return bins
 
     @property
@@ -146,4 +177,4 @@ def get_colormap(name):
         return builtin_continuous_colormaps[name]
     elif name in builtin_discrete_colormaps:
         return builtin_discrete_colormaps[name]
-    raise RuntimeError("DiscreteColormap!")
+    raise KeyError("unknown colormap '%s'" % name)

@@ -1573,7 +1573,7 @@ class DiscreteColormapField(InfoField):
         d = DiscreteColormapDialog(self.panel.project.control, layer.colormap)
         ret = d.ShowModal()
         if ret != wx.ID_CANCEL:
-            name = d.get_colormap()
+            name = d.get_edited_colormap()
             wx.CallAfter(self.change_variable, layer, name)
 
     def change_variable(self, layer, name):

@@ -272,10 +272,11 @@ class ParticleLegend(ScreenLayer):
         parent = self.source_particle_folder
 
         if parent.current_scalar_var is not None:
+            c = parent.colormap
             if parent.current_min_max == None:
                 labels1 = []
             else:
-                labels1 = math_utils.calc_labels(*parent.current_min_max)
+                labels1 = c.calc_labels(*parent.current_min_max)
 
             label_width = 0
             labels2 = []
@@ -291,7 +292,6 @@ class ParticleLegend(ScreenLayer):
             x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
             y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
 
-            c = parent.colormap
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
             colors = c.calc_rgba_texture()
             renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing, up_color=c.over_rgba, down_color=c.under_rgba)
@@ -546,6 +546,8 @@ class ParticleLayer(PointBaseLayer):
     def set_colormap(self, name):
         try:
             self.colormap = colormap.get_colormap(name)
+        except KeyError:
+            self.colormap = name
         except ValueError:
             prefs = self.manager.project.task.preferences
             self.colormap = colormap.get_colormap(prefs.colormap_name)

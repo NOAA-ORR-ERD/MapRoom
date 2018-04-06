@@ -318,7 +318,9 @@ class DiscreteColormapDialog(wx.Dialog):
         name = self.colormap_list.get_selected_name()
         self.populate_panel(name)
 
-    def get_colormap(self):
+    def get_edited_colormap(self):
+        self.working_copy.name += "prime"
+        print("FINISHED COLORMAP!", self.working_copy)
         return self.working_copy
 
     def on_add_above(self, evt):
