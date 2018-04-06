@@ -364,7 +364,8 @@ class MouseHandler(object):
             if isinstance(effective_mode, RectSelectMode):
                 if (keycode == wx.WXK_ESCAPE):
                     c.mouse_is_down = False
-                    c.ReleaseMouse()
+                    if c.HasCapture():
+                        c.ReleaseMouse()
                     c.render()
                     handled = True
         if not handled:
