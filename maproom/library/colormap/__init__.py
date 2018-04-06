@@ -104,9 +104,10 @@ class DiscreteColormap(ScaledColormap):
         bins = self.bin_borders
         print("BOESUBRCOEUHRCOEUHSOEUHSRCOEUH", bins)
         labels = []
-        for val in bins:
+        rounded_labels = math_utils.round_minimum_unique_digits(bins)
+        for val, rounded in zip(bins, rounded_labels):
             perc = (val - lo) / (hi - lo)
-            labels.append((perc, str(val)))
+            labels.append((perc, rounded))
         return labels
 
     @property

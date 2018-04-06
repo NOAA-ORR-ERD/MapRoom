@@ -70,6 +70,31 @@ def calc_labels(lo, hi, tolerance=.05):
         val += delta
     return labels
 
+def round_minimum_unique_digits(values):
+    # Round each entry in the list of numbers to find the minimum number of
+    # digits needed to display each value uniquely
+    lo = min(values)
+    hi = max(values)
+    llo, lhi = math.floor(math.log10(lo)), math.floor(math.log10(hi))
+    log_range = lhi - llo
+    exp_range = math.floor(math.log10(hi - lo))
+    base_size = max(llo, lhi)
+    stop_at_exp = exp_range - base_size
+    #print("lo,hi,range", lo, hi, hi - lo, math.log10(hi - lo), exp_range, llo, lhi, stop_at_exp)
+    scale = math.pow(10, stop_at_exp)
+    rounded = [int(v / scale) * scale for v in values]
+    #print(values)
+    #print(rounded)
+    fmt = "%%.%df" % abs(stop_at_exp)
+    labels = [fmt % r for r in rounded]
+    #print(labels)
+    return labels
+
+
 if __name__ == "__main__":
     print(calc_labels(1.2, 27))
     print(calc_labels(1.2, 2.7))
+    print(round_minimum_unique_digits([142.45, 142.44333, 142.43332, 142.432, 142.4324,12,999]))
+    print(round_minimum_unique_digits([142.451109853, 142.44333121983, 142.43332, 142.432, 142.4324]))
+    print(round_minimum_unique_digits([142.451109853, 141.44333121983, 140.43332, 139.432, 138.4324]))
+    print(round_minimum_unique_digits([3142.451109853, 2141.44333121983, 1140.43332, 139.432, 138.4324]))
