@@ -12,6 +12,7 @@ from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT
 
 class ColormapImage(object):
     def __init__(self, width, height):
+        self.arrow_width = 20
         self.height = height
         self.create_image_array(width)
 
@@ -20,12 +21,26 @@ class ColormapImage(object):
         self.array = np.empty((self.height, width, 3), dtype='uint8')
         self.image = wx.ImageFromBuffer(width, self.height, self.array)
 
-    def calc_bitmap(self, colormap, width=None):
+    def calc_bitmap(self, colormap, width=None, bgcolor=(255, 255, 255)):
         if width is not None:
             if width != self.width:
                 self.create_image_array(width)
-        colors = colormap.calc_rgb_texture(self.width)
-        self.array[:,:,:] = colors
+        if colormap.is_discrete:
+            middle_width = self.width - 2 * self.arrow_width
+            middle = colormap.calc_rgb_texture(middle_width)
+            self.array[:,self.arrow_width:-self.arrow_width,:] = middle
+            self.array[:,0:self.arrow_width,:] = np.asarray(colormap.under_rgba[0:3], dtype=np.float32) * 255
+            self.array[:,-self.arrow_width:,:] = np.asarray(colormap.over_rgba[0:3], dtype=np.float32) * 255
+            half_height = self.height // 2
+            for h in range(half_height):
+                w = self.arrow_width * h * 2 / self.height
+                self.array[half_height - h - 1,0:w,:] = bgcolor
+                self.array[self.height - half_height + h,0:w,:] = bgcolor
+                self.array[half_height - h - 1,self.width-w:,:] = bgcolor
+                self.array[self.height - half_height + h,self.width-w:,:] = bgcolor
+        else:
+            colors = colormap.calc_rgb_texture(self.width)
+            self.array[:,:,:] = colors
         return wx.BitmapFromImage(self.image)
 
 
@@ -188,8 +203,6 @@ class ColormapEntry(wx.Panel):
 
 
 class DiscreteColormapDialog(wx.Dialog):
-    displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon"]
-
     def __init__(self, parent, current):
         wx.Dialog.__init__(self, parent, -1, "Edit Discrete Colormaps", size=(500, -1))
         self.bitmap_width = 300
@@ -202,6 +215,9 @@ class DiscreteColormapDialog(wx.Dialog):
         self.colormap_list.Bind(wx.EVT_COMBOBOX, self.colormap_changed)
         self.colormap_list.SetSelection(0)
         sizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
+
+        s = wx.StaticText(self, -1, "Current colormap:")
+        sizer.Add(s, 0, wx.EXPAND|wx.TOP, 10)
 
         self.colormap_name = wx.TextCtrl(self, -1, name="colormap_name")
         sizer.Add(self.colormap_name, 0, wx.EXPAND, 5)
