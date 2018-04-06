@@ -5,7 +5,7 @@ import wx.adv
 import numpy as np
 import numpy.random as rand
 
-from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap
+from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, user_defined_discrete_colormaps
 from . import colors
 from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT
 
@@ -72,9 +72,12 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
         self.SetPopupMinWidth(popup_width)
 
     def recalc_order(self):
-        self.colormap_name_order = sorted(builtin_discrete_colormaps.keys()) + sorted(builtin_continuous_colormaps.keys())
+        self.colormap_name_order = sorted(user_defined_discrete_colormaps.keys()) + sorted(builtin_discrete_colormaps.keys()) + sorted(builtin_continuous_colormaps.keys())
         self.discrete_start = 0
         self.continuous_start = len(builtin_discrete_colormaps)
+
+    def rebuild_colormap_list(self):
+        self.recalc_order()
 
     def index_of(self, name):
         return self.colormap_name_order.index(name)
@@ -136,7 +139,7 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
 
 class DiscreteOnlyColormapComboBox(ColormapComboBox):
     def recalc_order(self):
-        self.colormap_name_order = sorted(builtin_discrete_colormaps.keys())
+        self.colormap_name_order = sorted(user_defined_discrete_colormaps.keys()) + sorted(builtin_discrete_colormaps.keys())
 
 
 class ColormapEntry(wx.Panel):
@@ -264,7 +267,7 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def populate_panel(self, name):
         try:
-            d = builtin_discrete_colormaps[name].copy()
+            d = get_colormap(name, True).copy()
         except KeyError:
             # not a valid discrete colormap name; start from the first item
             name = self.colormap_list.colormap_name_order[0]

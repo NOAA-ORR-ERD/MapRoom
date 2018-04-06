@@ -547,7 +547,9 @@ class ParticleLayer(PointBaseLayer):
         try:
             self.colormap = colormap.get_colormap(name)
         except KeyError:
+            # it's not really a colormap name, it's a colormap class
             self.colormap = name
+            colormap.register_colormap(name)
         except ValueError:
             prefs = self.manager.project.task.preferences
             self.colormap = colormap.get_colormap(prefs.colormap_name)

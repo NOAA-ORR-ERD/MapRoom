@@ -21,12 +21,12 @@ class ColormapMapping(object):
 class ScaledColormap(object):
     is_discrete = False
 
-    def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.0):
+    def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.0, values=None):
         self.name = name
         self.cmap = self.preprocess_colormap(cmap)
         self.mapping = None
         self.user_defined_bin_bounds = None
-        self.set_bounds(lo, hi, extra_padding)
+        self.set_bounds(lo, hi, extra_padding, values)
 
     def __repr__(self):
         return "ScaledColormap %s, %s-%s" % (self.name, self.lo_val, self.hi_val)
@@ -43,6 +43,7 @@ class ScaledColormap(object):
         return cmap
 
     def set_bounds(self, lo=None, hi=None, extra_padding=0.0, values=None):
+        self.extra_padding = extra_padding
         if lo is None:
             lo = 0.0
         if hi is None:
@@ -130,7 +131,7 @@ class DiscreteColormap(ScaledColormap):
         return c
 
     def copy(self):
-        return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val)
+        return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val, self.extra_padding, self.user_defined_bin_bounds)
 
     def create_colormap(self):
         print("CREATE DISCRETE COLORMAP %s values" % self.name, self.user_defined_bin_bounds)
@@ -152,6 +153,7 @@ class DiscreteColormap(ScaledColormap):
             bins = list(self.mapping.norm.boundaries)
             bins[0] = self.lo_val
             bins[-1] = self.hi_val
+            print("using bin_borders: %s" % str(bins))
         else:
             bins = []
         return bins
@@ -172,10 +174,18 @@ builtin_discrete_colormaps = {name:DiscreteColormap(name, cm.get_cmap(name)) for
 
 sample_discrete = colors.ListedColormap(['#ff0000', '#004400', '#007700', '#00aa00', '#0000ff'])
 builtin_discrete_colormaps['sample_lat'] = DiscreteColormap('sample_lat', sample_discrete)
+user_defined_discrete_colormaps = {}
 
-def get_colormap(name):
-    if name in builtin_continuous_colormaps:
+def get_colormap(name, discrete_only=False):
+    if not discrete_only and name in builtin_continuous_colormaps:
         return builtin_continuous_colormaps[name]
     elif name in builtin_discrete_colormaps:
         return builtin_discrete_colormaps[name]
+    elif name in user_defined_discrete_colormaps:
+        return user_defined_discrete_colormaps[name]
     raise KeyError("unknown colormap '%s'" % name)
+
+def register_colormap(c):
+    global user_defined_discrete_colormaps
+
+    user_defined_discrete_colormaps[c.name] = c

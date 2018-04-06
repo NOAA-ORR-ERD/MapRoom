@@ -1536,6 +1536,7 @@ class ColormapField(InfoField):
         return layer.is_using_colormap()
 
     def fill_data(self, layer):
+        self.ctrl.rebuild_colormap_list()
         self.ctrl.set_selection_by_name(layer.colormap.name)
 
     def create_control(self):
