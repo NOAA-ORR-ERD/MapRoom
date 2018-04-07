@@ -100,6 +100,22 @@ class DiscreteColormap(ScaledColormap):
     def __repr__(self):
         return "DiscreteColormap %s, %s-%s, bins=%s" % (self.name, self.lo_val, self.hi_val, self.bin_borders)
 
+    def to_json(self):
+        return {
+            'bin_colors': [colors.to_hex(c, True) for c in self.bin_colors],
+            'bin_borders': self.bin_borders,
+            'extra_padding': self.extra_padding,
+            'name': self.name,
+        }
+
+    @classmethod
+    def from_json(self, e):
+        bin_colors = e['bin_colors']
+        c = colors.ListedColormap(bin_colors[1:-1], e['name'])
+        c.set_under(bin_colors[0])
+        c.set_over(bin_colors[-1])
+        return DiscreteColormap(e['name'], c, extra_padding=e['extra_padding'], values=e['bin_borders'])
+
     def calc_labels(self, lo, hi):
         # Return percent, text pairs for each bin boundary
         bins = self.bin_borders
@@ -189,3 +205,8 @@ def register_colormap(c):
     global user_defined_discrete_colormaps
 
     user_defined_discrete_colormaps[c.name] = c
+
+def user_defined_colormaps_to_json():
+    e = {}
+    for name, colormap in user_defined_discrete_colormaps.iteritems():
+        e[name] = colormap.to_json()
