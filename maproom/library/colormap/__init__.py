@@ -5,6 +5,9 @@ from .. import math_utils
 from . import colors
 from . import cm
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class ColormapMapping(object):
     def __init__(self, colormap_generator, lo=None, hi=None, extra_padding=0.1):
@@ -44,14 +47,14 @@ class ScaledColormap(object):
 
     def set_bounds(self, lo=None, hi=None, extra_padding=0.0, values=None):
         self.extra_padding = extra_padding
-        if lo is None:
-            lo = 0.0
-        if hi is None:
-            hi = 1.0
         if values is not None:
             lo = min(values)
             hi = max(values)
             self.user_defined_bin_bounds = np.asarray(values, dtype=np.float32)
+        if lo is None:
+            lo = 0.0
+        if hi is None:
+            hi = 1.0
         self.lo_val = lo
         self.hi_val = hi
         delta = abs(hi - lo)
@@ -103,8 +106,8 @@ class DiscreteColormap(ScaledColormap):
     def to_json(self):
         return {
             'bin_colors': [colors.to_hex(c, True) for c in self.bin_colors],
-            'bin_borders': self.bin_borders,
-            'extra_padding': self.extra_padding,
+            'bin_borders': [float(v) for v in self.bin_borders],  # get rid of numpy objects
+            'extra_padding': float(self.extra_padding),
             'name': self.name,
         }
 
@@ -119,12 +122,13 @@ class DiscreteColormap(ScaledColormap):
     def calc_labels(self, lo, hi):
         # Return percent, text pairs for each bin boundary
         bins = self.bin_borders
-        print("BOESUBRCOEUHRCOEUHSOEUHSRCOEUH", bins)
+        log.debug("calc_labels: bins=%s" % str(bins))
         labels = []
         rounded_labels = math_utils.round_minimum_unique_digits(bins)
         for val, rounded in zip(bins, rounded_labels):
             perc = (val - lo) / (hi - lo)
             labels.append((perc, rounded))
+        log.debug("calc_labels: generated labels: %s" % str(labels))
         return labels
 
     @property
@@ -194,10 +198,13 @@ user_defined_discrete_colormaps = {}
 
 def get_colormap(name, discrete_only=False):
     if not discrete_only and name in builtin_continuous_colormaps:
+        log.debug("found colormap %s in builtin_continuous_colormaps" % name)
         return builtin_continuous_colormaps[name]
     elif name in builtin_discrete_colormaps:
+        log.debug("found colormap %s in builtin_discrete_colormaps" % name)
         return builtin_discrete_colormaps[name]
     elif name in user_defined_discrete_colormaps:
+        log.debug("found colormap %s in user_defined_discrete_colormaps" % name)
         return user_defined_discrete_colormaps[name]
     raise KeyError("unknown colormap '%s'" % name)
 
@@ -207,6 +214,24 @@ def register_colormap(c):
     user_defined_discrete_colormaps[c.name] = c
 
 def user_defined_colormaps_to_json():
-    e = {}
+    e = []
     for name, colormap in user_defined_discrete_colormaps.iteritems():
-        e[name] = colormap.to_json()
+        j = colormap.to_json()
+        e.append(colormap.to_json())
+    print("serialized colormaps: %s" % (e))
+    return e
+
+def user_defined_colormaps_from_json(e):
+    try:
+        for j in e:
+            log.debug("restoring colormap item %s" % repr(j))
+            try:
+                c = DiscreteColormap.from_json(j)
+            except Exception, e:
+                log.error("%s: Failed parsing colormap for %s" % (e, repr(j)))
+            else:
+                builtin_discrete_colormaps[j['name']] = c
+    except Exception, e:
+        log.error("%s: Invalid colormap format in json", e)
+        print e.traceback
+        raise

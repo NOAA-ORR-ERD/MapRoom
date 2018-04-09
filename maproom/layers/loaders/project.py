@@ -59,11 +59,18 @@ class ZipProjectLoader(BaseLoader):
         if zipfile.is_zipfile(fh):
             log.debug("found zipfile")
             with zipfile.ZipFile(fh, 'r') as zf:
+                valid = True
                 try:
                     info = zf.getinfo("extra json data")
+                    valid = True
                 except KeyError:
                     pass
-                else:
+                try:
+                    info = zf.getinfo("pre json data")
+                    valid = True
+                except KeyError:
+                    pass
+                if valid:
                     log.debug("found extra json data")
                     layer_data, extra = manager.load_all_from_zip(zf, batch_flags)
                     layers = manager.add_all(layer_data)

@@ -31,6 +31,7 @@ from pyface.api import GUI
 from omnivore.framework.document import BaseDocument
 from omnivore.utils.jsonutil import collapse_json
 from omnivore.utils.fileutil import ExpandZip
+from library import colormap
 
 import logging
 log = logging.getLogger(__name__)
@@ -1151,9 +1152,19 @@ class LayerManager(BaseDocument):
                 batch_flags.messages.append("WARNING: %s" % message)
 
     def load_all_from_zip(self, zf, batch_flags=None):
-        expanded_zip = ExpandZip(zf, ["extra json data", "json layer description"])
+        expanded_zip = ExpandZip(zf, ["pre json data", "post json data", "extra json data", "json layer description"])
         order = []
-        text = zf.read("extra json data")
+        try:
+            text = zf.read("pre json data")
+        except KeyError:
+            pass  # optional file, so skip if doesn't exist
+        else:
+            pre_json = json.loads(text)
+            self.process_pre_json_data(pre_json)
+        try:
+            text = zf.read("post json data")
+        except KeyError:
+            text = zf.read("extra json data")
         extra_json = json.loads(text)
         for info in zf.infolist():
             print("info: %s" % info.filename)
@@ -1188,6 +1199,27 @@ class LayerManager(BaseDocument):
     def save_all(self, file_path, extra_json_data=None):
         return self.save_all_zip(file_path, extra_json_data)
 
+    def process_pre_json_data(self, json):
+        # pre json data is stuff that layers need to exist at the time they are
+        # created
+        if "discrete_colormaps" in json:
+            colormap.user_defined_colormaps_from_json(json["discrete_colormaps"])
+
+    def calc_pre_json_data(self, pre_json_data=None):
+        if pre_json_data is None:
+            pre_json_data = {}
+        pre_json_data["discrete_colormaps"] = colormap.user_defined_colormaps_to_json()
+        log.debug("pre json data:\n%s" % repr(pre_json_data))
+        return pre_json_data
+
+    def calc_post_json_data(self, extra_json_data=None):
+        if extra_json_data is None:
+            extra_json_data = {}
+        for attr, to_json in self.get_to_json_attrs():
+            extra_json_data[attr] = to_json()
+        log.debug("post json data:\n%s" % repr(extra_json_data))
+        return extra_json_data
+
     def save_all_zip(self, file_path, extra_json_data=None):
         """Save all layers into a zip file that includes any referenced images,
         shapefiles, etc. so the file becomes portable and usable on other
@@ -1200,16 +1232,21 @@ class LayerManager(BaseDocument):
         log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
         log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
 
-        if extra_json_data is None:
-            extra_json_data = {}
-        for attr, to_json in self.get_to_json_attrs():
-            extra_json_data[attr] = to_json()
-        log.debug("extra json data")
-        log.debug(str(extra_json_data))
+        pre_json_data = self.calc_pre_json_data()
+        post_json_data = self.calc_post_json_data(extra_json_data)
         try:
             with fsopen(file_path, "wb") as fh:
                 zf = zipfile.ZipFile(fh, mode='w', compression=zipfile.ZIP_DEFLATED)
-                zf.writestr("extra json data", json.dumps(extra_json_data))
+                try:
+                    zf.writestr("pre json data", json.dumps(pre_json_data))
+                except TypeError:
+                    log.error("Failed encoding pre json data:\n%s" % repr(pre_json_data))
+                    raise
+                try:
+                    zf.writestr("post json data", json.dumps(post_json_data))
+                except TypeError:
+                    log.error("Failed encoding post json data:\n%s" % repr(post_json_data))
+                    raise
                 for index, layer in layer_info:
                     zip_root = "/".join([str(a) for a in index]) + "/"
                     log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))

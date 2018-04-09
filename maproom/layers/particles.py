@@ -459,7 +459,7 @@ class ParticleLayer(PointBaseLayer):
         return self.colormap.name
 
     def colormap_from_json(self, json_data):
-        self.colormap = colormap.get_colormap(json_data['colormap_name'])
+        self.colormap = colormap.get_colormap(json_data['colormap'])
 
     def from_json_sanity_check_after_load(self, json_data):
         if not self.status_code_count:
