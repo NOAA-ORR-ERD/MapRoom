@@ -75,7 +75,11 @@ def round_minimum_unique_digits(values):
     # digits needed to display each value uniquely
     lo = min(values)
     hi = max(values)
-    llo, lhi = math.floor(math.log10(lo)), math.floor(math.log10(hi))
+    if lo == hi:
+        hi += 1.0  # make sure there is some difference
+    llo = len(str(abs(int(lo))))
+    lhi = len(str(abs(int(hi))))
+    #llo, lhi = math.floor(math.log10(lo)), math.floor(math.log10(hi))
     log_range = lhi - llo
     exp_range = math.floor(math.log10(hi - lo))
     base_size = max(llo, lhi)
@@ -98,3 +102,4 @@ if __name__ == "__main__":
     print(round_minimum_unique_digits([142.451109853, 142.44333121983, 142.43332, 142.432, 142.4324]))
     print(round_minimum_unique_digits([142.451109853, 141.44333121983, 140.43332, 139.432, 138.4324]))
     print(round_minimum_unique_digits([3142.451109853, 2141.44333121983, 1140.43332, 139.432, 138.4324]))
+    print(round_minimum_unique_digits([0.0, 0.16666666666666666, 0.33333333333333331, 0.5, 0.66666666666666663, 0.83333333333333326, 1.0]))
