@@ -244,19 +244,29 @@ class DiscreteColormapDialog(wx.Dialog):
         lsizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
 
         rsizer = wx.BoxSizer(wx.VERTICAL)
-        self.add_hi = wx.Button(self, -1, "Add Bin Above")
+
+        self.scrolled_param_panel =  wx.lib.scrolledpanel.ScrolledPanel(self, -1, name="param_panel", size=(400, 500))
+        self.scrolled_param_panel.ShowScrollbars(False, True)
+        self.scrolled_param_panel.SetAutoLayout(1)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.add_hi = wx.Button(self.scrolled_param_panel, -1, "Add Bin Above")
         self.add_hi.Bind(wx.EVT_BUTTON, self.on_add_above)
-        rsizer.Add(self.add_hi, 0, wx.ALL|wx.CENTER, 5)
+        sizer.Add(self.add_hi, 0, wx.ALL|wx.CENTER, 5)
 
-        self.param_panel = wx.Panel(self, -1, name="param_panel")
+        self.param_panel = wx.Panel(self.scrolled_param_panel, -1, name="param_panel")
         self.param_panel.SetSizer(wx.BoxSizer(wx.VERTICAL))
-        rsizer.Add(self.param_panel, 1, wx.EXPAND, 0)
-
-        self.add_lo = wx.Button(self, -1, "Add Bin Below")
-        self.add_lo.Bind(wx.EVT_BUTTON, self.on_add_below)
-        rsizer.Add(self.add_lo, 0, wx.ALL|wx.CENTER, 5)
-
+        self.param_panel.GetSizer().AddStretchSpacer(1)
         self.panel_controls = []
+        sizer.Add(self.param_panel, 1, wx.EXPAND, 0)
+
+        self.add_lo = wx.Button(self.scrolled_param_panel, -1, "Add Bin Below")
+        self.add_lo.Bind(wx.EVT_BUTTON, self.on_add_below)
+        sizer.Add(self.add_lo, 0, wx.ALL|wx.CENTER, 5)
+        self.scrolled_param_panel.SetSizer(sizer)
+
+        rsizer.Add(self.scrolled_param_panel, 1, wx.EXPAND, 0)
+
+        # rsizer.AddStretchSpacer(1)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(lsizer, 0, wx.EXPAND|wx.ALL, 5)
@@ -301,7 +311,7 @@ class DiscreteColormapDialog(wx.Dialog):
                     raise IndexError
             except IndexError:
                 c = ColormapEntry(self.param_panel, i)
-                self.param_panel.GetSizer().Insert(0, c, 1, wx.EXPAND, 0)
+                self.param_panel.GetSizer().Insert(0, c, 0, wx.EXPAND, 0)
                 self.panel_controls.append(c)
             c.set_values(val, color)
             c.Show()
@@ -310,6 +320,9 @@ class DiscreteColormapDialog(wx.Dialog):
             self.panel_controls[i].Hide()
             i += 1
         self.param_panel.GetSizer().Layout()
+        self.scrolled_param_panel.Layout()
+        self.scrolled_param_panel.Fit()
+        self.scrolled_param_panel.SetupScrolling(scroll_x=False, scrollToTop=False, scrollIntoView=True)
         self.Fit()
         self.Layout()
 
