@@ -232,6 +232,10 @@ class DiscreteColormapDialog(wx.Dialog):
         self.colormap_bitmap = wx.StaticBitmap(self, -1, name="colormap_bitmap", size=(self.bitmap_width, self.bitmap_height))
         lsizer.Add(self.colormap_bitmap, 0, wx.EXPAND, 5)
 
+        b = wx.Button(self, -1, "Scale Bins to Current Data")
+        b.Bind(wx.EVT_BUTTON, self.on_scale_data)
+        lsizer.Add(b, 0, wx.ALL|wx.CENTER|wx.TOP, 40)
+
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
         btn.SetDefault()
@@ -393,3 +397,8 @@ class DiscreteColormapDialog(wx.Dialog):
     def set_color(self, entry_num, color):
         self.bin_colors[entry_num] = color
         wx.CallAfter(self.update_bitmap)
+
+    def on_scale_data(self, evt):
+        # Rescale current colormap to match data instead of autoscaling when
+        # map is loaded
+        pass
