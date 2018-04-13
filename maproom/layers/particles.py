@@ -532,7 +532,7 @@ class ParticleLayer(PointBaseLayer):
             values = self.scalar_vars[var]
             lo, hi = self.scalar_min_max[var]
             self.current_min_max = lo, hi
-            self.colormap.set_bounds(lo, hi)
+            self.colormap.adjust_bounds(lo, hi)
             colors = self.colormap.get_opengl_colors(values)
             self.points.color = colors
         else:

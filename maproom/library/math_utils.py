@@ -92,7 +92,7 @@ def round_minimum_unique_digits(values):
     fmt = "%%.%df" % abs(stop_at_exp)
     labels = [fmt % r for r in rounded]
     #print(labels)
-    return labels
+    return lo, hi, labels
 
 
 if __name__ == "__main__":

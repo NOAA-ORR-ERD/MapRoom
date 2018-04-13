@@ -143,10 +143,10 @@ class DiscreteOnlyColormapComboBox(ColormapComboBox):
 
 
 class ColormapEntry(wx.Panel):
-    def __init__(self, parent, num):
+    def __init__(self, parent, num, dialog):
         wx.Panel.__init__(self, parent, -1, name="panel#%d" % num)
         self.entry_num = num
-        self.dialog = parent.GetParent()
+        self.dialog = dialog
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
 
@@ -207,11 +207,12 @@ class ColormapEntry(wx.Panel):
 
 
 class DiscreteColormapDialog(wx.Dialog):
-    def __init__(self, parent, current):
+    def __init__(self, parent, current_colormap, values_min_max):
         wx.Dialog.__init__(self, parent, -1, "Edit Discrete Colormaps", size=(500, -1))
         self.bitmap_width = 300
         self.bitmap_height = 30
         self.working_copy = None
+        self.values_min_max = values_min_max
 
         lsizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -232,9 +233,14 @@ class DiscreteColormapDialog(wx.Dialog):
         self.colormap_bitmap = wx.StaticBitmap(self, -1, name="colormap_bitmap", size=(self.bitmap_width, self.bitmap_height))
         lsizer.Add(self.colormap_bitmap, 0, wx.EXPAND, 5)
 
-        b = wx.Button(self, -1, "Scale Bins to Current Data")
-        b.Bind(wx.EVT_BUTTON, self.on_scale_data)
-        lsizer.Add(b, 0, wx.ALL|wx.CENTER|wx.TOP, 40)
+        if self.values_min_max is not None:
+            b = wx.Button(self, -1, "Scale Bins to Current Data")
+            b.Bind(wx.EVT_BUTTON, self.on_scale_data)
+            lsizer.Add(b, 0, wx.ALL|wx.CENTER|wx.TOP, 40)
+
+        b = wx.Button(self, -1, "Convert Bins to Percentages")
+        b.Bind(wx.EVT_BUTTON, self.on_convert_bins_to_percentages)
+        lsizer.Add(b, 0, wx.ALL|wx.CENTER|wx.TOP, 10)
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
@@ -277,7 +283,7 @@ class DiscreteColormapDialog(wx.Dialog):
         sizer.Add(rsizer, 1, wx.EXPAND|wx.ALL, 5)
         self.SetSizer(sizer)
 
-        self.populate_panel(current.name)
+        self.populate_panel(current_colormap.name)
 
     def populate_panel(self, name):
         try:
@@ -314,7 +320,7 @@ class DiscreteColormapDialog(wx.Dialog):
                 if val is not None and not hasattr(c, 'text_box'):
                     raise IndexError
             except IndexError:
-                c = ColormapEntry(self.param_panel, i)
+                c = ColormapEntry(self.param_panel, i, self)
                 self.param_panel.GetSizer().Insert(0, c, 0, wx.EXPAND, 0)
                 self.panel_controls.append(c)
             c.set_values(val, color)
@@ -398,7 +404,39 @@ class DiscreteColormapDialog(wx.Dialog):
         self.bin_colors[entry_num] = color
         wx.CallAfter(self.update_bitmap)
 
+    def calc_percentages_of_bins(self):
+        skipping_firt_bin = self.bin_borders[1:]
+        lo = min(skipping_firt_bin)
+        hi = max(skipping_firt_bin)
+        delta = hi - lo
+        if delta == 0.0:
+            hi = lo + 1.0
+            delta = 1.0
+        new_bins = [(v - lo) / delta for v in skipping_firt_bin]
+        print("calc_percentages_of_bins:", skipping_firt_bin, lo, hi, delta, new_bins)
+        return new_bins
+
     def on_scale_data(self, evt):
         # Rescale current colormap to match data instead of autoscaling when
         # map is loaded
-        pass
+        if self.values_min_max is None:
+            log.debug("no min/max values specified when creating dialog box")
+        else:
+            temp = self.calc_percentages_of_bins()
+            print("to_Perc", temp)
+            lo, hi = self.values_min_max
+            if lo == hi:
+                hi += 1.0
+            delta = hi - lo
+            self.bin_borders = [(v * delta) + lo for v in temp]
+            self.bin_borders[0:0] = [None]  # Insert first dummy value
+            print("scaled", self.bin_borders)
+            wx.CallAfter(self.update_panel_controls)
+
+    def on_convert_bins_to_percentages(self, evt):
+        # Revert the bins back to percentages based on the min/max values of
+        # the bins
+        self.bin_borders = self.calc_percentages_of_bins()
+        self.bin_borders[0:0] = [None]  # Insert first dummy value
+        print("to_Perc", self.bin_borders)
+        wx.CallAfter(self.update_panel_controls)

@@ -1571,7 +1571,7 @@ class DiscreteColormapField(InfoField):
         layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
-        d = DiscreteColormapDialog(self.panel.project.control, layer.colormap)
+        d = DiscreteColormapDialog(self.panel.project.control, layer.colormap, layer.current_min_max)
         ret = d.ShowModal()
         if ret != wx.ID_CANCEL:
             name = d.get_edited_colormap()
