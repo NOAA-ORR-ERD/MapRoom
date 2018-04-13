@@ -1248,7 +1248,7 @@ class LayerManager(BaseDocument):
                     log.error("Failed encoding post json data:\n%s" % repr(post_json_data))
                     raise
                 for index, layer in layer_info:
-                    zip_root = "/".join([str(a) for a in index]) + "/"
+                    zip_root = "/".join([str(a) for a in index]) + "-" + layer.name + "/"
                     log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
                     data = layer.serialize_json(index)
                     if data is not None:
