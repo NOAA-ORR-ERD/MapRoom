@@ -5,8 +5,7 @@ import wx.adv
 import numpy as np
 import numpy.random as rand
 
-from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, user_defined_discrete_colormaps
-from . import colors
+from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, user_defined_discrete_colormaps, ListedBoundedColormap
 from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT
 
 
@@ -242,6 +241,10 @@ class DiscreteColormapDialog(wx.Dialog):
         b.Bind(wx.EVT_BUTTON, self.on_convert_bins_to_percentages)
         lsizer.Add(b, 0, wx.ALL|wx.CENTER|wx.TOP, 10)
 
+        self.autoscale_button = wx.CheckBox(self, -1, "Automatically scale bins when switching view\nto new type of data")
+        self.autoscale_button.Bind(wx.EVT_CHECKBOX, self.on_autoscale)
+        lsizer.Add(self.autoscale_button, 0, wx.ALL|wx.CENTER|wx.TOP, 10)
+
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
         btn.SetDefault()
@@ -301,10 +304,12 @@ class DiscreteColormapDialog(wx.Dialog):
         self.update_panel_controls()
 
     def regenerate_colormap(self):
-        cmap = colors.ListedColormap(self.bin_colors)
+        name = self.colormap_name.GetValue()
+        cmap = ListedBoundedColormap(self.bin_colors, name)
         values = self.bin_borders[1:]
-        d = DiscreteColormap(self.colormap_name.GetValue(), cmap)
+        d = DiscreteColormap(name, cmap)
         d.set_values(values)
+        d.autoscale = self.working_copy.autoscale
         self.working_copy = d
 
     def update_bitmap(self):
@@ -338,6 +343,7 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def update_panel_controls(self):
         self.update_bitmap()
+        self.autoscale_button.SetValue(self.working_copy.autoscale)
         self.create_panel_controls()
 
     def colormap_changed(self, evt):
@@ -439,4 +445,8 @@ class DiscreteColormapDialog(wx.Dialog):
         self.bin_borders = self.calc_percentages_of_bins()
         self.bin_borders[0:0] = [None]  # Insert first dummy value
         print("to_Perc", self.bin_borders)
+        wx.CallAfter(self.update_panel_controls)
+
+    def on_autoscale(self, evt):
+        self.working_copy.autoscale = evt.IsChecked()
         wx.CallAfter(self.update_panel_controls)

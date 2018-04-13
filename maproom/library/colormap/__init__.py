@@ -21,11 +21,19 @@ class ColormapMapping(object):
         self.mapping = colormap_generator.create_colormap(self.lo, self.hi)
 
 
+class ListedBoundedColormap(colors.ListedColormap):
+    def __init__(self, bin_colors, name):
+        print("Creating ListedBoundedColormap: %d, %s, %s" % (len(bin_colors), bin_colors, name))
+        colors.ListedColormap.__init__(self, bin_colors[1:-1], name)
+        self.set_under(bin_colors[0])
+        self.set_over(bin_colors[-1])
+
+
 class ScaledColormap(object):
     is_discrete = False
 
-    def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.0, values=None):
-        self.autoscale = True
+    def __init__(self, name, cmap, lo=None, hi=None, extra_padding=0.0, values=None, autoscale=True):
+        self.autoscale = autoscale
         self.name = name
         self.cmap = self.preprocess_colormap(cmap)
         self.mapping = None
@@ -116,16 +124,15 @@ class DiscreteColormap(ScaledColormap):
             'bin_colors': [colors.to_hex(c, True) for c in self.bin_colors],
             'bin_borders': [float(v) for v in self.bin_borders],  # get rid of numpy objects
             'extra_padding': float(self.extra_padding),
+            'autoscale': self.autoscale,
             'name': self.name,
         }
 
     @classmethod
     def from_json(self, e):
         bin_colors = e['bin_colors']
-        c = colors.ListedColormap(bin_colors[1:-1], e['name'])
-        c.set_under(bin_colors[0])
-        c.set_over(bin_colors[-1])
-        return DiscreteColormap(e['name'], c, extra_padding=e['extra_padding'], values=e['bin_borders'])
+        c = colors.ListedBoundedColormap(bin_colors, e['name'])
+        return DiscreteColormap(e['name'], c, extra_padding=e['extra_padding'], values=e['bin_borders'], autoscale=e['autoscale'])
 
     def adjust_bounds(self, lo=None, hi=None, extra_padding=0.0):
         if self.autoscale:
@@ -171,13 +178,15 @@ class DiscreteColormap(ScaledColormap):
 
     def copy_source_colormap(self):
         cmap = self.source_cmap
-        c = colors.ListedColormap(cmap.colors[1:-1], cmap.name)
-        c.set_under(cmap.colors[0])
-        c.set_over(cmap.colors[-1])
-        return c
+        c = list(cmap.colors)
+        if cmap._rgba_under is not None:
+            c[0:0] = [cmap._rgba_under]
+        if cmap._rgba_over is not None:
+            c.append(cmap._rgba_over)
+        return ListedBoundedColormap(c, cmap.name)
 
     def copy(self):
-        return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val, self.extra_padding, self.bin_borders)
+        return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val, self.extra_padding, self.bin_borders, self.autoscale)
 
     def create_colormap(self, bounds):
         print("CREATE DISCRETE COLORMAP %s values" % self.name, bounds)
