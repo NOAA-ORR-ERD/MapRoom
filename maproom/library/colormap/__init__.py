@@ -23,7 +23,6 @@ class ColormapMapping(object):
 
 class ListedBoundedColormap(colors.ListedColormap):
     def __init__(self, bin_colors, name):
-        print("Creating ListedBoundedColormap: %d, %s, %s" % (len(bin_colors), bin_colors, name))
         colors.ListedColormap.__init__(self, bin_colors[1:-1], name)
         self.set_under(bin_colors[0])
         self.set_over(bin_colors[-1])
@@ -131,7 +130,7 @@ class DiscreteColormap(ScaledColormap):
     @classmethod
     def from_json(self, e):
         bin_colors = e['bin_colors']
-        c = colors.ListedBoundedColormap(bin_colors, e['name'])
+        c = ListedBoundedColormap(bin_colors, e['name'])
         return DiscreteColormap(e['name'], c, extra_padding=e['extra_padding'], values=e['bin_borders'], autoscale=e['autoscale'])
 
     def adjust_bounds(self, lo=None, hi=None, extra_padding=0.0):
@@ -189,7 +188,7 @@ class DiscreteColormap(ScaledColormap):
         return DiscreteColormap(self.name, self.source_cmap, self.lo_val, self.hi_val, self.extra_padding, self.bin_borders, self.autoscale)
 
     def create_colormap(self, bounds):
-        print("CREATE DISCRETE COLORMAP %s values" % self.name, bounds)
+        log.debug("create_colormap discrete = %s values, bounds = %s" % (self.name, str(bounds)))
         norm = colors.BoundaryNorm(bounds, self.cmap.N)
         mapping = cm.ScalarMappable(norm=norm, cmap=self.cmap)
         return mapping
@@ -198,7 +197,7 @@ class DiscreteColormap(ScaledColormap):
     def bin_borders(self):
         if self.mapping is not None:
             bins = list(self.mapping.norm.boundaries)
-            print("using bin_borders: %s" % str(bins))
+            log.debug("using bin_borders: %s" % str(bins))
         else:
             bins = []
         return bins
@@ -243,7 +242,7 @@ def user_defined_colormaps_to_json():
     for name, colormap in user_defined_discrete_colormaps.iteritems():
         j = colormap.to_json()
         e.append(colormap.to_json())
-    print("serialized colormaps: %s" % (e))
+    log.debug("serialized colormaps: %s" % (e))
     return e
 
 def user_defined_colormaps_from_json(e):
@@ -258,5 +257,4 @@ def user_defined_colormaps_from_json(e):
                 builtin_discrete_colormaps[j['name']] = c
     except Exception, e:
         log.error("%s: Invalid colormap format in json", e)
-        print e.traceback
         raise
