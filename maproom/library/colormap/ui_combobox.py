@@ -41,7 +41,7 @@ class ColormapImage(object):
         else:
             colors = colormap.calc_rgb_texture(self.width)
             self.array[:,:,:] = colors
-        return wx.BitmapFromImage(self.image)
+        return wx.Bitmap(self.image)
 
 
 class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
