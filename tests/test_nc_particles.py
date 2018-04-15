@@ -13,7 +13,7 @@ from maproom.layers.loaders.nc_particles import nc_particles_file_loader
 def test_iterator():
     sample_nc_file = os.path.join(maproom_dir, "TestData/NC_particles/Mobile_test.nc")
     for i, data in enumerate( nc_particles_file_loader(sample_nc_file) ):
-        points, status_codes, status_code_map, time, warnings = data
+        points, status_codes, status_code_map, time, warnings, scalar_names, scalar_min_max = data
         print "next time step:", points.shape
         assert points.shape == (100, 2)
         assert warnings is None
@@ -22,7 +22,7 @@ def test_iterator():
 def test_old_status():
     sample_nc_file = os.path.join(maproom_dir, "TestData/NC_particles/gnome_1.3.9_particles.nc")
     for i, data in enumerate( nc_particles_file_loader(sample_nc_file) ):
-        points, status_codes, status_code_map, time, warnings = data
+        points, status_codes, status_code_map, time, warnings, scalar_names, scalar_min_max = data
         print "next time step:", points.shape
         assert points.shape == (1000, 2)
         assert warnings is None
@@ -31,7 +31,7 @@ def test_old_status():
 def test_spurious_values():
     sample_nc_file = os.path.join(maproom_dir, "TestData/NC_particles/new_york_harbor_save.nc")
     for i, data in enumerate( nc_particles_file_loader(sample_nc_file) ):
-        points, status_codes, status_code_map, time, warnings = data
+        points, status_codes, status_code_map, time, warnings, scalar_names, scalar_min_max = data
         print "next time step:", i, points.shape
         if i < 14 or i == 18 or i > 37:
             assert warnings is None
