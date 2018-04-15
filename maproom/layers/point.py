@@ -154,7 +154,6 @@ class PointLayer(PointBaseLayer):
 
         undo = UndoInfo()
         p = self.points[point_index]
-        print "LABEL: deleting point: %s" % str(p)
         undo.index = point_index
         undo.data = np.copy(p)
         undo.flags.refresh_needed = True

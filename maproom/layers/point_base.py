@@ -308,7 +308,6 @@ class PointBaseLayer(ProjectedLayer):
     def normalize_longitude(self):
         l = self.points.x.min()
         r = self.points.x.max()
-        print "left, right:", l, r
         if l > 0 and r > 0:
             self.points.x -= 360.0
 

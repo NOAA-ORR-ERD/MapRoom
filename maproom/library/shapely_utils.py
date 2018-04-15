@@ -75,8 +75,6 @@ def get_fiona(uri):
     if True:
         raise ImportError("fiona not found")
     fs, relpath = opener.parse(uri)
-    print "fiona:", relpath
-    print "fiona:", fs
     if not fs.hassyspath(relpath):
         raise RuntimeError("Only file URIs are supported for OGR: %s" % uri)
     file_path = fs.getsyspath(relpath)
@@ -86,7 +84,6 @@ def get_fiona(uri):
         source = fiona.open(str(file_path), 'r')
     except fiona.errors.DriverError, e:
         raise DriverLoadFailure(e)
-    print source
 
     if (source is None):
         return ("Unable to load the shapefile " + file_path, None)

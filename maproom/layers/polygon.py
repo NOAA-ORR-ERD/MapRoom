@@ -275,14 +275,13 @@ class PolygonLayer(PointLayer):
             poly = Polygon(points)
         else:
             poly = LineString(points)
-        if debug:
-            print "points tuples:", points
-            print "numpy:", points.__array_interface__, points.shape, id(points), points.flags
-            print "shapely polygon:", poly.bounds
+        if debug: print("points tuples:", points)
+        if debug: print("numpy:", points.__array_interface__, points.shape, id(points), points.flags)
+        if debug: print("shapely polygon:", poly.bounds)
         return poly
 
     def crop_rectangle(self, w_r):
-        print "Cropping to %s" % str(w_r)
+        log.debug("crop_rectangle: to %s" % str(w_r))
 
         crop_rect = box(w_r[0][0], w_r[1][1], w_r[1][0], w_r[0][1])
 
@@ -320,9 +319,7 @@ class PolygonLayer(PointLayer):
             try:
                 cropped_poly = crop_rect.intersection(poly)
             except Exception, e:
-                print "Shapely intersection exception", e
-                print poly
-                print poly.is_valid
+                log.error("Shapely intersection exception: %s\npoly=%s\nvalid=%s" % (e, poly, poly.is_valid))
                 raise
 
             if not cropped_poly.is_empty:
@@ -335,7 +332,7 @@ class PolygonLayer(PointLayer):
                         new_polys.add_polygon(p, ident)
                     continue
                 elif not hasattr(cropped_poly, 'exterior'):
-                    print "Temporarily skipping %s" % cropped_poly.geom_type
+                    log.debug("Temporarily skipping %s" % cropped_poly.geom_type)
                     continue
                 new_polys.add_polygon(cropped_poly, self.ring_identifiers[n])
 

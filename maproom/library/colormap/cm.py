@@ -107,10 +107,8 @@ locals().update(cmap_d)
 for cmapname in datad:
     spec = datad[cmapname]
     if 'listed' in spec:
-        print("discrete: %s" % cmapname)
         cmap_discrete.add(cmapname)
     else:
-        print("continuous: %s" % cmapname)
         cmap_continuous.add(cmapname)
 
 # Continue with definitions ...

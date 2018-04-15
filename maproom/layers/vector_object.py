@@ -680,7 +680,6 @@ class CircleVectorObject(EllipseVectorObject):
         lon2, _ = distance_bearing(lon1, lat1, 90.0, rkm)
         rx = lon2 - lon1
         ry = lat2 - lat1
-        print "rkm, dlon, dlat", rkm, rx, ry
 
         c = np.empty((4, 2), dtype=np.float32)
         c[0] = (lon1 - rx, lat1 - ry)

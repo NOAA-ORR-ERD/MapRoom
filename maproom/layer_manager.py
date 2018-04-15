@@ -674,9 +674,9 @@ class LayerManager(BaseDocument):
         for layer in self.flatten():
             if layer.start_time == 0 or (layer.start_time <= time and (layer.end_time == 0.0 or time < layer.end_time)):
                 layers.append(layer)
-                print("True: %s <= %s < %s: %s" % (layer.start_time, time, layer.end_time, str(layer)))
+                log.debug("get_visible_layers_at_time True: %s <= %s < %s: %s" % (layer.start_time, time, layer.end_time, str(layer)))
             else:
-                print("False: %s outside %s-%s: %s" % (time, layer.start_time, layer.end_time, str(layer)))
+                log.debug("get_visible_layers_at_time False: %s outside %s-%s: %s" % (time, layer.start_time, layer.end_time, str(layer)))
         return layers
 
     def get_visible_layers_in_ranges(self, ranges):
@@ -1167,7 +1167,6 @@ class LayerManager(BaseDocument):
             text = zf.read("extra json data")
         extra_json = json.loads(text)
         for info in zf.infolist():
-            print("info: %s" % info.filename)
             if info.filename.endswith("json layer description"):
                 text = zf.read(info.filename)
                 serialized_data = json.loads(text)

@@ -182,7 +182,6 @@ class ColormapEntry(wx.Panel):
             self.text.ChangeValue(str(value))
             self.text.SetBackgroundColour("#FFFFFF")
         int_colors = list((color * 255.0).astype(np.uint8))
-        print("color", int_colors)
         self.color.SetColor(int_colors)
 
     def on_add_entry(self, evt):
@@ -319,7 +318,6 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def create_panel_controls(self):
         for i, (val, color) in enumerate(zip(self.bin_borders, self.bin_colors)):
-            print("creating entry %d for %s,%s" % (i, val, color))
             try:
                 c = self.panel_controls[i]
                 if val is not None and not hasattr(c, 'text_box'):
@@ -352,7 +350,6 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def get_edited_colormap(self):
         self.working_copy.name += "prime"
-        print("FINISHED COLORMAP!", self.working_copy)
         return self.working_copy
 
     def on_add_above(self, evt):
@@ -380,7 +377,6 @@ class DiscreteColormapDialog(wx.Dialog):
         wx.CallAfter(self.update_panel_controls)
 
     def add_entry(self, entry_num):
-        print("adding entry %d" % entry_num)
         if entry_num == 1:  # first bin delimiter
             value = self.bin_borders[entry_num] - 1.0
         else:
@@ -391,7 +387,6 @@ class DiscreteColormapDialog(wx.Dialog):
         wx.CallAfter(self.update_panel_controls)
 
     def remove_entry(self, entry_num):
-        print("removing entry %d" % entry_num)
         self.bin_borders[entry_num:entry_num + 1] = []
         self.bin_colors[entry_num:entry_num + 1] = []
         wx.CallAfter(self.update_panel_controls)
@@ -419,7 +414,6 @@ class DiscreteColormapDialog(wx.Dialog):
             hi = lo + 1.0
             delta = 1.0
         new_bins = [(v - lo) / delta for v in skipping_firt_bin]
-        print("calc_percentages_of_bins:", skipping_firt_bin, lo, hi, delta, new_bins)
         return new_bins
 
     def on_scale_data(self, evt):
@@ -429,14 +423,12 @@ class DiscreteColormapDialog(wx.Dialog):
             log.debug("no min/max values specified when creating dialog box")
         else:
             temp = self.calc_percentages_of_bins()
-            print("to_Perc", temp)
             lo, hi = self.values_min_max
             if lo == hi:
                 hi += 1.0
             delta = hi - lo
             self.bin_borders = [(v * delta) + lo for v in temp]
             self.bin_borders[0:0] = [None]  # Insert first dummy value
-            print("scaled", self.bin_borders)
             wx.CallAfter(self.update_panel_controls)
 
     def on_convert_bins_to_percentages(self, evt):
@@ -444,7 +436,6 @@ class DiscreteColormapDialog(wx.Dialog):
         # the bins
         self.bin_borders = self.calc_percentages_of_bins()
         self.bin_borders[0:0] = [None]  # Insert first dummy value
-        print("to_Perc", self.bin_borders)
         wx.CallAfter(self.update_panel_controls)
 
     def on_autoscale(self, evt):

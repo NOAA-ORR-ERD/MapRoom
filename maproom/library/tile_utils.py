@@ -58,7 +58,7 @@ class TileServerInitRequest(UnskippableRequest):
         return data
 
     def try_cache(self, zoom, x, y):
-        print self.cache_root
+        log.debug("try_cache: root=%s" % self.cache_root)
         data = None
         if self.cache_root is not None:
             path = self.tile_host.get_tile_cache_file(self.cache_root, zoom, x, y)
@@ -68,10 +68,9 @@ class TileServerInitRequest(UnskippableRequest):
                 # update last modified time so we can implement cache pruning
                 # at some later time.
                 os.utime(path, None)
-                print "Found %s" % path
+                log.debug("try_cache: found %s" % path)
             except Exception, e:
-                print "Failed reading %s" % path
-                print "  exception:", e
+                log.error("Failed reading %s; exception %s" % (path, e))
         return data
 
     def save_cache(self, data, zoom, x, y):
@@ -84,7 +83,7 @@ class TileServerInitRequest(UnskippableRequest):
                 with open(path, "wb") as fh:
                     fh.write(data)
             except:
-                print "Failed caching %s" % path
+                log.debug("Failed caching %s" % path)
 
 
 class URLTileServerInitRequest(TileServerInitRequest):
@@ -93,7 +92,7 @@ class URLTileServerInitRequest(TileServerInitRequest):
             data = self.try_cache(zoom, x, y)
             if data is None:
                 url = self.tile_host.get_tile_url(zoom, x, y)
-                print "requesting tile from %s" % url
+                log.debug("requesting tile from %s" % url)
                 request = urllib2.Request(url)
                 response = urllib2.urlopen(request)
                 data = response.read()
@@ -137,7 +136,7 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
         bbox = ((None, None), (None, None))
         for name in self.layer_keys:
             b = self.tile_server[name].boundingBoxWGS84
-            print "layer", name, "bbox", b
+            # print "layer", name, "bbox", b
             r = ((b[0], b[1]), (b[2], b[3]))
             bbox = rect.accumulate_rect(bbox, r)
         return bbox
@@ -283,7 +282,7 @@ class TileRequest(UnskippableRequest):
         try:
             return get_numpy_from_data(self.data)
         except (IOError, TypeError), e:
-            print "error converting image: %s" % e
+            log.debug("error converting image: %s" % e)
             # some TileServeres return HTML data instead of an image on an error
             # (usually see this when outside the bounding box)
             return get_numpy_from_data(error_png)

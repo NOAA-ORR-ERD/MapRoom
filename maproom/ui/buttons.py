@@ -27,7 +27,7 @@ class ColorSelectButton(ColorSelect):
 
         bdr = 8
         width, height = self.GetSize()
-        print("button:", width, height)
+        #print("button:", width, height)
 
         # yes, this is weird, but it appears to work around a bug in wxMac
         if "wxMac" in wx.PlatformInfo and width == height:

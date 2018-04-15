@@ -456,7 +456,7 @@ class Boundaries(object):
                 error_points.update(point_indexes)
 
         if errors and throw_exception:
-            print "error points: %s" % sorted(list(error_points))
+            # print "error points: %s" % sorted(list(error_points))
             raise PointsError(
                 "\n\n".join(errors),
                 points=tuple(error_points)
@@ -554,7 +554,6 @@ def general_intersection_check(points, boundary_min_max):
     coordinates of the endpoint of the segment, and the indexes into :point:
     for both the start and end point in the segment.
     """
-    print len(points)
     progress_log.info("PULSE")
     points.sort()  # lexicographical sort
     open_segments = {}

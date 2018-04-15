@@ -222,9 +222,6 @@ class TriangleLayer(PointLayer):
         )
 
         for (boundary_index, boundary) in enumerate(boundaries):
-            print boundary_index, boundary
-
-        for (boundary_index, boundary) in enumerate(boundaries):
             if (len(boundary.point_indexes) < 3):
                 continue
 

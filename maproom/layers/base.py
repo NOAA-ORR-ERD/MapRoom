@@ -315,7 +315,6 @@ class Layer(HasTraits):
             json['has encoded data'] = True
             json.update(update)
         if children:
-            print "CHILDREN"
             for c in self.manager.get_layer_children(self):
                 json['children'].append(c.serialize_json(-999, True))
         return json
@@ -740,9 +739,9 @@ class EmptyLayer(Layer):
 
 class ProjectedLayer(Layer):
     def render_projected(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
-        print "Layer %s doesn't have projected objects to render" % self.name
+        log.debug("Layer %s doesn't have projected objects to render" % self.name)
 
 
 class ScreenLayer(Layer):
     def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
-        print "Layer %s doesn't have screen objects to render" % self.name
+        log.debug("Layer %s doesn't have screen objects to render" % self.name)

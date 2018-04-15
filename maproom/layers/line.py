@@ -439,7 +439,6 @@ class LineLayer(PointLayer):
     def delete_line_segment(self, l_s_i):
         undo = UndoInfo()
         p = self.line_segment_indexes[l_s_i]
-        print "LABEL: deleting line: %s" % str(p)
         undo.index = l_s_i
         undo.data = np.copy(p)
         undo.flags.refresh_needed = True

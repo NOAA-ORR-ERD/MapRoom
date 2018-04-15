@@ -59,13 +59,13 @@ class WMSRequestServer(UnskippableURLRequest):
         except ServiceException, e:
             self.error = e
         except HTTPError, e:
-            print "Error contacting", self.url, e
+            log.error("Error contacting %s: %s" % (self.url, e))
             self.error = e
         except AttributeError, e:
-            print "Bad response from server", self.url, e
+            log.error("Bad response from server %s: %s" % (self.url, e))
             self.error = e
         except Exception, e:
-            print "Server error", self.url, e
+            log.error("Server error %s: %s" % (self.url, e))
             self.error = e
 
     def is_valid(self):
@@ -83,7 +83,6 @@ class WMSRequestServer(UnskippableURLRequest):
         bbox = ((None, None), (None, None))
         for name in self.layer_keys:
             b = self.wms[name].boundingBoxWGS84
-            print "layer", name, "bbox", b
             r = ((b[0], b[1]), (b[2], b[3]))
             bbox = rect.accumulate_rect(bbox, r)
         return bbox

@@ -146,10 +146,6 @@ class CompassRose(ScreenLayer):
     def svg_changed(self):
         self.svg = self._svg_default()
 
-    # def pre_render(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility):
-    #     print "creating compass rose"
-    #     self.svg = SVGOverlay(self.svg_source)
-
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if picker.is_active:
             return

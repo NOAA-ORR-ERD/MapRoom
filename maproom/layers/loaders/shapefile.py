@@ -34,9 +34,7 @@ def write_boundaries_as_shapefile(filename, layer, boundaries):
             if file_point_index % BaseLayerLoader.points_per_tick == 0:
                 progress_log.info("Saved %d points" % file_point_index)
 
-        print "adding ring", ring
         poly.AddGeometry(ring)
-        print 'Polygon area =', poly.GetArea()
 
     feature_index = 0
     layer_defn = shapefile_layer.GetLayerDefn()
