@@ -1,3 +1,79 @@
+04/15/2018
+---------------------------
+Released 4.0rc3
+- RM Fixed colormap legend bins on initial load with a builtin discrete colormap
+- RM Fixed nc_particles loader test to handle the additional returned vars in the tuple
+- RM Removed debug prints or changed to calls to log.debug
+- RM Fixed deprecated call to wx.BitmapFromImage
+- RM Fixed #869: corrected call to ListedBoundedColormap
+- RM Fixed #877: added layer name to final component of zip directory path
+- RM Refs #869: fixed autoscale in dialog
+- RM Refs #869: added autoscale param to discrete colormaps to determine whether or not to scale the colormap when changing the scalar value
+- RM WIP scaling buttons
+- RM Refs #869: put bin controls in scrolled window in DiscreteColormapDialog
+- RM Refs #869: still working on colormap serialization
+- RM math_utils: added bounds check to prevent log of zero
+- RM Refs #869: WIP json serialization of colormaps
+- RM Refs #869: added colormap registration into user defined colormap dictionary
+- RM Fixed #874: removed leading/trailings blanks from input to lat_lon_parser
+- RM Fixed #875: added check for mouse capture before attempting to release the mouse
+- RM Refs #869: added round_minimum_unique_digits to math_utils to produce nicely formatted legend bin values
+- RM Refs #869: WIP colormap scaling
+- RM Refs #869: better background color for calc_bitmap
+- RM Refs #869: restructured discrete colormap dialog to use less vertical space
+- RM Refs #869: added arrows in combobox image for rgba under/over
+- RM Fixed #873: added cumulative path length for polyline/polygon creation
+- RM Refs #869: added arrows on colorbar when there are over or under colors
+- RM Refs #869: DiscreteColormapDialog can now handle being called with an unknown colormap name
+- RM Refs #869: added bitmap updating on bin color change
+- RM Refs #869: added text validation & updating of colormap
+- RM Refs #869: added bitmap view of current colormap
+- RM Refs #869: added buttons to add/remove colormap entries
+- RM Added basic design of colormap editor
+- RM Refs #869: added beginnings of discrete colormap dialog
+- RM Refs #869: refactored colormap combobox to separate discrete and continuous colormaps
+- RM Fixed #865: overlay line should have been using screen deltas to compute screen-space point when world-space point was moved
+- RM Fixed #872: only update particle status code count when loading point data
+- RM Changed info panel so colormap/status_codes selection only shows each as appropriate
+- RM Fixed #871: moved legend to its own layer
+- RM Fixed #868: also remove bogus indexes from scalar var arrays
+- RM Removed some development print statements
+- RM Select first new layer when loading a new file
+- RM Added background to legend
+- RM Fixed #857: added legend with colormap and labels for scalar values
+- RM Added missing colormap ui file
+- RM Refs #857: initial code for legend box showing current colormap
+- RM Refs #857: fixed colormap when changing back to status code coloring
+- RM Refs #857: add min/max calculation of scalar vars at load time
+- RM Added ui to adjust point size for particle layers
+- RM Refs #636: fixed initial position of sliders
+- RM Fixed #636: added simple positioning sliders for scale
+- RM json: turned off dialog display of warnings that items were missing from the json file
+- RM Refs #857: added colormap to info_panels
+- RM Fixed json serialization of numpy arrays in scalar_vars
+- RM Added colormap name as particle layer trait and default name in preferences
+- RM Added convenience function get_bitmap_from_numpy
+- RM Added standalone test window to display the default style dialog
+- RM Refs #857: Added matplotlib colormap code (without any matplotlib dependencies)
+- RM Added json sanity check to allow layers to recreate any data that wasn't restored with the from_json routines
+- RM Refs #857: added particle scalar summary info to popup status text
+- RM Refs #857: renamed contour to scalar
+- RM Refs #857: added contour menu to particle folders that affects all particle layers below it
+- RM Refs #857: basic contouring for single particle layer
+- RM Fixed #849: added project, layer manager, layer canvas, and command history to each exception report listing
+- RM Fixed #852: added error message when no particle data found
+- RM Refs #861: anchor point currently being dragged is now displayed in selection_info_panel instead of always the anchor point
+- RM Fixed #853: don't show status codes names if no particles of that type in layer
+- RM Fixed #862, #863: fixed incorrect scaling of int color values that fixes both issues
+- RM Fixed #850: PanMode is now default after loading a file
+- RM Fixed resize of child layers when moving a bounding box point of a parent layer
+- RM Fixed #855: fixed fit_to_bounding_box regression for PolylineMixin
+- RM Fixed #858: worked around inability for bitmaps in buttons to show alpha
+- RM Refs #858: transparency sliders for object colors are no longer needed with use of CubeColourDialog
+- RM Fixed #856: replaced platform-specific color selector with CubeColourSelector in wx.lib.agw
+- CB added example file from GNOME 1
+- RM Fixed #851: added check for degenerate size text box before rendering
+
 12/22/2017
 ---------------------------
 Released 4.0rc2
