@@ -277,6 +277,7 @@ class ParticleLegend(ScreenLayer):
                 labels1 = []
             else:
                 labels1 = c.calc_labels(*parent.current_min_max)
+            log.debug("rendering legend: colormap: %s, min_max=%s" % (c, parent.current_min_max))
 
             label_width = 0
             labels2 = []
@@ -470,6 +471,7 @@ class ParticleLayer(PointBaseLayer):
                     _, text = v[:-1].rsplit("(", 1)
                     count = int(text)
                 self.status_code_count[k] = count
+        self.recalc_colors_from_colormap()
 
     #
 
@@ -527,8 +529,10 @@ class ParticleLayer(PointBaseLayer):
             var = self.current_scalar_var
         return var != "status codes" and var in self.scalar_var_names
 
-    def set_colors_from_scalar(self, var):
-        if self.is_using_colormap(var):
+    def recalc_colors_from_colormap(self, var=None):
+        if var is None:
+            var = self.current_scalar_var
+        if var is not None and self.is_using_colormap(var):
             values = self.scalar_vars[var]
             lo, hi = self.scalar_min_max[var]
             self.current_min_max = lo, hi
@@ -539,6 +543,10 @@ class ParticleLayer(PointBaseLayer):
             log.error("%s not in scalar data for layer %s" % (var, self))
             self.set_colors_from_status_codes()
             var = None
+        return var
+
+    def set_colors_from_scalar(self, var):
+        var = self.recalc_colors_from_colormap(var)
         self.manager.layer_contents_changed = self
         self.manager.refresh_needed = None
         return var
