@@ -1,0 +1,570 @@
+Metadata:
+  Identification_Information:
+    Citation:
+      Citation_Information:
+        Originator: Rukstales, Kenneth S. (compiler)
+        Publication_Date: 200208
+        Title: Seismic Hazard Map for the United States
+        Geospatial_Data_Presentation_Form: Map
+        Publication_Information:
+          Publication_Place: Reston, VA
+          Publisher: National Atlas of the United States
+        Online_Linkage: <http://nationalatlas.gov/atlasftp.html?openChapters=chpgeol#chpgeol>
+    Description:
+      Abstract:
+        This map layer shows seismic hazard in the United States.  The data
+        represent a model showing the probability that ground motion will reach a
+        certain level.  This map layer shows peak horizontal ground acceleration
+        (the fastest measured change in speed, for a particle at ground level that
+        is moving horizontally due to an earthquake) with a 10% probability of
+        exceedance in 50 years.  Values are given in %g, where g is acceleration
+        due to gravity, or 9.8 meters/second^2.  The lines of equal hazard, which
+
+        are the lines between the polygons, were determined by interpolating from
+        a grid of equally spaced points in latitude and longitude.  Each point was
+        weighted based on the seismic hazard at that location.  The grid spacing
+        is 0.1 degrees for Alaska and the conterminous United States, and 0.02
+        degrees for Hawaii.
+      Purpose:
+        This map summarizes the quantitative information, available from geologic
+        and geophysical sources, about seismic ground motion hazard in the United
+        States.  The data are intended for geographic display and analysis at the
+        national level, and for large regional areas.  The data should be
+        displayed and analyzed at scales appropriate for 1:2,000,000-scale data.
+
+        No responsibility is assumed by the U.S. Geological Survey or the National
+        Atlas of the United States in the use of these data.
+
+      Supplemental_Information:
+        This map layer was prepared by combining spatially-smoothed historic
+        seismicity information with information from fault-specific sources.  The
+        acceleration values contoured are the random horizontal component.  The
+        reference site condition is firm rock, defined as having an average shear-
+        wave velocity of 760 meters/second in the top 30 meters corresponding to
+        the boundary between National Earthquake Hazards Reduction Program (NEHRP)
+        site classes B and C.
+
+        For more information about the USGS National Seismic Hazard Maps, please
+        visit <http://earthquake.usgs.gov/research/hazmaps/index.php.
+
+        A description of how the underlying geologic and geophysical data
+        were prepared as well as the methodology used in calculating seismic
+        hazard for a geographic location can be found in the following reports:
+
+        Frankel, A., C. Mueller, T. Barnhard, D. Perkins, E.V. Leyendecker, N.
+        Dickman, S. Hanson, and M. Hopper, 1996, National Seismic-Hazard Maps:
+        Documentation June 1996:  U.S. Geological Survey Open-File Report 96-532,
+        110 p.
+
+        Klein, F.W., A.D. Frankel, C.S. Mueller, R.L. Wesson and P.G. Okubo, 2001,
+        Seismic Hazard in Hawaii: high rate of large earthquakes and probabilistic
+        ground motion maps, Bulletin of the Seismological Society of America,
+        v. 91, pp. 479-498.
+
+        Petersen, M., W. Bryant, C. Cramer, T. Cao, M. Reichle, A. Frankel, J.
+        Lienkaemper, P. McCrory, and D. Schwartz, 1996, Probabilistic Seismic
+        Hazard Assessment for the State of California:  California Division of
+        Mines and Geology Open-File Report 96-08, 66 p., and U.S. Geological
+        Survey Open-File Report 96-706, 66 p.
+
+        Wesson, Robert, Arthur Frankel, Charles Mueller, and Stephen Harmsen,
+        1999, Probabilistic Seismic Hazard Maps of Alaska:  U.S. Geological Survey
+        Open-File Report 99-36, 48 p.
+
+    Time_Period_of_Content:
+      Time_Period_Information:
+        Single_Date/Time:
+          Calendar_Date: 2002
+      Currentness_Reference: Publication date
+
+    Status:
+      Progress: Complete
+      Maintenance_and_Update_Frequency: As Needed
+
+    Spatial_Domain:
+      Bounding_Coordinates:
+        West_Bounding_Coordinate: 172
+        East_Bounding_Coordinate: -66
+        North_Bounding_Coordinate: 72
+        South_Bounding_Coordinate: 18
+
+    Keywords:
+      Theme:
+        Theme_Keyword_Thesaurus: ISO 19115 Topic Category
+        Theme_Keyword: geoscientificInformation
+      Theme:
+        Theme_Keyword_Thesaurus: None
+        Theme_Keyword: Seismic
+        Theme_Keyword: Earthquakes
+        Theme_Keyword: Hazards
+
+      Place:
+        Place_Keyword_Thesaurus: None
+        Place_Keyword: Alabama
+        Place_Keyword: Alaska
+        Place_Keyword: Arizona
+        Place_Keyword: Arkansas
+        Place_Keyword: California
+        Place_Keyword: Colorado
+        Place_Keyword: Connecticut
+        Place_Keyword: Delaware
+        Place_Keyword: District of Columbia
+        Place_Keyword: Florida
+        Place_Keyword: Georgia
+        Place_Keyword: Hawaii
+        Place_Keyword: Idaho
+        Place_Keyword: Illinois
+        Place_Keyword: Indiana
+        Place_Keyword: Iowa
+        Place_Keyword: Kansas
+        Place_Keyword: Kentucky
+        Place_Keyword: Louisiana
+        Place_Keyword: Maine
+        Place_Keyword: Maryland
+        Place_Keyword: Massachusetts
+        Place_Keyword: Michigan
+        Place_Keyword: Minnesota
+        Place_Keyword: Mississippi
+        Place_Keyword: Missouri
+        Place_Keyword: Montana
+        Place_Keyword: Nebraska
+        Place_Keyword: Nevada
+        Place_Keyword: New Hampshire
+        Place_Keyword: New Jersey
+        Place_Keyword: New Mexico
+        Place_Keyword: New York
+        Place_Keyword: North Carolina
+        Place_Keyword: North Dakota
+        Place_Keyword: Ohio
+        Place_Keyword: Oklahoma
+        Place_Keyword: Oregon
+        Place_Keyword: Pennsylvania
+        Place_Keyword: Rhode Island
+        Place_Keyword: South Carolina
+        Place_Keyword: South Dakota
+        Place_Keyword: Tennessee
+        Place_Keyword: Texas
+        Place_Keyword: Utah
+        Place_Keyword: Vermont
+        Place_Keyword: Virginia
+        Place_Keyword: Washington
+        Place_Keyword: West Virginia
+        Place_Keyword: Wisconsin
+        Place_Keyword: Wyoming
+        Place_Keyword: USA
+
+    Access_Constraints: None.
+    Use_Constraints:
+      Acknowledgment of the National Atlas of the United States of America and
+      (or) the U.S. Geological Survey, National Seismic Hazard Mapping Project
+      would be appreciated in products derived from these data.
+    Point_of_Contact:
+      Contact_Information:
+        Contact_Person_Primary:
+          Contact_Person: Ken Rukstales
+          Contact_Organization: U.S. Geological Survey
+        Contact_Address:
+          Address_Type: Mailing address
+          Address: Box 25046, Mail Stop 966
+          City: Denver
+          State_or_Province: CO
+          Postal_Code: 80225
+          Country: USA
+        Contact_Voice_Telephone: 303-273-8677
+        Contact_Facsimile_Telephone: 303-273-8600
+        Contact_Electronic_Mail_Address: rukstales@usgs.gov
+        Contact_Instructions: Please contact via e-mail or telephone
+    Native_Data_Set_Environment:
+      Windows 2000
+      ARC/INFO version 8.1.2
+    Cross_Reference:
+      Citation_Information:
+        Originator: A. Frankel
+        Originator: C. Mueller
+        Originator: T. Barnhard
+        Originator: D. Perkins
+        Originator: E.V. Leyendecker
+        Originator: N. Dickman
+        Originator: S. Hanson
+        Originator: M. Hopper
+        Publication_Date: 1997
+        Title: Seismic-Hazard Maps for California, Nevada and Western Arizona/Utah
+        Geospatial_Data_Presentation_Form: Map
+        Series_Information:
+          Series_Name: U.S. Geological Survey Open File Reports
+          Issue_Identification: 97-130
+        Publication_Information:
+          Publication_Place: Reston, VA
+          Publisher: U.S. Geological Survey
+        Other_Citation_Details: 12 sheets, scale 1:2,000,000
+    Cross_Reference:
+      Citation_Information:
+        Originator: A. Frankel
+        Originator: C. Mueller
+        Originator: T. Barnhard
+        Originator: D. Perkins
+        Originator: E.V. Leyendecker
+        Originator: N. Dickman
+        Originator: S. Hanson
+        Originator: M. Hopper
+        Publication_Date: 1997
+        Title: Seismic-Hazard Maps for the Conterminous United States
+        Geospatial_Data_Presentation_Form: Map
+        Series_Information:
+          Series_Name: U.S. Geological Survey Open File Reports
+          Issue_Identification: 97-131
+        Publication_Information:
+          Publication_Place: Reston, VA
+          Publisher: U.S. Geological Survey
+        Other_Citation_Details: 12 sheets, scale 1:7,000,000
+    Cross_Reference:
+      Citation_Information:
+        Originator: F.W. Klein
+        Originator: A.D. Frankel
+        Originator: C.S. Mueller
+        Originator: R.L. Wesson
+        Originator: P.G. Okubo
+        Publication_Date: 2000
+        Title: Seismic-Hazard Maps for Hawaii
+        Geospatial_Data_Presentation_Form: Map
+
+        Series_Information:
+          Series_Name: U.S. Geological Survey Geologic Investigations Series Map
+          Issue_Identification: I-2724
+        Publication_Information:
+          Publication_Place: Reston, VA
+          Publisher: U.S. Geological Survey
+        Other_Citation_Details: 2 sheets, scale 1:2,000,000
+    Cross_Reference:
+      Citation_Information:
+        Originator: R. Wesson
+        Originator: A. Frankel
+        Originator: C. Mueller
+        Originator: S. Harmsen
+        Publication_Date: 1999
+        Title: Seismic-Hazard Maps for Alaska and the Aleutian Islands
+        Geospatial_Data_Presentation_Form: Map
+        Series_Information:
+          Series_Name: U.S. Geological Survey Geologic Investigations Series Map
+          Issue_Identification: I-2679
+        Publication_Information:
+          Publication_Place: Reston, VA
+          Publisher: U.S. Geological Survey
+        Other_Citation_Details: 2 sheets, scale 1:7,500,000
+
+  Data_Quality_Information:
+    Attribute_Accuracy:
+      Attribute_Accuracy_Report:
+        This map layer is based on a theoretical model.  The following resources
+        provide information on quality assessment for the map layer:
+
+        Frankel, A., C. Mueller, T. Barnhard, D. Perkins, E.V. Leyendecker, N.
+        Dickman, S. Hanson, and M. Hopper, 1996, National Seismic-Hazard Maps:
+        Documentation June 1996:  U.S. Geological Survey Open-File Report
+        96-532, 110 p.
+
+        Klein, F.W., A.D. Frankel, C.S. Mueller, R.L. Wesson, and P.G. Okubo,
+        2001, Seismic Hazard in Hawaii: high rate of large earthquakes and
+        probabilistic ground motion maps, BSSA v. 91, pp. 479-498.
+
+        Petersen, M., W. Bryant, C. Cramer, T. Cao, M. Reichle, A. Frankel, J.
+        Lienkaemper, P. McCrory, and D. Schwartz, 1996, Probabilistic Seismic
+        Hazard Assessment for the State of California:  California Division of
+        Mines and Geology Open-File Report 96-08, 66 p., and U.S. Geological
+        Survey Open-File Report 96-706, 66 p.
+
+        Wesson, Robert, Arthur Frankel, Charles Mueller, and Stephen Harmsen,
+        1999, Probabilistic Seismic Hazard Maps of Alaska:  U.S. Geological Survey
+        Open-File Report 99-36, 48 p.
+
+    Logical_Consistency_Report:
+      Polygon and chain-node topology are present.
+
+      Uncertainty in the underlying seismicity or fault parameters was not
+      considered in the production of this map layer.
+
+    Completeness_Report: This map layer shows levels of seismic hazard for the United States.
+    Positional_Accuracy:
+      Horizontal_Positional_Accuracy:
+        Horizontal_Positional_Accuracy_Report:
+          The location of features is based on theoretical calculations of a
+          seismological model for the study area.  The location of each point
+          is considered to be correct within the confines of computer accuracy.
+    Lineage:
+      Source_Information:
+        Source_Citation:
+          Citation_Information:
+            Originator: A. Frankel
+            Originator: C. Mueller
+            Originator: T. Barnhard
+            Originator: D. Perkins
+            Originator: E.V. Leyendecker
+            Originator: N. Dickman
+            Originator: S. Hanson
+            Originator: M. Hopper
+            Publication_Date: 1997
+            Title: Seismic-Hazard Maps for the Conterminous United States
+            Geospatial_Data_Presentation_Form: Map
+            Series_Information:
+              Series_Name: U.S. Geological Survey Open File Reports
+              Issue_Identification: 97-131
+            Publication_Information:
+              Publication_Place: Reston, VA
+              Publisher: U.S. Geological Survey
+            Other_Citation_Details: 12 sheets
+        Source_Scale_Denominator: 7000000
+        Type_of_Source_Media: Paper
+        Source_Time_Period_of_Content:
+          Time_Period_Information:
+            Single_Date/Time:
+              Calendar_Date: 1997
+          Source_Currentness_Reference: Publication date
+        Source_Citation_Abbreviation: SH-USA
+        Source_Contribution:
+          The publication describes the conterminous United States historical
+          seismicity and fault-specific sources used to build the theoretical
+          model, as well as the methodology employed.
+      Source_Information:
+        Source_Citation:
+          Citation_Information:
+            Originator: F.W. Klein
+            Originator: A.D. Frankel
+            Originator: C.S. Mueller
+            Originator: R.L. Wesson
+            Originator: P.G. Okubo
+            Publication_Date: 2000
+            Title: Seismic-Hazard Maps for Hawaii
+            Geospatial_Data_Presentation_Form: Map
+            Series_Information:
+              Series_Name: U.S. Geological Survey Geologic Investigations Series Map
+              Issue_Identification: I-2724
+            Publication_Information:
+              Publication_Place: Reston, VA
+              Publisher: U.S. Geological Survey
+            Other_Citation_Details: 2 sheets
+        Source_Scale_Denominator: 2000000
+        Type_of_Source_Media: Paper
+        Source_Time_Period_of_Content:
+          Time_Period_Information:
+            Single_Date/Time:
+              Calendar_Date: 2000
+          Source_Currentness_Reference: Publication date
+        Source_Citation_Abbreviation: SH-Hawaii
+        Source_Contribution:
+          The publication describes the Hawaiian historical seismicity and fault-
+          specific sources used to build the theoretical model, as well as the
+          methodology employed.
+
+      Source_Information:
+        Source_Citation:
+          Citation_Information:
+            Originator: R. Wesson
+            Originator: A. Frankel
+            Originator: C. Mueller
+            Originator: S. Harmsen
+            Publication_Date: 1999
+            Title: Seismic-Hazard Maps for Alaska and the Aleutian Islands
+            Geospatial_Data_Presentation_Form: Map
+            Series_Information:
+              Series_Name: U.S. Geological Survey Geologic Investigations Series Map
+              Issue_Identification: I-2679
+            Publication_Information:
+              Publication_Place: Reston, VA
+              Publisher: U.S. Geological Survey
+            Other_Citation_Details: 2 sheets
+        Source_Scale_Denominator: 7500000
+        Type_of_Source_Media: Paper
+        Source_Time_Period_of_Content:
+          Time_Period_Information:
+            Single_Date/Time:
+              Calendar_Date: 1999
+          Source_Currentness_Reference: Publication date
+        Source_Citation_Abbreviation: SH-Alaska
+        Source_Contribution:
+          The publication describes the Alaskan and Aleutian historical
+          seismicity and fault-specific sources used to build the theoretical
+          model, as well as the methodology employed.
+      Process_Step:
+        Process_Description:
+          Information drawn from the sources was used to produce an ASCII file
+          of grid points having a latitude and longitude spacing of either 0.1
+          degrees (conterminous United States and Alaska) or 0.02 degrees
+          (Hawaii).  For each grid point an associated acceleration value, or
+          weight, was calculated from the historic seismicity and fault-specific
+          sources, according to the prescribed seismological model.  The data were
+          then contoured using Arc/INFO.  The desired final lines of equal
+          seismological hazard were selected and polygon and arc topology were
+          ascertained as well as appropriate feature attributes.  The file was
+          converted to Shapefile format.
+        Process_Date: 2002
+        Process_Contact:
+          Contact_Information:
+            Contact_Person_Primary:
+              Contact_Person: Ken Rukstales
+              Contact_Organization: U.S. Geological Survey
+            Contact_Address:
+              Address_Type: Mailing address
+              Address: Box 25046, Mail Stop 966
+              City: Denver
+              State_or_Province: Colorado
+              Postal_Code: 80225
+              Country: USA
+            Contact_Voice_Telephone: 303-273-8677
+            Contact_Facsimile_Telephone: 303-273-8600
+            Contact_Electronic_Mail_Address: rukstales@usgs.gov
+            Contact_Instructions: Please contact via e-mail or telephone
+
+  Spatial_Data_Organization_Information:
+    Direct_Spatial_Reference_Method: Vector
+    Point_and_Vector_Object_Information:
+      SDTS_Terms_Description:
+        SDTS_Point_and_Vector_Object_Type: GT-polygon composed of chains
+        Point_and_Vector_Object_Count: 3359
+
+  Spatial_Reference_Information:
+    Horizontal_Coordinate_System_Definition:
+      Geographic:
+        Latitude_Resolution: 0.000278
+        Longitude_Resolution: 0.000278
+        Geographic_Coordinate_Units: Decimal degrees
+      Geodetic_Model:
+        Horizontal_Datum_Name: North American Datum of 1983
+        Ellipsoid_Name: GRS1980
+        Semi-major_Axis: 6378137.0
+        Denominator_of_Flattening_Ratio: 298.257222
+
+  Entity_and_Attribute_Information:
+    Detailed_Description:
+      Entity_Type:
+        Entity_Type_Label: Areas of equal seismic hazard (described by seihazp020.dbf).
+        Entity_Type_Definition:
+          Areas of predicted peak horizontal ground acceleration within the
+          specified range, with a 10% probability of exceedance in 50 years.
+        Entity_Type_Definition_Source: U.S. Geological Survey
+      Attribute:
+        Attribute_Label: Shape
+        Attribute_Definition: The representation of the entity in the data.
+        Attribute_Definition_Source: National Atlas of the United States
+        Attribute_Domain_Values:
+          Enumerated_Domain:
+            Enumerated_Domain_Value: Polygon
+            Enumerated_Domain_Value_Definition: 2-dimensional element
+            Enumerated_Domain_Value_Definition_Source: ESRI GIS software
+      Attribute:
+        Attribute_Label: Area
+        Attribute_Definition: The size of the shape in coverage units.
+        Attribute_Definition_Source: National Atlas of the United States
+        Attribute_Domain_Values:
+          Range_Domain:
+            Range_Domain_Minimum: 0.00000
+            Range_Domain_Maximum: 116.59068
+      Attribute:
+        Attribute_Label: Perimeter
+        Attribute_Definition: The perimeter of the shape in coverage units.
+        Attribute_Definition_Source: National Atlas of the United States
+        Attribute_Domain_Values:
+          Range_Domain:
+            Range_Domain_Minimum: 0.00105
+            Range_Domain_Maximum: 192.55132
+      Attribute:
+        Attribute_Label: Seihazm020
+        Attribute_Definition: Internal feature number.
+        Attribute_Definition_Source: National Atlas of the United States
+        Attribute_Domain_Values:
+          Range_Domain:
+            Range_Domain_Minimum: 2
+            Range_Domain_Maximum: 3360
+      Attribute:
+        Attribute_Label: Acc_val
+        Attribute_Definition:
+          The minimum peak horizontal ground acceleration value for the polygon,
+          as percent of gravity (9.8 meters/second2).  Valid values are 0, 1, 2,
+          3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 60, 80, and 100.
+        Attribute_Definition_Source: National Atlas of the United States
+        Attribute_Domain_Values:
+          Range_Domain:
+            Range_Domain_Minimum: 0
+            Range_Domain_Maximum: 100
+      Attribute:
+        Attribute_Label: Valley
+        Attribute_Definition: A code indicating whether the polygon represents a local minima.
+        Attribute_Definition_Source: U.S. Geological Survey
+        Attribute_Domain_Values:
+          Enumerated_Domain:
+            Enumerated_Domain_Value: 0
+            Enumerated_Domain_Value_Definition: The polygon is not a local minima.
+            Enumerated_Domain_Value_Definition_Source: U.S. Geological Survey
+        Attribute_Domain_Values:
+          Enumerated_Domain:
+            Enumerated_Domain_Value: 1
+            Enumerated_Domain_Value_Definition: The polygon is a local minima.
+            Enumerated_Domain_Value_Definition_Source: U.S. Geological Survey
+  Distribution_Information:
+    Distributor:
+      Contact_Information:
+        Contact_Organization_Primary:
+          Contact_Organization: Earth Science Information Center, U.S. Geological Survey
+        Contact_Address:
+          Address_Type: Mailing address
+          Address: 507 National Center
+          City: Reston
+          State_or_Province: VA
+          Postal_Code: 20192
+        Contact_Voice_Telephone: 1-888-ASK-USGS (1-888-275-8747)
+        Contact_Voice_Telephone: 703-648-5920
+        Contact_Instructions:
+          In addition to the address above there are other ESIC offices
+          throughout the country.  A full list of these offices is at
+          <http://ask.usgs.gov/esic_index.html>.
+
+    Distribution_Liability:
+      Although these data have been processed successfully on a computer system
+      at the U.S. Geological Survey, no warranty expressed or implied is made by
+      the U.S. Geological Survey regarding the utility of the data on any other
+      system, nor shall the act of distribution constitute any such warranty.
+      No responsibility is assumed by the U.S. Geological Survey in the use of
+      these data.
+
+    Standard_Order_Process:
+      Digital_Form:
+        Digital_Transfer_Information:
+          Format_Name: ESRI Shapefile
+        Digital_Transfer_Option:
+          Online_Option:
+            Computer_Contact_Information:
+              Network_Address:
+                Network_Resource_Name: <http://nationalatlas.gov/atlasftp.html?openChapters=chpgeol#chpgeol>
+      Digital_Form:
+        Digital_Transfer_Information:
+          Format_Name: SDTS
+        Digital_Transfer_Option:
+          Online_Option:
+            Computer_Contact_Information:
+              Network_Address:
+                Network_Resource_Name: <http://nationalatlas.gov/atlasftp.html?openChapters=chpgeol#chpgeol>
+      Fees: There is no charge for the map layer.
+
+  Metadata_Reference_Information:
+    Metadata_Date: 20060809
+    Metadata_Contact:
+      Contact_Information:
+        Contact_Person_Primary:
+          Contact_Person: Peg Rawson
+          Contact_Organization: National Atlas of the United States
+        Contact_Address:
+          Address_Type: Mailing address
+          Address: 12201 Sunrise Valley Dr
+          Address: MS 561
+          City: Reston
+          State_or_Province: VA
+          Postal_Code: 20192
+          Country: USA
+        Contact_Voice_Telephone: 703-648-4183
+        Contact_Electronic_Mail_Address: atlasmail@usgs.gov
+    Metadata_Standard_Name: FGDC Content Standards for Digital Geospatial Metadata
+    Metadata_Standard_Version: FGDC-STD-001-1998
+    Metadata_Security_Information:
+      Metadata_Security_Classification_System: None
+      Metadata_Security_Classification: Unclassified
+      Metadata_Security_Handling_Description: None
+

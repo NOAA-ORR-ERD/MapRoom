@@ -1,22 +1,16 @@
-import os
-import os.path
-import time
-import sys
 import numpy as np
 
 from pytriangle import triangulate_simple
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Str
 
-from ..library import rect
-from ..library.accumulator import flatten
-from ..library.projection import Projection
-from ..library.Boundary import Boundaries, PointsError
+from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
 from point import PointLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -25,25 +19,27 @@ progress_log = logging.getLogger("progress")
 
 class TriangleLayer(PointLayer):
     """Layer for triangles.
-    
+
     """
     type = Str("triangle")
-    
+
     mouse_mode_toolbar = Str("BaseLayerToolBar")
-    
+
     triangles = Any
 
     visibility_items = ["points", "triangles", "labels"]
-    
-    layer_info_panel = ["Layer name", "Triangle count", "Show depth shading"]
+
+    use_color_cycling = True
+
+    layer_info_panel = ["Triangle count", "Show depth shading"]
 
     def __str__(self):
         try:
             triangles = len(self.triangles)
-        except:
+        except TypeError:
             triangles = 0
         return PointLayer.__str__(self) + ", %d triangles" % triangles
-    
+
     def get_info_panel_text(self, prop):
         if prop == "Triangle count":
             if self.triangles is not None:
@@ -60,7 +56,7 @@ class TriangleLayer(PointLayer):
         no_triangles = (self.triangles is None or len(self.triangles) == 0)
 
         return no_points and no_triangles
-        
+
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
@@ -70,13 +66,8 @@ class TriangleLayer(PointLayer):
             return self.triangles is not None
         raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def set_layer_style_defaults(self):
-        self.style.use_next_default_color()
-        self.style.line_width = 1
-
     def set_data(self, f_points, f_depths, f_triangles):
         n = np.alen(f_points)
-        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
@@ -92,7 +83,7 @@ class TriangleLayer(PointLayer):
             if n > 0:
                 self.triangles = self.make_triangles(n)
                 self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes = f_triangles
-        
+
         self.update_bounds()
 
     def can_save_as(self):
@@ -118,18 +109,18 @@ class TriangleLayer(PointLayer):
             self.triangles.point3 += offsets
 
     def insert_triangle(self, point_index_1, point_index_2, point_index_3):
-        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.style.line_color, STATE_NONE))
+        return self.insert_triangle_at_index(len(self.triangles), (point_index_1, point_index_2, point_index_3, self.style.line_color, state.CLEAR))
 
     def insert_triangle_at_index(self, index, params):
         entry = np.array([params],
-                       dtype=data_types.TRIANGLE_DTYPE).view(np.recarray)
+                         dtype=data_types.TRIANGLE_DTYPE).view(np.recarray)
         self.triangles = np.insert(self.triangles, index, entry).view(np.recarray)
 
         return index
 
     def delete_triangle(self, index):
-        t = self.triangles[index]
-        params = (t.point1, t.point2, t.color, t.state)
+        # t = self.triangles[index]
+        # params = (t.point1, t.point2, t.color, t.state)
         # FIXME: add undo info
         self.triangles = np.delete(self.triangles, index, 0)
 
@@ -222,16 +213,13 @@ class TriangleLayer(PointLayer):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(layer, allow_branches=True, allow_self_crossing=False)
         boundaries.check_errors(True)
-        
+
         progress_log.info("Triangulating...")
 
         # calculate a hole point for each boundary
         hole_points_xy = np.empty(
             (len(boundaries), 2), np.float64,
         )
-
-        for (boundary_index, boundary) in enumerate(boundaries):
-            print boundary_index, boundary
 
         for (boundary_index, boundary) in enumerate(boundaries):
             if (len(boundary.point_indexes) < 3):
@@ -251,8 +239,8 @@ class TriangleLayer(PointLayer):
 
         # we need to use projected points for the triangulation
         projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float64).copy()
-        projected_points[:, 0], projected_points[:, 1] = self.manager.project.layer_canvas.projection(layer.points.x, layer.points.y)
-        hole_points_xy[:, 0], hole_points_xy[:, 1] = self.manager.project.layer_canvas.projection(hole_points_xy[:, 0], hole_points_xy[:, 1])
+        projected_points[:,0], projected_points[:,1] = self.manager.project.layer_canvas.projection(layer.points.x, layer.points.y)
+        hole_points_xy[:,0], hole_points_xy[:,1] = self.manager.project.layer_canvas.projection(hole_points_xy[:,0], hole_points_xy[:,1])
 #        print "params: " + params
 #        print "hole points:"
 #        print hole_points_xy
@@ -266,12 +254,12 @@ class TriangleLayer(PointLayer):
             layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(layer.line_segment_indexes)].view(np.uint32).copy(),
             hole_points_xy)
         return (triangle_points_xy,
-         triangle_points_z,
-         triangles)
+                triangle_points_z,
+                triangles)
 
     def unproject_triangle_points(self, points):
         points.x, points.y = self.manager.project.layer_canvas.projection(points.x, points.y, inverse=True)
-    
+
     def triangulate_from_data(self, points, depths, triangles):
         self.set_data(points, depths, triangles)
         self.unproject_triangle_points(self.points)
@@ -281,25 +269,25 @@ class TriangleLayer(PointLayer):
     def triangulate_from_layer(self, parent_layer, q, a):
         points, depths, triangles = self.get_triangulated_points(parent_layer, q, a)
         self.triangulate_from_data(points, depths, triangles)
-    
+
     def color_interp(self, z, colormap, alpha):
         c0 = colormap[0]
         if z < c0[0]:
-            return color_floats_to_int(c0[1]/255., c0[2]/255., c0[3]/255., alpha)
+            return color_floats_to_int(c0[1] / 255., c0[2] / 255., c0[3] / 255., alpha)
         for c in colormap[1:]:
             if z >= c0[0] and z <= c[0]:
                 perc = (z - c0[0]) / float(c[0] - c0[0])
-                return color_floats_to_int((c0[1] + (c[1] - c0[1]) * perc)/255.,
-                                    (c0[2] + (c[2] - c0[2]) * perc)/255.,
-                                    (c0[3] + (c[3] - c0[3]) * perc)/255.,
-                                    alpha)
+                return color_floats_to_int((c0[1] + (c[1] - c0[1]) * perc) / 255.,
+                                           (c0[2] + (c[2] - c0[2]) * perc) / 255.,
+                                           (c0[3] + (c[3] - c0[3]) * perc) / 255.,
+                                           alpha)
             c0 = c
-        return color_floats_to_int(c[1]/255., c[2]/255., c[3]/255., alpha)
-    
+        return color_floats_to_int(c[1] / 255., c[2] / 255., c[3] / 255., alpha)
+
     def get_triangle_point_colors(self, alpha=.9):
         colors = np.zeros(len(self.points), dtype=np.uint32)
         if self.points is not None:
-            
+
             # Lots of points in the colormap doesn't help because the shading
             # is only applied linearly based on the depth of the endpoints.
             # So if there are colors at depths 10, 25, 50, and 100, but the
@@ -311,29 +299,29 @@ class TriangleLayer(PointLayer):
                 (-10, 0xf0, 0xeb, 0xc3),
                 (-0.01, 0xf0, 0xeb, 0xc3),
                 (0, 0xd6, 0xea, 0xeb),
-#                (10, 0x9b, 0xd3, 0xe0),
-#                (20, 0x54, 0xc0, 0xdc),
-#                (30, 0x00, 0xa0, 0xcc),
-#                (40, 0x00, 0x6a, 0xa4),
-#                (50, 0x1f, 0x48, 0x8a),
+                #                (10, 0x9b, 0xd3, 0xe0),
+                #                (20, 0x54, 0xc0, 0xdc),
+                #                (30, 0x00, 0xa0, 0xcc),
+                #                (40, 0x00, 0x6a, 0xa4),
+                #                (50, 0x1f, 0x48, 0x8a),
                 (100, 0x00, 0x04, 0x69),
-                )
-                
+            )
+
             for i in range(len(colors)):
                 d = self.points.z[i]
                 colors[i] = self.color_interp(d, colormap, alpha)
         return colors
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer
-        
+
         """
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         triangles = self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
         tri_points_color = self.get_triangle_point_colors()
         renderer.set_triangles(triangles, tri_points_color)
-    
+
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering line layer!!! pick=%s" % (picker))
         if picker.is_active:

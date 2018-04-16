@@ -2,13 +2,21 @@
 
 """
 import os
-import sys
 
 # Enthought library imports.
-from pyface.api import ImageResource, GUI, YES, OK, CANCEL
-from pyface.action.api import Group, Separator
-from pyface.tasks.action.api import SMenuBar, SMenu, SToolBar, SchemaAddition
-from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
+from pyface.api import GUI
+from pyface.api import ImageResource
+from pyface.action.api import Separator
+from pyface.tasks.action.api import SMenu
+from pyface.tasks.action.api import SchemaAddition
+from traits.api import Dict
+from traits.api import Event
+from traits.api import Instance
+from traits.api import Property
+from traits.api import Str
+from traits.api import Unicode
+from traits.api import on_trait_change
+from traits.api import provides
 
 from omnivore.framework.task import FrameworkTask
 from omnivore.framework.i_about import IAbout
@@ -21,9 +29,10 @@ import toolbar
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
 from library.known_hosts import default_wms_hosts, default_tile_hosts
+from layers import LayerStyle, parse_styles_from_json, styles_to_json
 
-from actions import *
-from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction
+import actions
+from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction, SaveAsImageAction
 
 import logging
 log = logging.getLogger(__name__)
@@ -33,43 +42,43 @@ log = logging.getLogger(__name__)
 class MaproomProjectTask(FrameworkTask):
     """The Maproom Project File editor task.
     """
-    
-    id = pane_layout.task_id_with_pane_layout
-    
-    new_file_text = 'MapRoom Project'
-    
-    about_application = ""
 
-    #### Task interface #######################################################
+    id = pane_layout.task_id_with_pane_layout
+
+    new_file_text = 'MapRoom Project'
+
+    about_application = "template://default_project.maproom"
+
+    # Task interface #######################################################
 
     name = 'MapRoom Project File'
-    
+
     icon = ImageResource('maproom')
-    
+
     preferences_helper = MaproomPreferences
-    
+
     status_bar_debug_width = 300
-    
+
     start_new_editor_in_new_window = True
-    
-    #### 'IAbout' interface ###################################################
-    
+
+    # 'IAbout' interface ###################################################
+
     about_title = Str('MapRoom')
-    
+
     about_version = Unicode
-    
+
     about_description = Property(Unicode)
-    
+
     about_website = Str('http://www.noaa.gov')
-    
+
     about_image = Instance(ImageResource, ImageResource('maproom_large'))
-    
-    #### 'IErrorReporter' interface ###########################################
-    
+
+    # 'IErrorReporter' interface ###########################################
+
     error_email_to = Str('rob.mcmullen@noaa.gov')
-    
-    #### Menu events ##########################################################
-    
+
+    # Menu events ##########################################################
+
     # Layer selection event placed here instead of in the ProjectEditor
     # because the trait events don't seem to be triggered in the
     # menu items on task.active_editor.layer_selection_changed
@@ -77,11 +86,13 @@ class MaproomProjectTask(FrameworkTask):
     # ProjectEditor.update_layer_selection_ui() sets an event here in the
     # MaproomTask rather than in itself.
     layer_selection_changed = Event
-    
+
+    templates_changed = Event
+
     def _about_version_default(self):
         import Version
         return Version.VERSION
-    
+
     def _get_about_description(self):
         desc = "High-performance 2d mapping developed by NOAA\n\nMemory usage: %.0fMB\n\nUsing libraries:\n" % get_mem_use()
         import wx
@@ -98,12 +109,38 @@ class MaproomProjectTask(FrameworkTask):
             pass
         try:
             import OpenGL
+            import OpenGL.GL as gl
             desc += "  PyOpenGL %s\n" % OpenGL.__version__
+            desc += "  OpenGL %s\n" % gl.glGetString(gl.GL_VERSION)
+            desc += "  OpenGL Vendor: %s\n" % gl.glGetString(gl.GL_VENDOR)
+            desc += "  OpenGL Renderer: %s\n" % gl.glGetString(gl.GL_RENDERER)
+            desc += "  GLSL primary: %s\n" % gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
+            num_glsl = gl.glGetInteger(gl.GL_NUM_SHADING_LANGUAGE_VERSIONS)
+            desc += "  GLSL supported: "
+            for i in range(num_glsl):
+                v = gl.glGetStringi(gl.GL_SHADING_LANGUAGE_VERSION, i)
+                desc += v + ", "
+            desc += "\n"
         except:
             pass
         try:
             import pyproj
             desc += "  PyProj %s\n" % pyproj.__version__
+        except:
+            pass
+        try:
+            import netCDF4
+            desc += "  netCDF4 %s\n" % netCDF4.__version__
+        except:
+            pass
+        try:
+            import shapely
+            desc += "  Shapely %s\n" % shapely.__version__
+        except:
+            pass
+        try:
+            import omnivore
+            desc += "  Omnivore %s\n" % omnivore.__version__
         except:
             pass
         return desc
@@ -127,8 +164,8 @@ class MaproomProjectTask(FrameworkTask):
 
     def _extra_actions_default(self):
         layer_menu = self.create_menu("Menu", "Layer", "LayerCreateGroup", "LayerStackGroup", "LayerUtilGroup", "LayerDeleteGroup", "LayerCheckGroup")
-        tools_menu = self.create_menu("Menu", "Tools", "ToolsManageGroup")
-        actions = [
+        tools_menu = self.create_menu("Menu", "Tools", "ToolsActionGroup", "ToolsManageGroup")
+        additions = [
             # Menubar additions
             SchemaAddition(factory=lambda: layer_menu,
                            path='MenuBar',
@@ -138,8 +175,10 @@ class MaproomProjectTask(FrameworkTask):
                            path='MenuBar',
                            after="Edit",
                            ),
-            ]
-        return actions
+            SchemaAddition(factory=actions.DebugAnnotationLayersAction,
+                           path='MenuBar/Help/Debug'),
+        ]
+        return additions
 
     def pane_layout_initial_visibility(self):
         return pane_layout.pane_initially_visible()
@@ -147,177 +186,198 @@ class MaproomProjectTask(FrameworkTask):
     ###########################################################################
     # 'FrameworkTask' interface.
     ###########################################################################
-    
+
     def activated(self):
         FrameworkTask.activated(self)
-        
-        self.init_threaded_processing()
-        
+
+        self.one_time_init_driver()
+
         # This trait can't be set as a decorator on the method because
         # active_editor can be None during the initialization process.  Set
         # here because it's guaranteed not to be None
         self.on_trait_change(self.mode_toolbar_changed, 'active_editor.mouse_mode_toolbar')
 
     def prepare_destroy(self):
+        self.on_trait_change(self.mode_toolbar_changed, 'active_editor.mouse_mode_toolbar', remove=True)
         self.window.application.remember_perspectives(self.window)
         self.stop_threaded_processing()
-    
+
     def get_actions_Menu_File_NewGroup(self):
         return [
-            NewProjectAction(),
-            ]
-    
+            actions.NewProjectAction(),
+            actions.NewEmptyProjectAction(),
+            SMenu(actions.LoadProjectTemplateGroup(),
+                  id='LoadProjectTemplate', name="New Project From Template"),
+        ]
+
     def get_actions_Menu_File_SaveGroup(self):
         return [
-            SaveProjectAction(),
-            SaveProjectAsAction(),
-            SaveCommandLogAction(),
-            SaveLayerAction(),
-            SMenu(SaveLayerGroup(),
+            actions.SaveProjectAction(),
+            actions.SaveProjectAsAction(),
+            actions.SaveProjectTemplateAction(),
+            actions.SaveCommandLogAction(),
+            actions.SaveLayerAction(),
+            SMenu(actions.SaveLayerGroup(),
                   id='SaveLayerAsSubmenu', name="Save Layer As"),
-            SaveImageAction(),
-            ]
-    
+            SaveAsImageAction(),
+        ]
+
     def get_actions_Menu_File_RevertGroup(self):
         return [
-            RevertProjectAction(),
-            ]
-    
+            actions.RevertProjectAction(),
+        ]
+
     def get_actions_Menu_Edit_CopyPasteGroup(self):
         return [
             CutAction(),
             CopyAction(),
-            DuplicateLayerAction(),
+            actions.DuplicateLayerAction(),
             PasteAction(),
             Separator(),
-            CopyStyleAction(),
-            PasteStyleAction(),
-            ]
-    
+            actions.CopyStyleAction(),
+            actions.PasteStyleAction(),
+        ]
+
     def get_actions_Menu_Edit_SelectGroup(self):
         return [
-            ClearSelectionAction(),
-            DeleteSelectionAction(),
+            actions.ClearSelectionAction(),
+            actions.DeleteSelectionAction(),
             Separator(),
-            BoundaryToSelectionAction(),
+            actions.BoundaryToSelectionAction(),
             Separator(),
-            ClearFlaggedAction(),
-            FlaggedToSelectionAction(),
-            ]
-    
+            actions.ClearFlaggedAction(),
+            actions.FlaggedToSelectionAction(),
+        ]
+
     def get_actions_Menu_Edit_PrefGroup(self):
         return [
-            DefaultStyleAction(),
+            actions.DefaultStyleAction(),
             PreferencesAction(),
-            ]
-    
+        ]
+
     def get_actions_Menu_Edit_FindGroup(self):
         return [
-            FindPointsAction(),
-            ]
-    
+            actions.FindPointsAction(),
+        ]
+
     def get_actions_Menu_Help_BugReportGroup(self):
         return [
             OpenLogDirectoryAction(),
-            OpenLogAction(),
-            ]
-    
-    def get_actions_Menu_View_ViewZoomGroup(self):
+            actions.OpenLogAction(),
+        ]
+
+    def get_actions_Menu_View_ZoomGroup(self):
         return [
-            ZoomInAction(),
-            ZoomOutAction(),
-            ZoomToFit(),
-            ZoomToLayer(),
-            ]
-    
-    def get_actions_Menu_View_ViewChangeGroup(self):
+            actions.ZoomInAction(),
+            actions.ZoomOutAction(),
+            actions.ZoomToFit(),
+            actions.ZoomToLayer(),
+        ]
+
+    def get_actions_Menu_View_ChangeGroup(self):
         return [
-            JumpToCoordsAction(),
-            ]
-    
-    def get_actions_Menu_View_ViewDebugGroup(self):
+            actions.JumpToCoordsAction(),
+        ]
+
+    def get_actions_Menu_View_DebugGroup(self):
         return [
-            BoundingBoxAction(),
-            PickerFramebufferAction(),
-            ]
-    
+            actions.BoundingBoxAction(),
+            actions.PickerFramebufferAction(),
+        ]
+
     def get_actions_Menu_Layer_LayerCreateGroup(self):
         return [
-            NewVectorLayerAction(),
-            NewAnnotationLayerAction(),
-            NewWMSLayerAction(),
-            NewTileLayerAction(),
-            NewCompassRoseLayerAction(),
-            NewLonLatLayerAction(),
-            ]
+            actions.NewVectorLayerAction(),
+            actions.NewAnnotationLayerAction(),
+            actions.NewWMSLayerAction(),
+            actions.NewTileLayerAction(),
+            actions.NewCompassRoseLayerAction(),
+            actions.NewLonLatLayerAction(),
+            actions.NewRNCLayerAction(),
+            actions.NewRNCLayer360Action(),
+        ]
 
     def get_actions_Menu_Layer_LayerStackGroup(self):
         return [
-            RaiseToTopAction(),
-            RaiseLayerAction(),
-            LowerLayerAction(),
-            LowerToBottomAction(),
-            ]
-    
+            actions.RaiseToTopAction(),
+            actions.RaiseLayerAction(),
+            actions.LowerLayerAction(),
+            actions.LowerToBottomAction(),
+        ]
+
     def get_actions_Menu_Layer_LayerUtilGroup(self):
         return [
-            TriangulateLayerAction(),
-            ToPolygonLayerAction(),
-            ToVerdatLayerAction(),
-            MergeLayersAction(),
-            MergePointsAction(),
-            ]
-    
+            actions.TriangulateLayerAction(),
+            actions.ToPolygonLayerAction(),
+            actions.ToVerdatLayerAction(),
+            actions.MergeLayersAction(),
+            actions.MergePointsAction(),
+        ]
+
     def get_actions_Menu_Layer_LayerDeleteGroup(self):
         return [
-            DeleteLayerAction(),
-            ]
-    
+            actions.DeleteLayerAction(),
+        ]
+
     def get_actions_Menu_Layer_LayerCheckGroup(self):
         return [
-            CheckSelectedLayerAction(),
-            CheckAllLayersAction(),
-            ]
-    
+            actions.CheckSelectedLayerAction(),
+            actions.CheckAllLayersAction(),
+        ]
+
+    def get_actions_Menu_Tools_ToolsActionGroup(self):
+        return [
+            actions.NormalizeLongitudeAction(),
+            actions.SwapLatLonAction(),
+#            actions.TimelineAction(),
+        ]
+
     def get_actions_Menu_Tools_ToolsManageGroup(self):
         return [
-            ManageWMSAction(),
+            actions.ManageWMSAction(),
             Separator(),
-            ManageTileServersAction(),
-            ClearTileCacheAction(),
-            ]
-    
+            actions.ManageTileServersAction(),
+            actions.ClearTileCacheAction(),
+        ]
+
     def get_actions_Tool_File_SaveGroup(self):
         return [
-            SaveProjectAction(),
-            SaveProjectAsAction(),
-            ]
+            actions.SaveProjectAction(),
+            actions.SaveProjectAsAction(),
+        ]
 
     def get_actions_Tool_Edit_SelectGroup(self):
         return [
-            ClearSelectionAction(),
-            DeleteSelectionAction(),
+            actions.ClearSelectionAction(),
+            actions.DeleteSelectionAction(),
+        ]
+
+    def get_actions_Tool_View_ConfigGroup(self):
+        return [
+            actions.ZoomInAction(),
+            actions.ZoomOutAction(),
+            actions.ZoomToFit(),
+            actions.ZoomToLayer(),
+        ]
+
+    def get_actions_Tool_View_ChangeGroup(self):
+        return [
+            actions.RaiseToTopAction(),
+            actions.RaiseLayerAction(),
+            actions.LowerLayerAction(),
+            actions.LowerToBottomAction(),
+            actions.GroupLayerAction(),
+            actions.UngroupLayerAction(),
+            actions.TriangulateLayerAction(),
+            actions.DeleteLayerAction(),
+        ]
+
+    def get_actions_Menu_Help_DebugTaskGroup(self):
+        return [
+            actions.DebugLayerManagerAction(),
             ]
 
-    def get_actions_Tool_View_ViewConfigGroup(self):
-        return [
-            ZoomInAction(),
-            ZoomOutAction(),
-            ZoomToFit(),
-            ZoomToLayer(),
-            ]
-    
-    def get_actions_Tool_View_ViewChangeGroup(self):
-        return [
-            RaiseToTopAction(),
-            RaiseLayerAction(),
-            LowerLayerAction(),
-            LowerToBottomAction(),
-            TriangulateLayerAction(),
-            DeleteLayerAction(),
-            ]
-
-    def get_editor(self, guess=None):
+    def get_editor(self, guess=None, **kwargs):
         """ Opens a new empty window
         """
         editor = ProjectEditor()
@@ -336,26 +396,30 @@ class MaproomProjectTask(FrameworkTask):
         that will load a new file or create a new view of the existing editor,
         respectively.
         """
-        log.debug("In new...")
-        log.debug(" active editor is: %s"%self.active_editor)
+        log.debug("new: source=%s active editor=%s, kwargs=%s" % (source, self.active_editor, str(kwargs)))
         if hasattr(source, 'document_id'):
             if self.active_editor and not self.active_editor.load_in_new_tab(source.metadata):
                 editor = self.active_editor
                 editor.load_omnivore_document(source, **kwargs)
-                self._active_editor_changed()
+                #self._active_editor_changed()  # FIXME: unneeded now?
             else:
                 editor = self.get_editor()
                 self.editor_area.add_editor(editor)
                 self.editor_area.activate_editor(editor)
                 editor.load_omnivore_document(source, **kwargs)
+
+                # Only restore perspective on a new window, otherwise it causes
+                # an unnecessary update and incorrectly replaces existing pane
+                # names
+                self.window.application.restore_perspective(self.window, self)
             self.activated()
             self.window.application.successfully_loaded_event = source.metadata.uri
-            self.window.application.restore_perspective(self.window, self)
         else:
+            log.debug("starting empty task")
             FrameworkTask.new(self, source, **kwargs)
 
     def allow_different_task(self, guess, other_task):
-        return self.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text)) == YES
+        return self.confirm("The (MIME type %s) file\n\n%s\n\ncan't be edited in a MapRoom project.\nOpen a new %s window to edit?" % (guess.metadata.mime, guess.metadata.uri, other_task.new_file_text))
 
     def restore_toolbars(self, window):
         # Omnivore framework calls this after every file load, normally to
@@ -370,7 +434,7 @@ class MaproomProjectTask(FrameworkTask):
             info = window._aui_manager.GetPane(name)
             info.Show(state)
         window._aui_manager.Update()
-    
+
 # This trait change is set in activated() rather than as a decorator (see above)
 #    @on_trait_change('active_editor.mouse_mode_toolbar')
     def mode_toolbar_changed(self, changed_to):
@@ -390,11 +454,11 @@ class MaproomProjectTask(FrameworkTask):
             # because we segfault without the GUI.invoke_later (equivalent
             # to wx.CallAfter)
             GUI.invoke_later(tree.control.set_project, self.active_editor)
-    
+
     def _wx_on_mousewheel_from_window(self, event):
         if self.active_editor:
             self.active_editor.layer_canvas.on_mouse_wheel_scroll(event)
-    
+
     @on_trait_change('window.application.preferences_changed_event')
     def preferences_changed(self, evt):
         if self.active_editor:
@@ -404,62 +468,111 @@ class MaproomProjectTask(FrameworkTask):
     @classmethod
     def can_edit(cls, document):
         mime = document.metadata.mime
-        return ( mime.startswith("image") or
-                 mime.startswith("application/x-maproom-") or
-                 mime == "application/x-nc_ugrid" or
-                 mime == "application/x-nc_particles"
-                 )
-    
+        return (mime.startswith("image") or
+                mime.startswith("application/x-maproom-") or
+                mime == "application/x-nc_ugrid" or
+                mime == "application/x-nc_particles" or
+                mime == "text/latlon" or
+                mime == "text/lonlat"
+                )
+
     @classmethod
     def get_match_score(cls, document):
         if cls.can_edit(document):
             return 10
         return 0
 
-
-    ##### WMS and Tile processing
+    # WMS and Tile processing
 
     # Traits
     downloaders = Dict
-    
+
     # class attributes
-    
-    wms_extra_loaded = False
-    
+
+    extra_json_loaded = False
+
+    _fallback_styles = {
+        "other": LayerStyle(),
+        "ui": LayerStyle(line_stipple=0xaaaa, line_width=1, line_color=LayerStyle.default_line_color, fill_style=0),
+        "triangle": LayerStyle(line_width=1),
+    }
+
+    _default_styles = {}
+
+    @property
+    def default_styles(self):
+        d = {}
+        for type_name, style in self._default_styles.iteritems():
+            d[type_name] = style.get_copy()
+        return d
+
+    def default_styles_read_only(self, type_name):
+        return self._default_styles.get(type_name, self._default_styles["other"])
+
     @classmethod
-    def init_extra_servers(cls, application):
-        if cls.wms_extra_loaded is False:
+    def replace_default_styles(cls, styles):
+        if styles:
+            cls._default_styles = styles
+        else:
+            cls._default_styles = {}
+        for type_name, style in cls._fallback_styles.iteritems():
+            if type_name not in cls._default_styles:
+                cls._default_styles[type_name] = style.get_copy()
+
+    @classmethod
+    def override_default_styles(cls, styles):
+        if styles:
+            for type_name, style in styles.iteritems():
+                cls._default_styles[type_name] = style.get_copy()
+
+    def one_time_init_driver(self):
+        self.init_extra_json(self.window.application)
+
+    @classmethod
+    def init_extra_json(cls, application):
+        if cls.extra_json_loaded is False:
             # try once
-            cls.wms_extra_loaded = True
-            
+            cls.extra_json_loaded = True
+
             hosts = application.get_json_data("wms_servers")
             if hosts is None:
                 hosts = default_wms_hosts
             BackgroundWMSDownloader.set_known_hosts(hosts)
-            
+
             hosts = application.get_json_data("tile_servers")
             if hosts is None:
                 hosts = default_tile_hosts
             BackgroundTileDownloader.set_known_hosts(hosts)
-    
+
+            data = application.get_json_data("styles")
+            if data is not None:
+                styles = parse_styles_from_json(data)
+            else:
+                styles = None
+            cls.replace_default_styles(styles)
+
+    def remember_styles(self, override_styles=None):
+        self.override_default_styles(override_styles)
+        data = styles_to_json(self._default_styles)
+        self.window.application.save_json_data("styles", data)
+
     def remember_wms(self, host=None):
         if host is not None:
             BackgroundWMSDownloader.add_wms_host(host)
         hosts = BackgroundWMSDownloader.get_known_hosts()
         self.window.application.save_json_data("wms_servers", hosts)
 
-    def init_threaded_processing(self):
-        self.init_extra_servers(self.window.application)
-#        if "OpenStreetMap Test" not in self.get_known_wms_names():
-#            BackgroundWMSDownloader.add_wms("OpenStreetMap Test", "http://ows.terrestris.de/osm/service?", "1.1.1")
-#            self.remember_wms()
-    
     def stop_threaded_processing(self):
         log.debug("Stopping threaded services...")
         while len(self.downloaders) > 0:
             url, wms = self.downloaders.popitem()
             log.debug("Stopping threaded downloader %s" % wms)
-            wms = None
+            wms.stop_threads()
+        log.debug("Stopped threaded services.")
+
+        import threading
+        for thread in threading.enumerate():
+            log.debug("thread running: %s" % thread.name)
 
     def get_threaded_wms(self, host=None):
         if host is None:
@@ -483,13 +596,17 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_known_wms_names(self):
         return [s.name for s in BackgroundWMSDownloader.get_known_hosts()]
-    
+
+    def get_default_wms_id(self):
+        index, host = BackgroundWMSDownloader.get_default_host()
+        return index
+
     def remember_tile_servers(self, host=None):
         if host is not None:
             BackgroundTileDownloader.add_wms_host(host)
         hosts = BackgroundTileDownloader.get_known_hosts()
         self.window.application.save_json_data("tile_servers", hosts)
-    
+
     def get_tile_cache_root(self):
         return os.path.join(self.window.application.cache_dir, "tiles")
 
@@ -516,3 +633,7 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_known_tile_server_names(self):
         return [s.name for s in BackgroundTileDownloader.get_known_hosts()]
+
+    def get_default_tile_server_id(self):
+        index, host = BackgroundTileDownloader.get_default_host()
+        return index

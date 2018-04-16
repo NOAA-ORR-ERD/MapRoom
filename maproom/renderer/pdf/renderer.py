@@ -1,16 +1,12 @@
-import os
-import sys
-import wx
 import numpy as np
 
 from PIL import Image
 
 from reportlab.lib.utils import ImageReader
 
-from omnivore import get_image_path
 
 import maproom.library.rect as rect
-from .. import data_types, int_to_color_floats, color_floats_to_int
+from .. import int_to_color_floats
 from .. import BaseRenderer
 
 import logging
@@ -19,7 +15,7 @@ log = logging.getLogger(__name__)
 
 class PDFImage(object):
     static_renderer = True
-    
+
     def __init__(self, image_data):
         self.images = []
         self.xywh = []
@@ -30,7 +26,6 @@ class PDFImage(object):
             yield image, xywh[0], xywh[1], xywh[2], xywh[3]
 
     def load(self, image_data):
-        n = 0
         for image in image_data:
             try:
                 if image.z != image_data.zoom_level:
@@ -42,7 +37,7 @@ class PDFImage(object):
             converted = Image.fromarray(image.data, mode='RGBA')
             log.debug("PIL image: %s" % converted)
             self.images.append(converted)
-    
+
     def set_projection(self, image_data, projection):
         self.xywh = []
         for image in image_data:
@@ -51,7 +46,7 @@ class PDFImage(object):
             x1, y1 = projection(lb[0], lb[1])
             x2, y2 = projection(rt[0], rt[1])
             self.xywh.append((x1, y1, x2 - x1, y2 - y1))
-    
+
     def use_screen_rect(self, image_data, r, scale=1.0):
         self.xywh = []
         for image in image_data:
@@ -60,10 +55,10 @@ class PDFImage(object):
             w = image.size[0] * scale
             h = image.size[1] * scale
             self.xywh.append((x, y, w, h))
-    
+
     def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
-        left = int(point[0] - (image_data.x/2) * scale)
-        bottom = int(point[1] + (image_data.y/2) * scale)
+        left = int(point[0] - (image_data.x / 2) * scale)
+        bottom = int(point[1] + (image_data.y / 2) * scale)
         right = left + (image_data.x * scale)
         top = bottom + (image_data.y * scale)
         # flip y to treat rect as normal opengl coordinates
@@ -86,7 +81,7 @@ class ReportLabRenderer(BaseRenderer):
         self.line_xys = None
         self.line_colors = None
         self.images = None
-        
+
         self.debug_text_bounding_box = False
 
     def prepare_to_render_projected_objects(self):
@@ -94,27 +89,27 @@ class ReportLabRenderer(BaseRenderer):
 
     def prepare_to_render_screen_objects(self):
         self.canvas.set_screen_viewport()
-    
+
     def convert_colors(self, color, count):
         if color is None:
             black = ((0.0, 0.0, 0.0), 1.0)
             converted = [black for i in range(count)]
         else:
             c = color.view(dtype=np.uint32)
-            converted = [((r, g, b), a) for r, g, b, a in [int_to_color_floats(color) for color in c]]
+            converted = [((r, g, b), a) for r, g, b, a in [int_to_color_floats(intcolor) for intcolor in c]]
         return converted
-    
+
     def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
             num_points = np.alen(xy)
         self.point_xys = np.empty((num_points, 2), dtype=np.float32)
         self.point_xys[:num_points] = xy[:num_points]
         self.point_colors = self.convert_colors(color, num_points)
-    
+
     def set_lines(self, xy, indexes, color):
         self.line_xys = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
         self.line_colors = self.convert_colors(color, np.alen(self.line_xys) / 2)
-    
+
     def draw_lines(self,
                    layer,
                    picker,
@@ -152,7 +147,7 @@ class ReportLabRenderer(BaseRenderer):
         n, labels, relevant_points = c.get_visible_labels(values, self.point_xys, projected_rect)
         if n == 0:
             return
-        
+
         c.pdf.setFillColor((0.0, 0.0, 0.0), 1.0)
         for index, s in enumerate(labels):
             x, y = relevant_points[index]
@@ -176,11 +171,11 @@ class ReportLabRenderer(BaseRenderer):
     def set_image_screen(self, image_data):
         if self.images is None:
             self.images = PDFImage(image_data)
-    
+
     def set_image_center_at_screen_point(self, image_data, center, screen_rect, scale=1.0):
         height = rect.height(screen_rect)
         self.images.center_at_screen_point(image_data, center, height, scale)
-    
+
     def release_textures(self):
         pass
 
@@ -199,7 +194,7 @@ class ReportLabRenderer(BaseRenderer):
             self.images.set_projection(image_data, image_data.projection)
         self.image_tiles = self.images
         self.canvas.zoom_level = image_data.zoom_level
-    
+
     def release_tiles(self):
         pass
 
@@ -218,7 +213,7 @@ class ReportLabRenderer(BaseRenderer):
         d = self.canvas.pdf
         rgb, a = self.convert_color(line_color)
         self.set_stroke(rgb, a, line_width)
-        
+
         for polygon in self.polygons:
             rgb, a = self.convert_color(polygon['color'])
             d.setFillColor(rgb, a)
@@ -258,11 +253,11 @@ class ReportLabRenderer(BaseRenderer):
     def draw_screen_markers(self, markers, style):
         c = self.canvas
         self.set_stroke_style(style)
-        
+
         # Markers use the same the fill color as the line color
         rgb, a = self.convert_color(style.line_color)
         c.pdf.setFillColor(rgb, a)
-        
+
         for p1, p2, symbol in markers:
             marker_points, filled = style.get_marker_data(symbol)
             if marker_points is None:
@@ -286,7 +281,7 @@ class ReportLabRenderer(BaseRenderer):
             p.moveTo(x, h - y)
             for x, y in points[1:]:
                 log.debug("%f -> %f" % (x, y))
-                p.lineTo(x, h -y)
+                p.lineTo(x, h - y)
             p.close()
             c.pdf.drawPath(p, fill=filled, stroke=1)
 
@@ -314,12 +309,12 @@ class ReportLabRenderer(BaseRenderer):
     def convert_color(self, color):
         r, g, b, a = int_to_color_floats(color)
         return (r, g, b), a
-    
+
     def set_stroke_style(self, style):
         rgb, a = self.convert_color(style.line_color)
         self.set_stroke(rgb, a, style.line_width)
         return style.line_stipple > 0
-    
+
     def set_stroke(self, rgb, a, width):
         d = self.canvas.pdf
         d.setStrokeColor(rgb, a)
@@ -327,7 +322,7 @@ class ReportLabRenderer(BaseRenderer):
         d.setLineWidth(w)
         d.setLineJoin(1)  # rounded
         d.setLineCap(1)  # rounded
-    
+
     def set_fill_style(self, style):
         rgb, a = self.convert_color(style.fill_color)
         self.canvas.pdf.setFillColor(rgb, a)

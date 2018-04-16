@@ -4,7 +4,7 @@
 # Enthought library imports.
 from pyface.tasks.api import TaskLayout, PaneItem, HSplitter, VSplitter
 
-from panes import *
+import panes
 
 
 # The project ID must be changed when the pane layout changes, otherwise
@@ -18,7 +18,8 @@ from panes import *
 # is only updated when quitting the application; if the application is killed
 # (or crashes!) the saved state is not updated.
 
-task_id_with_pane_layout = 'maproom.project.v8'
+task_id_with_pane_layout = 'maproom.project.v10'
+
 
 def pane_layout():
     """ Create the default task layout, which is overridded by the user's save
@@ -29,7 +30,7 @@ def pane_layout():
             PaneItem('maproom.layer_selection_pane'),
             PaneItem('maproom.layer_info_pane'),
             PaneItem('maproom.selection_info_pane'),
-            ),
+        ),
         right=HSplitter(
             PaneItem('maproom.triangulate_pane'),
             PaneItem('maproom.merge_points_pane'),
@@ -38,14 +39,18 @@ def pane_layout():
             PaneItem('maproom.rst_markup_help_pane'),
             PaneItem('maproom.markdown_help_pane'),
             PaneItem('maproom.sidebar'),
-            ),
-        )
+        ),
+        bottom=HSplitter(
+            PaneItem('maproom.timeline_pane'),
+        ),
+    )
+
 
 def pane_initially_visible():
     """ List of initial pane visibility.  Any panes not listed will use the
     last saved state.
     """
-    
+
     return {
         'maproom.layer_selection_pane': True,
         'maproom.layer_info_pane': True,
@@ -56,7 +61,9 @@ def pane_initially_visible():
         'maproom.rst_markup_help_pane': False,
         'maproom.markdown_help_pane': False,
         'maproom.sidebar': True,
-        }
+        'maproom.timeline_pane': True,
+    }
+
 
 def pane_create():
     """ Create all the pane objects available for the task (regardless
@@ -64,14 +71,15 @@ def pane_create():
     MaproomTask.activated)
     """
     return [
-        LayerSelectionPane(),
-        LayerInfoPane(),
-        SelectionInfoPane(),
-        TriangulatePane(),
-        MergePointsPane(),
-        UndoHistoryPane(),
-        HtmlHelpPane(),
-        RSTHelpPane(),
-        MarkdownHelpPane(),
-        SidebarPane()
-        ]
+        panes.LayerSelectionPane(),
+        panes.LayerInfoPane(),
+        panes.SelectionInfoPane(),
+        panes.TriangulatePane(),
+        panes.MergePointsPane(),
+        panes.UndoHistoryPane(),
+        panes.HtmlHelpPane(),
+        panes.RSTHelpPane(),
+        panes.MarkdownHelpPane(),
+        panes.SidebarPane(),
+        panes.TimelinePane(),
+    ]

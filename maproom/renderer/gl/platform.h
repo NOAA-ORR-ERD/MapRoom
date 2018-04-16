@@ -13,9 +13,9 @@
     #define GL_STATIC_DRAW 0x88E4
     #define GL_DYNAMIC_DRAW 0x88E8
 #elif defined(__APPLE__)
-    #include "gl.h"
-    #include "glu.h"
-    #include "glext.h"
+    #include <OpenGL/gl.h>
+    #include <OpenGL/glu.h>
+    #include <OpenGL/glext.h>
 #else
     #define GL_GLEXT_PROTOTYPES 1
     #include "GL/gl.h"

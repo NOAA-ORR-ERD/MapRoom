@@ -11,13 +11,14 @@ from maproom.renderer import data_types
 
 WHITESPACE_PATTERN = re.compile("\s+")
 
+
 class UGridLoader(BaseLayerLoader):
     mime = "application/x-nc_ugrid"
-    
+
     layer_types = ["point", "line", "triangle"]
-    
+
     extensions = [".nc"]
-    
+
     name = "UGrid"
 
     def find_depths(self, grid):
@@ -25,10 +26,10 @@ class UGridLoader(BaseLayerLoader):
         if found:
             return found.pop()
         return None
-    
-    def load_layers(self, metadata, manager):
+
+    def load_layers(self, metadata, manager, **kwargs):
         layers = []
-        
+
         fs, relpath = opener.parse(metadata.uri)
         if not fs.hassyspath(relpath):
             raise RuntimeError("Only file URIs are supported for NetCDF: %s" % metadata.uri)
@@ -57,7 +58,7 @@ class UGridLoader(BaseLayerLoader):
             layer.mime = self.mime
             layers.append(layer)
         return layers
-    
+
     def save_to_local_file(self, filename, layer):
         n = np.alen(layer.points)
         points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n]

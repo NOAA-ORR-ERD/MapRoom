@@ -4,10 +4,10 @@ import numpy as np
 
 from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
 
+from mock import *
+
 from maproom.layers import loaders, TriangleLayer
 from maproom.library.Boundary import Boundaries
-
-from mock import *
 
 
 class ClipBase(object):
@@ -125,7 +125,7 @@ class TestShapelyBNA(ClipBase):
         self.layer = self.manager.load_first_layer("../TestData/BNA/00011polys_001486pts.bna", "application/x-maproom-bna")
 
     def get_clip_points(self):
-        poly = self.layer.polygons
+        poly = self.layer.rings
         start = poly.start[3]
         count = poly.count[3]
         boundary = self.layer.points

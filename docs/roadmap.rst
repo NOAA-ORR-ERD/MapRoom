@@ -2,8 +2,8 @@
 Code Walkthrough
 ================
 
-MapRoom uses the Peppy2 framework to provide multi-window, multi-frame user
-interface.  See the documentation in `peppy2-overview`.
+MapRoom uses the omnivore framework to provide multi-window, multi-frame user
+interface.  See the documentation in `omnivore-overview`.
 
 
 Startup
@@ -11,8 +11,8 @@ Startup
 
 The function :func:`.main` defines the MapRoom main plugin and
 extra file type recognizer plugins, then passes them on to the
-:func:`peppy2.framework.application.run` function which initializes the peppy2
-and Enthought frameworks.  This runs the Peppy2 application that shows the
+:func:`omnivore.framework.application.run` function which initializes the omnivore
+and Enthought frameworks.  This runs the omnivore application that shows the
 MapRoom editing windows by default because the Task ID for maproom is also
 passed into the ``run`` function that requests the MapRoom task as the startup
 task.
@@ -34,7 +34,7 @@ Task
 
 The task itself is defined in :class:`maproom.task.MaproomProjectTask`
 and includes concrete implementations of the abstract methods in
-:class:`peppy2.framework.task.FrameworkTask`, as well as some additional
+:class:`omnivore.framework.task.FrameworkTask`, as well as some additional
 methods to setup the menu bars, toolbars, and sidebar panes.  The editor is
 defined in the :class:`maproom.project_editor_wx.ProjectEditor` as the wx-
 specific control :class:`maproom.layer_control_wx.LayerControl`.
@@ -50,7 +50,7 @@ Editor
 ------
 
 The :class:`maproom.project_editor_wx.ProjectEditor` is the glue between the
-Peppy2/Enthought framework and the wx controls that the user interacts with.
+omnivore/Enthought framework and the wx controls that the user interacts with.
 These are described in the next section.
 
 
@@ -247,7 +247,7 @@ Adding a New MIME Type
 In order to display a new file type, MapRoom must be programmed
 to recognize the new file type.  Three actions are needed:
 
-First: add a new :class:`peppy2.file_type.i_file_recognizer.IFileRecognizer`
+First: add a new :class:`omnivore.file_type.i_file_recognizer.IFileRecognizer`
 that can return a MIME type based on either a scan of the beginning of the
 file, or as a last resort based on the filename itself.  These classes reside
 in the :mod:`maproom.file_type` module.  E.g., for the FloatCanvas annotation
@@ -286,3 +286,19 @@ Third: a layer loader must be added to parse the file and return the correct
 layer type based on the data.  If the new file type can not be displayed
 by a current layer, you will have to create a new layer type.  See above
 :ref:`Adding a New Layer`
+
+
+MapRoom load process
+====================
+
+Due to the complexity resulting from the flexibility of the Omnivore framework, some things aren't easy to follow. Like loading a file.
+
+When a file is loaded from File -> Open or from the command line it goes through this process:
+
+* FrameworkApplication.load_file is called with the path name (really URI), any keyword arguments sent to the function, and some optional stuff that isn't necessary to discuss here.
+* attempt to get a document that can edit that type of file using a FileGuess object and the FileRecognizerDriver and raises an error here if a compatible document type isn't found.
+* find a task that can edit this document
+* calls Task.new on that document, passing through the keyword arguments from load_file
+* Task.new checks document and if it is an entire MapRoom project file, it is loaded into a new tab by creating a new :class:`ProjectEditor`.
+* If it creates a new tab, it then calls FrameworkEditor.activate_editor which is a call into the Pyface library, and a side effect of that is a call back to :class:`ProjectEditor.create` which sets up the controls in the UI. This create method is a good place to put any initialization code that can happen before the document is loaded
+* :meth:`FrameworkEditor.load_omnivore_document` is called to process the document by finding a :class:`maproom.layers.loaders.common.BaseLoader` instance that can handle the file type.

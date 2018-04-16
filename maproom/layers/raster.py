@@ -1,37 +1,51 @@
-import os
-import os.path
-import time
-import sys
-import numpy as np
 
 # Enthought library imports.
-from traits.api import Unicode, Str, Any, Float
-from pyface.api import YES
+from traits.api import Any
+from traits.api import Str
+from traits.api import Unicode
 
 from ..library import rect
 
-from ..renderer import alpha_from_int, data_types, NullPicker
+from ..renderer import NullPicker
+from ..renderer import alpha_from_int
 
-from base import Layer, ProjectedLayer
-from constants import *
+from base import ProjectedLayer
+import state
 
 import logging
 log = logging.getLogger(__name__)
+
 
 class RasterLayer(ProjectedLayer):
     """Layer for raster images
     
     """
+    # class attributes
+
+    restore_from_url = True
+
+    background = True
+
+    opaque = True
+
+    # Traits
+
     name = Unicode("Raster Layer")
 
     type = Str("image")
 
     image_data = Any
-    
-    layer_info_panel = ["Layer name", "Transparency", "Raster size", "Memory used"]
-    
+
+    layer_info_panel = ["Transparency", "Raster size", "Memory used"]
+
     selection_info_panel = []
-    
+
+    def test_contents_equal(self, other):
+        """Test routine to compare layers"""
+        if self.image_data is not None and other.image_data is not None:
+            return self.image_data.x == other.image_data.x and self.image_data.y == other.image_data.y and ProjectedLayer.test_contents_equal(self, other)
+        return ProjectedLayer.test_contents_equal(self, other)
+
     def get_info_panel_text(self, prop):
         if prop == "Raster size":
             return "%dx%d" % (self.image_data.x, self.image_data.y)
@@ -44,12 +58,18 @@ class RasterLayer(ProjectedLayer):
         to determine if we can save this layer.
         """
         return self.image_data is None
-    
+
+    def extra_files_to_serialize(self):
+        """Pathnames to any files that need to be included in the maproom
+        project file that can't be recreated with JSON
+        """
+        return [self.file_path]
+
     def get_allowable_visibility_items(self):
         """Return allowable keys for visibility dict lookups for this layer
         """
         return ["images"]
-    
+
     def visibility_item_exists(self, label):
         if label == "images":
             return self.image_data is not None
@@ -63,7 +83,7 @@ class RasterLayer(ProjectedLayer):
         # TODO: handle other projections besides +proj=merc and +proj=longlat
         raster_layers = self.manager.count_raster_layers()
         vector_layers = self.manager.count_vector_layers()
-        
+
         if raster_layers == 0:
             self.manager.dispatch_event('projection_changed', self)
             return
@@ -87,20 +107,20 @@ class RasterLayer(ProjectedLayer):
                 message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
 
             if message is not None:
-                if (task.confirm(message) != YES):
+                if not task.confirm(message):
                     self.load_error_string = "Projection conflict"
                     return
 
                 self.manager.dispatch_event('projection_changed', self)
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
 
         if self.image_data is not None:
             bounds = self.image_data.get_bounds()
 
         return bounds
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
         

@@ -16,7 +16,7 @@ function commit_new_version {
 
     git tag -a $VERSION -m "Released $VERSION"
 
-    python setup.py py2app
+    (cd pyinstaller; python build_pyinstaller.py)
 }
 
 (cd tests; bash run.sh)

@@ -1,17 +1,12 @@
-import os
-import sys
-import wx
 import numpy as np
 
-import OpenGL
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import OpenGL.GLU as glu
 
-from omnivore import get_image_path
 
 import maproom.library.rect as rect
-from .. import data_types, int_to_color_floats
+from .. import int_to_color_floats
 from ..gl.textures import ImageTextures, TileTextures
 from ..gl.Tessellator import init_vertex_buffers, tessellate
 from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color
@@ -20,12 +15,12 @@ from .gldc import GLDC
 
 
 class ImmediateModeRenderer():
-    NUM_COLOR_CHANNELS = 4 #i.e. RGBA
+    NUM_COLOR_CHANNELS = 4  # i.e. RGBA
 
     def __init__(self, canvas, layer):
         self.canvas = canvas
         self.layer = layer
-        
+
         self.vbo_point_xys = None
         self.vbo_point_colors = None
         self.world_line_segment_points = None
@@ -61,7 +56,7 @@ class ImmediateModeRenderer():
         gl.glOrtho(0, c.s_w, 0, c.s_h, -1, 1)
         gl.glMatrixMode(gl.GL_MODELVIEW)
         gl.glLoadIdentity()
-    
+
     def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
             num_points = np.alen(xy)
@@ -71,7 +66,7 @@ class ImmediateModeRenderer():
         if color is not None:
             self.vbo_point_colors = gl_vbo.VBO(color)
         self.vbo_point_xys[:num_points] = xy[:num_points]
-    
+
     def set_lines(self, xy, indexes, color):
         # OpenGL doesn't allow a given vertex to have multiple colors
         # simultaneously. So vbo_line_segment_point_xys is needed to color each
@@ -85,7 +80,7 @@ class ImmediateModeRenderer():
             # double the colors since each segment has two vertexes
             segment_colors = np.c_[color, color].reshape(-1)
             self.vbo_line_segment_colors = gl_vbo.VBO(segment_colors.view(dtype=np.uint8))
-    
+
     def draw_lines(self,
                    layer,
                    picker,
@@ -98,8 +93,7 @@ class ImmediateModeRenderer():
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             if (picker.is_active):
-                picker.bind_picker_colors_for_lines(layer,
-                                          len(self.world_line_segment_points))
+                picker.bind_picker_colors_for_lines(layer, len(self.world_line_segment_points), self.canvas.project.layer_manager)
                 gl.glLineWidth(6)
             else:
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
@@ -138,7 +132,8 @@ class ImmediateModeRenderer():
                     picker,
                     point_size,
                     selected_point_indexes=[],
-                    flagged_point_indexes=[]):  # flagged_line_segment_indexes not yet used
+                    flagged_point_indexes=[],
+                    style=None):  # flagged_line_segment_indexes not yet used
         #log.debug("in Point_and_line_set_renderer.render_points, layer:%s, picker:%s"%(layer, picker) )
 
         if (self.vbo_point_xys is not None and len(self.vbo_point_xys) > 0):
@@ -147,17 +142,20 @@ class ImmediateModeRenderer():
             gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
             if (picker.is_active):
-                picker.bind_picker_colors_for_points(layer,
-                                                     len(self.vbo_point_xys.data))
+                picker.bind_picker_colors_for_points(layer, len(self.vbo_point_xys.data), self.canvas.project.layer_manager)
                 gl.glPointSize(point_size + 8)
             else:
                 # To make the points stand out better, especially when rendered on top
                 # of line segments, draw translucent white rings under them.
-                gl.glPointSize(point_size + 4)
-                gl.glColor(1, 1, 1, 0.75)
-                gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
-                gl.glColor(1, 1, 1, 1)
-                
+                if style is not False:
+                    gl.glPointSize(point_size + 4)
+                    if style is not None:
+                        r, g, b, a = int_to_color_floats(style.outline_color)
+                        gl.glColor(r, g, b, a)
+                    else:
+                        gl.glColor(1, 1, 1, 0.75)
+                    gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
+
                 # Now set actual color
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
                 self.vbo_point_colors.bind()
@@ -265,14 +263,14 @@ class ImmediateModeRenderer():
             gl.glColor(0.5, 0.5, 0.5, 0.75)
 
             if filled:
-                gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+                gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
                 self.vbo_triangle_point_colors.bind()
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
                 gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
                 gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
-                gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+                gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
 
             gl.glLineWidth(line_width)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
@@ -292,7 +290,7 @@ class ImmediateModeRenderer():
             self.image_textures = ImageTextures(image_data)
             # Release the raw image data to free up memory.
             image_data.release_images()
-            
+
         self.image_textures.set_projection(image_data, projection)
 
     def set_image_screen(self, image_data):
@@ -304,10 +302,10 @@ class ImmediateModeRenderer():
     def set_image_center_at_screen_point(self, image_data, center, screen_rect, scale=1.0):
         height = rect.height(screen_rect)
         self.image_textures.center_at_screen_point(image_data, center, height, scale)
-    
+
     def set_image_to_screen_rect(self, image_data, screen_rect):
         self.image_textures.use_screen_rect(image_data, screen_rect)
-    
+
     def release_textures(self):
         if self.image_textures is not None:
             self.image_textures.destroy()
@@ -336,7 +334,7 @@ class ImmediateModeRenderer():
                 self.image_textures.vbo_texture_coordinates.bind()
                 gl.glTexCoordPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
-            gl.glDrawArrays(gl.GL_QUADS, 0, 4)
+            gl.glDrawArrays(gl.GL_QUADS, 0, 8)
 
             if texture:
                 self.image_textures.vbo_texture_coordinates.unbind()
@@ -347,11 +345,11 @@ class ImmediateModeRenderer():
             gl.glDisableClientState(gl.GL_TEXTURE_COORD_ARRAY)
             gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
             gl.glDisable(gl.GL_TEXTURE_2D)
-    
+
     def set_tiles(self, image_data):
         if self.image_tiles is None:
             self.image_tiles = TileTextures(image_data)
-    
+
     def release_tiles(self):
         if self.image_tiles is not None:
             self.image_tiles.destroy()
@@ -452,7 +450,7 @@ class ImmediateModeRenderer():
         tessellate(
             projected_points,  # used to be: self.points
             self.point_adjacency_array.next,
-            self.point_adjacency_array.polygon,
+            self.point_adjacency_array.ring_index,
             self.polygons.start,
             self.polygons.count,  # per-polygon point count
             self.line_nan_counts,  # out parameter -- how many nan/deleted points in each polygon
@@ -533,7 +531,6 @@ class ImmediateModeRenderer():
 
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
-
     def draw_screen_line(self, point_a, point_b, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
         c = self.canvas
         # flip y to treat point as normal screen coordinates
@@ -584,10 +581,10 @@ class ImmediateModeRenderer():
 
     def draw_screen_markers(self, markers, style):
         """Draws a list of markers on screen.
-        
+
         Each entry in markers is a 3-tuple; the point to center the marker, a
         point on the other end of the line, and the marker type
-        """ 
+        """
         c = self.canvas
         gl.glDisable(gl.GL_TEXTURE_2D)
         gl.glEnable(gl.GL_LINE_SMOOTH)
@@ -647,11 +644,12 @@ class ImmediateModeRenderer():
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
-    def draw_screen_rect(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0):
+    def draw_screen_rect(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, flip=True):
         c = self.canvas
-        # flip y to treat rect as normal screen coordinates
-        r = ((r[0][0], rect.height(c.screen_rect) - r[0][1]),
-             (r[1][0], rect.height(c.screen_rect) - r[1][1]))
+        if flip:
+            # flip y to treat rect as normal screen coordinates
+            r = ((r[0][0], rect.height(c.screen_rect) - r[0][1]),
+                 (r[1][0], rect.height(c.screen_rect) - r[1][1]))
 
         gl.glDisable(gl.GL_TEXTURE_2D)
         # don't let texture colors override the fill color
@@ -664,6 +662,120 @@ class ImmediateModeRenderer():
         gl.glEnd()
         gl.glColor(1.0, 1.0, 1.0, 1.0)
         gl.glEnable(gl.GL_TEXTURE_2D)
+
+    def calc_legend_texture(self, legend):
+        width = legend.shape[0]
+        height = legend.shape[1]
+
+        texture = gl.glGenTextures(1)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, texture)
+        gl.glTexImage2D(
+            gl.GL_TEXTURE_2D,
+            0,
+            gl.GL_RGB,
+            width,
+            height,
+            0,
+            gl.GL_RGBA,
+            gl.GL_UNSIGNED_BYTE,
+            legend.tostring(),
+        )
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+
+        # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
+
+        return texture
+
+    def draw_screen_textured_rect(self, r, texture_array, labels, max_label_width, x_border=10, y_border=10, tick_length=4, label_spacing=4, line_width=1, border=15, up_color=None, down_color=None):
+        # Note: differs from draw_screen_rect in that the y values are not
+        # flipped -- you are drawing with OpenGL coords ==> y = 0 is at the
+        # bottom
+
+        (x1, y1), (x2, y2) = r
+        h = y2 - y1
+
+        background = ((x1 - x_border, y1 + y_border), (x2 + x_border + tick_length + max_label_width, y2 - y_border))
+        self.draw_screen_rect(background, 1.0, 1.0, 1.0, flip=False)
+
+        gl.glEnable(gl.GL_TEXTURE_2D)
+        t = self.calc_legend_texture(texture_array)
+        gl.glColor(1.0, 1.0, 1.0, 1.0)
+        gl.glBegin(gl.GL_QUADS)
+        gl.glTexCoord(0, 1)
+        gl.glVertex(x1, y1)
+        gl.glTexCoord(1, 1)
+        gl.glVertex(x2, y1)
+        gl.glTexCoord(1, 0)
+        gl.glVertex(x2, y2)
+        gl.glTexCoord(0, 0)
+        gl.glVertex(x1, y2)
+        gl.glEnd()
+        gl.glColor(0.0, 0.0, 0.0, 1.0)
+        gl.glDisable(gl.GL_TEXTURE_2D)
+        gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
+        gl.glDeleteTextures([t])
+
+        # Outline the texture box
+        gl.glDisable(gl.GL_LINE_SMOOTH)
+        gl.glLineWidth(line_width)
+        gl.glBegin(gl.GL_LINE_LOOP)
+        gl.glVertex(x1, y1)
+        gl.glVertex(x2, y1)
+        gl.glVertex(x2, y2)
+        gl.glVertex(x1, y2)
+        gl.glEnd()
+
+        # Draw ticks
+        tick_x = x2
+        gl.glBegin(gl.GL_LINES)
+        for perc, text, _, _ in labels:
+            y = y2 - perc * h
+            gl.glVertex(tick_x, y)
+            gl.glVertex(tick_x + tick_length, y)
+        gl.glEnd()
+
+        # Draw labels
+        label_x = tick_x + tick_length + label_spacing
+        for perc, text, lw, lh in labels:
+            # label centered vertically on tick
+            y = y2 - perc * h + (lh / 2)
+            self.draw_screen_string((label_x, y), text, False)
+
+        gl.glEnable(gl.GL_LINE_SMOOTH)
+        if up_color is not None:
+            gl.glDisable(gl.GL_TEXTURE_2D)
+            gl.glColor(*up_color)
+            gl.glBegin(gl.GL_TRIANGLES)
+            gl.glVertex(x1, y1 + 4, 0)
+            gl.glVertex(x2, y1 + 4, 0)
+            gl.glVertex((x1 + x2) // 2, y1 + 24, 0)
+            gl.glEnd()
+            gl.glLineWidth(line_width)
+            gl.glColor(0.0, 0.0, 0.0, 1.0)
+            gl.glBegin(gl.GL_LINE_LOOP)
+            gl.glVertex(x1, y1 + 4, 0)
+            gl.glVertex(x2, y1 + 4, 0)
+            gl.glVertex((x1 + x2) // 2, y1 + 24, 0)
+            gl.glEnd()
+
+        if down_color is not None:
+            gl.glDisable(gl.GL_TEXTURE_2D)
+            gl.glColor(*down_color)
+            gl.glBegin(gl.GL_TRIANGLES)
+            gl.glVertex(x1, y2 - 4, 0)
+            gl.glVertex(x2, y2 - 4, 0)
+            gl.glVertex((x1 + x2) // 2, y2 - 24, 0)
+            gl.glEnd()
+            gl.glLineWidth(line_width)
+            gl.glColor(0.0, 0.0, 0.0, 1.0)
+            gl.glBegin(gl.GL_LINE_LOOP)
+            gl.glVertex(x1, y2 - 4, 0)
+            gl.glVertex(x2, y2 - 4, 0)
+            gl.glVertex((x1 + x2) // 2, y2 - 24, 0)
+            gl.glEnd()
 
     def get_drawn_string_dimensions(self, text):
         c = self.canvas
@@ -678,14 +790,15 @@ class ImmediateModeRenderer():
 
         return (width, height)
 
-    def draw_screen_string(self, point, text):
-        ##fixme: Is this is the right place?
-        ##fixme: This should be done with shaders anyway.
-        ##fixme:  if not shaders, Cython could help a lot, too
+    def draw_screen_string(self, point, text, flip=True):
+        # fixme: Is this is the right place?
+        # fixme: This should be done with shaders anyway.
+        # fixme:  if not shaders, Cython could help a lot, too
 
         c = self.canvas
-        # flip y to treat point as normal screen coordinates
-        point = (point[0], rect.height(c.screen_rect) - point[1])
+        if flip:
+            # flip y to treat point as normal screen coordinates
+            point = (point[0], rect.height(c.screen_rect) - point[1])
 
         str_len, tex_id = c.prepare_string_texture(point[0], point[1], text)
 
@@ -715,7 +828,6 @@ class ImmediateModeRenderer():
     def get_emulated_dc(self):
         return GLDC(self)
 
-
     # Vector object drawing routines
 
     def get_fill_properties(self, style):
@@ -726,14 +838,14 @@ class ImmediateModeRenderer():
     def fill_object(self, layer, picker, style):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
-        
+
         if (picker.is_active):
-            fill_color = picker.get_polygon_picker_colors(layer, 1)[0]
+            fill_color = picker.get_polygon_picker_colors(layer, 1, self.canvas.project.layer_manager)[0]
         else:
             fill_color = self.get_fill_properties(style)
         if fill_color is None:
             return
-        
+
         if (not picker.is_active):
             fill_stipple = style.get_fill_stipple()
             if fill_stipple is not None:
@@ -747,9 +859,9 @@ class ImmediateModeRenderer():
         r, g, b, a = int_to_color_floats(fill_color)
         gl.glColor(r, g, b, a)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-        gl.glEnable( gl.GL_POLYGON_OFFSET_FILL )
+        gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
         gl.glDrawArrays(gl.GL_TRIANGLE_FAN, 0, np.alen(self.vbo_line_segment_point_xys.data))
-        gl.glDisable( gl.GL_POLYGON_OFFSET_FILL )
+        gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
         gl.glDisable(gl.GL_POLYGON_STIPPLE)
 
         self.vbo_line_segment_point_xys.unbind()
@@ -759,14 +871,13 @@ class ImmediateModeRenderer():
     def outline_object(self, layer, picker, style):
         if (self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) == 0):
             return
-        
+
         gl.glEnableClientState(gl.GL_VERTEX_ARRAY)  # FIXME: deprecated
         self.vbo_line_segment_point_xys.bind()
         gl.glVertexPointer(2, gl.GL_FLOAT, 0, None)  # FIXME: deprecated
 
         if (picker.is_active):
-            picker.bind_picker_colors_for_lines(layer,
-                                      len(self.world_line_segment_points))
+            picker.bind_picker_colors_for_lines(layer, len(self.world_line_segment_points), self.canvas.project.layer_manager)
             gl.glLineWidth(6)
         else:
             gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
@@ -787,7 +898,7 @@ class ImmediateModeRenderer():
             self.vbo_line_segment_colors.unbind()
             gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
         self.vbo_line_segment_point_xys.unbind()
-        
+
         gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
     def draw_screen_svg(self, r, svg):
@@ -795,13 +906,12 @@ class ImmediateModeRenderer():
 
         """
         gl.glDisable(gl.GL_TEXTURE_2D)
-        c = self.canvas
         x = (r[0][0] + r[1][0]) / 2
         y = (r[0][1] + r[1][1]) / 2
         w = rect.width(r)
         h = rect.height(r)
         scale = min(w / svg.width, h / svg.height)
-        x_origin = x - (scale * svg.width)/2
-        y_origin = y - (scale * svg.height)/2
+        x_origin = x - (scale * svg.width) / 2
+        y_origin = y - (scale * svg.height) / 2
         svg.draw(x_origin, y_origin, scale=scale, angle=0)
         gl.glEnable(gl.GL_TEXTURE_2D)

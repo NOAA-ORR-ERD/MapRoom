@@ -14,7 +14,7 @@ IMPORTAT Only works for 1-d arrays at the moment.
 import numpy as np
 
 
-class accumulator:
+class accumulator(object):
     # A few parameters
     DEFAULT_BUFFER_SIZE = 128
     BUFFER_EXTEND_SIZE = 1.25  # array.array uses 1+1/16 -- that seems small to me.
@@ -22,14 +22,14 @@ class accumulator:
     def __init__(self, object=None, dtype=np.float, block_shape=()):
         """
         proper docs here
-        
+
         note: a scalar accumulator doesn't really make sense, so you get a length - 1 array instead.
-        
+
         block_shape specifies the other dimensions of the array, so that it will be of shape:
           (n,) + block_shape
         block_shape is ignored if object is provided, and the shape of the array
         is determined from the shape of the provided object.
-        
+
         If neither object nor block_shape is provided, and empty 1-d array is created
         """
         if object is None:
@@ -63,7 +63,7 @@ class accumulator:
     def shape(self):
         """
         To be compatible with ndarray.shape
-        (only the getter!) 
+        (only the getter!)
         """
         return (self._length,) + self._block_shape
 
@@ -73,7 +73,7 @@ class accumulator:
     def __array__(self, dtype=None):
         """
         a.__array__(|dtype) -> copy of array.
-    
+
         Always returns a copy array, so that buffer doesn't have any references to it.
         """
         return np.array(self.__buffer[:self._length], dtype=dtype, copy=True)
@@ -81,9 +81,9 @@ class accumulator:
     def append(self, item):
         """
         add a new item to the end of the array.
-        
+
         It should be one less dimension than the array: i.e. a.shape[1:]
-        if the itme is a smaller shape, it needs to be broadcastable to that shape. 
+        if the itme is a smaller shape, it needs to be broadcastable to that shape.
         """
         try:
             self.__buffer[self._length] = item
@@ -102,7 +102,7 @@ class accumulator:
             self._length += len(items)
         except ValueError:  # the buffer is not big enough, or wrong shape
             items = np.asarray(items, dtype=self.dtype)
-            if items.shape[1:] <> self._block_shape:
+            if items.shape[1:] != self._block_shape:
                 raise
             self.resize((self._length + len(items)) * self.BUFFER_EXTEND_SIZE)
             self.extend(items)
@@ -110,12 +110,13 @@ class accumulator:
     def resize(self, newsize):
         """
         resize the internal buffer
-        
+
         it takes a scalar for the length of the the first axis appropriately.
-        
+
         You might want to do this to speed things up if you know you want it
         to be a lot bigger eventually
         """
+        newsize = int(newsize)
         if newsize < self._length:
             raise ValueError("accumulator buffer cannot be made smaller than the data")
         shape = (newsize,) + self._block_shape
@@ -140,9 +141,9 @@ class accumulator:
     def __getslice__(self, i, j):
         """
         a.__getslice__(i, j) <==> a[i:j]
-    
+
         Use of negative indices is not supported.
-        
+
         This returns a COPY, not a view, unlike numpy arrays
         This is required as the data buffer needs to be able to change.
         """
@@ -152,7 +153,7 @@ class accumulator:
         return self.__buffer[i:j].copy()
 
     def __delitem__(self):
-        raise NotImplimentedError
+        raise NotImplementedError
 
     def __eq__(self, other):
         return self.__buffer[:self._length] == other
@@ -167,3 +168,11 @@ class accumulator:
 
 def flatten(list_of_lists):
     return [j for i in list_of_lists for j in i]
+
+
+if __name__ == "__main__":
+    polygon_points = accumulator(block_shape=(2,), dtype=np.float64)
+    p = [(0, 0)] * 190
+    polygon_points.extend(p)  # works
+    p = [(0, 0, 0)] * 190
+    polygon_points.extend(p)  # fails with ValueError, even though it's supposed to catch ValueError!

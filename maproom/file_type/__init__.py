@@ -1,3 +1,5 @@
+# flake8: noqa  # cog scripts won't work with E265: extra space after the "#"
+
 # All built-in recognizer plugins should be listed in this file so that the
 # application can import this single file and determine the default plugins.
 # In addition, a list of plugins is expected so that the framework can import
@@ -51,26 +53,31 @@
 #           cog.outl("recognizers.append(%s())" % name)
 # ]]]*/
 recognizers = []
-from binary import NC_ParticleRecognizer, UGRID_Recognizer
+from binary import MapRoomZipProjectRecognizer, NC_ParticleRecognizer, UGRID_Recognizer
+recognizers.append(MapRoomZipProjectRecognizer())
 recognizers.append(NC_ParticleRecognizer())
 recognizers.append(UGRID_Recognizer())
 from image import GDALRecognizer
 recognizers.append(GDALRecognizer())
-from text import BNARecognizer, BSBRecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, VerdatRecognizer
+from text import BNARecognizer, BSBRecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, PlainTextRecognizer, VerdatRecognizer
 recognizers.append(BNARecognizer())
 recognizers.append(BSBRecognizer())
 recognizers.append(MapRoomCommandRecognizer())
 recognizers.append(MapRoomProjectRecognizer())
+recognizers.append(PlainTextRecognizer())
 recognizers.append(VerdatRecognizer())
+from vector import OGRRecognizer
+recognizers.append(OGRRecognizer())
 # [[[end]]]
 
 from envisage.api import Plugin
 from traits.api import List
 
+
 class MaproomFileRecognizerPlugin(Plugin):
     """ A plugin that contributes to the omnivore.file_type.recognizer extension point. """
 
-    #### 'IPlugin' interface ##################################################
+    # 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
     id = 'maproom.file_type.builtin'
@@ -81,5 +88,6 @@ class MaproomFileRecognizerPlugin(Plugin):
     # This tells us that the plugin contributes the value of this trait to the
     # 'greetings' extension point.
     recognizer = List(recognizers, contributes_to='omnivore.file_recognizer')
+
 
 plugins = [MaproomFileRecognizerPlugin()]

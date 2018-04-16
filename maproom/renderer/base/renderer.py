@@ -1,15 +1,5 @@
-import os
-import sys
-import wx
-import numpy as np
-
-from omnivore import get_image_path
-
-import maproom.library.rect as rect
-
-
-class BaseRenderer():
-    NUM_COLOR_CHANNELS = 4 #i.e. RGBA
+class BaseRenderer(object):
+    NUM_COLOR_CHANNELS = 4  # i.e. RGBA
 
     def __init__(self, canvas, layer):
         self.canvas = canvas
@@ -20,13 +10,13 @@ class BaseRenderer():
 
     def prepare_to_render_screen_objects(self):
         pass
-    
+
     def set_points(self, xy, depths, color=None, num_points=-1):
         pass
-    
+
     def set_lines(self, xy, indexes, color):
         pass
-    
+
     def draw_lines(self,
                    layer,
                    picker,
@@ -63,7 +53,7 @@ class BaseRenderer():
 
     def set_image_screen(self, image_data):
         pass
-    
+
     def release_textures(self):
         pass
 

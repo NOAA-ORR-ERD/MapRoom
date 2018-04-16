@@ -5,14 +5,15 @@ from cStringIO import StringIO
 from datetime import date
 from optparse import OptionParser
 from string import Template
-from distutils.version import StrictVersion
+from packaging.version import parse as version_parse
+from packaging.version import Version as StrictVersion
 
 module=None
 
 dateformat = "%m/%d/%Y"
 
 versionre = "([0-9]+(\.[0-9]+)+([ab][0-9]+)?)"
-versionre = "(([0-9]+)\.([0-9]+)(?:\.([0-9]+))?(([ab])([0-9]+))?)"
+versionre = "(([0-9]+)\.([0-9]+)(?:\.([0-9]+))?(((?:a|b|rc))([0-9]+))?)"
 
 def findLatestChangeLogVersion(options):
     fh = open("ChangeLog")

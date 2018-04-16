@@ -1,16 +1,10 @@
-import os
-import time
 
 import wx
-import pyproj
 
 from omnivore import get_image_path
 
-import library.coordinates as coordinates
 import renderer
-import library.rect as rect
-from mouse_handler import *
-import toolbar
+from mouse_handler import MouseHandler, PanMode
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.
@@ -18,6 +12,7 @@ The RenderWindow class -- where the opengl rendering really takes place.
 
 import logging
 log = logging.getLogger(__name__)
+
 
 class LayerCanvas(renderer.ScreenCanvas):
 
@@ -30,7 +25,7 @@ class LayerCanvas(renderer.ScreenCanvas):
     selection_box_is_being_defined = False
     mouse_down_position = (0, 0)
     mouse_move_position = (0, 0)
-    
+
     def __init__(self, *args, **kwargs):
         renderer.ScreenCanvas.__init__(self, *args, **kwargs)
 
@@ -42,7 +37,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         self.set_mouse_handler(MouseHandler)  # dummy initial mouse handler
         self.default_pan_mode = PanMode(self)
 
-        self.pick_layer_index_map = {} # provides mapping from pick_layer index to layer index.
+        self.pick_layer_index_map = {}  # provides mapping from pick_layer index to layer index.
 
     def rebuild_renderers(self):
         for layer in self.project.layer_manager.flatten():
@@ -53,9 +48,9 @@ class LayerCanvas(renderer.ScreenCanvas):
                 self.remove_renderer_for_layer(layer)
         self.update_renderers()
 
-    def get_selected_layer(self):
-        return self.project.layer_tree_control.get_selected_layer()
-    
+    def get_edit_layer(self):
+        return self.project.layer_tree_control.get_edit_layer()
+
     def set_mouse_handler(self, mode):
         self.release_mouse()
         self.mouse_handler = mode(self)
@@ -82,13 +77,13 @@ class LayerCanvas(renderer.ScreenCanvas):
         if (event is not None):
             try:
                 self.is_alt_key_down = event.AltDown()
-                # print self.is_alt_key_down
             except:
                 pass
             try:
                 middle_down = event.MiddleIsDown()
             except:
                 pass
+        log.debug("alt key: %s middle down: %s evt %s" % (self.is_alt_key_down, middle_down, event))
         if self.is_alt_key_down or middle_down:
             mode = self.default_pan_mode
         else:
@@ -96,20 +91,20 @@ class LayerCanvas(renderer.ScreenCanvas):
         return mode
 
     def do_jump_coords(self):
-        prefs = self.project.task.get_preferences()
+        prefs = self.project.task.preferences
         from ui.dialogs import JumpCoordsDialog
         dialog = JumpCoordsDialog(self, prefs.coordinate_display_format)
         if dialog.ShowModalWithFocus() == wx.ID_OK:
             self.projected_point_center = self.get_projected_point_from_world_point(dialog.lat_lon)
             self.project.refresh()
         dialog.Destroy()
-    
+
     def do_center_on_point_index(self, layer, index):
         if layer.has_points():
             lat_lon = layer.points[index].x, layer.points[index].y
             self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)
             self.project.refresh()
-    
+
     def do_select_points(self, layer, indexes):
         if len(indexes) > 0 and layer.has_points():
             layer.clear_all_point_selections()
@@ -139,7 +134,7 @@ class LayerCanvas(renderer.ScreenCanvas):
             except:
                 raise
         dialog.Destroy()
-        
+
     """
     def get_degrees_lon_per_pixel( self, reference_latitude = None ):
         if ( reference_latitude is None ):

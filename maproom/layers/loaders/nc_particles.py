@@ -11,12 +11,14 @@ import numpy as np
 from fs.opener import opener
 
 from common import BaseLayerLoader
-from maproom.layers.particles import ParticleLayer, ParticleFolder
+from maproom.layers.particles import ParticleLayer, ParticleFolder, ParticleLegend
 
 import logging
+log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 from post_gnome import nc_particles
+
 
 class nc_particles_file_loader():
     """
@@ -25,18 +27,22 @@ class nc_particles_file_loader():
     note: this should probably be in the nc_particles lib...
 
     """
+
     def __init__(self, uri):
         fs, relpath = opener.parse(uri)
         if not fs.hassyspath(relpath):
-            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % metadata.uri)
+            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % uri)
         path = fs.getsyspath(relpath)
         self.reader = nc_particles.Reader(path)
         self.current_timestep = 0  # fixme## hard coded limit!!!!!
+        self.status_id = "status_codes"
         try:
-            attributes = self.reader.get_attributes("status_codes")
+            attributes = self.reader.get_attributes(self.status_id)
         except KeyError:
             # try "status" instead
-            attributes = self.reader.get_attributes("status")
+            self.status_id = "status"
+            attributes = self.reader.get_attributes(self.status_id)
+        log.debug("Using '%s' for status code identifier" % self.status_id)
         meanings = attributes['flag_meanings']
         self.status_code_map = dict()
         if "," in meanings:
@@ -52,20 +58,55 @@ class nc_particles_file_loader():
         return self
 
     def next(self):
+        warning = None
         if self.current_timestep >= len(self.reader.times):
+            log.debug("Finished loading")
             raise StopIteration
+        # while self.current_timestep < 12:
+        #     data = self.reader.get_timestep(self.current_timestep, variables=['latitude', 'longitude'])
+        #     self.current_timestep += 1
         data = self.reader.get_timestep(self.current_timestep, variables=['latitude', 'longitude'])
-        time = self.reader.times[self.current_timestep]
+        timecode = self.reader.times[self.current_timestep]
         points = np.c_[data['longitude'], data['latitude']]
-        if 'status_codes' in self.reader.variables:
-            data = self.reader.get_timestep(self.current_timestep, variables=['status_codes'])
-            status_codes = np.array(data['status_codes'], dtype=np.uint32)
+        if self.status_id in self.reader.variables:
+            data = self.reader.get_timestep(self.current_timestep, variables=[self.status_id])
+            status_codes = np.array(data[self.status_id], dtype=np.uint32)
         else:
             status_codes = np.zeros(np.alen(data['longitude']), dtype=np.uint32)
+        abslon = np.absolute(points[:,0])
+        abslat = np.absolute(points[:,1])
+        bogus = np.where((abslon > 1e3) | (abslat > 1e3))
+        log.debug("Loaded timestep %s @ %s, %d points, %d bogus" % (self.current_timestep, timecode, len(points), len(bogus[0])))
+        if len(bogus[0] > 0):
+            log.debug("Bogus values: %s" % points[bogus[0]])
+            short = "(Timestep %d) # points: %d" % (self.current_timestep + 1, len(bogus[0]))
+            details = "%d spurious values in timestep %d\nindexes: %s" % (len(bogus[0]), self.current_timestep + 1, str(bogus[0]))
+            warning = (short, details)
+
+            points = np.delete(points, bogus[0], 0)
+            status_codes = np.delete(status_codes, bogus[0], 0)
+
+        scalar_vars = {}
+        scalar_min_max = {}
+        data = self.reader.get_timestep(self.current_timestep, variables=self.reader.variables)
+        for var in self.reader.variables:
+            if var in data:
+                d = data[var]
+                log.debug("timestep %d: %s" % (self.current_timestep, (var, d.dtype, d.shape)))
+                if len(d.shape) == 1:
+                    d = np.delete(d, bogus[0], 0)
+                    scalar_vars[var] = d
+                    scalar_min_max[var] = (min(d), max(d))
+            else:
+                log.warning("%s not present in timestep %d" % (var, self.current_timestep))
+
+        # if self.current_timestep > 14:
+        #     raise StopIteration
 
         self.current_timestep += 1
 
-        return (points, status_codes, self.status_code_map, time)
+        return (points, status_codes, self.status_code_map, timecode, warning, scalar_vars, scalar_min_max)
+
 
 class ParticleLoader(BaseLayerLoader):
     """
@@ -79,7 +120,7 @@ class ParticleLoader(BaseLayerLoader):
     extensions = [".nc"]
     name = "nc_particles"
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         """
         load the nc_particles file
 
@@ -90,20 +131,58 @@ class ParticleLoader(BaseLayerLoader):
         """
         parent = ParticleFolder(manager=manager)
         parent.file_path = metadata.uri
-        parent.mime = self.mime ## fixme: tricky here, as one file has multiple layers
+        parent.mime = self.mime  # fixme: tricky here, as one file has multiple layers
         parent.name = os.path.split(parent.file_path)[1]
 
+        warnings = []
         layers = []
-        ## loop through all the time steps in the file.
-        for (points, status_codes, code_map, time) in nc_particles_file_loader(metadata.uri):
+        folder_min_max = {}
+        # loop through all the time steps in the file.
+        for (points, status_codes, code_map, timecode, warning, scalar_vars, scalar_min_max) in nc_particles_file_loader(metadata.uri):
             layer = ParticleLayer(manager=manager)
             layer.file_path = metadata.uri
-            layer.mime = self.mime ## fixme: tricky here, as one file has multiple layers
-            layer.name = time.isoformat().rsplit(':',1)[0]
+            layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
+            layer.name = timecode.isoformat().rsplit(':', 1)[0]
+            # print timecode, type(timecode), layer.name, timecode.tzinfo
             progress_log.info("Finished loading %s" % layer.name)
-            layer.set_data(points, status_codes, code_map)
+            layer.set_data(points, status_codes, code_map, scalar_vars)
+            layer.set_datetime(timecode)
             layers.append(layer)
+            if warning:
+                layer.load_warning_details = warning[1]
+                warnings.append("%s %s" % (layer.name, warning[0]))
+
+            # compute scalar vars min and max as we go through the list of
+            # layers
+            for k, v in scalar_min_max.iteritems():
+                lo, hi = v
+                if k in folder_min_max:
+                    flo, fhi = folder_min_max[k]
+                    folder_min_max[k] = (float(min(lo, flo)), float(max(hi, fhi)))
+                else:
+                    folder_min_max[k] = (float(lo), float(hi))
+
         progress_log.info("Finished loading %s" % metadata.uri)
         layers.reverse()
-        layers[0:0] = [parent]
+
+        # The end time for each time step defaults to the start time of the
+        # subsequent step
+        end_time = layers[0].start_time
+        for layer in layers[1:]:
+            layer.end_time = end_time
+            end_time = layer.start_time
+
+        for layer in layers:
+            # now we can tell the layer what the overall min/max are because
+            # we've seen all the layers. Note that all layers will point to the
+            # same min/max dictionary, so updating the min/max values will
+            # affect all layers. Which is what we want.
+            layer.scalar_min_max = folder_min_max
+
+        legend = ParticleLegend(manager=manager, source_particle_folder=parent)
+        layers[0:0] = [parent, legend]
+        if warnings:
+            warnings[0:0] = ["The following layers have spurious values. Those values have been removed.\n"]
+        parent.load_warning_string = "\n  ".join(warnings)
+        log.debug("Adding layers: %s" % ("\n".join([str(lr) for lr in layers])))
         return layers

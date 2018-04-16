@@ -18,18 +18,18 @@ WHITESPACE_PATTERN = re.compile("\s+")
 
 class VerdatLoader(BaseLayerLoader):
     mime = "application/x-maproom-verdat"
-    
+
     layer_types = ["line"]
-    
+
     extensions = [".verdat", ".dat"]
-    
+
     name = "Verdat"
-    
+
     points_per_tick = 5000
-    
-    def load_layers(self, metadata, manager):
+
+    def load_layers(self, metadata, manager, **kwargs):
         layer = LineLayer(manager=manager)
-        
+
         progress_log.info("Loading from %s" % metadata.uri)
         (layer.load_error_string,
          f_points,
@@ -43,7 +43,7 @@ class VerdatLoader(BaseLayerLoader):
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
-    
+
     def save_to_fh(self, fh, layer):
         return write_layer_as_verdat(fh, layer)
 
@@ -51,9 +51,9 @@ class VerdatLoader(BaseLayerLoader):
 def load_verdat_file(uri):
     """
     Load data from a DOGS-style verdat file. Returns:
-    
+
     ( load_error_string, points, depths, line_segment_indexes, depth_unit )
-    
+
     where:
         load_error_string = string descripting the loading error, or "" if there was no error
         points = numpy array (type = 2 x np.float64)
@@ -64,7 +64,7 @@ def load_verdat_file(uri):
 
     points = accumulator(block_shape=(2,), dtype=np.float64)
     depths = accumulator(dtype=np.float32)
-    line_segment_indexes = accumulator(block_shape=(2,), dtype = np.uint32)
+    line_segment_indexes = accumulator(block_shape=(2,), dtype=np.uint32)
 
     in_file = fsopen(uri, "r")
 
@@ -84,7 +84,7 @@ def load_verdat_file(uri):
     # the points are listed such that the first boundary polygon is defined by points 0 through i - 1,
     # the second boundary polygon is defined by points i through j - 1, and so on; and then there
     # are some number of non-boundary-polygon points at the end of the list; in this way, the boundary
-    # polygons can be specified simply by giving the indexes i, j, etc.
+    # rings can be specified simply by giving the indexes i, j, etc.
 
     # read the points
     while True:
@@ -96,7 +96,7 @@ def load_verdat_file(uri):
         if data == (0, 0, 0, 0):
             break
         if len(data) != 4:
-            return ("The .verdat file {0} is invalid.".format(file_path), None, None, None, "", None, None)
+            return ("The .verdat file {0} is invalid.".format(uri), None, None, None, "", None, None)
 
         (index, longitude, latitude, depth) = data
 
@@ -108,7 +108,6 @@ def load_verdat_file(uri):
     # read the boundary polygon indexes
 
     boundary_count = int(in_file.readline())
-    line_segments = []
     point_index = 0
     start_point_index = 0
 
@@ -147,9 +146,8 @@ def write_layer_as_verdat(f, layer):
     errors, error_points = boundaries.check_errors()
     if errors:
         raise PointsError("Layer can't be saved as Verdat:\n\n%s" % "\n\n".join(errors), error_points)
-    
+
     points = layer.points
-    lines = layer.line_segment_indexes
 
     f.write("DOGS")
     if layer.depth_unit is not None and layer.depth_unit != "unknown":
@@ -186,7 +184,7 @@ def write_layer_as_verdat(f, layer):
                 points.z[point_index],
             ))
             file_point_index += 1
-            
+
             if file_point_index % VerdatLoader.points_per_tick == 0:
                 progress_log.info("Saved %d points" % file_point_index)
 
@@ -206,7 +204,7 @@ def write_layer_as_verdat(f, layer):
             x, y, z,
         ))
         file_point_index += 1
-        
+
         if file_point_index % VerdatLoader.points_per_tick == 0:
             progress_log.info("Saved %d points" % file_point_index)
 
@@ -218,5 +216,5 @@ def write_layer_as_verdat(f, layer):
 
     for endpoint in boundary_endpoints:
         f.write("{0}\n".format(endpoint))
-    
+
     progress_log.info("Saved verdat")

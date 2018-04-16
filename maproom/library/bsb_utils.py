@@ -2,9 +2,10 @@
 
 import os
 import sys
-import re
+import zipfile
 
 from fs.opener import fsopen
+
 
 class KAPImage(object):
     tag_map = {
@@ -30,12 +31,13 @@ class KAPImage(object):
                     value = os.path.join(dirname, value)
                 setattr(self, self.tag_map[tag], value)
 
+
 class BSBInfo(object):
     def __init__(self, dirname, items):
         self.items = items
         self.images = []
         self.parse_images(dirname)
-    
+
     def __str__(self):
         items = []
         for k in sorted(self.items.keys()):
@@ -56,12 +58,13 @@ class BSBInfo(object):
                 break
             index += 1
 
-        images.sort(key=lambda a:a.pane)
+        images.sort(key=lambda a: a.pane)
         self.images = images
+
 
 class BSBParser(object):
     delimiter_separators = {
-        "CRR":" ",
+        "CRR": " ",
     }
 
     def __init__(self, filename):
@@ -70,7 +73,7 @@ class BSBParser(object):
         self.fileroot, _ = os.path.splitext(os.path.basename(self.filename))
         self.info = None
         self.parse()
-    
+
     def parse(self):
         items = {}
         tag = None
@@ -98,7 +101,24 @@ class BSBParser(object):
         # this is where we could check the version, but only have 3.0 samples
         self.info = BSBInfo(self.dirname, items)
 
+
+def extract_from_zip(zip_path, kapfile, dest_path=None):
+    kapfile = kapfile.lower()
+    found_kap_path = None
+    with zipfile.ZipFile(zip_path) as z:
+        found = None
+        for info in z.infolist():
+            if info.filename.lower().endswith(kapfile):
+                found = info
+        if found:
+            found_kap_path = z.extract(found, dest_path)
+    return found_kap_path
+
+
 if __name__ == "__main__":
     for arg in sys.argv[1:]:
-        p = BSBParser(arg)
-        print p.info
+        if arg.endswith(".zip"):
+            extract_from_zip(arg, "16450_1.KAP", "/tmp")
+        else:
+            p = BSBParser(arg)
+            print p.info

@@ -1,3 +1,514 @@
+04/15/2018
+---------------------------
+Released 4.0rc3
+- RM Fixed colormap legend bins on initial load with a builtin discrete colormap
+- RM Fixed nc_particles loader test to handle the additional returned vars in the tuple
+- RM Removed debug prints or changed to calls to log.debug
+- RM Fixed deprecated call to wx.BitmapFromImage
+- RM Fixed #869: corrected call to ListedBoundedColormap
+- RM Fixed #877: added layer name to final component of zip directory path
+- RM Refs #869: fixed autoscale in dialog
+- RM Refs #869: added autoscale param to discrete colormaps to determine whether or not to scale the colormap when changing the scalar value
+- RM WIP scaling buttons
+- RM Refs #869: put bin controls in scrolled window in DiscreteColormapDialog
+- RM Refs #869: still working on colormap serialization
+- RM math_utils: added bounds check to prevent log of zero
+- RM Refs #869: WIP json serialization of colormaps
+- RM Refs #869: added colormap registration into user defined colormap dictionary
+- RM Fixed #874: removed leading/trailings blanks from input to lat_lon_parser
+- RM Fixed #875: added check for mouse capture before attempting to release the mouse
+- RM Refs #869: added round_minimum_unique_digits to math_utils to produce nicely formatted legend bin values
+- RM Refs #869: WIP colormap scaling
+- RM Refs #869: better background color for calc_bitmap
+- RM Refs #869: restructured discrete colormap dialog to use less vertical space
+- RM Refs #869: added arrows in combobox image for rgba under/over
+- RM Fixed #873: added cumulative path length for polyline/polygon creation
+- RM Refs #869: added arrows on colorbar when there are over or under colors
+- RM Refs #869: DiscreteColormapDialog can now handle being called with an unknown colormap name
+- RM Refs #869: added bitmap updating on bin color change
+- RM Refs #869: added text validation & updating of colormap
+- RM Refs #869: added bitmap view of current colormap
+- RM Refs #869: added buttons to add/remove colormap entries
+- RM Added basic design of colormap editor
+- RM Refs #869: added beginnings of discrete colormap dialog
+- RM Refs #869: refactored colormap combobox to separate discrete and continuous colormaps
+- RM Fixed #865: overlay line should have been using screen deltas to compute screen-space point when world-space point was moved
+- RM Fixed #872: only update particle status code count when loading point data
+- RM Changed info panel so colormap/status_codes selection only shows each as appropriate
+- RM Fixed #871: moved legend to its own layer
+- RM Fixed #868: also remove bogus indexes from scalar var arrays
+- RM Removed some development print statements
+- RM Select first new layer when loading a new file
+- RM Added background to legend
+- RM Fixed #857: added legend with colormap and labels for scalar values
+- RM Added missing colormap ui file
+- RM Refs #857: initial code for legend box showing current colormap
+- RM Refs #857: fixed colormap when changing back to status code coloring
+- RM Refs #857: add min/max calculation of scalar vars at load time
+- RM Added ui to adjust point size for particle layers
+- RM Refs #636: fixed initial position of sliders
+- RM Fixed #636: added simple positioning sliders for scale
+- RM json: turned off dialog display of warnings that items were missing from the json file
+- RM Refs #857: added colormap to info_panels
+- RM Fixed json serialization of numpy arrays in scalar_vars
+- RM Added colormap name as particle layer trait and default name in preferences
+- RM Added convenience function get_bitmap_from_numpy
+- RM Added standalone test window to display the default style dialog
+- RM Refs #857: Added matplotlib colormap code (without any matplotlib dependencies)
+- RM Added json sanity check to allow layers to recreate any data that wasn't restored with the from_json routines
+- RM Refs #857: added particle scalar summary info to popup status text
+- RM Refs #857: renamed contour to scalar
+- RM Refs #857: added contour menu to particle folders that affects all particle layers below it
+- RM Refs #857: basic contouring for single particle layer
+- RM Fixed #849: added project, layer manager, layer canvas, and command history to each exception report listing
+- RM Fixed #852: added error message when no particle data found
+- RM Refs #861: anchor point currently being dragged is now displayed in selection_info_panel instead of always the anchor point
+- RM Fixed #853: don't show status codes names if no particles of that type in layer
+- RM Fixed #862, #863: fixed incorrect scaling of int color values that fixes both issues
+- RM Fixed #850: PanMode is now default after loading a file
+- RM Fixed resize of child layers when moving a bounding box point of a parent layer
+- RM Fixed #855: fixed fit_to_bounding_box regression for PolylineMixin
+- RM Fixed #858: worked around inability for bitmaps in buttons to show alpha
+- RM Refs #858: transparency sliders for object colors are no longer needed with use of CubeColourDialog
+- RM Fixed #856: replaced platform-specific color selector with CubeColourSelector in wx.lib.agw
+- CB added example file from GNOME 1
+- RM Fixed #851: added check for degenerate size text box before rendering
+
+12/22/2017
+---------------------------
+Released 4.0rc2
+- RM Added preference for blinking the selected layer
+- RM Fixed #744: selecting a particle layer flags the points for 1000ms
+- RM Fixed #842: added new SelectionMode base class
+- RM Fixed #844: added missing hidden dependency on traitsui.wx
+- RM Fixed #843: fixed incorrect variable name
+- RM Fixed error in time step panel attempting to set rate of project with no timestamped layers
+- RM file_type: fixed binary zipfile load attempt using bytes as URI
+- RM Fixed #835: added interval calculation to set initial playback rate
+- RM Refs #835: project save files now include step rate/value and position of timeline
+- RM timeline: fixed timeline marks being out of sync because of a refresh called in the middle of load_omnivore_document
+- RM Fixed #838: project files now store viewport info so the same location & zoom are restored on project load
+- RM file_type: added checks for file appearing like it's a text file before trying these recognizers
+- RM Fixed #781: added text file import & SwapLatLonCommand to flip axes if recognized incorrectly
+- RM Refs #781: added initial import of text files
+- RM Fixed #834: turned playback rate popup into a dialog
+- RM Fixed #839: added opaque and background flags to layers
+- RM Fixed #836: text should not be drawn in the picker framebuffer
+- RM Changed control point names to center bottom, center right, etc.
+- RM Fixed shapefile trying to look at particle times for start times
+- RM Added default_project.maproom template to pyinstaller build
+
+12/11/2017
+---------------------------
+Released 4.0rc1
+- RM Updated tests to remove initial_layers keyword arg from layer manager creation
+- RM Added submenu to list known templates for creating new project
+- RM Added menu item to save current project as a template for later reuse
+- RM Refs #785: fixed non-project files being loaded into new tabs instead into a project
+- RM Refs #834: attempts to fix focus issue on Mac
+- RM Fixed #833: added wrapper around OpenGL context creation to hopefully catch the problem.
+- RM MacOS: fixed crash when loading default project. Needed CallAfter
+- RM Fixed #785: if application is still in init process, allow notebook tab to be replaced
+- RM Refs #785: added new menu item to open default project along with empty project
+- RM Added popup to set step rate & step value for playback
+- RM timeline: fixed play button to be enabled only when there are events in the timeline
+- RM Fixed save action to be disabled on a read-only file (like the default template)
+- RM Refs #800: added zipfile abstraction fixes to allow load from template
+- RM Refs #833: removed some debug prints
+- RM Refs #833: WIP to make the default file load from a template instead of hardcoding into LayerManager
+- RM Refs #833: added kwargs to MaproomProjectTask.new to handle window_opening flag
+- RM Refs #833: WIP debugging application initialization
+- RM Fixed bad reference to parent class
+- RM Refs #818: fixed layer visibility due to range select of timeline
+- RM Fixed #818: add playback that turns on and off layers using current time, start time and end time
+- RM Fixed timeline not being updated when loading a project file
+- RM Refs #818: added basic functionality for play/pause using timeline
+- RM Refs #816: handle change in mark data with zoomruler now supporting end timestamps
+- RM Refs #816: default end time of particle layer is start time of subsequent timestep
+- RM Added time range to __str__ of layers
+- RM Changed calls to status bar to follow new usage in framework
+- RM added a few missing attribute initialization calls to picker
+- RM Fixed #826: freeze/thaw around the OpenGL canvas flickers on windows
+- RM Moved to versioning utilities from packaging because it can support "rc" versions
+
+11/16/2017
+---------------------------
+Released 3.1b39
+- RM Don't load initial layers in the mock layer manager
+- RM Fixed test cases to add default value for serialized commands if loading old version of command log
+- RM Replaced deprecated call to wx.EmptyBitmap
+- RM Removed some debug prints
+- RM Refs #799: fixed arrow text icon object so the icon remains the same size regardless of parent scaling
+- RM Refs #799: flagged anchor point is no longer displayed for arrow + text objects
+- RM Added immediately flag for rendering so non-windows can get fast dynamic updating on control point movement
+- RM Refs #799: Fixed movement of control point 1 on line
+- RM Fixed #817: added fit_to_bounding_box to force sublayers to fit correctly
+- RM rect: added copy and get_transform, updated point_base to use
+- RM Fixed #821: points in a shapefile are now added in a separate layer
+- RM Fixed #787: added check for LineString in polygon highlighting
+- RM Fixed #820: ungroupable layers (graticule, tile, etc.) are added at the bottom
+- RM Changed "grid" to "graticule"
+- RM Fixed #819: added check to see if mouse move would highlight the same polygon and skip refresh if so
+- RM Fixed #769: added delay before calling refresh_callback, necessary for Windows
+- RM Refs #769: added wx callback & counter for render call to eliminate multiple redraws
+- RM Refs #769: added debug print to show each rendering call
+- RM Refs #787: remove prints, added logging
+- RM Refs #802: added select_initial_layer to layer tree control & call it when loading a file or on a blank document
+- RM toolbar: fixed intermediate trait errors by using omnivore's replacement EditorAction
+- RM docs: added step-by-step description of how a file is loaded
+- RM Fixed unicode error with tree editing when label is marked with the unicode symbol for a grouped layer
+- RM Fixed #815: needed to force removal of locked control point
+- RM layer_tree_control: check that we're actually on an item before attempting to rename
+- RM layer_tree_control: fixed segfault when customtreectrl text edit loses focus
+- RM Refs #799: picker now selects parent object by default
+- RM Ref #799: fixed arrow text box layer to update screen when editing text for its text sublayer
+- RM Added more commands to layer tree context menu
+- RM Refs #799: Added LayerAction to use the framework's new on_popup_menu_update
+- RM Refs #799: better menu item titles for group/ungroup
+- RM Refs #799: Fixed missing layer argument to group/ungroup children
+- RM Fixed #814: removed layer name from info panel
+- RM Fixed #813: added last loaded and saved dirs in omnivore framework
+- RM Fixed #763: added rename to popup menu
+- RM Refs #763: added context menu to layer_tree_control with group/ungroup
+- RM Refs #799: added toolbar items for grouping/ungrouping annotation layers
+- RM layers: added pretty_name property that adds a symbol before grouped layers
+- RM vector_object_command: Fixed missing logger
+- RM Refs #813: added placeholder default dir/filename for save as
+- RM Fixed #812: moved call to FileDialog into project_editor; added check for blank filename
+- RM Refs #799: default expansion state of grouped objects is collapsed
+- RM Fixed #811: made RNC loader layer more transparent
+- RM Corrected load_bna_as_shapely to have default regime of 0
+- RM Refs #799: exclude icon in boundary rect calculation for ArrowTextIconLayer
+- RM Refs #799: added (not default yet, though) picker that selects parent objects when a grouped sub-object is selected
+- RM Refs #799: arrow text compound objects start collapsed in the tree list
+- RM Fixed #810: changed default annotation layer to start as the top layer
+- RM layers: 'grouped' attribute not being saved/restored from json
+- RM Refs #799: added text editing to folder layer of the arrow text box & arrow text icon objects
+- RM Refs #799: added user friendly names for control points
+- RM Fixed #774: anchor point now moves the connected line in text/line combo vector objects
+- RM Fixed #806: added new menu item to load RNC downloader chart in the 0 - 360 range
+- RM Fixed #805: added duplicate chart (a GDAL image) in the 0 - 360 range
+- RM Fixed #768: added border width parameter to text vector objects
+
+10/30/2017
+---------------------------
+Released 3.1b38
+- RM Fixed project save tests to handle zip file projects
+- RM Fixed #803: fixed some missing handling of negative tile numbers
+- RM Fixed error when saving over an existing file; was attempting to use regular file open with a URL
+- RM Catch general exception in save_all_zip
+- RM Fixed #801: extra call to GetDefaultAttributes in get_error_text was causing a segfault
+
+10/26/2017
+---------------------------
+Released 3.1b37
+- RM Added preferences to mock project to handle new initial layers in layer manager
+- RM Fixed #797: annotation & tile layer added when creating new project
+- RM Fixed #794: restructured toolbar so select mode is first
+- RM Removed cursor changes due to mouse handler panning because it's now handled through the PanMode or the effective mode
+- RM Removed obsolete text description of mouse usage
+- RM Refs #794: made pan mode available in all toolbars
+- RM Fixed #795: make sure effective mode is panning before actually panning in process_mouse_motion_down
+- RM Fixed #791: added at_lon_parser and unit_conversion from NOAA_ORR_ERD github
+- RM Refs #791: split out lat/long into separate text entry boxes
+- RM Removed version limiter on shapely; 1.5.x won't compile with numpy 1.13
+- RM Fixed #792: re-added workaround for macos to intercept delete key menu item and check if actually in a text control
+- RM Updated setup to require wxpython 4 and latest omnivore framework
+- RM Fixed #789: parent of deleted layer may be a folder, so find an actual layer when choosing which new layer to select in the tree control
+- RM Refs #789: also clear out text part of combo button when particle folder has no children
+- RM Refs #789: Handle degenerate case of particle folder with no children
+- RM Fixed #790: before EnsurePosition will work after deleting all items, need call to CalculatePositions
+- RM Fixed #788: ignore everything but outline color in particle layer style change
+- RM Refs #729: Added checkbox on style dialog to apply styles to existing layers
+- RM Refs #729: added style default for particle layer
+- RM Refs #787: added sample shapefiles to TestData
+- RM Updated minimum required Omnivore framework to reflect the need for wx4 support
+- RM Fixed #782, #783: some metadata wasn't being restored when loading images
+- RM Refs #783: Added debugging command to show layer manager info
+- RM Fixed #779: middle mouse/left button + alt = pan, regardless of mode
+- RM Simplified build process; running installdeps.py not required if using omnivore-framework
+- RM wx4: fixed ComboBox for Phoenix API
+- RM Stubbed out TimelineAction, which doesn't exist yet
+- RM Added netcdf summary in particles test
+- RM Added check for wxPython phoenix when finalizing app
+- RM Added cleanup function for zipfiles opened during project load
+- RM Added explicit call to stop threads in all downloaders rather than relying on instance garbage collection
+- RM Fixed #778: got round-trip load/save working
+- RM Removed dynamic trait on active_editor.mouse_mode_toolbar to remove 2 trait warnings on exit
+- RM Refs #778: first attempt at saving images in zip files
+- RM Added rudimentary tests for comparing maproom project save files
+- RM Added pyface toolkit hack to force loading wx during unit tests
+- RM Refs #778: added zipped project file to tests
+- RM Refs #778: added zipfile storage of maproom project file, loading/saving non-image layers
+- RM Fix for whitespace changes introduced in 0d286c1 that messed up cog script
+- RM GLCanvas fails on Mac randomly when WX_GL_MIN_ALPHA is specified
+- RM wx color change events now include alpha
+- RM GetContext apparently not available in wx4; check for initialized instead
+- RM Use Bitmap, Image constructors instead of old From functions
+- RM Alpha unnecessary for colors returned by color select events
+- RM StockCursor -> Cursor
+- RM Fixed tree method renaming: GetItemPyData(...).Data -> GetItemData
+- RM numpy on python 2 doesn't support memoryview, so have to convert image to numpy array using copy of data
+- RM Initial wx4 conversion
+- RM updated pytriangle C source as generated by Cython 0.26
+- RM Added optimization to C compiler arguments
+- RM fixed build script to call python version of build_installer
+- RM Added shapley version check and netCDF4 (which is available through wheels on windows!)
+- RM Workaround for pip install using 'pytest-cov' when searching for 'pytest'
+- RM updated version number to 3.1b36
+- RM Fixed incorrect get_image_path for relative path
+- RM updated setup.py for omnivore-framework
+- RM Moved open source dependencies to omnivore-framework
+- RM Fixes for setuptools over distutils and windows git checkout
+- RM Changes to link/develop preferences for windows install
+- RM refactoring: changed name of selected_layer* functions to edit_layer* functions
+- RM timeline: added highlight marks for visible layers selected in tree
+- RM Replaced localtime with gmtime when converting particle layer timestamps
+- RM Refs #769: added more OpenGL version info in Help -> About dialog
+
+06/08/2017
+---------------------------
+Released 3.1b35
+- RM Fixed #767: added missing call to draw markers for overlay line
+- RM Added missing checks for valid editor in timeline callbacks
+- RM Fixed #772: only consider visibility changes on timestamped layers
+- RM Fixed #766: added dateutil parsing of layer name
+- RM Changed to full-width highlights in tree. Less mouse movement to select since you don't have to be inside the box
+- RM Refs #619: added double click to select only that layer
+- RM Fixed installdeps to be able to check out a branch
+- RM Refs #619: fixed refresh that was rescaling the timeline
+- RM Refs #619: added mouse selection/processing to timeline
+- RM Refs #619: added start/stop times to base layer abstract class
+- RM Fixed #733: added 9 new colors to default color cycle
+
+06/01/2017
+---------------------------
+Released 3.1b34
+- RM Added missing circle object from styles and reordered to match toolbar
+- RM Fixed tests for new default style usage
+- RM Fixed #765: use first entry in hosts list if no default WMS server explicitly set
+- RM Minor label changes for default style UI
+- RM Fixed #643: added option to save defaults for future projects
+- RM Removed some debug prints in vector_object_commands
+- RM Refs #643: added styling for compound annotation layers
+- RM Refs #643: added default styles per layer type
+- RM Added check for existence of point before trying to set line color
+- RM Removed default debug logging level from host_utils & thread_utils
+- RM Fixed release-and-tag script to use correct pyinstaller script
+
+05/30/2017
+---------------------------
+Released 3.1b33
+- RM Fixed #750: added better defaults for download directories
+- RM Fixed import change in framework: springtabs -> popuputil
+- RM Fixed #749: moved RNC title to web-browser-like popup status bar
+- RM Removed unnecessary perspective load, speeding file load & preventing overwrite of pane captions
+- RM Layer info pane now puts layer name in title bar
+- RM Fixed color button widths in info_panels to be the same width as status code color buttons
+- RM Fixed #757: fix to correctly handle recursion with yield statements
+- RM Refs #757: after layer delete, select previous sibling (if available)
+- RM Refs #757: now handles arbitrarily nested children in lists of lists of lists...
+- RM Added self-signed cert for code signing on macOS
+- RM Fixed #754: added point labeling for any particle layer when a particle layer is selected
+- RM Refs #754: added point labeling for selected particle layer
+- RM Moved text generation for clickable object into layer so output can be customized by layer
+- RM Fixed #756: convert control point to python int rather than int64
+- RM Fixed #753: added default lookup for tile server (and WMS server because it's similar)
+- RM Refs #753: added default indicator on WMS manager
+- RM Fixed #755: updating the map server ids after the list changes
+- RM Refactor: reordered and grouped related methods together in the layer_manager
+- RM Refs #753: added visible "default" label for default tile server
+- RM Refs #753: added default attribute to hosts
+- RM Fixed #752: updated code for new pane subclass from framework
+- RM Use new error logger from framework
+- RM Fixed #745: changed polygon fill checks to interior checks when clicking
+- RM Experimental tree control access by list indexes
+- RM Fixed #748: force parent layer to be selected when deleting
+- RM Added debug menu item to create sample annotation layer
+- RM Added test for gnome particles file with bad data
+- RM Added automatic pytest/coverage HTML reports with pytest.ini
+- RM Minor test fixes
+- RM Fixed pyinstaller builds on conda needing pythonw when running the maproom hook
+- RM Fixed app name appearing in Mac menubar with change in framework init code
+- RM Fixed MacOS app build
+- RM Removed some debug prints
+
+04/22/2017
+---------------------------
+Released 3.1b32
+- RM Updated version to 3.1b32 for windows pyinstaller test
+- RM Moved graphic source files into resources directory
+- RM Working one-folder and one-file builds for windows
+- RM Added missing dependencies from install_requires
+- RM Fixed windows support as shared directory view onto linux partition
+- RM Updated install instructions for unix
+- RM Updated install script to use local copies of enthought and omnivore
+- RM Added override so we don't get framework help pages
+- RM Fixed #737: handle either 'status_codes' or 'status' when iterating timesteps
+- RM Changed view menu groups to sync with framework API changes
+- RM Updated get_preferences() to preferences because of API change in framework
+- RM Updated file recognizers for change in framework API
+- RM Updated sidebar for API change in omnivore
+- RM Updated calls to Task.confirm due to change in framework API
+- RM Fixed #746: editable_properties_changed now forces refresh of info panel control with focus
+- RM Fixed #747: added check for compatible layer in coalesce
+- RM Changed get_affected_layers to return all descendants, not just immediate children
+- RM Using new child layer command propagation, added styling controls to parent annotation layer
+- RM Added outline color/transparency to parent particle layer
+- RM StyleChangeCommand now changes child layers
+- RM Added default implementations of Command.perform/undo and automatic handling of child layer effects
+- RM Refs #729: added controls for point outline color & transparency
+- RM Refs #729: changed colors for in water/on land
+- RM Fixed pep8 E272
+- RM Fixed pep8/flake8 F812
+- RM Fixed pep8/flake8 F811 errors
+- RM Fixed pep8 E303
+- RM Fixed pep8 E266
+- RM Fixed pep8 W603
+- RM Fixed most of the pep8/flake8 F841 errors
+- RM Fixed pep8 E701
+- RM Fixed pep8 E703
+- RM Fixed pep8 E115
+- RM Fixed pep8 E114
+- RM Fixed pep8 E401
+- RM Fixed pep8 E241, W503
+- RM Fixed pep8 E712, E503
+- RM Fixed pep8 E251
+- RM Fixed pep8 E713: 'not X in Y' is not the same as the intended meaning 'X not in Y'
+- RM Fixed pep8 E12, E13
+- RM Mostly fixed E231, except for numpy slices which I left mostly without spaces
+- RM Fixed pep8 E26
+- RM Added noqa to cog scripts; fixing E265 would break cog scripts
+- RM Fixed pep8 E22
+- RM Fixed E201, E202
+- RM Fixed empty except clause
+- RM Added pragma for flake8 to skip submodule init files that do a lot of importing but don't use anything they import
+- RM Added flake8 pragma to skip linting of the autogenerated marplot icons
+- RM Fixed all pyflakes "undefined name" and "import *" warnings
+- RM Replaced "from constants import *" with "import state"
+- RM Result of find . -name "*.py"|xargs autoflake --in-place --remove-all-unused-imports
+- RM Fixed RNCLoader's get_highlight_lines to return list of lists to match up to the current API
+- RM PEP8 whitespace fixes using 'autopep8 -i -r --select W29,E30,W39 maproom'
+- RM Fixed #741: BNA saving now includes copy of 1st point at the end to close the polygon
+- RM Removed duplicate code & refactored BNA loading
+- RM Removed some unused imports
+- RM Fixed error message return value for bad BNA files
+- RM Changed to use Save As Image from the framework
+- RM Fixed #740: added suffix to tile edit dialog, automatically check multiple suffixes on verify
+- RM Added USGS Topo tile server
+- RM Fixed equals check for TileHost
+
+03/07/2017
+---------------------------
+Released 3.1b31
+- RM Fixed #702: MacOS needs a Freeze/Thaw wrapper around the cascade of UI callbacks that result from command processing and the resulting trait handler callbacks
+- RM Made host objects sortable
+- RM Added URL for new USGS Topo WMS server
+- RM Fixed tests for import order and name change of polygons to rings
+- RM Force array resize to be integer; maybe something has changed in numpy 1.12 where it isn't cast to an int automatically
+- RM If using conda, don't try to install dependencies with setup.py in installdeps.py
+- RM Fixed OpenGL include paths for MacOS 10.11
+- RM Changed import name from Document to BaseDocument
+- RM Added cython exclusion and stripping of binaries to pyinstaller spec file
+- RM Added pyinstaller spec file to exclude unneeded tcl/tk
+- RM Added error dialog if OpenGL fails to initialize
+- RM Added the hardware's OpenGL version to about dialog
+- RM Added new mouse mode to select points and move them (but not add or delete)
+- RM Changed PanMode to be able to select a layer if over an object
+- RM Refs #726: fixed points flashing every time a transient layer point was moved
+- RM Refs #726: fixed line splitting in polygon layer
+- RM Added convenience function to find point nearest to world point
+- RM Fixed transient layer not setting invariant
+- RM Fix preventing same layer being processed in batch multiple times
+- RM Fixed #734: maproom name and feature code now saved/restored to json
+- RM Fixed #735: massive renaming of "polygon" to "ring" to change meaning of polygon
+
+01/11/2017
+---------------------------
+Released 3.1b30
+- RM Updated test_nc_particles
+- RM Made fiona an optional package because it won't compile on Windows
+- RM Added warning message and remove bogus points when loading particles files
+- RM Added polygon number to line state; first step to allow new points in polygon
+- RM Refs #726: optimized get_points_of_geometry to coalesce multiple points in the same ring to a single update
+- RM Refs #726: fix for editing rings other than the exterior
+- RM Refs #726: fix for polygon_identifier getting overridden because it was being inadvertently reused in shapely_to_polygon
+- RM Added transient layer helpers: at most 1 transient layer at any time
+- RM Refs #726: added serialization for shapefile layer
+- RM Refs #726, #646: basic editing of polygon layers
+- RM Added command argument to perform_batch_flags
+- RM Refs #726: shapely objects list starting point twice to close polygon; MapRoom/OpenGL don't, so correct for this
+- RM Refs #726: support holes in editable line layers
+- RM Refs #726: first step to editable polygons: convert polygon to line layer so you can use verdat editing tools
+- RM Refs #726: added demonstration of polygon highlighting in shapefile
+- RM Refs #726: first code for loading BNA as shapely polygons
+- RM Added display of number of shapefile objects in PolygonShapefileLayer
+- RM Removed attempt at triangle shapefile layer and straight-OGR loader
+- RM Refs #726: Added OGR file saving (KML, GeoJSON, ESRI)
+- RM Added support to display multiple file types in Save Layer As
+- RM Refs #726: added support for basic KML loading; fiona doesn't support KML so had to fall back to OGR
+- RM Fixed error messages; errors were being attached to the wrong object
+- RM Moved shapefile recognizer ahead of all text recognizers because KML is in XML format
+- RM Refs #726: added shapely object-based polygon layer subclass
+- RM Refs #726: added experimental shapely-geometry-to-triangle layer
+- RM Fixed #732: GL tessellation can handle holes; fixed polygons.group attribute so holes share the same group number as the outer boundary
+- RM Fixed undo of NormalizeLongitudeCommand
+- RM Fixed #731: added longitude normalization for vector object layers
+- RM Fixed shapefile reading to load holes in polygons (note: holes aren't displayed correctly yet, but at least they are parsed)
+- RM Refs #638: initial support for saving as shapefile (using OGR)
+- RM Only use x & y coordinate in shapefiles; throw away z if exists.
+- RM Added test case to accumulator that fails with ValueError even though it's supposed to catch ValueError
+
+12/15/2016
+---------------------------
+Released 3.1b29
+- RM Added missing cacert.pem from requests module that was preventing SSL connections on the py2exe version
+- RM Added error string for server error when loading WMS
+- RM Refs #372, #726: workaround to support points from shapefiles by creating tiny triangles for each point
+- RM Refs #372, #726: workaround to support linestrings even though polygon layer doesn't currently support those
+- RM Refs #372, #726: added initial support for loading shapefiles
+- RM Refs #731: initial support for longitude normalizing of point-based layers
+- RM Fixed #722: Added built-in RNC download template & menu item to bring up download selection layer
+- RM Added bsb and download directory preferences for RNC maps
+- RM Added sidebar refresh so download count will appear immediately
+- RM Fixed zoom bug that would zoom all the way out after loading a layer and setting the zoom to that layer
+- RM Added basic RNC downloading
+- RM Added KAP extractor from BSB zipfiles
+- RM Added argument parser to RNC parser
+- RM Refs #722: added display of RNC number/name when hovering over chart
+- RM Refs #722: added url for each map
+- CB fixed link to download page to use "gitlab.orr.noaa.gov"
+- RM NetCDF installed by Gohlke package on windows, not via gattai
+- RM Updated version number for pending next release
+- RM Refs #722: created new mouse mode for RNC selection
+- RM Refs #722: added highlighting for map outlines
+- RM Fixed #723: added test image for geo-referenced PNG file
+- RM Refs #723: added support for RGBA images in gdal loader
+- RM Added preference for pixel spacing of grid lines
+- RM Refs #722: added special subclass of PolygonLayer to display custom BNA files for RNC selector map
+- RM Modified cog script to include current dir in python search path to pick up local gdal.py needed by bsb.py
+- RM Added polygon identification for mouse-overs
+- RM Refs #722: finished enough XML parsing to create BNA converter
+- RM Refs #722: Added initial parses for RNC XML files
+
+09/23/2016
+---------------------------
+Released 3.1b28
+- RM Change release generator to pyinstaller rather than py2app
+- RM Added hacked py.test script for conda environment
+- RM Downgrade pyugrid to my version until I figure out what's incompatible with conda version
+- RM Fix for GDAL 2 returning None instead of raising exception when can't decode image file
+- RM Fixed off-by-one error in BNA color feature codes
+- RM Fixed API change in MergeLayersCommand
+- RM Fixed nc particles tests for changed files and new API
+- CB added abiity to read either "status" or "status_codes" in nc_particles layer
+- CB changes "status" to "status_codes" in teh n cparticles files, for compatibility with the new GNOME
+- RM Added win64 side-by-side config for GDAL 2
+- RM Hack for really weird locale error only on macOS, and only when running py.test
+- RM Need better way to check if we're using conda... Doesn't seem to be a standard way
+- RM updated pillow, omnivore version numbers for conda environment
+- RM Fixes to include markdown.util in py2exe
+
 09/15/2016
 ---------------------------
 Released 3.1b27

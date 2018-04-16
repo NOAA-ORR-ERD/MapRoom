@@ -1,0 +1,8 @@
+To generate the BNA file used for the RNC download layer, use:
+
+./parse_rnc.py RNCProdCat_19115.xml
+mv RNCProdCat_19115.xml RNCProdCat_latest.xml
+
+You can find the latest RNC Product Catalog at:
+
+http://www.charts.noaa.gov/RNCs/RNCs.shtml

@@ -1,5 +1,12 @@
 #!/bin/bash
 
-py.test --cov=maproom
+case $PATH in
+	*conda*)
+        ./py.testw
+        ;;
+    *)
+	    py.test
+	    ;;
+esac
 RESULT=$?
 exit $RESULT

@@ -39,29 +39,31 @@ FILES = [
 RECOGNIZERS = { item[1] for item in FILES }
 
 
-def test_identify():
-    """test generator for positive check"""
-    for filename, identifier in  FILES:
-        yield check_filetype, filename, identifier
-
-def check_filetype(filename, identifier):
+@pytest.mark.parametrize("filename,identifier", FILES)
+def test_identify(filename, identifier):
     recognizer = identifier()
     guess = FileGuess(filename)
     assert recognizer.identify(guess) == identifier.id
 
-
-def test_not_identity():
-    """test generator for negative check"""
-    for recognizer in RECOGNIZERS:
-        for filename, identifier in FILES:
-            if recognizer is not identifier:
-                yield check_not_filetype, filename, recognizer
-
-def check_not_filetype(filename, Recognizer):
+@pytest.mark.parametrize("filename,Recognizer", [(filename, recognizer) for recognizer in RECOGNIZERS for filename, identifier in FILES if recognizer is not identifier])
+def test_negative_identity(filename, Recognizer):
     recognizer = Recognizer()
     guess = FileGuess(filename)
     print filename, guess, Recognizer.id, recognizer.identify(guess)
-    assert not recognizer.identify(guess) == Recognizer.id
+    assert recognizer.identify(guess) != Recognizer.id
+
+# def test_not_identity():
+#     """test generator for negative check"""
+#     for recognizer in RECOGNIZERS:
+#         for filename, identifier in FILES:
+#             if recognizer is not identifier:
+#                 yield check_not_filetype, filename, recognizer
+
+# def check_not_filetype(filename, Recognizer):
+#     recognizer = Recognizer()
+#     guess = FileGuess(filename)
+#     print filename, guess, Recognizer.id, recognizer.identify(guess)
+#     assert not recognizer.identify(guess) == Recognizer.id
 
 def test_identify_nc_particles_ugrid():
     """ make sure it rejects a ugrid netcdf file """

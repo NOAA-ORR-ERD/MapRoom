@@ -1,11 +1,8 @@
 #!/usr/bin/env python
 
 
-import sys
-import traceback
 import wx
 
-from omnivore.framework.errors import ProgressCancelError
 
 from ..menu_commands import TriangulateLayerCommand
 
@@ -20,7 +17,7 @@ class TrianglePanel(wx.Panel):
     def __init__(self, parent, task):
         self.task = task
         wx.Panel.__init__(self, parent, wx.ID_ANY)
-        
+
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
         self.SetBackgroundColour(attr.colBg)
@@ -35,15 +32,15 @@ class TrianglePanel(wx.Panel):
 
         box = wx.StaticBox(self, label="Quality Mesh Minimum Angle")
         s = wx.StaticBoxSizer(box, wx.VERTICAL)
-##        t = wx.StaticText(self, label="You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.", pos=(0, 0))
-##        s.Add(t, 0, wx.ALIGN_TOP | wx.ALL, 5)
-#
-#        t = wx.StaticText(self, label="Minimum angle:")
-#        s.Add(t, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+        #  # t = wx.StaticText(self, label="You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.", pos=(0, 0))
+        #  # s.Add(t, 0, wx.ALIGN_TOP | wx.ALL, 5)
+
+        # t = wx.StaticText(self, label="Minimum angle:")
+        # s.Add(t, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         s2 = wx.BoxSizer(wx.HORIZONTAL)
         self.angle_text_box = wx.TextCtrl(self, 0, "", size=(100, -1))
         self.angle_text_box.SetHelpText("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
-        self.angle_text_box.SetToolTipString("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
+        self.angle_text_box.SetToolTip("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
         s2.Add(self.angle_text_box, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         t = wx.StaticText(self, label="degrees")
         s2.Add(t, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -58,7 +55,7 @@ class TrianglePanel(wx.Panel):
 
         s2 = wx.BoxSizer(wx.HORIZONTAL)
         self.area_text_box = wx.TextCtrl(self, 0, "", size=(100, -1))
-        self.area_text_box.SetToolTipString("You can specify a maximum triangle area (or leave blank if you don't want to specify a maximum). The units are those of the point coordinates on this layer.")
+        self.area_text_box.SetToolTip("You can specify a maximum triangle area (or leave blank if you don't want to specify a maximum). The units are those of the point coordinates on this layer.")
         s2.Add(self.area_text_box, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         t = wx.StaticText(self, label="units")
         s2.Add(t, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -83,7 +80,7 @@ class TrianglePanel(wx.Panel):
         self.SetSizer(self.sizer)
         self.sizer.Layout()
         self.Fit()
-    
+
     def set_task(self, task):
         self.task = task
 
@@ -93,7 +90,7 @@ class TrianglePanel(wx.Panel):
             # even when the panel is hidden, which is not what we want.
             event.Skip()
             return
-        
+
         self.triangulate_button.Enable(False)
         self.triangulate_button.SetLabel("Triangulating...")
         self.sizer.Layout()
@@ -104,7 +101,7 @@ class TrianglePanel(wx.Panel):
 
     def triangulate_internal(self):
         project = self.task.active_editor
-        
+
         q = None
         if (self.angle_text_box.GetValue().strip() != ""):
             try:
@@ -123,7 +120,7 @@ class TrianglePanel(wx.Panel):
 
                 return
 
-        layer = project.layer_tree_control.get_selected_layer()
+        layer = project.layer_tree_control.get_edit_layer()
         if layer.type == "triangle":
             # If attempting to triangulate a triangle layer, check if it is an
             # already-triangulated layer, and if so, use its parent
@@ -137,15 +134,3 @@ class TrianglePanel(wx.Panel):
 
         cmd = TriangulateLayerCommand(layer, q, a)
         project.process_command(cmd)
-
-
-if __name__ == "__main__":
-    """
-    simple test for the dialog
-    """
-    a = wx.App(False)
-    import wx.lib.inspection
-    wx.lib.inspection.InspectionTool().Show()
-    d = Triangle_dialog()
-    d.Show()
-    a.MainLoop()

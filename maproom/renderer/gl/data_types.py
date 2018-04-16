@@ -42,8 +42,8 @@ TRIANGLE_POINTS_VIEW_DTYPE = np.dtype([
     ("state", np.uint32)
 ])
 POLYGON_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
-    ("next", np.uint32),   # Index of next adjacent point in polygon.
-    ("polygon", np.uint32)  # Index of polygon this point is in.
+    ("next", np.uint32),   # Index of next adjacent point in ring
+    ("ring_index", np.uint32)  # Index of ring this point is in
 ])
 POLYGON_DTYPE = np.dtype([
     ("start", np.uint32),  # Index of arbitrary point in this polygon.
@@ -58,11 +58,31 @@ QUAD_VERTEX_DTYPE = np.dtype(
      ("x_rt", np.float32), ("y_rt", np.float32),
      ("x_rb", np.float32), ("y_rb", np.float32)]
 )
+QUAD_VERTEX_DUPLICATE_DTYPE = np.dtype(
+    [("x_lb", np.float32), ("y_lb", np.float32),
+     ("x_lt", np.float32), ("y_lt", np.float32),
+     ("x_rt", np.float32), ("y_rt", np.float32),
+     ("x_rb", np.float32), ("y_rb", np.float32),
+     ("xprime_lb", np.float32), ("yprime_lb", np.float32),
+     ("xprime_lt", np.float32), ("yprime_lt", np.float32),
+     ("xprime_rt", np.float32), ("yprime_rt", np.float32),
+     ("xprime_rb", np.float32), ("yprime_rb", np.float32)]
+)
 TEXTURE_COORDINATE_DTYPE = np.dtype(
     [("u_lb", np.float32), ("v_lb", np.float32),
      ("u_lt", np.float32), ("v_lt", np.float32),
      ("u_rt", np.float32), ("v_rt", np.float32),
      ("u_rb", np.float32), ("v_rb", np.float32)]
+)
+TEXTURE_COORDINATE_DUPLICATE_DTYPE = np.dtype(
+    [("u_lb", np.float32), ("v_lb", np.float32),
+     ("u_lt", np.float32), ("v_lt", np.float32),
+     ("u_rt", np.float32), ("v_rt", np.float32),
+     ("u_rb", np.float32), ("v_rb", np.float32),
+     ("uprime_lb", np.float32), ("vprime_lb", np.float32),
+     ("uprime_lt", np.float32), ("vprime_lt", np.float32),
+     ("uprime_rt", np.float32), ("vprime_rt", np.float32),
+     ("uprime_rb", np.float32), ("vprime_rb", np.float32)]
 )
 
 
@@ -72,7 +92,8 @@ def make_polygons(count):
         count,
     ).view(np.recarray)
 
-def make_polygon_adjacency_array(count):
+
+def make_point_adjacency_array(count):
     return np.repeat(
         np.array([(0, 0)], dtype=POLYGON_ADJACENCY_DTYPE),
         count,

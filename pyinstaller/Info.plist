@@ -6,7 +6,7 @@
 <key>CFBundleShortVersionString</key>
 <string>3.1b27</string>
 <key>CFBundleExecutable</key>
-<string>MacOS/staging_MapRoom</string>
+<string>MacOS/MapRoom_build</string>
 <key>CFBundleName</key>
 <string>MapRoom</string>
 <key>CFBundleInfoDictionaryVersion</key>

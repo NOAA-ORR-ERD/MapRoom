@@ -1,32 +1,35 @@
-import os
-import time
+import sys
+if sys.platform.startswith("win"):
+    # Windows seems to have no delay between the call to refresh and the
+    # CallAfter, so calls will still stack up without a delay
+    time_delay_refresh = 200  # milliseconds
+else:
+    time_delay_refresh = 0
 
 import wx
 import wx.glcanvas as glcanvas
 
-import math
 import numpy as np
 
 import OpenGL.GL as gl
-import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
-import OpenGL.GLU as glu
 
 # Thanks to Mike Fletcher's comment on the PyOpenGL mailing list,
 # pyopengl_accelerate now works by registering a plugin handler for recarrays.
 from OpenGL.plugins import FormatHandler
 FormatHandler('recarray',
               'OpenGL.arrays.numpymodule.NumpyHandler',
-              ['numpy.recarray',],
+              ['numpy.recarray', ],
               )
-     
+
 from renderer import ImmediateModeRenderer
 from picker import Picker
 import maproom.library.rect as rect
 
 from ..gl.font import load_font_texture_with_alpha
 from ..gl import data_types
-from .. import NullPicker, BaseCanvas, int_to_color_floats
+from .. import BaseCanvas
+from .. import int_to_color_floats
 
 import logging
 log = logging.getLogger(__name__)
@@ -37,9 +40,9 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
     """
     The core rendering class for MapRoom app.
     """
-    
+
     shared_context = None
-    
+
     @classmethod
     def init_context(cls, canvas):
         # Only one GLContext is needed for the entire application -- this way,
@@ -51,12 +54,16 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         project = kwargs.pop('project')
         kwargs['attribList'] = (glcanvas.WX_GL_RGBA,
                                 glcanvas.WX_GL_DOUBLEBUFFER,
-                                glcanvas.WX_GL_MIN_ALPHA, 8, )
+                                )
 
         glcanvas.GLCanvas.__init__(self, *args, **kwargs)
 
         self.init_context(self)
         self.is_canvas_initialized = False
+        self.is_gl_driver_ok = False
+        self.gl_driver_error_message = None
+        self.use_pending_render = True
+        self.pending_render_count = 0
 
         BaseCanvas.__init__(self, project)
 
@@ -66,33 +73,35 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         # Only bind paint event; others depend on window being realized
         self.Bind(wx.EVT_PAINT, self.on_draw)
-        
+
         # mouse handler events
         self.mouse_handler = None  # defined in subclass
-        
+
         self.native = self.get_native_control()
-        
+
         self.minimum_delay_timers = {}
-    
+
     def init_overlay(self):
         self.debug_show_bounding_boxes = False
         self.overlay = ImmediateModeRenderer(self, None)
-    
+
     def new_picker(self):
         return Picker()
 
     def get_native_control(self):
         return self
-    
+
     def set_callbacks(self):
         # Callbacks are not set immediately because they depend on the OpenGL
         # context being set on the canvas, which can't happen until the window
         # is realized.
-        self.Bind(wx.EVT_LEFT_DOWN, self.on_mouse_down)
+        self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_MOTION, self.on_mouse_motion)
-        self.Bind(wx.EVT_LEFT_UP, self.on_mouse_up)
-        self.Bind(wx.EVT_RIGHT_DOWN, self.on_right_mouse_down)
-        self.Bind(wx.EVT_RIGHT_UP, self.on_right_mouse_up)
+        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
+        self.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
+        self.Bind(wx.EVT_MIDDLE_UP, self.on_middle_up)
+        self.Bind(wx.EVT_RIGHT_DOWN, self.on_right_down)
+        self.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
         self.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
         self.Bind(wx.EVT_ENTER_WINDOW, self.on_mouse_enter)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_mouse_leave)
@@ -100,36 +109,70 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_up)
         self.Bind(wx.EVT_TIMER, self.on_timer)
-        
+        self.Bind(wx.EVT_SET_FOCUS, self.on_set_focus)
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
+
         # Prevent flashing on Windows by doing nothing on an erase background event.
-        ## fixme -- I think you can pass a flag to the Window instead...
-        self.Bind(wx.EVT_ERASE_BACKGROUND, lambda event: None)
+        # fixme -- I think you can pass a flag to the Window instead...
+        self.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
         self.Bind(wx.EVT_SIZE, self.on_resize)
+
+    def on_erase(self, event):
+        log.debug("on_erase: called!")
+
+    def on_set_focus(self, event):
+        log.debug("on_set_focus: called!")
+        event.Skip()
+
+    def on_kill_focus(self, event):
+        log.debug("on_kill_focus: called!")
+        event.Skip()
 
     def on_draw(self, event):
         if self.native.IsShownOnScreen():
             if not self.is_canvas_initialized:
+                log.debug("on_draw: first time! creating shared context")
                 self.SetCurrent(self.shared_context)
-                
+
                 # this has to be here because the window has to exist before creating
                 # textures and making the renderer
-                if self.font_texture is None:
-                    self.init_font()
-                    
+                try:
+                    if self.font_texture is None:
+                        self.init_font()
+                except gl.GLError:
+                    log.error("Caught GLError on initialization; likely OpenGL driver is not current")
+                    self.is_gl_driver_ok = False
+                else:
+                    self.is_gl_driver_ok = True
                 wx.CallAfter(self.set_callbacks)
                 self.is_canvas_initialized = True
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-            self.render()
+            if self.is_gl_driver_ok:
+                log.debug("on_draw: calling render")
+                self.render()
+            else:
+                self.render_error()
+        event.Skip()
+
+    def render_error(self):
+        if self.gl_driver_error_message is None:
+            err = "Unable to render OpenGL!\n\nThe OpenGL driver is not new enough to support MapRoom. The lowest version of OpenGL known to work is version 2.1 (any later version will also work). Since OpenGL 2.1 was released in 2006, support is likely available for this hardware.\n\nOpenGL support is included in the display driver. This problem is usually fixed by updating the display driver to the newest available version for your graphics hardware."
+
+            import sys
+            if sys.platform.startswith("win"):
+                err += "\n\nThis is especially common on Windows 10 machines, because Windows 10 does not require OpenGL 2.1 support. However, support is typically available with a driver update from the graphics hardware manufacturer."
+
+            self.gl_driver_error_message = err
+            wx.CallAfter(self.project.task.error, err, "OpenGL Error")
 
     def on_resize(self, event):
-        if not self.GetContext():
+        if not self.is_canvas_initialized:
             return
 
         event.Skip()
         self.render(event)
 
-    def on_mouse_down(self, event):
-        self.SetFocus() # why would it not be focused?
+    def on_left_down(self, event):
+        self.SetFocus()  # why would it not be focused?
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         self.mouse_is_down = True
@@ -148,19 +191,36 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             mode.process_mouse_motion_up(event)
         self.set_cursor(mode)
 
-    def on_mouse_up(self, event):
+    def on_left_up(self, event):
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         mode.process_mouse_up(event)
         self.set_cursor(mode)
 
-    def on_right_mouse_down(self, event):
+    def on_middle_down(self, event):
+        mode = self.get_effective_tool_mode(event)
+        self.forced_cursor = None
+        self.mouse_is_down = True
+        self.selection_box_is_being_defined = False
+        self.mouse_down_position = event.GetPosition()
+        self.mouse_move_position = self.mouse_down_position
+        mode.process_middle_mouse_down(event)
+        self.set_cursor(mode)
+
+    def on_middle_up(self, event):
+        mode = self.get_effective_tool_mode(event)
+        self.forced_cursor = None
+        self.mouse_is_down = False
+        mode.process_middle_mouse_up(event)
+        self.set_cursor(mode)
+
+    def on_right_down(self, event):
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         mode.process_right_mouse_down(event)
         self.set_cursor(mode)
 
-    def on_right_mouse_up(self, event):
+    def on_right_up(self, event):
         mode = self.get_effective_tool_mode(event)
         self.forced_cursor = None
         mode.process_right_mouse_up(event)
@@ -175,43 +235,43 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.set_cursor()
 
     def on_mouse_leave(self, event):
-        self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+        self.SetCursor(wx.Cursor(wx.CURSOR_ARROW))
         self.mouse_handler.process_mouse_leave(event)
 
     def on_key_down(self, event):
         mode = self.get_effective_tool_mode(event)
         mode.process_key_down(event)
         self.set_cursor(mode)
-        
+
         event.Skip()
 
     def on_key_up(self, event):
         mode = self.get_effective_tool_mode(event)
         mode.process_key_up(event)
         self.set_cursor(mode)
-        
+
         event.Skip()
 
     def on_key_char(self, event):
         mode = self.get_effective_tool_mode(event)
         self.set_cursor(mode)
-        
+
         if not mode.process_key_char(event):
             event.Skip()
-    
+
     def on_timer(self, event):
         id = event.GetTimer().GetId()
         timer, callback = self.minimum_delay_timers.pop(id)
         log.debug("timer %d triggered for callback %s" % (timer.GetId(), callback))
         wx.CallAfter(callback, self)
-    
+
     def set_minimum_delay_callback(self, callback, delay):
         """Trigger a callback after a delay.
-        
+
         Only one timer against a particular callback is allowed.  If this
         method is called before the delay time expires, it will reset to the
         full delay, effectively rescheduling the callback.
-        
+
         E.g. this is used in the WMS layer to prevent the background image
         from being reloaded while the user is panning the view around,
         preventing unnecessary traffic to the external webserver.
@@ -226,13 +286,13 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             timer = wx.Timer(self.native)
             self.minimum_delay_timers[timer.GetId()] = (timer, callback)
             log.debug("created timer %d for callback %s" % (timer.GetId(), callback))
-            
+
         timer.Start(delay, oneShot=True)
-    
+
     def new_renderer(self, layer):
         r = ImmediateModeRenderer(self, layer)
         return r
-    
+
     def load_font_texture(self):
         buffer_with_alpha, extents = load_font_texture_with_alpha()
         width = buffer_with_alpha.shape[0]
@@ -259,22 +319,22 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
 
         return (texture, (width, height), extents)
-    
+
     def init_font(self, max_label_characters=1000):
         (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
         self.max_label_characters = max_label_characters
-        
+
         self.screen_vertex_data = np.zeros(
             (max_label_characters, ),
             dtype=data_types.QUAD_VERTEX_DTYPE,
         ).view(np.recarray)
-        self.screen_vertex_raw = self.screen_vertex_data.view(dtype=np.float32).reshape(-1,8)
-        
+        self.screen_vertex_raw = self.screen_vertex_data.view(dtype=np.float32).reshape(-1, 8)
+
         self.texcoord_data = np.zeros(
             (max_label_characters, ),
             dtype=data_types.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
-        self.texcoord_raw = self.texcoord_data.view(dtype=np.float32).reshape(-1,8)
+        self.texcoord_raw = self.texcoord_data.view(dtype=np.float32).reshape(-1, 8)
 
         # note that the data for these vbo arrays is not yet set; it is set on
         # each render and depends on the number of points being labeled
@@ -285,10 +345,10 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.vbo_screen_vertexes = gl_vbo.VBO(self.screen_vertex_raw)
         self.vbo_texture_coordinates = gl_vbo.VBO(self.texcoord_raw)
 
-    def prepare_string_texture(self, sx, sy, text): 
+    def prepare_string_texture(self, sx, sy, text):
         # these are used just because it seems to be the fastest way to full numpy arrays
         # fixme: -- yes, but if you know how big the arrays are going to be
-        #           better to build the array once. 
+        #           better to build the array once.
         screen_vertex_accumulators = [[], [], [], [], [], [], [], []]
         tex_coord_accumulators = [[], [], [], [], [], [], [], []]
 
@@ -347,10 +407,10 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         self.vbo_screen_vertexes[0: n] = self.screen_vertex_raw[0: n]
         self.vbo_texture_coordinates[0: n] = self.texcoord_raw[0: n]
-        
+
         return n, self.font_texture
 
-    def prepare_string_texture_for_labels(self, values, projected_points, projected_rect): 
+    def prepare_string_texture_for_labels(self, values, projected_points, projected_rect):
         n, labels, relevant_points = self.get_visible_labels(values, projected_points, projected_rect)
         if n == 0:
             return 0, 0
@@ -432,7 +492,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
         self.vbo_screen_vertexes[0: n] = self.screen_vertex_raw[0: n]
         self.vbo_texture_coordinates[0: n] = self.texcoord_raw[0: n]
-        
+
         return n, self.font_texture
 
     def prepare_screen_viewport(self):
@@ -467,7 +527,30 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             return False
         self.SetCurrent(self.shared_context)  # Needed every time for OS X
         return True
-    
+
+    def render(self, event=None, immediately=False):
+        # Force render to happen after all wx event processing because multiple
+        # renders may stack up
+        immediately = immediately and time_delay_refresh == 0
+        if self.use_pending_render and not immediately:
+            self.pending_render_count += 1
+            if time_delay_refresh > 0:
+                wx.CallLater(time_delay_refresh, self.render_callback)
+            else:
+                wx.CallAfter(self.render_callback)
+        else:
+            self.render_callback(immediately=True)
+
+    def render_callback(self, immediately=False):
+        log.debug("immediately: %s pending renders: %d" % (immediately, self.pending_render_count))
+        if immediately or self.pending_render_count > 0:
+            log.debug("rendering")
+            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+            BaseCanvas.render(self)
+            self.pending_render_count = 0
+        else:
+            log.debug("optimized out a render!!!!")
+
     def render_overlay(self):
         self.overlay.prepare_to_render_screen_objects()
         if self.debug_show_bounding_boxes:
@@ -487,7 +570,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.SwapBuffers()
 
         def update_status(message):
-            self.project.task.status_bar.debug = message
+            self.project.debug_message = message
         wx.CallAfter(update_status, "Render complete, took %f seconds." % elapsed)
 
         if (event is not None):
@@ -512,16 +595,11 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             type=gl.GL_UNSIGNED_BYTE,
             outputType=str,
         )
-
-        bitmap = wx.BitmapFromBuffer(
-            width=window_size[0],
-            height=window_size[1],
-            dataBuffer=raw_data,
-        )
-
-        image = wx.ImageFromBitmap(bitmap)
+        image = np.fromstring(raw_data, dtype=np.uint8).reshape((window_size[1], window_size[0], 3))
 
         # Flip the image vertically, because glReadPixel()'s y origin is at
         # the bottom and wxPython's y origin is at the top.
-        screenshot = image.Mirror(horizontally=False)
-        return screenshot
+
+        # Need to return a copy because PIL apparently can't handle views, it
+        # needs the data in sequence.
+        return np.flipud(image).copy()

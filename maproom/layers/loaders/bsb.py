@@ -1,14 +1,11 @@
 import os
-import numpy as np
-import re
 
 import wx
 
-from fs.opener import fsopen
 
 from omnivore.framework.errors import ProgressCancelError
 
-from maproom.layers import Layer, RasterLayer
+from maproom.layers import RasterLayer
 from maproom.library.bsb_utils import BSBParser
 
 from common import BaseLoader
@@ -21,13 +18,13 @@ progress_log = logging.getLogger("progress")
 
 class BSBLoader(BaseLoader):
     mime = "application/x-maproom-bsb"
-    
+
     layer_types = []
-    
+
     extensions = [".bsb"]
-    
+
     name = "NOAA BSB"
-    
+
     def load_query(self, metadata, manager):
         bsb = BSBParser(metadata.uri)
         items = []
@@ -43,13 +40,13 @@ class BSBLoader(BaseLoader):
             for index in selections:
                 self.selected.append(bsb.info.images[index].filename)
 
-    def load_layers(self, metadata, manager):
+    def load_layers(self, metadata, manager, **kwargs):
         if not self.selected:
             raise ProgressCancelError("No files selected from BSB")
         layers = []
         for filename in self.selected:
             layer = RasterLayer(manager=manager)
-            
+
             progress_log.info("Loading from %s" % metadata.uri)
             (layer.load_error_string, layer.image_data) = load_image_file(filename)
             if (layer.load_error_string == ""):

@@ -2,29 +2,20 @@
 Layer type to be used as a base class for layers with points
 
 """
-import os
-import os.path
-import time
-import sys
-import tempfile
-import shutil
-from StringIO import StringIO
 import numpy as np
-import wx
-from pytriangle import triangulate_simple
-from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineString
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Str
+from traits.api import Unicode
+from traits.api import Float
 
 from ..library import rect
-from ..library.accumulator import flatten
-from ..library.Boundary import Boundaries, PointsError
 from ..library.depth_utils import convert_units
-from ..renderer import color_floats_to_int, data_types
+from ..renderer import data_types
 
 from base import ProjectedLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -34,27 +25,41 @@ progress_log = logging.getLogger("progress")
 class PointBaseLayer(ProjectedLayer):
     """
     Layer for just points
-    
+
     """
     name = Unicode("Point Layer")
-    
+
     type = Str("base_point")
-    
+
     points = Any
-    
+
+    hidden_points = Any  # numpy array listing indexes of points to hide
+
+    point_size = Float(4.0)
+
+    selected_point_size = Float(15.0)
+
+    selected_line_width = Float(10.0)
+
     visibility_items = ["points"]
-    
-    layer_info_panel = ["Layer name", "Point count"]
-    
+
+    layer_info_panel = ["Point count"]
+
     selection_info_panel = []
 
     def __str__(self):
+        return ProjectedLayer.__str__(self) + ", %d points" % (self.num_points)
+
+    @property
+    def num_points(self):
         try:
-            points = len(self.points)
+            return len(self.points)
         except TypeError:
-            points = 0
-        return "%s layer '%s': %d points" % (self.type, self.name, points)
-    
+            return 0
+
+    def test_contents_equal(self, other):
+        return self.num_points == other.num_points and ProjectedLayer.test_contents_equal(self, other)
+
     def get_info_panel_text(self, prop):
         if prop == "Point count":
             return str(len(self.points))
@@ -68,11 +73,10 @@ class PointBaseLayer(ProjectedLayer):
         return True
 
     def new_points(self, num=0):
-        #fixme: this should be done differently...
-        self.set_layer_style_defaults()
+        # fixme: this should be done differently...
         self.points = self.make_points(num)
 
-    def empty(self):##fixme: make a property?
+    def empty(self):  # fixme: make a property?
         """
         We shouldn't allow saving of a layer with no content, so we use this method
         to determine if we can save this layer.
@@ -81,18 +85,19 @@ class PointBaseLayer(ProjectedLayer):
 
         return no_points
 
-    ##fixme: can we remove all the visibility stuff???    
-    ## and if not -- this shouldn't have any references to labels
+    # fixme: can we remove all the visibility stuff???
+    # and if not -- this shouldn't have any references to labels
     def get_visibility_dict(self):
-        ##fixme: why not call self.get_visibility_dict ?
+        # fixme: why not call self.get_visibility_dict ?
         d = ProjectedLayer.get_visibility_dict(self)
-        ## fixme: and why do I need to mess with label visibility here?
+        # fixme: and why do I need to mess with label visibility here?
         d["labels"] = False
         return d
-    
-    def set_data(self, f_points):
+
+    def set_data(self, f_points, style=None):
         n = np.alen(f_points)
-        self.set_layer_style_defaults()
+        if style is not None:
+            self.style = style
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points
@@ -101,27 +106,26 @@ class PointBaseLayer(ProjectedLayer):
             self.points.state = 0
 
         self.update_bounds()
-    
+
     def set_color(self, color):
         self.points.color = color
-    
+
     def set_style(self, style):
         ProjectedLayer.set_style(self, style)
-        if style.line_color is not None:
-            self.set_color(style.line_color)
+        if self.style.line_color is not None and self.points is not None:
+            self.set_color(self.style.line_color)
 
     def make_points(self, count):
         return np.repeat(
             np.array([(np.nan, np.nan, np.nan, 0, 0)], dtype=data_types.POINT_DTYPE),
             count,
         ).view(np.recarray)
-    
+
     def copy_points(self):
         return self.points.copy().view(np.recarray)
-    
+
     def copy_bounds(self):
-        ((l, b), (r, t)) = self.bounds
-        return ((l, b), (r, t))
+        return rect.copy(self.bounds)
 
     def get_undo_info(self):
         """ Return a copy of any data needed to restore the state of the layer
@@ -137,13 +141,13 @@ class PointBaseLayer(ProjectedLayer):
         """
         self.points = info[0]
         self.bounds = info[1]
-    
-    ##### JSON Serialization
-    
+
+    # JSON Serialization
+
     def points_to_json(self):
         if self.points is not None:
             return self.points.tolist()
-    
+
     def points_from_json(self, json_data):
         jd = json_data['points']
         if jd is not None:
@@ -151,81 +155,102 @@ class PointBaseLayer(ProjectedLayer):
         else:
             self.points = jd
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
-        bounds = rect.NONE_RECT
+    def point_size_to_json(self):
+        return self.point_size
 
+    def point_size_from_json(self, json_data):
+        self.point_size = json_data.get('point_size', 4.0)
+
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
         if (self.points is not None and len(self.points) > 0):
-            if (mark_type == STATE_NONE):
+            if (mark_type == state.CLEAR):
                 points = self.points
             else:
                 points = self.points[self.get_selected_point_indexes(mark_type)]
-            # fixme -- could be more eficient numpy-wise
-            l = points.x.min()
-            r = points.x.max()
-            b = points.y.min()
-            t = points.y.max()
-            bounds = rect.accumulate_rect(bounds, ((l, b), (r, t)))
+            return self.compute_bounding_rect_from_points(points)
+        return rect.NONE_RECT
 
-        return bounds
+    def compute_bounding_rect_from_points(self, points):
+        # fixme -- could be more eficient numpy-wise
+        l = points.x.min()
+        r = points.x.max()
+        b = points.y.min()
+        t = points.y.max()
+        return ((l, b), (r, t))
 
     def get_state(self, index):
-        ##fixme -- is this needed -- should all points have a state?
+        # fixme -- is this needed -- should all points have a state?
         return self.points.state[index]
 
     def compute_selected_bounding_rect(self):
-        bounds = self.compute_bounding_rect(STATE_SELECTED)
+        bounds = self.compute_bounding_rect(state.SELECTED)
         return bounds
 
-    def clear_all_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_selections(self, mark_type=state.SELECTED):
         self.clear_all_point_selections(mark_type)
         self.increment_change_count()
 
-    def clear_all_point_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_point_selections(self, mark_type=state.SELECTED):
         if (self.points is not None):
             self.points.state = self.points.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
     def clear_flagged(self, refresh=False):
-        self.clear_all_selections(STATE_FLAGGED)
+        self.clear_all_selections(state.FLAGGED)
         if refresh:
-            self.manager.dispatch_event('refresh_needed')
-    
+            self.manager.refresh_needed = None
+
     def has_selection(self):
         return self.get_num_points_selected() > 0
 
     def has_flagged(self):
         return self.get_num_points_flagged() > 0
 
-    def select_point(self, point_index, mark_type=STATE_SELECTED):
+    def select_point(self, point_index, mark_type=state.SELECTED):
         self.points.state[point_index] = self.points.state[point_index] | mark_type
         self.increment_change_count()
 
-    def deselect_point(self, point_index, mark_type=STATE_SELECTED):
+    def select_all_points(self, mark_type=state.SELECTED):
+        if (self.points is not None):
+            self.points.state = self.points.state | mark_type
+            self.increment_change_count()
+
+    def select_nearest_point(self, world_point):
+        c = self.copy_points()
+        c.x -= world_point[0]
+        c.y -= world_point[1]
+        diff = np.empty([len(c)], dtype=np.float64)
+        diff[:] = np.abs(c.x + c.y)
+        s = np.argsort(diff, 0)
+        index = s[0]
+        self.select_point(index)
+
+    def deselect_point(self, point_index, mark_type=state.SELECTED):
         self.points.state[point_index] = self.points.state[point_index] & (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
 
-    def is_point_selected(self, point_index, mark_type=STATE_SELECTED):
+    def is_point_selected(self, point_index, mark_type=state.SELECTED):
         return self.points is not None and (self.points.state[point_index] & mark_type) != 0
 
-    def select_points(self, indexes, mark_type=STATE_SELECTED):
+    def select_points(self, indexes, mark_type=state.SELECTED):
         self.points.state[indexes] |= mark_type
         self.increment_change_count()
 
-    def deselect_points(self, indexes, mark_type=STATE_SELECTED):
+    def deselect_points(self, indexes, mark_type=state.SELECTED):
         self.points.state[indexes] &= (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
-    
+
     def select_flagged(self, refresh=False):
         indexes = self.get_flagged_point_indexes()
-        self.deselect_points(indexes, STATE_FLAGGED)
-        self.select_points(indexes, STATE_SELECTED)
+        self.deselect_points(indexes, state.FLAGGED)
+        self.select_points(indexes, state.SELECTED)
         if refresh:
             self.manager.dispatch_event('refresh_needed')
-    
-    def get_flagged_point_indexes(self):
-        return self.get_selected_point_indexes(STATE_FLAGGED)
 
-    def select_points_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
+    def get_flagged_point_indexes(self):
+        return self.get_selected_point_indexes(state.FLAGGED)
+
+    def select_points_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=state.SELECTED):
         if (not is_toggle_mode and not is_add_mode):
             self.clear_all_point_selections()
         indexes = np.where(np.logical_and(
@@ -237,35 +262,35 @@ class PointBaseLayer(ProjectedLayer):
             self.points.state[indexes] ^= mark_type
         self.increment_change_count()
 
-    def get_selected_point_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_point_indexes(self, mark_type=state.SELECTED):
         if (self.points is None):
             return []
         return np.where((self.points.state & mark_type) != 0)[0]
 
-    def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_and_dependent_point_indexes(self, mark_type=state.SELECTED):
         """Get all points from selected objects.
-        
+
         Subclasses should override to provide a list of points that are
         implicitly selected by an object being selected.
         """
         return self.get_selected_point_indexes(mark_type)
 
-    def get_num_points_selected(self, mark_type=STATE_SELECTED):
+    def get_num_points_selected(self, mark_type=state.SELECTED):
         return len(self.get_selected_point_indexes(mark_type))
 
     def get_num_points_flagged(self):
-        return len(self.get_selected_point_indexes(STATE_FLAGGED))
-    
+        return len(self.get_selected_point_indexes(state.FLAGGED))
+
     def is_mergeable_with(self, other_layer):
         return hasattr(other_layer, "points")
-    
+
     def find_merge_layer_class(self, other_layer):
         return type(self)
 
     def merge_from_source_layers(self, layer_a, layer_b, depth_unit=""):
         # for now we only handle merging of points and lines
         self.new()
-        
+
         self.merged_points_index = len(layer_a.points)
 
         n = len(layer_a.points) + len(layer_b.points)
@@ -280,8 +305,17 @@ class PointBaseLayer(ProjectedLayer):
 
         if depth_unit:
             self.depth_unit = depth_unit
-       # self.points.state = 0
-    
+        # self.points.state = 0
+
+    def normalize_longitude(self):
+        l = self.points.x.min()
+        r = self.points.x.max()
+        if l > 0 and r > 0:
+            self.points.x -= 360.0
+
+    def swap_lat_lon(self):
+        self.points.x, self.points.y = self.points.y, self.points.x.copy()
+
     def compute_projected_point_data(self):
         projection = self.manager.project.layer_canvas.projection
         view = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy.astype(np.float32)
@@ -289,12 +323,16 @@ class PointBaseLayer(ProjectedLayer):
             (len(self.points), 2),
             dtype=np.float32
         )
-        projected_point_data[:, 0], projected_point_data[:, 1] = projection(view[:,0], view[:,1])
+        projected_point_data[:,0], projected_point_data[:,1] = projection(view[:,0], view[:,1])
+        if self.hidden_points is not None:
+            print("hiding! %s" % repr(self.hidden_points))
+            # OpenGL doesn't draw points that have a coordinate set to NaN
+            projected_point_data[self.hidden_points] = np.nan
         return projected_point_data
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
-        
+
         """
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
@@ -304,13 +342,14 @@ class PointBaseLayer(ProjectedLayer):
 
         if layer_visibility["points"]:
             renderer.draw_points(self, picker, self.point_size,
-                                      self.get_selected_point_indexes(),
-                                      self.get_selected_point_indexes(STATE_FLAGGED))
+                                 self.get_selected_point_indexes(),
+                                 self.get_selected_point_indexes(state.FLAGGED),
+                                 style=self.style)
 
         # the labels
         if layer_visibility["labels"]:
             renderer.draw_labels_at_points(self.points.z, s_r, p_r)
-                
+
         # render selections after everything else
         if (not picker.is_active):
             if layer_visibility["points"]:

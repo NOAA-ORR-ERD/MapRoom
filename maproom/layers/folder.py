@@ -1,17 +1,17 @@
-import os
-import sys
 import numpy as np
 
 # Enthought library imports.
-from traits.api import HasTraits, Any, Int, Float, List, Set, Bool, Str, Unicode, Event
+from traits.api import Str
+from traits.api import Unicode
 
 # MapRoom imports
 from base import Layer
 from line import LineLayer
 from ..library import rect
+from ..renderer import data_types
 
 # local package imports
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -21,16 +21,16 @@ class Folder(Layer):
     """Layer that contains other layers.
     """
     name = Unicode("Folder")
-    
+
     type = Str("folder")
-    
+
     def is_folder(self):
         return True
-    
+
     @property
     def is_renderable(self):
         return False
-    
+
     def set_visibility_when_checked(self, checked, project_layer_visibility):
         # Folders will automatically set their children's visiblity state to
         # the parent state
@@ -46,14 +46,14 @@ class RootLayer(Folder):
     Only one root layer per project.
     """
     name = Unicode("Root Layer")
-    
+
     type = Str("root")
-    
+
     skip_on_insert = True
-    
+
     def is_root(self):
         return True
-    
+
     def serialize_json(self, index):
         # Root layer is never serialized
         pass
@@ -63,13 +63,13 @@ class BoundedFolder(LineLayer, Folder):
     """Layer that contains other layers.
     """
     name = Unicode("BoundedFolder")
-    
+
     type = Str("boundedfolder")
-    
+
     @property
     def is_renderable(self):
         return np.alen(self.points) > 0
-    
+
     def set_data_from_bounds(self, bounds):
         ((l, b), (r, t)) = bounds
         if l is None:
@@ -78,7 +78,6 @@ class BoundedFolder(LineLayer, Folder):
             points = [(l, b), (r, b), (r, t), (l, t)]
         f_points = np.asarray(points, dtype=np.float32)
         n = np.alen(f_points)
-        self.set_layer_style_defaults()
         self.points = self.make_points(n)
         log.debug("SET_DATA_FROM_BOUNDS:start %s" % self)
         if (n > 0):
@@ -86,7 +85,7 @@ class BoundedFolder(LineLayer, Folder):
             self.points.z = 0.0
             self.points.color = self.style.line_color
             self.points.state = 0
-            
+
             lines = [(0, 1), (1, 2), (2, 3), (3, 0)]
             n = len(lines)
             self.line_segment_indexes = self.make_line_segment_indexes(n)
@@ -95,15 +94,29 @@ class BoundedFolder(LineLayer, Folder):
             self.line_segment_indexes.state = 0
         log.debug("SET_DATA_FROM_BOUNDS:end %s" % self)
 
-    def compute_bounding_rect(self, mark_type=STATE_NONE):
+    def use_layer_for_bounding_rect(self, layer):
+        # Defaults to using all layers in boundary rect calculation
+        return True
+
+    def compute_bounding_rect(self, mark_type=state.CLEAR):
+        bounds = self.compute_bounding_rect_from_children()
+        self.set_data_from_bounds(bounds)
+        return bounds
+
+    def compute_bounding_rect_from_children(self):
         bounds = rect.NONE_RECT
         log.debug("COMPUTE_BOUNDING_RECT:before %s %s" % (self, self.bounds))
 
         children = self.manager.get_layer_children(self)
         for layer in children:
-            log.debug("  CHILD %s %s" % (layer, layer.bounds))
-            bounds = rect.accumulate_rect(bounds, layer.bounds)
+            if self.use_layer_for_bounding_rect(layer):
+                log.debug("  CHILD %s %s" % (layer, layer.bounds))
+                bounds = rect.accumulate_rect(bounds, layer.bounds)
+            else:
+                log.debug("  not using %s for boundary rect" % layer)
 
         log.debug("COMPUTE_BOUNDING_RECT:after %s %s" % (self, bounds))
-        self.set_data_from_bounds(bounds)
         return bounds
+
+    def update_overlay_bounds(self):
+        self.bounds = self.compute_bounding_rect_from_children()

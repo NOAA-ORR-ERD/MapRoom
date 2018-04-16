@@ -9,7 +9,7 @@ import OpenGL.GL.EXT.framebuffer_object as gl_fbo
 
 import maproom.library.rect as rect
 
-from ..gl.color import *
+from ..gl.color import color_floats_to_int
 
 import logging
 log = logging.getLogger(__name__)
@@ -17,6 +17,7 @@ log = logging.getLogger(__name__)
 POINTS_PICKER_OFFSET = 0
 LINES_PICKER_OFFSET = 1
 FILL_PICKER_OFFSET = 2
+
 
 class Picker(object):
     """
@@ -30,13 +31,19 @@ class Picker(object):
     render_buffer = None  # the render buffer within the frame buffer for offscreen drawing
     screen_rect = rect.EMPTY_RECT
     vbo_colors = None
-    
+
     is_active = True
-    
-    def __init__(self):
+
+    def __init__(self, select_group_object=True):
         # self.colored_objects = {} # renderer -> ( index, original color )
         gl_fbo.glInitFramebufferObjectEXT()
         self.picker_map = None
+        self.picker_blocks = []
+        self.picker_block_start = None
+
+        # whether or not selecting a member object of a group selects the whole
+        # group (True) or the sub-object (False)
+        self.select_group_object = select_group_object
 
     def destroy(self):
         self.vbo_colors = None
@@ -102,13 +109,13 @@ class Picker(object):
         gl.glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, gl.GL_COLOR_BUFFER_BIT, gl.GL_LINEAR)
         gl_fbo.glBindFramebufferEXT(gl.GL_READ_FRAMEBUFFER, 0)
 
-    def bind_picker_colors_for_lines(self, layer, object_count):
-        self.bind_picker_colors(layer, LINES_PICKER_OFFSET, object_count, True)
+    def bind_picker_colors_for_lines(self, layer, object_count, layer_manager=None):
+        self.bind_picker_colors(layer, LINES_PICKER_OFFSET, object_count, True, layer_manager)
 
-    def bind_picker_colors_for_points(self, layer, object_count):
-        self.bind_picker_colors(layer, POINTS_PICKER_OFFSET, object_count, False)
+    def bind_picker_colors_for_points(self, layer, object_count, layer_manager=None):
+        self.bind_picker_colors(layer, POINTS_PICKER_OFFSET, object_count, False, layer_manager)
 
-    def bind_picker_colors(self, layer, object_type, object_count, doubled=False):
+    def bind_picker_colors(self, layer, object_type, object_count, doubled=False, layer_manager=None):
         """
         bind the colors in the OpenGL context (right word?)
 
@@ -120,10 +127,10 @@ class Picker(object):
 
         :param object_count: how many objects need colors
 
-        :param doubled = False: whether to double the array (used for drawing line segments) 
+        :param doubled = False: whether to double the array (used for drawing line segments)
         """
         # Get range of picker colors for this layer and object type
-        color_data = self.get_next_color_block(layer, object_type, object_count)
+        color_data = self.get_next_color_block(layer, object_type, object_count, layer_manager)
 
         # NOTE: the color data array is doubled for lines because there are two
         # copies of each endpoint in the line data. See set_lines in
@@ -131,7 +138,7 @@ class Picker(object):
         if doubled:
             color_data = np.c_[color_data, color_data].reshape(-1)
 
-        self.vbo_colors = gl_vbo.VBO( color_data.view(dtype=np.uint8) )
+        self.vbo_colors = gl_vbo.VBO(color_data.view(dtype=np.uint8))
 
         gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
         self.vbo_colors.bind()
@@ -141,7 +148,14 @@ class Picker(object):
         self.vbo_colors.unbind()
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
 
-    def get_next_color_block(self, layer, object_type, object_count):
+    def get_next_color_block(self, layer, object_type, object_count, layer_manager):
+        if self.select_group_object and layer_manager is not None:
+           # if a layer is in a group, point to the group itself, rather than
+           # the component. Only when it's ungrouped will the components be
+           # separately selectable.
+            parent = layer_manager.get_folder_of_layer(layer)
+            if parent is not None and parent.grouped:
+                layer = parent
         start_range = self.picker_block_start
         end_range = self.picker_block_start + object_count
         self.picker_block_start = end_range
@@ -151,8 +165,8 @@ class Picker(object):
         log.debug("Generating color block for [%s] type=%d, #%d: %d-%d" % (layer, object_type, object_count, start_range, end_range))
         return color_data
 
-    def get_polygon_picker_colors(self, layer, object_count):
-        active_colors = self.get_next_color_block(layer, FILL_PICKER_OFFSET, object_count)
+    def get_polygon_picker_colors(self, layer, object_count, layer_manager=None):
+        active_colors = self.get_next_color_block(layer, FILL_PICKER_OFFSET, object_count, layer_manager)
         return active_colors
 
     def get_object_at_mouse_position(self, screen_point):
@@ -178,17 +192,17 @@ class Picker(object):
                                            outputType=str,
                                            )
 
-        if (color_string is not None) and (color_string[0: 3] != self.BACKGROUND_COLOR_STRING):
-
-            full_string = gl.glReadPixels(x=0,
-                                          # glReadPixels() expects coordinates with a lower-left origin
-                                          y=0,
-                                          width=rect.width(self.screen_rect),
-                                          height=rect.height(self.screen_rect),
-                                          format=gl.GL_RGBA,
-                                          type=gl.GL_UNSIGNED_BYTE,  # gl.GL_UNSIGNED_INT_8_8_8_8
-                                          outputType=str,
-                                          )
+        # if (color_string is not None) and (color_string[0: 3] != self.BACKGROUND_COLOR_STRING):
+        #     print "WTF?"
+        #     full_string = gl.glReadPixels(x=0,
+        #                                   # glReadPixels() expects coordinates with a lower-left origin
+        #                                   y=0,
+        #                                   width=rect.width(self.screen_rect),
+        #                                   height=rect.height(self.screen_rect),
+        #                                   format=gl.GL_RGBA,
+        #                                   type=gl.GL_UNSIGNED_BYTE,  # gl.GL_UNSIGNED_INT_8_8_8_8
+        #                                   outputType=str,
+        #                                   )
 
         self.unbind_frame_buffer()
 
@@ -209,12 +223,12 @@ class Picker(object):
         object_index = int(picked_color - start_color)
 
         return (layer, object_type, object_index)
-    
+
     @staticmethod
     def is_ugrid_point(obj):
         (layer, object_type, object_index) = obj
         return object_type == POINTS_PICKER_OFFSET
-    
+
     @staticmethod
     def is_ugrid_point_type(object_type):
         return object_type == POINTS_PICKER_OFFSET
@@ -229,6 +243,10 @@ class Picker(object):
         return object_type == LINES_PICKER_OFFSET
 
     @staticmethod
-    def is_polygon_fill(obj):
+    def is_interior(obj):
         (layer, object_type, object_index) = obj
         return type == FILL_PICKER_OFFSET
+
+    @staticmethod
+    def is_interior_type(object_type):
+        return object_type == FILL_PICKER_OFFSET

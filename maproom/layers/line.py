@@ -1,21 +1,20 @@
-import os
-import os.path
-import time
-import sys
 import numpy as np
 
 # Enthought library imports.
-from traits.api import Int, Unicode, Any, Str, Float, Enum, Property
+from traits.api import Any
+from traits.api import Int
+from traits.api import Str
+from traits.api import Unicode
 
-from ..library import rect
 from ..library.scipy_ckdtree import cKDTree
-from ..library.Boundary import Boundaries, PointsError
-from ..renderer import color_floats_to_int, data_types
+from ..library.Boundary import Boundaries
+from ..library.shapely_utils import shapely_to_polygon
+from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 
 from point import PointLayer
-from constants import *
+import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -24,27 +23,37 @@ progress_log = logging.getLogger("progress")
 
 class LineLayer(PointLayer):
     """Layer for points/lines/polygons.
-    
+
     """
     name = Unicode("Ugrid Layer")
-    
+
     type = Str("line")
-    
+
     line_segment_indexes = Any
 
-    pickable = True # this is a layer that supports picking
+    point_identifiers = Any
+
+    pickable = True  # this is a layer that supports picking
+
+    use_color_cycling = True
 
     visibility_items = ["points", "lines", "labels"]
-    
-    layer_info_panel = ["Layer name", "Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
+
+    layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     def __str__(self):
+        return PointLayer.__str__(self) + ", %d lines" % self.num_lines
+
+    @property
+    def num_lines(self):
         try:
-            lines = len(self.line_segment_indexes)
-        except:
-            lines = 0
-        return PointLayer.__str__(self) + ", %d lines" % lines
-    
+            return len(self.line_segment_indexes)
+        except TypeError:
+            return 0
+
+    def test_contents_equal(self, other):
+        return self.num_lines == other.num_lines and PointLayer.test_contents_equal(self, other)
+
     def new(self):
         super(LineLayer, self).new()
         self.line_segment_indexes = self.make_line_segment_indexes(0)
@@ -55,11 +64,11 @@ class LineLayer(PointLayer):
                 return str(len(self.line_segment_indexes))
             return "0"
         return PointLayer.get_info_panel_text(self, prop)
-        
+
     def visibility_item_exists(self, label):
         """Return keys for visibility dict lookups that currently exist in this layer
         """
-        ## fixme == does this need to be hard-coded?
+        # fixme == does this need to be hard-coded?
         if label in ["points", "labels"]:
             return self.points is not None
         elif label == "lines":
@@ -67,9 +76,10 @@ class LineLayer(PointLayer):
         else:
             raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
-    def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True):
+    def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True, style=None):
         n = np.alen(f_points)
-        self.set_layer_style_defaults()
+        if style is not None:
+            self.style = style
         self.points = self.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
@@ -89,10 +99,43 @@ class LineLayer(PointLayer):
             ] = f_line_segment_indexes
             self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0
-        
+
         if update_bounds:
             self.update_bounds()
-    
+
+    def set_simple_data(self, points):
+        count = np.alen(points)
+        lines = np.empty((count, 2), dtype=np.uint32)
+        lines[:,0] = np.arange(0, count, dtype=np.uint32)
+        lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
+        lines[count - 1, 1] = 0
+        self.set_data(points, 0.0, lines)
+
+    def set_data_from_geometry(self, geom, style=None):
+        error, points, starts, counts, identifiers, groups = shapely_to_polygon([geom])
+        count = np.alen(points)
+        lines = np.empty((count, 2), dtype=np.uint32)
+        self.point_identifiers = []
+        # there could be multiple rings if the geometry has holes or is a
+        # MultiPolygon, so each subset needs to be matched to its identifier
+        for s, c, ident in zip(starts, counts, identifiers):
+            # generate list connecting each point to the next
+            lines[s:s + c, 0] = np.arange(s, s + c, dtype=np.uint32)
+            lines[s:s + c, 1] = np.arange(s + 1, s + c + 1, dtype=np.uint32)
+            # but replace the last point with the first to close the loop
+            lines[s + c - 1, 1] = s
+            self.point_identifiers.append((s, s + c, ident))
+
+        self.set_data(points, 0.0, lines, style=style)
+        for i, (s, c, ident) in enumerate(zip(starts, counts, identifiers)):
+            self.line_segment_indexes.state[s:s + c] = state.POLYGON_NUMBER_SHIFT * i
+
+    def get_point_identifier(self, point_num):
+        for s, e, ident in self.point_identifiers:
+            if point_num >= s and point_num < e:
+                return s, e, ident
+        raise IndexError("Point number %d not found!" % point_num)
+
     def set_color(self, color):
         self.style.line_color = color
         self.points.color = color
@@ -100,7 +143,7 @@ class LineLayer(PointLayer):
 
     def can_save_as(self):
         return True
-    
+
     def lines_to_json(self):
         if self.line_segment_indexes is not None:
             return self.line_segment_indexes.tolist()
@@ -111,24 +154,24 @@ class LineLayer(PointLayer):
             self.line_segment_indexes = np.array([tuple(i) for i in jd], data_types.LINE_SEGMENT_DTYPE).view(np.recarray)
         else:
             self.line_segment_indexes = jd
-    
+
     def check_for_problems(self, window):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(self, allow_branches=False, allow_self_crossing=False)
         boundaries.check_errors(True)
-    
+
     def has_boundaries(self):
         return True
-    
+
     def get_all_boundaries(self):
         b = Boundaries(self, True, True)
         return b.boundaries
-    
+
     def get_points_lines(self):
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
         lines = self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points
         return points, lines
-    
+
     def select_outer_boundary(self):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(self, allow_branches=True, allow_self_crossing=True)
@@ -144,28 +187,28 @@ class LineLayer(PointLayer):
             count,
         ).view(np.recarray)
 
-    def clear_all_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_selections(self, mark_type=state.SELECTED):
         self.clear_all_point_selections(mark_type)
         self.clear_all_line_segment_selections(mark_type)
         self.increment_change_count()
 
-    def clear_all_line_segment_selections(self, mark_type=STATE_SELECTED):
+    def clear_all_line_segment_selections(self, mark_type=state.SELECTED):
         if (self.line_segment_indexes is not None):
             self.line_segment_indexes.state = self.line_segment_indexes.state & (0xFFFFFFFF ^ mark_type)
             self.increment_change_count()
 
-    def select_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
+    def select_line_segment(self, line_segment_index, mark_type=state.SELECTED):
         self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] | mark_type
         self.increment_change_count()
 
-    def deselect_line_segment(self, line_segment_index, mark_type=STATE_SELECTED):
+    def deselect_line_segment(self, line_segment_index, mark_type=state.SELECTED):
         self.line_segment_indexes.state[line_segment_index] = self.line_segment_indexes.state[line_segment_index] & (0xFFFFFFFF ^ mark_type)
         self.increment_change_count()
 
-    def is_line_segment_selected(self, line_segment_index, mark_type=STATE_SELECTED):
+    def is_line_segment_selected(self, line_segment_index, mark_type=state.SELECTED):
         return self.line_segment_indexes is not None and (self.line_segment_indexes.state[line_segment_index] & mark_type) != 0
 
-    def select_line_segments_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=STATE_SELECTED):
+    def select_line_segments_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=state.SELECTED):
         if (not is_toggle_mode and not is_add_mode):
             self.clear_all_line_segment_selections()
         point_indexes = np.where(np.logical_and(
@@ -180,7 +223,7 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.state[indexes] ^= mark_type
         self.increment_change_count()
 
-    def get_selected_and_dependent_point_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_and_dependent_point_indexes(self, mark_type=state.SELECTED):
         indexes = np.arange(0)
         if (self.points is not None):
             indexes = np.append(indexes, self.get_selected_point_indexes(mark_type))
@@ -191,10 +234,10 @@ class LineLayer(PointLayer):
         #
         return np.unique(indexes)
 
-    def get_num_points_selected(self, mark_type=STATE_SELECTED):
+    def get_num_points_selected(self, mark_type=state.SELECTED):
         return len(self.get_selected_and_dependent_point_indexes(mark_type))
 
-    def get_selected_line_segment_indexes(self, mark_type=STATE_SELECTED):
+    def get_selected_line_segment_indexes(self, mark_type=state.SELECTED):
         if (self.line_segment_indexes is None):
             return []
         #
@@ -225,7 +268,7 @@ class LineLayer(PointLayer):
                 p = path[len(path) - 1]
                 connections = self.find_points_connected_to_point(p)
                 for q in connections:
-                    if (not q in path):
+                    if (q not in path):
                         extended = []
                         extended.extend(path)
                         extended.append(q)
@@ -268,7 +311,7 @@ class LineLayer(PointLayer):
                 i = path[len(path) - 1]
                 connections = self.find_lines_connected_to_line(i)
                 for j in connections:
-                    if (not j in path):
+                    if (j not in path):
                         extended = []
                         extended.extend(path)
                         extended.append(j)
@@ -339,14 +382,14 @@ class LineLayer(PointLayer):
             offsets[: np.alen(offsets)] = 0
             offsets += np.where(self.line_segment_indexes.point2 >= point_index, 1, 0).astype(np.uint32)
             self.line_segment_indexes.point2 += offsets
-    
+
     def insert_point_in_line(self, world_point, line_segment_index):
         new_point_index = self.insert_point(world_point)
         point_index_1 = self.line_segment_indexes.point1[line_segment_index]
         point_index_2 = self.line_segment_indexes.point2[line_segment_index]
         color = self.line_segment_indexes.color[line_segment_index]
         state = self.line_segment_indexes.state[line_segment_index]
-        depth = (self.points.z[point_index_1] + self.points.z[point_index_2])/2
+        depth = (self.points.z[point_index_1] + self.points.z[point_index_2]) / 2
         self.points.z[new_point_index] = depth
         self.delete_line_segment(line_segment_index, True)
         self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, new_point_index, color, state, True)
@@ -360,7 +403,7 @@ class LineLayer(PointLayer):
         num_connections_made = 0
         for p_i in point_indexes:
             if ( p_i != point_index and not ( p_i in connected_points ) ):
-                l_s = np.array( [ ( p_i, point_index, DEFAULT_LINE_SEGMENT_COLOR, STATE_NONE ) ],
+                l_s = np.array( [ ( p_i, point_index, DEFAULT_LINE_SEGMENT_COLOR, state.CLEAR ) ],
                                 dtype = data_types.LINE_SEGMENT_DTYPE ).view( np.recarray )
                 self.line_segment_indexes = np.append( self.line_segment_indexes, l_s ).view( np.recarray )
                 num_connections_made += 1
@@ -369,7 +412,7 @@ class LineLayer(PointLayer):
     """
 
     def insert_line_segment(self, point_index_1, point_index_2):
-        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.style.line_color, STATE_NONE)
+        return self.insert_line_segment_at_index(len(self.line_segment_indexes), point_index_1, point_index_2, self.style.line_color, state.CLEAR)
 
     def insert_line_segment_at_index(self, l_s_i, point_index_1, point_index_2, color, state):
         l_s = np.array([(point_index_1, point_index_2, color, state)],
@@ -396,7 +439,6 @@ class LineLayer(PointLayer):
     def delete_line_segment(self, l_s_i):
         undo = UndoInfo()
         p = self.line_segment_indexes[l_s_i]
-        print "LABEL: deleting line: %s" % str(p)
         undo.index = l_s_i
         undo.data = np.copy(p)
         undo.flags.refresh_needed = True
@@ -517,10 +559,10 @@ class LineLayer(PointLayer):
 
         if (len(points_to_delete) > 0):
             return MergePointsCommand(self, list(points_to_delete))
-    
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer
-        
+
         """
         projected_point_data = self.compute_projected_point_data()
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
@@ -528,7 +570,7 @@ class LineLayer(PointLayer):
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         """Actually draw the screen using the current display canvas renderer
-        
+
         """
         log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
@@ -537,18 +579,18 @@ class LineLayer(PointLayer):
         # the points and line segments
         if layer_visibility["lines"]:
             renderer.draw_lines(self, picker, self.style,
-                            self.get_selected_line_segment_indexes(),
-                            self.get_selected_line_segment_indexes(STATE_FLAGGED))
+                                self.get_selected_line_segment_indexes(),
+                                self.get_selected_line_segment_indexes(state.FLAGGED))
 
         if layer_visibility["points"]:
             renderer.draw_points(self, picker, self.point_size,
-                             self.get_selected_point_indexes(),
-                             self.get_selected_point_indexes(STATE_FLAGGED))
+                                 self.get_selected_point_indexes(),
+                                 self.get_selected_point_indexes(state.FLAGGED))
 
         # the labels
         if layer_visibility["labels"]:
             renderer.draw_labels_at_points(self.points.z, s_r, p_r)
-            
+
         # render selections after everything else
         if (not picker.is_active):
             if layer_visibility["lines"]:
@@ -556,3 +598,67 @@ class LineLayer(PointLayer):
 
             if layer_visibility["points"]:
                 renderer.draw_selected_points(self.point_size, self.get_selected_point_indexes())
+
+
+class LineEditLayer(LineLayer):
+    """Layer for points/lines/rings.
+
+    """
+    name = Unicode("Line Edit Layer")
+
+    type = Str("line_edit")
+
+    parent_layer = Any
+
+    object_type = Int
+
+    object_index = Int
+
+    layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
+
+    transient_edit_layer = True
+
+    def get_new_points_after_move(self, indexes):
+        new_points = {}
+        for i in indexes:
+            # find the ring that contains the selected point
+            for s, e, line_layer_ident in self.point_identifiers:
+                if i >= s and i < e:
+                    sub_index = line_layer_ident['sub_index']
+                    ring_index = line_layer_ident['ring_index']
+                    geom, geom_ident = self.parent_layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
+                    geom_index = geom_ident['geom_index']
+                    # use a dict to coalesce changes in multiple points on the
+                    # same sub/ring to create a single change
+                    new_points[(geom_index, sub_index, ring_index)] = (geom_ident, self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
+        return new_points.values()
+
+    def get_new_points_after_insert(self, pt1, pt2, new_index):
+        new_points = {}
+        s, e, ident = self.get_point_identifier(pt1)
+        s2, e2, ident2 = self.get_point_identifier(pt2)
+        if ident != ident2:
+            log.error("Two points somehow aren't on the same ring")
+        sub_index = ident['sub_index']
+        ring_index = ident['ring_index']
+        geom, geom_ident = self.parent_layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
+        # geom_index = geom_ident['geom_index']
+        new_points = self.make_points(e - s + 1)  # start to pt1; add new index, pt1 + 1 to e
+        insertion_point = pt1 - s + 1
+        new_points[0:insertion_point] = self.points[s:s + insertion_point]
+        new_points[insertion_point] = self.points[new_index]
+        new_points[insertion_point + 1:e - s + 1] = self.points[pt1 + 1:e]
+        geom_points = [(geom_ident, new_points.view(data_types.POINT_XY_VIEW_DTYPE).xy)]
+        return geom_points
+
+    def rebuild_from_parent_layer(self):
+        geom, ident = self.parent_layer.get_geometry_from_object_index(self.object_index, 0, 0)
+        style_save = self.style.get_copy()
+        self.set_data_from_geometry(geom, style=style_save)
+        self.style = style_save
+
+    def update_transient_layer(self, command):
+        log.debug("Updating transient layer %s with %s" % (self.name, command))
+        if command and hasattr(command, 'transient_geometry_update'):
+            command.transient_geometry_update(self)
+        return self.parent_layer

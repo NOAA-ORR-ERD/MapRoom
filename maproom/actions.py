@@ -1,45 +1,88 @@
-import os
 import sys
+import wx
+import json
 
 # Enthought library imports.
-from pyface.api import ImageResource, GUI, FileDialog, YES, NO, OK, CANCEL
-from pyface.action.api import Action, ActionItem
-from pyface.tasks.action.api import TaskAction, EditorAction
-from traits.api import provides, on_trait_change, Property, Instance, Str, Unicode, Any, List, Event, Dict
+from pyface.api import ImageResource, GUI, FileDialog, OK
+from traits.api import Any
+from traits.api import Str
+from traits.api import on_trait_change
 
-from omnivore.framework.actions import TaskDynamicSubmenuGroup
+from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, TaskDynamicSubmenuGroup
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 import pane_layout
-from menu_commands import *
-from vector_object_commands import *
-from mouse_commands import *
+from menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand
+from mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLonCommand
 from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
+from layers import styleable_layers
 
 import logging
 log = logging.getLogger(__name__)
 
+
+class LayerAction(EditorAction):
+    """Superclass for actions that operate on layers.
+
+    Provides a common framework for usage in menubars and popup menus
+    """
+    def _update_popup_enabled(self, ui_state, popup_data):
+        layer = popup_data['layer']
+        self.enabled = self.is_popup_enabled(ui_state, layer)
+
+    def is_popup_enabled(self, ui_state, layer):
+        if self.enabled_name:
+            return getattr(ui_state, self.enabled_name)
+        return True
+
+    def get_layer(self, event):
+        if hasattr(event, 'popup_data'):
+            return event.popup_data['layer']
+        return self.active_editor.layer_tree_control.get_edit_layer()
+
+    def perform(self, event):
+        layer = self.get_layer(event)
+        if layer is not None:
+            self.perform_on_layer(layer, event)
+
+    def perform_on_layer(self, layer, event):
+        log.warning("Missing perform_on_layer method for %s" % self.name)
+
+
 class NewProjectAction(Action):
     """ An action for creating a new empty file that can be edited by a particular task
     """
-    name = 'New Project'
-    tooltip = 'Open an empty grid to create new layers'
-    
+    name = 'New Default Project'
+    tooltip = 'Open a new copy of the default project'
+
     def perform(self, event=None):
         task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
-        task.new()
+        wx.CallAfter(event.task.window.application.load_file, task.about_application, task)
+
+
+class NewEmptyProjectAction(Action):
+    """ An action for creating a new empty file that can be edited by a particular task
+    """
+    name = 'New Empty Project'
+    tooltip = 'Open an empty grid to create new layers'
+
+    def perform(self, event=None):
+        task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
+        wx.CallAfter(task.new)
+
 
 class SaveProjectAction(EditorAction):
     name = 'Save Project'
     accelerator = 'Ctrl+S'
     tooltip = 'Save the current project'
     image = ImageResource('file_save')
-    enabled_name = 'dirty' # enabled based on state of task.active_editor.dirty
+    enabled_name = 'can_save'  # enabled based on state of task.active_editor.dirty
 
     def perform(self, event):
-        self.active_editor.save(None)
+        self.active_editor.save()
+
 
 class SaveProjectAsAction(EditorAction):
     name = 'Save Project As...'
@@ -48,9 +91,43 @@ class SaveProjectAsAction(EditorAction):
     image = ImageResource('file_save_as')
 
     def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom")
-        if dialog.open() == OK:
-            self.active_editor.save(dialog.path)
+        self.active_editor.save(prompt=True)
+
+
+class SaveProjectTemplateAction(EditorAction):
+    name = 'Save Project as Template...'
+    tooltip = 'Save the current project as a template that can be reused'
+    image = ImageResource('file_save_as')
+
+    def perform(self, event):
+        name = event.task.prompt("Enter name for this template", "Save Project as Template", self.active_editor.layer_manager.root_name)
+        if name is not None:
+            self.active_editor.save_as_template(name)
+
+
+class LoadProjectTemplateGroup(TaskDynamicSubmenuGroup):
+    id = 'LoadProjectTemplateGroup'
+
+    event_name = Str('templates_changed')
+
+    def _get_items(self, layer=None):
+        items = []
+        names = self.task.window.application.get_available_user_data('project_templates')
+        print(names)
+        for name in sorted(names):
+            action = LoadProjectTemplateAction(name=name)
+            items.append(ActionItem(action=action))
+        return items
+
+
+class LoadProjectTemplateAction(Action):
+    name = '<load template>'
+    tooltip = 'Open project template'
+
+    def perform(self, event=None):
+        uri = event.task.window.application.get_user_dir_filename('project_templates', self.name)
+        wx.CallAfter(event.task.window.application.load_file, uri, event.task)
+
 
 class SaveCommandLogAction(EditorAction):
     name = 'Save Command Log...'
@@ -61,6 +138,7 @@ class SaveCommandLogAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save_log(dialog.path)
 
+
 class SaveLayerAction(EditorAction):
     name = 'Save Layer'
     tooltip = 'Save the currently selected layer'
@@ -68,6 +146,7 @@ class SaveLayerAction(EditorAction):
 
     def perform(self, event):
         self.active_editor.save_layer(None)
+
 
 class SaveLayerAsAction(EditorAction):
     name = 'Save Layer As...'
@@ -79,22 +158,25 @@ class SaveLayerAsAction(EditorAction):
         if dialog.open() == OK:
             self.active_editor.save_layer(dialog.path)
 
+
 class SaveLayerAsFormatAction(EditorAction):
     loader = Any
-    
+    ext = Str
+
     def _name_default(self):
-        return "%s (%s)" % (self.loader.name, self.loader.extensions[0])
-    
+        return "%s (%s)" % (self.loader.extension_name(self.ext), self.ext)
+
     def perform(self, event):
         dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard=self.loader.get_file_dialog_wildcard())
         if dialog.open() == OK:
             self.active_editor.save_layer(dialog.path)
 
+
 class SaveLayerGroup(TaskDynamicSubmenuGroup):
     """ A menu for changing the active task in a task window.
     """
     id = 'SaveLayerGroup'
-    
+
     event_name = Str('layer_selection_changed')
 
     def _get_items(self, layer=None):
@@ -104,19 +186,13 @@ class SaveLayerGroup(TaskDynamicSubmenuGroup):
             valid = valid_save_formats(layer)
             if valid:
                 for item in valid:
-                    action = SaveLayerAsFormatAction(loader=item[0])
-                    items.append(ActionItem(action=action))
-            
+                    loader = item[0]
+                    for ext in loader.extensions:
+                        action = SaveLayerAsFormatAction(loader=loader, ext=ext)
+                        items.append(ActionItem(action=action))
+
         return items
 
-class SaveImageAction(EditorAction):
-    name = 'Save As Image...'
-    tooltip = 'Save a bitmap image of the current view'
-
-    def perform(self, event):
-        dialog = FileDialog(parent=event.task.window.control, action='save as')
-        if dialog.open() == OK:
-            self.active_editor.save_image(dialog.path)
 
 class RevertProjectAction(EditorAction):
     name = 'Revert Project'
@@ -125,29 +201,27 @@ class RevertProjectAction(EditorAction):
 
     def perform(self, event):
         message = "Revert project from\n\n%s?" % self.active_editor.document.metadata.uri
-        result = event.task.confirm(message=message, default=NO, title='Revert Project?')
-        if result == CANCEL:
-            return
-        elif result == YES:
+        if event.task.confirm(message=message, title='Revert Project?'):
             self.active_editor.load_omnivore_document(self.active_editor.document)
 
+
 class DefaultStyleAction(EditorAction):
-    name = 'Default Style...'
+    name = 'Default Styles...'
     tooltip = 'Choose the line, fill and font styles'
 
     def perform(self, event):
-        dialog = StyleDialog(parent=event.task.window.control, action='save as')
-        if dialog.open() == OK:
-            self.active_editor.save_layer(dialog.path)
-
-    def perform(self, event):
         GUI.invoke_later(self.show_dialog, self.active_editor)
-    
+
     def show_dialog(self, project):
-        dialog = StyleDialog(project)
+        dialog = StyleDialog(project, styleable_layers)
         status = dialog.ShowModal()
         if status == wx.ID_OK:
-            project.layer_manager.update_default_style(dialog.get_style())
+            project.layer_manager.update_default_styles(dialog.get_styles())
+            if dialog.save_for_future:
+                project.task.remember_styles(project.layer_manager.default_styles)
+            if dialog.apply_to_current:
+                project.layer_manager.apply_default_styles()
+
 
 class BoundingBoxAction(EditorAction):
     name = 'Show Bounding Boxes'
@@ -160,9 +234,10 @@ class BoundingBoxAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
-    def _update_checked(self):
+    def _update_checked(self, ui_state):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_bounding_boxes
+
 
 class PickerFramebufferAction(EditorAction):
     name = 'Show Picker Framebuffer'
@@ -175,9 +250,10 @@ class PickerFramebufferAction(EditorAction):
         GUI.invoke_later(self.active_editor.layer_canvas.render)
 
     @on_trait_change('active_editor')
-    def _update_checked(self):
+    def _update_checked(self, ui_state):
         if self.active_editor:
             self.checked = self.active_editor.layer_canvas.debug_show_picker_framebuffer
+
 
 class ZoomInAction(EditorAction):
     name = 'Zoom In'
@@ -190,6 +266,7 @@ class ZoomInAction(EditorAction):
         cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
         self.active_editor.process_command(cmd)
 
+
 class ZoomOutAction(EditorAction):
     name = 'Zoom Out'
     tooltip = 'Decrease magnification'
@@ -200,6 +277,7 @@ class ZoomOutAction(EditorAction):
         units_per_pixel = c.zoom_out()
         cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
         self.active_editor.process_command(cmd)
+
 
 class ZoomToFit(EditorAction):
     name = 'Zoom to Fit'
@@ -212,17 +290,20 @@ class ZoomToFit(EditorAction):
         cmd = ViewportCommand(None, center, units_per_pixel)
         self.active_editor.process_command(cmd)
 
-class ZoomToLayer(EditorAction):
+
+class ZoomToLayer(LayerAction):
     name = 'Zoom to Layer'
     tooltip = 'Set magnification to show current layer'
     enabled_name = 'layer_zoomable'
     image = ImageResource('zoom_to_layer')
 
-    def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = ViewportCommand(sel_layer)
-            self.active_editor.process_command(cmd)
+    def is_popup_enabled(self, ui_state, layer):
+        return layer.is_zoomable()
+
+    def perform_on_layer(self, layer, event):
+        cmd = ViewportCommand(layer)
+        self.active_editor.process_command(cmd)
+
 
 class NewVectorLayerAction(EditorAction):
     name = 'New Verdat Layer'
@@ -233,13 +314,15 @@ class NewVectorLayerAction(EditorAction):
         cmd = AddLayerCommand("vector")
         self.active_editor.process_command(cmd)
 
+
 class NewLonLatLayerAction(EditorAction):
-    name = 'New Lon/Lat Layer'
+    name = 'New Graticule Layer'
     tooltip = 'Create new longitude/latitude grid layer'
 
     def perform(self, event):
         cmd = AddLayerCommand("grid")
         self.active_editor.process_command(cmd)
+
 
 class NewCompassRoseLayerAction(EditorAction):
     name = 'New Compass Rose Layer'
@@ -249,6 +332,7 @@ class NewCompassRoseLayerAction(EditorAction):
         cmd = AddLayerCommand("compass_rose")
         self.active_editor.process_command(cmd)
 
+
 class NewAnnotationLayerAction(EditorAction):
     name = 'New Annotation Layer'
     tooltip = 'Create new annotation layer'
@@ -256,6 +340,7 @@ class NewAnnotationLayerAction(EditorAction):
     def perform(self, event):
         cmd = AddLayerCommand("annotation")
         self.active_editor.process_command(cmd)
+
 
 class NewWMSLayerAction(EditorAction):
     name = 'New WMS Layer'
@@ -265,6 +350,7 @@ class NewWMSLayerAction(EditorAction):
         cmd = AddLayerCommand("wms")
         self.active_editor.process_command(cmd)
 
+
 class NewTileLayerAction(EditorAction):
     name = 'New Tile Layer'
     tooltip = 'Create new tile background service layer'
@@ -273,50 +359,91 @@ class NewTileLayerAction(EditorAction):
         cmd = AddLayerCommand("tile")
         self.active_editor.process_command(cmd)
 
-class DeleteLayerAction(EditorAction):
+
+class NewRNCLayerAction(EditorAction):
+    name = 'New RNC Download Selection Layer (-360 - 0)'
+    tooltip = 'Create new layer for downloading RNC images in the -360 to 0 map regime'
+
+    def perform(self, event):
+        from maproom.templates import get_template_path
+        path = get_template_path("RNCProdCat_*.bna")
+        event.task.window.application.load_file(path, event.task, regime=0)
+
+
+class NewRNCLayer360Action(EditorAction):
+    name = 'New RNC Download Selection Layer (0 - 360)'
+    tooltip = 'Create new layer for downloading RNC images in the 0 to 360 map regime'
+
+    def perform(self, event):
+        from maproom.templates import get_template_path
+        path = get_template_path("RNCProdCat_*.bna")
+        event.task.window.application.load_file(path, event.task, regime=360)
+
+
+class DeleteLayerAction(LayerAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
     enabled_name = 'layer_selected'
     image = ImageResource('delete_layer')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.delete_selected_layer)
+    def is_popup_enabled(self, ui_state, layer):
+        return True  # layer may not be selected using context menu
 
-class RaiseLayerAction(EditorAction):
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.delete_selected_layer, layer)
+
+
+class RaiseLayerAction(LayerAction):
     name = 'Raise Layer'
     tooltip = 'Move layer up in the stacking order'
     enabled_name = 'layer_above'
     image = ImageResource('raise.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.raise_selected_layer)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_raisable(layer)
 
-class RaiseToTopAction(EditorAction):
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.raise_selected_layer, layer)
+
+
+class RaiseToTopAction(LayerAction):
     name = 'Raise Layer To Top'
     tooltip = 'Move layer to the top'
     enabled_name = 'layer_above'
     image = ImageResource('raise_to_top.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.raise_to_top)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_raisable(layer)
 
-class LowerToBottomAction(EditorAction):
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.raise_to_top, layer)
+
+
+class LowerToBottomAction(LayerAction):
     name = 'Lower Layer To Bottom'
     tooltip = 'Move layer to the bottom'
     enabled_name = 'layer_below'
     image = ImageResource('lower_to_bottom.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.lower_to_bottom)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_lowerable(layer)
 
-class LowerLayerAction(EditorAction):
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.lower_to_bottom, layer)
+
+
+class LowerLayerAction(LayerAction):
     name = 'Lower Layer'
     tooltip = 'Move layer down in the stacking order'
     enabled_name = 'layer_below'
     image = ImageResource('lower.png')
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer)
+    def is_popup_enabled(self, ui_state, layer):
+        return ui_state.layer_manager.is_lowerable(layer)
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.lower_selected_layer, layer)
+
 
 class TriangulateLayerAction(EditorAction):
     name = 'Triangulate Layer'
@@ -329,27 +456,30 @@ class TriangulateLayerAction(EditorAction):
         pane = task.window.get_dock_pane('maproom.triangulate_pane')
         pane.visible = True
 
+
 class ToPolygonLayerAction(EditorAction):
     name = 'Convert to Polygon Layer'
     tooltip = 'Create new polygon layer from boundaries of current layer'
     enabled_name = 'layer_has_boundaries'
 
     def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = ToPolygonLayerCommand(sel_layer)
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = ToPolygonLayerCommand(edit_layer)
             self.active_editor.process_command(cmd)
+
 
 class ToVerdatLayerAction(EditorAction):
     name = 'Convert to Editable Layer'
-    tooltip = 'Create new editable layer from polygons of current layer'
+    tooltip = 'Create new editable layer from rings of current layer'
     enabled_name = 'layer_has_boundaries'
 
     def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            cmd = ToVerdatLayerCommand(sel_layer)
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = ToVerdatLayerCommand(edit_layer)
             self.active_editor.process_command(cmd)
+
 
 class MergeLayersAction(EditorAction):
     name = 'Merge Layers'
@@ -359,7 +489,7 @@ class MergeLayersAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.show_dialog, self.active_editor)
-    
+
     def show_dialog(self, project):
         layers = project.layer_manager.get_mergeable_layers()
 
@@ -410,6 +540,7 @@ class MergeLayersAction(EditorAction):
                 cmd = MergeLayersCommand(layer_a, layer_b, depth_unit)
                 project.process_command(cmd)
 
+
 class MergePointsAction(EditorAction):
     name = 'Merge Duplicate Points'
     tooltip = 'Merge points within a layer'
@@ -421,6 +552,7 @@ class MergePointsAction(EditorAction):
         pane = task.window.get_dock_pane('maproom.merge_points_pane')
         pane.visible = True
 
+
 class JumpToCoordsAction(EditorAction):
     name = 'Jump to Coordinates'
     accelerator = 'Ctrl+J'
@@ -429,6 +561,7 @@ class JumpToCoordsAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_canvas.do_jump_coords)
+
 
 class ClearSelectionAction(EditorAction):
     name = 'Clear Selection'
@@ -439,6 +572,7 @@ class ClearSelectionAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.clear_selection)
 
+
 class DeleteSelectionAction(EditorAction):
     name = 'Delete Selection'
     accelerator = 'DEL'
@@ -447,7 +581,22 @@ class DeleteSelectionAction(EditorAction):
     image = ImageResource('delete_selection.png')
 
     def perform(self, event):
-        GUI.invoke_later(self.active_editor.delete_selection)
+        # FIXME: OS X hack! DELETE key in the menu overrides any text field
+        # usage, so we have to catch it here and force the textctrl to do the
+        # delete programmatically
+        active = wx.Window.FindFocus()
+        if sys.platform == "darwin" and hasattr(active, "EmulateKeyPress"):
+            # EmulateKeyPress on wx.TextCtrl requires an actual KeyEvent
+            # which I haven't been able to create. Workaround: simulate what
+            # the delete key should do
+            start, end = active.GetSelection()
+            if start == end:
+                active.Remove(start, end + 1)
+            else:
+                active.Remove(start, end)
+        else:
+            GUI.invoke_later(self.active_editor.delete_selection)
+
 
 class ClearFlaggedAction(EditorAction):
     name = 'Clear Flagged'
@@ -457,6 +606,7 @@ class ClearFlaggedAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.clear_all_flagged)
 
+
 class FlaggedToSelectionAction(EditorAction):
     name = 'Select Flagged'
     enabled_name = 'layer_has_flagged'
@@ -464,6 +614,7 @@ class FlaggedToSelectionAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.select_all_flagged)
+
 
 class BoundaryToSelectionAction(EditorAction):
     name = 'Select Boundary'
@@ -483,14 +634,16 @@ class FindPointsAction(EditorAction):
     def perform(self, event):
         GUI.invoke_later(self.active_editor.layer_canvas.do_find_points)
 
-class CheckSelectedLayerAction(EditorAction):
+
+class CheckSelectedLayerAction(LayerAction):
     name = 'Check Layer For Errors'
     accelerator = 'Ctrl+E'
     enabled_name = 'layer_selected'
     tooltip = 'Check for valid layer construction'
 
-    def perform(self, event):
-        GUI.invoke_later(self.active_editor.check_for_errors)
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.check_for_errors, layer)
+
 
 class CheckAllLayersAction(EditorAction):
     name = 'Check All Layers For Errors'
@@ -499,6 +652,7 @@ class CheckAllLayersAction(EditorAction):
 
     def perform(self, event):
         GUI.invoke_later(self.active_editor.check_all_layers_for_errors)
+
 
 class OpenLogAction(Action):
     name = 'View Command History Log'
@@ -509,20 +663,23 @@ class OpenLogAction(Action):
         filename = app.get_log_file_name("command_log", ".mrc")
         app.load_file(filename, task_id="omnivore.framework.text_edit_task")
 
+
 class DebugAnnotationLayersAction(EditorAction):
     name = 'Sample Annotation Layer'
     tooltip = 'Create a sample annotation layer with examples of all vector objects'
 
     def perform(self, event):
         GUI.invoke_later(self.after, self.active_editor)
-    
+
     def after(self, project):
         import debug
         lm = project.layer_manager
-        debug.debug_objects(lm)
+        undo = debug.debug_objects(lm)
+        project.process_flags(undo.flags)
         project.update_default_visibility()
         project.layer_metadata_changed(None)
         project.layer_canvas.zoom_to_fit()
+
 
 class CopyStyleAction(EditorAction):
     name = 'Copy Style'
@@ -533,6 +690,7 @@ class CopyStyleAction(EditorAction):
     def perform(self, event):
         self.active_editor.copy_style()
 
+
 class PasteStyleAction(EditorAction):
     name = 'Paste Style'
     accelerator = 'Alt+Ctrl+V'
@@ -542,57 +700,166 @@ class PasteStyleAction(EditorAction):
     def perform(self, event):
         self.active_editor.paste_style()
 
-class DuplicateLayerAction(EditorAction):
-    name = 'Duplicate'
+
+class DuplicateLayerAction(LayerAction):
+    name = 'Duplicate Layer'
     accelerator = 'Ctrl+D'
     tooltip = 'Duplicate the current layer'
     enabled_name = 'can_copy'
 
-    def perform(self, event):
-        sel_layer = self.active_editor.layer_tree_control.get_selected_layer()
-        if sel_layer is not None:
-            json_data = sel_layer.serialize_json(-999, True)
-            if json_data:
-                text = json.dumps(json_data)
-                cmd = PasteLayerCommand(sel_layer, text, self.active_editor.layer_canvas.world_center)
-                self.active_editor.process_command(cmd)
+    def is_popup_enabled(self, ui_state, layer):
+        return hasattr(layer, "center_point_index")  # only vector layers
+
+    def perform_on_layer(self, layer, event):
+        json_data = layer.serialize_json(-999, True)
+        if json_data:
+            text = json.dumps(json_data)
+            cmd = PasteLayerCommand(layer, text, self.active_editor.layer_canvas.world_center)
+            self.active_editor.process_command(cmd)
+
 
 class ManageWMSAction(EditorAction):
     name = 'Manage WMS Servers...'
-    
+
     def perform(self, event):
-        dlg = ListReorderDialog(event.task.window.control, BackgroundWMSDownloader.get_known_hosts(), lambda a:getattr(a, 'name'), prompt_for_wms, "Manage WMS Servers")
+        hosts = BackgroundWMSDownloader.get_known_hosts()
+        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: a.label_helper(), prompt_for_wms, "Manage WMS Servers", default_helper=lambda a,v: a.default_helper(v))
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundWMSDownloader.set_known_hosts(items)
             event.task.remember_wms()
+            self.active_editor.layer_manager.update_map_server_ids("wms", hosts, items)
             self.active_editor.refresh(True)
         dlg.Destroy()
 
+
 class ManageTileServersAction(EditorAction):
     name = 'Manage Tile Servers...'
-    
+
     def perform(self, event):
         hosts = BackgroundTileDownloader.get_known_hosts()
-        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), prompt_for_tile, "Manage Tile Servers")
+        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: a.label_helper(), prompt_for_tile, "Manage Tile Servers", default_helper=lambda a,v: a.default_helper(v))
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundTileDownloader.set_known_hosts(items)
             event.task.remember_tile_servers()
+            self.active_editor.layer_manager.update_map_server_ids("tiles", hosts, items)
             self.active_editor.refresh(True)
         dlg.Destroy()
 
+
 class ClearTileCacheAction(EditorAction):
     name = 'Clear Tile Cache...'
-    
+
     def perform(self, event):
         hosts = BackgroundTileDownloader.get_known_hosts()
-        dlg = CheckItemDialog(event.task.window.control, hosts, lambda a:getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
+        dlg = CheckItemDialog(event.task.window.control, hosts, lambda a: getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
         if dlg.ShowModal() == wx.ID_OK:
             try:
                 for host in dlg.get_checked_items():
                     host.clear_cache(event.task.get_tile_cache_root())
             except OSError, e:
                 event.task.window.window.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
-                
+
         dlg.Destroy()
+
+
+class NormalizeLongitudeAction(EditorAction):
+    name = 'Normalize Longitude'
+    tooltip = 'Adjust longitudes so the map lies between 0 and 360W'
+
+    def perform(self, event):
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = NormalizeLongitudeCommand(edit_layer)
+            self.active_editor.process_command(cmd)
+
+
+class SwapLatLonAction(EditorAction):
+    name = 'Swap Lat && Lon'
+    tooltip = 'Exchange coordinate pairs to repair an incorrectly formatted input file'
+
+    def perform(self, event):
+        edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
+        if edit_layer is not None:
+            cmd = SwapLatLonCommand(edit_layer)
+            self.active_editor.process_command(cmd)
+
+
+class DebugLayerManagerAction(EditorAction):
+    name = 'Show Layer Manager Info'
+    tooltip = 'Show a debug output describing the currently displayed layers'
+
+    def perform(self, event):
+        lm = self.active_editor.layer_manager
+        text = lm.debug_structure()
+        print(text)
+
+
+
+class GroupLayerAction(LayerAction):
+    name = 'Group Sublayers'
+    tooltip = 'Group all children of the selected layer into a single unit'
+    enabled_name = 'layer_is_groupable'
+    image = ImageResource('shape_group.png')
+
+    def is_popup_enabled(self, ui_state, layer):
+        return layer.has_groupable_objects() and not layer.grouped
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.group_children, layer)
+
+
+class UngroupLayerAction(LayerAction):
+    name = 'Ungroup Into Sublayers'
+    tooltip = 'Remove grouping and display child layers'
+    enabled_name = 'layer_is_groupable'
+    image = ImageResource('shape_ungroup.png')
+
+    def is_popup_enabled(self, ui_state, layer):
+        return layer.has_groupable_objects() and layer.grouped
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.ungroup_children, layer)
+
+
+class RenameLayerAction(LayerAction):
+    name = 'Rename Layer'
+    tooltip = 'Rename layer'
+
+    def perform_on_layer(self, layer, event):
+        GUI.invoke_later(self.active_editor.layer_tree_control.start_rename, layer)
+
+
+class StartTimeAction(LayerAction):
+    name = 'Start Time'
+    tooltip = 'Set time that layer becomes active'
+    dialog_info = 'Set start time of %s\nto start time of:'
+    cmd = StartTimeCommand
+
+    def get_time(self, layer):
+        return layer.start_time
+
+    def perform_on_layer(self, layer, event):
+        layers = self.active_editor.layer_manager.get_playback_layers(layer)
+        dlg = wx.SingleChoiceDialog(
+                self.active_editor.layer_tree_control, self.dialog_info % layer.name, self.name,
+                [a.name for a in layers],
+                wx.CHOICEDLG_STYLE
+                )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            source_layer = layers[dlg.GetSelection()]
+            print('You selected: %s\n' % source_layer)
+            cmd = self.cmd(layer, self.get_time(source_layer))
+            self.active_editor.process_command(cmd)
+
+
+class EndTimeAction(StartTimeAction):
+    name = 'End Time'
+    tooltip = 'Set time that layer stops being active'
+    dialog_info = 'Set end time of %s\nto end time of:'
+    cmd = EndTimeCommand
+
+    def get_time(self, layer):
+        return layer.end_time

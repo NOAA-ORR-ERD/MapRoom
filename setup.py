@@ -10,8 +10,6 @@ python setup.py build_ext --inplace
 """
 
 
-from distutils.core import setup
-from distutils.extension import Extension
 from Cython.Distutils import build_ext
 from setuptools import setup, find_packages, Extension
 
@@ -45,16 +43,19 @@ elif sys.platform == "darwin":
 bitmap = Extension("maproom.library.Bitmap",
                    sources=["maproom/library/Bitmap.pyx"],
                    include_dirs=[numpy.get_include()],
+                   extra_compile_args = ["-O3" ],
                    )
 
 shape = Extension("maproom.library.Shape",
                   sources=["maproom/library/Shape.pyx"],
                   include_dirs=[numpy.get_include()],
+                  extra_compile_args = ["-O3" ],
                   )
 
 tree = Extension("maproom.library.scipy_ckdtree",
                  sources=["maproom/library/scipy_ckdtree.pyx"],
                  include_dirs=[numpy.get_include()],
+                 extra_compile_args = ["-O3" ],
                  )
 
 tessellator = Extension("maproom.renderer.gl.Tessellator",
@@ -62,6 +63,7 @@ tessellator = Extension("maproom.renderer.gl.Tessellator",
                         include_dirs=gl_include_dirs,
                         library_dirs=gl_library_dirs,
                         libraries=gl_libraries,
+                        extra_compile_args = ["-O3" ],
                         )
 
 render = Extension("maproom.renderer.gl.Render",
@@ -69,15 +71,65 @@ render = Extension("maproom.renderer.gl.Render",
                    include_dirs=gl_include_dirs,
                    library_dirs=gl_library_dirs,
                    libraries=gl_libraries,
+                   extra_compile_args = ["-O3" ],
                    )
 
-ext_modules = [bitmap, shape, tree, tessellator, render]
+# pytriangle extension
+
+DEFINES = [("TRILIBRARY", None), # this builds Triangle as a lib, rather than as a command line program.
+           ("NO_TIMER", None), # don't need the timer code (*nix specific anyway)
+           ("REDUCED", None),
+           ]
+
+# Add the defines for disabling the FPU extended precision           ] 
+## fixme: this needs a lot of work!
+##        it's really compiler dependent, not machine dependent
+if sys.platform == 'darwin':
+    print "adding no CPU flags for mac"
+    ## according to:
+    ## http://www.christian-seiler.de/projekte/fpmath/
+    ## nothing special is required on OS-X !
+    ##
+    ## """
+    ##     the precision is always determined by the largest operhand type in C.
+    ## 
+    ##     Because of this, Mac OS X does not provide any C wrapper macros to
+    ##     change the internal precision setting of the x87 FPU. It is simply
+    ##     not necessary. Should this really be wanted, inline assembler would
+    ##     probably be possible, I haven't tested this, however.
+
+
+    ##     Simply use the correct datatype and the operations performed will have the
+    ##     correct semantics
+    ## """
+elif sys.platform == 'win32':
+    print "adding define for Windows for FPU management"
+    DEFINES.append(('CPU86', None))
+elif 'linux' in sys.platform :#  something for linux here...
+    print "adding CPU flags for Intel Linux"
+    DEFINES.append(('LINUX', None))
+else:
+    raise RuntimeError("this system isn't supported for building yet")
+
+pytriangle = Extension(
+    "pytriangle",
+    sources = [ "deps/pytriangle-1.6.1/src/pytriangle.pyx",
+                "deps/pytriangle-1.6.1/triangle/triangle.c" ],
+    include_dirs = [ numpy.get_include(),
+                     "deps/pytriangle-1.6.1/triangle",
+                     ],
+    define_macros = DEFINES,
+)
+
+
+
+
+ext_modules = [bitmap, shape, tree, tessellator, render, pytriangle]
 #ext_modules = [tessellator]
 
 full_version = Version.VERSION
 spaceless_version = Version.VERSION.replace(" ", "_")
 
-import omnivore
 import maproom
 
 BUILD_APP = False
@@ -101,12 +153,20 @@ elif sys.platform.startswith("darwin") and "py2app" in sys.argv:
 
 data_files = []
 options = {}
+package_data = {
+    'maproom': [
+        'renderer/gl/font.png',
+        'templates/*.bna',
+        'icons/*',
+        ],
+}
 
 base_dist_dir = "dist-%s" % spaceless_version
 win_dist_dir = os.path.join(base_dist_dir, "win")
 mac_dist_dir = os.path.join(base_dist_dir, "mac")
 
 if BUILD_APP:
+    import omnivore
     includes = []
     excludes = []
     
@@ -119,6 +179,12 @@ if BUILD_APP:
     import pyface
     data_files.extend(omnivore.get_py2exe_data_files(pyface, excludes=["*/qt4/*", "*/pyface/images/*.jpg"]))
 
+    data_files.extend([
+        ("maproom/templates",
+            glob("maproom/templates/*.bna")
+            ),
+        ])
+    
     includes = [
         "ctypes",
         "ctypes.util",
@@ -193,6 +259,7 @@ if BUILD_APP:
         # copied over
         import shapely
         libgeos = os.path.join(os.path.dirname(shapely.__file__), "geos_c.dll")
+        import requests.certs
         data_files.extend([
             ("maproom/renderer/gl",
                 glob("maproom/renderer/gl/*.pyd")
@@ -202,6 +269,7 @@ if BUILD_APP:
              ),
             ("pyproj/data", pyproj_data),
             ("shapely", [libgeos]),
+            ("requests",[requests.certs.where()]),
         ])
 
         # Add missing DLL files that py2exe doesn't pull in automatically.
@@ -316,14 +384,27 @@ try:
             'pyproj',
             'cython',
             'shapely',
-            'pytest',
+            'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
             'coverage',
             'pytest-cov',
             'docutils',
             'markdown',
+            'reportlab',
+            'docutils',
+            'pyparsing',
+            'requests',
+            'python-dateutil',
+            'netCDF4',
+            'omnivore-framework>=1.0rc9',
+            'wxpython>=4.0.0b2',
             ],
+        setup_requires=[
+            'packaging',
+        ],
         data_files=data_files,
         packages=find_packages(),
+        package_data=package_data,
+        ext_modules=ext_modules,
         app=["maproom.py"],
         entry_points = """
 
@@ -336,7 +417,8 @@ try:
             icon_resources=[(1, "maproom/icons/maproom.ico")],
         )],
         options=options,
-    )
+        zip_safe = False,
+   )
 
     if APP_TARGET == "win":
         remove_pyc(win_dist_dir)

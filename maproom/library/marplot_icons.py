@@ -1,20 +1,24 @@
+# flake8: noqa
+#
 # Automatically generated file, DO NOT EDIT!",
 # Generated from resources/marplot/fonts/parse_marplot.py",
+
 
 def get_wx_bitmap(icon_num):
     import wx
     import cStringIO
-    
+
     data = marplot_icon_data[icon_num]
-    image = wx.ImageFromStream(cStringIO.StringIO(data))
-    bitmap = wx.BitmapFromImage(image)
+    image = wx.Image(cStringIO.StringIO(data))
+    bitmap = wx.Bitmap(image)
     return bitmap
+
 
 def get_numpy_bitmap(icon_num):
     from PIL import Image
     import numpy as np
     import cStringIO
-    
+
     data = marplot_icon_data[icon_num]
     size = list(marplot_icon_max_size)
     size[1] += 1  # hack to fix vertical centering
@@ -24,6 +28,7 @@ def get_numpy_bitmap(icon_num):
     y = (image.size[1] - overlay.size[1]) / 2 + 1
     image.paste(overlay, (x, y))
     return np.array(image)
+
 
 marplot_icon_max_size = (41, 36)
 

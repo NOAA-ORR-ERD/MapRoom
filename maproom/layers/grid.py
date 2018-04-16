@@ -12,24 +12,27 @@ from base import ScreenLayer
 import logging
 log = logging.getLogger(__name__)
 
-class Grid(ScreenLayer):
-    """Root layer
-    
-    Only one root layer per project.
+
+class Graticule(ScreenLayer):
+    """Graticule
     """
-    name = Unicode("Lon/Lat Grid")
-    
+    name = Unicode("Graticule")
+
     type = Str("grid")
-    
+
     skip_on_insert = True
-    
+
+    # class attributes
+
+    bounded = False
+
+    background = True
+
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)
-    # a nice amount of spacing between lines
-    REFERENCE_PIXEL_SIZE = (100, 100)
-    
+
     def resize(self, renderer, world_rect, screen_rect):
-        prefs = renderer.canvas.project.task.get_preferences()
+        prefs = renderer.canvas.project.task.preferences
         if prefs.coordinate_display_format == "decimal degrees":
             self.grid = DecimalDegreeGridLines()
         else:
@@ -37,17 +40,19 @@ class Grid(ScreenLayer):
         self.lat_step = self.grid.get_step_size(0)
         self.lon_step = self.grid.get_step_size(0)
 
+        ref_pixel_size = prefs.grid_spacing
+
         degrees_lon_per_pixel = float(rect.width(world_rect)) / float(rect.width(screen_rect))
         degrees_lat_per_pixel = float(rect.height(world_rect)) / float(rect.height(screen_rect))
 
-        self.lon_step = self.grid.get_step_size(self.REFERENCE_PIXEL_SIZE[0] * degrees_lon_per_pixel)
+        self.lon_step = self.grid.get_step_size(ref_pixel_size * degrees_lon_per_pixel)
         self.lon_steps = np.arange(
             world_rect[0][0] + self.lon_step - world_rect[0][0] % self.lon_step,
             world_rect[1][0],
             self.lon_step,
             dtype=np.float64)
 
-        self.lat_step = self.grid.get_step_size(self.REFERENCE_PIXEL_SIZE[1] * degrees_lat_per_pixel)
+        self.lat_step = self.grid.get_step_size(ref_pixel_size * degrees_lat_per_pixel)
         self.lat_steps = np.arange(
             world_rect[0][1] + self.lat_step - world_rect[0][1] % self.lat_step,
             world_rect[1][1],
@@ -60,16 +65,16 @@ class Grid(ScreenLayer):
             return
         log.log(5, "Rendering grid!!! pick=%s" % (picker))
         render_window = renderer.canvas
-#        print "projected_rect = %r" % (projected_rect,)
-#        print "screen_rect = %r" % (screen_rect,)
+        # print "projected_rect = %r" % (projected_rect,)
+        # print "screen_rect = %r" % (screen_rect,)
         self.resize(renderer, world_rect, screen_rect)
-#        print "lon_step = " + str(self.lon_step)
-#        print "lat_step = " + str(self.lat_step)
-#        print "world_rect = " + str(world_rect)
+        # print "lon_step = " + str(self.lon_step)
+        # print "lat_step = " + str(self.lat_step)
+        # print "world_rect = " + str(world_rect)
 
         for longitude in self.lon_steps:
 
-#            print "  longitude = " + str(longitude)
+            # print "  longitude = " + str(longitude)
             if (longitude < -360 or longitude > 360):
                 continue
             w_p = (longitude, world_rect[0][1])
@@ -77,7 +82,7 @@ class Grid(ScreenLayer):
             s = self.grid.format_lon_line_label(longitude)
             size = renderer.get_drawn_string_dimensions(s)
             renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5),
-                                             (s_p[0], screen_rect[1][1]))
+                                      (s_p[0], screen_rect[1][1]))
             """
             for offset in xrange( 200 ):
                 renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] + offset * 2 ), s )
@@ -86,7 +91,7 @@ class Grid(ScreenLayer):
 
         for latitude in self.lat_steps:
 
-#            print "  latitude = " + str(latitude)
+            # print "  latitude = " + str(latitude)
             if (latitude < -89 or latitude > 89):
                 continue
             w_p = (world_rect[0][0], latitude)
@@ -94,7 +99,7 @@ class Grid(ScreenLayer):
             s = self.grid.format_lat_line_label(latitude)
             size = renderer.get_drawn_string_dimensions(s)
             renderer.draw_screen_line((screen_rect[0][0], s_p[1]),
-                                             (screen_rect[1][0] - size[0] - 5, s_p[1]))
+                                      (screen_rect[1][0] - size[0] - 5, s_p[1]))
             renderer.draw_screen_string(
                 (screen_rect[1][0] - size[0] - 3, s_p[1] - size[1] / 2 - 1), s)
 
@@ -105,7 +110,8 @@ class GridLines(object):
             bisect.bisect(self.STEPS, abs(reference_size)),
             self.STEP_COUNT - 1,
         )]
-    
+
+
 class DegreeMinuteGridLines(GridLines):
     DEGREE = np.float64(1.0)
     MINUTE = DEGREE / 60.0
@@ -133,12 +139,13 @@ class DegreeMinuteGridLines(GridLines):
         DEGREE * 40,
     )
     STEP_COUNT = len(STEPS)
-    
+
     def format_lat_line_label(self, latitude):
         return coordinates.format_lat_line_label(latitude)
 
     def format_lon_line_label(self, longitude):
         return coordinates.format_lon_line_label(longitude)
+
 
 class DecimalDegreeGridLines(GridLines):
     DEGREE = np.float64(1.0)
@@ -164,15 +171,15 @@ class DecimalDegreeGridLines(GridLines):
         DEGREE * 40,
     )
     STEP_COUNT = len(STEPS)
-    
+
     def format_lat_line_label(self, latitude):
-        ( degrees, direction ) = \
+        (degrees, direction) = \
             coordinates.float_to_degrees(latitude, directions=("N", "S"))
 
         return u" %.2f° %s " % (degrees, direction)
 
     def format_lon_line_label(self, longitude):
-        ( degrees, direction ) = \
+        (degrees, direction) = \
             coordinates.float_to_degrees(longitude, directions=("E", "W"))
 
         return u" %.2f° %s " % (degrees, direction)

@@ -1,14 +1,11 @@
-import os
 import Queue
 import weakref
 
-import wx
 import numpy as np
 import OpenGL.GL as gl
 import OpenGL.arrays.vbo as gl_vbo
 import pyproj
 
-from maproom.library.accumulator import flatten
 import maproom.library.rect as rect
 
 import data_types
@@ -39,7 +36,7 @@ class Image(object):
 class ImageData(object):
     """ Temporary storage object to hold raw image data before converted to GL
     textures.
-    
+
     images = list of lists, where each sublist is a row of images
                 and each image is a numpy array [ 0 : max_y, 0 : max_x, 0 : num_bands ]
                 where:
@@ -56,27 +53,27 @@ class ImageData(object):
     """
 
     NORTH_UP_TOLERANCE = 0.002
-    
+
     def __init__(self, x, y, texture_size=1024):
         self.x = x
         self.y = y
         self.texture_size = texture_size
         self.projection = None
         self.pixel_to_projected_transform = np.array((0.0, 1.0, 0.0, 0.0, 0.0, 1.0))
-        
+
         self.image_list = []
-        
+
         self.calc_textures(self.texture_size)
-    
+
     def __iter__(self):
         return iter(self.image_list)
-    
+
     def is_threaded(self):
         return False
-    
+
     def release_images(self):
         """Free image data after renderer is done converting to textures.
-        
+
         This has no effect when using the background loader because each image
         chunk is sent to the main thread through a callback.  When using the
         normal non-threaded loader, the entire image is loaded into memory and
@@ -84,18 +81,17 @@ class ImageData(object):
         """
         # release images by allowing garbage collector to collect the now
         # unrefcounted images.
-        
+
         # UPDATE: need to keep raw images around for PDF rendering
         #self.images = True
-        pass
-    
+
     def set_projection(self, projection=None):
         if projection is None:
             # no projection, assume latlong:
             projection = pyproj.Proj("+proj=latlong")
         self.projection = projection
         self.calc_image_world_rects()
-    
+
     def get_bounds(self):
         bounds = rect.NONE_RECT
 
@@ -104,9 +100,9 @@ class ImageData(object):
             for r in self.image_list[1:]:
                 b = rect.accumulate_rect(b, r.world_rect)
             bounds = rect.accumulate_rect(bounds, b)
-        
+
         return bounds
-    
+
     def calc_textures(self, texture_size):
         self.texture_size = texture_size
         num_cols = self.x / texture_size
@@ -125,10 +121,10 @@ class ImageData(object):
                 selection_width = texture_size
                 if (((c + 1) * texture_size) > self.x):
                     selection_width -= (c + 1) * texture_size - self.x
-                
+
                 image = Image(selection_origin, (selection_width, selection_height))
                 self.image_list.append(image)
-    
+
     def calc_world_rect(self, selection_origin, selection_size):
         # we invert the y in going to projected coordinates
         left_bottom_projected = apply_transform(
@@ -163,9 +159,9 @@ class ImageData(object):
             right_top_world = self.projection(right_top_projected[0], right_top_projected[1], inverse=True)
             right_bottom_world = self.projection(right_bottom_projected[0], right_bottom_projected[1], inverse=True)
         log.debug("  after: %s" % str((left_bottom_world, left_top_world, right_top_world, right_bottom_world)))
-        
+
         return left_bottom_world, left_top_world, right_top_world, right_bottom_world
-    
+
     def calc_image_world_rects(self):
         """ Includes a simple dateline check to move images that cross the
         dateline or are in far east latitudes to move to the west latitude (US
@@ -182,23 +178,23 @@ class ImageData(object):
         subimage_loader.prepare(len(self.image_list))
         for entry in self.image_list:
             entry.data = subimage_loader.load(entry.origin, entry.size)
-    
+
     def set_control_points(self, cp, projection):
         xoffset = cp[0][0]
         yoffset = cp[0][1]
-        xscale = (cp[1][0] - cp[0][0])/self.x
-        yscale = (cp[3][1] - cp[0][1])/self.y
+        xscale = (cp[1][0] - cp[0][0]) / self.x
+        yscale = (cp[3][1] - cp[0][1]) / self.y
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
-    
+
     def set_rect(self, rect, projection):
         xoffset = rect[0][0]
         yoffset = rect[0][1]
-        xscale = (rect[1][0] - rect[0][0])/self.x
-        yscale = (rect[1][1] - rect[0][1])/self.y
+        xscale = (rect[1][0] - rect[0][0]) / self.x
+        yscale = (rect[1][1] - rect[0][1]) / self.y
         self.pixel_to_projected_transform = np.array((xoffset, xscale, 0.0, yoffset, 0.0, yscale))
         self.set_projection(projection)
-    
+
     def load_numpy_array(self, cp, array, projection=None):
         if projection is not None:
             self.set_control_points(cp, projection)
@@ -214,10 +210,11 @@ class ImageData(object):
                 return False
         return True
 
+
 class SubImageLoader(object):
     def prepare(self, num_sub_images):
         pass
-    
+
     def load(self, origin, size):
         pass
 
@@ -225,11 +222,11 @@ class SubImageLoader(object):
 class RawSubImageLoader(SubImageLoader):
     def __init__(self, array):
         self.array = array
-    
+
     def load(self, origin, size):
         # numpy image coords are reversed!
         return self.array[origin[1]:origin[1] + size[1],
-                          origin[0]:origin[0] + size[0],:]
+                          origin[0]:origin[0] + size[0], :]
 
 
 class TileImage(Image):
@@ -252,10 +249,10 @@ class TileImageData(ImageData):
         self.downloader_ref = weakref.ref(downloader)
         self.last_requested = None
         self.requested = dict()  # (x, y): Image
-    
+
     def __iter__(self):
         return self.requested.itervalues()
-    
+
     def calc_textures(self, texture_size):
         pass
 
@@ -290,10 +287,10 @@ class TileImageData(ImageData):
             self.last_requested = self.requested
             self.zoom_level = zoom
             self.requested = dict()
-    
+
     def release_tiles(self):
         print "RELEASING TILES FOR ZOOM=%d: %s" % (self.last_zoom_level, self.last_requested)
-    
+
     def calc_center_tiles(self, tl, br):
         needed = []
         x1, y1 = tl
@@ -301,32 +298,32 @@ class TileImageData(ImageData):
         for x in range(x1, x2 + 1):
             for y in range(y1, y2 + 1):
                 tile = (x, y)
-                if not tile in self.requested:
+                if tile not in self.requested:
                     needed.append(tile)
         return needed
-    
+
     def calc_border_tiles(self, tl, br):
         needed = []
         z = self.zoom_level
         x1, y1 = tl
         x2, y2 = br
-        x1 = max(x1 - 1, 0)
+        x1 = x1 - 1  # one tile west, may be negative if across dateline
         y1 = max(y1 - 1, 0)
         n = (2 << (z - 1)) - 1
-        x2 = min(x2 + 1, n)
+        x2 = x2 + 1  # one tile east, may be > n if across dateline
         y2 = min(y2 + 1, n)
-        for x in [x1, x2]:
+        for x in [x1, x2]:  # west and east borders
             for y in range(y1, y2 + 1):
                 tile = (x, y)
-                if not tile in self.requested:
+                if tile not in self.requested:
                     needed.append(tile)
-        for y in [y1, y2]:
+        for y in [y1, y2]:  # north and south borders
             for x in range(x1 + 1, x2):
                 tile = (x, y)
-                if not tile in self.requested:
+                if tile not in self.requested:
                     needed.append(tile)
         return needed
-    
+
     def request_tiles(self, tiles, manager, event_data):
         downloader = self.downloader_ref()
         if downloader is None:
@@ -337,7 +334,7 @@ class TileImageData(ImageData):
                 print "REQUESTING TILE:", tile
                 req = downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
                 self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_lb_rt)
-    
+
     def add_tiles(self, queue, image_textures):
         if image_textures.static_renderer:
             # short circuit to skip for PDF renderer or other renderers that
@@ -368,8 +365,9 @@ class TileImageData(ImageData):
 
 class ImageTextures(object):
     """Class to allow sharing of textures between views
-    
+
     """
+
     def __init__(self, image_data):
         self.blank = np.array([128, 128, 128, 128], 'B')
         self.textures = []
@@ -380,11 +378,10 @@ class ImageTextures(object):
     def load(self, image_data):
         texcoord_data = np.zeros(
             (1, ),
-            dtype=data_types.TEXTURE_COORDINATE_DTYPE,
+            dtype=data_types.TEXTURE_COORDINATE_DUPLICATE_DTYPE,
         ).view(np.recarray)
-        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1, 16)
 
-        n = 0
         for i, image in enumerate(image_data):
             self.textures.append(gl.glGenTextures(1))
             gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[i])
@@ -398,7 +395,7 @@ class ImageTextures(object):
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
             gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
             gl.glTexEnvf(gl.GL_TEXTURE_FILTER_CONTROL, gl.GL_TEXTURE_LOD_BIAS, -0.5)
-            
+
             if image.data is not None:
                 gl.glTexImage2D(
                     gl.GL_TEXTURE_2D,
@@ -426,9 +423,9 @@ class ImageTextures(object):
 
             vertex_data = np.zeros(
                 (1, ),
-                dtype=data_types.QUAD_VERTEX_DTYPE,
+                dtype=data_types.QUAD_VERTEX_DUPLICATE_DTYPE,
             ).view(np.recarray)
-            vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1,8)
+            vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1, 16)
             # we fill the vbo_vertexes data in reproject() below
             self.vbo_vertexes.append(gl_vbo.VBO(vertex_raw))
 
@@ -441,12 +438,22 @@ class ImageTextures(object):
         texcoord_data.u_rb = 1.0
         texcoord_data.v_rb = 1.0
 
+        # The prime coordinates are the duplicates 360 degrees east
+        texcoord_data.uprime_lb = 0
+        texcoord_data.vprime_lb = 1.0
+        texcoord_data.uprime_lt = 0
+        texcoord_data.vprime_lt = 0
+        texcoord_data.uprime_rt = 1.0
+        texcoord_data.vprime_rt = 0
+        texcoord_data.uprime_rb = 1.0
+        texcoord_data.vprime_rb = 1.0
+
         self.vbo_texture_coordinates = gl_vbo.VBO(texcoord_raw)
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-    
+
     def update_texture(self, texture_index, w, h, image):
-#        print "ImageData: loading texture index %d" % texture_index
+        # print "ImageData: loading texture index %d" % texture_index
         gl.glBindTexture(gl.GL_TEXTURE_2D, self.textures[texture_index])
         gl.glTexImage2D(
             gl.GL_TEXTURE_2D,
@@ -459,21 +466,21 @@ class ImageTextures(object):
             gl.GL_UNSIGNED_BYTE,
             image
         )
-    
+
     def set_projection(self, image_data, projection):
-        image_projected_rects = []
         log.debug("set_projection: image_list=%s" % str(list(image_data)))
         for i, image in enumerate(image_data):
+            raw = self.vbo_vertexes[i].data
+            vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DUPLICATE_DTYPE, type=np.recarray)
+
             log.debug("  world rect #%d: %s" % (i, str(image.world_rect)))
             lb, lt, rt, rb = image.world_rect
+
+            # original copy is in the -360 to 0 range
             lb_projected = projection(lb[0], lb[1])
             lt_projected = projection(lt[0], lt[1])
             rt_projected = projection(rt[0], rt[1])
             rb_projected = projection(rb[0], rb[1])
-
-            log.debug("  projected #%d: %s" % (i, str((lb_projected, lt_projected, rt_projected, rb_projected))))
-            raw = self.vbo_vertexes[i].data
-            vertex_data = raw.view(dtype=data_types.QUAD_VERTEX_DTYPE, type=np.recarray)
             vertex_data.x_lb = lb_projected[0]
             vertex_data.y_lb = lb_projected[1]
             vertex_data.x_lt = lt_projected[0]
@@ -482,9 +489,25 @@ class ImageTextures(object):
             vertex_data.y_rt = rt_projected[1]
             vertex_data.x_rb = rb_projected[0]
             vertex_data.y_rb = rb_projected[1]
+            log.debug("  projected #%d: %s" % (i, str((lb_projected, lt_projected, rt_projected, rb_projected))))
+
+            # The same texture is duplicated at +360, so two copies will appear
+            # if the map is zoomed out far enough
+            lbprime_projected = projection(lb[0] + 360, lb[1])
+            ltprime_projected = projection(lt[0] + 360, lt[1])
+            rtprime_projected = projection(rt[0] + 360, rt[1])
+            rbprime_projected = projection(rb[0] + 360, rb[1])
+            vertex_data.xprime_lb = lbprime_projected[0]
+            vertex_data.yprime_lb = lbprime_projected[1]
+            vertex_data.xprime_lt = ltprime_projected[0]
+            vertex_data.yprime_lt = ltprime_projected[1]
+            vertex_data.xprime_rt = rtprime_projected[0]
+            vertex_data.yprime_rt = rtprime_projected[1]
+            vertex_data.xprime_rb = rbprime_projected[0]
+            vertex_data.yprime_rb = rbprime_projected[1]
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
-    
+
     def use_screen_rect(self, image_data, r, scale=1.0):
         for i, image in enumerate(image_data):
             x = image.origin[0] * scale
@@ -503,10 +526,10 @@ class ImageTextures(object):
             vertex_data.y_rb = y + r[0][1]
 
             self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
-    
+
     def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
-        left = int(point[0] - (image_data.x/2) * scale)
-        bottom = int(point[1] + (image_data.y/2) * scale)
+        left = int(point[0] - (image_data.x / 2) * scale)
+        bottom = int(point[1] + (image_data.y / 2) * scale)
         right = left + (image_data.x * scale)
         top = bottom + (image_data.y * scale)
         # flip y to treat rect as normal opengl coordinates
@@ -528,9 +551,10 @@ class VBOTexture(object):
         self.tex_id = tex_id
         self.vbo_vertexes = None
 
+
 class TileTextures(object):
     """Class to allow sharing of textures between views
-    
+
     """
     static_renderer = False
 
@@ -544,7 +568,7 @@ class TileTextures(object):
             (1, ),
             dtype=data_types.TEXTURE_COORDINATE_DTYPE,
         ).view(np.recarray)
-        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1,8)
+        texcoord_raw = texcoord_data.view(dtype=np.float32).reshape(-1, 8)
 
         texcoord_data.u_lb = 0
         texcoord_data.v_lb = 1.0
@@ -570,7 +594,7 @@ class TileTextures(object):
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
         gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
         gl.glTexEnvf(gl.GL_TEXTURE_FILTER_CONTROL, gl.GL_TEXTURE_LOD_BIAS, -0.5)
-        
+
         if image.data is not None:
             gl.glTexImage2D(
                 gl.GL_TEXTURE_2D,
@@ -600,18 +624,18 @@ class TileTextures(object):
             (1, ),
             dtype=data_types.QUAD_VERTEX_DTYPE,
         ).view(np.recarray)
-        vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1,8)
+        vertex_raw = vertex_data.view(dtype=np.float32).reshape(-1, 8)
         # we fill the vbo_vertexes data in reproject() below
         tile.vbo_vertexes = gl_vbo.VBO(vertex_raw)
         self.set_projection(tile, image, projection)
-        
+
         if self.vbo_texture_coordinates is None:
             self.get_vbo_texture_coords()
 
         gl.glBindTexture(gl.GL_TEXTURE_2D, 0)
-        
+
         self.tiles.append(tile)
-    
+
     def set_projection(self, tile, image, projection):
         log.debug("  world rect %s: %s" % (tile.xy, str(image.world_rect)))
         lb, lt, rt, rb = image.world_rect
@@ -633,7 +657,7 @@ class TileTextures(object):
         vertex_data.y_rb = rb_projected[1]
 
         tile.vbo_vertexes[: np.alen(vertex_data)] = raw
-    
+
     def reorder_tiles(self, image_data):
         z_front = image_data.zoom_level
         z_behind = image_data.last_zoom_level
@@ -646,13 +670,13 @@ class TileTextures(object):
                 behind.append(tile)
             else:
                 self.remove_tile(tile)
-        
+
         # Tiles that appear in front will be drawn last.  Tiles that have
         # been removed won't appear in either the front or behind list
         # will be garbage collected
         self.tiles = behind
         self.tiles.extend(front)
-    
+
     def remove_tile(self, tile):
         gl.glDeleteTextures(np.array([tile.tex_id], np.uint32))
         tile.vbo_vertexes = None

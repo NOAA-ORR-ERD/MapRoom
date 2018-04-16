@@ -1,12 +1,14 @@
 # functions for rects (screen rects, world rects, etc.)
 # a rect is a rect stored as ( ( l, b ), ( r, t ) )
+import numpy as np
+
 
 NONE_RECT = ((None, None), (None, None))
 EMPTY_RECT = ((0, 0), (0, 0))
 
 
 def is_rect_empty(r):
-    return r[ 0 ][ 0 ] is None or r[ 0 ][ 1 ] is None or r[ 1 ][ 0 ] is None or r[ 1 ][ 1 ] is None or \
+    return r[0][0] is None or r[0][1] is None or r[1][0] is None or r[1][1] is None or \
         width(r) <= 0 or height(r) <= 0
 
 
@@ -156,12 +158,11 @@ def get_rect_of_points(points):
 
 
 def n_or_s(y):
-    if y < 0: return "S"
-    return "N"
+    return "S" if y < 0 else "N"
+
 
 def e_or_w(x):
-    if x < 0: return "W"
-    return "E"
+    return "W" if x < 0 else "E"
 
 
 def pretty_format(r):
@@ -173,3 +174,19 @@ def pretty_format(r):
         y1, n_or_s(y1),
         x2, e_or_w(x2),
         y2, n_or_s(y2))
+
+
+def get_transform(r1, r2):
+    xs = (r2[0][0] - r2[1][0]) / (r1[0][0] - r1[1][0])
+    ys = (r2[0][1] - r2[1][1]) / (r1[0][1] - r1[1][1])
+    xt = r2[0][0] - r1[0][0]
+    yt = r2[0][1] - r1[0][1]
+    scale = np.asarray([xs, 0, 0, ys], dtype=np.float64).reshape((2,2))
+    old_origin = np.asarray([r1[0][0], r1[0][1]], dtype=np.float64)
+    new_origin = np.asarray([r2[0][0], r2[0][1]], dtype=np.float64)
+    return scale, old_origin, new_origin
+
+
+def copy(r):
+    ((l, b), (rt, t)) = r
+    return ((l, b), (rt, t))
