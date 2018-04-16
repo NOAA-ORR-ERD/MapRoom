@@ -579,6 +579,13 @@ class YPercentageField(XPercentageField):
     def set_value(self, layer, val):
         layer.y_percentage = self.normalize(val)
 
+class MagnificationPercentageField(XPercentageField):
+    def get_value(self, layer):
+        return self.scale(layer.magnification)
+
+    def set_value(self, layer, val):
+        layer.magnification = self.normalize(val)
+
 
 class PointSizeField(XPercentageField):
     def get_params(self):
@@ -1721,6 +1728,7 @@ class InfoPanel(PANELTYPE):
         "Discrete colormap": DiscreteColormapField,
         "X location": XPercentageField,
         "Y location": YPercentageField,
+        "Magnification": MagnificationPercentageField,
         "Point size": PointSizeField,
     }
 
