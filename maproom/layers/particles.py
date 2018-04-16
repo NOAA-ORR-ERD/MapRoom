@@ -539,10 +539,12 @@ class ParticleLayer(PointBaseLayer):
             self.colormap.adjust_bounds(lo, hi)
             colors = self.colormap.get_opengl_colors(values)
             self.points.color = colors
+            self.hidden_points = np.arange(0,len(colors),2, dtype=np.int32)
         else:
             log.error("%s not in scalar data for layer %s" % (var, self))
             self.set_colors_from_status_codes()
             var = None
+            self.hidden_points = None
         return var
 
     def set_colors_from_scalar(self, var):

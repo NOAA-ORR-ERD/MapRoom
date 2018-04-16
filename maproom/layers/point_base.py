@@ -33,6 +33,8 @@ class PointBaseLayer(ProjectedLayer):
 
     points = Any
 
+    hidden_points = Any  # numpy array listing indexes of points to hide
+
     point_size = Float(4.0)
 
     selected_point_size = Float(15.0)
@@ -322,6 +324,10 @@ class PointBaseLayer(ProjectedLayer):
             dtype=np.float32
         )
         projected_point_data[:,0], projected_point_data[:,1] = projection(view[:,0], view[:,1])
+        if self.hidden_points is not None:
+            print("hiding! %s" % repr(self.hidden_points))
+            # OpenGL doesn't draw points that have a coordinate set to NaN
+            projected_point_data[self.hidden_points] = np.nan
         return projected_point_data
 
     def rebuild_renderer(self, renderer, in_place=False):
