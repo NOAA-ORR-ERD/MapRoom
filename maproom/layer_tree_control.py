@@ -95,10 +95,11 @@ class LayerTreeControl(wx.Panel):
         if item is None:
             item = self.tree.GetRootItem()
         current = []
-        current.append(item)
-        if item.HasChildren():
-            for child in item.GetChildren():
-                current.extend(self.walk_tree(child))
+        if item is not None:
+            current.append(item)
+            if item.HasChildren():
+                for child in item.GetChildren():
+                    current.extend(self.walk_tree(child))
         return current
 
     def get_item_of_layer(self, layer):
