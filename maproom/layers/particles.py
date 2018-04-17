@@ -19,7 +19,7 @@ from traits.api import Int, Float
 from traits.api import Str
 from traits.api import Unicode
 
-from omnivore.utils.parseutil import NumpyExpression, ParseException
+from omnivore.utils.parseutil import NumpyFloatExpression, ParseException
 
 from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils
@@ -641,7 +641,7 @@ class ParticleLayer(PointBaseLayer):
         return [self]
 
     def get_matches(self, search_text):
-        expression = NumpyExpression(self.scalar_vars)
+        expression = NumpyFloatExpression(self.scalar_vars)
         try:
             result = expression.eval(search_text)
             return result
