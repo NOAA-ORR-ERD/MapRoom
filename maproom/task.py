@@ -383,7 +383,7 @@ class MaproomProjectTask(FrameworkTask):
         editor = ProjectEditor()
         return editor
 
-    def new(self, source=None, **kwargs):
+    def new(self, source=None, window_opening=False, **kwargs):
         """Open a maproom file.
         
         If the file is a maproom project, it will open a new tab.
@@ -414,7 +414,7 @@ class MaproomProjectTask(FrameworkTask):
                 self.window.application.restore_perspective(self.window, self)
             self.activated()
             self.window.application.successfully_loaded_event = source.metadata.uri
-        else:
+        elif not window_opening:
             log.debug("starting empty task")
             FrameworkTask.new(self, source, **kwargs)
 

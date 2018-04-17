@@ -369,8 +369,13 @@ class PolygonLayer(PointLayer):
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_polygons(self.rings, self.point_adjacency_array)
 
+    def can_render_for_picker(self, renderer):
+        return renderer.canvas.project.layer_tree_control.is_edit_layer(self)
+
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering polygon layer!!! pick=%s" % (picker))
+        if picker.is_active and not self.can_render_for_picker(renderer):
+            return
         # the rings
         if layer_visibility["polygons"]:
             renderer.draw_polygons(self, picker,
@@ -407,3 +412,6 @@ class RNCLoaderLayer(PolygonLayer):
         # add starting point again so the outline will be closed
         boundary = np.vstack((points, points[0]))
         return [boundary]
+
+    def can_render_for_picker(self, renderer):
+        return True
