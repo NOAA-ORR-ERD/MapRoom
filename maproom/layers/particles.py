@@ -19,6 +19,8 @@ from traits.api import Int, Float
 from traits.api import Str
 from traits.api import Unicode
 
+from omnivore.utils.parseutil import NumpyExpression, ParseException
+
 from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils
 
@@ -47,6 +49,8 @@ class ParticleFolder(Folder):
     end_index = Int(sys.maxint)
 
     layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Discrete colormap", "Status Code Color", "Outline color", "Point size"]
+
+    selection_info_panel = ["Scalar value ranges"]
 
     @property
     def scalar_var_names(self):
@@ -87,6 +91,28 @@ class ParticleFolder(Folder):
         else:
             current = None
         return current
+
+    def scalar_value_ranges(self):
+        children = self.get_particle_layers()
+        r = {}
+        for c in children:
+            for name, vals in c.scalar_value_ranges().iteritems():
+                if name not in r:
+                    r[name] = ([],[])
+                r[name][0].append(vals[0])
+                r[name][1].append(vals[1])
+        ranges = {}
+        for name, vals in r.iteritems():
+            ranges[name] = (min(vals[0]), max(vals[1]))
+        return ranges
+
+    def calc_scalar_value_summary(self):
+        ranges = self.scalar_value_ranges()
+        lines = []
+        for name in sorted(ranges.keys()):
+            r = ranges[name]
+            lines.append("%s\n    %f-%f" % (name, r[0], r[1]))
+        return "\n".join(lines)
 
     @property
     def colormap(self):  # Raises IndexError if no children
@@ -193,6 +219,14 @@ class ParticleFolder(Folder):
 
     def is_using_discrete_colormap(self, var=None):
         return self.is_using_colormap() and self.colormap.is_discrete
+
+    def subset_using_logical_operation(self, operation):
+        print("folder: op=%s" % operation)
+
+        children = self.get_particle_layers()
+        for c in children:
+            c.subset_using_logical_operation(operation)
+        return children
 
 
 class ParticleLegend(ScreenLayer):
@@ -309,6 +343,8 @@ class ParticleLayer(PointBaseLayer):
 
     layer_info_panel = ["Scalar value", "Point size", "Outline color", "Status Code Color"]
 
+    selection_info_panel = ["Scalar value ranges"]
+
     pickable = True  # this is a layer that supports picking
 
     status_codes = Any  # numpy list matching array size of points
@@ -353,6 +389,20 @@ class ParticleLayer(PointBaseLayer):
 
     def _colormap_default(self):
         return colormap.get_colormap("Dark2")
+
+    def scalar_value_ranges(self):
+        ranges = {}
+        for name, vals in self.scalar_vars.iteritems():
+            ranges[name] = (min(vals), max(vals))
+        return ranges
+
+    def calc_scalar_value_summary(self):
+        ranges = self.scalar_value_ranges()
+        lines = []
+        for name in sorted(ranges.keys()):
+            r = ranges[name]
+            lines.append("%s: %f-%f" % (name, r[0], r[1]))
+        return "\n".join(lines)
 
     # JSON Serialization
 
@@ -577,3 +627,23 @@ class ParticleLayer(PointBaseLayer):
         # Style changes in particle layer only affect the outline color; point
         # colors are controlled by the status colors
         ProjectedLayer.set_style(self, style)
+
+    def subset_using_logical_operation(self, operation):
+        log.debug("using operation %s" % operation)
+        try:
+            matches = self.get_matches(operation)
+            # print matches
+        except ValueError:
+            self.hidden_points = None
+        else:
+            self.hidden_points = np.where(matches == False)[0]
+            # print self.hidden_points
+        return [self]
+
+    def get_matches(self, search_text):
+        expression = NumpyExpression(self.scalar_vars)
+        try:
+            result = expression.eval(search_text)
+            return result
+        except ParseException, e:
+            raise ValueError(e)

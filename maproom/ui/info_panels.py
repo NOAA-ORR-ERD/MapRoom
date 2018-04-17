@@ -123,9 +123,10 @@ class InfoField(object):
 
 class LabelField(InfoField):
     same_line = True
+    alignment_style = wx.ALIGN_RIGHT
 
     def create_control(self):
-        c = wx.StaticText(self.parent, style=wx.ALIGN_RIGHT)
+        c = wx.StaticText(self.parent, style=self.alignment_style)
         return c
 
 
@@ -1589,6 +1590,14 @@ class DiscreteColormapField(InfoField):
         self.panel.project.update_info_panels(layer, True)
 
 
+class ScalarSummaryField(WholeLinePropertyField):
+    alignment_style = wx.ALIGN_LEFT
+
+    def fill_data(self, layer):
+        text = layer.calc_scalar_value_summary()
+        self.ctrl.SetLabel(text)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
@@ -1730,6 +1739,7 @@ class InfoPanel(PANELTYPE):
         "Y location": YPercentageField,
         "Magnification": MagnificationPercentageField,
         "Point size": PointSizeField,
+        "Scalar value ranges": ScalarSummaryField,
     }
 
     def create_fields(self, layer, fields):

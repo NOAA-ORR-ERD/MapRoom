@@ -687,6 +687,9 @@ class Layer(HasTraits):
     def get_highlight_lines(self, object_type, object_index):
         return []
 
+    def subset_using_logical_operation(self, operation):
+        pass
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
 
