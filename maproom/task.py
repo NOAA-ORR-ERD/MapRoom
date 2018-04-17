@@ -276,7 +276,6 @@ class MaproomProjectTask(FrameworkTask):
 
     def get_actions_Menu_View_ChangeGroup(self):
         return [
-            actions.ParticleAlgorithmAction(),
             actions.JumpToCoordsAction(),
         ]
 

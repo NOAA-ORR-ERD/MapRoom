@@ -48,7 +48,9 @@ class ParticleFolder(Folder):
 
     end_index = Int(sys.maxint)
 
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Colormap", "Discrete colormap", "Status Code Color", "Outline color", "Point size"]
+    scalar_subset_expression = Str("")
+
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Scalar value expression", "Colormap", "Discrete colormap", "Status Code Color", "Outline color", "Point size"]
 
     selection_info_panel = ["Scalar value ranges"]
 
@@ -341,7 +343,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = Str("particle")
 
-    layer_info_panel = ["Scalar value", "Point size", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Scalar value", "Scalar value expression", "Point size", "Outline color", "Status Code Color"]
 
     selection_info_panel = ["Scalar value ranges"]
 
@@ -362,6 +364,8 @@ class ParticleLayer(PointBaseLayer):
     current_min_max = Any(None)
 
     current_scalar_var = Any(None)
+
+    scalar_subset_expression = Str("")
 
     colormap = Any
 

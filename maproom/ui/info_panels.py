@@ -1598,6 +1598,24 @@ class ScalarSummaryField(WholeLinePropertyField):
         self.ctrl.SetLabel(text)
 
 
+class ScalarExpressionField(TextEditField):
+    same_line = False
+
+    def get_value(self, layer):
+        if (layer is None):
+            text = ""
+        else:
+            text = layer.scalar_subset_expression
+        return text
+
+    def process_text_change(self, layer):
+        expression = self.parse_from_string()
+        affected = layer.subset_using_logical_operation(expression)
+        for layer in affected:
+            self.panel.project.layer_contents_changed(layer)
+        self.panel.project.refresh()
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
@@ -1739,6 +1757,7 @@ class InfoPanel(PANELTYPE):
         "Y location": YPercentageField,
         "Magnification": MagnificationPercentageField,
         "Point size": PointSizeField,
+        "Scalar value expression": ScalarExpressionField,
         "Scalar value ranges": ScalarSummaryField,
     }
 

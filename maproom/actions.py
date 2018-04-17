@@ -18,7 +18,6 @@ from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
 from layers import styleable_layers
-from minibuffer import ParticleAlgorithmMinibuffer
 
 import logging
 log = logging.getLogger(__name__)
@@ -864,13 +863,3 @@ class EndTimeAction(StartTimeAction):
 
     def get_time(self, layer):
         return layer.end_time
-
-
-class ParticleAlgorithmAction(EditorAction):
-    name = 'View Subset of Particles'
-    accelerator = 'Ctrl+P'
-    tooltip = 'Display a subset of particles using logical operators'
-
-    def perform(self, event):
-        e = self.active_editor
-        event.task.show_minibuffer(ParticleAlgorithmMinibuffer(e, e.last_search_settings["algorithm"]))
