@@ -157,6 +157,12 @@ class ParticleFolder(Folder):
     def end_index_from_json(self, json_data):
         self.end_index = json_data['end_index']
 
+    def scalar_subset_expression_to_json(self):
+        return self.scalar_subset_expression
+
+    def scalar_subset_expression_from_json(self, json_data):
+        self.scalar_subset_expression = json_data['scalar_subset_expression']
+
     def get_particle_layers(self):
         timesteps = []
         children = self.manager.get_layer_children(self)
@@ -225,6 +231,7 @@ class ParticleFolder(Folder):
     def subset_using_logical_operation(self, operation):
         print("folder: op=%s" % operation)
 
+        self.scalar_subset_expression = operation
         children = self.get_particle_layers()
         for c in children:
             c.subset_using_logical_operation(operation)
@@ -510,6 +517,12 @@ class ParticleLayer(PointBaseLayer):
     def current_min_max_from_json(self, json_data):
         self.current_min_max = json_data['current_min_max']
 
+    def scalar_subset_expression_to_json(self):
+        return self.scalar_subset_expression
+
+    def scalar_subset_expression_from_json(self, json_data):
+        self.scalar_subset_expression = json_data['scalar_subset_expression']
+
     def colormap_to_json(self):
         return self.colormap.name
 
@@ -526,6 +539,7 @@ class ParticleLayer(PointBaseLayer):
                     count = int(text)
                 self.status_code_count[k] = count
         self.recalc_colors_from_colormap()
+        self.subset_using_logical_operation(self.scalar_subset_expression)
 
     #
 
@@ -633,6 +647,7 @@ class ParticleLayer(PointBaseLayer):
         ProjectedLayer.set_style(self, style)
 
     def subset_using_logical_operation(self, operation):
+        self.scalar_subset_expression = operation
         log.debug("using operation %s" % operation)
         try:
             matches = self.get_matches(operation)
