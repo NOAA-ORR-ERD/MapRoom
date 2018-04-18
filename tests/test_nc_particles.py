@@ -17,7 +17,7 @@ def test_iterator():
         print "next time step:", points.shape
         assert points.shape == (100, 2)
         assert warnings is None
-    assert i == 12
+    assert i == 8
 
 def test_old_status():
     sample_nc_file = os.path.join(maproom_dir, "TestData/NC_particles/gnome_1.3.9_particles.nc")
