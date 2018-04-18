@@ -575,6 +575,7 @@ class ParticleLayer(PointBaseLayer):
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
         self.scalar_vars = scalar_vars
         self.set_colors_from_status_codes(True)
+        self.hidden_points = None
 
     def set_colors_from_status_codes(self, update_count=False):
         log.debug("setting status code colors to: %s" % self.status_code_colors)
@@ -611,7 +612,6 @@ class ParticleLayer(PointBaseLayer):
             log.error("%s not in scalar data for layer %s" % (var, self))
             self.set_colors_from_status_codes()
             var = None
-        self.hidden_points = None
         return var
 
     def set_colors_from_scalar(self, var):
