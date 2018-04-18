@@ -142,6 +142,8 @@ class DiscreteOnlyColormapComboBox(ColormapComboBox):
 
 
 class ColormapEntry(wx.Panel):
+    label_text = "Bin Boundary"
+
     def __init__(self, parent, num, dialog):
         wx.Panel.__init__(self, parent, -1, name="panel#%d" % num)
         self.entry_num = num
@@ -162,8 +164,8 @@ class ColormapEntry(wx.Panel):
             b.SetBitmapLabel(wx.ArtProvider.GetBitmap(wx.ART_PLUS, wx.ART_MENU))
             b.Bind(wx.EVT_BUTTON, self.on_add_entry)
             hbox.Add(b, 0, wx.ALIGN_CENTER_VERTICAL)
-            t = wx.StaticText(self.text_box, -1, "Bin Boundary")
-            hbox.Add(t, 0, wx.ALIGN_CENTER_VERTICAL)
+            self.label = wx.StaticText(self.text_box, -1, "%s (%%)" % (self.label_text))
+            hbox.Add(self.label, 0, wx.ALIGN_CENTER_VERTICAL)
             self.text = wx.TextCtrl(self.text_box, -1, size=(100, 20))
             self.text.Bind(wx.EVT_TEXT, self.on_text_changed)
             hbox.Add(self.text, 1, wx.EXPAND)
@@ -177,10 +179,11 @@ class ColormapEntry(wx.Panel):
 
         self.Layout()
 
-    def set_values(self, value, color):
+    def set_values(self, value, color, autoscale=True):
         if value is not None:
             self.text.ChangeValue(str(value))
             self.text.SetBackgroundColour("#FFFFFF")
+            self.label.SetLabel("%s %s" % (self.label_text, "(%)" if autoscale else ""))
         int_colors = list((color * 255.0).astype(np.uint8))
         self.color.SetColor(int_colors)
 
@@ -234,15 +237,19 @@ class DiscreteColormapDialog(wx.Dialog):
         if self.values_min_max is not None:
             b = wx.Button(self, -1, "Scale Bins to Current Data")
             b.Bind(wx.EVT_BUTTON, self.on_scale_data)
-            lsizer.Add(b, 0, wx.ALL|wx.CENTER|wx.TOP, 40)
+            lsizer.Add(b, 0, wx.CENTER|wx.TOP, 40)
+            t = wx.StaticText(self, -1, "Bins will become fixed to the values you specify")
+            lsizer.Add(t, 0, wx.ALL|wx.CENTER|wx.TOP, 2)
 
         b = wx.Button(self, -1, "Convert Bins to Percentages")
         b.Bind(wx.EVT_BUTTON, self.on_convert_bins_to_percentages)
-        lsizer.Add(b, 0, wx.ALL|wx.CENTER|wx.TOP, 10)
+        lsizer.Add(b, 0, wx.CENTER|wx.TOP, 40)
+        t = wx.StaticText(self, -1, "Bins will scale to fit the range of data being viewed")
+        lsizer.Add(t, 0, wx.ALL|wx.CENTER|wx.TOP, 2)
 
-        self.autoscale_button = wx.CheckBox(self, -1, "Automatically scale bins when switching view\nto new type of data")
-        self.autoscale_button.Bind(wx.EVT_CHECKBOX, self.on_autoscale)
-        lsizer.Add(self.autoscale_button, 0, wx.ALL|wx.CENTER|wx.TOP, 10)
+        # self.autoscale_button = wx.CheckBox(self, -1, "Automatically scale bins when switching view\nto new type of data")
+        # self.autoscale_button.Bind(wx.EVT_CHECKBOX, self.on_autoscale)
+        # lsizer.Add(self.autoscale_button, 0, wx.ALL|wx.CENTER|wx.TOP, 10)
 
         btnsizer = wx.StdDialogButtonSizer()
         btn = wx.Button(self, wx.ID_OK)
@@ -298,6 +305,8 @@ class DiscreteColormapDialog(wx.Dialog):
         self.colormap_name.SetValue(name)
         self.working_copy = d
         self.bin_borders = list(d.bin_borders)
+        if d.autoscale:
+            self.bin_borders = self.calc_percentages_of_bins()
         self.bin_colors = list(d.bin_colors)
         self.bin_borders[0:0] = [None]  # alternates color, val, color, val ... color
         self.update_panel_controls()
@@ -317,6 +326,7 @@ class DiscreteColormapDialog(wx.Dialog):
         self.colormap_bitmap.SetBitmap(bitmap)
 
     def create_panel_controls(self):
+        autoscale = self.working_copy.autoscale
         for i, (val, color) in enumerate(zip(self.bin_borders, self.bin_colors)):
             try:
                 c = self.panel_controls[i]
@@ -326,7 +336,7 @@ class DiscreteColormapDialog(wx.Dialog):
                 c = ColormapEntry(self.param_panel, i, self)
                 self.param_panel.GetSizer().Insert(0, c, 0, wx.EXPAND, 0)
                 self.panel_controls.append(c)
-            c.set_values(val, color)
+            c.set_values(val, color, autoscale)
             c.Show()
         i += 1
         while i < len(self.panel_controls):
@@ -341,7 +351,6 @@ class DiscreteColormapDialog(wx.Dialog):
 
     def update_panel_controls(self):
         self.update_bitmap()
-        self.autoscale_button.SetValue(self.working_copy.autoscale)
         self.create_panel_controls()
 
     def colormap_changed(self, evt):
@@ -429,6 +438,7 @@ class DiscreteColormapDialog(wx.Dialog):
             delta = hi - lo
             self.bin_borders = [(v * delta) + lo for v in temp]
             self.bin_borders[0:0] = [None]  # Insert first dummy value
+            self.working_copy.autoscale = False
             wx.CallAfter(self.update_panel_controls)
 
     def on_convert_bins_to_percentages(self, evt):
@@ -436,8 +446,5 @@ class DiscreteColormapDialog(wx.Dialog):
         # the bins
         self.bin_borders = self.calc_percentages_of_bins()
         self.bin_borders[0:0] = [None]  # Insert first dummy value
-        wx.CallAfter(self.update_panel_controls)
-
-    def on_autoscale(self, evt):
-        self.working_copy.autoscale = evt.IsChecked()
+        self.working_copy.autoscale = True
         wx.CallAfter(self.update_panel_controls)
