@@ -1,3 +1,20 @@
+04/17/2018
+---------------------------
+Released 4.0rc4
+- RM Refs #595: changed test to match changes in test particle file
+- RM Removed debug print about point hiding
+- RM updated version prerequisites for wxpython and omnivore
+- RM Fixed #870: save/load scalar expression to project file
+- RM Refs #870: moved scalar expression into info panel
+- RM Refs #870: fixed partical subset expressions to handle floating point with leading dot
+- RM Refs #870: added basic algorithmic selection
+- RM Fixed project load error & remove sample data for hidden points
+- RM Fixed #879: BNA layers not clickable unless they are the selected layer
+- RM Fixed #882: added check for window opening flag when creating a new task, and if so don't create a blank document so the default template can be loaded
+- CB updated particle file examples from latest GNOME1
+- RM Refs #870: added hidden_points array to PointBaseLayer
+- RM Added positioning, size for compass rose
+
 04/15/2018
 ---------------------------
 Released 4.0rc3
