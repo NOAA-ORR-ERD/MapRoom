@@ -118,7 +118,7 @@ class ProjectEditor(FrameworkEditor):
         # toplevel window. If this happens during app init, allow the initial
         # notebook tab to be replaced with the command line project or the
         # default project.
-        if metadata.mime == "application/x-maproom-project-json":
+        if metadata.mime.startswith("application/x-maproom-project-"):
             return self.window.application.application_initialization_finished
         return False
 
