@@ -395,8 +395,8 @@ try:
             'requests',
             'python-dateutil',
             'netCDF4',
-            'omnivore-framework>=1.0rc9',
-            'wxpython>=4.0.0b2',
+            'omnivore-framework>=2.0a1',
+            'wxpython>=4.0.1',
             ],
         setup_requires=[
             'packaging',
