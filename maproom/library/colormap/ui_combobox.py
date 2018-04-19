@@ -8,6 +8,9 @@ import numpy.random as rand
 from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, user_defined_discrete_colormaps, ListedBoundedColormap
 from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class ColormapImage(object):
     def __init__(self, width, height):
@@ -312,6 +315,8 @@ class DiscreteColormapDialog(wx.Dialog):
         self.update_panel_controls()
 
     def regenerate_colormap(self):
+        log.debug("bin_borders(%d):%s" % (len(self.bin_borders), str(self.bin_borders)))
+        log.debug("bin_colors(%d):%s" % (len(self.bin_colors), str(self.bin_colors)))
         name = self.colormap_name.GetValue()
         cmap = ListedBoundedColormap(self.bin_colors, name)
         values = self.bin_borders[1:]
@@ -362,6 +367,7 @@ class DiscreteColormapDialog(wx.Dialog):
         return self.working_copy
 
     def on_add_above(self, evt):
+        log.debug("on_add_above: before: borders(%d):%s" % (len(self.bin_borders), str(self.bin_borders)))
         current = self.bin_borders[-1]
         if len(self.bin_borders) > 2:
             delta = current - self.bin_borders[-2]
@@ -371,6 +377,7 @@ class DiscreteColormapDialog(wx.Dialog):
         color = np.asarray([.5, .5, .5, 1.0], dtype=np.float32)
         self.bin_borders.append(value)
         self.bin_colors.append(color)
+        log.debug("on_add_above: after: borders(%d):%s" % (len(self.bin_borders), str(self.bin_borders)))
         wx.CallAfter(self.update_panel_controls)
 
     def on_add_below(self, evt):
@@ -415,14 +422,17 @@ class DiscreteColormapDialog(wx.Dialog):
         wx.CallAfter(self.update_bitmap)
 
     def calc_percentages_of_bins(self):
-        skipping_firt_bin = self.bin_borders[1:]
-        lo = min(skipping_firt_bin)
-        hi = max(skipping_firt_bin)
+        if self.bin_borders[0] is None:
+            bins = self.bin_borders[1:]
+        else:
+            bins = self.bin_borders
+        lo = min(bins)
+        hi = max(bins)
         delta = hi - lo
         if delta == 0.0:
             hi = lo + 1.0
             delta = 1.0
-        new_bins = [(v - lo) / delta for v in skipping_firt_bin]
+        new_bins = [(v - lo) / delta for v in bins]
         return new_bins
 
     def on_scale_data(self, evt):
