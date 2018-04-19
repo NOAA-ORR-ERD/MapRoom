@@ -237,6 +237,15 @@ class ParticleFolder(Folder):
             c.subset_using_logical_operation(operation)
         return children
 
+    def num_below_above(self):
+        total_lo = 0
+        total_hi = 0
+        for c in self.get_particle_layers():
+            lo, hi = c.num_below_above()
+            total_lo += lo
+            total_hi += hi
+        return total_lo, total_hi
+
 
 class ParticleLegend(ScreenLayer):
     """Layer for vector annotation image
@@ -338,7 +347,10 @@ class ParticleLegend(ScreenLayer):
 
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
             colors = c.calc_rgba_texture()
-            renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing, up_color=c.over_rgba, down_color=c.under_rgba)
+            lo, hi = parent.num_below_above()
+            up_color = c.over_rgba if hi > 0 else None
+            down_color = c.under_rgba if lo > 0 else None
+            renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing, up_color=up_color, down_color=down_color)
 
 
 class ParticleLayer(PointBaseLayer):
@@ -613,6 +625,15 @@ class ParticleLayer(PointBaseLayer):
             self.set_colors_from_status_codes()
             var = None
         return var
+
+    def num_below_above(self):
+        var = self.current_scalar_var
+        if var is not None and self.is_using_colormap(var):
+            values = self.scalar_vars[var]
+            num_lo = len(np.where(values < self.colormap.under_value)[0])
+            num_hi = len(np.where(values >= self.colormap.over_value)[0])
+            return num_lo, num_hi
+        return 0, 0
 
     def set_colors_from_scalar(self, var):
         var = self.recalc_colors_from_colormap(var)

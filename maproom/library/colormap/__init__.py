@@ -171,6 +171,14 @@ class DiscreteColormap(ScaledColormap):
     def over_rgba(self):
         return colors.colorConverter.to_rgba(self.cmap._rgba_over)
 
+    @property
+    def under_value(self):
+        return self.mapping.norm.boundaries[0]
+
+    @property
+    def over_value(self):
+        return  self.mapping.norm.boundaries[-1]
+
     def preprocess_colormap(self, cmap):
         self.source_cmap = cmap
         return self.copy_source_colormap()
