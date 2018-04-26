@@ -22,6 +22,11 @@ class AlwaysAlphaCCD(CCD.CubeColourDialog):
 class ColorSelectButton(ColorSelect):
     SetColor = ColorSelect.SetColour
 
+    if wx.Platform == "__WXMAC__":
+        color_dialog = wx.ColourDialog
+    else:
+        color_dialog = AlwaysAlphaCCD
+
     def MakeBitmap(self):
         """ Creates a bitmap representation of the current selected colour. """
 
@@ -71,7 +76,7 @@ class ColorSelectButton(ColorSelect):
                 if clr is not None:
                     data.SetCustomColour(idx, clr)
 
-        dlg = AlwaysAlphaCCD(wx.GetTopLevelParent(self), data)
+        dlg = self.color_dialog(wx.GetTopLevelParent(self), data)
         changed = dlg.ShowModal() == wx.ID_OK
 
         if changed:
