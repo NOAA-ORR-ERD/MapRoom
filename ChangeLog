@@ -1,3 +1,13 @@
+04/26/2018
+---------------------------
+Released 4.0rc5
+- RM Refs #891: use system color picker on Mac to work around crash in pure-python one
+- RM Refs #883: fixed problem that ignored a bin, making the colormap one entry smaller than it should have been
+- RM Fixed #884: added checks for arrow drawing
+- RM Fixed #889: check for any mime type starting with application/x-maproom-project-
+- RM Fixed #883: autoscale is now set to True when converting to percentages, False when converting to fixed bins
+- RM Fixed particle layer hidden points being reset after changing colormap
+
 04/17/2018
 ---------------------------
 Released 4.0rc4
