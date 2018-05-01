@@ -347,9 +347,13 @@ class ParticleLegend(ScreenLayer):
 
             r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
             colors = c.calc_rgba_texture()
-            lo, hi = parent.num_below_above()
-            up_color = c.over_rgba if hi > 0 else None
-            down_color = c.under_rgba if lo > 0 else None
+            try:
+                lo, hi = parent.num_below_above()
+                up_color = c.over_rgba if hi > 0 else None
+                down_color = c.under_rgba if lo > 0 else None
+            except AttributeError:
+                # continuous colormap doesn't have values outside of bounds
+                up_color = down_color = None
             renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing, up_color=up_color, down_color=down_color)
 
 
