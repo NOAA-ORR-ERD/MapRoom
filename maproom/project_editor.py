@@ -234,6 +234,7 @@ class ProjectEditor(FrameworkEditor):
             "projected_point_center": self.layer_canvas.projected_point_center,
             "projected_units_per_pixel": self.layer_canvas.projected_units_per_pixel,
             "timeline": self.timeline.serialize_json(),
+            "tile_manager": self.control.calc_layout()["tile_manager"]
             }
 
     def layer_visibility_to_json(self):
@@ -540,7 +541,7 @@ class ProjectEditor(FrameworkEditor):
                 time.sleep(1)
         self.long_status = PopupStatusBar(self.layer_canvas)
 
-        panel.add(self.layer_canvas, "layer_canvas")
+        panel.add(self.layer_canvas, "layer_canvas", show_title=False)
 
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = LayerTreeControl(panel, self, size=(200, 300))
