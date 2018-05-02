@@ -490,7 +490,7 @@ class ProjectEditor(FrameworkEditor):
     def _create_control(self, parent):
         """ Creates the toolkit-specific control for the widget. """
 
-        panel = TileManager(parent, show_close=False)
+        panel = TileManager(parent)
         panel.Bind(TileManager.EVT_LAYOUT_CHANGED, self.on_layout_changed)
 
         self.document = self.layer_manager = LayerManager.create(self)
@@ -541,32 +541,32 @@ class ProjectEditor(FrameworkEditor):
                 time.sleep(1)
         self.long_status = PopupStatusBar(self.layer_canvas)
 
-        panel.add(self.layer_canvas, "layer_canvas", show_title=False)
+        panel.add(self.layer_canvas, "layer_canvas", show_title=False, use_close_button=False)
 
         # Tree/Properties controls referenced from MapController
         self.layer_tree_control = LayerTreeControl(panel, self, size=(200, 300))
-        panel.add(self.layer_tree_control, "layer_tree_control")
+        panel.add(self.layer_tree_control, "layer_tree_control", use_close_button=False)
 
         self.layer_info = LayerInfoPanel(panel, self, size=(200, 200))
-        panel.add(self.layer_info, "layer_info")
+        panel.add(self.layer_info, "layer_info", use_close_button=False)
 
         self.selection_info = SelectionInfoPanel(panel, self, size=(200, 200))
-        panel.add(self.selection_info, "selection_info")
+        panel.add(self.selection_info, "selection_info", use_close_button=False)
 
         self.triangle_panel = TrianglePanel(panel, self.task)
-        panel.add(self.triangle_panel, "triangle_panel", wx.RIGHT, sidebar=True)
+        panel.add(self.triangle_panel, "triangle_panel", wx.RIGHT, sidebar=True, use_close_button=False)
 
         self.merge_points_panel = MergePointsPanel(panel, self.task)
-        panel.add(self.merge_points_panel, "merge_points_panel", wx.RIGHT, sidebar=True)
+        panel.add(self.merge_points_panel, "merge_points_panel", wx.RIGHT, sidebar=True, use_close_button=False)
 
         self.undo_history = UndoHistoryPanel(panel, self.task)
-        panel.add(self.undo_history, "undo_history", wx.RIGHT, sidebar=True)
+        panel.add(self.undo_history, "undo_history", wx.RIGHT, sidebar=True, use_close_button=False)
 
         self.flagged_control = panes.FlaggedPointPanel(panel, self.task)
-        panel.add(self.flagged_control, "flagged_control", wx.RIGHT, sidebar=True)
+        panel.add(self.flagged_control, "flagged_control", wx.RIGHT, sidebar=True, use_close_button=False)
 
         self.download_control = panes.DownloadPanel(panel, self.task)
-        panel.add(self.download_control, "download_control", wx.RIGHT, sidebar=True)
+        panel.add(self.download_control, "download_control", wx.RIGHT, sidebar=True, use_close_button=False)
 
         self.timeline = panes.TimelinePlaybackPanel(panel, self.task)
         panel.add_footer(self.timeline)
