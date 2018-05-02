@@ -149,14 +149,6 @@ class MaproomProjectTask(FrameworkTask):
     # 'Task' interface.
     ###########################################################################
 
-    def _default_layout_default(self):
-        return pane_layout.pane_layout()
-
-    def create_dock_panes(self):
-        """ Create the file browser and connect to its double click event.
-        """
-        return pane_layout.pane_create()
-
     def _tool_bars_default(self):
         toolbars = toolbar.get_all_toolbars()
         toolbars.extend(FrameworkTask._tool_bars_default(self))
@@ -179,9 +171,6 @@ class MaproomProjectTask(FrameworkTask):
                            path='MenuBar/Help/Debug'),
         ]
         return additions
-
-    def pane_layout_initial_visibility(self):
-        return pane_layout.pane_initially_visible()
 
     ###########################################################################
     # 'FrameworkTask' interface.
@@ -426,6 +415,8 @@ class MaproomProjectTask(FrameworkTask):
         # restore the single toolbar per task.  But because MapRoom uses
         # dynamic toolbars based on layer, have to make sure that only the
         # correct layer toolbar is shown
+        if self.active_editor is None:
+            return
         active_toolbar = self.active_editor.mouse_mode_toolbar
         for toolbar in window.tool_bar_managers:
             name = toolbar.id
@@ -446,14 +437,6 @@ class MaproomProjectTask(FrameworkTask):
                 state = False
             toolbar.visible = state
             log.debug("toolbar: %s = %s" % (name, state))
-
-    def _active_editor_changed(self):
-        tree = self.window.get_dock_pane('maproom.layer_selection_pane')
-        if tree is not None and tree.control is not None:
-            # We must be in an event handler during trait change callbacks,
-            # because we segfault without the GUI.invoke_later (equivalent
-            # to wx.CallAfter)
-            GUI.invoke_later(tree.control.set_project, self.active_editor)
 
     def _wx_on_mousewheel_from_window(self, event):
         if self.active_editor:

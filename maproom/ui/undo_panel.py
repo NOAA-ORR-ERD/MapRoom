@@ -8,7 +8,7 @@ progress_log = logging.getLogger("progress")
 class UndoHistoryPanel(wx.Panel):
     def __init__(self, parent, task):
         self.task = task
-        wx.Panel.__init__(self, parent, wx.ID_ANY)
+        wx.Panel.__init__(self, parent, wx.ID_ANY, name="Undo History")
 
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()

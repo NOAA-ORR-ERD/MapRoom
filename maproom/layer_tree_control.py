@@ -37,7 +37,7 @@ class LayerTreeControl(wx.Panel):
     dragged_item = None
 
     def __init__(self, parent, project, size=(-1, -1)):
-        wx.Panel.__init__(self, parent, wx.ID_ANY, size=size)
+        wx.Panel.__init__(self, parent, wx.ID_ANY, name="Layers", size=size)
 
         self.tree = IndexableTree(self, wx.ID_ANY, style=treectrl.TR_DEFAULT_STYLE, agwStyle=treectrl.TR_HIDE_ROOT | treectrl.TR_NO_LINES | treectrl.TR_HAS_BUTTONS | treectrl.TR_FULL_ROW_HIGHLIGHT | treectrl.TR_EDIT_LABELS)
         self.project = project

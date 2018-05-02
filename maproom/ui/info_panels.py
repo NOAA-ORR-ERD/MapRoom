@@ -1628,6 +1628,8 @@ class InfoPanel(PANELTYPE):
     VALUE_SPACING = 3
     SIDE_SPACING = 5
 
+    window_name = "InfoPanel"
+
     def __init__(self, parent, project, size=(-1, -1)):
         self.project = project
 
@@ -1643,7 +1645,7 @@ class InfoPanel(PANELTYPE):
         self.field_map = {}
         self.focus_on_input = None
 
-        PANELTYPE.__init__(self, parent, size=size)
+        PANELTYPE.__init__(self, parent, name=self.window_name, size=size)
 
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()
@@ -1852,12 +1854,16 @@ class InfoPanel(PANELTYPE):
 
 
 class LayerInfoPanel(InfoPanel):
+    window_name = "Current Layer"
+
     def get_visible_fields(self, layer):
         fields = list(layer.layer_info_panel)
         return fields
 
 
 class SelectionInfoPanel(InfoPanel):
+    window_name = "Current Selection"
+
     def get_visible_fields(self, layer):
         fields = list(layer.selection_info_panel)
         return fields

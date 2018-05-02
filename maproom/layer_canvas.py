@@ -28,6 +28,7 @@ class LayerCanvas(renderer.ScreenCanvas):
 
     def __init__(self, *args, **kwargs):
         renderer.ScreenCanvas.__init__(self, *args, **kwargs)
+        self.SetName("Maproom Project")
 
         p = get_image_path("icons/hand.ico", file=__name__)
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)

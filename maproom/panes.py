@@ -289,6 +289,7 @@ class TimeStepDialog(wx.Dialog, TimeStepPanelMixin):
 class TimelinePlaybackPanel(wx.Panel):
     def __init__(self, parent, task, *args, **kwargs):
         wx.Panel.__init__(self, parent, *args, **kwargs)
+        self.SetName("Timeline")
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
 
@@ -387,100 +388,6 @@ class TimelinePlaybackPanel(wx.Panel):
         self.update_ui()
 
 
-class TimelinePane(FrameworkPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.timeline_pane'
-    name = 'Timeline'
-
-    caption_visible = False
-    movable = False
-
-    def create_contents(self, parent):
-        control = TimelinePlaybackPanel(parent, self.task)
-        return control
-
-    def get_new_info(self):
-        info = FrameworkPane.get_new_info(self)
-        info.LeftDockable(False)
-        info.RightDockable(False)
-        info.DockFixed(True)
-        return info
-
-
-class LayerSelectionPane(FrameworkPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.layer_selection_pane'
-    name = 'Layers'
-
-    def create_contents(self, parent):
-        control = LayerTreeControl(parent, self.task.active_editor, size=(200, 300))
-        return control
-
-
-class LayerInfoPane(FrameworkPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.layer_info_pane'
-    name = 'Current Layer'
-
-    def create_contents(self, parent):
-        control = LayerInfoPanel(parent, self.task.active_editor, size=(200, 200))
-        return control
-
-
-class SelectionInfoPane(FrameworkPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.selection_info_pane'
-    name = 'Current Selection'
-
-    def create_contents(self, parent):
-        control = SelectionInfoPanel(parent, self.task.active_editor, size=(200, 200))
-        return control
-
-
-class TriangulatePane(FrameworkPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.triangulate_pane'
-    name = 'Triangulate'
-
-    def create_contents(self, parent):
-        control = TrianglePanel(parent, self.task)
-        return control
-
-
-class MergePointsPane(FrameworkPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.merge_points_pane'
-    name = 'Merge Points'
-
-    def create_contents(self, parent):
-        control = MergePointsPanel(parent, self.task)
-        return control
-
-
-class UndoHistoryPane(FrameworkPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.undo_history_pane'
-    name = 'Undo History'
-
-    def create_contents(self, parent):
-        control = UndoHistoryPanel(parent, self.task)
-        return control
-
-    # trait change handlers
-
-    def _task_changed(self):
-        log.debug("TASK CHANGED IN UNDOHISTORYPANE!!!! %s" % self.task)
-        if self.control:
-            self.control.set_task(self.task)
-
-
 # class FlaggedPointPanel(wx.Panel):
 #    def __init__(self, parent, task, **kwargs):
 #        self.task = task
@@ -506,7 +413,7 @@ class FlaggedPointPanel(wx.ListBox):
         self.task = task
         self.editor = None
         self.point_indexes = []
-        wx.ListBox.__init__(self, parent, wx.ID_ANY, **kwargs)
+        wx.ListBox.__init__(self, parent, wx.ID_ANY, name="Flagged Points", **kwargs)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
 
         # Return key not sent through to EVT_CHAR, EVT_CHAR_HOOK or
@@ -583,7 +490,7 @@ class DownloadPanel(DownloadControl):
         self.task = task
         self.editor = None
         downloader = self.task.window.application.get_downloader()
-        DownloadControl.__init__(self, parent, downloader, size=(400, -1), **kwargs)
+        DownloadControl.__init__(self, parent, downloader, size=(400, -1), name="Downloads", **kwargs)
 
     # turn the superclass attribute path into a property so we can override it
     # and pull out the paths from the preferences
@@ -612,35 +519,6 @@ class DownloadPanel(DownloadControl):
     def get_notification_count(self):
         self.refresh_view()
         return self.num_active
-
-
-class SidebarPane(FrameworkFixedPane):
-    # TaskPane interface ###################################################
-
-    id = 'maproom.sidebar'
-    name = 'Sidebar'
-
-    movable = False
-    caption_visible = False
-    dock_layer = 9
-
-    def flagged_cb(self, parent, task, **kwargs):
-        self.flagged_control = FlaggedPointPanel(parent, task)
-
-    def download_cb(self, parent, task, **kwargs):
-        self.download_control = DownloadPanel(parent, task)
-
-    def create_contents(self, parent):
-        control = SpringTabs(parent, self.task, popup_direction="left")
-        control.add_tab("Flagged Points", self.flagged_cb)
-        control.add_tab("Downloads", self.download_cb)
-        return control
-
-    def refresh_active(self):
-        self.control.update_notifications()
-        active = self.control._radio
-        if active is not None and active.is_shown:
-            active.managed_window.refresh_view()
 
 
 class HtmlHelpPane(FrameworkPane):

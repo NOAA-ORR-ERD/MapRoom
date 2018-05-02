@@ -19,6 +19,8 @@ from traits.api import on_trait_change
 from omnivore.framework.editor import FrameworkEditor
 from omnivore.framework.errors import ProgressCancelError
 from omnivore.utils.wx.popuputil import PopupStatusBar
+from omnivore.utils.wx.tilemanager import TileManager
+from omnivore.templates import get_template
 
 # Local imports.
 from layer_canvas import LayerCanvas
@@ -31,6 +33,12 @@ from menu_commands import LoadLayersCommand, DeleteLayerCommand, SavepointComman
 from mouse_commands import ViewportCommand, StyleChangeCommand
 import toolbar
 from library.bsb_utils import extract_from_zip
+import panes
+from layer_tree_control import LayerTreeControl
+from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
+from ui.triangle_panel import TrianglePanel
+from ui.merge_panel import MergePointsPanel
+from ui.undo_panel import UndoHistoryPanel
 
 import logging
 log = logging.getLogger(__name__)
@@ -132,14 +140,15 @@ class ProjectEditor(FrameworkEditor):
         if hasattr(loader, "load_project"):
             document = LayerManager.create(self)
             document.metadata = metadata.clone_traits()
-            log.debug("Clearing timeline")
-            self.timeline.clear_marks()
             batch_flags = BatchStatus()
             print "FIXME: Add load project command that clears all layers"
             extra = loader.load_project(metadata, document, batch_flags)
             self.document = self.layer_manager = document
+            self.create_layout(extra)
             self.parse_extra_json(extra, batch_flags)
             self.loaded_project_extra_json = extra
+            log.debug("Clearing timeline")
+            self.timeline.clear_marks()
             self.layer_tree_control.clear_all_items()
             self.layer_tree_control.rebuild()
             self.layer_tree_control.select_initial_layer()
@@ -470,9 +479,8 @@ class ProjectEditor(FrameworkEditor):
     def download_file(self, url, filename, callback, extra_data):
         if filename is None:
             filename = os.path.basename(url)
-        req = self.sidebar.download_control.request_download(url, filename, callback)
+        req = self.download_control.request_download(url, filename, callback)
         req.extra_data = extra_data
-        self.sidebar.refresh_active()
 
     ###########################################################################
     # Private interface.
@@ -481,8 +489,42 @@ class ProjectEditor(FrameworkEditor):
     def _create_control(self, parent):
         """ Creates the toolkit-specific control for the widget. """
 
+        panel = TileManager(parent, show_close=False)
+        panel.Bind(TileManager.EVT_LAYOUT_CHANGED, self.on_layout_changed)
+
         self.document = self.layer_manager = LayerManager.create(self)
         self.layer_visibility = self.get_default_visibility()
+
+        log.debug("LayerEditor: task=%s" % self.task)
+
+        return panel
+
+    def on_layout_changed(self, evt):
+        layout = self.control.calc_layout()
+        print(json.dumps(layout))
+
+    def get_default_layout(self):
+        try:
+            data = get_template("%s.default_layout" % self.task.id)
+        except OSError:
+            log.error("no default layout")
+            e = {}
+        else:
+            print("DEFAULT LAYOUT", data)
+            try:
+                e = json.loads(data)
+            except ValueError:
+                log.error("invalid data in default layout")
+                e = {}
+        return e
+
+    def create_layout(self, json):
+        panel = self.control
+        if "tile_manager" in json:
+            layout = json
+        else:
+            layout = self.get_default_layout()
+        panel.restore_layout(layout)
 
         # Mac can occasionally fail to get an OpenGL context, so creation of
         # the layer canvas can fail. Attempting to work around by giving it
@@ -491,25 +533,42 @@ class ProjectEditor(FrameworkEditor):
         while attempts > 0:
             attempts -= 1
             try:
-                self.layer_canvas = LayerCanvas(parent, project=self)
+                self.layer_canvas = LayerCanvas(panel, project=self)
                 attempts = 0
             except wx.wxAssertionError:
                 log.error("Failed initializing OpenGL context. Trying %d more times" % attempts)
                 time.sleep(1)
         self.long_status = PopupStatusBar(self.layer_canvas)
 
+        panel.add(self.layer_canvas, "layer_canvas")
+
         # Tree/Properties controls referenced from MapController
-        self.layer_tree_control = self.window.get_dock_pane('maproom.layer_selection_pane').control
-        self.layer_info = self.window.get_dock_pane('maproom.layer_info_pane').control
-        self.selection_info = self.window.get_dock_pane('maproom.selection_info_pane').control
-        self.undo_history = self.window.get_dock_pane('maproom.undo_history_pane').control
-        self.sidebar = self.window.get_dock_pane('maproom.sidebar')
-        self.timeline = self.window.get_dock_pane('maproom.timeline_pane').control
-        self.timeline.recalc_view()
+        self.layer_tree_control = LayerTreeControl(panel, self, size=(200, 300))
+        panel.add(self.layer_tree_control, "layer_tree_control")
 
-        log.debug("LayerEditor: task=%s" % self.task)
+        self.layer_info = LayerInfoPanel(panel, self, size=(200, 200))
+        panel.add(self.layer_info, "layer_info")
 
-        return self.layer_canvas.get_native_control()
+        self.selection_info = SelectionInfoPanel(panel, self, size=(200, 200))
+        panel.add(self.selection_info, "selection_info")
+
+        self.triangle_panel = TrianglePanel(panel, self.task)
+        panel.add_sidebar(self.triangle_panel, "triangle_panel", wx.RIGHT)
+
+        self.merge_points_panel = MergePointsPanel(panel, self.task)
+        panel.add_sidebar(self.merge_points_panel, "merge_points_panel", wx.RIGHT)
+
+        self.undo_history = UndoHistoryPanel(panel, self.task)
+        panel.add_sidebar(self.undo_history, "undo_history", wx.RIGHT)
+
+        self.flagged_control = panes.FlaggedPointPanel(panel, self.task)
+        panel.add_sidebar(self.flagged_control, "flagged_control", wx.RIGHT)
+
+        self.download_control = panes.DownloadPanel(panel, self.task)
+        panel.add_sidebar(self.download_control, "download_control", wx.RIGHT)
+
+        self.timeline = panes.TimelinePlaybackPanel(panel, self.task)
+        panel.add_footer(self.timeline)
 
     # Traits event handlers
 
@@ -586,10 +645,8 @@ class ProjectEditor(FrameworkEditor):
             self.layer_is_groupable = False
             layer_name = "Current Layer"
         log.debug("has_points=%s, has_selection = %s, has_flagged=%s, has_boundaries = %s" % (self.layer_has_points, self.layer_has_selection, self.layer_has_flagged, self.layer_has_boundaries))
-        pane = self.window.get_dock_pane('maproom.layer_info_pane')
-        pane.name = layer_name
+        self.layer_info.SetName(layer_name)
         self.update_undo_redo()
-        self.sidebar.refresh_active()
 
     def update_info_panels(self, layer, force=False):
         edit_layer = self.layer_tree_control.get_edit_layer()

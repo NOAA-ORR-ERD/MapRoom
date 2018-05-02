@@ -84,7 +84,7 @@ class MergePointsPanel(wx.Panel):
 
     def __init__(self, parent, task):
         self.task = task
-        wx.Panel.__init__(self, parent, wx.ID_ANY)
+        wx.Panel.__init__(self, parent, wx.ID_ANY, name="Merge Points")
 
         # Mac/Win needs this, otherwise background color is black
         attr = self.GetDefaultAttributes()

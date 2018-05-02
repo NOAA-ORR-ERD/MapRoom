@@ -452,9 +452,8 @@ class TriangulateLayerAction(EditorAction):
     image = ImageResource('triangulate.png')
 
     def perform(self, event):
-        task = self.active_editor.task
-        pane = task.window.get_dock_pane('maproom.triangulate_pane')
-        pane.visible = True
+        e = self.active_editor
+        e.control.force_focus(e.triangle_panel)
 
 
 class ToPolygonLayerAction(EditorAction):
@@ -548,9 +547,8 @@ class MergePointsAction(EditorAction):
     image = ImageResource('merge_duplicates.png')
 
     def perform(self, event):
-        task = self.active_editor.task
-        pane = task.window.get_dock_pane('maproom.merge_points_pane')
-        pane.visible = True
+        e = self.active_editor
+        e.control.force_focus(e.merge_points_panel)
 
 
 class JumpToCoordsAction(EditorAction):
