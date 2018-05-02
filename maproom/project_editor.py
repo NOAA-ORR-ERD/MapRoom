@@ -553,19 +553,19 @@ class ProjectEditor(FrameworkEditor):
         panel.add(self.selection_info, "selection_info")
 
         self.triangle_panel = TrianglePanel(panel, self.task)
-        panel.add_sidebar(self.triangle_panel, "triangle_panel", wx.RIGHT)
+        panel.add(self.triangle_panel, "triangle_panel", wx.RIGHT, sidebar=True)
 
         self.merge_points_panel = MergePointsPanel(panel, self.task)
-        panel.add_sidebar(self.merge_points_panel, "merge_points_panel", wx.RIGHT)
+        panel.add(self.merge_points_panel, "merge_points_panel", wx.RIGHT, sidebar=True)
 
         self.undo_history = UndoHistoryPanel(panel, self.task)
-        panel.add_sidebar(self.undo_history, "undo_history", wx.RIGHT)
+        panel.add(self.undo_history, "undo_history", wx.RIGHT, sidebar=True)
 
         self.flagged_control = panes.FlaggedPointPanel(panel, self.task)
-        panel.add_sidebar(self.flagged_control, "flagged_control", wx.RIGHT)
+        panel.add(self.flagged_control, "flagged_control", wx.RIGHT, sidebar=True)
 
         self.download_control = panes.DownloadPanel(panel, self.task)
-        panel.add_sidebar(self.download_control, "download_control", wx.RIGHT)
+        panel.add(self.download_control, "download_control", wx.RIGHT, sidebar=True)
 
         self.timeline = panes.TimelinePlaybackPanel(panel, self.task)
         panel.add_footer(self.timeline)
