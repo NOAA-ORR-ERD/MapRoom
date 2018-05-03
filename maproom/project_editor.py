@@ -188,6 +188,8 @@ class ProjectEditor(FrameworkEditor):
             self.perform_batch_flags(None, batch_flags)
             self.view_document(self.document)
         else:
+            if not hasattr(self, 'layer_tree_control'):
+                self.create_layout({})
             log.debug("loading %s" % metadata)
             cmd = LoadLayersCommand(metadata, regime)
             self.process_command(cmd)
