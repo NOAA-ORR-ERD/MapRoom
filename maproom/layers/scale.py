@@ -19,9 +19,9 @@ class Scale(ScreenLayer):
 
     Shows a scale in miles/meters
     """
-    name = Unicode("Scale")
+    name = "Scale"
 
-    type = Str("scale")
+    type = "scale"
 
     x_percentage = Float(0.0)
 

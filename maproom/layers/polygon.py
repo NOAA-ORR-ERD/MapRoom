@@ -27,7 +27,7 @@ class PolygonLayer(PointLayer):
     """Layer for polygons.
     
     """
-    type = Str("polygon")
+    type = "polygon"
 
     mouse_mode_toolbar = Str("PolygonLayerToolBar")
 
@@ -388,7 +388,7 @@ class RNCLoaderLayer(PolygonLayer):
     """Layer for selecting RNC maps
     
     """
-    type = Str("rncloader")
+    type = "rncloader"
 
     mouse_mode_toolbar = Str("RNCToolBar")
 

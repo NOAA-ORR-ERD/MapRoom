@@ -38,9 +38,9 @@ class ParticleFolder(Folder):
     """Layer for vector annotation image
 
     """
-    name = Unicode("Particles")
+    name = "Particles"
 
-    type = Str("particles")
+    type = "particles"
 
     style_as = "particle"
 
@@ -251,9 +251,9 @@ class ParticleLegend(ScreenLayer):
     """Layer for vector annotation image
 
     """
-    name = Unicode("Legend")
+    name = "Legend"
 
-    type = Str("legend")
+    type = "legend"
 
     x_percentage = Float(1.0)
 
@@ -362,9 +362,9 @@ class ParticleLayer(PointBaseLayer):
 
        not much here, but this class exists because we're going to add stuff.
     """
-    name = Unicode("Particle Layer")
+    name = "Particle"
 
-    type = Str("particle")
+    type = "particle"
 
     layer_info_panel = ["Scalar value", "Scalar value expression", "Point size", "Outline color", "Status Code Color"]
 

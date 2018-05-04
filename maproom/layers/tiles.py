@@ -21,9 +21,9 @@ class TileLayer(ProjectedLayer):
     """Web Tile Service
     
     """
-    name = Unicode("Tiles")
+    name = "Tiles"
 
-    type = Str("tiles")
+    type = "tiles"
 
     layer_info_panel = ["Layer Name", "Transparency", "Server status", "Server reload"]
 

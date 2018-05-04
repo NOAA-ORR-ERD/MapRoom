@@ -22,7 +22,7 @@ class PolygonShapefileLayer(PolygonLayer):
     """Layer for shapely objects rendered as rings.
     
     """
-    type = Str("shapefile")
+    type = "shapefile"
 
     geometry = List
 

@@ -30,9 +30,9 @@ class RasterLayer(ProjectedLayer):
 
     # Traits
 
-    name = Unicode("Raster Layer")
+    name = "Raster"
 
-    type = Str("image")
+    type = "image"
 
     image_data = Any
 

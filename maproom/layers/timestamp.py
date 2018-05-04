@@ -19,9 +19,9 @@ class Timestamp(ScreenLayer):
     """Displays the current date & time in the image, useful for timeline
     playback
     """
-    name = Unicode("Timestamp")
+    name = "Timestamp"
 
-    type = Str("timestamp")
+    type = "timestamp"
 
     x_percentage = Float(1.0)
 

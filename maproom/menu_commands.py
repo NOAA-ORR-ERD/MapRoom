@@ -122,7 +122,7 @@ class AddLayerCommand(Command):
         self.after = after
 
     def __str__(self):
-        return "Add %s" % str(self.layer_class)
+        return "Add %s Layer" % self.layer_class.name
 
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()

@@ -20,9 +20,9 @@ log = logging.getLogger(__name__)
 class Folder(Layer):
     """Layer that contains other layers.
     """
-    name = Unicode("Folder")
+    name = "Folder"
 
-    type = Str("folder")
+    type = "folder"
 
     def is_folder(self):
         return True
@@ -45,9 +45,9 @@ class RootLayer(Folder):
     
     Only one root layer per project.
     """
-    name = Unicode("Root Layer")
+    name = "Root"
 
-    type = Str("root")
+    type = "root"
 
     skip_on_insert = True
 
@@ -62,9 +62,9 @@ class RootLayer(Folder):
 class BoundedFolder(LineLayer, Folder):
     """Layer that contains other layers.
     """
-    name = Unicode("BoundedFolder")
+    name = "BoundedFolder"
 
-    type = Str("boundedfolder")
+    type = "boundedfolder"
 
     @property
     def is_renderable(self):

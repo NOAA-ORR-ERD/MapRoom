@@ -27,9 +27,9 @@ class PointBaseLayer(ProjectedLayer):
     Layer for just points
 
     """
-    name = Unicode("Point Layer")
+    name = "Point"
 
-    type = Str("base_point")
+    type = "base_point"
 
     points = Any
 

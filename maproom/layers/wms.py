@@ -22,9 +22,9 @@ class WMSLayer(ProjectedLayer):
     """Web Map Service
     
     """
-    name = Unicode("WMS")
+    name = "WMS"
 
-    type = Str("wms")
+    type = "wms"
 
     layer_info_panel = ["Transparency", "Server status", "Server reload", "Map status"]
 

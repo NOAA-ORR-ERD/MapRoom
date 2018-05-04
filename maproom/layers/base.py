@@ -53,9 +53,14 @@ class Layer(HasTraits):
     # True if an image or other layer where it occludes stuff behind it
     opaque = False
 
-    # Traits
+    name = "Empty"
 
-    name = Unicode("Empty Layer")
+    # type is a string identifier that uniquely refers to a layer class.
+    # Base classes should use an empty string to show that they won't be
+    # serializable.
+    type = ""
+
+    # Traits
 
     # invariant is sort of a serial number of the layer in a LayerManager: an
     # id that doesn't change when the layer is renamed or reordered.  It is
@@ -67,11 +72,6 @@ class Layer(HasTraits):
     # the invariant of the parent layer (used in triangulation so that a
     # retriangulation will replace the older triangulation.
     dependent_of = Int(-1)
-
-    # type is a string identifier that uniquely refers to a layer class.
-    # Base classes should use an empty string to show that they won't be
-    # serializable.
-    type = Str("")
 
     mime = Str("")
 
@@ -741,9 +741,9 @@ class Layer(HasTraits):
 class EmptyLayer(Layer):
     """Emply layer used when a folder has no other children.
     """
-    name = Unicode("<empty folder>")
+    name = "<empty folder>"
 
-    type = Str("empty")
+    type = "empty"
 
 
 class ProjectedLayer(Layer):

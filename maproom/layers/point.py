@@ -27,9 +27,9 @@ class PointLayer(PointBaseLayer):
     Points are selectable, and all that
 
     """
-    name = Unicode("Point Layer")
+    name = "Point"
 
-    type = Str("point")
+    type = "point"
 
     mouse_mode_toolbar = Str("VectorLayerToolBar")
 

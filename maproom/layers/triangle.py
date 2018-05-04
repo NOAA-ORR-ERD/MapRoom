@@ -21,7 +21,7 @@ class TriangleLayer(PointLayer):
     """Layer for triangles.
 
     """
-    type = Str("triangle")
+    type = "triangle"
 
     mouse_mode_toolbar = Str("BaseLayerToolBar")
 

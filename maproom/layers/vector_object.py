@@ -40,9 +40,9 @@ class VectorObjectLayer(LineLayer):
     from a saved project file, and if multiple objects use the same string,
     the class used for deserializing will be randomly chosen, which is bad.
     """
-    name = Unicode("Vector Object Layer")
+    name = "Vector Object"
 
-    type = Str("vector_object")
+    type = "vector_object"
 
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
@@ -209,9 +209,9 @@ class LineVectorObject(VectorObjectLayer):
     ends.  This is used as the control point when translating.
 
     """
-    name = Unicode("Line")
+    name = "Line"
 
-    type = Str("line_obj")
+    type = "line_obj"
 
     layer_info_panel = ["Line style", "Line width", "Line color", "Start marker", "End marker"]
 
@@ -442,9 +442,9 @@ class LineVectorObject(VectorObjectLayer):
 
 
 class FillableVectorObject(LineVectorObject):
-    name = Unicode("Fillable")
+    name = "Fillable"
 
-    type = Str("fillable_obj")
+    type = "fillable_obj"
 
     # Fillable objects should (in general) display their center control point
     display_center_control_point = True
@@ -515,9 +515,9 @@ class RectangleMixin(object):
 
 
 class RectangleVectorObject(RectangleMixin, FillableVectorObject):
-    name = Unicode("Rectangle")
+    name = "Rectangle"
 
-    type = Str("rectangle_obj")
+    type = "rectangle_obj"
 
     layer_info_panel = ["Line style", "Line width", "Line color", "Fill style", "Fill color"]
 
@@ -567,9 +567,9 @@ class EllipseVectorObject(RectangleVectorObject):
     the polygon points array.  All corner points can be used as control points.
 
     """
-    name = Unicode("Ellipse")
+    name = "Ellipse"
 
-    type = Str("ellipse_obj")
+    type = "ellipse_obj"
 
     def get_info_panel_text(self, prop):
         if prop == "Area":
@@ -644,9 +644,9 @@ class CircleVectorObject(EllipseVectorObject):
     circle on resizing.
 
     """
-    name = Unicode("Circle")
+    name = "Circle"
 
-    type = Str("circle_obj")
+    type = "circle_obj"
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Radius", "Circumference", "Area"]
 
@@ -704,9 +704,9 @@ class ScaledImageObject(RectangleVectorObject):
     trasparent pixels.
 
     """
-    name = Unicode("Image")
+    name = "Image"
 
-    type = Str("scaled_image_obj")
+    type = "scaled_image_obj"
 
     layer_info_panel = ["Transparency"]
 
@@ -816,9 +816,9 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
     the resulting line is always the same length regardless of zoom
 
     """
-    name = Unicode("OverlayLine")
+    name = "OverlayLine"
 
-    type = Str("overlay_line_obj")
+    type = "overlay_line_obj"
 
     screen_dx = Float(-1)
 
@@ -918,9 +918,9 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
     trasparent pixels.
 
     """
-    name = Unicode("Overlay Image")
+    name = "Overlay Image"
 
-    type = Str("overlay_image_obj")
+    type = "overlay_image_obj"
 
     layer_info_panel = ["Transparency"]
 
@@ -1032,9 +1032,9 @@ class OverlayScalableImageObject(OverlayImageObject):
     trasparent pixels.
 
     """
-    name = Unicode("Scalable Image")
+    name = "Scalable Image"
 
-    type = Str("overlay_scalable_image_obj")
+    type = "overlay_scalable_image_obj"
 
     text_width = Float(-1)
 
@@ -1112,9 +1112,9 @@ class OverlayTextObject(OverlayScalableImageObject):
     trasparent pixels.
 
     """
-    name = Unicode("Text")
+    name = "Text"
 
-    type = Str("overlay_text_obj")
+    type = "overlay_text_obj"
 
     user_text = Unicode("<b>New Label</b>")
 
@@ -1157,9 +1157,9 @@ class OverlayIconObject(OverlayScalableImageObject):
 
     Uses the Marplot category icons.
     """
-    name = Unicode("Icon")
+    name = "Icon"
 
-    type = Str("overlay_icon_obj")
+    type = "overlay_icon_obj"
 
     layer_info_panel = ["Marplot icon", "Color"]
 
@@ -1267,9 +1267,9 @@ class PolylineMixin(object):
 
 
 class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
-    name = Unicode("Polyline")
+    name = "Polyline"
 
-    type = Str("polyline_obj")
+    type = "polyline_obj"
 
     display_center_control_point = True
 
@@ -1286,9 +1286,9 @@ class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
 
 
 class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
-    name = Unicode("Polygon")
+    name = "Polygon"
 
-    type = Str("polygon_obj")
+    type = "polygon_obj"
 
     layer_info_panel = ["Line style", "Line width", "Line color", "Fill style", "Fill color"]
 
@@ -1385,9 +1385,9 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     """Layer for vector annotation image
 
     """
-    name = Unicode("Annotation Layer")
+    name = "Annotation"
 
-    type = Str("annotation")
+    type = "annotation"
 
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
@@ -1487,9 +1487,9 @@ class ArrowTextBoxLayer(AnnotationLayer):
     """Layer for predefined group of text box and arrow pointing to lat/lon
 
     """
-    name = Unicode("Arrow Text Box")
+    name = "Arrow Text Box"
 
-    type = Str("arrowtextbox")
+    type = "arrowtextbox"
 
     layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color"]
 
@@ -1536,9 +1536,9 @@ class ArrowTextIconLayer(ArrowTextBoxLayer):
     """Layer for predefined group of text box and arrow pointing to lat/lon
 
     """
-    name = Unicode("Arrow Text Icon")
+    name = "Arrow Text Icon"
 
-    type = Str("arrowtexticon")
+    type = "arrowtexticon"
 
     layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color", "Marplot icon"]
 

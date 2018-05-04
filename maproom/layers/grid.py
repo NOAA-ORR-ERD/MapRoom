@@ -16,9 +16,9 @@ log = logging.getLogger(__name__)
 class Graticule(ScreenLayer):
     """Graticule
     """
-    name = Unicode("Graticule")
+    name = "Graticule"
 
-    type = Str("grid")
+    type = "grid"
 
     skip_on_insert = True
 

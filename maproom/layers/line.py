@@ -25,9 +25,9 @@ class LineLayer(PointLayer):
     """Layer for points/lines/polygons.
 
     """
-    name = Unicode("Ugrid Layer")
+    name = "Ugrid"
 
-    type = Str("line")
+    type = "line"
 
     line_segment_indexes = Any
 
@@ -604,9 +604,9 @@ class LineEditLayer(LineLayer):
     """Layer for points/lines/rings.
 
     """
-    name = Unicode("Line Edit Layer")
+    name = "Line Edit"
 
-    type = Str("line_edit")
+    type = "line_edit"
 
     parent_layer = Any
 

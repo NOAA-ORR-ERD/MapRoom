@@ -17,9 +17,9 @@ class CompassRose(ScreenLayer):
 
     Shows a compass rose or north-up arrow as a graphic overlay
     """
-    name = Unicode("Compass Rose")
+    name = "Compass Rose"
 
-    type = Str("compass_rose")
+    type = "compass_rose"
 
     x_percentage = Float(1.0)
 
