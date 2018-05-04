@@ -209,6 +209,7 @@ class MaproomProjectTask(FrameworkTask):
             SMenu(actions.SaveLayerGroup(),
                   id='SaveLayerAsSubmenu', name="Save Layer As"),
             SaveAsImageAction(),
+            actions.SaveMovieAction(),
         ]
 
     def get_actions_Menu_File_RevertGroup(self):

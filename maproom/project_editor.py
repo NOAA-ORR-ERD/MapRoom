@@ -14,6 +14,7 @@ from traits.api import Bool
 from traits.api import Dict
 from traits.api import Float
 from traits.api import Str
+from traits.api import List
 from traits.api import on_trait_change
 
 from omnivore.framework.editor import FrameworkEditor
@@ -33,6 +34,7 @@ from menu_commands import LoadLayersCommand, DeleteLayerCommand, SavepointComman
 from mouse_commands import ViewportCommand, StyleChangeCommand
 import toolbar
 from library.bsb_utils import extract_from_zip
+from library import apng
 import panes
 from layer_tree_control import LayerTreeControl
 from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
@@ -96,6 +98,8 @@ class ProjectEditor(FrameworkEditor):
     # can_paste_style is set by copy_style if there's a style that can be
     # applied
     can_paste_style = Bool(False)
+
+    latest_movie = Any
 
     # NOTE: Class attribute!
     clipboard_style = None
@@ -449,6 +453,21 @@ class ProjectEditor(FrameworkEditor):
         pdf_canvas.copy_viewport_from(self.layer_canvas)
         pdf_canvas.update_renderers()
         pdf_canvas.render()
+
+    def start_movie_recording(self):
+        log.debug("Starting movie recording")
+        self.latest_movie = apng.APNG()
+
+    def stop_movie_recording(self):
+        print("Recorded %d frames" % len(self.latest_movie.frames))
+
+    def save_latest_movie(self, path):
+        if self.latest_movie is not None:
+            self.latest_movie.save(path.encode("utf-8"))
+
+    def add_frame_to_movie(self):
+        print("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
+        self.latest_movie.append(self.get_numpy_image())
 
     @property
     def most_recent_uri(self):

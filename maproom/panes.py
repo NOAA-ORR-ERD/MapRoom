@@ -129,15 +129,18 @@ class TimelinePanel(ZoomRuler):
 
     def playback_start_callback(self):
         self.GetParent().play.SetLabel("Pause")
+        self.editor.start_movie_recording()
 
     def playback_pause_callback(self):
         self.GetParent().play.SetLabel("Play")
         self.current_time = None
+        self.editor.stop_movie_recording()
 
     def playback_callback(self, current_time):
-        log.debug("playback for time: %f" % current_time)
+        log.debug("playback for time: %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(current_time)))
         self.current_time = current_time
         self.editor.refresh()
+        self.editor.add_frame_to_movie()
 
 
 wxEVT_TIME_STEP_MODIFIED = wx.NewEventType()
@@ -324,6 +327,10 @@ class TimelinePlaybackPanel(wx.Panel):
     @property
     def current_time(self):
         return self.timeline.current_time
+
+    @property
+    def step_rate(self):
+        return self.timeline.step_rate
 
     @property
     def selected_time_range(self):

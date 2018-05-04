@@ -57,12 +57,12 @@ class Timestamp(ScreenLayer):
             return
         current_time = renderer.canvas.project.timeline.current_time
         if current_time is not None:
-            timestamp = time.strftime("%b %d %Y %H:%M", time.localtime(current_time))
+            timestamp = time.strftime("%b %d %Y %H:%M", time.gmtime(current_time))
         else:
             begin, end = renderer.canvas.project.timeline.selected_time_range
             if begin is not None:
-                t1 = time.strftime("%b %d %Y %H:%M", time.localtime(begin))
-                t2 = time.strftime("%b %d %Y %H:%M", time.localtime(end))
+                t1 = time.strftime("%b %d %Y %H:%M", time.gmtime(begin))
+                t2 = time.strftime("%b %d %Y %H:%M", time.gmtime(end))
                 timestamp = "%s - %s" % (t1, t2)
             else:
                 return

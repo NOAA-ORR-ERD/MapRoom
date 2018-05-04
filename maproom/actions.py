@@ -194,6 +194,17 @@ class SaveLayerGroup(TaskDynamicSubmenuGroup):
         return items
 
 
+class SaveMovieAction(EditorAction):
+    name = 'Save Latest Playback...'
+    loader = Any
+    enabled_name = 'latest_movie'
+
+    def perform(self, event):
+        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="PNG Movies (*.png)|*.png")
+        if dialog.open() == OK:
+            self.active_editor.save_latest_movie(dialog.path)
+
+
 class RevertProjectAction(EditorAction):
     name = 'Revert Project'
     tooltip = 'Revert project to last saved version'
