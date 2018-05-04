@@ -38,11 +38,7 @@ class TimelinePanel(ZoomRuler):
         self.step_rate = 0  # set as flag to indicate it needs to be updated
 
     def get_timeline_info(self):
-        if self.editor is not None:
-            layers, start, end = self.editor.layer_manager.get_timestamped_layers(self.editor.layer_visibility, False)
-        else:
-            layers = []
-            start = end = 0.0
+        layers, start, end = self.editor.layer_manager.get_timestamped_layers(self.editor.layer_visibility, False)
         if start == 0.0:
             today = datetime.datetime.today()
             noon = today.replace(hour=12, minute=0, second=0, tzinfo=None)
@@ -87,8 +83,7 @@ class TimelinePanel(ZoomRuler):
     def selection_started_callback(self, selected_ranges):
         log.debug("selection started: %s" % str(selected_ranges))
         self.current_marks_in_selection = set()
-        if self.editor is not None:
-            self.editor.refresh()
+        self.editor.refresh()
 
     def selection_extended_callback(self, selected_ranges, marks_in_selection):
         log.debug("selection extended: %s" % str(selected_ranges))
@@ -100,32 +95,26 @@ class TimelinePanel(ZoomRuler):
 
     def selection_finished_callback(self, selected_ranges):
         log.debug("selection finished: %s" % str(selected_ranges))
-        if self.editor is not None:
-            self.editor.refresh()
+        self.editor.refresh()
 
     def item_activation_callback(self, item):
-        if self.editor is not None:
-            layers = [item]
-            self.editor.set_layer_visibility(layers)
-            self.editor.layer_tree_control.Refresh()
+        layers = [item]
+        self.editor.set_layer_visibility(layers)
+        self.editor.layer_tree_control.Refresh()
 
     def over_item_callback(self, pos, item):
-        if self.editor is not None:
-            self.editor.status_message = str(item)
+        self.editor.status_message = str(item)
 
     def not_over_item_callback(self, pos):
-        if self.editor is not None:
-            self.editor.status_message = ""
+        self.editor.status_message = ""
 
     def selected_item_callback(self, item):
-        if self.editor is not None:
-            self.editor.layer_tree_control.set_edit_layer(item)
+        self.editor.layer_tree_control.set_edit_layer(item)
 
     def selection_cleared_callback(self):
         log.debug("selection cleared")
-        if self.editor is not None:
-            self.current_time = None
-            self.editor.refresh()
+        self.current_time = None
+        self.editor.refresh()
 
     def playback_start_callback(self):
         self.GetParent().play.SetLabel("Pause")
@@ -379,12 +368,7 @@ class TimelinePlaybackPanel(wx.Panel):
 
     def refresh_view(self):
         log.debug("timeline refresh_view")
-        editor = self.timeline.task.active_editor
-        if editor is not None:
-            if self.timeline.editor != editor:
-                self.recalc_view()
-            else:
-                self.Refresh()
+        self.Refresh()
         self.update_ui()
 
     def update_ui(self):
@@ -493,22 +477,16 @@ class FlaggedPointPanel(wx.ListBox):
 
     def recalc_view(self):
         editor = self.task.active_editor
-        if editor is not None:
-            self.editor = editor
-            layer = editor.layer_tree_control.get_edit_layer()
-            try:
-                points = layer.get_flagged_point_indexes()
-            except AttributeError:
-                points = []
-            self.set_flagged(points)
+        self.editor = editor
+        layer = editor.layer_tree_control.get_edit_layer()
+        try:
+            points = layer.get_flagged_point_indexes()
+        except AttributeError:
+            points = []
+        self.set_flagged(points)
 
     def refresh_view(self):
-        editor = self.task.active_editor
-        if editor is not None:
-            if self.editor != editor:
-                self.recalc_view()
-            else:
-                self.Refresh()
+        self.Refresh()
 
     def activateSpringTab(self):
         self.recalc_view()

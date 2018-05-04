@@ -123,8 +123,6 @@ class LayerTreeControl(wx.Panel):
             self.tree.SelectItem(fallback)
 
     def set_edit_layer(self, layer):
-        if self.project is None:
-            return
         self.project.clear_all_selections(False)
 
         if (layer is None):
@@ -195,9 +193,6 @@ class LayerTreeControl(wx.Panel):
 
     def rebuild(self, expand=None):
         # rebuild the tree from the layer manager's data
-        if self.project is None:
-            # Wait till there's an active project
-            return
         selected = self.get_edit_layer()
         expanded_state = self.get_expanded_state()
         if expand is not None:
@@ -467,8 +462,7 @@ class LayerTreeControl(wx.Panel):
         size = self.GetSize()
         if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
             # print "Mouse not over Tree: trying map!"
-            if self.project is not None:
-                self.project.control.on_mouse_wheel_scroll(event)
+            self.project.control.on_mouse_wheel_scroll(event)
             return
 
         event.Skip()
