@@ -17,7 +17,7 @@ from mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLo
 from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from library.thread_utils import BackgroundWMSDownloader
 from library.tile_utils import BackgroundTileDownloader
-from layers import styleable_layers
+from . import layers
 
 import logging
 log = logging.getLogger(__name__)
@@ -224,7 +224,7 @@ class DefaultStyleAction(EditorAction):
         GUI.invoke_later(self.show_dialog, self.active_editor)
 
     def show_dialog(self, project):
-        dialog = StyleDialog(project, styleable_layers)
+        dialog = StyleDialog(project, layers.styleable_layers)
         status = dialog.ShowModal()
         if status == wx.ID_OK:
             project.layer_manager.update_default_styles(dialog.get_styles())
@@ -316,68 +316,54 @@ class ZoomToLayer(LayerAction):
         self.active_editor.process_command(cmd)
 
 
-class NewVectorLayerAction(EditorAction):
+class NewLayerBaseAction(EditorAction):
+    layer_class = None
+
+    def perform(self, event):
+        cmd = AddLayerCommand(self.layer_class)
+        self.active_editor.process_command(cmd)
+
+class NewVectorLayerAction(NewLayerBaseAction):
     name = 'New Verdat Layer'
     tooltip = 'Create new vector (grid) layer'
     image = ImageResource('add_layer')
-
-    def perform(self, event):
-        cmd = AddLayerCommand("vector")
-        self.active_editor.process_command(cmd)
+    layer_class = layers.LineLayer
 
 
-class NewLonLatLayerAction(EditorAction):
+class NewLonLatLayerAction(NewLayerBaseAction):
     name = 'New Graticule Layer'
     tooltip = 'Create new longitude/latitude grid layer'
-
-    def perform(self, event):
-        cmd = AddLayerCommand("grid")
-        self.active_editor.process_command(cmd)
+    layer_class = layers.Graticule
 
 
-class NewCompassRoseLayerAction(EditorAction):
+class NewCompassRoseLayerAction(NewLayerBaseAction):
     name = 'New Compass Rose Layer'
     tooltip = 'Create new compass rose or north-up arrow layer'
-
-    def perform(self, event):
-        cmd = AddLayerCommand("compass_rose")
-        self.active_editor.process_command(cmd)
+    layer_class = layers.CompassRose
 
 
-class NewTimestampLayerAction(EditorAction):
+class NewTimestampLayerAction(NewLayerBaseAction):
     name = 'New Timestamp Layer'
     tooltip = 'Create new timestamp to display current time in playback'
-
-    def perform(self, event):
-        cmd = AddLayerCommand("timestamp")
-        self.active_editor.process_command(cmd)
+    layer_class = layers.Timestamp
 
 
-class NewAnnotationLayerAction(EditorAction):
+class NewAnnotationLayerAction(NewLayerBaseAction):
     name = 'New Annotation Layer'
     tooltip = 'Create new annotation layer'
-
-    def perform(self, event):
-        cmd = AddLayerCommand("annotation")
-        self.active_editor.process_command(cmd)
+    layer_class = layers.AnnotationLayer
 
 
-class NewWMSLayerAction(EditorAction):
+class NewWMSLayerAction(NewLayerBaseAction):
     name = 'New WMS Layer'
     tooltip = 'Create new Web Map Service layer'
-
-    def perform(self, event):
-        cmd = AddLayerCommand("wms")
-        self.active_editor.process_command(cmd)
+    layer_class = layers.WMSLayer
 
 
-class NewTileLayerAction(EditorAction):
+class NewTileLayerAction(NewLayerBaseAction):
     name = 'New Tile Layer'
     tooltip = 'Create new tile background service layer'
-
-    def perform(self, event):
-        cmd = AddLayerCommand("tile")
-        self.active_editor.process_command(cmd)
+    layer_class = layers.TileLayer
 
 
 class NewRNCLayerAction(EditorAction):

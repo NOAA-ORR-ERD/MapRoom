@@ -112,40 +112,23 @@ class LoadLayersCommand(Command):
 class AddLayerCommand(Command):
     short_name = "add_layer"
     serialize_order = [
-        ('type', 'string'),
+        ('layer_class', 'layer_class'),
     ]
 
-    def __init__(self, type, before=None, after=None):
+    def __init__(self, layer_class, before=None, after=None):
         Command.__init__(self)
-        self.type = type
+        self.layer_class = layer_class
         self.before = before
         self.after = after
 
     def __str__(self):
-        return "Add %s Layer" % self.type.title()
+        return "Add %s" % str(self.layer_class)
 
     def perform(self, editor):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
-        if self.type == "grid":
-            layer = Graticule(manager=lm)
-        elif self.type == "compass_rose":
-            layer = CompassRose(manager=lm)
-        elif self.type == "timestamp":
-            layer = Timestamp(manager=lm)
-        elif self.type == "triangle":
-            layer = TriangleLayer(manager=lm)
-        elif self.type == "annotation":
-            layer = AnnotationLayer(manager=lm)
-        elif self.type == "wms":
-            layer = WMSLayer(manager=lm)
-        elif self.type == "tile":
-            layer = TileLayer(manager=lm)
-        elif self.type == "rnc":
-            layer = RNCLoaderLayer(manager=lm)
-        else:
-            layer = LineLayer(manager=lm)
+        layer = self.layer_class(manager=lm)
 
         layer.new()
         lm.insert_loaded_layer(layer, editor, self.before, self.after)
