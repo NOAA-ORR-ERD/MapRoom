@@ -115,7 +115,7 @@ class InfoField(object):
         size = self.ctrl.GetSize()
         if screen_point.x < 0 or screen_point.y < 0 or screen_point.x > size.x or screen_point.y > size.y:
             # print "Mouse not over info panel %s: trying map!" % self
-            self.panel.project.control.on_mouse_wheel_scroll(event)
+            self.panel.project.layer_canvas.on_mouse_wheel_scroll(event)
             return
 
         event.Skip()
