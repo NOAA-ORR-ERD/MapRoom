@@ -99,7 +99,7 @@ class ProjectEditor(FrameworkEditor):
     # applied
     can_paste_style = Bool(False)
 
-    latest_movie = Any
+    latest_movie = Any(False)
 
     # NOTE: Class attribute!
     clipboard_style = None
