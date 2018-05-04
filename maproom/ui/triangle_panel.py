@@ -38,7 +38,7 @@ class TrianglePanel(wx.Panel):
         # t = wx.StaticText(self, label="Minimum angle:")
         # s.Add(t, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         s2 = wx.BoxSizer(wx.HORIZONTAL)
-        self.angle_text_box = wx.TextCtrl(self, 0, "", size=(100, -1))
+        self.angle_text_box = wx.TextCtrl(self, 0, "", size=(100, -1), name="TrainglePanel.angle_text_box")
         self.angle_text_box.SetHelpText("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
         self.angle_text_box.SetToolTip("You can specify a minimum triangle angle (or leave blank if you don't want to specify a minimum). If the minimum angle is 20.7 degrees or smaller, the triangulation is theoretically guaranteed to terminate. It often succeeds for minimum angles up to 33 degrees. It usually doesn't terminate for angles above 34 degrees.")
         s2.Add(self.angle_text_box, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
@@ -54,7 +54,7 @@ class TrianglePanel(wx.Panel):
         s = wx.StaticBoxSizer(box, wx.VERTICAL)
 
         s2 = wx.BoxSizer(wx.HORIZONTAL)
-        self.area_text_box = wx.TextCtrl(self, 0, "", size=(100, -1))
+        self.area_text_box = wx.TextCtrl(self, 0, "", size=(100, -1), name="TrainglePanel.area_text_box")
         self.area_text_box.SetToolTip("You can specify a maximum triangle area (or leave blank if you don't want to specify a maximum). The units are those of the point coordinates on this layer.")
         s2.Add(self.area_text_box, 0, wx.ALIGN_LEFT | wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
         t = wx.StaticText(self, label="units")

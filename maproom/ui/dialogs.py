@@ -27,7 +27,7 @@ class FindPointDialog(sc.SizedDialog):
         panel = self.GetContentsPane()
         wx.StaticText(panel, -1, "Find point number, range of points\nor multiple ranges.\n\nSeparate ranges by commas, e.g: 1-4,8-10")
 
-        self.text = wx.TextCtrl(panel, -1, "")
+        self.text = wx.TextCtrl(panel, -1, "", name="FindPointDialog.text")
         self.text.SetSizerProps(expand=True)
 
         btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
@@ -77,7 +77,7 @@ class JumpCoordsDialog(sc.SizedDialog):
         panel = self.GetContentsPane()
         wx.StaticText(panel, -1, "Please enter the coordinates to jump to")
 
-        self.coords_text = wx.TextCtrl(panel, -1, "")
+        self.coords_text = wx.TextCtrl(panel, -1, "", name="JumpCoordsDialog.coords_text")
         self.coords_text.SetSizerProps(expand=True)
         self.coords_text.Bind(wx.EVT_TEXT, self.OnText)
 
@@ -118,7 +118,7 @@ class IconDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, -1, "Choose MARPLOT Icon")
         self.num_cols = 5
 
-        self.icon_list = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.VSCROLL)
+        self.icon_list = wx.ScrolledWindow(self, wx.ID_ANY, style=wx.VSCROLL, name="IconDialog.icon_list")
         self.grid = wx.FlexGridSizer(cols=self.num_cols, hgap=2, vgap=2)
 
         self.Bind(wx.EVT_BUTTON, self.OnButton)
@@ -127,7 +127,7 @@ class IconDialog(wx.Dialog):
         self.icon_list.SetScrollbars(0, marplot_icon_max_size[1], 0, (50 + self.num_cols - 1) / self.num_cols)
 
         icon_cats = [cat for cat, icons in marplot_icons]
-        cat = wx.ListBox(self, -1, choices=icon_cats)
+        cat = wx.ListBox(self, -1, choices=icon_cats, name="IconDialog.cat")
         cat.Bind(wx.EVT_LISTBOX, self.on_category)
         cat_id = icon_cats.index(marplot_icon_id_to_category[iid])
         cat.SetSelection(cat_id)
