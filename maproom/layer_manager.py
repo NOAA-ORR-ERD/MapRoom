@@ -661,36 +661,6 @@ class LayerManager(BaseDocument):
             latest_time = earliest_time
         return layers, earliest_time, latest_time
 
-    def get_untimestamped_layers(self):
-        layers = []
-        for layer in self.flatten():
-            if layer.start_time > 0.0:
-                continue
-            layers.append(layer)
-        return layers
-
-    def get_visible_layers_at_time(self, layer_visibility, time):
-        layers = []
-        for layer in self.flatten():
-            if layer.start_time == 0 or (layer.start_time <= time and (layer.end_time == 0.0 or time < layer.end_time)):
-                layers.append(layer)
-                log.debug("get_visible_layers_at_time True: %s <= %s < %s: %s" % (layer.start_time, time, layer.end_time, str(layer)))
-            else:
-                log.debug("get_visible_layers_at_time False: %s outside %s-%s: %s" % (time, layer.start_time, layer.end_time, str(layer)))
-        return layers
-
-    def get_visible_layers_in_ranges(self, ranges):
-        layers = []
-        for layer in self.flatten():
-            if layer.start_time == 0:
-                layers.append(layer)
-            else:
-                for begin, end in ranges:
-                    if (layer.start_time >= begin and layer.start_time < end) or (layer.end_time >= begin and layer.end_time < end) or (layer.start_time < begin and (layer.end_time == 0.0 or layer.end_time >= end)):
-                        layers.append(layer)
-                        break
-        return layers
-
     def get_playback_layers(self, skip_layer=None, tree=None):
         # layers = [layer for layer in self.flatten()[1:] if layer != skip_layer]
         # return layers

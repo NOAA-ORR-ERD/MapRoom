@@ -499,6 +499,12 @@ class Layer(HasTraits):
                 text += "%s)" % e
         return text
 
+    def is_visible_at_time(self, time):
+        return time is None or self.start_time == 0 or (self.start_time <= time and (self.end_time == 0.0 or time < self.end_time))
+
+    def is_visible_in_time_range(self, begin, end):
+        return begin is None or (self.start_time >= begin and self.start_time < end) or (self.end_time >= begin and self.end_time < end) or (self.start_time < begin and (self.end_time == 0.0 or self.end_time >= end))
+
     #####
 
     def set_dependent_of(self, layer):

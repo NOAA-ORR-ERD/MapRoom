@@ -31,6 +31,7 @@ class TimelinePanel(ZoomRuler):
         ZoomRuler.__init__(self, parent, **kwargs)
         self.task = task
         self.editor = None
+        self.current_time = None
  
     def init_playback(self):
         ZoomRuler.init_playback(self)
@@ -79,18 +80,28 @@ class TimelinePanel(ZoomRuler):
         # print info
         return info
 
-    def marks_to_display_as_selected(self):
-        sel_marks = self.marks_in_selection()
-        for start, end, data in self._marks:
-            if self.editor.layer_visibility[data]['layer']:
-                sel_marks.add(data)
-        return sel_marks
+    def get_selected_range(self):
+        r = self.ruler.selected_ranges
+        return r
+
+    def selection_started_callback(self, selected_ranges):
+        log.debug("selection started: %s" % str(selected_ranges))
+        self.current_marks_in_selection = set()
+        if self.editor is not None:
+            self.editor.refresh()
+
+    def selection_extended_callback(self, selected_ranges, marks_in_selection):
+        log.debug("selection extended: %s" % str(selected_ranges))
+        if marks_in_selection != self.current_marks_in_selection:
+            self.editor.refresh()
+            self.current_marks_in_selection = marks_in_selection
+        else:
+            log.debug("no marks changed; no refresh needed")
 
     def selection_finished_callback(self, selected_ranges):
+        log.debug("selection finished: %s" % str(selected_ranges))
         if self.editor is not None:
-            selected_layers = self.editor.layer_manager.get_visible_layers_in_ranges(selected_ranges)
-            self.editor.set_layer_visibility(selected_layers)
-            self.editor.layer_tree_control.Refresh()
+            self.editor.refresh()
 
     def item_activation_callback(self, item):
         if self.editor is not None:
@@ -111,20 +122,22 @@ class TimelinePanel(ZoomRuler):
             self.editor.layer_tree_control.set_edit_layer(item)
 
     def selection_cleared_callback(self):
+        log.debug("selection cleared")
         if self.editor is not None:
-            self.Refresh()
+            self.current_time = None
+            self.editor.refresh()
 
     def playback_start_callback(self):
         self.GetParent().play.SetLabel("Pause")
 
     def playback_pause_callback(self):
         self.GetParent().play.SetLabel("Play")
+        self.current_time = None
 
     def playback_callback(self, current_time):
         log.debug("playback for time: %f" % current_time)
-        selected_layers = self.editor.layer_manager.get_visible_layers_at_time(self.editor.layer_visibility, current_time)
-        self.editor.set_layer_visibility(selected_layers)
-        self.editor.layer_tree_control.Refresh()
+        self.current_time = current_time
+        self.editor.refresh()
 
 
 wxEVT_TIME_STEP_MODIFIED = wx.NewEventType()
@@ -233,7 +246,7 @@ class TimeStepPanelMixin(object):
     def send_event(self, step, rate):
         e = TimeStepEvent(wxEVT_TIME_STEP_MODIFIED, self.GetId(), step, rate)
         e.SetEventObject(self)
-        print "sending", e, "to", self.GetEventHandler()
+        log.debug("sending %s to %s" % (e, self.GetEventHandler()))
         self.GetParent().GetEventHandler().ProcessEvent(e)
 
 
@@ -308,6 +321,19 @@ class TimelinePlaybackPanel(wx.Panel):
 
         self.Bind(EVT_TIME_STEP_MODIFIED, self.on_set_steps)
 
+    @property
+    def current_time(self):
+        return self.timeline.current_time
+
+    @property
+    def selected_time_range(self):
+        r = self.timeline.ruler.selected_ranges
+        try:
+            begin, end = r[0]
+        except IndexError:
+            begin = end = None
+        return begin, end
+
     def serialize_json(self):
         return {
             "step_value": self.timeline.step_value,
@@ -380,7 +406,7 @@ class TimelinePlaybackPanel(wx.Panel):
     def on_set_steps(self, evt):
         step = evt.GetStep()
         rate = evt.GetRate()
-        print("step=%s rate=%s" % (step, rate))
+        log.debug("step=%s rate=%s" % (step, rate))
         if step is not None:
             self.timeline.step_value = step
         if rate is not None:

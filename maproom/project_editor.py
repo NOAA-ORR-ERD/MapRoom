@@ -281,6 +281,14 @@ class ProjectEditor(FrameworkEditor):
         self.layer_tree_control.update_checked_from_visibility()
         self.refresh()
 
+    def is_layer_visible_at_current_time(self, layer):
+        t = self.timeline.current_time
+        if t is None:
+            begin, end = self.timeline.selected_time_range
+            return layer.is_visible_in_time_range(begin, end)
+        else:
+            return layer.is_visible_at_time(t)
+
     def rebuild_document_properties(self):
         self.layer_manager = self.document
         self.update_default_visibility()

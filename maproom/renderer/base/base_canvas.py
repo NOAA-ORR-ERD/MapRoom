@@ -207,6 +207,7 @@ class BaseCanvas(object):
         null_picker = NullPicker()
 
         def render_layers(layer_order, picker=null_picker):
+            log.debug("rendering at time %s, range %s" % (self.project.timeline.current_time, self.project.timeline.selected_time_range))
             delayed_pick_layer = None
             control_points_layer = None
             for i, layer in layer_order:
@@ -214,6 +215,10 @@ class BaseCanvas(object):
                 vis = self.project.layer_visibility[layer]
                 if not vis["layer"]:
                     # short circuit displaying anything if entire layer is hidden
+                    continue
+                log.debug("valid times: %s - %s; layer=%s" % (layer.start_time, layer.end_time, layer))
+                if not self.project.is_layer_visible_at_current_time(layer):
+                    log.debug("skipping layer %s; not in currently displayed time")
                     continue
                 if picker.is_active:
                     if layer.pickable:
