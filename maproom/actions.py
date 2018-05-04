@@ -333,6 +333,15 @@ class NewCompassRoseLayerAction(EditorAction):
         self.active_editor.process_command(cmd)
 
 
+class NewTimestampLayerAction(EditorAction):
+    name = 'New Timestamp Layer'
+    tooltip = 'Create new timestamp to display current time in playback'
+
+    def perform(self, event):
+        cmd = AddLayerCommand("timestamp")
+        self.active_editor.process_command(cmd)
+
+
 class NewAnnotationLayerAction(EditorAction):
     name = 'New Annotation Layer'
     tooltip = 'Create new annotation layer'

@@ -6,6 +6,7 @@ from omnivore.framework.errors import ProgressCancelError
 from command import Command, UndoInfo
 from layers import AnnotationLayer
 from layers import CompassRose
+from layers import Timestamp
 from layers import EmptyLayer
 from layers import Graticule
 from layers import LineEditLayer
@@ -131,6 +132,8 @@ class AddLayerCommand(Command):
             layer = Graticule(manager=lm)
         elif self.type == "compass_rose":
             layer = CompassRose(manager=lm)
+        elif self.type == "timestamp":
+            layer = Timestamp(manager=lm)
         elif self.type == "triangle":
             layer = TriangleLayer(manager=lm)
         elif self.type == "annotation":
