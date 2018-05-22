@@ -94,7 +94,9 @@ class MaproomProjectTask(FrameworkTask):
         return Version.VERSION
 
     def _get_about_description(self):
-        desc = "High-performance 2d mapping developed by NOAA\n\nMemory usage: %.0fMB\n\nUsing libraries:\n" % get_mem_use()
+        import sys
+        major, minor, micro = sys.version_info[0:3]
+        desc = "High-performance 2d mapping developed by NOAA\n\nMemory usage: %.0fMB\n\nPython %d.%d.%d using libraries:\n" % (get_mem_use(), major, minor, micro)
         import wx
         desc += "  wxPython %s\n" % wx.version()
         try:
@@ -111,14 +113,14 @@ class MaproomProjectTask(FrameworkTask):
             import OpenGL
             import OpenGL.GL as gl
             desc += "  PyOpenGL %s\n" % OpenGL.__version__
-            desc += "  OpenGL %s\n" % gl.glGetString(gl.GL_VERSION)
-            desc += "  OpenGL Vendor: %s\n" % gl.glGetString(gl.GL_VENDOR)
-            desc += "  OpenGL Renderer: %s\n" % gl.glGetString(gl.GL_RENDERER)
-            desc += "  GLSL primary: %s\n" % gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
+            desc += "  OpenGL %s\n" % gl.glGetString(gl.GL_VERSION).encode('utf-8')
+            desc += "  OpenGL Vendor: %s\n" % gl.glGetString(gl.GL_VENDOR).encode('utf-8')
+            desc += "  OpenGL Renderer: %s\n" % gl.glGetString(gl.GL_RENDERER).encode('utf-8')
+            desc += "  GLSL primary: %s\n" % gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION).encode('utf-8')
             num_glsl = gl.glGetInteger(gl.GL_NUM_SHADING_LANGUAGE_VERSIONS)
             desc += "  GLSL supported: "
             for i in range(num_glsl):
-                v = gl.glGetStringi(gl.GL_SHADING_LANGUAGE_VERSION, i)
+                v = gl.glGetStringi(gl.GL_SHADING_LANGUAGE_VERSION, i).encode('utf-8')
                 desc += v + ", "
             desc += "\n"
         except:
