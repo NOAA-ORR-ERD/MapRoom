@@ -394,6 +394,7 @@ try:
             'pyparsing',
             'requests',
             'python-dateutil',
+            'pytz',
             'netCDF4',
             'omnivore-framework>=2.0a1',
             'wxpython>=4.0.1',
