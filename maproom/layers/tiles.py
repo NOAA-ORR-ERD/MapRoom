@@ -1,4 +1,4 @@
-import Queue
+import queue
 
 # Enthought library imports.
 from traits.api import Any
@@ -10,7 +10,7 @@ from traits.api import Unicode
 from ..renderer import TileImageData
 from ..renderer import alpha_from_int
 
-from base import ProjectedLayer
+from .base import ProjectedLayer
 
 
 import logging
@@ -78,7 +78,7 @@ class TileLayer(ProjectedLayer):
             self.map_server_id = index
 
     def _threaded_request_results_default(self):
-        return Queue.Queue()
+        return queue.Queue()
 
     def is_valid_threaded_result(self, map_server_id, tile_request):
         if map_server_id == self.map_server_id:

@@ -14,8 +14,8 @@ from ..library import rect
 from ..library.depth_utils import convert_units
 from ..renderer import data_types
 
-from base import ProjectedLayer
-import state
+from .base import ProjectedLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)

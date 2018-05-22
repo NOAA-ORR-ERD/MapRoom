@@ -4,7 +4,7 @@ import numpy as np
 
 from omnivore import get_image_path
 
-from font_extents import FONT_EXTENTS
+from .font_extents import FONT_EXTENTS
 
 
 def load_font_texture_with_alpha():

@@ -2,8 +2,8 @@ import sys
 import wx
 import omnivore.utils.wx.customtreectrl as treectrl
 
-from layers import Layer
-from menu_commands import MoveLayerCommand, RenameLayerCommand
+from .layers import Layer
+from .menu_commands import MoveLayerCommand, RenameLayerCommand
 from . import actions
 
 
@@ -162,8 +162,8 @@ class LayerTreeControl(wx.Panel):
         items = self.walk_tree()
         for item in items:
             (item_layer, ) = self.tree.GetItemData(item)
-            log.debug("collapse_layers: checking %s: %s" % (item_layer, item_layer in collapse.keys()))
-            if item_layer in collapse.keys():
+            log.debug("collapse_layers: checking %s: %s" % (item_layer, item_layer in list(collapse.keys())))
+            if item_layer in list(collapse.keys()):
                 log.debug("COLLAPSING %s" % item_layer)
                 wx.CallAfter(self.tree.Collapse, item)
 

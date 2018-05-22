@@ -1,7 +1,7 @@
 import wx
 
 from ..layers import state
-import sliders
+from . import sliders
 
 
 class DistanceCtrl(wx.Panel):

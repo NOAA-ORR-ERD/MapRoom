@@ -6,10 +6,10 @@
 
 def get_wx_bitmap(icon_num):
     import wx
-    import cStringIO
+    import io
 
     data = marplot_icon_data[icon_num]
-    image = wx.Image(cStringIO.StringIO(data))
+    image = wx.Image(io.StringIO(data))
     bitmap = wx.Bitmap(image)
     return bitmap
 
@@ -17,13 +17,13 @@ def get_wx_bitmap(icon_num):
 def get_numpy_bitmap(icon_num):
     from PIL import Image
     import numpy as np
-    import cStringIO
+    import io
 
     data = marplot_icon_data[icon_num]
     size = list(marplot_icon_max_size)
     size[1] += 1  # hack to fix vertical centering
     image = Image.new("RGBA", size)
-    overlay = Image.open(cStringIO.StringIO(data))
+    overlay = Image.open(io.StringIO(data))
     x = (image.size[0] - overlay.size[0]) / 2
     y = (image.size[1] - overlay.size[1]) / 2 + 1
     image.paste(overlay, (x, y))

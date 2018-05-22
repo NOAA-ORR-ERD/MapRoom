@@ -5,7 +5,7 @@ import re
 from fs.opener import opener
 from pyugrid.ugrid import UGrid, UVar
 
-from common import BaseLayerLoader
+from .common import BaseLayerLoader
 from maproom.layers import LineLayer, TriangleLayer
 from maproom.renderer import data_types
 

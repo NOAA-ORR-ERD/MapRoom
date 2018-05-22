@@ -150,7 +150,7 @@ class LayerStyle(object):
                 setattr(self, k, v)
             if len(kwargs):
                 # Any extra kwargs are invalid names
-                raise KeyError("Invalid style names: %s" % ",".join(kwargs.keys()))
+                raise KeyError("Invalid style names: %s" % ",".join(list(kwargs.keys())))
         else:
             self.line_color = self.default_line_color  # 4 byte including alpha
             self.line_stipple = 0xffff  # 32 bit stipple pattern
@@ -282,7 +282,7 @@ class LayerStyle(object):
             fonts.EnumerateFacenames()
             fonts = fonts.GetFacenames()
             fonts.sort()
-            fonts[0:0] = [u"default"]
+            fonts[0:0] = ["default"]
             cls.fonts = fonts
         return cls.fonts
 
@@ -296,7 +296,7 @@ class LayerStyle(object):
 
 def parse_styles_from_json(sdict):
     d = {}
-    for name, style_str in sdict.iteritems():
+    for name, style_str in sdict.items():
         style = LayerStyle()
         style.parse(style_str)
         d[name] = style
@@ -304,7 +304,7 @@ def parse_styles_from_json(sdict):
 
 def styles_to_json(style_dict):
     j = {}
-    for name, style in style_dict.iteritems():
+    for name, style in style_dict.items():
         j[name] = str(style)
     return j
 

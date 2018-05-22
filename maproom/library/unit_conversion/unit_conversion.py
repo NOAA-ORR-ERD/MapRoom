@@ -22,7 +22,7 @@ CHANGELOG:
                  - Unit data moved to separate module
 """
 
-from __future__ import unicode_literals, absolute_import
+
 import warnings
 
 from .unit_data import ConvertDataUnits
@@ -55,7 +55,7 @@ def GetUnitTypes():
 
     a unit type is something like "mass", "velocity", etc.
     """
-    return ConvertDataUnits.keys()
+    return list(ConvertDataUnits.keys())
 
 
 def GetUnitNames(UnitType):
@@ -67,7 +67,7 @@ def GetUnitNames(UnitType):
     a unit of mass would be "kilogram", "slug", etc.
     """
     UnitType.capitalize()
-    return ConvertDataUnits[UnitType].keys()
+    return list(ConvertDataUnits[UnitType].keys())
 
 
 def FindUnitTypes():
@@ -80,13 +80,13 @@ def FindUnitTypes():
     Usually not called from user code.
     """
     unit_types = {}
-    for unit_type, unit_data in ConvertDataUnits.items():
+    for unit_type, unit_data in list(ConvertDataUnits.items()):
         unit_type = Simplify(unit_type)
         if unit_type == "oilconcentration" or unit_type == "concentrationinwater":
             continue  # skipping Oil Concentration, 'cause this is really length
                       # -- lots of duplicate units!
                       # skipping Concentration in water, cause it's weird
-        for pname, data in unit_data.items():
+        for pname, data in list(unit_data.items()):
             # strip out whitespace and capitalization
             pname = Simplify(pname)
             # add the primary name:
@@ -163,7 +163,7 @@ class ConverterClass:
 
         self.Synonyms = {}
         self.Convertdata = {}
-        for PrimaryName, data in UnitsDict.items():
+        for PrimaryName, data in list(UnitsDict.items()):
             # strip out whitespace and capitalization
             Pname = Simplify(PrimaryName)
             self.Convertdata[Pname] = data[0]
@@ -270,9 +270,9 @@ class DensityConverterClass(ConverterClass):
             raise InvalidUnitError( (ToUnit, self.Name) )
         if FromUnit == "apidegree": # another Special case (could I do this the same as temp?)
             Value = 141.5/(Value + 131.5)
-            FromUnit = u"specificgravity(15\xb0c)"
+            FromUnit = "specificgravity(15\xb0c)"
         if ToUnit == "apidegree":
-            ToVal = 141.5/(Value * self.Convertdata[FromUnit] / self.Convertdata[u"specificgravity(15\xb0c)"] ) - 131.5
+            ToVal = 141.5/(Value * self.Convertdata[FromUnit] / self.Convertdata["specificgravity(15\xb0c)"] ) - 131.5
         else:
             ToVal = Value * self.Convertdata[FromUnit] / self.Convertdata[ToUnit]
         return ToVal
@@ -322,7 +322,7 @@ class OilQuantityConverter:
 
 # create the converter objects
 Converters = {}
-for (unittype, data) in ConvertDataUnits.items():
+for (unittype, data) in list(ConvertDataUnits.items()):
     if unittype.lower() == 'temperature':
         Converters["temperature"] = TempConverterClass(unittype, data)
     elif unittype.lower() == 'density':

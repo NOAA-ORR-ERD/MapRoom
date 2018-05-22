@@ -41,7 +41,7 @@ class PDFImage(object):
     def set_projection(self, image_data, projection):
         self.xywh = []
         for image in image_data:
-            print image.world_rect
+            print(image.world_rect)
             lb, lt, rt, rb = image.world_rect
             x1, y1 = projection(lb[0], lb[1])
             x2, y2 = projection(rt[0], rt[1])

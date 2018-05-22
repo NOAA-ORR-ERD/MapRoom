@@ -7,7 +7,7 @@ from fs.opener import fsopen
 from maproom.library.accumulator import accumulator
 from maproom.library.lat_lon_parser import parse_coordinate_text
 
-from common import BaseLayerLoader
+from .common import BaseLayerLoader
 from maproom.layers import LineLayer
 
 import logging

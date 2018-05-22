@@ -20,8 +20,8 @@ from omnivore.utils.runtime import get_all_subclasses
 from ..library import rect
 
 # local package imports
-import state
-from style import LayerStyle
+from . import state
+from .style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class Layer(HasTraits):
 
     restore_from_url = False
 
-    grouped_indicator_prefix = u"\u271a"  # a bold plus
+    grouped_indicator_prefix = "\u271a"  # a bold plus
 
     # False means it is a layer without bounds like grid, scale, tile, etc.
     # These types of layers can not be added to any group and will always be
@@ -124,7 +124,7 @@ class Layer(HasTraits):
         return "%s (%x)" % (self.name, id(self))
 
     def __str__(self):
-        return "%s layer '%s' (%s) %s" % (self.type, unicode(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
+        return "%s layer '%s' (%s) %s" % (self.type, str(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
 
     @property
     def pretty_name(self):
@@ -678,7 +678,7 @@ class Layer(HasTraits):
 
     def increment_change_count(self):
         self.change_count += 1
-        if (self.change_count == sys.maxint):
+        if (self.change_count == sys.maxsize):
             self.change_count = 0
 
     def can_crop(self):

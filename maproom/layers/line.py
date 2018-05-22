@@ -13,8 +13,8 @@ from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 
-from point import PointLayer
-import state
+from .point import PointLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -631,7 +631,7 @@ class LineEditLayer(LineLayer):
                     # use a dict to coalesce changes in multiple points on the
                     # same sub/ring to create a single change
                     new_points[(geom_index, sub_index, ring_index)] = (geom_ident, self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
-        return new_points.values()
+        return list(new_points.values())
 
     def get_new_points_after_insert(self, pt1, pt2, new_index):
         new_points = {}

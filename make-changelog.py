@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import os,sys,re,os.path,time, subprocess
-from cStringIO import StringIO
+from io import StringIO
 from datetime import date
 from optparse import OptionParser
 from string import Template
@@ -24,12 +24,12 @@ def findLatestChangeLogVersion(options):
         if release_date is None:
             match = re.match('(\d+/\d+/\d+).*',line)
             if match:
-                if options.verbose: print 'found date %s' % match.group(1)
+                if options.verbose: print('found date %s' % match.group(1))
                 release_date = date.fromtimestamp(time.mktime(time.strptime(match.group(1),'%m/%d/%Y'))).strftime(dateformat)
         else:
             match = re.match('[Rr]eleased %s' % versionre,line)
             if match:
-                if options.verbose: print 'found version %s' % match.group(1)
+                if options.verbose: print('found version %s' % match.group(1))
                 version = match.group(1)
                 versions.append(version)
     if release_date is None:
@@ -48,11 +48,11 @@ def findChangeLogVersionForGit(options):
     for line in fh:
         match = re.match('(\d+-\d+-\d+).*',line)
         if match:
-            if options.verbose: print 'found date %s' % match.group(1)
+            if options.verbose: print('found date %s' % match.group(1))
             release_date = date.fromtimestamp(time.mktime(time.strptime(match.group(1),'%Y-%m-%d'))).strftime(dateformat)
         match = re.match('\s+\*\s*[Rr]eleased ([0-9]+\.[0-9]+(?:\.[0-9]+)?) \"(.+)\"',line)
         if match:
-            if options.verbose: print 'found version %s' % match.group(1)
+            if options.verbose: print('found version %s' % match.group(1))
             version = match.group(1)
             codename = match.group(2)
             break
@@ -70,7 +70,7 @@ def findLatestInGit(options):
             found = StrictVersion(match.group(1))
             if found > version:
                 version = found
-            if options.verbose: print "found %s, latest = %s" % (found, version)
+            if options.verbose: print("found %s, latest = %s" % (found, version))
     return str(version)
 
 def next_version(tagged_version):
@@ -110,17 +110,17 @@ def isImportantChangeLogLine(text):
     return True
 
 def getGitChangeLogSuggestions(tag, options):
-    if options.verbose: print tag
+    if options.verbose: print(tag)
     top = "HEAD"
     suggestions = []
     text = subprocess.Popen(["git", "log", "--pretty=format:%ae--%B", "%s..%s" % (tag, top)], stdout=subprocess.PIPE).communicate()[0]
     lines = text.splitlines()
-    print lines
+    print(lines)
     first = True
     for line in lines:
         if first:
             if "--" in line and "@" in line:
-                print line
+                print(line)
                 email, text = line.split("--", 1)
                 initials = getInitialsFromEmail(email)
                 if isImportantChangeLogLine(text):
@@ -139,7 +139,7 @@ def getChangeLogBlock(git_version, module_version, options):
     new_block.append("Released %s" % module_version)
     for line in suggestions:
         new_block.append(line)
-    print "\n".join(new_block)
+    print("\n".join(new_block))
     return new_block
 
 def prepend(filename, block):
@@ -182,39 +182,39 @@ if __name__=='__main__':
 
     tagged_version = findLatestInGit(options)
     if options.verbose:
-        print "latest tagged in git: %s" % tagged_version
+        print("latest tagged in git: %s" % tagged_version)
     if options.version:
-        print tagged_version
+        print(tagged_version)
         sys.exit()
     if options.next_version:
-        print next_version(tagged_version)
+        print(next_version(tagged_version))
         sys.exit()
     
     version, latest_date, versions = findLatestChangeLogVersion(options)
-    print "latest from changelog: %s" % version
-    print "all from changelog: %s" % str(versions)
+    print("latest from changelog: %s" % version)
+    print("all from changelog: %s" % str(versions))
 
     import importlib
     module = importlib.import_module("maproom.Version")
-    print module
-    print "module version: %s" % module.VERSION
+    print(module)
+    print("module version: %s" % module.VERSION)
     
     v_changelog = StrictVersion(version)
-    print v_changelog
+    print(v_changelog)
     v_module = StrictVersion(module.VERSION)
-    print v_module
+    print(v_module)
     v_tagged = StrictVersion(tagged_version)
-    print v_tagged
+    print(v_tagged)
     
     if v_module > v_changelog:
-        print "adding to ChangeLog!"
+        print("adding to ChangeLog!")
         block = getChangeLogBlock(tagged_version, module.VERSION, options)
         if not options.dry_run:
             prepend(options.outputfile, block)
     elif v_module == v_changelog and v_module > v_tagged:
-        print "replacing ChangeLog entry!"
+        print("replacing ChangeLog entry!")
         block = getChangeLogBlock(tagged_version, module.VERSION, options)
         if not options.dry_run:
             replace(options.outputfile, block)
     else:
-            print "unhandled version differences..."
+            print("unhandled version differences...")

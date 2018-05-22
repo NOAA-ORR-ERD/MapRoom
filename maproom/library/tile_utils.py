@@ -2,7 +2,8 @@
 
 """
 import os
-import urllib2 as urllib2
+import urllib.request
+import urllib.error
 from requests.exceptions import HTTPError
 
 from owslib.util import ServiceException
@@ -11,10 +12,10 @@ from owslib.wms import WebMapService
 from omnivore.utils.background_http import BackgroundHttpMultiDownloader
 from omnivore.utils.background_http import UnskippableRequest
 
-from numpy_images import get_numpy_from_data
+from .numpy_images import get_numpy_from_data
 
-import rect
-from host_utils import HostCache
+from . import rect
+from .host_utils import HostCache
 
 import logging
 log = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class TileServerInitRequest(UnskippableRequest):
                 # at some later time.
                 os.utime(path, None)
                 log.debug("try_cache: found %s" % path)
-            except Exception, e:
+            except Exception as e:
                 log.error("Failed reading %s; exception %s" % (path, e))
         return data
 
@@ -93,8 +94,8 @@ class URLTileServerInitRequest(TileServerInitRequest):
             if data is None:
                 url = self.tile_host.get_tile_url(zoom, x, y)
                 log.debug("requesting tile from %s" % url)
-                request = urllib2.Request(url)
-                response = urllib2.urlopen(request)
+                request = urllib.request.Request(url)
+                response = urllib.request.urlopen(request)
                 data = response.read()
                 self.save_cache(data, zoom, x, y)
         else:
@@ -112,21 +113,21 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
         try:
             tile_server = WebMapService(self.url, self.tile_host.version)
             self.setup(tile_server)
-        except ServiceException, e:
+        except ServiceException as e:
             self.error = e
-        except HTTPError, e:
+        except HTTPError as e:
             log.error("Error %s contacting %s" % (e, self.url))
             self.error = e
-        except AttributeError, e:
+        except AttributeError as e:
             log.error("Bad response from server" % self.url)
             self.error = e
-        except Exception, e:
+        except Exception as e:
             log.error("Server error" % self.url)
             self.error = e
 
     def setup(self, tile_server):
         self.tile_server = tile_server
-        self.layer_keys = self.tile_server.contents.keys()
+        self.layer_keys = list(self.tile_server.contents.keys())
         self.layer_keys.sort()
         self.current_layer = self.layer_keys[0]
         self.world_bbox_rect = self.get_global_bbox()
@@ -143,14 +144,14 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
 
     def debug(self):
         tile_server = self.tile_server
-        print tile_server
-        print "contents", tile_server.contents
+        print(tile_server)
+        print("contents", tile_server.contents)
         layer = self.current_layer
-        print "layer index", layer
-        print "title", tile_server[layer].title
-        print "bounding box", tile_server[layer].boundingBoxWGS84
-        print "crsoptions", tile_server[layer].crsOptions
-        print "styles", tile_server[layer].styles
+        print("layer index", layer)
+        print("title", tile_server[layer].title)
+        print("bounding box", tile_server[layer].boundingBoxWGS84)
+        print("crsoptions", tile_server[layer].crsOptions)
+        print("styles", tile_server[layer].styles)
         #    {'pseudo_bright': {'title': 'Pseudo-color image (Uses IR and Visual bands,
         #    542 mapping), gamma 1.5'}, 'pseudo': {'title': '(default) Pseudo-color
         #    image, pan sharpened (Uses IR and Visual bands, 542 mapping), gamma 1.5'},
@@ -163,8 +164,8 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
 
         # Available methods, their URLs, and available formats::
 
-        print [op.name for op in tile_server.operations]
-        print tile_server.getOperationByName('GetMap').methods
+        print([op.name for op in tile_server.operations])
+        print(tile_server.getOperationByName('GetMap').methods)
 
         # The NOAA server returns a bad URL (not fully specified or maybe just old),
         # so replace it with the server URL used above.  This prevents patching the
@@ -174,11 +175,11 @@ class WMTSTileServerInitRequest(TileServerInitRequest):
             if m['type'].lower() == 'get':
                 m['url'] = self.url
                 break
-        print tile_server.getOperationByName('GetMap').methods
-        print tile_server.getOperationByName('GetMap').formatOptions
+        print(tile_server.getOperationByName('GetMap').methods)
+        print(tile_server.getOperationByName('GetMap').formatOptions)
 
         for name in self.layer_keys:
-            print "layer:", name, "title", self.tile_server.convert_title(self.tile_server[name].title), "crsoptions", tile_server[layer].crsOptions
+            print("layer:", name, "title", self.tile_server.convert_title(self.tile_server[name].title), "crsoptions", tile_server[layer].crsOptions)
 
     def get_bbox(self, layers, wr, pr):
         types = [("102100", "p"),
@@ -268,11 +269,11 @@ class TileRequest(UnskippableRequest):
     def get_data_from_server(self):
         try:
             self.data = self.tile_server.get_image(self.zoom, self.x, self.y)
-        except urllib2.URLError, e:
+        except urllib.error.URLError as e:
             self.error = e
-        except ServiceException, e:
+        except ServiceException as e:
             self.error = e
-        except Exception, e:
+        except Exception as e:
             log.error("Error %s loading %s" % (e, self.url))
             self.error = e
         if self.manager is not None:
@@ -281,7 +282,7 @@ class TileRequest(UnskippableRequest):
     def get_image_array(self):
         try:
             return get_numpy_from_data(self.data)
-        except (IOError, TypeError), e:
+        except (IOError, TypeError) as e:
             log.debug("error converting image: %s" % e)
             # some TileServeres return HTML data instead of an image on an error
             # (usually see this when outside the bounding box)
@@ -301,16 +302,16 @@ if __name__ == "__main__":
         if test.is_finished:
             break
         time.sleep(1)
-        print "Waiting for test..."
+        print("Waiting for test...")
 
     if test.error:
-        print "Error!", test.error
+        print("Error!", test.error)
     else:
-        print "world bbox", downloader.tile_server.world_bbox_rect
+        print("world bbox", downloader.tile_server.world_bbox_rect)
         outfile = 'tile_servertest.png'
         out = open(outfile, 'wb')
         out.write(test.data)
         out.close()
-        print "Generated image", outfile
+        print("Generated image", outfile)
 
     downloader = None

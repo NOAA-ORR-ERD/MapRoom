@@ -96,10 +96,10 @@ def round_minimum_unique_digits(values):
 
 
 if __name__ == "__main__":
-    print(calc_labels(1.2, 27))
-    print(calc_labels(1.2, 2.7))
-    print(round_minimum_unique_digits([142.45, 142.44333, 142.43332, 142.432, 142.4324,12,999]))
-    print(round_minimum_unique_digits([142.451109853, 142.44333121983, 142.43332, 142.432, 142.4324]))
-    print(round_minimum_unique_digits([142.451109853, 141.44333121983, 140.43332, 139.432, 138.4324]))
-    print(round_minimum_unique_digits([3142.451109853, 2141.44333121983, 1140.43332, 139.432, 138.4324]))
-    print(round_minimum_unique_digits([0.0, 0.16666666666666666, 0.33333333333333331, 0.5, 0.66666666666666663, 0.83333333333333326, 1.0]))
+    print((calc_labels(1.2, 27)))
+    print((calc_labels(1.2, 2.7)))
+    print((round_minimum_unique_digits([142.45, 142.44333, 142.43332, 142.432, 142.4324,12,999])))
+    print((round_minimum_unique_digits([142.451109853, 142.44333121983, 142.43332, 142.432, 142.4324])))
+    print((round_minimum_unique_digits([142.451109853, 141.44333121983, 140.43332, 139.432, 138.4324])))
+    print((round_minimum_unique_digits([3142.451109853, 2141.44333121983, 1140.43332, 139.432, 138.4324])))
+    print((round_minimum_unique_digits([0.0, 0.16666666666666666, 0.33333333333333331, 0.5, 0.66666666666666663, 0.83333333333333326, 1.0])))

@@ -31,9 +31,9 @@ elif sys.platform == "darwin":
         "/System/Library/Frameworks/OpenGL.framework/Libraries",
     )
 
-print gl_include_dirs
-print gl_library_dirs
-print gl_libraries
+print(gl_include_dirs)
+print(gl_library_dirs)
+print(gl_libraries)
 
 # Definintion of compiled extension code:
 bitmap = Extension("maproom.library.Bitmap",
@@ -80,7 +80,7 @@ PYTRIANGLE_DEFINES = [
 ## fixme: this needs a lot of work!
 ##        it's really compiler dependent, not machine dependent
 if sys.platform == 'darwin':
-    print "adding no CPU flags for mac"
+    print("adding no CPU flags for mac")
     ## according to: http://www.christian-seiler.de/projekte/fpmath/
     ## nothing special is required on OS-X !
     ##
@@ -96,10 +96,10 @@ if sys.platform == 'darwin':
     ##     have the correct semantics
     ## """
 elif sys.platform == 'win32':
-    print "adding define for Windows for FPU management"
+    print("adding define for Windows for FPU management")
     PYTRIANGLE_DEFINES.append(('CPU86', None))
 elif 'linux' in sys.platform :#  something for linux here...
-    print "adding CPU flags for Intel Linux"
+    print("adding CPU flags for Intel Linux")
     PYTRIANGLE_DEFINES.append(('LINUX', None))
 else:
     raise RuntimeError("this system isn't supported for building yet")

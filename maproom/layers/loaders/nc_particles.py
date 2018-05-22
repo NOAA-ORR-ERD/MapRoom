@@ -10,7 +10,7 @@ import numpy as np
 
 from fs.opener import opener
 
-from common import BaseLayerLoader
+from .common import BaseLayerLoader
 from maproom.layers.particles import ParticleLayer, ParticleFolder, ParticleLegend
 
 import logging
@@ -57,7 +57,7 @@ class nc_particles_file_loader():
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         warning = None
         if self.current_timestep >= len(self.reader.times):
             log.debug("Finished loading")
@@ -154,7 +154,7 @@ class ParticleLoader(BaseLayerLoader):
 
             # compute scalar vars min and max as we go through the list of
             # layers
-            for k, v in scalar_min_max.iteritems():
+            for k, v in scalar_min_max.items():
                 lo, hi = v
                 if k in folder_min_max:
                     flo, fhi = folder_min_max[k]

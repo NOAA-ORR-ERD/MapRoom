@@ -5,13 +5,13 @@ from traits.api import Str
 from traits.api import Unicode
 
 # MapRoom imports
-from base import Layer
-from line import LineLayer
+from .base import Layer
+from .line import LineLayer
 from ..library import rect
 from ..renderer import data_types
 
 # local package imports
-import state
+from . import state
 
 import logging
 log = logging.getLogger(__name__)

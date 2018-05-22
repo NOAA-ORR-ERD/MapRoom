@@ -43,10 +43,10 @@ def git(args, branch=None):
 dry_run = False
 if dry_run:
     def dry_run_call(args):
-        print "in %s: %s" % (os.getcwd(), " ".join(args))
+        print("in %s: %s" % (os.getcwd(), " ".join(args)))
     subprocess.call = dry_run_call
     def dry_run_symlink(source, name):
-        print "in %s: %s -> %s" % (os.getcwd(), name, source)
+        print("in %s: %s -> %s" % (os.getcwd(), name, source))
     os.symlink = dry_run_symlink
 
 if using_conda:
@@ -69,7 +69,7 @@ for dep in deps:
         repourl = dep[0]
         options = {}
     if repourl.startswith("http"):
-        print "UPDATING %s" % repourl
+        print("UPDATING %s" % repourl)
         _, repo = os.path.split(repourl)
         repodir, _ = os.path.splitext(repo)
         if os.path.exists(repodir):
@@ -103,7 +103,7 @@ for dep in deps:
         os.chdir(linkdir)
         name = link_map.get(repodir, repodir)
         if name is None:
-            print "No link for %s" % repodir
+            print("No link for %s" % repodir)
         else:
             src = os.path.normpath(os.path.join("deps", repodir, builddir, name))
             if os.path.islink(name):

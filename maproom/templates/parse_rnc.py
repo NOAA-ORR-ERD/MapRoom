@@ -18,7 +18,7 @@ class RNCChart(object):
             self.parse_desc(description)
             self.parse_polygon(polygon)
         except Exception:
-            print "ERROR in ", description[0].text, polygon
+            print("ERROR in ", description[0].text, polygon)
             raise
 
     def parse_desc(self, desc):

@@ -24,23 +24,23 @@ from omnivore.utils.wx.tilemanager import TileManager
 from omnivore.templates import get_template
 
 # Local imports.
-from layer_canvas import LayerCanvas
-from layer_manager import LayerManager
-import renderer
-from layers import loaders
-from command import UndoStack, BatchStatus
-import mouse_handler
-from menu_commands import LoadLayersCommand, DeleteLayerCommand, SavepointCommand, PasteLayerCommand
-from mouse_commands import ViewportCommand, StyleChangeCommand
-import toolbar
-from library.bsb_utils import extract_from_zip
-from library import apng
-import panes
-from layer_tree_control import LayerTreeControl
-from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
-from ui.triangle_panel import TrianglePanel
-from ui.merge_panel import MergePointsPanel
-from ui.undo_panel import UndoHistoryPanel
+from .layer_canvas import LayerCanvas
+from .layer_manager import LayerManager
+from . import renderer
+from .layers import loaders
+from .command import UndoStack, BatchStatus
+from . import mouse_handler
+from .menu_commands import LoadLayersCommand, DeleteLayerCommand, SavepointCommand, PasteLayerCommand
+from .mouse_commands import ViewportCommand, StyleChangeCommand
+from . import toolbar
+from .library.bsb_utils import extract_from_zip
+from .library import apng
+from . import panes
+from .layer_tree_control import LayerTreeControl
+from .ui.info_panels import LayerInfoPanel, SelectionInfoPanel
+from .ui.triangle_panel import TrianglePanel
+from .ui.merge_panel import MergePointsPanel
+from .ui.undo_panel import UndoHistoryPanel
 
 import logging
 log = logging.getLogger(__name__)
@@ -145,7 +145,7 @@ class ProjectEditor(FrameworkEditor):
             document = LayerManager.create(self)
             document.metadata = metadata.clone_traits()
             batch_flags = BatchStatus()
-            print "FIXME: Add load project command that clears all layers"
+            print("FIXME: Add load project command that clears all layers")
             extra = loader.load_project(metadata, document, batch_flags)
             self.document = self.layer_manager = document
             self.create_layout(extra)
@@ -174,10 +174,10 @@ class ProjectEditor(FrameworkEditor):
                     if not undo.flags.success:
                         errors = undo.errors
                         break
-                except Exception, e:
+                except Exception as e:
                     errors = [str(e)]
                     import traceback
-                    print traceback.format_exc(e)
+                    print(traceback.format_exc(e))
                     break
             if errors is not None:
                 header = [
@@ -245,14 +245,14 @@ class ProjectEditor(FrameworkEditor):
 
     def layer_visibility_to_json(self):
         v = dict()
-        for layer, vis in self.layer_visibility.iteritems():
+        for layer, vis in self.layer_visibility.items():
             v[layer.invariant] = vis
         return v
 
     def layer_visibility_from_json(self, json_data):
         lm = self.layer_manager
         v = dict()
-        for invariant, vis in json_data.iteritems():
+        for invariant, vis in json_data.items():
             layer = lm.get_layer_by_invariant(int(invariant))
             if layer is not None:
                 # Some layer visibility data from deleted layers may have been
@@ -359,7 +359,7 @@ class ProjectEditor(FrameworkEditor):
         try:
             progress_log.info("START=Saving %s" % path)
             error = self.layer_manager.save_all(path, self.current_extra_json)
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             error = e.message
         finally:
             progress_log.info("END")
@@ -393,7 +393,7 @@ class ProjectEditor(FrameworkEditor):
             fh = open(path, "wb")
             fh.write(str(serializer))
             fh.close()
-        except IOError, e:
+        except IOError as e:
             self.task.error(str(e))
         self.layer_manager.undo_stack.pop_command()
 
@@ -412,7 +412,7 @@ class ProjectEditor(FrameworkEditor):
         try:
             progress_log.info("START")
             error = self.layer_manager.save_layer(layer, path, loader)
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             error = e.message
         finally:
             progress_log.info("END")
@@ -459,14 +459,14 @@ class ProjectEditor(FrameworkEditor):
         self.latest_movie = apng.APNG()
 
     def stop_movie_recording(self):
-        print("Recorded %d frames" % len(self.latest_movie.frames))
+        print(("Recorded %d frames" % len(self.latest_movie.frames)))
 
     def save_latest_movie(self, path):
         if self.latest_movie is not None:
             self.latest_movie.save(path.encode("utf-8"))
 
     def add_frame_to_movie(self):
-        print("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
+        print(("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time))))
         self.latest_movie.append(self.get_numpy_image())
 
     @property
@@ -531,7 +531,7 @@ class ProjectEditor(FrameworkEditor):
 
     def on_layout_changed(self, evt):
         layout = self.control.calc_layout()
-        print(json.dumps(layout))
+        print((json.dumps(layout)))
 
     def get_default_layout(self):
         try:
@@ -540,7 +540,7 @@ class ProjectEditor(FrameworkEditor):
             log.error("no default layout")
             e = {}
         else:
-            print("DEFAULT LAYOUT", data)
+            print(("DEFAULT LAYOUT", data))
             try:
                 e = json.loads(data)
             except ValueError:
@@ -764,12 +764,12 @@ class ProjectEditor(FrameworkEditor):
     def threaded_image_loaded(self, data):
         log.debug("threaded image loaded called")
         (layer, map_server_id), wms_request = data
-        print "event happed on %s for map server id %d" % (layer, map_server_id)
-        print "wms_request:", wms_request
+        print("event happed on %s for map server id %d" % (layer, map_server_id))
+        print("wms_request:", wms_request)
         if layer.is_valid_threaded_result(map_server_id, wms_request):
             wx.CallAfter(self.layer_canvas.render)
         else:
-            print "Throwing away result from old map server id"
+            print("Throwing away result from old map server id")
 
     # New Command processor
 
@@ -900,7 +900,7 @@ class ProjectEditor(FrameworkEditor):
 
         # Use LayerManager events to trigger updates in all windows that are
         # displaying this project
-        for layer, in_place in b.need_rebuild.iteritems():
+        for layer, in_place in b.need_rebuild.items():
             if in_place:
                 self.layer_manager.layer_contents_changed_in_place = layer
             else:
@@ -953,7 +953,7 @@ class ProjectEditor(FrameworkEditor):
             if edit_layer is not None:
                 json_data = edit_layer.serialize_json(-999, children=True)
                 text = json.dumps(json_data, indent=4)
-                print "clipboard object: json data", text
+                print("clipboard object: json data", text)
                 data_obj = wx.CustomDataObject("maproom")
                 data_obj.SetData(text)
             else:
@@ -961,9 +961,9 @@ class ProjectEditor(FrameworkEditor):
         return data_obj
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
-        print "Found data object %s" % data_obj
+        print("Found data object %s" % data_obj)
         text = data_obj.GetData()
-        print "value:", text
+        print("value:", text)
         edit_layer = self.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
             cmd = PasteLayerCommand(edit_layer, text, self.layer_canvas.world_center)

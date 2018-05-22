@@ -7,7 +7,7 @@ from fs.opener import fsopen
 from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import Boundaries, PointsError
 
-from common import BaseLayerLoader
+from .common import BaseLayerLoader
 from maproom.layers import LineLayer
 
 import logging

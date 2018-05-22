@@ -16,8 +16,8 @@ from ..library.coordinates import haversine, distance_bearing, haversine_at_cons
 from ..library.Boundary import Boundary
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_color_uint8, int_to_html_color_string, alpha_from_int, ImageData, data_types
 
-from line import LineLayer
-from folder import BoundedFolder
+from .line import LineLayer
+from .folder import BoundedFolder
 
 import logging
 log = logging.getLogger(__name__)
@@ -1230,7 +1230,7 @@ class PolylineMixin(object):
 
     def get_polylines(self, num_points):
         offset = self.center_point_index + 1
-        lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
+        lines = list(zip(list(range(offset, offset + num_points - 1)), list(range(offset + 1, offset + num_points))))
         return lines
 
     def move_polyline_point(self, anchor, dx, dy):
@@ -1303,7 +1303,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         r = 6371.
         lat_dist = math.pi * r / 180.0
         area = 0.0
-        indexes = range(self.center_point_index + 1, np.alen(self.points))
+        indexes = list(range(self.center_point_index + 1, np.alen(self.points)))
         indexes.append(self.center_point_index + 1)
         x = []
         y = []
@@ -1324,7 +1324,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
 
     def get_polylines(self, num_points):
         offset = self.center_point_index + 1
-        lines = zip(range(offset, offset + num_points - 1), range(offset + 1, offset + num_points))
+        lines = list(zip(list(range(offset, offset + num_points - 1)), list(range(offset + 1, offset + num_points))))
         lines.append((offset + num_points - 1, offset))
         return lines
 
@@ -1336,7 +1336,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         return True
 
     def get_all_boundaries(self):
-        indexes = range(self.center_point_index + 1, np.alen(self.points))
+        indexes = list(range(self.center_point_index + 1, np.alen(self.points)))
         indexes.append(self.center_point_index + 1)
         b = Boundary(self.points, indexes, 0.0)
         return [b]

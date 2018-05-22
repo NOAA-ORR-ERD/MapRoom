@@ -5,7 +5,7 @@ from traits.api import List
 
 from omnivore.framework.plugin import FrameworkPlugin
 
-from preferences import MaproomPreferencesPane
+from .preferences import MaproomPreferencesPane
 
 
 class MaproomPlugin(FrameworkPlugin):

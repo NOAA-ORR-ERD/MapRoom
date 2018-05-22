@@ -3,8 +3,8 @@ import time
 import math
 import numpy as np
 
-from renderer import BaseRenderer
-from picker import NullPicker
+from .renderer import BaseRenderer
+from .picker import NullPicker
 import maproom.library.rect as rect
 from maproom.library.projection import Projection
 import maproom.preferences
@@ -100,7 +100,7 @@ class BaseCanvas(object):
             log.debug("renderer rebuilt")
         else:
             log.warning("layer %s isn't in layer_renderers!" % layer)
-            for layer in self.layer_renderers.keys():
+            for layer in list(self.layer_renderers.keys()):
                 log.warning("  layer: %s" % layer)
 
     def begin_rendering_screen(self, projected_rect, screen_rect):
@@ -520,7 +520,7 @@ class BaseCanvas(object):
         relevant_points = projected_points[relevant_indexes]
 
         relevant_values = values[relevant_indexes]
-        labels = map(str, relevant_values)
+        labels = list(map(str, relevant_values))
         n = sum(map(len, labels))
 
         if (n == 0 or n > self.max_label_characters):

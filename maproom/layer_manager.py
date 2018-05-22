@@ -5,20 +5,20 @@ import functools
 
 from fs.opener import opener, fsopen
 
-import library.rect as rect
+from . import library.rect as rect
 
-from layers import Graticule
-from layers import Layer
-from layers import LayerStyle
-from layers import LineLayer
-from layers import RootLayer
-from layers import Scale
-from layers import TriangleLayer
-from layers import AnnotationLayer
-from layers import TileLayer
-from layers import loaders
-from layers import LayerStyle, parse_styles_from_json, styles_to_json
-from command import UndoStack
+from .layers import Graticule
+from .layers import Layer
+from .layers import LayerStyle
+from .layers import LineLayer
+from .layers import RootLayer
+from .layers import Scale
+from .layers import TriangleLayer
+from .layers import AnnotationLayer
+from .layers import TileLayer
+from .layers import loaders
+from .layers import LayerStyle, parse_styles_from_json, styles_to_json
+from .command import UndoStack
 
 # Enthought library imports.
 from traits.api import Any
@@ -31,7 +31,7 @@ from pyface.api import GUI
 from omnivore.framework.document import BaseDocument
 from omnivore.utils.jsonutil import collapse_json
 from omnivore.utils.fileutil import ExpandZip
-from library import colormap
+from .library import colormap
 
 import logging
 log = logging.getLogger(__name__)
@@ -139,7 +139,7 @@ class LayerManager(BaseDocument):
 
         # Add hook to create layer instances for debugging purposes
         if "--debug-objects" in self.project.window.application.command_line_args:
-            import debug
+            from . import debug
             debug.debug_objects(self)
 
         return self
@@ -160,9 +160,9 @@ class LayerManager(BaseDocument):
 
     def debug_invariant(self):
         layers = self.flatten()
-        print "next invariant: %d" % self.next_invariant
+        print("next invariant: %d" % self.next_invariant)
         for layer in layers:
-            print "  %s: invariant=%d" % (layer, layer.invariant)
+            print("  %s: invariant=%d" % (layer, layer.invariant))
 
     def debug_structure(self, indent=""):
         lines = self.debug_structure_recursive(self.layers, indent)
@@ -191,7 +191,7 @@ class LayerManager(BaseDocument):
         # json can't handle dictionaries with tuples as their keys, so have
         # to compress
         cplist = []
-        for entry, (truth, locked) in self.control_point_links.iteritems():
+        for entry, (truth, locked) in self.control_point_links.items():
             # retain compatibility with old versions, only add locked flag if
             # present
             if locked:
@@ -694,7 +694,7 @@ class LayerManager(BaseDocument):
         if layer is not None:
             try:
                 layer.check_for_problems(window)
-            except Exception, e:
+            except Exception as e:
                 if hasattr(e, 'points'):
                     return e
                 else:
@@ -1016,7 +1016,7 @@ class LayerManager(BaseDocument):
 
         """
         links = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             dep_invariant, dep_cp = dep[0], dep[1]
             if dep_invariant == layer.invariant:
                 truth_invariant, truth_cp = truth[0], truth[1]
@@ -1032,7 +1032,7 @@ class LayerManager(BaseDocument):
         dependent layer.
         """
         to_remove = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             log.debug("control_point_links: %s child of %s" % (dep, truth))
             dep_layer_invariant, dep_cp = dep[0], dep[1]
             if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp) and (not locked or force):
@@ -1049,7 +1049,7 @@ class LayerManager(BaseDocument):
         and propagated to the dependent layer
         """
         layers = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             log.debug("control_point_links: update %s child of %s" % (dep, truth))
             truth_layer, truth_cp = self.get_layer_by_invariant(truth[0]), truth[1]
             dep_layer, dep_cp = self.get_layer_by_invariant(dep[0]), dep[1]
@@ -1064,7 +1064,7 @@ class LayerManager(BaseDocument):
         Used when deleting a layer.
         """
         to_remove = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             invariant, _ = dep[0], dep[1]
             if invariant == layer.invariant:
                 to_remove.append((dep, truth, locked))
@@ -1104,7 +1104,7 @@ class LayerManager(BaseDocument):
                 index = serialized_data['index']
                 order.append((index, loaded))
                 log.debug("processed json from layer %s" % loaded)
-            except RuntimeError, e:
+            except RuntimeError as e:
                 batch_flags.messages.append("ERROR: %s" % str(e))
         order.sort()
         log.debug("load_all_from_json: order: %s" % str(order))
@@ -1153,7 +1153,7 @@ class LayerManager(BaseDocument):
                     index = serialized_data['index']
                     order.append((index, loaded))
                     log.debug("processed json from layer %s" % loaded)
-                except RuntimeError, e:
+                except RuntimeError as e:
                     batch_flags.messages.append("ERROR: %s" % str(e))
         order.sort()
         log.debug("load_all_from_zip: order: %s" % str(order))
@@ -1199,7 +1199,7 @@ class LayerManager(BaseDocument):
         layer_info = self.flatten_with_indexes()
         log.debug("layers are " + str(self.layers))
         log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
-        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
+        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().items()]))
 
         pre_json_data = self.calc_pre_json_data()
         post_json_data = self.calc_post_json_data(extra_json_data)
@@ -1244,10 +1244,10 @@ class LayerManager(BaseDocument):
 
                         try:
                             text = json.dumps(data, indent=4)
-                        except Exception, e:
+                        except Exception as e:
                             log.error("JSON failure %s, layer %s: data=%s" % (e, layer.name, repr(data)))
                             errors = []
-                            for k, v in data.iteritems():
+                            for k, v in data.items():
                                 small = {k: v}
                                 try:
                                     _ = json.dumps(small)
@@ -1261,10 +1261,10 @@ class LayerManager(BaseDocument):
                         zf.writestr(zip_path, processed)
                 zf.close()
 
-        except RuntimeError, e:
+        except RuntimeError as e:
             log.error("file save error: %s" % str(e))
             return "Failed saving %s: %s" % (file_path, e)
-        except Exception, e:
+        except Exception as e:
             import traceback
             log.error("file save error: %s\n%s" % (str(e), traceback.format_exc()))
             return "Failed saving %s: %s" % (file_path, e)
@@ -1277,7 +1277,7 @@ class LayerManager(BaseDocument):
         layer_info = self.flatten_with_indexes()
         log.debug("layers are " + str(self.layers))
         log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
-        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
+        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().items()]))
         project = []
         if extra_json_data is None:
             extra_json_data = {}
@@ -1291,10 +1291,10 @@ class LayerManager(BaseDocument):
             if data is not None:
                 try:
                     text = json.dumps(data)
-                except Exception, e:
+                except Exception as e:
                     log.error("JSON failure, layer %s: data=%s" % (layer.name, repr(data)))
                     errors = []
-                    for k, v in data.iteritems():
+                    for k, v in data.items():
                         small = {k: v}
                         try:
                             _ = json.dumps(small)
@@ -1312,7 +1312,7 @@ class LayerManager(BaseDocument):
                 processed = collapse_json(text, 12)
                 fh.write(processed)
                 fh.write("\n")
-        except Exception, e:
+        except Exception as e:
             return "Failed saving %s: %s" % (file_path, e)
         return ""
 

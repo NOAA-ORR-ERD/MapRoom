@@ -9,8 +9,8 @@ from ..library import rect
 from ..renderer import NullPicker
 from ..renderer import alpha_from_int
 
-from base import ProjectedLayer
-import state
+from .base import ProjectedLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)

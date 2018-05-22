@@ -9,8 +9,8 @@ from traits.api import Str
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
-from point import PointLayer
-import state
+from .point import PointLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)

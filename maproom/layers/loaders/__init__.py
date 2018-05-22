@@ -54,29 +54,29 @@
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
 loaders = []
-from bna import BNALoader, BNAShapefileLoader, RNCLoader
+from .bna import BNALoader, BNAShapefileLoader, RNCLoader
 loaders.append(BNALoader())
 loaders.append(BNAShapefileLoader())
 loaders.append(RNCLoader())
-from bsb import BSBLoader
+from .bsb import BSBLoader
 loaders.append(BSBLoader())
-from gdal import GDALLoader
+from .gdal import GDALLoader
 loaders.append(GDALLoader())
-from logfile import CommandLogLoader
+from .logfile import CommandLogLoader
 loaders.append(CommandLogLoader())
-from nc_particles import ParticleLoader
+from .nc_particles import ParticleLoader
 loaders.append(ParticleLoader())
-from project import ProjectLoader, ZipProjectLoader
+from .project import ProjectLoader, ZipProjectLoader
 loaders.append(ProjectLoader())
 loaders.append(ZipProjectLoader())
-from shapefile import ShapefileLoader
+from .shapefile import ShapefileLoader
 loaders.append(ShapefileLoader())
-from text import LatLonTextLoader, LonLatTextLoader
+from .text import LatLonTextLoader, LonLatTextLoader
 loaders.append(LatLonTextLoader())
 loaders.append(LonLatTextLoader())
-from ugrid import UGridLoader
+from .ugrid import UGridLoader
 loaders.append(UGridLoader())
-from verdat import VerdatLoader
+from .verdat import VerdatLoader
 loaders.append(VerdatLoader())
 # [[[end]]]
 

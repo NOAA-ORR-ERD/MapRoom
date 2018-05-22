@@ -51,9 +51,9 @@ def trace_calls(frame, event, arg):
     f = caller_filename + func_filename
     if "trait_notifiers.py" in f or "trait_handlers" in f or "has_traits" in f or "logging" in f or "envisage" in f or "sre_" in f:
         return
-    print 'Call to %s on line %s of %s from line %s of %s' % \
+    print('Call to %s on line %s of %s from line %s of %s' % \
         (func_name, func_line_no, func_filename,
-         caller_line_no, caller_filename)
+         caller_line_no, caller_filename))
     return
 
 def main(argv):

@@ -2,14 +2,14 @@ import os
 
 from omnivore.utils.file_guess import FileGuess
 
-from layer_manager import LayerManager
-from layers import Layer, loaders, LayerStyle
-from library.Boundary import Boundaries
-from library.projection import NullProjection
-from library.host_utils import HostCache
-from library.known_hosts import default_tile_hosts
-from command import UndoStack, BatchStatus
-from menu_commands import LoadLayersCommand
+from .layer_manager import LayerManager
+from .layers import Layer, loaders, LayerStyle
+from .library.Boundary import Boundaries
+from .library.projection import NullProjection
+from .library.host_utils import HostCache
+from .library.known_hosts import default_tile_hosts
+from .command import UndoStack, BatchStatus
+from .menu_commands import LoadLayersCommand
 
 
 class MockApplication(object):
@@ -72,8 +72,8 @@ class MockProject(object):
     def raw_load_all_layers(self, uri, mime):
         guess = FileGuess(uri)
         guess.metadata.mime = mime
-        print guess
-        print guess.metadata
+        print(guess)
+        print(guess.metadata)
         loader, layers = loaders.load_layers(guess.metadata, manager=self.layer_manager)
         return layers
 
@@ -84,12 +84,12 @@ class MockProject(object):
         guess = FileGuess(os.path.realpath(path))
         guess.metadata.mime = mime
         metadata = guess.get_metadata()
-        print metadata
+        print(metadata)
         loader = loaders.get_loader(metadata)
-        print loader
+        print(loader)
         batch_flags = BatchStatus()
         if hasattr(loader, "load_project"):
-            print "FIXME: Add load project command that clears all layers"
+            print("FIXME: Add load project command that clears all layers")
             loader.load_project(metadata, self.layer_manager, batch_flags)
         elif hasattr(loader, "iter_log"):
             line = 0
@@ -97,7 +97,7 @@ class MockProject(object):
                 line += 1
                 errors = None
                 if cmd.short_name == "load":
-                    print cmd.metadata
+                    print(cmd.metadata)
                     if cmd.metadata.uri.startswith("TestData"):
                         cmd.metadata.uri = "../" + cmd.metadata.uri
                 try:
@@ -131,13 +131,13 @@ class MockProject(object):
             count -= 1
 
     def process_command(self, command, new_mouse_mode=None, override_editable_properties_changed=None):
-        print "processing command %s" % command.short_name
+        print("processing command %s" % command.short_name)
         undo = self.layer_manager.undo_stack.perform(command, self)
         self.process_flags(undo.flags)
         return undo
 
     def process_flags(self, f):
-        print "in process_flags"
+        print("in process_flags")
 
     def get_outer_boundary(self, layer):
         boundaries = Boundaries(layer)
@@ -156,8 +156,8 @@ class MockManager(object):
     def load_all_layers(self, uri, mime):
         guess = FileGuess(uri)
         guess.metadata.mime = mime
-        print guess
-        print guess.metadata
+        print(guess)
+        print(guess.metadata)
         loader, layers = loaders.load_layers(guess.metadata, manager=self)
         return layers
 

@@ -12,8 +12,8 @@ from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
 
-from point_base import PointBaseLayer
-import state
+from .point_base import PointBaseLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)

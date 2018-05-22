@@ -247,7 +247,7 @@ def register_colormap(c):
 
 def user_defined_colormaps_to_json():
     e = []
-    for name, colormap in user_defined_discrete_colormaps.iteritems():
+    for name, colormap in user_defined_discrete_colormaps.items():
         j = colormap.to_json()
         e.append(colormap.to_json())
     log.debug("serialized colormaps: %s" % (e))
@@ -259,10 +259,10 @@ def user_defined_colormaps_from_json(e):
             log.debug("restoring colormap item %s" % repr(j))
             try:
                 c = DiscreteColormap.from_json(j)
-            except Exception, e:
+            except Exception as e:
                 log.error("%s: Failed parsing colormap for %s" % (e, repr(j)))
             else:
                 builtin_discrete_colormaps[j['name']] = c
-    except Exception, e:
+    except Exception as e:
         log.error("%s: Invalid colormap format in json", e)
         raise

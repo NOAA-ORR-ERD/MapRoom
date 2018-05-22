@@ -8,10 +8,10 @@ from owslib.util import ServiceException
 
 from omnivore.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
 
-from numpy_images import get_numpy_from_data
+from .numpy_images import get_numpy_from_data
 
-import rect
-from host_utils import WMSHost, HostCache
+from . import rect
+from .host_utils import WMSHost, HostCache
 
 import logging
 log = logging.getLogger(__name__)
@@ -56,15 +56,15 @@ class WMSRequestServer(UnskippableURLRequest):
         try:
             wms = self.get_wms()
             self.setup(wms)
-        except ServiceException, e:
+        except ServiceException as e:
             self.error = e
-        except HTTPError, e:
+        except HTTPError as e:
             log.error("Error contacting %s: %s" % (self.url, e))
             self.error = e
-        except AttributeError, e:
+        except AttributeError as e:
             log.error("Bad response from server %s: %s" % (self.url, e))
             self.error = e
-        except Exception, e:
+        except Exception as e:
             log.error("Server error %s: %s" % (self.url, e))
             self.error = e
 
@@ -73,7 +73,7 @@ class WMSRequestServer(UnskippableURLRequest):
 
     def setup(self, wms):
         self.wms = wms
-        self.layer_keys = self.wms.contents.keys()
+        self.layer_keys = list(self.wms.contents.keys())
         self.layer_keys.sort()
         self.current_layer = self.layer_keys[0]
         self.world_bbox_rect = self.get_global_bbox()
@@ -89,16 +89,16 @@ class WMSRequestServer(UnskippableURLRequest):
 
     def debug(self):
         wms = self.wms
-        print wms
-        print "identification: Title: ", wms.identification.title
-        print "identification: Abstract: ", wms.identification.abstract
-        print "contents", wms.contents
+        print(wms)
+        print("identification: Title: ", wms.identification.title)
+        print("identification: Abstract: ", wms.identification.abstract)
+        print("contents", wms.contents)
         layer = self.current_layer
-        print "layer index", layer
-        print "title", wms[layer].title
-        print "bounding box", wms[layer].boundingBoxWGS84
-        print "crsoptions", wms[layer].crsOptions
-        print "styles", wms[layer].styles
+        print("layer index", layer)
+        print("title", wms[layer].title)
+        print("bounding box", wms[layer].boundingBoxWGS84)
+        print("crsoptions", wms[layer].crsOptions)
+        print("styles", wms[layer].styles)
         #    {'pseudo_bright': {'title': 'Pseudo-color image (Uses IR and Visual bands,
         #    542 mapping), gamma 1.5'}, 'pseudo': {'title': '(default) Pseudo-color
         #    image, pan sharpened (Uses IR and Visual bands, 542 mapping), gamma 1.5'},
@@ -111,8 +111,8 @@ class WMSRequestServer(UnskippableURLRequest):
 
         # Available methods, their URLs, and available formats::
 
-        print [op.name for op in wms.operations]
-        print wms.getOperationByName('GetMap').methods
+        print([op.name for op in wms.operations])
+        print(wms.getOperationByName('GetMap').methods)
 
         # The NOAA server returns a bad URL (not fully specified or maybe just old),
         # so replace it with the server URL used above.  This prevents patching the
@@ -122,11 +122,11 @@ class WMSRequestServer(UnskippableURLRequest):
             if m['type'].lower() == 'get':
                 m['url'] = self.url
                 break
-        print wms.getOperationByName('GetMap').methods
-        print wms.getOperationByName('GetMap').formatOptions
+        print(wms.getOperationByName('GetMap').methods)
+        print(wms.getOperationByName('GetMap').formatOptions)
 
         for name in self.layer_keys:
-            print "layer:", name, "title", self.wmshost.convert_title(self.wms[name].title), "crsoptions", wms[layer].crsOptions
+            print("layer:", name, "title", self.wmshost.convert_title(self.wms[name].title), "crsoptions", wms[layer].crsOptions)
 
     def get_layer_info(self):
         layer_info = []
@@ -203,9 +203,9 @@ class WMSRequest(BaseRequest):
 
             if not rect.intersects(self.world_rect, self.server.world_bbox_rect):
                 self.error = "Outside WMS boundary of %s" % rect.pretty_format(self.server.world_bbox_rect)
-        except ServiceException, e:
+        except ServiceException as e:
             self.error = e
-        except Exception, e:
+        except Exception as e:
             self.error = e
         if self.manager is not None:
             self.manager.threaded_image_loaded = (self.event_data, self)
@@ -247,18 +247,18 @@ if __name__ == "__main__":
 
     for version in ['1.3.0', '1.1.1']:
         host = WMSHost("test", url, version)
-        print host
+        print(host)
         downloader = BackgroundWMSDownloader(host)
         while True:
             if downloader.server.is_finished:
                 break
             time.sleep(.1)
-            print "Waiting for server config..."
+            print("Waiting for server config...")
         if downloader.server.is_valid():
             break
 
     if not downloader.server.is_valid():
-        print downloader.server.error
+        print(downloader.server.error)
     sys.exit()
 
     h = WMSHost.get_wms_by_name("USACE Inland ENC")
@@ -274,16 +274,16 @@ if __name__ == "__main__":
         if test.is_finished:
             break
         time.sleep(1)
-        print "Waiting for test..."
+        print("Waiting for test...")
 
     if test.error:
-        print "Error!", test.error
+        print("Error!", test.error)
     else:
-        print "world bbox", downloader.server.world_bbox_rect
+        print("world bbox", downloader.server.world_bbox_rect)
         outfile = 'wmstest.png'
         out = open(outfile, 'wb')
         out.write(test.data)
         out.close()
-        print "Generated image", outfile
+        print("Generated image", outfile)
 
     downloader = None

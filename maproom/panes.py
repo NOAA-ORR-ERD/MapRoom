@@ -16,11 +16,11 @@ from omnivore.utils.wx.download_manager import DownloadControl
 from omnivore.utils.wx.zoomruler import ZoomRuler
 from omnivore.utils.textutil import pretty_seconds, parse_pretty_seconds
 
-from layer_tree_control import LayerTreeControl
-from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
-from ui.triangle_panel import TrianglePanel
-from ui.merge_panel import MergePointsPanel
-from ui.undo_panel import UndoHistoryPanel
+from .layer_tree_control import LayerTreeControl
+from .ui.info_panels import LayerInfoPanel, SelectionInfoPanel
+from .ui.triangle_panel import TrianglePanel
+from .ui.merge_panel import MergePointsPanel
+from .ui.undo_panel import UndoHistoryPanel
 
 import logging
 log = logging.getLogger(__name__)

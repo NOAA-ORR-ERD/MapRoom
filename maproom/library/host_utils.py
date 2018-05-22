@@ -308,7 +308,7 @@ class ExtraAttributeHandler(jsonpickle.handlers.BaseHandler):
         if "py/state" in data:
             state = data["py/state"]
         else:
-            state = {k:v for k,v in data.iteritems() if not k.startswith("py/")}
+            state = {k:v for k,v in data.items() if not k.startswith("py/")}
         restored.__setstate__(state)
         return restored
 

@@ -7,8 +7,8 @@ def add_layer(undo, lm, mi, layer):
 
 
 def debug_objects(lm):
-    import layers
-    from command import UndoInfo
+    from . import layers
+    from .command import UndoInfo
 
     undo = UndoInfo()
     undo.flags.layers_changed = True

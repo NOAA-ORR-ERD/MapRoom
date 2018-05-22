@@ -21,17 +21,17 @@ from traits.api import provides
 from omnivore.framework.task import FrameworkTask
 from omnivore.framework.i_about import IAbout
 
-from project_editor import ProjectEditor
-import pane_layout
-from preferences import MaproomPreferences
-from library.mem_use import get_mem_use
-import toolbar
-from library.thread_utils import BackgroundWMSDownloader
-from library.tile_utils import BackgroundTileDownloader
-from library.known_hosts import default_wms_hosts, default_tile_hosts
-from layers import LayerStyle, parse_styles_from_json, styles_to_json
+from .project_editor import ProjectEditor
+from . import pane_layout
+from .preferences import MaproomPreferences
+from .library.mem_use import get_mem_use
+from . import toolbar
+from .library.thread_utils import BackgroundWMSDownloader
+from .library.tile_utils import BackgroundTileDownloader
+from .library.known_hosts import default_wms_hosts, default_tile_hosts
+from .layers import LayerStyle, parse_styles_from_json, styles_to_json
 
-import actions
+from . import actions
 from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction, SaveAsImageAction
 
 import logging
@@ -90,7 +90,7 @@ class MaproomProjectTask(FrameworkTask):
     templates_changed = Event
 
     def _about_version_default(self):
-        import Version
+        from . import Version
         return Version.VERSION
 
     def _get_about_description(self):
@@ -487,7 +487,7 @@ class MaproomProjectTask(FrameworkTask):
     @property
     def default_styles(self):
         d = {}
-        for type_name, style in self._default_styles.iteritems():
+        for type_name, style in self._default_styles.items():
             d[type_name] = style.get_copy()
         return d
 
@@ -500,14 +500,14 @@ class MaproomProjectTask(FrameworkTask):
             cls._default_styles = styles
         else:
             cls._default_styles = {}
-        for type_name, style in cls._fallback_styles.iteritems():
+        for type_name, style in cls._fallback_styles.items():
             if type_name not in cls._default_styles:
                 cls._default_styles[type_name] = style.get_copy()
 
     @classmethod
     def override_default_styles(cls, styles):
         if styles:
-            for type_name, style in styles.iteritems():
+            for type_name, style in styles.items():
                 cls._default_styles[type_name] = style.get_copy()
 
     def one_time_init_driver(self):

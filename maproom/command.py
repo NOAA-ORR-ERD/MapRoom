@@ -94,18 +94,18 @@ class UndoStack(list):
         return last
 
     def history_list(self):
-        h = [unicode(c).encode("utf-8") for c in self]
+        h = [str(c).encode("utf-8") for c in self]
         return h
 
     def serialize(self):
-        from serializer import Serializer
+        from .serializer import Serializer
         s = Serializer()
         for c in self:
             s.add(c)
         return s
 
     def unserialize_text(self, text, manager):
-        from serializer import TextDeserializer
+        from .serializer import TextDeserializer
 
         offset = manager.get_invariant_offset()
         s = TextDeserializer(text, offset)

@@ -6,7 +6,7 @@ from shapely.geometry import shape
 from shapely.wkt import loads
 from osgeo import ogr
 
-from accumulator import accumulator
+from .accumulator import accumulator
 
 import logging
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ def get_fiona(uri):
         file_path = file_path[4:]
     try:
         source = fiona.open(str(file_path), 'r')
-    except fiona.errors.DriverError, e:
+    except fiona.errors.DriverError as e:
         raise DriverLoadFailure(e)
 
     if (source is None):
@@ -116,7 +116,7 @@ def load_shapely(uri):
         if not error:
             try:
                 geometry_list = convert_dataset(dataset, point_list)
-            except ValueError, e:
+            except ValueError as e:
                 error = str(e)
 
     if error:

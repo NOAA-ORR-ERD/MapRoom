@@ -10,7 +10,7 @@ from ..library import rect
 from ..renderer import ImageData
 from ..renderer import alpha_from_int
 
-from base import ProjectedLayer
+from .base import ProjectedLayer
 
 from maproom.library import numpy_images
 

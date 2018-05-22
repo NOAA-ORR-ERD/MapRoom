@@ -85,7 +85,7 @@ DEFINES = [("TRILIBRARY", None), # this builds Triangle as a lib, rather than as
 ## fixme: this needs a lot of work!
 ##        it's really compiler dependent, not machine dependent
 if sys.platform == 'darwin':
-    print "adding no CPU flags for mac"
+    print("adding no CPU flags for mac")
     ## according to:
     ## http://www.christian-seiler.de/projekte/fpmath/
     ## nothing special is required on OS-X !
@@ -103,10 +103,10 @@ if sys.platform == 'darwin':
     ##     correct semantics
     ## """
 elif sys.platform == 'win32':
-    print "adding define for Windows for FPU management"
+    print("adding define for Windows for FPU management")
     DEFINES.append(('CPU86', None))
 elif 'linux' in sys.platform :#  something for linux here...
-    print "adding CPU flags for Intel Linux"
+    print("adding CPU flags for Intel Linux")
     DEFINES.append(('LINUX', None))
 else:
     raise RuntimeError("this system isn't supported for building yet")
@@ -333,12 +333,12 @@ if BUILD_APP:
 
 def remove_pyc(basedir):
     for curdir, dirlist, filelist in os.walk(basedir):
-        print curdir
+        print(curdir)
         for name in filelist:
             if name.endswith(".pyo"):
                 c = name[:-1] + "c"
                 cpath = os.path.join(curdir, c)
-                print "  " + name
+                print("  " + name)
                 # remove .pyc if .pyo exists
                 if os.path.exists(cpath):
                     os.remove(cpath)
@@ -349,12 +349,12 @@ def remove_pyc(basedir):
 
 
 def remove_numpy_tests(basedir):
-    print basedir
+    print(basedir)
     for f in glob("%s/*/tests" % basedir):
-        print f
+        print(f)
         shutil.rmtree(f)
     for f in glob("%s/tests" % basedir):
-        print f
+        print(f)
         shutil.rmtree(f)
     for f in ["tests", "f2py", "testing", "core/include", "core/lib", "distutils"]:
         path = os.path.join(basedir, f)
@@ -425,11 +425,11 @@ try:
         try:
             import triangle
             import shutil
-            print "*** copy Triangle module ***"
+            print("*** copy Triangle module ***")
             triangle_path = triangle.__file__
             try:
                 shutil.copy(triangle_path, win_dist_dir)
-            except (OSError, WindowsError), error:
+            except (OSError, WindowsError) as error:
                 if not "already exists" in str(error):
                     raise
         except ImportError:
@@ -439,7 +439,7 @@ try:
         import OpenGL
         import OpenGL_accelerate
         import shutil
-        print "*** copy PyOpenGL module ***"
+        print("*** copy PyOpenGL module ***")
         opengl_dir = os.path.dirname(OpenGL.__file__)
         opengl_accelerate_dir = os.path.dirname(OpenGL_accelerate.__file__)
         try:
@@ -451,11 +451,11 @@ try:
                 opengl_accelerate_dir,
                 os.path.join(win_dist_dir, "OpenGL_accelerate"),
             )
-        except WindowsError, error:
+        except WindowsError as error:
             if not "already exists" in str(error):
                 raise
 
-        print "*** create installer ***"
+        print("*** create installer ***")
 
         if is_64bit:
             nsis_arch = """ArchitecturesAllowed=x64
@@ -464,7 +464,7 @@ try:
             # copy manifest and app config files to work around side-by-side
             # errors
             for f in glob(r'pyinstaller/Microsoft.VC90.CRT-9.0.30729.6161/*'):
-                print f
+                print(f)
                 shutil.copy(f, win_dist_dir)
         else:
             nsis_arch = ""

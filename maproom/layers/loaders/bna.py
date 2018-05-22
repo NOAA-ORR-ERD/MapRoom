@@ -7,8 +7,8 @@ from shapely.geometry import Polygon, LineString
 from maproom.library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from maproom.layers import PolygonLayer, RNCLoaderLayer, PolygonShapefileLayer
 
-from common import BaseLayerLoader
-from shapefile import write_layer_as_shapefile
+from .common import BaseLayerLoader
+from .shapefile import write_layer_as_shapefile
 
 import logging
 log = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ class BNAShapefileLoader(BNALoader):
 
         try:
             layer.load_error_string, geometry_list, ring_identifiers = load_bna_as_shapely(metadata.uri)
-        except RuntimeError, e:
+        except RuntimeError as e:
             layer.load_error_string = str(e)
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
@@ -152,7 +152,7 @@ def parse_bna_file(uri, regime=0):
 
         polygon_points = np.zeros((num_points, 2), dtype=np.float64)
         first_point = ()
-        for j in xrange(num_points):
+        for j in range(num_points):
             line = lines[i].strip()
             i += 1
             pieces = line.split(",")

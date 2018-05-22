@@ -130,7 +130,7 @@ class FloatSlider(wx.PyPanel):
         self.value = value
         self.stepValue = self.float_to_slider_value(value)
         if self.stepValue > self.steps:
-            print "Value %s is outside of slider bounds." % self.stepValue
+            print("Value %s is outside of slider bounds." % self.stepValue)
             wx.Bell()
             return
         self.sliderCtrl.Value = self.stepValue

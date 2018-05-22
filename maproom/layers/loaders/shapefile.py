@@ -5,7 +5,7 @@ from osgeo import ogr, osr
 from maproom.library.shapely_utils import load_shapely
 from maproom.layers import PolygonShapefileLayer, PointLayer
 
-from common import BaseLayerLoader
+from .common import BaseLayerLoader
 
 import logging
 log = logging.getLogger(__name__)
@@ -171,7 +171,7 @@ if __name__ == "__main__":
     # datasource.Destroy()
 
     error, geom_list = load_shapely('/noaa/maproom/TestData/Shapefiles/20160516_0013d.shp')
-    print geom_list
+    print(geom_list)
     write_geometry_as_shapefile("a.kml", "test", "KML", geom_list)
     write_geometry_as_shapefile("a.shp", "test", "ESRI Shapefile", geom_list)
     write_geometry_as_shapefile("a.json", "test", "GeoJSON", geom_list)

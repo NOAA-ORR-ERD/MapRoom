@@ -8,8 +8,8 @@ from omnivore.framework.errors import ProgressCancelError
 from maproom.layers import RasterLayer
 from maproom.library.bsb_utils import BSBParser
 
-from common import BaseLoader
-from gdal import load_image_file, get_dataset
+from .common import BaseLoader
+from .gdal import load_image_file, get_dataset
 
 import logging
 log = logging.getLogger(__name__)

@@ -1,4 +1,4 @@
-import Queue
+import queue
 import weakref
 
 import numpy as np
@@ -8,7 +8,7 @@ import pyproj
 
 import maproom.library.rect as rect
 
-import data_types
+from . import data_types
 
 import logging
 log = logging.getLogger(__name__)
@@ -112,11 +112,11 @@ class ImageData(object):
         if ((self.y % texture_size) != 0):
             num_rows += 1
         self.image_list = []
-        for r in xrange(num_rows):
+        for r in range(num_rows):
             selection_height = texture_size
             if (((r + 1) * texture_size) > self.y):
                 selection_height -= (r + 1) * texture_size - self.y
-            for c in xrange(num_cols):
+            for c in range(num_cols):
                 selection_origin = (c * texture_size, r * texture_size)
                 selection_width = texture_size
                 if (((c + 1) * texture_size) > self.x):
@@ -251,7 +251,7 @@ class TileImageData(ImageData):
         self.requested = dict()  # (x, y): Image
 
     def __iter__(self):
-        return self.requested.itervalues()
+        return iter(self.requested.values())
 
     def calc_textures(self, texture_size):
         pass
@@ -266,12 +266,12 @@ class TileImageData(ImageData):
             self.set_zoom_level(zoom)
         top_left = host.world_to_tile_num(self.zoom_level, w_r[0][0], w_r[1][1])
         bot_right = host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
-        print "UPDATE_TILES:", top_left, bot_right
+        print("UPDATE_TILES:", top_left, bot_right)
         tile_list = self.calc_center_tiles(top_left, bot_right)
-        print "CENTER TILES:", tile_list
+        print("CENTER TILES:", tile_list)
         self.request_tiles(tile_list, manager, event_data)
         tile_list = self.calc_border_tiles(top_left, bot_right)
-        print "BORDER TILES", tile_list
+        print("BORDER TILES", tile_list)
         self.request_tiles(tile_list, manager, event_data)
 
     def set_zoom_level(self, zoom):
@@ -289,7 +289,7 @@ class TileImageData(ImageData):
             self.requested = dict()
 
     def release_tiles(self):
-        print "RELEASING TILES FOR ZOOM=%d: %s" % (self.last_zoom_level, self.last_requested)
+        print("RELEASING TILES FOR ZOOM=%d: %s" % (self.last_zoom_level, self.last_requested))
 
     def calc_center_tiles(self, tl, br):
         needed = []
@@ -331,7 +331,7 @@ class TileImageData(ImageData):
             return
         for tile in tiles:
             if tile not in self.requested:
-                print "REQUESTING TILE:", tile
+                print("REQUESTING TILE:", tile)
                 req = downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
                 self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_lb_rt)
 
@@ -343,7 +343,7 @@ class TileImageData(ImageData):
         try:
             while True:
                 tile_request = queue.get_nowait()
-                print "GOT TILE:", tile_request
+                print("GOT TILE:", tile_request)
                 tile = (tile_request.x, tile_request.y)
                 if tile not in self.requested:
                     # Hmmm, got tile info for something that's not currently in
@@ -351,15 +351,15 @@ class TileImageData(ImageData):
                     # Or the user zoomed in and out really quickly? If it's
                     # for the same zoom level, let's use it.
                     if tile_request.zoom == self.zoom_level:
-                        print "  Using tile received but not requested:", tile
+                        print("  Using tile received but not requested:", tile)
                         self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, tile_request.world_lb_rt)
                     else:
-                        print "  Ignoring tile received but not requested:", tile
+                        print("  Ignoring tile received but not requested:", tile)
                 if tile in self.requested:
                     tile_image = self.requested[tile]
                     tile_image.data = tile_request.get_image_array()
                     image_textures.add_tile(tile_image, self.projection)
-        except Queue.Empty:
+        except queue.Empty:
             pass
 
 

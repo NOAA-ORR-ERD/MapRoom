@@ -21,12 +21,12 @@ for mod_name, version in deps:
     try:
         mod = __import__(mod_name)
         try:
-            if mod.__version__ <> version:
-                print "Module: %s imported, but is the wrong version" % mod_name
-                print "need: %s, got %s" % (version, mod.__version__)
+            if mod.__version__ != version:
+                print("Module: %s imported, but is the wrong version" % mod_name)
+                print("need: %s, got %s" % (version, mod.__version__))
             else:
-                print "Module: %s is properly installed" % mod_name
+                print("Module: %s is properly installed" % mod_name)
         except AttributeError:
-            print "Module: %s is installed, but could not check the version" % mod_name
+            print("Module: %s is installed, but could not check the version" % mod_name)
     except ImportError:
-        print "module: %s could not be imported" % mod_name
+        print("module: %s could not be imported" % mod_name)

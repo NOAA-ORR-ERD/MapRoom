@@ -1,6 +1,6 @@
 import numpy as np
 
-from command import Command, UndoInfo
+from .command import Command, UndoInfo
 
 import logging
 log = logging.getLogger(__name__)

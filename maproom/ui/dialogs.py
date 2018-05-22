@@ -224,7 +224,7 @@ class StyleDialog(wx.Dialog):
 
         # Can't import from the top level because info_panels imports this
         # file, creating a circular import loop
-        from info_panels import LayerInfoPanel
+        from .info_panels import LayerInfoPanel
         self.info = LayerInfoPanel(self, self.mock_project)
         self.info.display_panel_for_layer(self.mock_project, self.other)
 

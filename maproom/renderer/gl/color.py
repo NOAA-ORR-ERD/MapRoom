@@ -124,8 +124,8 @@ def linear_contour(values, colormap, smooth=True, alpha=1.0):
 if __name__ == "__main__":
     rgba = (.5, .5, .5, 1)
     i = color_floats_to_int(*rgba)
-    print "%x" % i
-    print type(i)
+    print("%x" % i)
+    print(type(i))
     color = int_to_color_floats(i)
     rgba2 = list(color)
-    print rgba2
+    print(rgba2)

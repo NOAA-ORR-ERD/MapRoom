@@ -9,7 +9,7 @@ it also includes a utility function for dumping the units to the console or a fi
    write_units(filename=None)
 
 """
-from __future__ import unicode_literals, absolute_import
+
 import itertools
 
 ConvertDataUnits = {
@@ -129,7 +129,7 @@ ConvertDataUnits = {
 #       following is the value for the Density of water at 15C
 #       (CRC Handbook of Chemistry and Physics)
 "Density" : {"gram per cubic centimeter"  : (1.0,["g/cm^3","grams per cubic centimeter"]),
-             u"specific gravity (15\xb0C)"  : (0.99913,["S","specificgravity","Spec grav","SG","specificgravity(15C)"]),
+             "specific gravity (15\xb0C)"  : (0.99913,["S","specificgravity","Spec grav","SG","specificgravity(15C)"]),
              "kilogram per cubic meter" : (.001,["kg/m^3"]),
              "pound per cubic foot":  (0.016018463,["lbs/ft^3"]),
              "API degree"  : (1,["api"]),# this is special cased in the code.
@@ -190,8 +190,8 @@ ConvertDataUnits = {
 #              }
 
 unit_sets = {}
-for k in ConvertDataUnits.keys():
-    unit_sets[k] = set(itertools.chain(*[y for (x, y) in ConvertDataUnits[k].values()]))
+for k in list(ConvertDataUnits.keys()):
+    unit_sets[k] = set(itertools.chain(*[y for (x, y) in list(ConvertDataUnits[k].values())]))
 
 del unit_sets['Concentration In Water']
 unit_sets['Oil Concentration'] = unit_sets['Length']
@@ -199,7 +199,7 @@ unit_sets['Oil Concentration'] = unit_sets['Length']
 # Build the global unit list
 
 supported_units = set([])
-for s in unit_sets.values():
+for s in list(unit_sets.values()):
     supported_units = supported_units.union(s)
 
 
@@ -210,7 +210,7 @@ def write_units(filename=None):
     else:
         f = open(filename, 'w')
     f.write("NUCOS unit set:\n")
-    for key, value in ConvertDataUnits.items():
+    for key, value in list(ConvertDataUnits.items()):
         f.write("\n%s:\n" % key)
         for key2 in value:
             f.write("    %s\n"%key2.encode('ascii', 'ignore'))
@@ -221,7 +221,7 @@ def all_unit_names():
     returns a string of all unit names
     """
     result = []
-    for key, value in ConvertDataUnits.items():
+    for key, value in list(ConvertDataUnits.items()):
         result.append('\n%s:\n' % key)
         for key2 in value:
             result.append("    %s\n        " % key2.encode('ascii', 'ignore'))

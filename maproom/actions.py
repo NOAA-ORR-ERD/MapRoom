@@ -11,12 +11,12 @@ from traits.api import on_trait_change
 from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, TaskDynamicSubmenuGroup
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
-import pane_layout
-from menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand
-from mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLonCommand
-from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
-from library.thread_utils import BackgroundWMSDownloader
-from library.tile_utils import BackgroundTileDownloader
+from . import pane_layout
+from .menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand
+from .mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLonCommand
+from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
+from .library.thread_utils import BackgroundWMSDownloader
+from .library.tile_utils import BackgroundTileDownloader
 from . import layers
 
 import logging
@@ -182,7 +182,7 @@ class SaveLayerGroup(TaskDynamicSubmenuGroup):
     def _get_items(self, layer=None):
         items = []
         if layer is not None:
-            from layers.loaders import valid_save_formats
+            from .layers.loaders import valid_save_formats
             valid = valid_save_formats(layer)
             if valid:
                 for item in valid:
@@ -676,7 +676,7 @@ class DebugAnnotationLayersAction(EditorAction):
         GUI.invoke_later(self.after, self.active_editor)
 
     def after(self, project):
-        import debug
+        from . import debug
         lm = project.layer_manager
         undo = debug.debug_objects(lm)
         project.process_flags(undo.flags)
@@ -762,7 +762,7 @@ class ClearTileCacheAction(EditorAction):
             try:
                 for host in dlg.get_checked_items():
                     host.clear_cache(event.task.get_tile_cache_root())
-            except OSError, e:
+            except OSError as e:
                 event.task.window.window.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
 
         dlg.Destroy()
@@ -854,7 +854,7 @@ class StartTimeAction(LayerAction):
 
         if dlg.ShowModal() == wx.ID_OK:
             source_layer = layers[dlg.GetSelection()]
-            print('You selected: %s\n' % source_layer)
+            print(('You selected: %s\n' % source_layer))
             cmd = self.cmd(layer, self.get_time(source_layer))
             self.active_editor.process_command(cmd)
 

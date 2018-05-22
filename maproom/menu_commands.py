@@ -3,22 +3,22 @@ import json
 
 from omnivore.framework.errors import ProgressCancelError
 
-from command import Command, UndoInfo
-from layers import AnnotationLayer
-from layers import CompassRose
-from layers import Timestamp
-from layers import EmptyLayer
-from layers import Graticule
-from layers import LineEditLayer
-from layers import LineLayer
-from layers import PolygonLayer
-from layers import TileLayer
-from layers import TriangleLayer
-from layers import WMSLayer
-from layers import RNCLoaderLayer
-from layers import loaders
-from vector_object_commands import get_parent_layer_data
-from vector_object_commands import restore_layers
+from .command import Command, UndoInfo
+from .layers import AnnotationLayer
+from .layers import CompassRose
+from .layers import Timestamp
+from .layers import EmptyLayer
+from .layers import Graticule
+from .layers import LineEditLayer
+from .layers import LineLayer
+from .layers import PolygonLayer
+from .layers import TileLayer
+from .layers import TriangleLayer
+from .layers import WMSLayer
+from .layers import RNCLoaderLayer
+from .layers import loaders
+from .vector_object_commands import get_parent_layer_data
+from .vector_object_commands import restore_layers
 
 import logging
 log = logging.getLogger(__name__)
@@ -50,10 +50,10 @@ class LoadLayersCommand(Command):
         try:
             progress_log.info("START=Loading %s" % self.metadata.uri)
             layers = loader.load_layers(self.metadata, manager=lm, regime=self.regime)
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             undo.flags.success = False
             undo.flags.errors = [e.message]
-        except IOError, e:
+        except IOError as e:
             undo.flags.success = False
             undo.flags.errors = [str(e)]
         finally:
@@ -190,11 +190,11 @@ class PasteLayerCommand(Command):
         x = layer.points.x[drag]
         y = layer.points.y[drag]
         layer.move_control_point(drag, drag, self.center[0] - x, self.center[1] - y)
-        print "AFTER NEW LAYER POSITION"
+        print("AFTER NEW LAYER POSITION")
         layer.update_bounds()
 
         new_links = []
-        for old_invariant, new_layer in old_invariant_map.iteritems():
+        for old_invariant, new_layer in old_invariant_map.items():
             for dep_cp, truth_invariant, truth_cp, locked in new_layer.control_point_links:
                 # see if new truth layer has changed because it's also in the
                 # copied group
@@ -210,7 +210,7 @@ class PasteLayerCommand(Command):
 
         affected = layer.parents_affected_by_move()
         for parent in affected:
-            print "AFFECTED!", parent
+            print("AFFECTED!", parent)
             lf = undo.flags.add_layer_flags(parent)
             lf.layer_items_moved = True
         undo.data = (layer.invariant, saved_invariant, new_links)
@@ -501,11 +501,11 @@ class TriangulateLayerCommand(Command):
         try:
             progress_log.info("START=Triangulating layer %s" % layer.name)
             t_layer.triangulate_from_layer(layer, self.q, self.a)
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             self.undo_info.flags.success = False
         except Exception as e:
             import traceback
-            print traceback.format_exc(e)
+            print(traceback.format_exc(e))
             progress_log.info("END")
             self.undo_info.flags.success = False
             self.undo_info.flags.errors = [e.message]
@@ -574,11 +574,11 @@ class ToPolygonLayerCommand(Command):
         try:
             progress_log.info("START=Boundary to polygon layer %s" % layer.name)
             boundaries = layer.get_all_boundaries()
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             self.undo_info.flags.success = False
         except Exception as e:
             import traceback
-            print traceback.format_exc(e)
+            print(traceback.format_exc(e))
             progress_log.info("END")
             self.undo_info.flags.success = False
             layer.highlight_exception(e)

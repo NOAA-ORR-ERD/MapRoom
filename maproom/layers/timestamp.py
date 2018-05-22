@@ -9,7 +9,7 @@ from traits.api import Unicode, Str, Float
 from ..library import rect
 from ..library.coordinates import haversine_at_const_lat, km_to_string, ft_to_string
 
-from base import ScreenLayer
+from .base import ScreenLayer
 
 import logging
 log = logging.getLogger(__name__)

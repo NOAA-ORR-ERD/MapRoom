@@ -4,11 +4,11 @@ import math
 import wx
 
 
-from library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
-import library.rect as rect
-from mouse_commands import ViewportCommand, SetAnchorCommand, CropRectCommand, InsertPointCommand, InsertLineCommand, SplitLineCommand, ConnectPointsCommand
-from vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
-from menu_commands import PolygonEditLayerCommand
+from .library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
+from . import library.rect as rect
+from .mouse_commands import ViewportCommand, SetAnchorCommand, CropRectCommand, InsertPointCommand, InsertLineCommand, SplitLineCommand, ConnectPointsCommand
+from .vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
+from .menu_commands import PolygonEditLayerCommand
 
 
 class NoObjectError(RuntimeError):
@@ -134,7 +134,7 @@ class MouseHandler(object):
         c.release_mouse()
         # print "mouse is not down"
         self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
-        log.debug("process_mouse_motion_up: object under mouse: %s" % (unicode(self.current_object_under_mouse).encode("utf-8")))
+        log.debug("process_mouse_motion_up: object under mouse: %s" % (str(self.current_object_under_mouse).encode("utf-8")))
         obj = None
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
@@ -369,7 +369,7 @@ class MouseHandler(object):
                     c.render()
                     handled = True
         if not handled:
-            text = unichr(text)
+            text = chr(text)
             if keycode == wx.WXK_ESCAPE:
                 self.esc_key_pressed()
                 handled = True

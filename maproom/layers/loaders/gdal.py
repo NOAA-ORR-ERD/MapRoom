@@ -9,7 +9,7 @@ import pyproj
 import maproom.library.Bitmap as Bitmap
 from maproom.renderer import ImageData
 
-from common import BaseLayerLoader
+from .common import BaseLayerLoader
 from maproom.layers import RasterLayer
 
 import logging

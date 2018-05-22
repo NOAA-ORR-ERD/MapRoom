@@ -5,9 +5,9 @@ from wx.lib.expando import ExpandoTextCtrl
 
 from pyface.api import ImageResource
 
-import sliders
-import dialogs
-import buttons
+from . import sliders
+from . import dialogs
+from . import buttons
 from ..layers import state, LayerStyle
 from ..library import coordinates
 from ..library import colormap
@@ -458,7 +458,7 @@ class PointIndexesField(TextEditField):
             self.panel.project.layer_canvas.do_select_points(layer, values)
         except Exception as e:
             import traceback
-            print traceback.format_exc(e)
+            print(traceback.format_exc(e))
             c.SetBackgroundColour("#FF8080")
 
 
@@ -849,7 +849,7 @@ class FillStyleField(InfoField):
     def create_control(self):
         c = wx.adv.BitmapComboBox(self.parent, -1, "", size=(self.default_width, -1),
                                     style=wx.CB_READONLY)
-        for i, s in LayerStyle.fill_styles.iteritems():
+        for i, s in LayerStyle.fill_styles.items():
             c.Append(s[0])
 
         c.Bind(wx.EVT_COMBOBOX, self.style_changed)
