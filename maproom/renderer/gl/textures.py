@@ -335,14 +335,14 @@ class TileImageData(ImageData):
                 req = downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
                 self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_lb_rt)
 
-    def add_tiles(self, queue, image_textures):
+    def add_tiles(self, tile_queue, image_textures):
         if image_textures.static_renderer:
             # short circuit to skip for PDF renderer or other renderers that
             # don't dynamically update the screen
             return
         try:
             while True:
-                tile_request = queue.get_nowait()
+                tile_request = tile_queue.get_nowait()
                 print("GOT TILE:", tile_request)
                 tile = (tile_request.x, tile_request.y)
                 if tile not in self.requested:
