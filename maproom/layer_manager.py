@@ -5,7 +5,7 @@ import functools
 
 from fs.opener import opener, fsopen
 
-from . import library.rect as rect
+from .library import rect
 
 from .layers import Graticule
 from .layers import Layer

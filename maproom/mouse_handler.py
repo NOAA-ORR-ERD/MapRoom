@@ -5,7 +5,7 @@ import wx
 
 
 from .library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
-from . import library.rect as rect
+from . library import rect
 from .mouse_commands import ViewportCommand, SetAnchorCommand, CropRectCommand, InsertPointCommand, InsertLineCommand, SplitLineCommand, ConnectPointsCommand
 from .vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
 from .menu_commands import PolygonEditLayerCommand
