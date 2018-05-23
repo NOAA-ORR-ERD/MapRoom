@@ -36,7 +36,7 @@ class ColormapImage(object):
             self.array[:,-self.arrow_width:,:] = np.asarray(colormap.over_rgba[0:3], dtype=np.float32) * 255
             half_height = self.height // 2
             for h in range(half_height):
-                w = self.arrow_width * h * 2 / self.height
+                w = self.arrow_width * h * 2 // self.height
                 self.array[half_height - h - 1,0:w,:] = bgcolor
                 self.array[self.height - half_height + h,0:w,:] = bgcolor
                 self.array[half_height - h - 1,self.width-w:,:] = bgcolor

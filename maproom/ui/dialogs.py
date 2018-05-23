@@ -124,7 +124,7 @@ class IconDialog(wx.Dialog):
         self.Bind(wx.EVT_BUTTON, self.OnButton)
         self.Bind(wx.EVT_ENTER_WINDOW, self.on_enter)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
-        self.icon_list.SetScrollbars(0, marplot_icon_max_size[1], 0, (50 + self.num_cols - 1) / self.num_cols)
+        self.icon_list.SetScrollbars(0, marplot_icon_max_size[1], 0, (50 + self.num_cols - 1) // self.num_cols)
 
         icon_cats = [cat for cat, icons in marplot_icons]
         cat = wx.ListBox(self, -1, choices=icon_cats, name="IconDialog.cat")
@@ -163,7 +163,7 @@ class IconDialog(wx.Dialog):
             self.grid.Add(b, flag=wx.ALIGN_CENTER_VERTICAL)
             b.Bind(wx.EVT_ENTER_WINDOW, self.on_enter)
             b.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave)
-        self.icon_list.SetScrollbars(0, marplot_icon_max_size[1], 0, (len(icons) + self.num_cols - 1) / self.num_cols)
+        self.icon_list.SetScrollbars(0, marplot_icon_max_size[1], 0, (len(icons) + self.num_cols - 1) // self.num_cols)
         self.icon_list.Layout()
 
     def OnButton(self, event):

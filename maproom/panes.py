@@ -47,7 +47,7 @@ class TimelinePanel(ZoomRuler):
             end = start
 
         # Minimum of one hour
-        padding = divmod((end - start) / 10, 60)[0] * 60
+        padding = divmod((end - start) // 10, 60)[0] * 60
         if padding < 3600:
             padding = 3600
 
