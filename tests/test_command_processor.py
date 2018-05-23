@@ -76,7 +76,7 @@ class TestVerdatDelete(object):
         points = [9, 10]
         cmd = DeleteLinesCommand(self.layer, points, None)
         self.project.process_command(cmd)
-        print self.layer.line_segment_indexes
+        print(self.layer.line_segment_indexes)
         
         self.project.undo()
         assert orig_lsi[-1] == self.layer.line_segment_indexes[-1]

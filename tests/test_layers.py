@@ -53,33 +53,33 @@ class TestBasic(object):
         a2.update_bounds()
         a1.update_bounds()
         
-        print lm
+        print(lm)
         mi = lm.get_multi_index_of_layer(a1)
-        print "mi", mi
+        print("mi", mi)
         
         assert 7 == lm.next_invariant
-        print lm
+        print(lm)
         
         cmd = DeleteLayerCommand(a1)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
         
-        print lm
+        print(lm)
         assert 7 == lm.next_invariant
         self.project.undo()
         assert 7 == lm.next_invariant
-        print lm
+        print(lm)
         
         # remove last layer and see if invariant changes
         cmd = DeleteLayerCommand(a)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
         
-        print lm
+        print(lm)
         assert 6 == lm.next_invariant
         self.project.undo()
         assert 7 == lm.next_invariant
-        print lm
+        print(lm)
 
 
 

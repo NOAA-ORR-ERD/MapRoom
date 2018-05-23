@@ -16,16 +16,16 @@ def compare_layer_managers(lm1, lm2):
             layer.manager
         except AttributeError:
             continue
-        print layer
+        print(layer)
         mi = lm1.get_multi_index_of_layer(layer)
-        print mi
+        print(mi)
         other = lm2.get_layer_by_multi_index(mi)
-        print other
+        print(other)
         try:
             other.manager
         except AttributeError:
             continue
-        print("%s: %s" % (mi, layer.test_contents_equal(other)))
+        print(("%s: %s" % (mi, layer.test_contents_equal(other))))
 
 
 class TestBasic(object):

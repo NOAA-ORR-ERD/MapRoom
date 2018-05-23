@@ -15,8 +15,8 @@ class ClipBase(object):
         """from http://pcjericks.github.io/py-gdalogr-cookbook/geometry.html#quarter-polygon-and-create-centroids
         """
         geom_poly = self.get_clip_object()
-        print "geom_poly"
-        print geom_poly
+        print("geom_poly")
+        print(geom_poly)
         
         # Create 4 square polygons
         geom_poly_envelope = geom_poly.bounds
@@ -43,26 +43,26 @@ class ClipBase(object):
         coord8 = maxX, minY
 
         clipTopLeft = box(coord3[0], coord3[1], coord1[0], coord1[1])
-        print "TopLeft"
-        print  clipTopLeft.bounds
+        print("TopLeft")
+        print(clipTopLeft.bounds)
         clipBottomRight = box(coord7[0], coord7[1], coord5[0], coord5[1])
-        print "BottomRight"
-        print  clipBottomRight.bounds
+        print("BottomRight")
+        print(clipBottomRight.bounds)
         
         # Note: polygons must be in a list
         clip = MultiPolygon([clipTopLeft, clipBottomRight])
         
-        print "clip"
-        print clip.is_valid
-        print clip.bounds
+        print("clip")
+        print(clip.is_valid)
+        print(clip.bounds)
 
         # Intersect 4 squares polygons with test polygon
         clip_result = clip.intersection(geom_poly)
-        print "clip_result"
-        print clip_result
+        print("clip_result")
+        print(clip_result)
         for i, x in enumerate(clip_result.geoms):
-            print "clip result %d:" % (i, )
-            print x
+            print("clip result %d:" % (i, ))
+            print(x)
 
 
 class TestShapelyVerdat(ClipBase):
@@ -72,14 +72,14 @@ class TestShapelyVerdat(ClipBase):
 
     def get_clip_points(self):
         boundary = self.manager.get_outer_boundary(self.verdat)
-        print boundary
+        print(boundary)
         points = boundary.get_xy_point_float64()
-        print "points tuples:"
-        print points
-        print points.__array_interface__
-        print points.shape
-        print id(points)
-        print points.flags
+        print("points tuples:")
+        print(points)
+        print(points.__array_interface__)
+        print(points.shape)
+        print(id(points))
+        print(points.flags)
 #        points = np.require(points, np.float64, ["C", "OWNDATA"])
 #        print id(points)
 #        print points.flags
@@ -88,7 +88,7 @@ class TestShapelyVerdat(ClipBase):
     def get_clip_object(self):
         points = self.get_clip_points()
         poly = Polygon(points)
-        print poly.bounds
+        print(poly.bounds)
         return poly
 
 
@@ -99,14 +99,14 @@ class TestShapelyUGridLines(ClipBase):
 
     def get_clip_points(self):
         boundary = self.manager.get_outer_boundary(self.verdat)
-        print boundary
+        print(boundary)
         points = boundary.get_xy_point_float64()
-        print "points tuples:"
-        print points
-        print points.__array_interface__
-        print points.shape
-        print id(points)
-        print points.flags
+        print("points tuples:")
+        print(points)
+        print(points.__array_interface__)
+        print(points.shape)
+        print(id(points))
+        print(points.flags)
 #        points = np.require(points, np.float64, ["C", "OWNDATA"])
 #        print id(points)
 #        print points.flags
@@ -115,7 +115,7 @@ class TestShapelyUGridLines(ClipBase):
     def get_clip_object(self):
         points = self.get_clip_points()
         poly = LineString(points)
-        print poly.bounds
+        print(poly.bounds)
         return poly
 
 
@@ -129,23 +129,23 @@ class TestShapelyBNA(ClipBase):
         start = poly.start[3]
         count = poly.count[3]
         boundary = self.layer.points
-        print boundary
+        print(boundary)
         points = np.c_[boundary.x[start:start + count], boundary.y[start:start + count]]
-        print "points tuples:"
-        print points
-        print points.__array_interface__
-        print points.shape
-        print id(points)
-        print points.flags
+        print("points tuples:")
+        print(points)
+        print(points.__array_interface__)
+        print(points.shape)
+        print(id(points))
+        print(points.flags)
         points = np.require(points, np.float64, ["C", "OWNDATA"])
-        print id(points)
-        print points.flags
+        print(id(points))
+        print(points.flags)
         return points
 
     def get_clip_object(self):
         points = self.get_clip_points()
         poly = Polygon(points)
-        print poly.bounds
+        print(poly.bounds)
         return poly
 
     def test_clip_rect(self):

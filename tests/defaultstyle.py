@@ -12,7 +12,7 @@ from maproom.layers import LayerStyle
 
 def hook(self, f):
     layer = self.layer_tree_control.get_selected_layer()
-    print layer.style
+    print(layer.style)
     self.control.info.display_panel_for_layer(self, layer)
 
 #MockProject.process_flags = hook
@@ -38,8 +38,8 @@ class MyApp(wx.App):
         import wx.lib.inspection
 #        wx.lib.inspection.InspectionTool().Show()
         result = frame.ShowModal()
-        print result
-        print frame.get_style()
+        print(result)
+        print(frame.get_style())
         return True
 
 if __name__ == '__main__':

@@ -18,13 +18,13 @@ class TestTileCoordinates(object):
 
     def test_tile_to_coord(self):
         wr = self.host.tile_num_to_world_lb_rt(0, 0, 0)
-        print wr
+        print(wr)
         wr = self.host.tile_num_to_world_lb_rt(1, 0, 0)
-        print wr
+        print(wr)
         wr = self.host.tile_num_to_world_lb_rt(1, 0, 1)
-        print wr
+        print(wr)
         wr = self.host.tile_num_to_world_lb_rt(2, 0, 0)
-        print wr
+        print(wr)
 
 
 if __name__ == "__main__":
