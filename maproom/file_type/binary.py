@@ -43,7 +43,7 @@ class MapRoomZipProjectRecognizer(RecognizerBase):
 
         # attempt to load as a uri
         try:
-            if zipfile.is_zipfile(guess.bytes):
+            if zipfile.is_zipfile(guess.bytes_as_stream):
                 return self.id
         except TypeError:
             # if there is an embedded zero in the byte stream, ZipFile fails
