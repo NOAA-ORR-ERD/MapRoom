@@ -384,6 +384,7 @@ try:
             'pyproj',
             'cython',
             'shapely',
+            'owslib>=0.16',
             'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
             'coverage',
             'pytest-cov',
