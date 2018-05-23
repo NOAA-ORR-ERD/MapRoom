@@ -105,10 +105,10 @@ class ImageData(object):
 
     def calc_textures(self, texture_size):
         self.texture_size = texture_size
-        num_cols = self.x / texture_size
+        num_cols = self.x // texture_size
         if ((self.x % texture_size) != 0):
             num_cols += 1
-        num_rows = self.y / texture_size
+        num_rows = self.y // texture_size
         if ((self.y % texture_size) != 0):
             num_rows += 1
         self.image_list = []
