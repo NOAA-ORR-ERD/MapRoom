@@ -42,7 +42,7 @@ def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
 
 
 def get_numpy_from_data(data):
-    image = Image.open(io.StringIO(data))
+    image = Image.open(io.BytesIO(data))
     if image.mode != "RGBA":
         image = image.convert("RGBA")
     arr = np.array(image)

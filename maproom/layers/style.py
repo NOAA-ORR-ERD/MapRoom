@@ -176,7 +176,7 @@ class LayerStyle(object):
         if v is None:
             return "-"
         if k == 'font':
-            return v.encode('utf-8')
+            return v
         return "%x" % v
 
     def has_same_keywords(self, other_style):
@@ -202,7 +202,8 @@ class LayerStyle(object):
             if v == "-":
                 v = None
             elif k == 'font':
-                v = v.decode('utf-8')
+                # v = v.decode('utf-8')
+                pass
             else:
                 v = int(v, 16)
             setattr(self, k, v)
