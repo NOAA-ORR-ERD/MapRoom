@@ -206,7 +206,7 @@ class Picker(object):
 
         self.unbind_frame_buffer()
 
-        if color_string is None or color_string[0: 3] == self.BACKGROUND_COLOR_STRING:
+        if color_string is None or list(color_string[0:3]) == self.BACKGROUND_COLOR_STRING:
             return None
 
         if (sys.byteorder == "big"):
