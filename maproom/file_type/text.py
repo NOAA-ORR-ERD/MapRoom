@@ -17,7 +17,7 @@ class MapRoomProjectRecognizer(RecognizerBase):
     def identify(self, guess):
         if guess.likely_text:
             byte_stream = guess.get_utf8()
-            if byte_stream.startswith("# -*- MapRoom project file -*-"):
+            if byte_stream.startswith(b"# -*- MapRoom project file -*-"):
                 return self.id
 
 
@@ -33,7 +33,7 @@ class MapRoomCommandRecognizer(RecognizerBase):
     def identify(self, guess):
         if guess.likely_text:
             byte_stream = guess.get_utf8()
-            if byte_stream.startswith(magic_template):
+            if byte_stream.startswith(magic_template.encode('utf-8')):
                 return self.id
 
 
@@ -49,7 +49,7 @@ class VerdatRecognizer(RecognizerBase):
     def identify(self, guess):
         if guess.likely_text:
             byte_stream = guess.get_utf8()
-            if byte_stream.startswith("DOGS"):
+            if byte_stream.startswith(b"DOGS"):
                 return "application/x-maproom-verdat"
 
 
@@ -66,7 +66,7 @@ class BNARecognizer(RecognizerBase):
         if guess.likely_text and guess.metadata.uri.lower().endswith(".bna"):
             byte_stream = guess.get_utf8()[:1000]
             lines = byte_stream.splitlines()
-            if ".KAP" in lines[0]:
+            if b".KAP" in lines[0]:
                 return "application/x-maproom-rncloader"
             return "application/x-maproom-bna"
 

@@ -69,8 +69,8 @@ class UGRID_Recognizer(RecognizerBase):
     def identify(self, guess):
         byte_stream = guess.bytes
         # check if it is either HDF or CDF
-        if byte_stream[:3] == "CDF" or byte_stream[0:8] == "\211HDF\r\n\032\n":
-            if ('cf_role' in byte_stream) and ('mesh_topology' in byte_stream):
+        if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
+            if (b'cf_role' in byte_stream) and (b'mesh_topology' in byte_stream):
                 return self.id
 
 
@@ -91,6 +91,6 @@ class NC_ParticleRecognizer(RecognizerBase):
     def identify(self, guess):
         byte_stream = guess.bytes
         # check if is is HDF or CDF
-        if byte_stream[:3] == "CDF" or byte_stream[0:8] == "\211HDF\r\n\032\n":
-            if ('feature_type' in byte_stream) and ('particle_trajector' in byte_stream):
+        if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
+            if (b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream):
                 return self.id
