@@ -177,7 +177,7 @@ class ProjectEditor(FrameworkEditor):
                 except Exception as e:
                     errors = [str(e)]
                     import traceback
-                    print(traceback.format_exc(e))
+                    print(traceback.format_exc())
                     break
             if errors is not None:
                 header = [

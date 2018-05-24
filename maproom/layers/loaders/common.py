@@ -71,7 +71,7 @@ class BaseLayerLoader(BaseLoader):
             error = self.save_to_local_file(temp_file, layer)
         except Exception as e:
             import traceback
-            print(traceback.format_exc(e))
+            print(traceback.format_exc())
             if hasattr(e, "points") and e.points is not None:
                 layer.clear_all_selections(state.FLAGGED)
                 for p in e.points:
@@ -95,7 +95,7 @@ class BaseLayerLoader(BaseLoader):
                 import traceback
 
                 error = "Unable to save file to disk. Make sure you have write permissions to the file.\n\nSystem error was: %s" % e.message
-                print(traceback.format_exc(e))
+                print(traceback.format_exc())
         return error
 
     def save_to_local_file(self, filename, layer):

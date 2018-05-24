@@ -458,7 +458,7 @@ class PointIndexesField(TextEditField):
             self.panel.project.layer_canvas.do_select_points(layer, values)
         except Exception as e:
             import traceback
-            print(traceback.format_exc(e))
+            print(traceback.format_exc())
             c.SetBackgroundColour("#FF8080")
 
 

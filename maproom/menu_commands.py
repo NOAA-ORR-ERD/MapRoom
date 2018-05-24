@@ -505,7 +505,7 @@ class TriangulateLayerCommand(Command):
             self.undo_info.flags.success = False
         except Exception as e:
             import traceback
-            print(traceback.format_exc(e))
+            print(traceback.format_exc())
             progress_log.info("END")
             self.undo_info.flags.success = False
             self.undo_info.flags.errors = [e.message]
@@ -578,7 +578,7 @@ class ToPolygonLayerCommand(Command):
             self.undo_info.flags.success = False
         except Exception as e:
             import traceback
-            print(traceback.format_exc(e))
+            print(traceback.format_exc())
             progress_log.info("END")
             self.undo_info.flags.success = False
             layer.highlight_exception(e)
