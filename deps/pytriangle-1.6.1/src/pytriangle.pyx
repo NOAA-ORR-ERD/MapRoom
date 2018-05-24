@@ -150,9 +150,10 @@ def triangulate_simple(
         cleanup_child( connection, child )
         raise RuntimeError( "Triangulation timeout." )
     cdef unsigned int out_point_count = <unsigned int>connection.recv()
+    # print("received %d points" % out_point_count)
 
-    cdef np.ndarray[ np.float64_t, ndim = 2 ] out_points_xy = \
-       np.ndarray( ( out_point_count, 2 ), np.float64 )
+    cdef np.ndarray[ np.float64_t ] out_points_xy = \
+       np.ndarray( ( out_point_count * 2 ), np.float64 )
 
     poll_with_timeout( connection, child )
     connection.recv_bytes_into( out_points_xy )
@@ -166,8 +167,8 @@ def triangulate_simple(
     poll_with_timeout( connection, child )
     cdef unsigned int out_line_count = <unsigned int>connection.recv()
 
-    cdef np.ndarray[ np.uint32_t, ndim = 2 ] out_lines = \
-       np.ndarray( ( out_line_count, 2 ), np.uint32 )
+    cdef np.ndarray[ np.uint32_t ] out_lines = \
+       np.ndarray( ( out_line_count * 2 ), np.uint32 )
 
     poll_with_timeout( connection, child )
     connection.recv_bytes_into( out_lines )
@@ -175,15 +176,15 @@ def triangulate_simple(
     poll_with_timeout( connection, child )
     cdef unsigned int out_triangle_count = <unsigned int>connection.recv()
 
-    cdef np.ndarray[ np.uint32_t, ndim = 2 ] out_triangles = \
-       np.ndarray( ( out_triangle_count, 3 ), np.uint32 )
+    cdef np.ndarray[ np.uint32_t ] out_triangles = \
+       np.ndarray( ( out_triangle_count * 3 ), np.uint32 )
 
     poll_with_timeout( connection, child )
     connection.recv_bytes_into( out_triangles )
 
     cleanup_child( connection, child )
 
-    return ( out_points_xy, out_points_z, out_lines, out_triangles )
+    return ( out_points_xy.reshape((out_point_count, 2)), out_points_z, out_lines.reshape((out_line_count, 2)), out_triangles.reshape((out_triangle_count, 3)) )
 
 
 cdef poll_with_timeout( connection, child ):
@@ -268,27 +269,26 @@ def triangulate_simple_child( connection, utf8_param_text ):
     If the triangulation is not successful, then the child process may simply
     terminate or even hang.
     """
-    switchesP = "pzB" + utf8_param_text # TODO: Add -a# -q# -Q
+    switchesP = b"pzB" + utf8_param_text # TODO: Add -a# -q# -Q
     cdef char* switches = switchesP
     cdef triangulateio in_data, out_data
 
     # Receive incoming data from the parent process.
     if not connection.poll( TIMEOUT ): return
     cdef unsigned int point_count = <unsigned int>connection.recv()
+    # print("point count: ", point_count)
 
     # Receive as 32-bit floats, then convert to 64-bit floats below, so the
     # Triangle library has more precision to work with.
-    cdef np.ndarray[ np.float64_t, ndim = 2 ] points_xy = \
-       np.ndarray( ( point_count, 2 ), np.float64 )
+    cdef np.ndarray[ np.float64_t ] points_xy = \
+       np.ndarray( ( point_count * 2 ), np.float64 )
 
     if not connection.poll( TIMEOUT ): return
+    # print("storage: ", len(points_xy))
     connection.recv_bytes_into( points_xy )
 
-    cdef np.ndarray[ np.float64_t, ndim = 2 ] points_xy_64 = \
-       points_xy.astype( np.float64 )
-
     cdef np.ndarray[ np.float32_t ] points_z = \
-       np.ndarray( ( point_count, ), np.float32 )
+       np.ndarray( ( point_count ), np.float32 )
 
     if not connection.poll( TIMEOUT ): return
     connection.recv_bytes_into( points_z )
@@ -297,28 +297,28 @@ def triangulate_simple_child( connection, utf8_param_text ):
        points_z.astype( np.float64 )
 
     if not connection.poll( TIMEOUT ): return
-    cdef unsigned int line_count = <unsigned int>connection.recv()
+    c = connection.recv()
+    # print("line count: ", c)
+    cdef unsigned int line_count = <unsigned int>c
 
-    cdef np.ndarray[ np.uint32_t, ndim = 2 ] lines = \
-       np.ndarray( ( line_count, 2 ), np.uint32 )
+    cdef np.ndarray[np.uint32_t] lines = \
+       np.ndarray( ( line_count * 2 ), np.uint32 )
 
+    # print("lines: ", len(lines), line_count)
     if not connection.poll( TIMEOUT ): return
     connection.recv_bytes_into( lines )
 
     if not connection.poll( TIMEOUT ): return
     cdef unsigned int hole_point_count = <unsigned int>connection.recv()
 
-    cdef np.ndarray[ np.float64_t, ndim = 2 ] hole_points_xy = \
-       np.ndarray( ( hole_point_count, 2 ), np.float64 )
+    cdef np.ndarray[ np.float64_t ] hole_points_xy = \
+       np.ndarray( ( hole_point_count * 2 ), np.float64 )
 
     if not connection.poll( TIMEOUT ): return
     connection.recv_bytes_into( hole_points_xy )
 
-    cdef np.ndarray[ np.float64_t, ndim = 2 ] hole_points_xy_64 = \
-       hole_points_xy.astype( np.float64 )
-
     # Pass the data to Triangle and triangulate with it.
-    in_data.pointlist = <double*>points_xy_64.data
+    in_data.pointlist = <double*>points_xy.data
     in_data.pointattributelist = <double*>points_z_64.data
     in_data.pointmarkerlist = NULL
     in_data.numberofpoints = point_count
@@ -332,7 +332,7 @@ def triangulate_simple_child( connection, utf8_param_text ):
     in_data.segmentlist = <int*>lines.data # Note the conversion to signed!
     in_data.segmentmarkerlist = NULL
     in_data.numberofsegments = lines.shape[ 0 ]
-    in_data.holelist = <double*>hole_points_xy_64.data
+    in_data.holelist = <double*>hole_points_xy.data
     in_data.numberofholes = hole_points_xy.shape[ 0 ]
     in_data.regionlist = NULL
     in_data.numberofregions = 0

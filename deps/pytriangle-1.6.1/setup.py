@@ -37,7 +37,7 @@ DEFINES = [("TRILIBRARY", None), # this builds Triangle as a lib, rather than as
 ## fixme: this needs a lot of work!
 ##        it's really compiler dependent, not machine dependent
 if sys.platform == 'darwin':
-    print "adding no CPU flags for mac"
+    print("adding no CPU flags for mac")
     ## according to:
     ## http://www.christian-seiler.de/projekte/fpmath/
     ## nothing special is required on OS-X !
@@ -55,10 +55,10 @@ if sys.platform == 'darwin':
     ##     correct semantics
     ## """
 elif sys.platform == 'win32':
-    print "adding define for Windows for FPU management"
+    print("adding define for Windows for FPU management")
     DEFINES.append(('CPU86', None))
 elif 'linux' in sys.platform :#  something for linux here...
-    print "adding CPU flags for Intel Linux"
+    print("adding CPU flags for Intel Linux")
     DEFINES.append(('LINUX', None))
 else:
     raise RuntimeError("this system isn't supported for building yet")
