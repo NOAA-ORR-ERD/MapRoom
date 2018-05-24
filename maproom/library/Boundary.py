@@ -9,7 +9,7 @@ progress_log = logging.getLogger("progress")
 
 class PointsError(Exception):
     def __init__(self, message, points=None):
-        Exception.__init__(self, message)
+        self.message = message
         self.points = points
 
 
