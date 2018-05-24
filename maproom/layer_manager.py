@@ -1272,50 +1272,6 @@ class LayerManager(BaseDocument):
         # print("\n".join(zf.namelist()))
         return ""
 
-    def save_all_text(self, file_path, extra_json_data=None):
-        log.debug("saving layers in project file: " + file_path)
-        layer_info = self.flatten_with_indexes()
-        log.debug("layers are " + str(self.layers))
-        log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
-        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().items()]))
-        project = []
-        if extra_json_data is None:
-            extra_json_data = {}
-        for attr, to_json in self.get_to_json_attrs():
-            extra_json_data[attr] = to_json()
-        project.append("extra json data")
-        project.append(extra_json_data)
-        for index, layer in layer_info:
-            log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
-            data = layer.serialize_json(index)
-            if data is not None:
-                try:
-                    text = json.dumps(data)
-                except Exception as e:
-                    log.error("JSON failure, layer %s: data=%s" % (layer.name, repr(data)))
-                    errors = []
-                    for k, v in data.items():
-                        small = {k: v}
-                        try:
-                            _ = json.dumps(small)
-                        except Exception:
-                            errors.append((k, v))
-                    log.error("JSON failures at: %s" % ", ".join(["%s: %s" % (k, v) for k, v in errors]))
-                    return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
-
-                project.append(data)
-
-        try:
-            with fsopen(file_path, "wb") as fh:
-                fh.write("# -*- MapRoom project file -*-\n")
-                text = json.dumps(project, indent=4)
-                processed = collapse_json(text, 12)
-                fh.write(processed)
-                fh.write("\n")
-        except Exception as e:
-            return "Failed saving %s: %s" % (file_path, e)
-        return ""
-
     def save_layer(self, layer, file_path, loader=None):
         if layer is not None:
             error = loaders.save_layer(layer, file_path, loader)
