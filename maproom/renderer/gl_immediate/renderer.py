@@ -449,7 +449,7 @@ class ImmediateModeRenderer():
         projected_points = self.vbo_point_xys.data
         tessellate(
             projected_points,  # used to be: self.points
-            self.point_adjacency_array.__next__,
+            self.point_adjacency_array.next,
             self.point_adjacency_array.ring_index,
             self.polygons.start,
             self.polygons.count,  # per-polygon point count

@@ -22,11 +22,13 @@ def render_buffers_with_colors(
     cdef np.int32_t buffer_index
     cdef glBindBuffer_pointer glBindBuffer
 
-    if hasattr( pygl.platform.PLATFORM, "getExtensionProcedure" ):
+    glBindBuffer = <glBindBuffer_pointer>0
+    if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        glBindBuffer = \
-            <glBindBuffer_pointer><size_t>getExtensionProcedure( "glBindBuffer" )
-    else:
+        proc = getExtensionProcedure("glBindBuffer")
+        if proc is not None:
+            glBindBuffer = <glBindBuffer_pointer><size_t>proc
+    if glBindBuffer == <glBindBuffer_pointer>0:
         glBindBuffer = <glBindBuffer_pointer><size_t>gl.glBindBufferARB
 
     gl.glEnableClientState( gl.GL_VERTEX_ARRAY ) # FIXME: deprecated
@@ -71,11 +73,13 @@ def render_buffers_with_one_color(
     cdef np.int32_t buffer_index
     cdef glBindBuffer_pointer glBindBuffer
 
-    if hasattr( pygl.platform.PLATFORM, "getExtensionProcedure" ):
+    glBindBuffer = <glBindBuffer_pointer>0
+    if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        glBindBuffer = \
-            <glBindBuffer_pointer><size_t>getExtensionProcedure( "glBindBuffer" )
-    else:
+        proc = getExtensionProcedure("glBindBuffer")
+        if proc is not None:
+            glBindBuffer = <glBindBuffer_pointer><size_t>proc
+    if glBindBuffer == <glBindBuffer_pointer>0:
         glBindBuffer = <glBindBuffer_pointer><size_t>gl.glBindBufferARB
 
     gl.glEnableClientState( gl.GL_VERTEX_ARRAY ) # FIXME: deprecated

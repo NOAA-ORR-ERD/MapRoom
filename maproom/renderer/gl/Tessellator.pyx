@@ -62,12 +62,14 @@ def init_vertex_buffers(
     """
     cdef glGenBuffers_pointer glGenBuffers
 
-    if hasattr( pygl.platform.PLATFORM, "getExtensionProcedure" ):
+    glGenBuffers = <glGenBuffers_pointer>0
+    if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        glGenBuffers = \
-            <glGenBuffers_pointer><size_t>getExtensionProcedure( "glGenBuffers" )
-    else:
-        glGenBuffers = <glGenBuffers_pointer><size_t>gl.glGenBuffersARB
+        proc = getExtensionProcedure("glGenBuffers")
+        if proc is not None:
+            glGenBuffers = <glGenBuffers_pointer><size_t>proc
+    if glGenBuffers == <glGenBuffers_pointer>0:
+        glGenBuffers = <glGenBuffers_pointer>gl.glGenBuffersARB
 
     glGenBuffers(
         count,
@@ -144,14 +146,19 @@ def tessellate(
     cdef glBindBuffer_pointer glBindBuffer
     cdef glBufferData_pointer glBufferData
 
-    if hasattr( pygl.platform.PLATFORM, "getExtensionProcedure" ):
+    glBindBuffer = <glBindBuffer_pointer>0
+    glBufferData = <glBufferData_pointer>0
+    if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        glBindBuffer = \
-            <glBindBuffer_pointer><size_t>getExtensionProcedure( "glBindBuffer" )
-        glBufferData = \
-            <glBufferData_pointer><size_t>getExtensionProcedure( "glBufferData" )
-    else:
+        proc = getExtensionProcedure("glBindBuffer")
+        if proc is not None:
+            glBindBuffer = <glBindBuffer_pointer><size_t>proc
+        proc = getExtensionProcedure("glBufferData")
+        if proc is not None:
+            glBufferData = <glBufferData_pointer><size_t>proc
+    if glBindBuffer == <glBindBuffer_pointer>0:
         glBindBuffer = <glBindBuffer_pointer><size_t>gl.glBindBufferARB
+    if glBufferData == <glBufferData_pointer>0:
         glBufferData = <glBufferData_pointer><size_t>gl.glBufferDataARB
 
     state.current_type = 0
