@@ -733,7 +733,7 @@ class ManageWMSAction(EditorAction):
             BackgroundWMSDownloader.set_known_hosts(items)
             event.task.remember_wms()
             self.active_editor.layer_manager.update_map_server_ids("wms", hosts, items)
-            self.active_editor.refresh(True)
+            self.active_editor.refresh()
         dlg.Destroy()
 
 
@@ -748,7 +748,7 @@ class ManageTileServersAction(EditorAction):
             BackgroundTileDownloader.set_known_hosts(items)
             event.task.remember_tile_servers()
             self.active_editor.layer_manager.update_map_server_ids("tiles", hosts, items)
-            self.active_editor.refresh(True)
+            self.active_editor.refresh()
         dlg.Destroy()
 
 
