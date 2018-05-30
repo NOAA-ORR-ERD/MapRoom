@@ -647,7 +647,7 @@ class Layer(HasTraits):
         targets = []
         if self.is_mergeable_with(other_layer):
             targets.append(self.find_merge_layer_class(other_layer))
-        if other_layer.is_mergeable_with(other_layer):
+        if other_layer.is_mergeable_with(self):
             targets.append(other_layer.find_merge_layer_class(self))
         if not targets:
             return

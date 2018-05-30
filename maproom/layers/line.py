@@ -449,8 +449,7 @@ class LineLayer(PointLayer):
         return undo
 
     def merge_from_source_layers(self, layer_a, layer_b, depth_unit=""):
-        # Use superclass for points
-        super(LineLayer, self).merge_from_source_layers(layer_a, layer_b, depth_unit)
+        PointLayer.merge_from_source_layers(self, layer_a, layer_b, depth_unit)
 
         n = len(layer_a.line_segment_indexes) + len(layer_b.line_segment_indexes)
         self.line_segment_indexes = self.make_line_segment_indexes(n)

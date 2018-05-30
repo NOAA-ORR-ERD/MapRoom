@@ -372,6 +372,7 @@ class MergeLayersCommand(Command):
         undo.flags.refresh_needed = True
 
         layer = layer_a.merge_layer_into_new(layer_b, self.depth_unit)
+        log.debug("created merged layer: %s" % layer)
         if layer is None:
             undo.flags.success = False
             undo.flags.errors = ["Incompatible layer types for merge"]

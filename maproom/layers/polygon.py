@@ -50,6 +50,14 @@ class PolygonLayer(PointLayer):
             rings = 0
         return PointLayer.__str__(self) + ", %d rings" % rings
 
+    def is_mergeable_with(self, other_layer):
+        # FIXME: disable merge capability until the extra metadata (rings,
+        # geometry) can be merged correctly.
+        return False
+
+    def find_merge_layer_class(self, other_layer):
+        return None
+
     def get_info_panel_text(self, prop):
         if prop == "Polygon count":
             if self.rings is not None:
