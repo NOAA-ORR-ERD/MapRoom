@@ -12,6 +12,9 @@ class PointsError(Exception):
         self.message = message
         self.points = points
 
+    def __str__(self):
+        return self.message
+
 
 class Boundary(object):
     # max number of iterations for finding inside/outside hole points

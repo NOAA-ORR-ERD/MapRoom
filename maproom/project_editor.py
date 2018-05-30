@@ -361,7 +361,7 @@ class ProjectEditor(FrameworkEditor):
             progress_log.info("START=Saving %s" % path)
             error = self.layer_manager.save_all(path, self.current_extra_json)
         except ProgressCancelError as e:
-            error = e.message
+            error = str(e)
         finally:
             progress_log.info("END")
 
@@ -414,7 +414,7 @@ class ProjectEditor(FrameworkEditor):
             progress_log.info("START")
             error = self.layer_manager.save_layer(layer, path, loader)
         except ProgressCancelError as e:
-            error = e.message
+            error = str(e)
         finally:
             progress_log.info("END")
         if error:
@@ -977,7 +977,7 @@ class ProjectEditor(FrameworkEditor):
             data_obj = clipboard.get_paste_data_object(self)
             self.process_paste_data_object(data_obj)
         except clipboard.ClipboardError as e:
-            self.window.error(e.message, "Paste Error")
+            self.window.error(str(e), "Paste Error")
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
         print("Found data object %s" % data_obj)
@@ -1134,9 +1134,9 @@ class ProjectEditor(FrameworkEditor):
         elif error is not None:
             edit_layer.highlight_exception(error)
             if save_message:
-                all_ok = self.task.confirm(error.message, "Layer Contains Problems; Save Anyway?")
+                all_ok = self.task.confirm(str(error), "Layer Contains Problems; Save Anyway?")
             else:
-                self.task.error(error.message, "Layer Contains Problems")
+                self.task.error(str(error), "Layer Contains Problems")
         else:
             edit_layer.clear_flagged(refresh=True)
             self.task.information("Layer %s OK" % edit_layer.name, "No Problems Found")
@@ -1151,7 +1151,7 @@ class ProjectEditor(FrameworkEditor):
                 progress_log.info("TITLE=Checking layer %s" % layer.name)
                 error = self.layer_manager.check_layer(layer, self.window)
                 if error is not None:
-                    messages.append("%s: %s" % (layer.name, error.message))
+                    messages.append("%s: %s" % (layer.name, str(error)))
                     layer.highlight_exception(error)
                     self.control.Refresh()
                     error = None

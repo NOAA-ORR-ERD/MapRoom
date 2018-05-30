@@ -52,7 +52,7 @@ class LoadLayersCommand(Command):
             layers = loader.load_layers(self.metadata, manager=lm, regime=self.regime)
         except ProgressCancelError as e:
             undo.flags.success = False
-            undo.flags.errors = [e.message]
+            undo.flags.errors = [str(e)]
         except IOError as e:
             undo.flags.success = False
             undo.flags.errors = [str(e)]
@@ -508,7 +508,7 @@ class TriangulateLayerCommand(Command):
             print(traceback.format_exc())
             progress_log.info("END")
             self.undo_info.flags.success = False
-            self.undo_info.flags.errors = [e.message]
+            self.undo_info.flags.errors = [str(e)]
             layer.highlight_exception(e)
         finally:
             progress_log.info("END")
@@ -582,7 +582,7 @@ class ToPolygonLayerCommand(Command):
             progress_log.info("END")
             self.undo_info.flags.success = False
             layer.highlight_exception(e)
-            editor.window.error(e.message, "Boundary Error")
+            editor.window.error(str(e), "Boundary Error")
         finally:
             progress_log.info("END")
 

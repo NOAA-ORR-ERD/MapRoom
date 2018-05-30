@@ -77,7 +77,7 @@ class BaseLayerLoader(BaseLoader):
                 for p in e.points:
                     layer.select_point(p, state.FLAGGED)
                 layer.manager.dispatch_event('refresh_needed')
-            error = e.message
+            error = str(e)
 
         if (not error and temp_file and os.path.exists(temp_file)):
             if layer.get_num_points_selected(state.FLAGGED):
@@ -94,7 +94,7 @@ class BaseLayerLoader(BaseLoader):
             except Exception as e:
                 import traceback
 
-                error = "Unable to save file to disk. Make sure you have write permissions to the file.\n\nSystem error was: %s" % e.message
+                error = "Unable to save file to disk. Make sure you have write permissions to the file.\n\nSystem error was: %s" % str(e)
                 print(traceback.format_exc())
         return error
 
