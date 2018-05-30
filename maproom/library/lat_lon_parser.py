@@ -94,14 +94,18 @@ def parse(string):
         raise ValueError("%s is not a valid coordinate string" % orig_string)
 
 
-re_latlon = r'^\s*([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))\s*[/,|\s]+\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))'
+re_latlon = rb'^\s*([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))\s*[/,|\s]+\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))'
 
-re_lonlat = r'^\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*[/|,\s]+\s*([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))'
+re_lonlat = rb'^\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))\s*[/|,\s]+\s*([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))'
 
 def parse_coordinate_text(text):
     mime = None
+    if type(text) == str:
+        text = text.encode('utf-8')
     latlon, num_latlon_unmatched = parse_for_matching_lines(text, re_latlon, [1, 2])
+    print("Trying lat/lon order: %d, unmatched=%d" % (len(latlon), num_latlon_unmatched))
     lonlat, num_lonlat_unmatched = parse_for_matching_lines(text, re_lonlat, [1, 2])
+    print("Trying lon/lat order: %d, unmatched=%d" % (len(latlon), num_lonlat_unmatched))
     if len(latlon) > num_latlon_unmatched or len(lonlat) > num_lonlat_unmatched:
         latlon = np.asarray(latlon, dtype=np.float64)
         lonlat = np.asarray(lonlat, dtype=np.float64)
@@ -132,6 +136,7 @@ def parse_coordinate_text(text):
             mime = "text/latlon"
         else:
             mime = "text/lonlat"
+    print("Guessing mime: %s" % mime)
 
     if mime == "text/latlon":
         return mime, latlon, num_latlon_unmatched
