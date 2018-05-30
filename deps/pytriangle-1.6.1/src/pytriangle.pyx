@@ -67,6 +67,7 @@ cdef extern from "triangle.h":
 
 
 cdef unsigned int TIMEOUT = 1
+cdef unsigned int PROCESSING_TIMEOUT = 10
 
 
 @cython.boundscheck( False )
@@ -146,7 +147,7 @@ def triangulate_simple(
 
     # Receive data resulting from triangulation from child process. Allow
     # longer for the initial timeout since it includes triangulation time.
-    if not connection.poll( TIMEOUT * 5 ):
+    if not connection.poll(PROCESSING_TIMEOUT):
         cleanup_child( connection, child )
         raise RuntimeError( "Triangulation timeout." )
     cdef unsigned int out_point_count = <unsigned int>connection.recv()
