@@ -94,7 +94,7 @@ class UndoStack(list):
         return last
 
     def history_list(self):
-        h = [str(c).encode("utf-8") for c in self]
+        h = [str(c) for c in self]
         return h
 
     def serialize(self):

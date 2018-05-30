@@ -124,7 +124,7 @@ class Layer(HasTraits):
         return "%s (%x)" % (self.name, id(self))
 
     def __str__(self):
-        return "%s layer '%s' (%s) %s" % (self.type, str(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
+        return "%s layer '%s' (%s) %s" % (self.type, self.name, "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
 
     @property
     def pretty_name(self):
