@@ -19,6 +19,7 @@ from traits.api import on_trait_change
 
 from omnivore.framework.editor import FrameworkEditor
 from omnivore.framework.errors import ProgressCancelError
+import omnivore.framework.clipboard as clipboard
 from omnivore.utils.wx.popuputil import PopupStatusBar
 from omnivore.utils.wx.tilemanager import TileManager
 from omnivore.templates import get_template
@@ -932,7 +933,11 @@ class ProjectEditor(FrameworkEditor):
 
     supported_clipboard_data_objects = [wx.CustomDataObject("maproom")]
 
-    def create_clipboard_data_object(self):
+    @property
+    def clipboard_data_format(self):
+        return "maproom"
+
+    def copy_selection_to_clipboard(self, name):
         focused = self.control.FindFocus()
         if hasattr(focused, "AppendText"):
             try:
@@ -948,6 +953,7 @@ class ProjectEditor(FrameworkEditor):
         if text is not None:
             data_obj = wx.TextDataObject()
             data_obj.SetText(text)
+            retval = "%d characters" % len(text)
         else:
             edit_layer = self.layer_tree_control.get_edit_layer()
             if edit_layer is not None:
@@ -955,14 +961,27 @@ class ProjectEditor(FrameworkEditor):
                 text = json.dumps(json_data, indent=4)
                 print("clipboard object: json data", text)
                 data_obj = wx.CustomDataObject("maproom")
-                data_obj.SetData(text)
+                data_obj.SetData(text.encode('utf-8'))
+                retval = "layer %s" % edit_layer.name
             else:
                 data_obj = None
-        return data_obj
+                retval = "Error: unable to copy a layer"
+        clipboard.set_clipboard_object(data_obj)
+        return retval
+
+    def paste(self, cmd_cls=None):
+        """ Pastes the current clipboard at the current insertion point or over
+        the current selection
+        """
+        try:
+            data_obj = clipboard.get_paste_data_object(self)
+            self.process_paste_data_object(data_obj)
+        except clipboard.ClipboardError as e:
+            self.window.error(e.message, "Paste Error")
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
         print("Found data object %s" % data_obj)
-        text = data_obj.GetData()
+        text = clipboard.get_data_object_value(data_obj, "maproom")
         print("value:", text)
         edit_layer = self.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
