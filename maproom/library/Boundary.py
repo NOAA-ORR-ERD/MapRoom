@@ -25,6 +25,9 @@ class Boundary(object):
         self.point_indexes = indexes
         self.area = area
 
+    def __str__(self):
+        return f"{len(self.points)} points, area={self.area}"
+
     def __len__(self):
         return len(self.point_indexes)
 
@@ -159,6 +162,11 @@ class Boundaries(object):
         self.boundaries = []
         self.non_boundary_points = []
         self.find_boundaries()
+
+    def __str__(self):
+        lines = [f"{len(self.boundaries)} boundaries ({self.point_count} points, {self.line_count} lines)"]
+        lines.extend([f"  boundary {i}: {b}" for i, b in enumerate(self.boundaries)])
+        return "\n".join(lines)
 
     def __len__(self):
         return len(self.boundaries)
