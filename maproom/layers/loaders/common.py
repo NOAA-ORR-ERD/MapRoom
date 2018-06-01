@@ -3,6 +3,8 @@ import glob
 import tempfile
 import shutil
 
+from fs.opener import fsopen
+
 from maproom.layers import state
 from maproom.library.Boundary import Boundaries, PointsError
 
@@ -62,6 +64,10 @@ class BaseLayerLoader(BaseLoader):
         raise NotImplementedError
 
     def save_layer(self, uri, layer):
+        # Save the layer inside an empty directory because we can't assume that
+        # the layer will only overwrite a single file. ESRI shapefile data is
+        # spread among at least 3 file, for instance. Everything that's created
+        # in the temp directory is copied back to the real location.
         if uri is None:
             uri = layer.file_path
         temp_dir = tempfile.mkdtemp()
@@ -84,12 +90,13 @@ class BaseLayerLoader(BaseLoader):
                 layer.clear_all_selections(state.FLAGGED)
                 layer.manager.dispatch_event('refresh_needed')
             try:
-                # copy all the files that have been created in that directory;
-                # e.g. ESRI shapefile data is spread among 3 files.
                 uri_base = os.path.dirname(uri)
                 for path in glob.glob(os.path.join(temp_dir, "*")):
                     filename = os.path.basename(path)
-                    shutil.copy(path, os.path.join(uri_base, filename))
+                    dest_uri = uri_base + "/" + filename
+                    with fsopen(dest_uri, "wb") as fh:
+                        data = open(path, "rb").read()
+                        fh.write(data)
                 layer.file_path = uri
             except Exception as e:
                 import traceback
