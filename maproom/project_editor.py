@@ -723,7 +723,7 @@ class ProjectEditor(FrameworkEditor):
         log.debug("refresh called; batch_flags=%s" % batch_flags)
         if self.control is None:
             return
-        if batch_flags is None:
+        if batch_flags is None or batch_flags is True:
             batch_flags = BatchStatus()
 
         # current control with focus is used to prevent usability issues with
