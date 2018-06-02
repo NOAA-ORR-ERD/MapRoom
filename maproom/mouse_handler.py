@@ -32,7 +32,7 @@ class MouseHandler(object):
     editor_trait_for_enabled = ""
     toolbar_group = "other"
 
-    mouse_too_close_pixel_tolerance = 5
+    mouse_too_close_pixel_tolerance = 8
 
     def __init__(self, layer_canvas):
         self.layer_canvas = layer_canvas
@@ -1422,6 +1422,7 @@ class AddPolylineMode(MouseHandler):
         self.points = []
         self.cursor_point = None
         self.cumulative_distance = 0
+        self.mouse_moved_enough = False
 
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_CROSS)
@@ -1441,20 +1442,21 @@ class AddPolylineMode(MouseHandler):
         c = self.layer_canvas
         self.cursor_point = self.get_world_point(event)
         c.render(event)
+        if not self.mouse_moved_enough:
+            self.mouse_moved_enough = not self.check_early_mouse_release(event)
 
     def process_mouse_motion_down(self, event):
         self.process_mouse_motion_up(event)
+        if not self.mouse_moved_enough:
+            self.mouse_moved_enough = not self.check_early_mouse_release(event)
 
     def process_mouse_up(self, event):
-        # After the first point, mouse up events add points
+        if self.mouse_moved_enough:
+            self.finish_mouse_event(event)
+            self.mouse_moved_enough = False
+
+    def finish_mouse_event(self, event):
         c = self.layer_canvas
-
-        if not self.after_first_mouse_up and self.check_early_mouse_release(event):
-            self.mouse_up_too_close = True
-            self.after_first_mouse_up = True
-            return
-        self.after_first_mouse_up = True
-
         self.add_point_at_event(event)
         c.render(event)
 
