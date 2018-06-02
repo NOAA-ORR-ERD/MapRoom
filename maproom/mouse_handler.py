@@ -1106,18 +1106,28 @@ class RectSelectMode(MouseHandler):
     def is_snappable_to_layer(self, layer):
         return False
 
-    def process_left_down(self, event):
-        # Mouse down only sets the initial point, after that it is ignored
-        # unless it is released too soon.
-        if not self.after_first_mouse_up:
-            self.first_mouse_down_position = event.GetPosition()
+    def process_mouse_down(self, event):
+        if self.mouse_up_too_close:
+            # process the press-release-move-press method of creating objects
+            self.process_left_down(event)
         else:
-            # reset mouse down position because the on_mouse_down event handler
-            # in base_canvas sets it every time the mouse is pressed.  Without
-            # this here it would move the start of the rectangle to this most
-            # recent mouse press which is not what we want.
+            # process the default press-drag-press method of creating objects
+            MouseHandler.process_mouse_down(self, event)
+
+    def process_left_down(self, event):
+        if self.after_first_mouse_up:
+            # reset mouse_down_position because the on_mouse_down event handler
+            # in base_canvas sets it every time the mouse is pressed.
             c = self.layer_canvas
             c.mouse_down_position = self.first_mouse_down_position
+            if self.mouse_up_too_close:
+                # User has pressed and released the mouse to set an initial
+                # point, and this second mouse down will set the end.
+                self.finish_mouse_event(event)
+        else:
+            # Mouse down sets the initial point, after that it is ignored
+            # unless it is released too soon.
+            self.first_mouse_down_position = event.GetPosition()
         self.can_snap = True
 
     def process_mouse_motion_down(self, event):
@@ -1140,6 +1150,10 @@ class RectSelectMode(MouseHandler):
 
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        self.finish_mouse_event(event)
+
+    def finish_mouse_event(self, event):
+        c = self.layer_canvas
         c.mouse_move_position = self.get_position(event)
         if self.normalize_mouse_coordinates:
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
