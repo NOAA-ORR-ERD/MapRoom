@@ -1140,6 +1140,8 @@ class ProjectEditor(FrameworkEditor):
         else:
             edit_layer.clear_flagged(refresh=True)
             self.task.information("Layer %s OK" % edit_layer.name, "No Problems Found")
+        log.debug(f"check_for_errors in {edit_layer}: {error}")
+        self.flagged_control.recalc_view()
         return all_ok
 
     def check_all_layers_for_errors(self, save_message=False):

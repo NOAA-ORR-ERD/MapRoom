@@ -430,6 +430,7 @@ class FlaggedPointPanel(wx.ListBox):
         self.task = task
         self.editor = None
         self.point_indexes = []
+        self.notification_count = 0
         wx.ListBox.__init__(self, parent, wx.ID_ANY, name="Flagged Points", **kwargs)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
 
@@ -474,6 +475,7 @@ class FlaggedPointPanel(wx.ListBox):
     def set_flagged(self, point_indexes):
         self.point_indexes = list(point_indexes)
         self.Set([str(i) for i in point_indexes])
+        self.notification_count = len(point_indexes)
 
     def recalc_view(self):
         editor = self.task.active_editor
@@ -483,17 +485,11 @@ class FlaggedPointPanel(wx.ListBox):
             points = layer.get_flagged_point_indexes()
         except AttributeError:
             points = []
+        log.debug(f"flagged in {layer}: {str(points)}")
         self.set_flagged(points)
 
     def refresh_view(self):
         self.Refresh()
-
-    def activateSpringTab(self):
-        self.recalc_view()
-
-    def get_notification_count(self):
-        self.recalc_view()
-        return len(self.point_indexes)
 
 
 class DownloadPanel(DownloadControl):
