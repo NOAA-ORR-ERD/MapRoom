@@ -130,6 +130,15 @@ class LineLayer(PointLayer):
         for i, (s, c, ident) in enumerate(zip(starts, counts, identifiers)):
             self.line_segment_indexes.state[s:s + c] = state.POLYGON_NUMBER_SHIFT * i
 
+    def set_data_from_boundary_points(self, points, style=None):
+        print(f"data_from_boundary: {points.shape}")
+        count = np.alen(points)
+        lines = np.empty((count, 2), dtype=np.uint32)
+        lines[0:count, 0] = np.arange(0, count, dtype=np.uint32)
+        lines[0:count, 1] = np.arange(1, count + 1, dtype=np.uint32)
+        lines[count - 1, 1] = 0
+        self.set_data(points, 0.0, lines, style=style)
+
     def get_point_identifier(self, point_num):
         for s, e, ident in self.point_identifiers:
             if point_num >= s and point_num < e:

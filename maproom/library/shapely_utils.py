@@ -270,3 +270,85 @@ def rebuild_geometry_list(geometry_list, changes):
             copy_maproom_attributes(new_geom, geom)
         geometry_list[gi] = new_geom
     return geometry_list
+
+
+def parse_geom(geom):
+    item = None
+    if geom.geom_type == 'MultiPolygon':
+        if True:
+            return None
+        item = [geom.geom_type]
+        for poly in geom.geoms:
+            points = np.array(poly.exterior.coords, dtype=np.float64)
+            sub_item = [poly.geom_type, points]
+            for hole in poly.interiors:
+                points = np.asarray(hole.coords, dtype=np.float64)
+                sub_item.append(points)
+            item.append(sub_item)
+    elif geom.geom_type == 'Polygon':
+        points = np.array(geom.exterior.coords, dtype=np.float64)
+        item = [geom.geom_type, points]
+        for hole in geom.interiors:
+            points = np.asarray(hole.coords, dtype=np.float64)
+            item.append(points)
+    elif geom.geom_type == 'LineString':
+        points = np.asarray(geom.coords, dtype=np.float64)
+        item = [geom.geom_type, points]
+    elif geom.geom_type == 'Point':
+        points = np.asarray(geom.coords, dtype=np.float64)
+        if points.shape[1] > 2:
+            points = points[:,0:2].copy()
+        item = [geom.geom_type, points]
+    else:
+        log.warning(f"Unsupported geometry type {geom.geom_type}")
+    return item
+
+
+def parse_fiona(source):
+    # Note: all coordinate points are converted from
+    # shapely.coords.CoordinateSequence to normal numpy array
+
+    geometry_list = []
+    for f in source:
+        geom = shape(f['geometry'])
+        print(f"processing shape {geom}")
+        item = parse_geom(geom)
+        if geom is not None:
+            geometry_list.append(item)
+    return geometry_list
+
+def parse_ogr(dataset):
+    geometry_list = []
+    layer = dataset.GetLayer()
+    for feature in layer:
+        ogr_geom = feature.GetGeometryRef()
+        if ogr_geom is None:
+            continue
+        wkt = ogr_geom.ExportToWkt()
+        geom = loads(wkt)
+        print(geom)
+        item = parse_geom(geom)
+        if item is not None:
+            geometry_list.append(item)
+    return geometry_list
+
+def load_shapely2(uri):
+    geometry_list = []
+    try:
+        # Try fiona first
+        error, source = get_fiona(uri)
+        geometry_list = parse_fiona(source)
+    except (DriverLoadFailure, ImportError):
+        # use GDAL instead
+        source = None
+        error, dataset = get_dataset(uri)
+        if not error:
+            try:
+                geometry_list = parse_ogr(dataset)
+            except ValueError as e:
+                error = str(e)
+
+    if error:
+        return (error, None)
+
+    return ("", geometry_list)

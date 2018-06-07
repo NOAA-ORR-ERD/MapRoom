@@ -8,7 +8,7 @@ from mock import *
 
 from maproom.layers import loaders, TriangleLayer
 from maproom.library.Boundary import Boundaries
-
+from maproom.library.shapely_utils import load_shapely2
 
 class ClipBase(object):
     def test_clip_quarters(self):
@@ -164,7 +164,16 @@ if __name__ == "__main__":
 #    t = TestShapelyUGridLines()
 #    t.setup()
 #    t.test_clip_quarters()
-    t = TestShapelyBNA()
-    t.setup()
-    t.test_clip_rect()
-    t.test_clip_multipolygon()
+    # t = TestShapelyBNA()
+    # t.setup()
+    # t.test_clip_rect()
+    # t.test_clip_multipolygon()
+    from maproom.library.shapely_utils import load_shapely, shapely_to_polygon
+
+    error, geom_list = load_shapely2('/noaa/maproom/TestData/Shapefiles/20160516_0013d.shp')
+    for i, geom in enumerate(geom_list):
+        print(f"#{i}: {geom} {type(geom[1])}")
+
+    # write_geometry_as_shapefile("a.kml", "test", "KML", geom_list)
+    # write_geometry_as_shapefile("a.shp", "test", "ESRI Shapefile", geom_list)
+    # write_geometry_as_shapefile("a.json", "test", "GeoJSON", geom_list)

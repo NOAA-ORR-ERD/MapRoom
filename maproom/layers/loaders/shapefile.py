@@ -2,8 +2,8 @@ import os
 
 from osgeo import ogr, osr
 
-from maproom.library.shapely_utils import load_shapely
-from maproom.layers import PolygonShapefileLayer, PointLayer
+from maproom.library.shapely_utils import load_shapely2
+from maproom.layers import PolygonParentLayer, PolygonBoundaryLayer, HoleLayer, PointLayer
 
 from .common import BaseLayerLoader
 
@@ -82,8 +82,8 @@ def write_geometry_as_shapefile(filename, layer_name, driver_name, geometry_list
         feature_index += 1
 
 
-class ShapefileLoader(BaseLayerLoader):
-    mime = "application/x-maproom-shapefile"
+class ReallyOldShapefileLoader(BaseLayerLoader):
+    mime = "application/x-maproom-shapefile-not-appearing-in-this-film"
 
     layer_types = ["shapefile"]
 
@@ -124,6 +124,80 @@ class ShapefileLoader(BaseLayerLoader):
                 layers.append(layer)
         else:
             layers.append(layer)  # to return the load error string
+        return layers
+
+    def save_to_local_file(self, filename, layer):
+        _, ext = os.path.splitext(filename)
+        desc = self.extension_desc[ext]
+        write_layer_as_shapefile(filename, layer, desc)
+
+
+class ShapefileLoader(BaseLayerLoader):
+    mime = "application/x-maproom-shapefile"
+
+    layer_types = ["shapefile"]
+
+    extensions = [".shp", ".kml", ".json", ".geojson"]
+
+    extension_desc = {
+        ".shp": "ESRI Shapefile",
+        ".kml": "KML",
+        ".geojson": "GeoJSON",
+        ".json": "GeoJSON",
+    }
+
+    name = "Shapefile"
+
+    def load_layers(self, metadata, manager, **kwargs):
+        """May return one or two layers; points are placed in a separate layer
+        so they can be rendered and operated on like a regular points layer
+        """
+        file_path = metadata.uri
+
+        layers = []
+        parent = PolygonParentLayer(manager=manager)
+        parent.grouped = True
+        parent.file_path = metadata.uri
+        parent.name = os.path.split(file_path)[1]
+        parent.mime = self.mime
+        layers.append(parent)
+
+        def create_layer(points, layer_cls, name):
+            layer = layer_cls(manager=manager)
+            layer.name = name
+            layer.set_data_from_boundary_points(points)
+            layer.file_path = metadata.uri
+            layer.mime = self.mime
+            return layer
+
+        def create_polygon(geom_sublist, name):
+            points = geom_sublist[0]
+            layer = create_layer(points, PolygonBoundaryLayer, name)
+            layers.append(layer)
+
+            print(f"geom_sublist: {geom_sublist}")
+            for j, points in enumerate(geom_sublist[1:]):
+                layer = create_layer(points, HoleLayer, f"Hole #{j+1}")
+                layers.append(layer)
+
+        parent.load_error_string, geometry_list = load_shapely2(metadata.uri)
+        if (parent.load_error_string == ""):
+            if geometry_list:
+                progress_log.info("Creating polygon layer...")
+                for i, item in enumerate(geometry_list):
+                    print(f"item {i}: {item}")
+                    item_type = item[0]
+                    print(f"type: {item_type}")
+                    if item_type == "MultiPolygon":
+                        for j, poly in enumerate(item[1:]):
+                            create_polygon(poly, "MultiPolygon #{i+1}.{j+1}")
+                    else:
+                        if item_type == "Point":
+                            points = item[1]
+                            layer = create_layer(points, PointLayer, f"Points #{i+1}")
+                            layers.append(layer)
+                        else:
+                            create_polygon(item[1:], f"Polygon #{i+1}")
         return layers
 
     def save_to_local_file(self, filename, layer):
