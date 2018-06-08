@@ -279,17 +279,17 @@ def parse_geom(geom):
             return None
         item = [geom.geom_type]
         for poly in geom.geoms:
-            points = np.array(poly.exterior.coords, dtype=np.float64)
+            points = np.array(poly.exterior.coords[:-1], dtype=np.float64)
             sub_item = [poly.geom_type, points]
             for hole in poly.interiors:
-                points = np.asarray(hole.coords, dtype=np.float64)
+                points = np.asarray(hole.coords[:-1], dtype=np.float64)
                 sub_item.append(points)
             item.append(sub_item)
     elif geom.geom_type == 'Polygon':
-        points = np.array(geom.exterior.coords, dtype=np.float64)
+        points = np.array(geom.exterior.coords[:-1], dtype=np.float64)
         item = [geom.geom_type, points]
         for hole in geom.interiors:
-            points = np.asarray(hole.coords, dtype=np.float64)
+            points = np.asarray(hole.coords[:-1], dtype=np.float64)
             item.append(points)
     elif geom.geom_type == 'LineString':
         points = np.asarray(geom.coords, dtype=np.float64)
