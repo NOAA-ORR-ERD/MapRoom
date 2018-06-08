@@ -32,18 +32,25 @@ class PolygonBoundaryLayer(LineLayer):
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
+    def layer_selected_hook(self):
+        parent = self.manager.get_layer_parent(self)
+        c = self.manager.project.layer_canvas
+        c.rebuild_renderer_for_layer(parent)
 
-class HoleLayer(LineLayer):
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        if not self.manager.project.layer_tree_control.is_edit_layer(self):
+            print(f"not edit layer, skipping verdat editing for {self}")
+            return
+        LineLayer.render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker)
+
+
+class HoleLayer(PolygonBoundaryLayer):
     """Layer for points/lines/polygons.
 
     """
     name = "Polygon Hole"
 
     type = "polygon_hole"
-
-    layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
-
-    selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
 
 class PolygonParentLayer(Folder, LineLayer):
@@ -95,6 +102,9 @@ class PolygonParentLayer(Folder, LineLayer):
         ring_counts = []
         point_start_index = 0
         for child in self.get_child_layers():
+            if self.manager.project.layer_tree_control.is_edit_layer(child):
+                print(f"skipping polygon display for {child}")
+                continue
             if len(points) > 0:
                 points = np.append(points, child.points).view(np.recarray)
             else:
