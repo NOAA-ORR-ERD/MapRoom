@@ -82,7 +82,7 @@ class PointLayer(PointBaseLayer):
         n = np.alen(f_points)
         if style is not None:
             self.style = style
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points
             self.points.z[0:n] = f_depths

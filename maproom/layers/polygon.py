@@ -99,7 +99,7 @@ class PolygonLayer(PointLayer):
         if style is not None:
             self.style = style
         n_points = np.alen(f_ring_points)
-        self.points = self.make_points(n_points)
+        self.points = data_types.make_points(n_points)
         if (n_points > 0):
             n_rings = np.alen(f_ring_starts)
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[

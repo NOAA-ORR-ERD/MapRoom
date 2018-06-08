@@ -82,7 +82,7 @@ class BoundedFolder(LineLayer, Folder):
             points = [(l, b), (r, b), (r, t), (l, t)]
         f_points = np.asarray(points, dtype=np.float32)
         n = np.alen(f_points)
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         log.debug("SET_DATA_FROM_BOUNDS:start %s" % self)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points

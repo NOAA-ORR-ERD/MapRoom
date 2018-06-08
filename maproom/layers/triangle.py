@@ -68,7 +68,7 @@ class TriangleLayer(PointLayer):
 
     def set_data(self, f_points, f_depths, f_triangles):
         n = np.alen(f_points)
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                 0: n

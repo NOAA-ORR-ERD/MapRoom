@@ -1416,7 +1416,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     def set_data_from_bounds(self, bounds):
         log.debug("SETTING BOUNDARY BOX!!! %s %s" % (self, bounds))
         if bounds[0][0] is None:
-            self.points = self.make_points(0)
+            self.points = data_types.make_points(0)
 
         else:
             points = np.asarray(bounds, dtype=np.float32)
