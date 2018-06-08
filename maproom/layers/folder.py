@@ -39,6 +39,10 @@ class Folder(Layer):
         for layer in children:
             layer.set_visibility_when_checked(checked, project_layer_visibility)
 
+    def get_child_layers(self):
+        children = self.manager.get_layer_children(self)
+        return children
+
 
 class RootLayer(Folder):
     """Root layer

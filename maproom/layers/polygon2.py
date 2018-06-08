@@ -28,6 +28,10 @@ class PolygonBoundaryLayer(LineLayer):
 
     type = "polygon_boundary"
 
+    layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
+
+    selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
+
 
 class HoleLayer(LineLayer):
     """Layer for points/lines/polygons.
@@ -36,6 +40,10 @@ class HoleLayer(LineLayer):
     name = "Polygon Hole"
 
     type = "polygon_hole"
+
+    layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
+
+    selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
 
 class PolygonParentLayer(Folder, LineLayer):
@@ -50,9 +58,28 @@ class PolygonParentLayer(Folder, LineLayer):
 
     visibility_items = ["points", "lines", "labels"]
 
-    layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
+    layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
 
-    selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]
+    selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
     def has_groupable_objects(self):
         return True
+
+    def get_info_panel_text(self, prop):
+        if prop == "Point count":
+            total = 0
+            for child in self.get_child_layers():
+                try:
+                    total += len(self.points)
+                except TypeError:
+                    pass
+            return str(total)
+        elif prop == "Line segment count":
+            total = 0
+            for child in self.get_child_layers():
+                try:
+                    total += len(self.line_segment_indexes)
+                except TypeError:
+                    pass
+            return str(total)
+        return None
