@@ -573,6 +573,16 @@ class LayerManager(BaseDocument):
         ret = self.flatten_recursive(l)
         return ret[1:]
 
+    def get_layer_parent(self, layer):
+        """Return the immediate parent
+        """
+        parents = None
+        mi = self.get_multi_index_of_layer(layer)
+        if mi is not None and len(mi) > 1:
+            mi[-1] = 0
+            parent = self.get_layer_by_multi_index(mi)
+        return parent
+
     def get_layer_parents(self, layer):
         """Return a list of parent layers, starting from the immediate parent
         and continuing to older ancestors but ignoring the root layer
