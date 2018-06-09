@@ -37,6 +37,9 @@ class PolygonBoundaryLayer(LineLayer):
         c = self.manager.project.layer_canvas
         c.rebuild_renderer_for_layer(parent)
 
+    def calc_ring_fill_color(self):
+        return color_floats_to_int(0.25, 0.5, 0, 0.10)
+
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if not self.manager.project.layer_tree_control.is_edit_layer(self):
             print(f"not edit layer, skipping verdat editing for {self}")
@@ -51,6 +54,9 @@ class HoleLayer(PolygonBoundaryLayer):
     name = "Polygon Hole"
 
     type = "polygon_hole"
+
+    def calc_ring_fill_color(self):
+        return color_floats_to_int(0.0, 0.0, 0.5, 0.10)
 
 
 class PolygonParentLayer(Folder, LineLayer):
@@ -100,6 +106,7 @@ class PolygonParentLayer(Folder, LineLayer):
         n_rings = 0
         ring_starts = []
         ring_counts = []
+        ring_color = []
         point_start_index = 0
         for child in self.get_child_layers():
             if self.manager.project.layer_tree_control.is_edit_layer(child):
@@ -112,11 +119,14 @@ class PolygonParentLayer(Folder, LineLayer):
             n_rings += 1
             ring_starts.append(point_start_index)
             ring_counts.append(len(child.points))
+            ring_color.append(child.calc_ring_fill_color())
             point_start_index += len(child.points)
         projection = self.manager.project.layer_canvas.projection
         projected_point_data = data_types.compute_projected_point_data(points, projection)
         renderer.set_points(projected_point_data, points.z, points.color.copy().view(dtype=np.uint8))
         self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts)
+        for c in ring_color:
+            self.rings.color = c
         print(f"ring list: {self.rings}")
         print(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
 
