@@ -162,22 +162,25 @@ class ShapefileLoader(BaseLayerLoader):
         parent.mime = self.mime
         layers.append(parent)
 
-        def create_layer(points, layer_cls, name):
+        def create_layer(points, layer_cls, name, verify_winding=False, positive_winding=True):
             layer = layer_cls(manager=manager)
             layer.name = name
             layer.set_data_from_boundary_points(points)
+            if verify_winding:
+                layer.verify_winding(positive_winding)
             layer.file_path = metadata.uri
             layer.mime = self.mime
             return layer
 
         def create_polygon(geom_sublist, name):
             points = geom_sublist[0]
-            layer = create_layer(points, PolygonBoundaryLayer, name)
+            layer = create_layer(points, PolygonBoundaryLayer, name, True, True)
+            layer.verify_winding()
             layers.append(layer)
 
-            print(f"geom_sublist: {geom_sublist}")
+            log.debug(f"geom_sublist: {geom_sublist}")
             for j, points in enumerate(geom_sublist[1:]):
-                layer = create_layer(points, HoleLayer, f"Hole #{j+1}")
+                layer = create_layer(points, PolygonBoundaryLayer, f"Hole #{j+1}", True, False)
                 layers.append(layer)
 
         parent.load_error_string, geometry_list = load_shapely2(metadata.uri)
@@ -185,9 +188,8 @@ class ShapefileLoader(BaseLayerLoader):
             if geometry_list:
                 progress_log.info("Creating polygon layer...")
                 for i, item in enumerate(geometry_list):
-                    print(f"item {i}: {item}")
                     item_type = item[0]
-                    print(f"type: {item_type}")
+                    print(f"item {i}: {item_type}, {len(item[1])} points")
                     if item_type == "MultiPolygon":
                         for j, poly in enumerate(item[1:]):
                             create_polygon(poly, "MultiPolygon #{i+1}.{j+1}")

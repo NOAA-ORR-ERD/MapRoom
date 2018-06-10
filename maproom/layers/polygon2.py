@@ -32,6 +32,38 @@ class PolygonBoundaryLayer(LineLayer):
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
+    @property
+    def area(self):
+        # numpy version of shoelace formula, from
+        # https://stackoverflow.com/questions/24467972
+        if len(self.line_segment_indexes) < 3:
+            return 0.0
+        start = self.line_segment_indexes.point1
+        end = self.line_segment_indexes.point2
+        x = self.points.x
+        y = self.points.y
+        return 0.5 * np.dot(x[start] + x[end], y[start] - y[end])
+
+    @property
+    def is_clockwise(self):
+        return self.area > 0.0
+
+    @property
+    def pretty_name(self):
+        if self.grouped:
+            prefix = self.grouped_indicator_prefix
+        else:
+            prefix = ""
+        return prefix + self.name + (" cw" if self.is_clockwise else " ccw") + " " + str(self.area)
+
+    def verify_winding(self, positive_area=True):
+        area = self.area
+        cw = self.is_clockwise
+        log.debug(f"area={area} cw={cw}, should be cw={positive_area}")
+        if (positive_area and not cw) or (not positive_area and cw):
+            self.reverse_line_direction()
+            log.debug(f"reversed: area={area} cw={self.is_clockwise}")
+
     def layer_selected_hook(self):
         parent = self.manager.get_layer_parent(self)
         c = self.manager.project.layer_canvas
@@ -42,7 +74,7 @@ class PolygonBoundaryLayer(LineLayer):
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if not self.manager.project.layer_tree_control.is_edit_layer(self):
-            print(f"not edit layer, skipping verdat editing for {self}")
+            log.debug(f"not edit layer, skipping verdat editing for {self}")
             return
         LineLayer.render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker)
 

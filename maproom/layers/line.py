@@ -196,6 +196,11 @@ class LineLayer(PointLayer):
             count,
         ).view(np.recarray)
 
+    def reverse_line_direction(self):
+        temp = self.line_segment_indexes.point1.copy()
+        self.line_segment_indexes.point1 = self.line_segment_indexes.point2
+        self.line_segment_indexes.point2 = temp
+
     def clear_all_selections(self, mark_type=state.SELECTED):
         self.clear_all_point_selections(mark_type)
         self.clear_all_line_segment_selections(mark_type)
