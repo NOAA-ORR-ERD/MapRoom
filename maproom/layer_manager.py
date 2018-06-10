@@ -331,7 +331,7 @@ class LayerManager(BaseDocument):
             if layer.is_overlay:
                 log.debug("Updating overlay bounds for %s" % str(layer))
                 layer.update_overlay_bounds()
-            elif layer.is_folder() and not layer.is_root():
+            elif layer.contains_overlays:
                 log.debug("Updating overlay bounds for %s" % str(layer))
                 layer.compute_bounding_rect()
                 layer.update_overlay_bounds()

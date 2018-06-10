@@ -97,7 +97,7 @@ class BaseCanvas(object):
         if layer in self.layer_renderers:
             r = self.layer_renderers[layer]
             layer.rebuild_renderer(r, in_place)
-            log.debug("renderer rebuilt")
+            log.debug(f"renderer rebuilt for {layer}")
         else:
             log.warning("layer %s isn't in layer_renderers!" % layer)
             for layer in list(self.layer_renderers.keys()):
@@ -201,6 +201,7 @@ class BaseCanvas(object):
                 layer_draw_order.append((i, layer))
         affected_layers = self.project.layer_manager.update_linked_control_points()
         for layer in affected_layers:
+            log.debug(f"rebuilding layer {layer} to update control points")
             renderer = self.layer_renderers[layer]
             layer.rebuild_renderer(renderer, True)
 

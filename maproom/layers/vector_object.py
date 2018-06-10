@@ -1397,6 +1397,10 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     selection_info_panel = ["Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
 
+    @property
+    def contains_overlays(self):
+        return True
+
     def has_groupable_objects(self):
         return True
 

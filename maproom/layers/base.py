@@ -240,6 +240,10 @@ class Layer(HasTraits):
         # coordinates, not word coordinates.
         return False
 
+    @property
+    def contains_overlays(self):
+        return False
+
     def can_copy(self):
         return False
 
