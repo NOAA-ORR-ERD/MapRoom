@@ -81,18 +81,6 @@ class PolygonBoundaryLayer(LineLayer):
         LineLayer.render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker)
 
 
-class HoleLayer(PolygonBoundaryLayer):
-    """Layer for points/lines/polygons.
-
-    """
-    name = "Polygon Hole"
-
-    type = "polygon_hole"
-
-    def calc_ring_fill_color(self):
-        return color_floats_to_int(0.0, 0.0, 0.5, 0.10)
-
-
 class PolygonParentLayer(Folder, LineLayer):
     """Parent folder for group of polygons. Direct children will be
     PolygonBoundaryLayer objects (with grandchildren will be HoleLayers) or

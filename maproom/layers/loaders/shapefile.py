@@ -3,7 +3,7 @@ import os
 from osgeo import ogr, osr
 
 from maproom.library.shapely_utils import load_shapely2
-from maproom.layers import PolygonParentLayer, PolygonBoundaryLayer, HoleLayer, PointLayer
+from maproom.layers import PolygonParentLayer, PolygonBoundaryLayer, PointLayer
 
 from .common import BaseLayerLoader
 
