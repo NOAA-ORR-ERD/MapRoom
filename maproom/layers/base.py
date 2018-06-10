@@ -244,6 +244,10 @@ class Layer(HasTraits):
     def contains_overlays(self):
         return False
 
+    @property
+    def can_rotate(self):
+        return False
+
     def can_copy(self):
         return False
 

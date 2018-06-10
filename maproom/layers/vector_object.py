@@ -69,6 +69,10 @@ class VectorObjectLayer(LineLayer):
     def __str__(self):
         return LineLayer.__str__(self) + ", bb: %s" % str(self.bounds)
 
+    @property
+    def can_rotate(self):
+        return False
+
     def can_copy(self):
         return True
 

@@ -692,6 +692,7 @@ class SelectionMode(MouseHandler):
         c = self.layer_canvas
         e = c.project
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
+            layer, object_type, object_index = e.clickable_object_mouse_is_over
             p = self.get_position(event)
             proj_p = c.get_world_point_from_screen_point(p)
             d_x = p[0] - c.mouse_down_position[0]
@@ -709,8 +710,7 @@ class SelectionMode(MouseHandler):
                         c.mouse_down_position = p
                         self.last_modifier_state = modifiers
                         return
-                    else:
-                        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+                    elif layer.can_rotate:
                         layer.set_initial_rotation()  # reset rotation when control is pressed again
                         c.mouse_down_position = p
                         self.last_modifier_state = modifiers
@@ -721,7 +721,7 @@ class SelectionMode(MouseHandler):
                 w_p1 = c.get_world_point_from_screen_point(p)
                 if not c.HasCapture():
                     c.CaptureMouse()
-                if rotate:
+                if rotate and layer.can_rotate:
                     cmd = self.rotated(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
                 else:
                     cmd = self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point, about_center=modifiers & wx.MOD_SHIFT)
