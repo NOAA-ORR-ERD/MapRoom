@@ -32,6 +32,8 @@ class PolygonBoundaryLayer(LineLayer):
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
+    draw_on_top_when_selected = True
+
     @property
     def area(self):
         # numpy version of shoelace formula, from
@@ -143,9 +145,6 @@ class PolygonParentLayer(Folder, LineLayer):
         current_group_number = 0
         point_start_index = 0
         for child in self.get_child_layers():
-            if self.manager.project.layer_tree_control.is_edit_layer(child):
-                print(f"skipping polygon display for {child}")
-                continue
             if len(points) > 0:
                 points = np.append(points, child.points).view(np.recarray)
             else:

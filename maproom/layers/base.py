@@ -103,9 +103,15 @@ class Layer(HasTraits):
 
     end_time = Float(0.0)
 
+    ##### class attributes
+
+    has_control_points = False
+
     pickable = False  # is this a layer that support picking?
 
     transient_edit_layer = False
+
+    draw_on_top_when_selected = False
 
     visibility_items = []
 

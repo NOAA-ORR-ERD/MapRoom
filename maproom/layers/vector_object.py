@@ -54,6 +54,8 @@ class VectorObjectLayer(LineLayer):
 
     # class attributes
 
+    has_control_points = True
+
     use_color_cycling = False
 
     center_point_index = 0
