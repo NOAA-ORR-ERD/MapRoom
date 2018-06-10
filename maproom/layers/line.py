@@ -131,7 +131,6 @@ class LineLayer(PointLayer):
             self.line_segment_indexes.state[s:s + c] = state.POLYGON_NUMBER_SHIFT * i
 
     def set_data_from_boundary_points(self, points, style=None):
-        print(f"data_from_boundary: {points.shape}")
         count = np.alen(points)
         lines = np.empty((count, 2), dtype=np.uint32)
         lines[0:count, 0] = np.arange(0, count, dtype=np.uint32)

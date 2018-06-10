@@ -189,7 +189,7 @@ class ShapefileLoader(BaseLayerLoader):
                 progress_log.info("Creating polygon layer...")
                 for i, item in enumerate(geometry_list):
                     item_type = item[0]
-                    print(f"item {i}: {item_type}, {len(item[1])} points")
+                    log.debug(f"item {i}: {item_type}, {len(item[1])} points")
                     if item_type == "MultiPolygon":
                         for j, poly in enumerate(item[1:]):
                             create_polygon(poly, "MultiPolygon #{i+1}.{j+1}")

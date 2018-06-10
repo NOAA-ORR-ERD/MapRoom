@@ -311,7 +311,6 @@ def parse_fiona(source):
     geometry_list = []
     for f in source:
         geom = shape(f['geometry'])
-        print(f"processing shape {geom}")
         item = parse_geom(geom)
         if geom is not None:
             geometry_list.append(item)
@@ -326,7 +325,6 @@ def parse_ogr(dataset):
             continue
         wkt = ogr_geom.ExportToWkt()
         geom = loads(wkt)
-        print(geom)
         item = parse_geom(geom)
         if item is not None:
             geometry_list.append(item)

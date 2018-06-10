@@ -151,8 +151,8 @@ class PolygonParentLayer(Folder, LineLayer):
         self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts, ring_groups)
         for c in ring_color:
             self.rings.color = c
-        print(f"ring list: {self.rings}")
-        print(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
+        log.debug(f"ring list: {self.rings}")
+        log.debug(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
 
         renderer.set_polygons(self.rings, self.point_adjacency_array)
 
