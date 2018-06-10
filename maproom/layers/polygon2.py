@@ -138,7 +138,9 @@ class PolygonParentLayer(Folder, LineLayer):
         n_rings = 0
         ring_starts = []
         ring_counts = []
+        ring_groups = []
         ring_color = []
+        current_group_number = 0
         point_start_index = 0
         for child in self.get_child_layers():
             if self.manager.project.layer_tree_control.is_edit_layer(child):
@@ -152,11 +154,14 @@ class PolygonParentLayer(Folder, LineLayer):
             ring_starts.append(point_start_index)
             ring_counts.append(len(child.points))
             ring_color.append(child.calc_ring_fill_color())
+            if child.is_clockwise:
+                current_group_number += 1
+            ring_groups.append(current_group_number)
             point_start_index += len(child.points)
         projection = self.manager.project.layer_canvas.projection
         projected_point_data = data_types.compute_projected_point_data(points, projection)
         renderer.set_points(projected_point_data, points.z, points.color.copy().view(dtype=np.uint8))
-        self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts)
+        self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts, ring_groups)
         for c in ring_color:
             self.rings.color = c
         print(f"ring list: {self.rings}")
