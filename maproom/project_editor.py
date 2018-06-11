@@ -852,7 +852,9 @@ class ProjectEditor(FrameworkEditor):
             if lf.layer_items_moved:
                 b.editable_properties_changed = True
                 if lf.indexes_of_points_affected:
-                    layer.update_points(lf.indexes_of_points_affected)
+                    rebuild_layer = layer.update_affected_points(lf.indexes_of_points_affected)
+                    if rebuild_layer is not None:
+                        b.need_rebuild[rebuild_layer] = True
                 else:
                     b.need_rebuild[layer] = True
                     if layer.is_folder():

@@ -320,6 +320,14 @@ class PointBaseLayer(ProjectedLayer):
         projection = self.manager.project.layer_canvas.projection
         return data_types.compute_projected_point_data(self.points, projection, self.hidden_points)
 
+    def update_affected_points(self,
+        indexes_affected: "list of indexes that have been moved"
+        ):
+        """Hook to update additional layer attributes when the points
+        specified by the index have been changed.
+        """
+        pass
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
 

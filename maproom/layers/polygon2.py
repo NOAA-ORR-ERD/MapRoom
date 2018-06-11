@@ -80,7 +80,8 @@ class PolygonBoundaryLayer(LineLayer):
 
     def set_data_from_parent_points(self, parent_points, index, count):
         self.parent_point_index = index
-        self.points = parent_points[index:index + count]
+        self.parent_point_map = np.arange(index, index + count, dtype=np.uint32)
+        self.points = parent_points[self.parent_point_map]  # Copy!
         log.debug(f"polygon point index={index} count={count}")
         self.points.color = self.style.line_color
         self.points.state = 0
@@ -93,9 +94,14 @@ class PolygonBoundaryLayer(LineLayer):
         self.line_segment_indexes = lsi
         self.update_bounds()
 
-    def update_points(self, indexes):
+    def update_affected_points(self, indexes):
+        indexes = np.asarray(indexes, dtype=np.uint32)
         print(f"points changed: {indexes}")
-        
+        print(f"points changed in parent: {self.parent_point_map[indexes]}")
+        parent = self.manager.get_layer_parent(self)
+        changed_points = self.points[indexes]
+        parent.update_child_points(self.parent_point_map[indexes], changed_points)
+        return parent
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if not self.manager.project.layer_tree_control.is_edit_layer(self):
@@ -180,6 +186,12 @@ class PolygonParentLayer(Folder, LineLayer):
             self.rings.color = c
         log.debug(f"ring list: {self.rings}")
         log.debug(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
+
+    def update_child_points(self, indexes, values):
+        self.points[indexes] = values
+        # projection = self.manager.project.layer_canvas.projection
+        # projected_point_data = data_types.compute_projected_point_data(self.points[indexes], projection)
+
 
     def rebuild_renderer(self, renderer, in_place=False):
         print("REBUILDING POLYGON2")
