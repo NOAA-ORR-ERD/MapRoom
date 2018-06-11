@@ -140,7 +140,7 @@ def compute_rings(f_ring_starts, f_ring_counts, f_ring_groups=None):
     n_points = f_ring_starts[-1] + f_ring_counts[-1]
     point_adjacency_array = make_point_adjacency_array(n_points)
 
-    total = 0
+    total = f_ring_starts[0]
     for p in range(n_rings):
         c = rings.count[p]
         point_adjacency_array.ring_index[total: total + c] = p

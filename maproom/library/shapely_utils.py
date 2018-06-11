@@ -343,6 +343,7 @@ def parse_ogr(dataset, point_list):
 def load_shapely2(uri):
     geometry_list = []
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
+    point_list.append((np.nan, np.nan))  # zeroth point is a NaN so it can be used for deleted points
     try:
         # Try fiona first
         error, source = get_fiona(uri)

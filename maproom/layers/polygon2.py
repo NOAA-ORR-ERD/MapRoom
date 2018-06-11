@@ -81,6 +81,7 @@ class PolygonBoundaryLayer(LineLayer):
     def set_data_from_parent_points(self, parent_points, index, count):
         self.parent_point_index = index
         self.points = parent_points[index:index + count]
+        log.debug(f"polygon point index={index} count={count}")
         self.points.color = self.style.line_color
         self.points.state = 0
         lsi = self.make_line_segment_indexes(count)
@@ -155,6 +156,7 @@ class PolygonParentLayer(Folder, LineLayer):
 
     def set_parent_points(self, parent_points):
         self.points = parent_points
+        log.debug(f"parent_points={parent_points[0:10]}")
         self.rings = None
 
     def create_rings(self):
