@@ -28,6 +28,10 @@ class PolygonBoundaryLayer(LineLayer):
 
     type = "polygon_boundary"
 
+    parent_point_index = Int
+
+    use_color_cycling = False
+
     layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
@@ -74,6 +78,24 @@ class PolygonBoundaryLayer(LineLayer):
     def calc_ring_fill_color(self):
         return color_floats_to_int(0.25, 0.5, 0, 0.10)
 
+    def set_data_from_parent_points(self, parent_points, index, count):
+        self.parent_point_index = index
+        self.points = parent_points[index:index + count]
+        self.points.color = self.style.line_color
+        self.points.state = 0
+        lsi = self.make_line_segment_indexes(count)
+        lsi.point1[0:count] = np.arange(0, count, dtype=np.uint32)
+        lsi.point2[0:count] = np.arange(1, count + 1, dtype=np.uint32)
+        lsi.point2[count - 1] = 0
+        lsi.color = self.style.line_color
+        lsi.state = 0
+        self.line_segment_indexes = lsi
+        self.update_bounds()
+
+    def update_points(self, indexes):
+        print(f"points changed: {indexes}")
+        
+
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if not self.manager.project.layer_tree_control.is_edit_layer(self):
             log.debug(f"not edit layer, skipping verdat editing for {self}")
@@ -91,11 +113,19 @@ class PolygonParentLayer(Folder, LineLayer):
 
     type = "polygon_folder"
 
+    point_list = Any
+
     visibility_items = ["points", "lines", "labels"]
 
     layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
+
+    def _style_default(self):
+        style = self.manager.get_default_style_for(self)
+        style.use_next_default_color()
+        log.debug("_style_default for %s: %s" % (self.type, str(style)))
+        return style
 
     @property
     def is_renderable(self):
@@ -123,8 +153,11 @@ class PolygonParentLayer(Folder, LineLayer):
             return str(total)
         return str(None)
 
-    def rebuild_renderer(self, renderer, in_place=False):
-        points = data_types.make_points(0)
+    def set_parent_points(self, parent_points):
+        self.points = parent_points
+        self.rings = None
+
+    def create_rings(self):
         n_rings = 0
         ring_starts = []
         ring_counts = []
@@ -133,27 +166,26 @@ class PolygonParentLayer(Folder, LineLayer):
         current_group_number = 0
         point_start_index = 0
         for child in self.get_child_layers():
-            if len(points) > 0:
-                points = np.append(points, child.points).view(np.recarray)
-            else:
-                points = child.points.copy()
             n_rings += 1
-            ring_starts.append(point_start_index)
+            ring_starts.append(child.parent_point_index)
             ring_counts.append(len(child.points))
             ring_color.append(child.calc_ring_fill_color())
             if child.is_clockwise:
                 current_group_number += 1
             ring_groups.append(current_group_number)
-            point_start_index += len(child.points)
-        projection = self.manager.project.layer_canvas.projection
-        projected_point_data = data_types.compute_projected_point_data(points, projection)
-        renderer.set_points(projected_point_data, points.z, points.color.copy().view(dtype=np.uint8))
         self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts, ring_groups)
         for c in ring_color:
             self.rings.color = c
         log.debug(f"ring list: {self.rings}")
         log.debug(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
 
+    def rebuild_renderer(self, renderer, in_place=False):
+        print("REBUILDING POLYGON2")
+        if self.rings is None:
+            self.create_rings()
+        projection = self.manager.project.layer_canvas.projection
+        projected_point_data = data_types.compute_projected_point_data(self.points, projection)
+        renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_polygons(self.rings, self.point_adjacency_array)
 
     def can_render_for_picker(self, renderer):

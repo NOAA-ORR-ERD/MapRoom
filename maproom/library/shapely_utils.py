@@ -272,7 +272,7 @@ def rebuild_geometry_list(geometry_list, changes):
     return geometry_list
 
 
-def parse_geom(geom):
+def parse_geom(geom, point_list):
     item = None
     if geom.geom_type == 'MultiPolygon':
         if True:
@@ -280,43 +280,53 @@ def parse_geom(geom):
         item = [geom.geom_type]
         for poly in geom.geoms:
             points = np.array(poly.exterior.coords[:-1], dtype=np.float64)
-            sub_item = [poly.geom_type, points]
+            index = len(point_list)
+            point_list.extend(points)
+            sub_item = [poly.geom_type, (index, len(points))]
             for hole in poly.interiors:
                 points = np.asarray(hole.coords[:-1], dtype=np.float64)
-                sub_item.append(points)
+                index = len(point_list)
+                point_list.extend(points)
+                sub_item.append((index, len(points)))
             item.append(sub_item)
     elif geom.geom_type == 'Polygon':
         points = np.array(geom.exterior.coords[:-1], dtype=np.float64)
-        item = [geom.geom_type, points]
+        index = len(point_list)
+        point_list.extend(points)
+        item = [geom.geom_type, (index, len(points))]
         for hole in geom.interiors:
             points = np.asarray(hole.coords[:-1], dtype=np.float64)
-            item.append(points)
+            index = len(point_list)
+            point_list.extend(points)
+            item.append((index, len(points)))
     elif geom.geom_type == 'LineString':
         points = np.asarray(geom.coords, dtype=np.float64)
-        item = [geom.geom_type, points]
+        index = len(point_list)
+        point_list.extend(points)
+        item = [geom.geom_type, (index, len(points))]
     elif geom.geom_type == 'Point':
         points = np.asarray(geom.coords, dtype=np.float64)
-        if points.shape[1] > 2:
-            points = points[:,0:2].copy()
-        item = [geom.geom_type, points]
+        index = len(point_list)
+        point_list.extend(points)
+        item = [geom.geom_type, (index, len(points))]
     else:
         log.warning(f"Unsupported geometry type {geom.geom_type}")
     return item
 
 
-def parse_fiona(source):
+def parse_fiona(source, point_list):
     # Note: all coordinate points are converted from
     # shapely.coords.CoordinateSequence to normal numpy array
 
     geometry_list = []
     for f in source:
         geom = shape(f['geometry'])
-        item = parse_geom(geom)
+        item = parse_geom(geom, point_list)
         if geom is not None:
             geometry_list.append(item)
     return geometry_list
 
-def parse_ogr(dataset):
+def parse_ogr(dataset, point_list):
     geometry_list = []
     layer = dataset.GetLayer()
     for feature in layer:
@@ -325,28 +335,33 @@ def parse_ogr(dataset):
             continue
         wkt = ogr_geom.ExportToWkt()
         geom = loads(wkt)
-        item = parse_geom(geom)
+        item = parse_geom(geom, point_list)
         if item is not None:
             geometry_list.append(item)
     return geometry_list
 
 def load_shapely2(uri):
     geometry_list = []
+    point_list = accumulator(block_shape=(2,), dtype=np.float64)
     try:
         # Try fiona first
         error, source = get_fiona(uri)
-        geometry_list = parse_fiona(source)
+        geometry_list = parse_fiona(source, point_list)
     except (DriverLoadFailure, ImportError):
         # use GDAL instead
         source = None
         error, dataset = get_dataset(uri)
         if not error:
             try:
-                geometry_list = parse_ogr(dataset)
+                geometry_list = parse_ogr(dataset, point_list)
             except ValueError as e:
                 error = str(e)
 
     if error:
-        return (error, None)
+        return (error, None, None)
 
-    return ("", geometry_list)
+    # extra 1000 pts at the end to prevent resizing too often
+    extra_space_for_new_points = np.full((1000,2), np.nan)
+    point_list.extend(extra_space_for_new_points)
+
+    return ("", geometry_list, np.asarray(point_list))

@@ -67,6 +67,9 @@ class ImmediateModeRenderer():
             self.vbo_point_colors = gl_vbo.VBO(color)
         self.vbo_point_xys[:num_points] = xy[:num_points]
 
+    def update_point(self, index, xy):
+        self.vbo_point_xys[index] = [index]
+
     def set_lines(self, xy, indexes, color):
         # OpenGL doesn't allow a given vertex to have multiple colors
         # simultaneously. So vbo_line_segment_point_xys is needed to color each

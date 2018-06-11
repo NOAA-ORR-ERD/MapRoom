@@ -850,12 +850,15 @@ class ProjectEditor(FrameworkEditor):
             else:
                 b.layers.append(layer)
             if lf.layer_items_moved:
-                b.need_rebuild[layer] = True
                 b.editable_properties_changed = True
-                if layer.is_folder():
-                    folder_bounds.append((self.layer_manager.get_multi_index_of_layer(layer), layer))
+                if lf.indexes_of_points_affected:
+                    layer.update_points(lf.indexes_of_points_affected)
                 else:
-                    layer.update_bounds()
+                    b.need_rebuild[layer] = True
+                    if layer.is_folder():
+                        folder_bounds.append((self.layer_manager.get_multi_index_of_layer(layer), layer))
+                    else:
+                        layer.update_bounds()
             if lf.layer_display_properties_changed:
                 b.need_rebuild[layer] = False
                 b.refresh_needed = True

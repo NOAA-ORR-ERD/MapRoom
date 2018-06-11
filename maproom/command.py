@@ -126,6 +126,9 @@ class LayerStatus(object):
         # True if items within the layer have changed position only
         self.layer_items_moved = False
 
+        # List of points that have been changed, if command supports it
+        self.indexes_of_points_affected = []
+
         # True if items have been added to the layer
         self.layer_contents_added = False
 
