@@ -2,7 +2,7 @@ import os
 
 from osgeo import ogr, osr
 
-from maproom.library.shapely_utils import load_shapely2
+from maproom.library.shapefile_utils import load_shapefile, load_bna_items
 from maproom.layers import PolygonParentLayer, PolygonBoundaryLayer, PointLayer
 from ...renderer import data_types
 from .common import BaseLayerLoader
@@ -82,56 +82,6 @@ def write_geometry_as_shapefile(filename, layer_name, driver_name, geometry_list
         feature_index += 1
 
 
-class ReallyOldShapefileLoader(BaseLayerLoader):
-    mime = "application/x-maproom-shapefile-not-appearing-in-this-film"
-
-    layer_types = ["shapefile"]
-
-    extensions = [".shp", ".kml", ".json", ".geojson"]
-
-    extension_desc = {
-        ".shp": "ESRI Shapefile",
-        ".kml": "KML",
-        ".geojson": "GeoJSON",
-        ".json": "GeoJSON",
-    }
-
-    name = "Shapefile"
-
-    def load_layers(self, metadata, manager, **kwargs):
-        """May return one or two layers; points are placed in a separate layer
-        so they can be rendered and operated on like a regular points layer
-        """
-        layers = []
-        layer = PolygonShapefileLayer(manager=manager)
-
-        layer.load_error_string, geometry_list, point_list = load_shapely(metadata.uri)
-        if (layer.load_error_string == ""):
-            if geometry_list:
-                progress_log.info("Creating polygon layer...")
-                layer.set_geometry(geometry_list)
-                layer.file_path = metadata.uri
-                layer.name = os.path.split(layer.file_path)[1]
-                layer.mime = self.mime
-                layers.append(layer)
-            if len(point_list) > 0:
-                progress_log.info("Creating point layer...")
-                layer = PointLayer(manager=manager)
-                layer.set_data(point_list)
-                layer.file_path = metadata.uri
-                layer.name = os.path.split(layer.file_path)[1]
-                layer.mime = self.mime
-                layers.append(layer)
-        else:
-            layers.append(layer)  # to return the load error string
-        return layers
-
-    def save_to_local_file(self, filename, layer):
-        _, ext = os.path.splitext(filename)
-        desc = self.extension_desc[ext]
-        write_layer_as_shapefile(filename, layer, desc)
-
-
 class ShapefileLoader(BaseLayerLoader):
     mime = "application/x-maproom-shapefile"
 
@@ -147,6 +97,9 @@ class ShapefileLoader(BaseLayerLoader):
     }
 
     name = "Shapefile"
+
+    def load_uri_as_items(self, uri):
+        return load_shapefile(uri)
 
     def load_layers(self, metadata, manager, **kwargs):
         """May return one or two layers; points are placed in a separate layer
@@ -185,7 +138,7 @@ class ShapefileLoader(BaseLayerLoader):
                 layer = create_layer(parent_points, points, PolygonBoundaryLayer, f"Hole #{j+1}", True, False)
                 layers.append(layer)
 
-        parent.load_error_string, geometry_list, point_list = load_shapely2(metadata.uri)
+        parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(metadata.uri)
         if (parent.load_error_string == ""):
             if geometry_list:
                 parent_points = data_types.make_points(len(point_list))
@@ -210,7 +163,68 @@ class ShapefileLoader(BaseLayerLoader):
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
         desc = self.extension_desc[ext]
-        write_layer_as_shapefile(filename, layer, desc)
+        write_rings_as_shapefile(filename, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
+
+
+def write_rings_as_shapefile(filename, points, rings, adjacency, projection):
+    # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(projection)
+
+    driver = ogr.GetDriverByName('ESRI Shapefile')
+    shapefile = driver.CreateDataSource(filename)
+    shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
+
+    poly = ogr.Geometry(ogr.wkbPolygon)
+    file_point_index = 0
+    for source_ring in rings:
+        print(source_ring)
+        dest_ring = ogr.Geometry(ogr.wkbLinearRing)
+
+        point_index = source_ring.start
+        count = 0
+        while count < source_ring.count:
+            dest_ring.AddPoint(points.x[point_index], points.y[point_index])
+            count += 1
+            point_index = adjacency[point_index]
+
+            file_point_index += 1
+            if file_point_index % BaseLayerLoader.points_per_tick == 0:
+                progress_log.info("Saved %d points" % file_point_index)
+
+        poly.AddGeometry(ring)
+
+    feature_index = 0
+    layer_defn = shapefile_layer.GetLayerDefn()
+    feature = ogr.Feature(layer_defn)
+    feature.SetGeometry(poly)
+    feature.SetFID(feature_index)
+    shapefile_layer.CreateFeature(feature)
+    feature.Destroy()
+    feature = None
+
+    # ## lets add now a second point with different coordinates:
+    # point.AddPoint(474598, 5429281)
+    # feature_index = 1
+    # feature = osgeo.ogr.Feature(layer_defn)
+    # feature.SetGeometry(point)
+    # feature.SetFID(feature_index)
+    # layer.CreateFeature(feature)
+    shapefile.Destroy()
+    shapefile = None  # garbage collection = save
+
+
+class BNAShapefileLoader(ShapefileLoader):
+    mime = "application/x-maproom-bna"
+
+    extensions = [".bna"]
+
+    extension_desc = {
+        ".bna": "BNA text file",
+    }
+
+    def load_uri_as_items(self, uri):
+        return load_bna_items(uri)
 
 
 if __name__ == "__main__":

@@ -118,7 +118,7 @@ class PolygonParentLayer(Folder, LineLayer):
     """
     name = "Polygon"
 
-    type = "polygon_folder"
+    type = "shapefile"
 
     point_list = Any
 

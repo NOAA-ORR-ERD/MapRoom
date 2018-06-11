@@ -15,16 +15,16 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
-class BNALoader(BaseLayerLoader):
-    mime = "application/x-maproom-bna-old"
+class RNCLoader(BaseLayerLoader):
+    mime = "application/x-maproom-rncloader"
 
-    layer_types = ["polygon"]
+    layer_types = ["rncloader"]
 
     extensions = [".bna"]
 
-    name = "BNA"
+    name = "RNCLoader"
 
-    layer_class = PolygonLayer
+    layer_class = RNCLoaderLayer
 
     def load_layers(self, metadata, manager, **kwargs):
         layer = self.layer_class(manager=manager)
@@ -45,61 +45,6 @@ class BNALoader(BaseLayerLoader):
 
     def save_to_fh(self, fh, layer):
         save_bna_file(fh, layer)
-
-
-class RNCLoader(BNALoader):
-    mime = "application/x-maproom-rncloader"
-
-    layer_types = ["rncloader"]
-
-    extensions = [".bna"]
-
-    name = "RNCLoader"
-
-    layer_class = RNCLoaderLayer
-
-
-class BNAShapefileLoader(BNALoader):
-    mime = "application/x-maproom-bna"
-
-    layer_types = ["shapefile"]
-
-    extensions = [".bna", ".shp", ".kml", ".json", ".geojson"]
-
-    extension_desc = {
-        ".bna": "Boundary File",
-        ".shp": "ESRI Shapefile",
-        ".kml": "KML",
-        ".geojson": "GeoJSON",
-        ".json": "GeoJSON",
-    }
-
-    name = "BNA"
-
-    layer_class = PolygonShapefileLayer
-
-    def load_layers(self, metadata, manager, **kwargs):
-        layer = self.layer_class(manager=manager)
-
-        try:
-            layer.load_error_string, geometry_list, ring_identifiers = load_bna_as_shapely(metadata.uri)
-        except RuntimeError as e:
-            layer.load_error_string = str(e)
-        progress_log.info("Creating layer...")
-        if (layer.load_error_string == ""):
-            layer.set_geometry(geometry_list)
-            layer.file_path = metadata.uri
-            layer.name = os.path.split(layer.file_path)[1]
-            layer.mime = self.mime
-        return [layer]
-
-    def save_to_local_file(self, filename, layer):
-        _, ext = os.path.splitext(filename)
-        if ext.lower() == ".bna":
-            BNALoader.save_to_local_file(self, filename, layer)
-        else:
-            desc = self.extension_desc[ext]
-            write_layer_as_shapefile(filename, layer, desc)
 
 
 def parse_bna_file(uri, regime=0):
@@ -240,37 +185,3 @@ def save_bna_file(f, layer):
         f.write("%s,%s\n" % (polygon[0][0], polygon[0][1]))
     progress_log.info("TICK=%d" % ticks)
     progress_log.info("Saved BNA")
-
-
-def load_bna_as_shapely(uri, regime=0):
-    """
-    used by the code below, to separate reading the file from creating the special maproom objects.
-    reads the data in the file, and returns:
-
-    ( load_error_string, geometry_list )
-
-    where:
-        load_error_string = string descripting the loading error, or "" if there was no error
-        geometry_list = list of shapely objects
-    """
-
-    items, total_points = parse_bna_file(uri)
-
-    geometry_list = []
-    ring_identifiers = []
-
-    for name, feature_type, feature_code, num_points, is_polygon, item_points in items:
-        ring_identifiers.append(
-            {'name': name,
-             'feature_code': feature_code}
-        )
-        p = item_points[0:num_points]
-        p[:,0] += regime
-        if is_polygon:
-            geom = Polygon(p)
-        else:
-            geom = LineString(p)
-        add_maproom_attributes_to_shapely_geom(geom, name, feature_code)
-        geometry_list.append(geom)
-
-    return "", geometry_list, ring_identifiers
