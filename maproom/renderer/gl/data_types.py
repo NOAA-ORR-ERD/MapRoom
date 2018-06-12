@@ -120,15 +120,12 @@ def compute_projected_point_data(points, projection, hidden_points=None):
     return projected_point_data
 
 
-def compute_rings(f_ring_starts, f_ring_counts, f_ring_groups=None):
+def compute_rings(f_ring_starts, f_ring_counts, f_ring_groups=None, f_ring_colors=0):
     n_rings = np.alen(f_ring_starts)
     rings = make_polygons(n_rings)
-    rings.start[
-        0: n_rings
-    ] = f_ring_starts
-    rings.count[
-        0: n_rings
-    ] = f_ring_counts
+    rings.start[0:n_rings] = f_ring_starts
+    rings.count[0:n_rings] = f_ring_counts
+    rings.color[0:n_rings] = f_ring_colors
     if f_ring_groups is None:
         # if not otherwise specified, each polygon is in its own group
         rings.group = np.arange(n_rings)

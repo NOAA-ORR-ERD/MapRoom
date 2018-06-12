@@ -117,11 +117,11 @@ class ShapefileLoader(BaseLayerLoader):
         parent.mime = self.mime
         layers.append(parent)
 
-        def create_layer(parent_points, points, layer_cls, name, verify_winding=False, positive_winding=True):
+        def create_layer(parent_points, points, layer_cls, default_name, verify_winding=False, positive_winding=True):
             layer = layer_cls(manager=manager)
-            layer.name = name
-            index, count = points
-            layer.set_data_from_parent_points(parent_points, index, count)
+            index, count, name, feature_code, feature_name = points
+            layer.name = name if name else default_name
+            layer.set_data_from_parent_points(parent_points, index, count, feature_code, feature_name)
             if verify_winding:
                 layer.verify_winding(positive_winding)
             layer.file_path = metadata.uri
@@ -165,12 +165,12 @@ class ShapefileLoader(BaseLayerLoader):
         _, ext = os.path.splitext(filename)
         desc = self.extension_desc[ext]
         if ext == ".bna":
-            write_rings_as_bna(filename, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
+            write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
         else:
-            write_rings_as_shapefile(filename, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
+            write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
 
 
-def write_rings_as_shapefile(filename, points, rings, adjacency, projection):
+def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
     # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
     srs = osr.SpatialReference()
     srs.ImportFromProj4(projection)
@@ -220,7 +220,7 @@ def write_rings_as_shapefile(filename, points, rings, adjacency, projection):
     shapefile = None  # garbage collection = save
 
 
-def write_rings_as_bna(filename, points, rings, adjacency, projection):
+def write_rings_as_bna(filename, layer, points, rings, adjacency, projection):
     update_every = 1000
     ticks = 0
     progress_log.info("TICKS=%d" % np.alen(points))
@@ -232,10 +232,11 @@ def write_rings_as_bna(filename, points, rings, adjacency, projection):
         while ring_index < len(rings):
             point_index = int(rings.start[ring_index])
             count = 0
-            fh.write('"%s","%s", %d\n' % ('name', '0', rings.count[ring_index] + 1))  # extra point for closed polygon
-            print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
+            child = layer.ring_index_to_layer[ring_index]
+            fh.write('"%s","%s", %d\n' % (child.name, child.feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
+            # print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
             while count < rings.count[ring_index]:
-                print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
+                # print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
                 fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
                 count += 1
                 point_index = adjacency.next[point_index]

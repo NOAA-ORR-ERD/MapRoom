@@ -20,6 +20,15 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
+color_array = {
+    1: color_floats_to_int(0.25, 0.5, 0, 0.10),  # green
+    2: color_floats_to_int(0.0, 0.0, 1.0, 0.10),  # blue
+    3: color_floats_to_int(0.5, 0.5, 0.5, 0.10),  # gray
+    4: color_floats_to_int(0.9, 0.9, 0.9, 0.15),  # mapbounds
+    5: color_floats_to_int(0.0, 0.2, 0.5, 0.15),  # spillable
+}
+
+
 class PolygonBoundaryLayer(LineLayer):
     """Layer for points/lines/polygons.
 
@@ -31,6 +40,12 @@ class PolygonBoundaryLayer(LineLayer):
     parent_point_index = Int
 
     use_color_cycling = False
+
+    ring_fill_color = Int
+
+    feature_code = Int
+
+    feature_name = Str
 
     layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
 
@@ -75,10 +90,7 @@ class PolygonBoundaryLayer(LineLayer):
         c = self.manager.project.layer_canvas
         c.rebuild_renderer_for_layer(parent)
 
-    def calc_ring_fill_color(self):
-        return color_floats_to_int(0.25, 0.5, 0, 0.10)
-
-    def set_data_from_parent_points(self, parent_points, index, count):
+    def set_data_from_parent_points(self, parent_points, index, count, feature_code, feature_name):
         self.parent_point_index = index
         self.parent_point_map = np.arange(index, index + count, dtype=np.uint32)
         self.points = parent_points[self.parent_point_map]  # Copy!
@@ -92,6 +104,9 @@ class PolygonBoundaryLayer(LineLayer):
         lsi.color = self.style.line_color
         lsi.state = 0
         self.line_segment_indexes = lsi
+        self.feature_code = feature_code
+        self.feature_name = feature_name
+        self.ring_fill_color = color_array.get(feature_code, color_array[1])
         self.update_bounds()
 
     def update_affected_points(self, indexes):
@@ -171,19 +186,20 @@ class PolygonParentLayer(Folder, LineLayer):
         ring_counts = []
         ring_groups = []
         ring_color = []
+        ring_index_to_layer = []
         current_group_number = 0
         point_start_index = 0
         for child in self.get_child_layers():
             n_rings += 1
             ring_starts.append(child.parent_point_index)
             ring_counts.append(len(child.points))
-            ring_color.append(child.calc_ring_fill_color())
+            ring_color.append(child.ring_fill_color)
+            ring_index_to_layer.append(child)
             if child.is_clockwise:
                 current_group_number += 1
             ring_groups.append(current_group_number)
-        self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts, ring_groups)
-        for c in ring_color:
-            self.rings.color = c
+        self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts, ring_groups, ring_color)
+        self.ring_index_to_layer = ring_index_to_layer
         log.debug(f"ring list: {self.rings} {type(self.rings)}")
         log.debug(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
 

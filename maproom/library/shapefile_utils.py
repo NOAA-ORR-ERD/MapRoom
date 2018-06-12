@@ -16,6 +16,9 @@ progress_log = logging.getLogger("progress")
 
 def parse_geom(geom, point_list):
     item = None
+    name = ""
+    feature_code = 1
+    feature_type = "1"
     if geom.geom_type == 'MultiPolygon':
         if True:
             return None
@@ -24,18 +27,18 @@ def parse_geom(geom, point_list):
             points = np.array(poly.exterior.coords[:-1], dtype=np.float64)
             index = len(point_list)
             point_list.extend(points)
-            sub_item = [poly.geom_type, (index, len(points))]
+            sub_item = [poly.geom_type, (index, len(points), name, feature_code, feature_name)]
             for hole in poly.interiors:
                 points = np.asarray(hole.coords[:-1], dtype=np.float64)
                 index = len(point_list)
                 point_list.extend(points)
-                sub_item.append((index, len(points)))
+                sub_item.append((index, len(points), name, feature_code, feature_name))
             item.append(sub_item)
     elif geom.geom_type == 'Polygon':
         points = np.array(geom.exterior.coords[:-1], dtype=np.float64)
         index = len(point_list)
         point_list.extend(points)
-        item = [geom.geom_type, (index, len(points))]
+        item = [geom.geom_type, (index, len(points), name, feature_code, feature_name)]
         for hole in geom.interiors:
             points = np.asarray(hole.coords[:-1], dtype=np.float64)
             index = len(point_list)
@@ -45,12 +48,12 @@ def parse_geom(geom, point_list):
         points = np.asarray(geom.coords, dtype=np.float64)
         index = len(point_list)
         point_list.extend(points)
-        item = [geom.geom_type, (index, len(points))]
+        item = [geom.geom_type, (index, len(points), name, feature_code, feature_name)]
     elif geom.geom_type == 'Point':
         points = np.asarray(geom.coords, dtype=np.float64)
         index = len(point_list)
         point_list.extend(points)
-        item = [geom.geom_type, (index, len(points))]
+        item = [geom.geom_type, (index, len(points), name, feature_code, feature_name)]
     else:
         log.warning(f"Unsupported geometry type {geom.geom_type}")
     return item
@@ -147,7 +150,7 @@ def parse_bna_file2(uri, points_accumulator, regime=0):
             feature_code = 4
         elif name.lower() in ['spillable area', 'spillablearea']:
             feature_code = 5
-        feature_type = pieces[1].strip('"')
+        feature_name = pieces[1].strip('"')
         num_points = int(pieces[2])
 
         start_index = len(points_accumulator)
@@ -168,16 +171,15 @@ def parse_bna_file2(uri, points_accumulator, regime=0):
                 continue
             polygon_points[j, :] = p
         polygon_points[:,0] += regime
-        print(f"points: {polygon_points}")
         points_accumulator.extend(polygon_points[:num_points])
 
         # A negative num_points value indicates that this is a line
         # rather than a polygon. And if a "polygon" only has 1 or 2
         # points, it's not a polygon.
         if num_points < 3:
-            item = ['LineString', (start_index, num_points)]
+            item = ['LineString', (start_index, num_points, name, feature_code, feature_name)]
         else:
-            item = ['Polygon', (start_index, num_points)]
+            item = ['Polygon', (start_index, num_points, name, feature_code, feature_name)]
         items.append(item)
 
     progress_log.info("TICK=%d" % num_lines)
@@ -187,7 +189,6 @@ def parse_bna_file2(uri, points_accumulator, regime=0):
 def load_bna_items(uri):
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
     point_list.append((np.nan, np.nan))  # zeroth point is a NaN so it can be used for deleted points
-    print(f"point list: {point_list}")
     item_list = parse_bna_file2(uri, point_list)
 
     # extra 1000 pts at the end to prevent resizing too often
