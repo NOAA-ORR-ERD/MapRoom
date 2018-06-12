@@ -184,7 +184,7 @@ class PolygonParentLayer(Folder, LineLayer):
         self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts, ring_groups)
         for c in ring_color:
             self.rings.color = c
-        log.debug(f"ring list: {self.rings}")
+        log.debug(f"ring list: {self.rings} {type(self.rings)}")
         log.debug(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
 
     def update_child_points(self, indexes, values):
@@ -192,6 +192,8 @@ class PolygonParentLayer(Folder, LineLayer):
         # projection = self.manager.project.layer_canvas.projection
         # projected_point_data = data_types.compute_projected_point_data(self.points[indexes], projection)
 
+    def check_for_problems(self, window):
+        pass
 
     def rebuild_renderer(self, renderer, in_place=False):
         print("REBUILDING POLYGON2")

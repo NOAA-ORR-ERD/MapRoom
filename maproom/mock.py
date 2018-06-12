@@ -5,7 +5,7 @@ from omnivore.utils.file_guess import FileGuess
 from .layer_manager import LayerManager
 from .layers import Layer, loaders, LayerStyle
 from .library.Boundary import Boundaries
-from .library.projection import NullProjection
+from .library.projection import Projection
 from .library.host_utils import HostCache
 from .library.known_hosts import default_tile_hosts
 from .command import UndoStack, BatchStatus
@@ -18,7 +18,7 @@ class MockApplication(object):
 
 class MockCanvas(object):
     def __init__(self):
-        self.projection = NullProjection()
+        self.projection = Projection("+proj=merc +units=m +over")
 
 
 class MockWindow(object):

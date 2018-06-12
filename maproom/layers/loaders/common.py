@@ -91,6 +91,7 @@ class BaseLayerLoader(BaseLoader):
                 layer.manager.dispatch_event('refresh_needed')
             try:
                 uri_base = os.path.dirname(uri)
+                print(f"uri={uri} uri_base={uri_base}")
                 for path in glob.glob(os.path.join(temp_dir, "*")):
                     filename = os.path.basename(path)
                     dest_uri = uri_base + "/" + filename
