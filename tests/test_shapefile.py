@@ -22,7 +22,7 @@ class TestBNA(object):
         print(len(self.bna.points))
         assert 1034 == np.alen(self.bna.points)
         
-        uri = "../tests/tmp.3polys.bna"
+        uri = os.path.join(os.getcwd(), "tmp.3polys.bna")
         loaders.save_layer(self.bna, uri)
         # layer = self.project.raw_load_first_layer(uri, "application/x-maproom-bna")
         # assert 16 == np.alen(layer.line_segment_indexes)

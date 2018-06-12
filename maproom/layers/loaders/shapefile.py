@@ -1,6 +1,7 @@
 import os
 
 from osgeo import ogr, osr
+import numpy as np
 
 from maproom.library.shapefile_utils import load_shapefile, load_bna_items
 from maproom.layers import PolygonParentLayer, PolygonBoundaryLayer, PointLayer
@@ -163,7 +164,10 @@ class ShapefileLoader(BaseLayerLoader):
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
         desc = self.extension_desc[ext]
-        write_rings_as_shapefile(filename, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
+        if ext == ".bna":
+            write_rings_as_bna(filename, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
+        else:
+            write_rings_as_shapefile(filename, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
 
 
 def write_rings_as_shapefile(filename, points, rings, adjacency, projection):
@@ -173,6 +177,7 @@ def write_rings_as_shapefile(filename, points, rings, adjacency, projection):
 
     driver = ogr.GetDriverByName('ESRI Shapefile')
     shapefile = driver.CreateDataSource(filename)
+    print(f"writing {filename}")
     shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
 
     file_point_index = 0
@@ -218,63 +223,31 @@ def write_rings_as_shapefile(filename, points, rings, adjacency, projection):
 def write_rings_as_bna(filename, points, rings, adjacency, projection):
     update_every = 1000
     ticks = 0
-    progress_log.info("TICKS=%d" % np.alen(layer.points))
+    progress_log.info("TICKS=%d" % np.alen(points))
     progress_log.info("Saving BNA...")
     with open(filename, "w") as fh:
-        for i, p in enumerate(layer.iter_rings()):
-            polygon = p[0]
-            count = np.alen(polygon)
-            ident = p[1]
-            fh.write('"%s","%s", %d\n' % (ident['name'], ident['feature_code'], count + 1))  # extra point for closed polygon
-            for j in range(count):
-                fh.write("%s,%s\n" % (polygon[j][0], polygon[j][1]))
-                ticks += 1
+        file_point_index = 0
+        ring_index = 0
+        feature_index = 0
+        while ring_index < len(rings):
+            point_index = int(rings.start[ring_index])
+            count = 0
+            fh.write('"%s","%s", %d\n' % ('name', '0', rings.count[ring_index] + 1))  # extra point for closed polygon
+            print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
+            while count < rings.count[ring_index]:
+                print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
+                fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
+                count += 1
+                point_index = adjacency.next[point_index]
 
-                if (ticks % update_every) == 0:
-                    progress_log.info("TICK=%d" % ticks)
+                file_point_index += 1
+                if file_point_index % BaseLayerLoader.points_per_tick == 0:
+                    progress_log.info("Saved %d points" % file_point_index)
+
             # duplicate first point to create a closed polygon
-            fh.write("%s,%s\n" % (polygon[0][0], polygon[0][1]))
-        progress_log.info("TICK=%d" % ticks)
-        progress_log.info("Saved BNA")
-
-    file_point_index = 0
-    ring_index = 0
-    feature_index = 0
-    while ring_index < len(rings):
-        poly = ogr.Geometry(ogr.wkbPolygon)
-        dest_ring = ogr.Geometry(ogr.wkbLinearRing)
-
-        point_index = int(rings.start[ring_index])
-        count = 0
-        print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
-        while count < rings.count[ring_index]:
-            print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
-            dest_ring.AddPoint(points.x[point_index], points.y[point_index])
-            count += 1
-            point_index = adjacency.next[point_index]
-
-            file_point_index += 1
-            if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                progress_log.info("Saved %d points" % file_point_index)
-
-        poly.AddGeometry(dest_ring)
-        ring_index += 1
-
-        layer_defn = shapefile_layer.GetLayerDefn()
-        feature = ogr.Feature(layer_defn)
-        feature.SetGeometry(poly)
-        feature.SetFID(feature_index)
-        shapefile_layer.CreateFeature(feature)
-        feature = None
-
-    # ## lets add now a second point with different coordinates:
-    # point.AddPoint(474598, 5429281)
-    # feature_index = 1
-    # feature = osgeo.ogr.Feature(layer_defn)
-    # feature.SetGeometry(point)
-    # feature.SetFID(feature_index)
-    # layer.CreateFeature(feature)
-    shapefile = None  # garbage collection = save
+            point_index = int(rings.start[ring_index])
+            fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
+            ring_index += 1
 
 
 class BNAShapefileLoader(ShapefileLoader):
