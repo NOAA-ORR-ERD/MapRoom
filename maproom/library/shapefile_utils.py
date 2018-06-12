@@ -18,7 +18,7 @@ def parse_geom(geom, point_list):
     item = None
     name = ""
     feature_code = 1
-    feature_type = "1"
+    feature_name = "1"
     if geom.geom_type == 'MultiPolygon':
         if True:
             return None
@@ -43,7 +43,7 @@ def parse_geom(geom, point_list):
             points = np.asarray(hole.coords[:-1], dtype=np.float64)
             index = len(point_list)
             point_list.extend(points)
-            item.append((index, len(points)))
+            item.append((index, len(points), name, feature_code, feature_name))
     elif geom.geom_type == 'LineString':
         points = np.asarray(geom.coords, dtype=np.float64)
         index = len(point_list)
