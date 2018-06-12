@@ -851,7 +851,7 @@ class ProjectEditor(FrameworkEditor):
                 b.layers.append(layer)
             if lf.layer_items_moved:
                 b.editable_properties_changed = True
-                if lf.indexes_of_points_affected:
+                if lf.indexes_of_points_affected is not None:
                     rebuild_layer = layer.update_affected_points(lf.indexes_of_points_affected)
                     if rebuild_layer is not None:
                         b.need_rebuild[rebuild_layer] = True
