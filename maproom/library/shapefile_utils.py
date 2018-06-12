@@ -107,10 +107,6 @@ def load_shapefile(uri):
     if error:
         return (error, None, None)
 
-    # extra 1000 pts at the end to prevent resizing too often
-    extra_space_for_new_points = np.full((1000,2), np.nan)
-    point_list.extend(extra_space_for_new_points)
-
     return ("", geometry_list, np.asarray(point_list))
 
 
@@ -190,10 +186,6 @@ def load_bna_items(uri):
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
     point_list.append((np.nan, np.nan))  # zeroth point is a NaN so it can be used for deleted points
     item_list = parse_bna_file2(uri, point_list)
-
-    # extra 1000 pts at the end to prevent resizing too often
-    extra_space_for_new_points = np.full((1000,2), np.nan)
-    point_list.extend(extra_space_for_new_points)
 
     return ("", item_list, np.asarray(point_list))
 

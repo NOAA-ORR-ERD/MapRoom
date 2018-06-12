@@ -20,7 +20,7 @@ class TestBNA(object):
         print(self.bna)
         print(self.bna.points)
         print(len(self.bna.points))
-        assert 1034 == np.alen(self.bna.points)
+        assert 34 == np.alen(self.bna.points)
         
         uri = os.path.join(os.getcwd(), "tmp.3polys.bna")
         loaders.save_layer(self.bna, uri)
