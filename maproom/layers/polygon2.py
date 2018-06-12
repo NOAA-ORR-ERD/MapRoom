@@ -139,7 +139,7 @@ class PolygonParentLayer(Folder, LineLayer):
 
     visibility_items = ["points", "lines", "labels"]
 
-    layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
+    layer_info_panel = ["Point count", "Polygon count", "Flagged points", "Color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
@@ -158,22 +158,14 @@ class PolygonParentLayer(Folder, LineLayer):
 
     def get_info_panel_text(self, prop):
         if prop == "Point count":
-            total = 0
-            for child in self.get_child_layers():
-                try:
-                    total += len(self.points)
-                except TypeError:
-                    pass
-            return str(total)
-        elif prop == "Line segment count":
-            total = 0
-            for child in self.get_child_layers():
-                try:
-                    total += len(self.line_segment_indexes)
-                except TypeError:
-                    pass
-            return str(total)
-        return str(None)
+            if self.points is not None:
+                return str(len(self.points) - 1)  # zeroth point is a NaN
+            return "0"
+        if prop == "Polygon count":
+            if self.rings is not None:
+                return str(len(self.rings))
+            return "0"
+        return LineLayer.get_info_panel_text(self, prop)
 
     def set_parent_points(self, parent_points):
         self.points = parent_points
@@ -228,6 +220,7 @@ class PolygonParentLayer(Folder, LineLayer):
         if picker.is_active and not self.can_render_for_picker(renderer):
             return
         # the rings
+        # self.rebuild_renderer(renderer)
         if layer_visibility["polygons"]:
             renderer.draw_polygons(self, picker,
                                    self.rings.color,
