@@ -4,7 +4,7 @@ import numpy as np
 from traits.api import Any
 from traits.api import Int
 from traits.api import Str
-from traits.api import Unicode
+from traits.api import Bool
 
 from ..library.scipy_ckdtree import cKDTree
 from ..library.Boundary import Boundaries
@@ -145,6 +145,8 @@ class PolygonParentLayer(Folder, LineLayer):
 
     type = "shapefile"
 
+    rebuild_needed = Bool(False)
+
     point_list = Any
 
     current_editing_layer = Any
@@ -213,19 +215,61 @@ class PolygonParentLayer(Folder, LineLayer):
         print(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
         if layer is None:
             return
-        index = layer.ring_index
-        ring = self.rings[index]
-        num_points = len(layer.points)
-        if num_points <= ring['count']:
-            print(f"fast! will fit in same space without resizing")
-            boundary = layer.select_outer_boundary()
-            if boundary is not None:
-                print(f"boundary: {boundary.points}")
-                self.points[layer.parent_point_map[:num_points]] = boundary.points
-                ring.start = layer.parent_point_map[0]
-                print(f"befor: {self.point_adjacency_array[layer.parent_point_map]}")
-                self.point_adjacency_array[layer.parent_point_map[:num_points-1]].next = layer.parent_point_map[1:num_points]
-                print(f"after: {self.point_adjacency_array[layer.parent_point_map]}")
+        boundary = layer.select_outer_boundary()
+        if boundary is not None:
+            print(f"boundary: {boundary.points}")
+
+            ring_index = layer.ring_index
+            if len(boundary.points) == self.rings.count[ring_index]:
+                self.replace_ring_without_resizing(ring_index, boundary)
+            else:
+                self.replace_ring_with_resizing(ring_index, boundary)
+        else:
+            log.error("no boundary found; not committing layer")
+
+    def replace_ring_without_resizing(self, ring_index, boundary):
+        # fast! will fit in exactly the same space
+        ring = self.rings[ring_index]
+        num_points = len(boundary.points)
+        index = ring.start
+        self.points[index:index + num_points] = boundary.points
+
+    def replace_ring_with_resizing(self, ring_index, boundary):
+        # slow! need to recreate the entire points & ring array
+        # print(f"before: points={self.points} rings={self.rings} adjacency={self.point_adjacency_array}")
+        ring = self.rings[ring_index]
+        num_old_points = len(self.points)
+        num_before = ring.start
+        num_insert = len(boundary.points)
+        num_replace = ring.count
+        insert_index = num_before
+        num_after = num_old_points - num_before - ring.count
+        after_index = insert_index + num_insert
+        num_new_points = num_before + num_insert + num_after
+        p = data_types.make_points(num_new_points)
+        p[:insert_index] = self.points[:insert_index]
+        p[insert_index:after_index] = boundary.get_points()
+        p[after_index:] = self.points[insert_index + ring.count:]
+        self.points = p
+
+        ring.start = insert_index
+        ring.count = num_insert
+
+        # need to adjust the ring start for all rings after the insert point
+        point_offset = num_insert - num_replace
+        self.rings.start[ring_index + 1:] += np.uint32(point_offset)
+
+        # new point adjacency array because number of points has changed
+        p = data_types.make_point_adjacency_array(num_new_points)
+        p[:insert_index] = self.point_adjacency_array[:insert_index]
+        p.ring_index[insert_index:after_index] = ring_index
+        p.next[insert_index:after_index - 1] = np.arange(insert_index + 1, after_index, dtype=np.uint32)
+        p.next[after_index - 1] = insert_index
+        p[after_index:] = self.point_adjacency_array[insert_index + num_replace:]
+        p.next[after_index:] += np.uint32(point_offset)
+        self.point_adjacency_array = p
+        # print(f"after: points={self.points} rings={self.rings} adjacency={self.point_adjacency_array}")
+        self.rebuild_needed = True
 
     def update_child_points(self, indexes, values):
         self.points[indexes] = values
@@ -236,7 +280,7 @@ class PolygonParentLayer(Folder, LineLayer):
         pass
 
     def rebuild_renderer(self, renderer, in_place=False):
-        print("REBUILDING POLYGON2")
+        log.debug("rebuilding polygon2 {self.name}")
         if self.rings is None:
             self.create_rings()
         projection = self.manager.project.layer_canvas.projection
@@ -251,8 +295,8 @@ class PolygonParentLayer(Folder, LineLayer):
         log.log(5, "Rendering polygon folder layer!!! pick=%s" % (picker))
         if picker.is_active and not self.can_render_for_picker(renderer):
             return
-        # the rings
-        # self.rebuild_renderer(renderer)
+        if self.rebuild_needed:
+            self.rebuild_renderer(renderer)
         if layer_visibility["polygons"]:
             ring_index = None if self.current_editing_layer is None else self.current_editing_layer.ring_index
             renderer.draw_polygons(self, picker, self.rings.color, color_floats_to_int(0, 0, 0, 1.0), 1, editing_polygon_index=ring_index)

@@ -49,6 +49,9 @@ class Boundary(object):
         return view.astype(np.float64)
         return view
 
+    def get_points(self):
+        return self.points[self.point_indexes]
+
     def generate_inside_hole_point(self):
         """
             bounday = a boundary point index list as returned from find_boundaries() above
