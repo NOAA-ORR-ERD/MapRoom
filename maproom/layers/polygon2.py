@@ -39,8 +39,6 @@ class PolygonBoundaryLayer(LineLayer):
 
     parent_point_index = Int
 
-    use_color_cycling = False
-
     ring_fill_color = Int
 
     ring_index = Int
@@ -54,6 +52,12 @@ class PolygonBoundaryLayer(LineLayer):
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
     draw_on_top_when_selected = True
+
+    def _style_default(self):
+        style = self.manager.get_default_style_for(self)
+        style.line_color = style.default_highlight_color
+        log.debug("_style_default for %s: %s" % (self.type, str(style)))
+        return style
 
     @property
     def area(self):
@@ -212,13 +216,11 @@ class PolygonParentLayer(Folder, LineLayer):
 
     def commit_editing_layer(self):
         layer = self.current_editing_layer
-        print(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
+        log.debug(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
         if layer is None:
             return
         boundary = layer.select_outer_boundary()
         if boundary is not None:
-            print(f"boundary: {boundary.points}")
-
             ring_index = layer.ring_index
             if len(boundary.points) == self.rings.count[ring_index]:
                 self.replace_ring_without_resizing(ring_index, boundary)
@@ -226,6 +228,7 @@ class PolygonParentLayer(Folder, LineLayer):
                 self.replace_ring_with_resizing(ring_index, boundary)
         else:
             log.error("no boundary found; not committing layer")
+            self.manager.project.window.error("Incomplete boundary; not updating polygon")
 
     def replace_ring_without_resizing(self, ring_index, boundary):
         # fast! will fit in exactly the same space
