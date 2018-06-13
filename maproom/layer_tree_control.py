@@ -45,6 +45,7 @@ class LayerTreeControl(wx.Panel):
         self.tree.Bind(treectrl.EVT_TREE_ITEM_CHECKED, self.handle_item_checked)
         self.tree.Bind(treectrl.EVT_TREE_BEGIN_DRAG, self.handle_begin_drag)
         self.tree.Bind(treectrl.EVT_TREE_END_DRAG, self.handle_end_drag)
+        self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGING, self.handle_selection_changing)
         self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
         self.tree.Bind(treectrl.EVT_TREE_ITEM_EXPANDING, self.handle_item_expanding)
         self.tree.Bind(wx.EVT_LEFT_DCLICK, self.handle_start_rename)
@@ -128,6 +129,9 @@ class LayerTreeControl(wx.Panel):
         if (layer is None):
             self.tree.UnselectAll()
         else:
+            old_layer = self.get_edit_layer()
+            if old_layer is not None and old_layer != layer:
+                old_layer.layer_deselected_hook()
             self.tree.CalculatePositions()
             self.set_edit_layer_recursive(layer, self.tree.GetRootItem())
 
@@ -334,11 +338,15 @@ class LayerTreeControl(wx.Panel):
         cmd = MoveLayerCommand(source_layer, target_layer, before, in_folder)
         self.project.process_command(cmd)
 
+    def handle_selection_changing(self, event):
+        layer = self.get_edit_layer()
+        log.debug("About to change from selected layer: %s" % layer)
+        layer.layer_deselected_hook()
+
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
         layer = self.get_edit_layer()
         log.debug("Currently selected layer: %s" % layer)
-        layer.layer_deselected_hook()
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         prefs = self.project.task.preferences
