@@ -43,6 +43,8 @@ class PolygonBoundaryLayer(LineLayer):
 
     ring_fill_color = Int
 
+    ring_index = Int
+
     feature_code = Int
 
     feature_name = Str
@@ -87,6 +89,14 @@ class PolygonBoundaryLayer(LineLayer):
 
     def layer_selected_hook(self):
         parent = self.manager.get_layer_parent(self)
+        parent.current_editing_layer = self
+        c = self.manager.project.layer_canvas
+        c.rebuild_renderer_for_layer(parent)
+
+    def layer_deselected_hook(self):
+        parent = self.manager.get_layer_parent(self)
+        parent.commit_editing_layer()
+        parent.current_editing_layer = None
         c = self.manager.project.layer_canvas
         c.rebuild_renderer_for_layer(parent)
 
@@ -109,14 +119,14 @@ class PolygonBoundaryLayer(LineLayer):
         self.ring_fill_color = color_array.get(feature_code, color_array[1])
         self.update_bounds()
 
-    def update_affected_points(self, indexes):
-        indexes = np.asarray(indexes, dtype=np.uint32)
-        print(f"points changed: {indexes}")
-        print(f"points changed in parent: {self.parent_point_map[indexes]}")
-        parent = self.manager.get_layer_parent(self)
-        changed_points = self.points[indexes]
-        parent.update_child_points(self.parent_point_map[indexes], changed_points)
-        return parent
+    # def update_affected_points(self, indexes):
+    #     indexes = np.asarray(indexes, dtype=np.uint32)
+    #     print(f"points changed: {indexes}")
+    #     print(f"points changed in parent: {self.parent_point_map[indexes]}")
+    #     parent = self.manager.get_layer_parent(self)
+    #     changed_points = self.points[indexes]
+    #     parent.update_child_points(self.parent_point_map[indexes], changed_points)
+    #     return parent
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if not self.manager.project.layer_tree_control.is_edit_layer(self):
@@ -136,6 +146,8 @@ class PolygonParentLayer(Folder, LineLayer):
     type = "shapefile"
 
     point_list = Any
+
+    current_editing_layer = Any
 
     visibility_items = ["points", "lines", "labels"]
 
@@ -182,6 +194,7 @@ class PolygonParentLayer(Folder, LineLayer):
         current_group_number = 0
         point_start_index = 0
         for child in self.get_child_layers():
+            child.ring_index = n_rings
             n_rings += 1
             ring_starts.append(child.parent_point_index)
             ring_counts.append(len(child.points))
@@ -194,6 +207,25 @@ class PolygonParentLayer(Folder, LineLayer):
         self.ring_index_to_layer = ring_index_to_layer
         log.debug(f"ring list: {self.rings} {type(self.rings)}")
         log.debug(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
+
+    def commit_editing_layer(self):
+        layer = self.current_editing_layer
+        print(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
+        if layer is None:
+            return
+        index = layer.ring_index
+        ring = self.rings[index]
+        num_points = len(layer.points)
+        if num_points <= ring['count']:
+            print(f"fast! will fit in same space without resizing")
+            boundary = layer.select_outer_boundary()
+            if boundary is not None:
+                print(f"boundary: {boundary.points}")
+                self.points[layer.parent_point_map[:num_points]] = boundary.points
+                ring.start = layer.parent_point_map[0]
+                print(f"befor: {self.point_adjacency_array[layer.parent_point_map]}")
+                self.point_adjacency_array[layer.parent_point_map[:num_points-1]].next = layer.parent_point_map[1:num_points]
+                print(f"after: {self.point_adjacency_array[layer.parent_point_map]}")
 
     def update_child_points(self, indexes, values):
         self.points[indexes] = values
@@ -222,7 +254,5 @@ class PolygonParentLayer(Folder, LineLayer):
         # the rings
         # self.rebuild_renderer(renderer)
         if layer_visibility["polygons"]:
-            renderer.draw_polygons(self, picker,
-                                   self.rings.color,
-                                   color_floats_to_int(0, 0, 0, 1.0),
-                                   1)
+            ring_index = None if self.current_editing_layer is None else self.current_editing_layer.ring_index
+            renderer.draw_polygons(self, picker, self.rings.color, color_floats_to_int(0, 0, 0, 1.0), 1, editing_polygon_index=ring_index)

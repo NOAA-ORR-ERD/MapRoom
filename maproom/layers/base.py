@@ -224,6 +224,11 @@ class Layer(HasTraits):
         selection changes to this layer"""
         pass
 
+    def layer_deselected_hook(self):
+        """Hook to allow layer to display some feedback when the layer
+        selection is removed from this layer"""
+        pass
+
     def is_folder(self):
         return False
 

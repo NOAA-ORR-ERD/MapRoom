@@ -338,6 +338,7 @@ class LayerTreeControl(wx.Panel):
         self.project.clear_all_selections(False)
         layer = self.get_edit_layer()
         log.debug("Currently selected layer: %s" % layer)
+        layer.layer_deselected_hook()
         self.project.update_layer_selection_ui(layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         prefs = self.project.task.preferences

@@ -64,6 +64,7 @@ def render_buffers_with_one_color(
     pygl,
     np.uint32_t alternate_type_index,
     gl.GLenum alternate_primitive_type,
+    np.uint32_t dashed_index,
 ):
     """
     Given an array of vertex buffer handles, a single color, an array of vertex
@@ -93,6 +94,9 @@ def render_buffers_with_one_color(
         )
         gl.glVertexPointer( 2, gl.GL_FLOAT, 0, NULL ) # FIXME: deprecated
 
+        if buffer_index == dashed_index:
+            gl.glEnable(gl.GL_LINE_STIPPLE)
+            gl.glLineStipple(6, 0x3333)
         if buffer_index == alternate_type_index:
             gl.glDrawArrays(
                 alternate_primitive_type,
@@ -105,6 +109,8 @@ def render_buffers_with_one_color(
                 0,
                 vertex_counts[ buffer_index ],
             )
+        if buffer_index == dashed_index:
+            gl.glDisable(gl.GL_LINE_STIPPLE)
 
     glBindBuffer( gl.GL_ARRAY_BUFFER, 0 )
 
