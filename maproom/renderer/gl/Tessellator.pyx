@@ -249,9 +249,9 @@ def tessellate(
                     <gl.GLvoid*>&raw_points[ point_index ],
                 )
                 polygon_point_index += 1
-#                print "Tessellator.pyx: loop #%d, point_index=%d capacity=%d count=%d" % (loop_index, polygon_point_index, state.point_capacity, state.point_count)
 
             point_index = point_adjacency[ point_index ]
+            # print(f"Tessellator.pyx: loop {loop_index}, start_point_index={start_point_index} point_index={point_index} polygon_point_index={polygon_point_index}")
             if point_index == start_point_index:
                 break
 
