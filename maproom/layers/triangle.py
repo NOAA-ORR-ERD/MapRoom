@@ -212,7 +212,7 @@ class TriangleLayer(PointLayer):
     def get_triangulated_points(self, layer, q, a):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(layer, allow_branches=True, allow_self_crossing=False)
-        boundaries.check_errors(True)
+        # boundaries.check_errors(True)
 
         progress_log.info("Triangulating...")
 
@@ -236,6 +236,8 @@ class TriangleLayer(PointLayer):
             params = params + "q" + str(q)
         if (a is not None):
             params = params + "a" + str(a)
+        if (len(boundaries) == 0):
+            params = params + "cO"  # allows triangulation without explicit boundary
 
         # we need to use projected points for the triangulation
         projected_points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[: len(layer.points)].view(np.float64).copy()

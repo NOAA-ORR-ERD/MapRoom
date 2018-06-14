@@ -67,6 +67,7 @@ cdef extern from "triangle.h":
 
 
 cdef unsigned int TIMEOUT = 1
+cdef unsigned int PROCESSING_TIMEOUT = 10
 
 
 @cython.boundscheck( False )
@@ -141,12 +142,15 @@ def triangulate_simple(
     connection.send( lines.shape[ 0 ] )
     connection.send_bytes( lines )
 
-    connection.send( hole_points_xy.shape[ 0 ] )
-    connection.send_bytes( hole_points_xy )
+    num_holes = hole_points_xy.shape[0]
+    connection.send(num_holes)
+    if num_holes > 0:
+        connection.send_bytes( hole_points_xy )
+    print("holes!", num_holes)
 
     # Receive data resulting from triangulation from child process. Allow
     # longer for the initial timeout since it includes triangulation time.
-    if not connection.poll( TIMEOUT * 5 ):
+    if not connection.poll(PROCESSING_TIMEOUT):
         cleanup_child( connection, child )
         raise RuntimeError( "Triangulation timeout." )
     cdef unsigned int out_point_count = <unsigned int>connection.recv()
@@ -308,14 +312,20 @@ def triangulate_simple_child( connection, utf8_param_text ):
     if not connection.poll( TIMEOUT ): return
     cdef unsigned int hole_point_count = <unsigned int>connection.recv()
 
-    cdef np.ndarray[ np.float64_t, ndim = 2 ] hole_points_xy = \
-       np.ndarray( ( hole_point_count, 2 ), np.float64 )
+    cdef np.ndarray[ np.float64_t, ndim = 2 ] hole_points_xy
+    cdef np.ndarray[ np.float64_t, ndim = 2 ] hole_points_xy_64
+    if hole_point_count > 0:
+        hole_points_xy = np.ndarray( ( hole_point_count, 2 ), np.float64 )
 
-    if not connection.poll( TIMEOUT ): return
-    connection.recv_bytes_into( hole_points_xy )
+        if not connection.poll( TIMEOUT ): return
+        connection.recv_bytes_into( hole_points_xy )
 
-    cdef np.ndarray[ np.float64_t, ndim = 2 ] hole_points_xy_64 = \
-       hole_points_xy.astype( np.float64 )
+        hole_points_xy_64 = hole_points_xy.astype( np.float64 )
+        in_data.holelist = <double*>hole_points_xy_64.data
+        in_data.numberofholes = hole_points_xy.shape[ 0 ]
+    else:
+        in_data.holelist = NULL
+        in_data.numberofholes = 0
 
     # Pass the data to Triangle and triangulate with it.
     in_data.pointlist = <double*>points_xy_64.data
@@ -332,8 +342,6 @@ def triangulate_simple_child( connection, utf8_param_text ):
     in_data.segmentlist = <int*>lines.data # Note the conversion to signed!
     in_data.segmentmarkerlist = NULL
     in_data.numberofsegments = lines.shape[ 0 ]
-    in_data.holelist = <double*>hole_points_xy_64.data
-    in_data.numberofholes = hole_points_xy.shape[ 0 ]
     in_data.regionlist = NULL
     in_data.numberofregions = 0
 
