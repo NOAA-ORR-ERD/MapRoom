@@ -134,6 +134,7 @@ class LayerTreeControl(wx.Panel):
                 old_layer.layer_deselected_hook()
             self.tree.CalculatePositions()
             self.set_edit_layer_recursive(layer, self.tree.GetRootItem())
+            layer.layer_selected_hook()
 
     def set_edit_layer_recursive(self, layer, item):
         (item_layer, ) = self.tree.GetItemData(item)

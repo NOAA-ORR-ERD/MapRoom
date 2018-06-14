@@ -835,6 +835,16 @@ class RenameLayerAction(LayerAction):
         GUI.invoke_later(self.active_editor.layer_tree_control.start_rename, layer)
 
 
+class EditLayerAction(EditorAction):
+    name = 'Edit Layer'
+    tooltip = 'Edit the currently selected layer'
+
+    def perform(self, event):
+        layer = event.popup_data['layer']
+        polygon_layer = layer.get_child_polygon_layer(event.popup_data['object_index'])
+        self.active_editor.layer_tree_control.set_edit_layer(polygon_layer)
+
+
 class StartTimeAction(LayerAction):
     name = 'Start Time'
     tooltip = 'Set time that layer becomes active'

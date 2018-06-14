@@ -9,7 +9,7 @@ from . library import rect
 from .mouse_commands import ViewportCommand, SetAnchorCommand, CropRectCommand, InsertPointCommand, InsertLineCommand, SplitLineCommand, ConnectPointsCommand
 from .vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
 from .menu_commands import PolygonEditLayerCommand
-
+from .actions import EditLayerAction
 
 class NoObjectError(RuntimeError):
     pass
@@ -215,6 +215,7 @@ class MouseHandler(object):
 
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+            print(f"right mouse down: {self} {layer} {object_type} {object_index}")
             if (e.clickable_object_is_ugrid_point()):
                 self.right_clicked_on_point(event, layer, object_index)
             elif (e.clickable_object_is_ugrid_line()):
@@ -239,8 +240,12 @@ class MouseHandler(object):
     def right_clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         pass
 
-    def right_clicked_on_interior(self, event, layer, polygon_index, world_point):
-        pass
+    def right_clicked_on_interior(self, event, layer, object_index, world_point):
+        print(f"Right clicked on {layer}")
+        menu = [EditLayerAction]
+        c = self.layer_canvas
+        e = c.project
+        e.popup_context_menu_from_actions(self.layer_canvas, menu, popup_data={'layer':layer, 'object_index':object_index})
 
     def right_clicked_on_empty_space(self, event, layer, world_point):
         pass

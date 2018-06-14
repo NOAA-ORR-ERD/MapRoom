@@ -185,6 +185,9 @@ class PolygonParentLayer(Folder, LineLayer):
             return "0"
         return LineLayer.get_info_panel_text(self, prop)
 
+    def get_child_polygon_layer(self, object_index):
+        return self.ring_index_to_layer[object_index]
+
     def set_parent_points(self, parent_points):
         self.points = parent_points
         log.debug(f"parent_points={parent_points[0:10]}")
