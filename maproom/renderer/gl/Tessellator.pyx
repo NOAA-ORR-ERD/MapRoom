@@ -65,7 +65,7 @@ def init_vertex_buffers(
     glGenBuffers = <glGenBuffers_pointer>0
     if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        proc = getExtensionProcedure("glGenBuffers")
+        proc = getExtensionProcedure(b"glGenBuffers")
         if proc is not None:
             glGenBuffers = <glGenBuffers_pointer><size_t>proc
     if glGenBuffers == <glGenBuffers_pointer>0:
@@ -150,10 +150,10 @@ def tessellate(
     glBufferData = <glBufferData_pointer>0
     if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        proc = getExtensionProcedure("glBindBuffer")
+        proc = getExtensionProcedure(b"glBindBuffer")
         if proc is not None:
             glBindBuffer = <glBindBuffer_pointer><size_t>proc
-        proc = getExtensionProcedure("glBufferData")
+        proc = getExtensionProcedure(b"glBufferData")
         if proc is not None:
             glBufferData = <glBufferData_pointer><size_t>proc
     if glBindBuffer == <glBindBuffer_pointer>0:

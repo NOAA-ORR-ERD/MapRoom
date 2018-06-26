@@ -25,7 +25,7 @@ def render_buffers_with_colors(
     glBindBuffer = <glBindBuffer_pointer>0
     if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        proc = getExtensionProcedure("glBindBuffer")
+        proc = getExtensionProcedure(b"glBindBuffer")
         if proc is not None:
             glBindBuffer = <glBindBuffer_pointer><size_t>proc
     if glBindBuffer == <glBindBuffer_pointer>0:
@@ -77,7 +77,7 @@ def render_buffers_with_one_color(
     glBindBuffer = <glBindBuffer_pointer>0
     if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        proc = getExtensionProcedure("glBindBuffer")
+        proc = getExtensionProcedure(b"glBindBuffer")
         if proc is not None:
             glBindBuffer = <glBindBuffer_pointer><size_t>proc
     if glBindBuffer == <glBindBuffer_pointer>0:
