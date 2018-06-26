@@ -29,7 +29,7 @@ a = Analysis(["%s.py" % appname],
 
 for pymod, path, tag in sorted(a.pure):
   if ".qt" in pymod or ".test" in pymod:
-    print "why is this still here?", pymod
+    print("why is this still here?", pymod)
 
 # pytz zip bundle from https://github.com/pyinstaller/pyinstaller/wiki/Recipe-pytz-zip-file
 # DOESN'T WORK ON MAC!
@@ -43,7 +43,7 @@ if sys.platform == "darwin":
         a.scripts,
         exclude_binaries=True,
         name=appname,
-        debug=False,
+        debug=True,
         strip=True,
         upx=True,
         console=False,

@@ -72,10 +72,10 @@ def collect_submodules(package, filter=lambda name: True):
                 if ispkg:
                     try:
                         __import__(name)
-                    except ImportError, e:
+                    except ImportError as e:
                         if onerror is not None:
                             onerror(name, e)
-                    except Exception, e:
+                    except Exception as e:
                         if onerror is not None:
                             onerror(name, e)
                         else:
@@ -129,7 +129,7 @@ for s in subpkgs:
     hiddenimports.extend(collect_submodules(s, qt_filter))
 
 if DEBUG:
-    print "\n".join(sorted(hiddenimports))
+    print("\n".join(sorted(hiddenimports)))
 
 subpkgs = [
     "traitsui",
@@ -167,9 +167,9 @@ for s in subpkgs:
             skipped.append((src, dest))
 
 if DEBUG:
-    print "\n".join(["%s -> %s" % d for d in datas])
-    print "SKIPPED:"
-    print "\n".join(["%s -> %s" % d for d in skipped])
+    print("\n".join(["%s -> %s" % d for d in datas]))
+    print("SKIPPED:")
+    print("\n".join(["%s -> %s" % d for d in skipped]))
 
 # Restore sys.executable if changed because using pythonw causes failures
 # further along in the process, and this is the only place where this hack

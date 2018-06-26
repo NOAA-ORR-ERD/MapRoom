@@ -24,7 +24,7 @@ if "-d" in sys.argv:
     onefile = False
 
 
-execfile("../maproom/Version.py")
+exec(compile(open("../maproom/Version.py").read(), "../maproom/Version.py", 'exec'))
 
 from subprocess import Popen, PIPE
 
@@ -32,7 +32,7 @@ def run(args):
     p = Popen(args, stdout=PIPE, bufsize=1)
     with p.stdout:
         for line in iter(p.stdout.readline, b''):
-            print line,
+            print(line, end=' ')
     p.wait()
 
 # can't use MapRoom because MapRoom is a directory name and the filesystem is
@@ -53,7 +53,7 @@ final_zip = "%s-%s-darwin.tbz" % (final_target, VERSION)
 dest_exe = "%s/%s" % (dest_dir, final_exe)
 dest_zip = "%s/%s" % (dest_dir, final_zip)
 
-print "Building %s" % build_app
+print("Building %s" % build_app)
 args = ['pyinstaller', '-y', '--debug', '--windowed']
 if onefile:
     args.append('--onefile')
@@ -62,45 +62,45 @@ run(args)
 
 try:
     os.mkdir(dest_dir)
-    print "Creating %s" % dest_dir
+    print("Creating %s" % dest_dir)
 except OSError:
     # Directory exists; remove old stuff
     if os.path.exists(dest_app):
-        print "Removing old %s" % dest_app
+        print("Removing old %s" % dest_app)
         shutil.rmtree(dest_app)
     if os.path.exists(dest_zip):
-        print "Removing old %s" % dest_zip
+        print("Removing old %s" % dest_zip)
         os.unlink(dest_zip)
     if os.path.exists(dest_app):
-        print "Removing old %s" % dest_exe
+        print("Removing old %s" % dest_exe)
         shutil.rmtree(dest_exe)
 
 if win:
     if onefile:
-        print "Copying %s -> %s" % (build_app, dest_exe)
+        print("Copying %s -> %s" % (build_app, dest_exe))
         shutil.copyfile(build_app, dest_exe)
     else:
-        print "One-folder build at: dist/%s" % build_target
+        print("One-folder build at: dist/%s" % build_target)
 elif mac:
     contents = "%s/Contents" % build_app
-    print "Copying new Info.plist"
+    print("Copying new Info.plist")
     shutil.copyfile("Info.plist", "%s/Info.plist" % contents)
 
     dup = "%s/MacOS/libwx_osx_cocoau-3.0.dylib" % contents    
     if os.path.exists(dup):
-        print "Fixing duplicate wxPython libs"
+        print("Fixing duplicate wxPython libs")
         os.unlink(dup)
         os.symlink("libwx_osx_cocoau-3.0.0.2.0.dylib", dup)
 
-    print "Fixing missing symlink to geos library"
+    print("Fixing missing symlink to geos library")
     os.symlink("libgeos_c.1.dylib", "%s/MacOS/libgeos_c.dylib" % contents)
 
-    print "Copying %s -> %s & removing architectures other than x86_64" % (build_app, dest_app)
+    print("Copying %s -> %s & removing architectures other than x86_64" % (build_app, dest_app))
     #shutil.copytree(build_app, dest_app, True)
     run(['/usr/bin/ditto', '-arch', 'x86_64', build_app, dest_app])
 
-    print "Signing (with self-signed cert)"
+    print("Signing (with self-signed cert)")
     run(["codesign", "-s", "test1", "--deep", dest_app])
 
-    print "Zipping %s" % dest_zip
+    print("Zipping %s" % dest_zip)
     run(['tar', 'cfj', dest_zip, '-C', dest_dir, final_app])
