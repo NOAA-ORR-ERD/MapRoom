@@ -29,6 +29,19 @@ class TestBNA(object):
 
 
 if __name__ == "__main__":
-    t = TestBNA()
-    t.setup()
-    t.test_simple()
+    # t = TestBNA()
+    # t.setup()
+    # t.test_simple()
+    import sys
+    project = MockProject()
+    project.load_file(sys.argv[1], "application/x-maproom-shapefile")
+    for layer in project.layer_manager.flatten():
+        try:
+            layer.create_rings()
+        except AttributeError:
+            pass
+        else:
+            for r in layer.rings:
+                print(f"ring: {r}")
+                p = layer.points[r["start"]:r["start"] + r["count"]]
+                print(f"points: {p}")
