@@ -5,7 +5,7 @@ NOTE! When debugging, this must be run from the directory level above
 pyinstaller so the script can find the symlinked dependency
 directories.
 """
-DEBUG = True
+DEBUG = False
 
 import os
 import sys
@@ -124,7 +124,7 @@ subpkgs = [
     "maproom",
 ]
 
-hiddenimports = ["netCDF4_utils"]
+hiddenimports = ["netCDF4.utils", "cftime"]
 for s in subpkgs:
     hiddenimports.extend(collect_submodules(s, qt_filter))
 
@@ -176,3 +176,17 @@ if DEBUG:
 # is needed.
 if save_exec is not None:
     sys.executable = save_exec
+
+# _gdal shared library is not found (see pyintaller issue
+# https://github.com/pyinstaller/pyinstaller/issues/1522), so this hack adds it
+# to the build directory. On windows, it adds it as _gdal.cp36-win_amd64.pyd
+# instead of just _glad.pyd, but it seems to work anyway.
+binaries = []
+from osgeo import gdal
+from imp import get_suffixes
+gdal_folder = os.path.abspath(os.path.dirname(gdal.__file__))
+for suffix in get_suffixes():
+    if suffix[2] == 3:  # C_EXTENSION
+        gdal_pyd_path = os.path.join(gdal_folder, '_gdal%s' % suffix[0])
+        if os.path.exists(gdal_pyd_path):
+            binaries = [(gdal_pyd_path, ""), ]
