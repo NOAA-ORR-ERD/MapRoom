@@ -57,6 +57,7 @@ print("Building %s" % build_app)
 args = ['pyinstaller', '-y', '--debug', '--windowed']
 if onefile:
     args.append('--onefile')
+args = ['pyinstaller', '-y']
 args.append('%s.spec' % build_target)
 run(args)
 

@@ -1,6 +1,7 @@
 # -*- mode: python -*-
 
 block_cipher = None
+DEBUG = True
 
 appname = "MapRoom_build"
 bundle = True
@@ -14,15 +15,15 @@ import sys
 sys.modules['FixTk'] = None
 
 import os
-maproom_path = os.path.abspath("..")
 
+pathex = [os.path.abspath("..")]
 
 a = Analysis(["%s.py" % appname],
-             pathex=[maproom_path],
+             pathex=pathex,
              binaries=None,
              datas=None,
              hiddenimports=[],
-             hookspath=[os.path.join(maproom_path, 'pyinstaller')],
+             hookspath=['.'],
              runtime_hooks=[],
              excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'Cython', 'sphinx', 'nose', 'pygments'],
              cipher=block_cipher)
@@ -43,9 +44,9 @@ if sys.platform == "darwin":
         a.scripts,
         exclude_binaries=True,
         name=appname,
-        debug=True,
-        strip=True,
-        upx=True,
+        debug=DEBUG,
+        strip=not DEBUG,
+        upx=not DEBUG,
         console=False,
         icon=icon)
     coll = COLLECT(exe,
@@ -53,7 +54,7 @@ if sys.platform == "darwin":
         a.zipfiles,
         a.datas,
         strip=None,
-        upx=True,
+        upx=not DEBUG,
         name=appname)
     app = BUNDLE(coll,
        name="%s.app" % appname,
