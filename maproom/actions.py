@@ -12,7 +12,7 @@ from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, T
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 from . import pane_layout
-from .menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand
+from .menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand, PolygonEditLayerCommand
 from .mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLonCommand
 from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from .library.thread_utils import BackgroundWMSDownloader
@@ -840,9 +840,9 @@ class EditLayerAction(EditorAction):
     tooltip = 'Edit the currently selected layer'
 
     def perform(self, event):
-        layer = event.popup_data['layer']
-        polygon_layer = layer.get_child_polygon_layer(event.popup_data['object_index'])
-        self.active_editor.layer_tree_control.set_edit_layer(polygon_layer)
+        d = event.popup_data
+        cmd = PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'])
+        self.active_editor.process_command(cmd)
 
 
 class StartTimeAction(LayerAction):

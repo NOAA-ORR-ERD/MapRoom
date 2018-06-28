@@ -46,8 +46,6 @@ class VectorObjectLayer(LineLayer):
 
     mouse_mode_toolbar = Str("AnnotationLayerToolBar")
 
-    rebuild_needed = Bool(False)
-
     rotation = Float(0.0)
 
     border_width = Int(10)

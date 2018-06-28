@@ -4,7 +4,7 @@ from osgeo import ogr, osr
 import numpy as np
 
 from maproom.library.shapefile_utils import load_shapefile, load_bna_items
-from maproom.layers import PolygonParentLayer, PolygonBoundaryLayer, PointLayer
+from maproom.layers import PolygonParentLayer
 from ...renderer import data_types
 from .common import BaseLayerLoader
 
@@ -117,48 +117,15 @@ class ShapefileLoader(BaseLayerLoader):
         parent.mime = self.mime
         layers.append(parent)
 
-        def create_layer(parent_points, points, layer_cls, default_name, verify_winding=False, positive_winding=True):
-            layer = layer_cls(manager=manager)
-            index, count, name, feature_code, feature_name = points
-            layer.name = name if name else default_name
-            layer.set_data_from_parent_points(parent_points, index, count, feature_code, feature_name)
-            if verify_winding:
-                layer.verify_winding(positive_winding)
-            layer.file_path = metadata.uri
-            layer.mime = self.mime
-            return layer
-
-        def create_polygon(parent_points, geom_sublist, name):
-            points = geom_sublist[0]
-            layer = create_layer(parent_points, points, PolygonBoundaryLayer, name, True, True)
-            layer.verify_winding()
-            layers.append(layer)
-
-            log.debug(f"geom_sublist: {geom_sublist}")
-            for j, points in enumerate(geom_sublist[1:]):
-                layer = create_layer(parent_points, points, PolygonBoundaryLayer, f"Hole #{j+1}", True, False)
-                layers.append(layer)
-
         parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(metadata.uri)
+        geom_type = geometry_list[0]
+        items = geometry_list[1:]
+        print(geom_type)
+        for item in geometry_list[1:]:
+            print(item)
+        print()
         if (parent.load_error_string == ""):
-            if geometry_list:
-                parent_points = data_types.make_points(len(point_list))
-                parent_points.view(data_types.POINT_XY_VIEW_DTYPE).xy[:] = point_list
-                progress_log.info("Creating polygon layer...")
-                for i, item in enumerate(geometry_list):
-                    item_type = item[0]
-                    log.debug(f"item {i}: {item_type}, {len(item[1])} points")
-                    if item_type == "MultiPolygon":
-                        for j, poly in enumerate(item[1:]):
-                            create_polygon(parent_points, poly, "MultiPolygon #{i+1}.{j+1}")
-                    else:
-                        if item_type == "Point":
-                            points = item[1]
-                            layer = create_layer(parent_points, points, PointLayer, f"Points #{i+1}")
-                            layers.append(layer)
-                        else:
-                            create_polygon(parent_points, item[1:], f"Polygon #{i+1}")
-                parent.set_parent_points(parent_points)
+            parent.set_geometry(point_list, geometry_list)
         return layers
 
     def save_to_local_file(self, filename, layer):

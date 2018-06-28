@@ -41,6 +41,23 @@ TRIANGLE_POINTS_VIEW_DTYPE = np.dtype([
     ("color", np.uint32),
     ("state", np.uint32)
 ])
+
+# point adjacency flag can be:
+# bit 0: if 1, connect previous point to this point
+# bit 1: last point
+# bit 2: only checked on last point: connect to starting point
+# any points after this in the ring are unconnected points
+# bit 31: if 1, start of new ring and bits 0 - 30 are number of points
+#
+# the meaning of state depends on its position in the points array
+# entry corresponding to starting point holds state for entire polygon (see maproom/layers/state.py)
+# next entry is feature code, because if there's only one entry, it's a point
+# next entry holds fill color for entire polygon, because it requires at least 3 points to have a color
+RING_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
+    ("point_flag", np.int32),
+    ("state", np.int32),
+])
+
 POLYGON_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
     ("next", np.uint32),   # Index of next adjacent point in ring
     ("ring_index", np.uint32)  # Index of ring this point is in
@@ -100,6 +117,14 @@ def make_polygons(count):
     ).view(np.recarray)
 
 
+def make_ring_adjacency_array(count):
+    # default point_flag is to connect last point
+    return np.repeat(
+        np.array([(1, 0)], dtype=RING_ADJACENCY_DTYPE),
+        count,
+    ).view(np.recarray)
+
+
 def make_point_adjacency_array(count):
     return np.repeat(
         np.array([(0, 0)], dtype=POLYGON_ADJACENCY_DTYPE),
@@ -120,29 +145,20 @@ def compute_projected_point_data(points, projection, hidden_points=None):
     return projected_point_data
 
 
-def compute_rings(f_ring_starts, f_ring_counts, f_ring_groups=None, f_ring_colors=0):
-    n_rings = np.alen(f_ring_starts)
-    rings = make_polygons(n_rings)
-    rings.start[0:n_rings] = f_ring_starts
-    rings.count[0:n_rings] = f_ring_counts
-    rings.color[0:n_rings] = f_ring_colors
-    if f_ring_groups is None:
-        # if not otherwise specified, each polygon is in its own group
-        rings.group = np.arange(n_rings)
-    else:
-        # grouping of rings allows for holes: the first polygon is
-        # the outer boundary and subsequent rings in the group are
-        # the holes
-        rings.group = np.asarray(f_ring_groups, dtype=np.uint32)
-    n_points = f_ring_starts[-1] + f_ring_counts[-1]
-    point_adjacency_array = make_point_adjacency_array(n_points)
-
-    total = f_ring_starts[0]
-    for p in range(n_rings):
-        c = rings.count[p]
-        point_adjacency_array.ring_index[total: total + c] = p
-        point_adjacency_array.next[total: total + c] = np.arange(total + 1, total + c + 1)
-        point_adjacency_array.next[total + c - 1] = total
-        total += c
-
-    return rings, point_adjacency_array
+def compute_rings(point_list, geom_list, feature_code_to_color):
+    ring_adjacency = make_ring_adjacency_array(len(point_list))
+    flattened_geom_list = []
+    default_color = feature_code_to_color.get("default", 0x12345678)
+    for geom in geom_list:
+        geom_type = geom[0]
+        for item in geom[1:]:
+            print("Adding geometry", item)
+            flattened_geom_list.append(item)
+            ring_adjacency[item.start_index]['point_flag'] = -item.count
+            ring_adjacency[item.start_index + item.count - 1]['point_flag'] = 2
+            ring_adjacency[item.start_index]['state'] = 0
+            if item.count > 0:
+                ring_adjacency[item.start_index + 1]['state'] = item.feature_code
+            if item.count > 1:
+                ring_adjacency[item.start_index + 2]['state'] = feature_code_to_color.get(item.feature_code, default_color)
+    return flattened_geom_list, ring_adjacency

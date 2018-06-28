@@ -13,29 +13,30 @@ from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 
-from . import LineLayer, Folder, state
+from . import PointLayer, LineLayer, Folder, state
 
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
-color_array = {
+feature_code_to_color = {
     1: color_floats_to_int(0.25, 0.5, 0, 0.10),  # green
     2: color_floats_to_int(0.0, 0.0, 1.0, 0.10),  # blue
     3: color_floats_to_int(0.5, 0.5, 0.5, 0.10),  # gray
     4: color_floats_to_int(0.9, 0.9, 0.9, 0.15),  # mapbounds
     5: color_floats_to_int(0.0, 0.2, 0.5, 0.15),  # spillable
+    "default": color_floats_to_int(0.8, 0.8, 0.8, 0.10),  # light gray
 }
 
 
-class PolygonBoundaryLayer(LineLayer):
-    """Layer for points/lines/polygons.
+class RingEditLayer(LineLayer):
+    """Layer for editing rings
 
     """
-    name = "Polygon Boundary"
+    name = "Ring Edit"
 
-    type = "polygon_boundary"
+    type = "ring_edit"
 
     parent_point_index = Int
 
@@ -52,6 +53,10 @@ class PolygonBoundaryLayer(LineLayer):
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
     draw_on_top_when_selected = True
+
+    parent_layer = Any
+
+    transient_edit_layer = True
 
     def _style_default(self):
         style = self.manager.get_default_style_for(self)
@@ -91,19 +96,6 @@ class PolygonBoundaryLayer(LineLayer):
             self.reverse_line_direction()
             log.debug(f"reversed: area={area} cw={self.is_clockwise}")
 
-    def layer_selected_hook(self):
-        parent = self.manager.get_layer_parent(self)
-        parent.current_editing_layer = self
-        c = self.manager.project.layer_canvas
-        c.rebuild_renderer_for_layer(parent)
-
-    def layer_deselected_hook(self):
-        parent = self.manager.get_layer_parent(self)
-        parent.commit_editing_layer()
-        parent.current_editing_layer = None
-        c = self.manager.project.layer_canvas
-        c.rebuild_renderer_for_layer(parent)
-
     def set_data_from_parent_points(self, parent_points, index, count, feature_code, feature_name):
         self.parent_point_index = index
         self.parent_point_map = np.arange(index, index + count, dtype=np.uint32)
@@ -123,23 +115,14 @@ class PolygonBoundaryLayer(LineLayer):
         self.ring_fill_color = color_array.get(feature_code, color_array[1])
         self.update_bounds()
 
-    # def update_affected_points(self, indexes):
-    #     indexes = np.asarray(indexes, dtype=np.uint32)
-    #     print(f"points changed: {indexes}")
-    #     print(f"points changed in parent: {self.parent_point_map[indexes]}")
-    #     parent = self.manager.get_layer_parent(self)
-    #     changed_points = self.points[indexes]
-    #     parent.update_child_points(self.parent_point_map[indexes], changed_points)
-    #     return parent
+    def set_data_from_geometry(self, points):
+        self.set_simple_data(points)
 
-    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
-        if not self.manager.project.layer_tree_control.is_edit_layer(self):
-            log.debug(f"not edit layer, skipping verdat editing for {self}")
-            return
-        LineLayer.render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker)
+    def update_transient_layer(self, command):
+        return None
 
 
-class PolygonParentLayer(Folder, LineLayer):
+class PolygonParentLayer(PointLayer):
     """Parent folder for group of polygons. Direct children will be
     PolygonBoundaryLayer objects (with grandchildren will be HoleLayers) or
     PointLayer objects.
@@ -152,6 +135,12 @@ class PolygonParentLayer(Folder, LineLayer):
     rebuild_needed = Bool(False)
 
     point_list = Any
+
+    geometry_list = Any
+
+    ring_adjacency = Any
+
+    rings = Any
 
     current_editing_layer = Any
 
@@ -180,13 +169,30 @@ class PolygonParentLayer(Folder, LineLayer):
                 return str(len(self.points) - 1)  # zeroth point is a NaN
             return "0"
         if prop == "Polygon count":
-            if self.rings is not None:
-                return str(len(self.rings))
+            if self.ring_adjacency is not None:
+                polygon_count = len(np.where(self.ring_adjacency['point_flag'] < 0)[0])
+                return str(polygon_count)
             return "0"
         return LineLayer.get_info_panel_text(self, prop)
 
     def get_child_polygon_layer(self, object_index):
-        return self.ring_index_to_layer[object_index]
+        edit_layer = self.get_child_layers()[0]
+        print(f"editing polygon {object_index}")
+        r = self.rings[object_index]
+        start = r['start']
+        end = start + r['count']
+        edit_layer.set_simple_data(self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:end])
+        edit_layer.rebuild_needed = True
+        edit_layer.ring_index = object_index
+        edit_layer.name = f"Editing polygon {object_index+1}"
+        return edit_layer
+
+    def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
+        r = self.rings[object_index]
+        start = r['start']
+        end = start + r['count']
+        geom = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:end]
+        return geom, None
 
     def set_parent_points(self, parent_points):
         self.points = parent_points
@@ -194,34 +200,48 @@ class PolygonParentLayer(Folder, LineLayer):
         self.rings = None
 
     def create_rings(self):
-        n_rings = 0
-        ring_starts = []
-        ring_counts = []
-        ring_groups = []
-        ring_color = []
-        ring_index_to_layer = []
-        current_group_number = 0
-        point_start_index = 0
-        for child in self.get_child_layers():
-            child.ring_index = n_rings
-            n_rings += 1
-            ring_starts.append(child.parent_point_index)
-            ring_counts.append(len(child.points))
-            ring_color.append(child.ring_fill_color)
-            ring_index_to_layer.append(child)
-            if child.is_clockwise:
-                current_group_number += 1
-            ring_groups.append(current_group_number)
-        self.rings, self.point_adjacency_array = data_types.compute_rings(ring_starts, ring_counts, ring_groups, ring_color)
-        self.ring_index_to_layer = ring_index_to_layer
-        log.debug(f"ring list: {self.rings} {type(self.rings)}")
-        log.debug(f"points: {point_start_index}, from rings: {self.rings[-1][0] + self.rings[-1][1]}")
+        print("creating rings from", self.ring_adjacency)
+        polygon_starts = np.where(self.ring_adjacency['point_flag'] < 0)[0]
+        print("polygon_starts", polygon_starts)
+        polygon_counts = -self.ring_adjacency[polygon_starts]['point_flag']
+        print("polygon counts", polygon_counts)
+        polys = data_types.make_polygons(len(polygon_counts))
+        paa = data_types.make_point_adjacency_array(len(self.points))
+        group_index = 0
+        for ring_index, (start, count) in enumerate(zip(polygon_starts, polygon_counts)):
+            end = start + count
+            print("poly:", start, end)
+            paa[start:end]['next'] = np.arange(start+1, end+1, dtype=np.uint32)
+            paa[end-1]['next'] = start
+            paa[start:end]['ring_index'] = ring_index
+            polys[ring_index]['start'] = start
+            polys[ring_index]['count'] = count
+            is_hole = count > 1 and self.ring_adjacency[start + 1]['state'] < 0
+            if not is_hole:
+                group_index += 1
+            polys[ring_index]['group'] = group_index
+            if count > 2:
+                color = self.ring_adjacency[start + 2]['state']
+            else:
+                color = 0x12345678
+            polys[ring_index]['color'] = color
+        print(paa)
+        print(polys)
+        self.rings = polys
+        self.point_adjacency_array = paa
+
+    def set_geometry(self, point_list, geom_list):
+        self.set_data(point_list)
+        print("points", self.points)
+        self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, geom_list, feature_code_to_color)
+        print("adjacency", self.ring_adjacency)
 
     def commit_editing_layer(self):
         layer = self.current_editing_layer
         log.debug(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
         if layer is None:
             return
+        layer.name = "<right click on polygon to edit>"
         boundary = layer.select_outer_boundary()
         if boundary is not None:
             ring_index = layer.ring_index
@@ -292,6 +312,7 @@ class PolygonParentLayer(Folder, LineLayer):
         projection = self.manager.project.layer_canvas.projection
         projected_point_data = data_types.compute_projected_point_data(self.points, projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
+        # renderer.set_rings(self.ring_adjacency)
         renderer.set_polygons(self.rings, self.point_adjacency_array)
 
     def can_render_for_picker(self, renderer):

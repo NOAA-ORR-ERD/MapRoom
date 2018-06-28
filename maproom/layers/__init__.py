@@ -10,7 +10,7 @@ from .compass_rose import CompassRose
 from .timestamp import Timestamp
 from .triangle import TriangleLayer
 from .polygon import PolygonLayer, RNCLoaderLayer
-from .polygon2 import PolygonParentLayer, PolygonBoundaryLayer
+from .polygon2 import PolygonParentLayer, RingEditLayer
 from .raster import RasterLayer
 from .wms import WMSLayer
 from .tiles import TileLayer

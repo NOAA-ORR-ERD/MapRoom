@@ -1,3 +1,5 @@
+import collections
+
 import numpy as np
 from fs.opener import opener, fsopen
 
@@ -14,6 +16,10 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
+GeomInfo = collections.namedtuple('GeomInfo', 'start_index count name feature_code feature_name')
+
+
+
 def parse_geom(geom, point_list):
     item = None
     name = ""
@@ -27,33 +33,33 @@ def parse_geom(geom, point_list):
             points = np.array(poly.exterior.coords[:-1], dtype=np.float64)
             index = len(point_list)
             point_list.extend(points)
-            sub_item = [poly.geom_type, (index, len(points), name, feature_code, feature_name)]
+            sub_item = [poly.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
             for hole in poly.interiors:
                 points = np.asarray(hole.coords[:-1], dtype=np.float64)
                 index = len(point_list)
                 point_list.extend(points)
-                sub_item.append((index, len(points), name, feature_code, feature_name))
+                sub_item.append(GeomInfo(index, len(points), name, -feature_code, feature_name))
             item.append(sub_item)
     elif geom.geom_type == 'Polygon':
         points = np.array(geom.exterior.coords[:-1], dtype=np.float64)
         index = len(point_list)
         point_list.extend(points)
-        item = [geom.geom_type, (index, len(points), name, feature_code, feature_name)]
+        item = [geom.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
         for hole in geom.interiors:
             points = np.asarray(hole.coords[:-1], dtype=np.float64)
             index = len(point_list)
             point_list.extend(points)
-            item.append((index, len(points), name, feature_code, feature_name))
+            item.append(GeomInfo(index, len(points), name, -feature_code, feature_name))
     elif geom.geom_type == 'LineString':
         points = np.asarray(geom.coords, dtype=np.float64)
         index = len(point_list)
         point_list.extend(points)
-        item = [geom.geom_type, (index, len(points), name, feature_code, feature_name)]
+        item = [geom.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
     elif geom.geom_type == 'Point':
         points = np.asarray(geom.coords, dtype=np.float64)
         index = len(point_list)
         point_list.extend(points)
-        item = [geom.geom_type, (index, len(points), name, feature_code, feature_name)]
+        item = [geom.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
     else:
         log.warning(f"Unsupported geometry type {geom.geom_type}")
     return item
@@ -89,7 +95,6 @@ def parse_ogr(dataset, point_list):
 def load_shapefile(uri):
     geometry_list = []
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
-    point_list.append((np.nan, np.nan))  # zeroth point is a NaN so it can be used for deleted points
     try:
         # Try fiona first
         error, source = get_fiona(uri)

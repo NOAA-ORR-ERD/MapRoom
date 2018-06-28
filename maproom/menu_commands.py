@@ -9,7 +9,7 @@ from .layers import CompassRose
 from .layers import Timestamp
 from .layers import EmptyLayer
 from .layers import Graticule
-from .layers import LineEditLayer
+from .layers import RingEditLayer
 from .layers import LineLayer
 from .layers import PolygonLayer
 from .layers import TileLayer
@@ -675,7 +675,7 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = LineEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, object_index=self.obj_index)
+        p = RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, ring_index=self.obj_index)
 
         # arbitrarily choose sub_index 0 and ring_index 0; we only need to get
         # the shapely geometry object

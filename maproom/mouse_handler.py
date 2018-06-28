@@ -223,7 +223,7 @@ class MouseHandler(object):
                 self.right_clicked_on_line_segment(event, layer, object_index, world_point)
             else:  # anything else is the interior of the layer
                 world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                self.right_clicked_on_interior(event, layer, object_index, world_point)
+                self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
             self.right_clicked_on_different_layer(event, e.clickable_object_in_layer)
@@ -240,12 +240,12 @@ class MouseHandler(object):
     def right_clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         pass
 
-    def right_clicked_on_interior(self, event, layer, object_index, world_point):
+    def right_clicked_on_interior(self, event, layer, object_type, object_index, world_point):
         print(f"Right clicked on {layer}")
         menu = [EditLayerAction]
         c = self.layer_canvas
         e = c.project
-        e.popup_context_menu_from_actions(self.layer_canvas, menu, popup_data={'layer':layer, 'object_index':object_index})
+        e.popup_context_menu_from_actions(self.layer_canvas, menu, popup_data={'layer':layer, 'object_type':object_type, 'object_index':object_index})
 
     def right_clicked_on_empty_space(self, event, layer, world_point):
         pass

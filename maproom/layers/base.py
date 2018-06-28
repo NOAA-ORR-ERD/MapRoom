@@ -103,6 +103,8 @@ class Layer(HasTraits):
 
     end_time = Float(0.0)
 
+    rebuild_needed = Bool(False)
+
     ##### class attributes
 
     has_control_points = False
