@@ -50,7 +50,7 @@ class RingEditLayer(LineLayer):
 
     layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
 
-    selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
+    selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude", "Area"]
 
     draw_on_top_when_selected = True
 
@@ -87,6 +87,11 @@ class RingEditLayer(LineLayer):
         else:
             prefix = ""
         return prefix + self.name + (" cw" if self.is_clockwise else " ccw") + " " + str(self.area)
+
+    def get_info_panel_text(self, prop):
+        if prop == "Area":
+            return str(self.area)
+        return LineLayer.get_info_panel_text(self, prop)
 
     def verify_winding(self, positive_area=True):
         area = self.area
