@@ -309,4 +309,5 @@ class PolygonParentLayer(PointLayer):
         """
         from ..actions import EditLayerAction
 
-        return [EditLayerAction]
+        if object_index is not None:
+            return [EditLayerAction]
