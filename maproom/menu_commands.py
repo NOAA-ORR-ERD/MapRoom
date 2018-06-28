@@ -710,6 +710,52 @@ class PolygonEditLayerCommand(Command):
         return undo
 
 
+class PolygonSaveEditLayerCommand(Command):
+    short_name = "polygon_save_edit"
+    serialize_order = [
+        ('layer', 'layer'),
+    ]
+
+    def __init__(self, layer):
+        Command.__init__(self, layer)
+        self.name = layer.name
+
+    def __str__(self):
+        return "Saving Edits from %s" % self.name
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        parent = layer.parent_layer
+        undo_info = parent.get_undo_info()
+        parent.commit_editing_layer(layer)
+        old_layer, old_insertion_index = lm.remove_transient_layer()
+        undo.data = parent, undo_info, old_layer, old_insertion_index
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(parent)
+        lf.select_layer = True
+
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer, undo_info, old_layer, old_insertion_index = self.undo_info.data
+        layer.restore_undo_info(undo_info)
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        if old_layer:
+            lm.insert_layer(old_insertion_index, old_layer)
+            lf2 = undo.flags.add_layer_flags(old_layer)
+            lf2.select_layer = True
+        else:
+            lf.select_layer = True
+        return undo
+
+
 class SavepointCommand(Command):
     short_name = "savepoint"
     serialize_order = [

@@ -965,13 +965,17 @@ class LayerManager(BaseDocument):
             item = tree[at_multi_index[0]]
             return self.replace_layer_recursive(at_multi_index[1:], layer, item)
 
-    def replace_transient_layer(self, layer, editor, **kwargs):
+    def remove_transient_layer(self):
         old = self.find_transient_layer()
         if old:
             insertion_index = self.get_multi_index_of_layer(old)
             self.remove_layer_at_multi_index(insertion_index)
         else:
             insertion_index = None
+        return old, insertion_index
+
+    def replace_transient_layer(self, layer, editor, **kwargs):
+        old, insertion_index = self.remove_transient_layer()
         self.insert_loaded_layer(layer, editor, **kwargs)
         return old, insertion_index
 

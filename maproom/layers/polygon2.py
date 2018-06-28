@@ -121,6 +121,16 @@ class RingEditLayer(LineLayer):
     def update_transient_layer(self, command):
         return None
 
+    ##### User interface
+
+    def calc_context_menu_actions(self, object_type, object_index, world_point):
+        """Return actions that are appropriate when the right mouse button
+        context menu is displayed over a particular object within the layer.
+        """
+        from ..actions import SaveRingEditAction
+
+        return [SaveRingEditAction]
+
 
 class PolygonParentLayer(PointLayer):
     """Parent folder for group of polygons. Direct children will be
@@ -166,10 +176,22 @@ class PolygonParentLayer(PointLayer):
             return "0"
         return LineLayer.get_info_panel_text(self, prop)
 
-    def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
-        r = self.rings[object_index]
+    def get_undo_info(self):
+        return (self.copy_points(), self.ring_adjacency.copy())
+
+    def restore_undo_info(self, info):
+        self.points = info[0]
+        self.update_bounds()
+        self.ring_adjacency = info[1]
+        self.create_rings()
+
+    def get_ring_start_end(self, ring_index):
+        r = self.rings[ring_index]
         start = r['start']
-        end = start + r['count']
+        return start, start + r['count']
+
+    def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
+        start, end = self.get_ring_start_end(object_index)
         geom = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:end]
         return geom, None
 
@@ -210,65 +232,54 @@ class PolygonParentLayer(PointLayer):
         self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, geom_list, feature_code_to_color)
         print("adjacency", self.ring_adjacency)
 
-    def commit_editing_layer(self):
-        layer = self.current_editing_layer
+    def commit_editing_layer(self, layer):
         log.debug(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
         if layer is None:
             return
-        layer.name = "<right click on polygon to edit>"
+        log.warning("committing polygon edits, but only handling outer boundary at the moment")
         boundary = layer.select_outer_boundary()
         if boundary is not None:
-            ring_index = layer.ring_index
-            if len(boundary.points) == self.rings.count[ring_index]:
-                self.replace_ring_without_resizing(ring_index, boundary)
-            else:
-                self.replace_ring_with_resizing(ring_index, boundary)
+            self.replace_ring_with_resizing(layer, boundary)
         else:
             log.error("no boundary found; not committing layer")
             self.manager.project.window.error("Incomplete boundary; not updating polygon")
 
-    def replace_ring_without_resizing(self, ring_index, boundary):
-        # fast! will fit in exactly the same space
-        ring = self.rings[ring_index]
-        num_points = len(boundary.points)
-        index = ring.start
-        self.points[index:index + num_points] = boundary.points
+    def replace_ring_with_resizing(self, layer, boundary):
+        # print(f"before: points={self.points} rings={self.ring_adjacency}")
+        insert_index, old_after_index = self.get_ring_start_end(layer.ring_index)
+        old_num_points = len(self.points)
 
-    def replace_ring_with_resizing(self, ring_index, boundary):
-        # slow! need to recreate the entire points & ring array
-        # print(f"before: points={self.points} rings={self.rings} adjacency={self.point_adjacency_array}")
-        ring = self.rings[ring_index]
-        num_old_points = len(self.points)
-        num_before = ring.start
+        num_before = insert_index
+        num_replace = old_after_index - insert_index
         num_insert = len(boundary.points)
-        num_replace = ring.count
-        insert_index = num_before
-        num_after = num_old_points - num_before - ring.count
-        after_index = insert_index + num_insert
-        num_new_points = num_before + num_insert + num_after
-        p = data_types.make_points(num_new_points)
+        num_after = old_num_points - old_after_index
+
+        new_after_index = insert_index + num_insert
+        new_num_points = num_before + num_insert + num_after
+
+        p = data_types.make_points(new_num_points)
         p[:insert_index] = self.points[:insert_index]
-        p[insert_index:after_index] = boundary.get_points()
-        p[after_index:] = self.points[insert_index + ring.count:]
+        p[insert_index:new_after_index] = boundary.get_points()
+        p[new_after_index:] = self.points[old_after_index:]
         self.points = p
 
-        ring.start = insert_index
-        ring.count = num_insert
+        # ring adjacency needs the exact same substitution
+        r = data_types.make_ring_adjacency_array(new_num_points)
+        r[:insert_index] = self.ring_adjacency[:insert_index]
+        r[insert_index]['point_flag'] = -num_insert
+        r[new_after_index - 1]['point_flag'] = 2
+        r[insert_index]['state'] = 0
+        if num_insert > 0:
+            r[insert_index + 1]['state'] = self.ring_adjacency[insert_index + 1]['state']
+        if num_insert > 1:
+            r[insert_index + 2]['state'] = self.ring_adjacency[insert_index + 2]['state']
+        r[new_after_index:] = self.ring_adjacency[old_after_index:]
+        self.ring_adjacency = r
 
-        # need to adjust the ring start for all rings after the insert point
-        point_offset = num_insert - num_replace
-        self.rings.start[ring_index + 1:] += np.uint32(point_offset)
+        # print(f"after: points={self.points} rings={self.ring_adjacency}")
 
-        # new point adjacency array because number of points has changed
-        p = data_types.make_point_adjacency_array(num_new_points)
-        p[:insert_index] = self.point_adjacency_array[:insert_index]
-        p.ring_index[insert_index:after_index] = ring_index
-        p.next[insert_index:after_index - 1] = np.arange(insert_index + 1, after_index, dtype=np.uint32)
-        p.next[after_index - 1] = insert_index
-        p[after_index:] = self.point_adjacency_array[insert_index + num_replace:]
-        p.next[after_index:] += np.uint32(point_offset)
-        self.point_adjacency_array = p
-        # print(f"after: points={self.points} rings={self.rings} adjacency={self.point_adjacency_array}")
+        # Force rebuild
+        self.create_rings()
         self.rebuild_needed = True
 
     def check_for_problems(self, window):

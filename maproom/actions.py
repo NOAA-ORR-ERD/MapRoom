@@ -12,7 +12,7 @@ from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, T
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 from . import pane_layout
-from .menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand, PolygonEditLayerCommand
+from .menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand, PolygonEditLayerCommand, PolygonSaveEditLayerCommand
 from .mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLonCommand
 from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
 from .library.thread_utils import BackgroundWMSDownloader
@@ -842,6 +842,16 @@ class EditLayerAction(EditorAction):
     def perform(self, event):
         d = event.popup_data
         cmd = PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'])
+        self.active_editor.process_command(cmd)
+
+
+class SaveRingEditAction(EditorAction):
+    name = 'Save Changes in Polygon'
+    tooltip = 'Save the current edits in the parent polygon'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = PolygonSaveEditLayerCommand(d['layer'])
         self.active_editor.process_command(cmd)
 
 
