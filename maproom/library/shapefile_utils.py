@@ -178,9 +178,9 @@ def parse_bna_file2(uri, points_accumulator, regime=0):
         # rather than a polygon. And if a "polygon" only has 1 or 2
         # points, it's not a polygon.
         if num_points < 3:
-            item = ['LineString', (start_index, num_points, name, feature_code, feature_name)]
+            item = ['LineString', GeomInfo(start_index, num_points, name, feature_code, feature_name)]
         else:
-            item = ['Polygon', (start_index, num_points, name, feature_code, feature_name)]
+            item = ['Polygon', GeomInfo(start_index, num_points, name, feature_code, feature_name)]
         items.append(item)
 
     progress_log.info("TICK=%d" % num_lines)
@@ -189,7 +189,6 @@ def parse_bna_file2(uri, points_accumulator, regime=0):
 
 def load_bna_items(uri):
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
-    point_list.append((np.nan, np.nan))  # zeroth point is a NaN so it can be used for deleted points
     item_list = parse_bna_file2(uri, point_list)
 
     return ("", item_list, np.asarray(point_list))
