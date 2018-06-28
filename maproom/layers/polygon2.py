@@ -142,8 +142,6 @@ class PolygonParentLayer(PointLayer):
 
     rings = Any
 
-    current_editing_layer = Any
-
     visibility_items = ["points", "lines", "labels"]
 
     layer_info_panel = ["Point count", "Polygon count", "Flagged points", "Color"]
@@ -155,13 +153,6 @@ class PolygonParentLayer(PointLayer):
         style.use_next_default_color()
         log.debug("_style_default for %s: %s" % (self.type, str(style)))
         return style
-
-    @property
-    def is_renderable(self):
-        return True
-
-    def has_groupable_objects(self):
-        return True
 
     def get_info_panel_text(self, prop):
         if prop == "Point count":
@@ -175,29 +166,12 @@ class PolygonParentLayer(PointLayer):
             return "0"
         return LineLayer.get_info_panel_text(self, prop)
 
-    def get_child_polygon_layer(self, object_index):
-        edit_layer = self.get_child_layers()[0]
-        print(f"editing polygon {object_index}")
-        r = self.rings[object_index]
-        start = r['start']
-        end = start + r['count']
-        edit_layer.set_simple_data(self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:end])
-        edit_layer.rebuild_needed = True
-        edit_layer.ring_index = object_index
-        edit_layer.name = f"Editing polygon {object_index+1}"
-        return edit_layer
-
     def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
         r = self.rings[object_index]
         start = r['start']
         end = start + r['count']
         geom = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:end]
         return geom, None
-
-    def set_parent_points(self, parent_points):
-        self.points = parent_points
-        log.debug(f"parent_points={parent_points[0:10]}")
-        self.rings = None
 
     def create_rings(self):
         print("creating rings from", self.ring_adjacency)
@@ -297,11 +271,6 @@ class PolygonParentLayer(PointLayer):
         # print(f"after: points={self.points} rings={self.rings} adjacency={self.point_adjacency_array}")
         self.rebuild_needed = True
 
-    def update_child_points(self, indexes, values):
-        self.points[indexes] = values
-        # projection = self.manager.project.layer_canvas.projection
-        # projected_point_data = data_types.compute_projected_point_data(self.points[indexes], projection)
-
     def check_for_problems(self, window):
         pass
 
@@ -325,5 +294,19 @@ class PolygonParentLayer(PointLayer):
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         if layer_visibility["polygons"]:
-            ring_index = None if self.current_editing_layer is None else self.current_editing_layer.ring_index
+            edit_layer = self.manager.find_transient_layer()
+            if edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self:
+                ring_index = edit_layer.ring_index
+            else:
+                ring_index = None
             renderer.draw_polygons(self, picker, self.rings.color, color_floats_to_int(0, 0, 0, 1.0), 1, editing_polygon_index=ring_index)
+
+    ##### User interface
+
+    def calc_context_menu_actions(self, object_type, object_index, world_point):
+        """Return actions that are appropriate when the right mouse button
+        context menu is displayed over a particular object within the layer.
+        """
+        from ..actions import EditLayerAction
+
+        return [EditLayerAction]
