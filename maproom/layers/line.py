@@ -77,7 +77,7 @@ class LineLayer(PointLayer):
             raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True, style=None):
-        n = np.alen(f_points)
+        n = len(f_points)
         if style is not None:
             self.style = style
         self.points = data_types.make_points(n)
@@ -104,11 +104,12 @@ class LineLayer(PointLayer):
             self.update_bounds()
 
     def set_simple_data(self, points):
-        count = np.alen(points)
+        count = len(points)
         lines = np.empty((count, 2), dtype=np.uint32)
-        lines[:,0] = np.arange(0, count, dtype=np.uint32)
-        lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
-        lines[count - 1, 1] = 0
+        if count > 0:
+            lines[:,0] = np.arange(0, count, dtype=np.uint32)
+            lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
+            lines[count - 1, 1] = 0
         self.set_data(points, 0.0, lines)
 
     def set_data_from_geometry(self, geom, style=None):

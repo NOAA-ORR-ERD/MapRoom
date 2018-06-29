@@ -48,6 +48,10 @@ class RingEditLayer(LineLayer):
 
     feature_name = Str
 
+    new_boundary = Bool
+
+    new_hole = Bool
+
     layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude", "Area"]
@@ -195,10 +199,33 @@ class PolygonParentLayer(PointLayer):
         start = r['start']
         return start, start + r['count']
 
+    def get_ring_points(self, ring_index):
+        start, end = self.get_ring_start_end(ring_index)
+        p = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:end]
+        return p
+
+    def get_ring_state(self, ring_index):
+        start, end = self.get_ring_start_end(ring_index)
+        count = -self.ring_adjacency[start]['point_flag']
+        state = self.ring_adjacency[start]['state']
+        if count > 1:
+            feature_code = self.ring_adjacency[start + 1]['state']
+            if count > 2:
+                color = self.ring_adjacency[start + 2]['state']
+            else:
+                color = None
+        else:
+            feature_code = None
+            color = None
+        return start, end, count, state, feature_code, color
+
     def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
-        start, end = self.get_ring_start_end(object_index)
-        geom = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:end]
-        return geom, None
+        points = self.get_ring_points(object_index)
+        return points, None
+
+    def is_hole(self, ring_index):
+        _, _, _, _, feature_code, _ = self.get_ring_state(ring_index)
+        return feature_code < 0
 
     def create_rings(self):
         print("creating rings from", self.ring_adjacency)
@@ -237,6 +264,10 @@ class PolygonParentLayer(PointLayer):
         self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, geom_list, feature_code_to_color)
         print("adjacency", self.ring_adjacency)
 
+    def dup_geometry_list_entry(self, ring_index_to_copy):
+        g = self.geometry_list[ring_index_to_copy]
+        self.geometry_list[ring_index_to_copy:ring_index_to_copy] = [g]
+
     def commit_editing_layer(self, layer):
         log.debug(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
         if layer is None:
@@ -244,19 +275,30 @@ class PolygonParentLayer(PointLayer):
         log.warning("committing polygon edits, but only handling outer boundary at the moment")
         boundary = layer.select_outer_boundary()
         if boundary is not None:
-            self.replace_ring_with_resizing(layer, boundary)
+            self.replace_ring_with_resizing(layer.ring_index, boundary, layer.new_boundary, layer.new_hole)
         else:
             log.error("no boundary found; not committing layer")
             self.manager.project.window.error("Incomplete boundary; not updating polygon")
 
-    def replace_ring_with_resizing(self, layer, boundary):
+    def replace_ring_with_resizing(self, ring_index, boundary, new_boundary, new_hole):
         # print(f"before: points={self.points} rings={self.ring_adjacency}")
-        insert_index, old_after_index = self.get_ring_start_end(layer.ring_index)
+        insert_index, old_after_index = self.get_ring_start_end(ring_index)
+        if new_boundary:
+            # arbitrarily insert at beginning
+            old_after_index = insert_index
+            self.dup_geometry_list_entry(0)
+        elif new_hole:
+            # insert after indicated polygon so it becomes a hole of that one
+            insert_index = old_after_index
+            self.dup_geometry_list_entry(ring_index)
         old_num_points = len(self.points)
 
+        insert_points = boundary.get_points()
+        num_insert = len(insert_points)
+
+        # import pdb; pdb.set_trace()
         num_before = insert_index
         num_replace = old_after_index - insert_index
-        num_insert = len(boundary.points)
         num_after = old_num_points - old_after_index
 
         new_after_index = insert_index + num_insert
@@ -264,7 +306,7 @@ class PolygonParentLayer(PointLayer):
 
         p = data_types.make_points(new_num_points)
         p[:insert_index] = self.points[:insert_index]
-        p[insert_index:new_after_index] = boundary.get_points()
+        p[insert_index:new_after_index] = insert_points
         p[new_after_index:] = self.points[old_after_index:]
         self.points = p
 
@@ -275,8 +317,14 @@ class PolygonParentLayer(PointLayer):
         r[new_after_index - 1]['point_flag'] = 2
         r[insert_index]['state'] = 0
         if num_insert > 0:
-            r[insert_index + 1]['state'] = self.ring_adjacency[insert_index + 1]['state']
+            # feature code depends on type of polygon
+            if new_hole:
+                feature_code = -1
+            else:
+                feature_code = self.ring_adjacency[insert_index + 1]['state']
+            r[insert_index + 1]['state'] = feature_code
         if num_insert > 1:
+            # color
             r[insert_index + 2]['state'] = self.ring_adjacency[insert_index + 2]['state']
         r[new_after_index:] = self.ring_adjacency[old_after_index:]
         self.ring_adjacency = r
@@ -311,7 +359,7 @@ class PolygonParentLayer(PointLayer):
             self.rebuild_renderer(renderer)
         if layer_visibility["polygons"]:
             edit_layer = self.manager.find_transient_layer()
-            if edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self:
+            if edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self and not edit_layer.new_boundary and not edit_layer.new_hole:
                 ring_index = edit_layer.ring_index
             else:
                 ring_index = None
@@ -323,7 +371,14 @@ class PolygonParentLayer(PointLayer):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
-        from ..actions import EditLayerAction
+        from .. import actions as a
 
+        actions = []
         if object_index is not None:
-            return [EditLayerAction]
+            actions = [a.EditLayerAction]
+            print(f"object type {object_type} index {object_index}")
+            if not self.is_hole(object_index):
+                actions.append(a.AddPolygonHoleAction)
+            actions.append(None)
+        actions.append(a.AddPolygonBoundaryAction)
+        return actions

@@ -28,6 +28,13 @@ class TestShapefile(object):
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-shapefile")
         assert 33 == np.alen(layer.points)
 
+    def test_add_polygon(self):
+        uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
+        layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
+        boundary = layer.select_outer_boundary()
+        self.bna.create_rings()
+        self.bna.replace_ring_with_resizing(0, boundary, True, False)
+
 
 if __name__ == "__main__":
     import sys
@@ -54,3 +61,4 @@ if __name__ == "__main__":
         t = TestShapefile()
         t.setup()
         t.test_simple()
+        t.test_add_polygon()

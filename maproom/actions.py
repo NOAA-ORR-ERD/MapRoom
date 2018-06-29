@@ -845,6 +845,26 @@ class EditLayerAction(EditorAction):
         self.active_editor.process_command(cmd)
 
 
+class AddPolygonBoundaryAction(EditorAction):
+    name = 'Add Polygon'
+    tooltip = 'Add a new boundary polygon'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], new_boundary=True)
+        self.active_editor.process_command(cmd)
+
+
+class AddPolygonHoleAction(EditorAction):
+    name = 'Add Hole'
+    tooltip = 'Add a new hole polygon'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], new_hole=True)
+        self.active_editor.process_command(cmd)
+
+
 class SaveRingEditAction(EditorAction):
     name = 'Save Changes in Polygon'
     tooltip = 'Save the current edits in the parent polygon'
