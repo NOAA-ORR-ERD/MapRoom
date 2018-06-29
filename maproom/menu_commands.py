@@ -718,6 +718,51 @@ class PolygonEditLayerCommand(Command):
         return undo
 
 
+class DeletePolygonCommand(Command):
+    short_name = "polygon_edit"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('obj_type', 'int'),
+        ('obj_index', 'int'),
+    ]
+
+    def __init__(self, layer, obj_type, obj_index):
+        Command.__init__(self, layer)
+        self.obj_type = obj_type
+        self.obj_index = obj_index
+        self.name = layer.name
+
+    def __str__(self):
+        return "Delete Polygon from %s" % self.name
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo_info = layer.get_undo_info()
+        layer.delete_ring(self.obj_index)
+        undo.data = undo_info
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        undo_info = self.undo_info.data
+        layer.restore_undo_info(undo_info)
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+        return undo
+
+
+
 class PolygonSaveEditLayerCommand(Command):
     short_name = "polygon_save_edit"
     serialize_order = [

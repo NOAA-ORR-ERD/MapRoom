@@ -9,7 +9,7 @@ from mock import *
 from maproom.layers import loaders, TriangleLayer
 from maproom.library.Boundary import Boundaries, PointsError
 
-class TestShapefile(object):
+class TestBNAShapefile(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/BNA/00003polys_000035pts.bna", "application/x-maproom-bna")
@@ -35,6 +35,25 @@ class TestShapefile(object):
         self.bna.create_rings()
         self.bna.replace_ring_with_resizing(0, boundary, True, False)
 
+    def test_delete_polygon(self):
+        self.bna.delete_ring(0)
+        assert len(self.bna.rings) == 2
+
+class TestESRIShapefile(object):
+    def setup(self):
+        self.project = MockProject()
+        self.project.load_file("../TestData/Shapefiles/square.shp", "application/x-maproom-shapefile")
+        self.layer = self.project.layer_manager.get_layer_by_invariant(1)
+        self.layer.create_rings()
+
+    def test_delete_polygon(self):
+        self.layer.delete_ring(0)
+        assert len(self.layer.rings) == 0
+
+    def test_delete_hole(self):
+        self.layer.delete_ring(1)
+        assert len(self.layer.rings) == 1
+
 
 if __name__ == "__main__":
     import sys
@@ -58,7 +77,15 @@ if __name__ == "__main__":
         reloaded_layer = project.raw_load_first_layer(out_uri, "application/x-maproom-shapefile")
         assert np.alen(reloaded_layer.points) == np.alen(layer.points)
     else:
-        t = TestShapefile()
+        t = TestBNAShapefile()
         t.setup()
         t.test_simple()
+        t.setup()
         t.test_add_polygon()
+        t.setup()
+        t.test_delete_polygon()
+        t = TestESRIShapefile()
+        t.setup()
+        t.test_delete_polygon()
+        t.setup()
+        t.test_delete_hole()

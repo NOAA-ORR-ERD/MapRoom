@@ -219,6 +219,27 @@ class PolygonParentLayer(PointLayer):
             color = None
         return start, end, count, state, feature_code, color
 
+    def get_ring_and_holes_start_end(self, ring_index):
+        start, end, _, _, feature_code, _ = self.get_ring_state(ring_index)
+        print(f"found ring {ring_index}: {start}, {end}, {feature_code}")
+        count = 1
+        if feature_code >= 0:
+            while True:
+                try:
+                    _, possible, _, _, feature_code, _ = self.get_ring_state(ring_index + 1)
+                except IndexError:
+                    # no more rings
+                    break
+                print(f"checking ring {ring_index}: {start}, {end}, {feature_code}")
+                if feature_code >= 0:
+                    break
+                end = possible
+                print(f"found hole: {start}, {end}, {feature_code}")
+                count += 1
+                ring_index += 1
+
+        return start, end, count
+
     def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
         points = self.get_ring_points(object_index)
         return points, None
@@ -267,6 +288,9 @@ class PolygonParentLayer(PointLayer):
     def dup_geometry_list_entry(self, ring_index_to_copy):
         g = self.geometry_list[ring_index_to_copy]
         self.geometry_list[ring_index_to_copy:ring_index_to_copy] = [g]
+
+    def delete_geometry_list_entries(self, start_ring_index, count):
+        self.geometry_list[start_ring_index:start_ring_index + count] = []
 
     def commit_editing_layer(self, layer):
         log.debug(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
@@ -329,7 +353,26 @@ class PolygonParentLayer(PointLayer):
         r[new_after_index:] = self.ring_adjacency[old_after_index:]
         self.ring_adjacency = r
 
-        # print(f"after: points={self.points} rings={self.ring_adjacency}")
+        # Force rebuild
+        self.create_rings()
+        self.rebuild_needed = True
+
+    def delete_ring(self, ring_index):
+        start, end, num_rings = self.get_ring_and_holes_start_end(ring_index)
+        print(f"deleting rings {ring_index} - {ring_index + num_rings}")
+        old_num_points = len(self.points)
+        new_num_points = old_num_points - end + start
+        p = data_types.make_points(new_num_points)
+        p[:start] = self.points[:start]
+        p[start:] = self.points[end:]
+        self.points = p
+
+        r = data_types.make_ring_adjacency_array(new_num_points)
+        r[:start] = self.ring_adjacency[:start]
+        r[start:] = self.ring_adjacency[end:]
+        self.ring_adjacency = r
+
+        self.delete_geometry_list_entries(ring_index, num_rings)
 
         # Force rebuild
         self.create_rings()
@@ -380,5 +423,6 @@ class PolygonParentLayer(PointLayer):
             if not self.is_hole(object_index):
                 actions.append(a.AddPolygonHoleAction)
             actions.append(None)
+            actions.append(a.DeletePolygonAction)
         actions.append(a.AddPolygonBoundaryAction)
         return actions
