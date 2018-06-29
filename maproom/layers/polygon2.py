@@ -1,5 +1,7 @@
 import numpy as np
 
+import shapely.geometry as sg
+
 # Enthought library imports.
 from traits.api import Any, Int, Str, Bool
 
@@ -240,6 +242,80 @@ class PolygonParentLayer(PointLayer):
     def is_hole(self, ring_index):
         _, _, _, _, feature_code, _ = self.get_ring_state(ring_index)
         return feature_code < 0
+
+    def get_shapely_polygon(self, start, end, debug=False):
+        points = np.c_[p.x[start:end], p.y[start:end]]
+        points = np.require(points, np.float64, ["C", "OWNDATA"])
+        if np.alen(points) > 2:
+            poly = sg.Polygon(points)
+        else:
+            poly = sg.LineString(points)
+        if debug: print(("points tuples:", points))
+        if debug: print(("numpy:", points.__array_interface__, points.shape, id(points), points.flags))
+        if debug: print(("shapely polygon:", poly.bounds))
+        return poly
+
+    def iter_rings(self):
+        for i in range(len(self.rings)):
+            geom = self.geometry_list[i]
+            state = self.get_ring_state(i)
+            yield geom, state
+
+    def crop_rectangle(self, w_r):
+        log.debug("crop_rectangle: to %s" % str(w_r))
+
+        crop_rect = sg.box(w_r[0][0], w_r[1][1], w_r[1][0], w_r[0][1])
+
+        cropped_list = []
+        new_point_count = 0
+        for geom, state in self.iter_rings():
+            start = state[0]
+            end = state[1]
+            poly = self.get_shapely_polygon(start, end)
+            try:
+                cropped_poly = crop_rect.intersection(poly)
+            except Exception as e:
+                log.error("Shapely intersection exception: %s\npoly=%s\nvalid=%s" % (e, poly, poly.is_valid))
+                raise
+
+            if not cropped_poly.is_empty:
+                new_point_tount += len(cropped_poly.exterior.coords.xy)
+                cropped_list.append(geom, state, num_points, cropped_poly)
+
+        print(f"{len(cropped_list)} cropped polygons")
+        p = data_types.make_points(new_point_count)
+        p = data_types.make_ring_adjacency_array(new_point_count)
+
+        # FIXME: WIP, not working yet!
+        def add_polygon(shapely_poly, geom, state):
+            points = np.require(cropped_poly.exterior.coords.xy, np.float64, ["C", "OWNDATA"])
+            num_points = points.shape[1]
+            p[self.total_points:, :] = points.T
+
+        for geom, state, num_points, cropped_poly in cropped_list:
+            points = np.require(cropped_poly.exterior.coords.xy, np.float64, ["C", "OWNDATA"])
+            count = points.shape[1]
+            if cropped_poly.geom_type == "MultiPolygon":
+                for i, p in enumerate(cropped_poly):
+                    new_polys.add_polygon(p, geom, state)
+                continue
+            elif not hasattr(cropped_poly, 'exterior'):
+                log.debug("Temporarily skipping %s" % cropped_poly.geom_type)
+                continue
+            new_polys.add_polygon(cropped_poly, geom, state)
+
+        old_state = self.get_undo_info()
+        self.points = p
+        self.ring_adjacency = r
+        self.create_rings()
+
+        undo = UndoInfo()
+        undo.data = old_state
+        undo.flags.refresh_needed = True
+        undo.flags.items_moved = True
+        lf = undo.flags.add_layer_flags(self)
+        lf.layer_contents_deleted = True
+        return undo
 
     def create_rings(self):
         print("creating rings from", self.ring_adjacency)
