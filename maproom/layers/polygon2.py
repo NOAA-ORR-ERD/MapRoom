@@ -180,6 +180,38 @@ class PolygonParentLayer(PointLayer):
             return "0"
         return LineLayer.get_info_panel_text(self, prop)
 
+    def copy_ring(self, start_index, points, feature_code, color):
+        count = len(points)
+        if count < 0:
+            return
+        end = start_index + count
+        self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start_index:end] = points[:]
+        self.ring_adjacency
+        self.ring_adjacency[start_index]['point_flag'] = -count
+        self.ring_adjacency[start_index + count - 1]['point_flag'] = 2
+        self.ring_adjacency[start_index]['state'] = 0
+        if count > 1:
+            self.ring_adjacency[start_index + 1]['state'] = feature_code
+        if count > 2:
+            self.ring_adjacency[start_index + 2]['state'] = color
+
+    def set_data_from_boundaries(self, boundaries):
+        num_new_points = 0
+        for i, b in enumerate(boundaries):
+            print(i, b)
+            points = b.get_xy_points()
+            num_new_points += np.alen(points)
+
+        self.points = data_types.make_points(num_new_points)
+        self.ring_adjacency = data_types.make_ring_adjacency_array(num_new_points)
+        index = 0
+        for i, b in enumerate(boundaries):
+            points = b.get_xy_points()
+            self.copy_ring(index, points, 1, 0x12345678)
+            index += len(points)
+
+        self.create_rings()
+
     def get_undo_info(self):
         return (self.copy_points(), self.ring_adjacency.copy())
 

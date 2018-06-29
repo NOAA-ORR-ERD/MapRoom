@@ -560,7 +560,7 @@ class ToPolygonLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = ly.PolygonLayer(manager=lm)
+        p = ly.PolygonParentLayer(manager=lm)
         try:
             progress_log.info("START=Boundary to polygon layer %s" % layer.name)
             boundaries = layer.get_all_boundaries()
