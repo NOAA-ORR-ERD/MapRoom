@@ -134,7 +134,7 @@ class ShapefileLoader(BaseLayerLoader):
         if ext == ".bna":
             write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
         else:
-            write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
+            write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection.srs)
 
 
 def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
@@ -150,32 +150,46 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
     file_point_index = 0
     ring_index = 0
     feature_index = 0
-    while ring_index < len(rings):
-        poly = ogr.Geometry(ogr.wkbPolygon)
-        dest_ring = ogr.Geometry(ogr.wkbLinearRing)
 
-        point_index = int(rings.start[ring_index])
-        count = 0
-        print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
-        while count < rings.count[ring_index]:
-            print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
-            dest_ring.AddPoint(points.x[point_index], points.y[point_index])
-            count += 1
-            point_index = adjacency.next[point_index]
+    def add_poly():
+        nonlocal poly
+        if poly is not None:
+            layer_defn = shapefile_layer.GetLayerDefn()
+            feature = ogr.Feature(layer_defn)
+            feature.SetGeometry(poly)
+            feature.SetFID(feature_index)
+            shapefile_layer.CreateFeature(feature)
+            feature = None
+        poly = ogr.Geometry(ogr.wkbPolygon)
+
+    poly = None
+    while ring_index < len(rings):
+        point_index = first_index = int(rings.start[ring_index])
+        count = -adjacency[first_index]['point_flag']
+        feature_code = 0
+        dup_first_point = False
+        if count < 2:
+            dest_ring = ogr.Geometry(ogr.wkbPoint)
+        elif count == 2:
+            dest_ring = ogr.Geometry(ogr.wkbLineString)
+        else:
+            feature_code = adjacency[first_index+1]['state']
+            dest_ring = ogr.Geometry(ogr.wkbLinearRing)
+            dup_first_point = True
+        if feature_code >= 0:
+            add_poly()
+        
+        for index in range(first_index, first_index + count):
+            dest_ring.AddPoint(points.x[index], points.y[index])
 
             file_point_index += 1
             if file_point_index % BaseLayerLoader.points_per_tick == 0:
                 progress_log.info("Saved %d points" % file_point_index)
-
+        if dup_first_point:
+            dest_ring.AddPoint(points.x[first_index], points.y[first_index])
         poly.AddGeometry(dest_ring)
         ring_index += 1
-
-        layer_defn = shapefile_layer.GetLayerDefn()
-        feature = ogr.Feature(layer_defn)
-        feature.SetGeometry(poly)
-        feature.SetFID(feature_index)
-        shapefile_layer.CreateFeature(feature)
-        feature = None
+    add_poly()
 
     # ## lets add now a second point with different coordinates:
     # point.AddPoint(474598, 5429281)
@@ -199,8 +213,8 @@ def write_rings_as_bna(filename, layer, points, rings, adjacency, projection):
         while ring_index < len(rings):
             point_index = int(rings.start[ring_index])
             count = 0
-            child = layer.ring_index_to_layer[ring_index]
-            fh.write('"%s","%s", %d\n' % (child.name, child.feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
+            geom = layer.geometry_list[ring_index]
+            fh.write('"%s","%s", %d\n' % (geom.name, geom.feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
             # print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
             while count < rings.count[ring_index]:
                 # print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
