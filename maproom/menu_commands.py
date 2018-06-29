@@ -4,18 +4,7 @@ import json
 from omnivore.framework.errors import ProgressCancelError
 
 from .command import Command, UndoInfo
-from .layers import AnnotationLayer
-from .layers import CompassRose
-from .layers import Timestamp
-from .layers import EmptyLayer
-from .layers import Graticule
-from .layers import RingEditLayer
-from .layers import LineLayer
-from .layers import PolygonLayer
-from .layers import TileLayer
-from .layers import TriangleLayer
-from .layers import WMSLayer
-from .layers import RNCLoaderLayer
+from . import layers as ly
 from .layers import loaders
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers
@@ -439,7 +428,7 @@ class MoveLayerCommand(Command):
 
         # here we "re-get" the source layer so that it's replaced by a
         # placeholder and temporarily removed from the tree
-        temp_layer = EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_manager=lm)
         source_layer, children = lm.replace_layer(mi_source, temp_layer)
 
         # if we are inserting onto a folder, insert as the second item in the folder
@@ -463,7 +452,7 @@ class MoveLayerCommand(Command):
     def undo(self, editor):
         lm = editor.layer_manager
         mi_temp, = self.undo_info.data
-        temp_layer = EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_manager=lm)
         lm.insert_layer(mi_temp, temp_layer)
 
         source_layer = lm.get_layer_by_invariant(self.moved_layer)
@@ -498,7 +487,7 @@ class TriangulateLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        t_layer = TriangleLayer(manager=lm)
+        t_layer = ly.TriangleLayer(manager=lm)
         try:
             progress_log.info("START=Triangulating layer %s" % layer.name)
             t_layer.triangulate_from_layer(layer, self.q, self.a)
@@ -571,7 +560,7 @@ class ToPolygonLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = PolygonLayer(manager=lm)
+        p = ly.PolygonLayer(manager=lm)
         try:
             progress_log.info("START=Boundary to polygon layer %s" % layer.name)
             boundaries = layer.get_all_boundaries()
@@ -637,7 +626,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = LineLayer(manager=lm)
+        p = ly.LineLayer(manager=lm)
         points, segments = layer.get_points_lines()
         p.set_data(points, 0, segments)
         p.name = "Verdat from %s" % layer.name
@@ -679,7 +668,7 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, ring_index=self.obj_index, new_boundary=self.new_boundary, new_hole=self.new_hole)
+        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, ring_index=self.obj_index, new_boundary=self.new_boundary, new_hole=self.new_hole)
 
         if self.new_boundary:
             p.name = "New Boundary"

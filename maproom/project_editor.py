@@ -31,8 +31,8 @@ from . import renderer
 from .layers import loaders
 from .command import UndoStack, BatchStatus
 from . import mouse_handler
-from .menu_commands import LoadLayersCommand, DeleteLayerCommand, SavepointCommand, PasteLayerCommand
-from .mouse_commands import ViewportCommand, StyleChangeCommand
+from . import menu_commands as mec
+from . import mouse_commands as moc
 from . import toolbar
 from .library.bsb_utils import extract_from_zip
 from .library import apng
@@ -196,14 +196,14 @@ class ProjectEditor(FrameworkEditor):
             if not hasattr(self, 'layer_tree_control'):
                 self.create_layout({})
             log.debug("loading %s" % metadata)
-            cmd = LoadLayersCommand(metadata, regime)
+            cmd = mec.LoadLayersCommand(metadata, regime)
             self.process_command(cmd)
             layers = cmd.undo_info.affected_layers()
             if len(layers) == 1:
-                cmd = ViewportCommand(layers[0], regime=regime)
+                cmd = moc.ViewportCommand(layers[0], regime=regime)
             else:
                 center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
-                cmd = ViewportCommand(None, center, units_per_pixel, regime=regime)
+                cmd = moc.ViewportCommand(None, center, units_per_pixel, regime=regime)
             self.process_command(cmd)
         document.read_only = document.metadata.check_read_only()
 
@@ -378,13 +378,13 @@ class ProjectEditor(FrameworkEditor):
 
     def get_savepoint(self):
         layer = self.layer_tree_control.get_edit_layer()
-        cmd = SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
+        cmd = mec.SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
         return cmd
 
     def save_log(self, path):
         """ Saves the command log to a text file
         """
-        # Add temporary SavepointCommand to command history so that it can be
+        # Add temporary mec.SavepointCommand to command history so that it can be
         # serialized, but remove it after seriarization so it doesn't clutter
         # the history
         cmd = self.get_savepoint()
@@ -472,7 +472,7 @@ class ProjectEditor(FrameworkEditor):
 
     @property
     def most_recent_uri(self):
-        cmd = self.layer_manager.undo_stack.find_most_recent(LoadLayersCommand)
+        cmd = self.layer_manager.undo_stack.find_most_recent(mec.LoadLayersCommand)
         if cmd is None:
             return self.layer_manager.metadata.uri
         return cmd.metadata.uri
@@ -991,7 +991,7 @@ class ProjectEditor(FrameworkEditor):
         print("value:", text)
         edit_layer = self.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
-            cmd = PasteLayerCommand(edit_layer, text, self.layer_canvas.world_center)
+            cmd = mec.PasteLayerCommand(edit_layer, text, self.layer_canvas.world_center)
             self.process_command(cmd)
 
     def copy_style(self):
@@ -1005,7 +1005,7 @@ class ProjectEditor(FrameworkEditor):
         if edit_layer is not None:
             style = self.clipboard_style
             if style is not None:
-                cmd = StyleChangeCommand(edit_layer, style)
+                cmd = moc.StyleChangeCommand(edit_layer, style)
                 self.process_command(cmd)
 
     def clear_selection(self):
@@ -1115,7 +1115,7 @@ class ProjectEditor(FrameworkEditor):
         if m is not None and not self.task.confirm(m):
             return
 
-        cmd = DeleteLayerCommand(layer)
+        cmd = mec.DeleteLayerCommand(layer)
         self.process_command(cmd)
 
     def check_for_errors(self, edit_layer=None, save_message=False):
