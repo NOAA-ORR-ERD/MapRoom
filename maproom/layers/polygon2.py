@@ -519,9 +519,14 @@ class PolygonParentLayer(PointLayer):
 
         actions = []
         if object_index is not None:
-            actions = [a.EditLayerAction]
+            edit_action = a.EditLayerAction(task=self.manager.project.task)
+            actions = [edit_action]
             print(f"object type {object_type} index {object_index}")
-            if not self.is_hole(object_index):
+            start, end, count, _, feature_code, _ = self.get_ring_state(object_index)
+            if self.is_hole(object_index):
+                edit_action.name = f"Edit Hole ({count} points, id={object_index})"
+            else:
+                edit_action.name = f"Edit Polygon ({count} points, id={object_index})"
                 actions.append(a.AddPolygonHoleAction)
             actions.append(None)
             actions.append(a.DeletePolygonAction)
