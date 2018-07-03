@@ -70,13 +70,12 @@ class Icon(object):
                 setattr(self, k, int(v))
         self.data = page[self.page][self.y:self.y+self.height,self.x:self.x+self.width,:]
     
-    def __cmp__(self, other):
-        if self.name < other.name:
-            return -1
-        elif self.name > other.name:
-            return 1
-        return 0
-    
+    def __lt__(self, other):
+        return self.name < other.name
+
+    def __eq__(self, other):
+        return self.name == other.name
+
     def __str__(self):
         return "%s: %dx%d@%d,%d on p=%d" % (self.name, self.width, self.height, self.x, self.y, self.page)
     
@@ -199,10 +198,10 @@ if __name__ == "__main__":
 
 def get_wx_bitmap(icon_num):
     import wx
-    import cStringIO
+    import io
 
     data = marplot_icon_data[icon_num]
-    image = wx.Image(cStringIO.StringIO(data))
+    image = wx.Image(io.BytesIO(data))
     bitmap = wx.Bitmap(image)
     return bitmap
 
@@ -210,15 +209,15 @@ def get_wx_bitmap(icon_num):
 def get_numpy_bitmap(icon_num):
     from PIL import Image
     import numpy as np
-    import cStringIO
+    import io
 
     data = marplot_icon_data[icon_num]
     size = list(marplot_icon_max_size)
     size[1] += 1  # hack to fix vertical centering
     image = Image.new("RGBA", size)
-    overlay = Image.open(cStringIO.StringIO(data))
-    x = (image.size[0] - overlay.size[0]) / 2
-    y = (image.size[1] - overlay.size[1]) / 2 + 1
+    overlay = Image.open(io.BytesIO(data))
+    x = (image.size[0] - overlay.size[0]) // 2
+    y = (image.size[1] - overlay.size[1]) // 2 + 1
     image.paste(overlay, (x, y))
     return np.array(image)
 
