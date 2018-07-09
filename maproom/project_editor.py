@@ -792,6 +792,9 @@ class ProjectEditor(FrameworkEditor):
                 undo = self.process_batch_command(command, b)
             except MapRoomError as e:
                 self.task.error(str(e), "Error Processing Command")
+                if hasattr(e, 'error_points'):
+                    layer = command.get_layer_in_layer_manager(self.layer_manager)
+                    layer.highlight_exception(e)
                 undo = None
             else:
                 if override_editable_properties_changed is not None:

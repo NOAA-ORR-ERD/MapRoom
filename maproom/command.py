@@ -265,6 +265,9 @@ class Command(object):
     def __str__(self):
         return "<unnamed command>"
 
+    def get_layer_in_layer_manager(self, layer_manager):
+        return layer_manager.get_layer_by_invariant(self.layer)
+
     def get_serialized_name(self):
         if self.short_name is None:
             return self.__class__.__name__

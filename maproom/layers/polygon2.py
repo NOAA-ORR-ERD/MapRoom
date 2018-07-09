@@ -400,11 +400,10 @@ class PolygonParentLayer(PointLayer):
         if layer is None:
             return
         log.warning("committing polygon edits, but only handling outer boundary at the moment")
-        boundary = layer.select_outer_boundary()
-        if boundary is not None:
+        boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False)
+        boundaries.check_errors(True)
+        for boundary in boundaries:
             self.replace_ring_with_resizing(layer.ring_index, boundary, layer.new_boundary, layer.new_hole)
-        else:
-            raise PointsError("Incomplete boundary; not updating polygon")
 
     def replace_ring_with_resizing(self, ring_index, boundary, new_boundary, new_hole):
         # print(f"before: points={self.points} rings={self.ring_adjacency}")
