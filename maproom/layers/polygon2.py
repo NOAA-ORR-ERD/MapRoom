@@ -146,6 +146,8 @@ class PolygonParentLayer(PointLayer):
 
     type = "shapefile"
 
+    mouse_mode_toolbar = Str("PolygonLayerToolBar")
+
     rebuild_needed = Bool(False)
 
     point_list = Any
