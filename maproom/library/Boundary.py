@@ -8,9 +8,9 @@ progress_log = logging.getLogger("progress")
 
 
 class PointsError(Exception):
-    def __init__(self, message, points=None):
+    def __init__(self, message, error_points=None):
         self.message = message
-        self.points = points
+        self.error_points = error_points
 
     def __str__(self):
         return self.message
@@ -304,7 +304,7 @@ class Boundaries(object):
                 if len(adjacent) == 1:
                     raise PointsError(
                         "Only closed boundaries are supported.",
-                        points=(boundary[-2], boundary[-1], )
+                        error_points=(boundary[-2], boundary[-1], )
                         if len(boundary) >= 2
                         else (boundary[0], adjacent[0]),
                     )
@@ -317,7 +317,7 @@ class Boundaries(object):
                 else:
                     raise PointsError(
                         "Two points are connected by multiple line segments.",
-                        points=(previous_point, ) + tuple(adjacent),
+                        error_points=(previous_point, ) + tuple(adjacent),
                     )
 
                 previous_point = boundary[-1]
@@ -473,7 +473,7 @@ class Boundaries(object):
             # print "error points: %s" % sorted(list(error_points))
             raise PointsError(
                 "\n\n".join(errors),
-                points=tuple(error_points)
+                error_points=tuple(error_points)
             )
 
         return errors, error_points

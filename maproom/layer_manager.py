@@ -696,7 +696,7 @@ class LayerManager(BaseDocument):
             try:
                 layer.check_for_problems(window)
             except Exception as e:
-                if hasattr(e, 'points'):
+                if hasattr(e, 'error_points'):
                     return e
                 else:
                     raise

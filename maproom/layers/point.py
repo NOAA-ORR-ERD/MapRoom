@@ -72,9 +72,9 @@ class PointLayer(PointBaseLayer):
         return PointBaseLayer.get_info_panel_text(self, prop)
 
     def highlight_exception(self, e):
-        if hasattr(e, "points") and e.points is not None:
+        if hasattr(e, "error_points") and e.error_points is not None:
             self.clear_all_selections(state.FLAGGED)
-            for p in e.points:
+            for p in e.error_points:
                 self.select_point(p, state.FLAGGED)
             self.manager.dispatch_event('refresh_needed')
 
