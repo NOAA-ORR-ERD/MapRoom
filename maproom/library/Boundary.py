@@ -146,7 +146,7 @@ class Boundary(object):
 
 
 class Boundaries(object):
-    def __init__(self, layer, allow_branches=True, allow_self_crossing=True):
+    def __init__(self, layer, allow_branches=True, allow_self_crossing=True, allow_points_outside_boundary=False):
         self.points = layer.points
         self.point_count = len(layer.points)
         self.lines = layer.line_segment_indexes
@@ -154,6 +154,7 @@ class Boundaries(object):
 
         self.allow_branches = allow_branches
         self.allow_self_crossing = allow_self_crossing
+        self.allow_points_outside_boundary = allow_points_outside_boundary
         self.branch_points = []
         self.boundaries = []
         self.non_boundary_points = []
@@ -451,10 +452,11 @@ class Boundaries(object):
             errors.add("Branching boundaries.")
             error_points.update(self.branch_points)
 
-        point_indexes = self.check_outside_outer_boundary()
-        if len(point_indexes) > 0:
-            errors.add("Points occur outside the outer boundary.")
-            error_points.update(point_indexes)
+        if not self.allow_points_outside_boundary:
+            point_indexes = self.check_outside_outer_boundary()
+            if len(point_indexes) > 0:
+                errors.add("Points occur outside the outer boundary.")
+                error_points.update(point_indexes)
 
         if not self.allow_self_crossing:
             point_indexes = self.check_boundary_crossings()

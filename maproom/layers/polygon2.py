@@ -400,7 +400,7 @@ class PolygonParentLayer(PointLayer):
         if layer is None:
             return
         log.warning("committing polygon edits, but only handling outer boundary at the moment")
-        boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False)
+        boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False, allow_points_outside_boundary=True)
         boundaries.check_errors(True)
         for boundary in boundaries:
             self.replace_ring_with_resizing(layer.ring_index, boundary, layer.new_boundary, layer.new_hole)
