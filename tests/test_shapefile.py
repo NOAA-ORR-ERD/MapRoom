@@ -54,6 +54,15 @@ class TestESRIShapefile(object):
         self.layer.delete_ring(1)
         assert len(self.layer.rings) == 1
 
+    def test_save_compare(self):
+        uri = os.path.normpath(os.getcwd() + "/tmp.square.shp")
+        loaders.save_layer(self.layer, uri)
+        layer = self.project.raw_load_first_layer(uri, "application/x-maproom-shapefile")
+        print(layer.points)
+        print(self.layer.points)
+        assert layer.points[0]['x'] == self.layer.points[0]['x']
+
+
 
 if __name__ == "__main__":
     import sys

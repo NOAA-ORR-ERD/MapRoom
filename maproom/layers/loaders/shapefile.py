@@ -120,10 +120,11 @@ class ShapefileLoader(BaseLayerLoader):
         parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(metadata.uri)
         geom_type = geometry_list[0]
         items = geometry_list[1:]
-        print(geom_type)
-        for item in geometry_list[1:]:
-            print(item)
-        print()
+        if log.level <= logging.DEBUG:
+            print(geom_type)
+            for item in geometry_list[1:]:
+                print(item)
+            print()
         if (parent.load_error_string == ""):
             parent.set_geometry(point_list, geometry_list)
         return layers
@@ -132,19 +133,19 @@ class ShapefileLoader(BaseLayerLoader):
         _, ext = os.path.splitext(filename)
         desc = self.extension_desc[ext]
         if ext == ".bna":
-            write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection.srs)
+            write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
         else:
-            write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection.srs)
+            write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection)
 
 
 def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
     # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
     srs = osr.SpatialReference()
-    srs.ImportFromProj4(projection)
+    srs.ImportFromProj4(projection.srs)
 
     driver = ogr.GetDriverByName('ESRI Shapefile')
     shapefile = driver.CreateDataSource(filename)
-    print(f"writing {filename}")
+    print(f"writing {filename}, srs={srs}")
     shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
 
     file_point_index = 0
@@ -179,14 +180,15 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
         if feature_code >= 0:
             add_poly()
         
-        for index in range(first_index, first_index + count):
-            dest_ring.AddPoint(points.x[index], points.y[index])
+        x, y = projection(points.x[first_index:first_index+count], points.y[first_index:first_index+count])
+        for index in range(0, count):
+            dest_ring.AddPoint(x[index], y[index])
 
             file_point_index += 1
             if file_point_index % BaseLayerLoader.points_per_tick == 0:
                 progress_log.info("Saved %d points" % file_point_index)
         if dup_first_point:
-            dest_ring.AddPoint(points.x[first_index], points.y[first_index])
+            dest_ring.AddPoint(x[0], y[0])
         poly.AddGeometry(dest_ring)
         ring_index += 1
     add_poly()

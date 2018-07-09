@@ -6,7 +6,8 @@ from fs.opener import opener, fsopen
 from shapely.geometry import Polygon
 from shapely.geometry import shape
 from shapely.wkt import loads
-from osgeo import ogr
+from osgeo import ogr, osr
+import pyproj
 
 from .shapely_utils import DriverLoadFailure, get_fiona, get_dataset
 from .accumulator import accumulator
@@ -95,15 +96,22 @@ def parse_ogr(dataset, point_list):
 def load_shapefile(uri):
     geometry_list = []
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
+    source = None
     try:
         # Try fiona first
         error, source = get_fiona(uri)
         geometry_list = parse_fiona(source, point_list)
     except (DriverLoadFailure, ImportError):
         # use GDAL instead
-        source = None
         error, dataset = get_dataset(uri)
         if not error:
+            layer = dataset.GetLayer()
+            sref = layer.GetSpatialRef()
+            if sref is not None:
+                source = pyproj.Proj(sref.ExportToProj4())
+                log.debug(f"load_shapefile: source projection {source.srs}")
+                target = pyproj.Proj(init='epsg:4326')
+                log.debug(f"load_shapefile: target projection: {target.srs}")
             try:
                 geometry_list = parse_ogr(dataset, point_list)
             except ValueError as e:
@@ -111,8 +119,13 @@ def load_shapefile(uri):
 
     if error:
         return (error, None, None)
+    points = np.asarray(point_list)
+    if source is not None:
+        tx, ty = pyproj.transform(source, target, points[:,0], points[:,1])
+        # Re-create (n,2) coordinates
+        points = np.dstack([tx, ty])[0]
 
-    return ("", geometry_list, np.asarray(point_list))
+    return ("", geometry_list, points)
 
 
 def parse_bna_file2(uri, points_accumulator, regime=0):
