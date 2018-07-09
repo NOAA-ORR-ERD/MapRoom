@@ -10,7 +10,7 @@ from traits.api import Any
 from traits.api import Str
 
 from ..library.Boundary import Boundary
-from ..library.Boundary import PointsError
+from ..errors import PointsError
 from ..library.shapely_utils import shapely_to_polygon
 from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo

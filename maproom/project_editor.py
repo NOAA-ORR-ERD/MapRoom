@@ -25,6 +25,7 @@ from omnivore.utils.wx.tilemanager import TileManager
 from omnivore.templates import get_template
 
 # Local imports.
+from .errors import MapRoomError
 from .layer_canvas import LayerCanvas
 from .layer_manager import LayerManager
 from . import renderer
@@ -787,15 +788,20 @@ class ProjectEditor(FrameworkEditor):
                 self.window.control.Freeze()
 
             b = BatchStatus()
-            undo = self.process_batch_command(command, b)
-            if override_editable_properties_changed is not None:
-                b.editable_properties_changed = override_editable_properties_changed
-            self.perform_batch_flags(command, b)
-            history = self.layer_manager.undo_stack.serialize()
-            self.window.application.save_log(str(history), "command_log", ".mrc")
-            if new_mouse_mode is not None:
-                self.mouse_mode_factory = new_mouse_mode
-                self.update_layer_selection_ui()
+            try:
+                undo = self.process_batch_command(command, b)
+            except MapRoomError as e:
+                self.task.error(str(e), "Error Processing Command")
+                undo = None
+            else:
+                if override_editable_properties_changed is not None:
+                    b.editable_properties_changed = override_editable_properties_changed
+                self.perform_batch_flags(command, b)
+                history = self.layer_manager.undo_stack.serialize()
+                self.window.application.save_log(str(history), "command_log", ".mrc")
+                if new_mouse_mode is not None:
+                    self.mouse_mode_factory = new_mouse_mode
+                    self.update_layer_selection_ui()
         finally:
             if sys.platform == "darwin":
                 self.window.control.Thaw()

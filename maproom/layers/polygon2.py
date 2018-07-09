@@ -5,7 +5,8 @@ import shapely.geometry as sg
 # Enthought library imports.
 from traits.api import Any, Int, Str, Bool
 
-from ..library.Boundary import Boundaries, PointsError
+from ..errors import PointsError
+from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
 from . import PointLayer, LineLayer, Folder, state
@@ -403,9 +404,7 @@ class PolygonParentLayer(PointLayer):
         if boundary is not None:
             self.replace_ring_with_resizing(layer.ring_index, boundary, layer.new_boundary, layer.new_hole)
         else:
-            log.error("no boundary found; not committing layer")
-            self.manager.project.window.error("Incomplete boundary; not updating polygon")
-            raise PointsError("BLAH")
+            raise PointsError("Incomplete boundary; not updating polygon")
 
     def replace_ring_with_resizing(self, ring_index, boundary, new_boundary, new_hole):
         # print(f"before: points={self.points} rings={self.ring_adjacency}")
