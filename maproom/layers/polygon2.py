@@ -198,7 +198,6 @@ class PolygonParentLayer(PointLayer):
     def set_data_from_boundaries(self, boundaries):
         num_new_points = 0
         for i, b in enumerate(boundaries):
-            print(i, b)
             points = b.get_xy_points()
             num_new_points += np.alen(points)
 
@@ -248,7 +247,7 @@ class PolygonParentLayer(PointLayer):
 
     def get_ring_and_holes_start_end(self, ring_index):
         start, end, _, _, feature_code, _ = self.get_ring_state(ring_index)
-        print(f"found ring {ring_index}: {start}, {end}, {feature_code}")
+        log.debug(f"found ring {ring_index}: {start}, {end}, {feature_code}")
         count = 1
         if feature_code >= 0:
             while True:
@@ -257,11 +256,11 @@ class PolygonParentLayer(PointLayer):
                 except IndexError:
                     # no more rings
                     break
-                print(f"checking ring {ring_index}: {start}, {end}, {feature_code}")
+                log.debug(f"checking ring {ring_index}: {start}, {end}, {feature_code}")
                 if feature_code >= 0:
                     break
                 end = possible
-                print(f"found hole: {start}, {end}, {feature_code}")
+                log.debug(f"found hole: {start}, {end}, {feature_code}")
                 count += 1
                 ring_index += 1
 
@@ -314,7 +313,7 @@ class PolygonParentLayer(PointLayer):
                 new_point_tount += len(cropped_poly.exterior.coords.xy)
                 cropped_list.append(geom, state, num_points, cropped_poly)
 
-        print(f"{len(cropped_list)} cropped polygons")
+        log.debug(f"{len(cropped_list)} cropped polygons")
         p = data_types.make_points(new_point_count)
         p = data_types.make_ring_adjacency_array(new_point_count)
 
@@ -350,17 +349,17 @@ class PolygonParentLayer(PointLayer):
         return undo
 
     def create_rings(self):
-        print("creating rings from", self.ring_adjacency)
+        log.debug(f"creating rings from {self.ring_adjacency}")
         polygon_starts = np.where(self.ring_adjacency['point_flag'] < 0)[0]
-        print("polygon_starts", polygon_starts)
+        log.debug(f"polygon_starts {polygon_starts}")
         polygon_counts = -self.ring_adjacency[polygon_starts]['point_flag']
-        print("polygon counts", polygon_counts)
+        log.debug(f"polygon counts {polygon_counts}")
         polys = data_types.make_polygons(len(polygon_counts))
         paa = data_types.make_point_adjacency_array(len(self.points))
         group_index = 0
         for ring_index, (start, count) in enumerate(zip(polygon_starts, polygon_counts)):
             end = start + count
-            print("poly:", start, end)
+            log.debug(f"poly: {start, end}")
             paa[start:end]['next'] = np.arange(start+1, end+1, dtype=np.uint32)
             paa[end-1]['next'] = start
             paa[start:end]['ring_index'] = ring_index
@@ -375,16 +374,16 @@ class PolygonParentLayer(PointLayer):
             else:
                 color = 0x12345678
             polys[ring_index]['color'] = color
-        print(paa)
-        print(polys)
+        # print(paa)
+        # print(polys)
         self.rings = polys
         self.point_adjacency_array = paa
 
     def set_geometry(self, point_list, geom_list):
         self.set_data(point_list)
-        print("points", self.points)
+        log.debug(f"points {self.points}")
         self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, geom_list, feature_code_to_color)
-        print("adjacency", self.ring_adjacency)
+        log.debug(f"adjacency {self.ring_adjacency}")
 
     def dup_geometry_list_entry(self, ring_index_to_copy):
         g = self.geometry_list[ring_index_to_copy]
@@ -460,7 +459,7 @@ class PolygonParentLayer(PointLayer):
 
     def delete_ring(self, ring_index):
         start, end, num_rings = self.get_ring_and_holes_start_end(ring_index)
-        print(f"deleting rings {ring_index} - {ring_index + num_rings}")
+        log.debug(f"deleting rings {ring_index} - {ring_index + num_rings}")
         old_num_points = len(self.points)
         new_num_points = old_num_points - end + start
         p = data_types.make_points(new_num_points)
@@ -521,7 +520,7 @@ class PolygonParentLayer(PointLayer):
         if object_index is not None:
             edit_action = a.EditLayerAction(task=self.manager.project.task)
             actions = [edit_action]
-            print(f"object type {object_type} index {object_index}")
+            log.debug(f"object type {object_type} index {object_index}")
             start, end, count, _, feature_code, _ = self.get_ring_state(object_index)
             if self.is_hole(object_index):
                 edit_action.name = f"Edit Hole ({count} points, id={object_index})"
