@@ -27,8 +27,6 @@ def parse_geom(geom, point_list):
     feature_code = 1
     feature_name = "1"
     if geom.geom_type == 'MultiPolygon':
-        if True:
-            return None
         item = [geom.geom_type]
         for poly in geom.geoms:
             points = np.array(poly.exterior.coords[:-1], dtype=np.float64)
@@ -80,16 +78,18 @@ def parse_fiona(source, point_list):
 
 def parse_ogr(dataset, point_list):
     geometry_list = []
-    layer = dataset.GetLayer()
-    for feature in layer:
-        ogr_geom = feature.GetGeometryRef()
-        if ogr_geom is None:
-            continue
-        wkt = ogr_geom.ExportToWkt()
-        geom = loads(wkt)
-        item = parse_geom(geom, point_list)
-        if item is not None:
-            geometry_list.append(item)
+    count = dataset.GetLayerCount()
+    for layer_index in range(count):
+        layer = dataset.GetLayer(layer_index)
+        for feature in layer:
+            ogr_geom = feature.GetGeometryRef()
+            if ogr_geom is None:
+                continue
+            wkt = ogr_geom.ExportToWkt()
+            geom = loads(wkt)
+            item = parse_geom(geom, point_list)
+            if item is not None:
+                geometry_list.append(item)
     return geometry_list
 
 

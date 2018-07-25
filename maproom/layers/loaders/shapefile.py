@@ -120,7 +120,7 @@ class ShapefileLoader(BaseLayerLoader):
         parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(metadata.uri)
         geom_type = geometry_list[0]
         items = geometry_list[1:]
-        if log.level <= logging.DEBUG:
+        if log.isEnabledFor(logging.DEBUG):
             print(geom_type)
             for item in geometry_list[1:]:
                 print(item)

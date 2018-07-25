@@ -1,5 +1,8 @@
 import numpy as np
 
+import logging
+log = logging.getLogger(__name__)
+
 
 # data type used for point coordinates in the renderer
 POINT_COORD_VIEW_DTYPE = np.float32
@@ -145,20 +148,32 @@ def compute_projected_point_data(points, projection, hidden_points=None):
     return projected_point_data
 
 
+def iter_geom(geom_list):
+    for item in geom_list:
+        geom_type = item[0]
+        if geom_type == "MultiPolygon":
+            # MultiPolygon is list of lists
+            for subgeom in item[1:]:
+                geom_type = subgeom[0]
+                for subitem in subgeom[1:]:
+                    yield geom_type, subitem
+        else:
+            for subitem in item[1:]:
+                yield geom_type, subitem
+
+
 def compute_rings(point_list, geom_list, feature_code_to_color):
     ring_adjacency = make_ring_adjacency_array(len(point_list))
     flattened_geom_list = []
     default_color = feature_code_to_color.get("default", 0x12345678)
-    for geom in geom_list:
-        geom_type = geom[0]
-        for item in geom[1:]:
-            print("Adding geometry", item)
-            flattened_geom_list.append(item)
-            ring_adjacency[item.start_index]['point_flag'] = -item.count
-            ring_adjacency[item.start_index + item.count - 1]['point_flag'] = 2
-            ring_adjacency[item.start_index]['state'] = 0
-            if item.count > 0:
-                ring_adjacency[item.start_index + 1]['state'] = item.feature_code
-            if item.count > 1:
-                ring_adjacency[item.start_index + 2]['state'] = feature_code_to_color.get(item.feature_code, default_color)
+    for geom_type, item in iter_geom(geom_list):
+        log.debug(f"Adding geometry {item}")
+        flattened_geom_list.append(item)
+        ring_adjacency[item.start_index]['point_flag'] = -item.count
+        ring_adjacency[item.start_index + item.count - 1]['point_flag'] = 2
+        ring_adjacency[item.start_index]['state'] = 0
+        if item.count > 0:
+            ring_adjacency[item.start_index + 1]['state'] = item.feature_code
+        if item.count > 1:
+            ring_adjacency[item.start_index + 2]['state'] = feature_code_to_color.get(item.feature_code, default_color)
     return flattened_geom_list, ring_adjacency
