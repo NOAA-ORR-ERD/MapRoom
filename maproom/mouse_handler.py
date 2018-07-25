@@ -4,12 +4,11 @@ import math
 import wx
 
 
-from library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
-import library.rect as rect
-from mouse_commands import ViewportCommand, SetAnchorCommand, CropRectCommand, InsertPointCommand, InsertLineCommand, SplitLineCommand, ConnectPointsCommand
-from vector_object_commands import DrawCircleCommand, DrawEllipseCommand, DrawLineCommand, DrawPolygonCommand, DrawPolylineCommand, DrawRectangleCommand, DrawArrowTextBoxCommand, DrawArrowTextIconCommand, AddTextCommand, AddIconCommand, UnlinkControlPointCommand
-from menu_commands import PolygonEditLayerCommand
-
+from .library.coordinates import haversine, distance_bearing, format_coords_for_display, km_to_rounded_string, mi_to_rounded_string
+from . library import rect
+from . import mouse_commands as moc
+from . import vector_object_commands as voc
+from . import menu_commands as mec
 
 class NoObjectError(RuntimeError):
     pass
@@ -32,7 +31,7 @@ class MouseHandler(object):
     editor_trait_for_enabled = ""
     toolbar_group = "other"
 
-    mouse_too_close_pixel_tolerance = 5
+    mouse_too_close_pixel_tolerance = 8
 
     def __init__(self, layer_canvas):
         self.layer_canvas = layer_canvas
@@ -134,7 +133,7 @@ class MouseHandler(object):
         c.release_mouse()
         # print "mouse is not down"
         self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
-        log.debug("process_mouse_motion_up: object under mouse: %s" % (unicode(self.current_object_under_mouse).encode("utf-8")))
+        log.debug("process_mouse_motion_up: object under mouse: %s" % (str(self.current_object_under_mouse)))
         obj = None
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
@@ -173,7 +172,7 @@ class MouseHandler(object):
                           c.projected_point_center[1] - d_y_p)
                 c.mouse_down_position = p
 
-                cmd = ViewportCommand(None, center, c.projected_units_per_pixel)
+                cmd = moc.ViewportCommand(None, center, c.projected_units_per_pixel)
                 e.process_command(cmd)
                 event.Skip()
         else:
@@ -215,6 +214,7 @@ class MouseHandler(object):
 
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+            print(f"right mouse down: {self} {layer} {object_type} {object_index}")
             if (e.clickable_object_is_ugrid_point()):
                 self.right_clicked_on_point(event, layer, object_index)
             elif (e.clickable_object_is_ugrid_line()):
@@ -222,7 +222,7 @@ class MouseHandler(object):
                 self.right_clicked_on_line_segment(event, layer, object_index, world_point)
             else:  # anything else is the interior of the layer
                 world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                self.right_clicked_on_interior(event, layer, object_index, world_point)
+                self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
             self.right_clicked_on_different_layer(event, e.clickable_object_in_layer)
@@ -239,11 +239,16 @@ class MouseHandler(object):
     def right_clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         pass
 
-    def right_clicked_on_interior(self, event, layer, polygon_index, world_point):
-        pass
+    def right_clicked_on_interior(self, event, layer, object_type, object_index, world_point):
+        print(f"Right clicked on {layer}")
+        menu = layer.calc_context_menu_actions(object_type, object_index, world_point)
+        if menu:
+            c = self.layer_canvas
+            e = c.project
+            e.popup_context_menu_from_actions(self.layer_canvas, menu, popup_data={'layer':layer, 'object_type':object_type, 'object_index':object_index})
 
     def right_clicked_on_empty_space(self, event, layer, world_point):
-        pass
+        self.right_clicked_on_interior(event, layer, None, None, world_point)
 
     def right_clicked_on_different_layer(self, event, layer):
         pass
@@ -285,13 +290,13 @@ class MouseHandler(object):
 
             # add extra to the rotation so the minimum amount is 1 or -1
             extra = delta if rotation > 0 else -delta
-            amount = (rotation + extra) / delta
+            amount = (rotation + extra) // delta
             self.wheel_scroll_count -= abs(amount)
             if self.wheel_scroll_count > 0:
                 return
             self.wheel_scroll_count = self.use_every_nth_wheel_scroll
         else:
-            amount = rotation / delta
+            amount = rotation // delta
 
         screen_point = event.GetPosition()
 
@@ -335,7 +340,7 @@ class MouseHandler(object):
         center = (c.projected_point_center[0] + delta[0],
                   c.projected_point_center[1] + delta[1])
 
-        cmd = ViewportCommand(None, center, units_per_pixel)
+        cmd = moc.ViewportCommand(None, center, units_per_pixel)
         e.process_command(cmd)
 
         p = event.GetPosition()
@@ -369,7 +374,7 @@ class MouseHandler(object):
                     c.render()
                     handled = True
         if not handled:
-            text = unichr(text)
+            text = chr(text)
             if keycode == wx.WXK_ESCAPE:
                 self.esc_key_pressed()
                 handled = True
@@ -634,7 +639,7 @@ class PolygonSelectionMode(RNCSelectionMode):
             rnc = self.get_rnc_object()
             if rnc is not None:
                 layer, object_type, object_index = rnc
-                cmd = PolygonEditLayerCommand(layer, object_type, object_index)
+                cmd = mec.PolygonEditLayerCommand(layer, object_type, object_index)
                 c.project.process_command(cmd)
                 c.render(event)
 
@@ -692,6 +697,7 @@ class SelectionMode(MouseHandler):
         c = self.layer_canvas
         e = c.project
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
+            layer, object_type, object_index = e.clickable_object_mouse_is_over
             p = self.get_position(event)
             proj_p = c.get_world_point_from_screen_point(p)
             d_x = p[0] - c.mouse_down_position[0]
@@ -709,8 +715,7 @@ class SelectionMode(MouseHandler):
                         c.mouse_down_position = p
                         self.last_modifier_state = modifiers
                         return
-                    else:
-                        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+                    elif layer.can_rotate:
                         layer.set_initial_rotation()  # reset rotation when control is pressed again
                         c.mouse_down_position = p
                         self.last_modifier_state = modifiers
@@ -721,7 +726,7 @@ class SelectionMode(MouseHandler):
                 w_p1 = c.get_world_point_from_screen_point(p)
                 if not c.HasCapture():
                     c.CaptureMouse()
-                if rotate:
+                if rotate and layer.can_rotate:
                     cmd = self.rotated(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
                 else:
                     cmd = self.dragged(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point, about_center=modifiers & wx.MOD_SHIFT)
@@ -894,7 +899,7 @@ class PointSelectionMode(ObjectSelectionMode):
                       c.projected_point_center[1] - d_y_p)
             c.mouse_down_position = p
 
-            cmd = ViewportCommand(None, center, c.projected_units_per_pixel)
+            cmd = moc.ViewportCommand(None, center, c.projected_units_per_pixel)
             e.process_command(cmd)
             event.Skip()
 
@@ -976,7 +981,7 @@ class PointEditMode(ObjectSelectionMode):
 
         if (not event.ControlDown() and not event.ShiftDown()):
             e.clear_all_selections(False)
-            cmd = SplitLineCommand(layer, line_segment_index, world_point)
+            cmd = moc.SplitLineCommand(layer, line_segment_index, world_point)
             e.process_command(cmd)
             c.forced_cursor = wx.Cursor(wx.CURSOR_HAND)
 #            if not vis:
@@ -999,7 +1004,7 @@ class PointEditMode(ObjectSelectionMode):
             # we release the focus because we don't want to immediately drag the new object (if any)
             # self.control.release_mouse() # shouldn't be captured now anyway
 
-            cmd = InsertPointCommand(layer, world_point)
+            cmd = moc.InsertPointCommand(layer, world_point)
             e.process_command(cmd)
 
     def select_objects_in_rect(self, event, rect, layer):
@@ -1031,7 +1036,7 @@ class LineEditMode(PointEditMode):
         point_indexes = layer.get_selected_point_indexes()
         if len(point_indexes == 1):
             if not layer.are_points_connected(point_index, point_indexes[0]):
-                cmd = ConnectPointsCommand(layer, point_index, point_indexes[0])
+                cmd = moc.ConnectPointsCommand(layer, point_index, point_indexes[0])
                 e.process_command(cmd)
                 if not vis:
                     message = "Added line to hidden layer %s" % layer.name
@@ -1089,7 +1094,7 @@ class LineEditMode(PointEditMode):
                 e.clear_all_selections(False)
                 # we release the focus because we don't want to immediately drag the new object (if any)
                 # self.control.release_mouse()
-                cmd = InsertLineCommand(layer, point_indexes[0], world_point)
+                cmd = moc.InsertLineCommand(layer, point_indexes[0], world_point)
                 e.process_command(cmd)
 
     def select_objects_in_rect(self, event, rect, layer):
@@ -1106,18 +1111,28 @@ class RectSelectMode(MouseHandler):
     def is_snappable_to_layer(self, layer):
         return False
 
-    def process_left_down(self, event):
-        # Mouse down only sets the initial point, after that it is ignored
-        # unless it is released too soon.
-        if not self.after_first_mouse_up:
-            self.first_mouse_down_position = event.GetPosition()
+    def process_mouse_down(self, event):
+        if self.mouse_up_too_close:
+            # process the press-release-move-press method of creating objects
+            self.process_left_down(event)
         else:
-            # reset mouse down position because the on_mouse_down event handler
-            # in base_canvas sets it every time the mouse is pressed.  Without
-            # this here it would move the start of the rectangle to this most
-            # recent mouse press which is not what we want.
+            # process the default press-drag-press method of creating objects
+            MouseHandler.process_mouse_down(self, event)
+
+    def process_left_down(self, event):
+        if self.after_first_mouse_up:
+            # reset mouse_down_position because the on_mouse_down event handler
+            # in base_canvas sets it every time the mouse is pressed.
             c = self.layer_canvas
             c.mouse_down_position = self.first_mouse_down_position
+            if self.mouse_up_too_close:
+                # User has pressed and released the mouse to set an initial
+                # point, and this second mouse down will set the end.
+                self.finish_mouse_event(event)
+        else:
+            # Mouse down sets the initial point, after that it is ignored
+            # unless it is released too soon.
+            self.first_mouse_down_position = event.GetPosition()
         self.can_snap = True
 
     def process_mouse_motion_down(self, event):
@@ -1140,6 +1155,10 @@ class RectSelectMode(MouseHandler):
 
         c.mouse_is_down = False
         c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        self.finish_mouse_event(event)
+
+    def finish_mouse_event(self, event):
+        c = self.layer_canvas
         c.mouse_move_position = self.get_position(event)
         if self.normalize_mouse_coordinates:
             (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
@@ -1206,7 +1225,7 @@ class ZoomRectMode(RectSelectMode):
         if (d_x >= 5 and d_y >= 5):
             w_r = c.get_world_rect_from_screen_rect(((x1, y1), (x2, y2)))
             center, units_per_pixel = c.calc_zoom_to_world_rect(w_r, False)
-            cmd = ViewportCommand(None, center, units_per_pixel)
+            cmd = moc.ViewportCommand(None, center, units_per_pixel)
             e.process_command(cmd)
 
 
@@ -1224,7 +1243,7 @@ class CropRectMode(RectSelectMode):
         # print "CROPPING!!!!  ", w_r
         layer = c.project.layer_tree_control.get_edit_layer()
         if (layer is not None and layer.can_crop()):
-            cmd = CropRectCommand(layer, w_r)
+            cmd = moc.CropRectCommand(layer, w_r)
             e.process_command(cmd)
 
 
@@ -1237,7 +1256,7 @@ class ControlPointEditMode(ObjectSelectionMode):
         menu = []
         try:
             if layer.can_anchor_point_move():
-                menu.append(("Set Anchor to Control Point %d" % point_index, SetAnchorCommand(layer, point_index)))
+                menu.append(("Set Anchor to Control Point %d" % point_index, moc.SetAnchorCommand(layer, point_index)))
         except AttributeError:
             pass
         truth, truth_cp = layer.get_control_point_link(point_index)
@@ -1310,21 +1329,21 @@ class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_square.png"
     menu_item_name = "Add Rectangle"
     menu_item_tooltip = "Add a new rectangle or square"
-    vector_object_command = DrawRectangleCommand
+    vector_object_command = voc.DrawRectangleCommand
 
 
 class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_ellipse.png"
     menu_item_name = "Add Ellipse"
     menu_item_tooltip = "Add a new ellipse or circle"
-    vector_object_command = DrawEllipseCommand
+    vector_object_command = voc.DrawEllipseCommand
 
 
 class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_arrow_text.png"
     menu_item_name = "Add Arrow/Text Box"
     menu_item_tooltip = "Add a new arrow and text box combo object"
-    vector_object_command = DrawArrowTextBoxCommand
+    vector_object_command = voc.DrawArrowTextBoxCommand
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
@@ -1342,14 +1361,14 @@ class AddArrowTextIconMode(AddArrowTextMode):
     icon = "shape_arrow_text_icon.png"
     menu_item_name = "Add Arrow/Text/Icon Box"
     menu_item_tooltip = "Add a new arrow/text box/icon combo object"
-    vector_object_command = DrawArrowTextIconCommand
+    vector_object_command = voc.DrawArrowTextIconCommand
 
 
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_circle.png"
     menu_item_name = "Add Circle"
     menu_item_tooltip = "Add a new circle from center point"
-    vector_object_command = DrawCircleCommand
+    vector_object_command = voc.DrawCircleCommand
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
@@ -1378,7 +1397,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
     icon = "shape_line.png"
     menu_item_name = "Add Line"
     menu_item_tooltip = "Add a new line"
-    vector_object_command = DrawLineCommand
+    vector_object_command = voc.DrawLineCommand
 
     def is_snappable_to_layer(self, layer):
         return hasattr(layer, "center_point_index")
@@ -1400,7 +1419,7 @@ class AddPolylineMode(MouseHandler):
     icon = "shape_polyline.png"
     menu_item_name = "Add Polyline"
     menu_item_tooltip = "Add a new polyline"
-    vector_object_command = DrawPolylineCommand
+    vector_object_command = voc.DrawPolylineCommand
     toolbar_group = "annotation"
 
     def __init__(self, *args, **kwargs):
@@ -1408,6 +1427,7 @@ class AddPolylineMode(MouseHandler):
         self.points = []
         self.cursor_point = None
         self.cumulative_distance = 0
+        self.mouse_moved_enough = False
 
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_CROSS)
@@ -1427,20 +1447,21 @@ class AddPolylineMode(MouseHandler):
         c = self.layer_canvas
         self.cursor_point = self.get_world_point(event)
         c.render(event)
+        if not self.mouse_moved_enough:
+            self.mouse_moved_enough = not self.check_early_mouse_release(event)
 
     def process_mouse_motion_down(self, event):
         self.process_mouse_motion_up(event)
+        if not self.mouse_moved_enough:
+            self.mouse_moved_enough = not self.check_early_mouse_release(event)
 
     def process_mouse_up(self, event):
-        # After the first point, mouse up events add points
+        if self.mouse_moved_enough:
+            self.finish_mouse_event(event)
+            self.mouse_moved_enough = False
+
+    def finish_mouse_event(self, event):
         c = self.layer_canvas
-
-        if not self.after_first_mouse_up and self.check_early_mouse_release(event):
-            self.mouse_up_too_close = True
-            self.after_first_mouse_up = True
-            return
-        self.after_first_mouse_up = True
-
         self.add_point_at_event(event)
         c.render(event)
 
@@ -1478,7 +1499,7 @@ class AddPolygonMode(AddPolylineMode):
     icon = "shape_polygon.png"
     menu_item_name = "Add Polygon"
     menu_item_tooltip = "Add a new polygon"
-    vector_object_command = DrawPolygonCommand
+    vector_object_command = voc.DrawPolygonCommand
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
@@ -1518,7 +1539,7 @@ class AddOverlayTextMode(AddOverlayMode):
     icon = "shape_text.png"
     menu_item_name = "Add Text"
     menu_item_tooltip = "Add a new text overlay"
-    vector_object_command = AddTextCommand
+    vector_object_command = voc.AddTextCommand
 
     def get_vector_object_command(self, layer, cp, style=None):
         return self.vector_object_command(layer, cp, style, 300, 250)
@@ -1528,4 +1549,4 @@ class AddOverlayIconMode(AddOverlayMode):
     icon = "shape_icon.png"
     menu_item_name = "Add Icon"
     menu_item_tooltip = "Add a new Marplot icon"
-    vector_object_command = AddIconCommand
+    vector_object_command = voc.AddIconCommand

@@ -35,6 +35,8 @@ class LayerStyle(object):
 
     default_outline_color = color_floats_to_int(1.0, 0.5, 1.0, 0.0)
 
+    default_highlight_color = color_floats_to_int(1.0, 0.0, 0.0, 1.0)
+
     default_colors = [
         color_floats_to_int(0, 0, 1.0, 1),
         color_floats_to_int(0, 0.75, 0, 1),
@@ -150,7 +152,7 @@ class LayerStyle(object):
                 setattr(self, k, v)
             if len(kwargs):
                 # Any extra kwargs are invalid names
-                raise KeyError("Invalid style names: %s" % ",".join(kwargs.keys()))
+                raise KeyError("Invalid style names: %s" % ",".join(list(kwargs.keys())))
         else:
             self.line_color = self.default_line_color  # 4 byte including alpha
             self.line_stipple = 0xffff  # 32 bit stipple pattern
@@ -176,7 +178,7 @@ class LayerStyle(object):
         if v is None:
             return "-"
         if k == 'font':
-            return v.encode('utf-8')
+            return v
         return "%x" % v
 
     def has_same_keywords(self, other_style):
@@ -202,7 +204,8 @@ class LayerStyle(object):
             if v == "-":
                 v = None
             elif k == 'font':
-                v = v.decode('utf-8')
+                # v = v.decode('utf-8')
+                pass
             else:
                 v = int(v, 16)
             setattr(self, k, v)
@@ -282,7 +285,7 @@ class LayerStyle(object):
             fonts.EnumerateFacenames()
             fonts = fonts.GetFacenames()
             fonts.sort()
-            fonts[0:0] = [u"default"]
+            fonts[0:0] = ["default"]
             cls.fonts = fonts
         return cls.fonts
 
@@ -296,7 +299,7 @@ class LayerStyle(object):
 
 def parse_styles_from_json(sdict):
     d = {}
-    for name, style_str in sdict.iteritems():
+    for name, style_str in sdict.items():
         style = LayerStyle()
         style.parse(style_str)
         d[name] = style
@@ -304,7 +307,7 @@ def parse_styles_from_json(sdict):
 
 def styles_to_json(style_dict):
     j = {}
-    for name, style in style_dict.iteritems():
+    for name, style in style_dict.items():
         j[name] = str(style)
     return j
 

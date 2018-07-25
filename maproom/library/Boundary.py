@@ -1,16 +1,12 @@
 import time
 import random
 import numpy as np
+
+from ..errors import PointsError
 from maproom.library.Shape import point_in_polygon, points_outside_polygon
 
 import logging
 progress_log = logging.getLogger("progress")
-
-
-class PointsError(Exception):
-    def __init__(self, message, points=None):
-        Exception.__init__(self, message)
-        self.points = points
 
 
 class Boundary(object):
@@ -21,6 +17,9 @@ class Boundary(object):
         self.points = points
         self.point_indexes = indexes
         self.area = area
+
+    def __str__(self):
+        return f"{len(self.points)} points, area={self.area}"
 
     def __len__(self):
         return len(self.point_indexes)
@@ -42,6 +41,9 @@ class Boundary(object):
         view = np.c_[points.x[self.point_indexes], points.y[self.point_indexes]]
         return view.astype(np.float64)
         return view
+
+    def get_points(self):
+        return self.points[self.point_indexes]
 
     def generate_inside_hole_point(self):
         """
@@ -134,7 +136,7 @@ class Boundary(object):
             error_points.update({self[point] for segment in intersecting_segments for item in segment for point in item[2:]})
 
         t = time.clock() - t0
-        print "DONE WITH BOUNDARY SELF-CROSSING CHECK! %f" % t
+        print("DONE WITH BOUNDARY SELF-CROSSING CHECK! %f" % t)
 
         return tuple(error_points)
 
@@ -144,7 +146,7 @@ class Boundary(object):
 
 
 class Boundaries(object):
-    def __init__(self, layer, allow_branches=True, allow_self_crossing=True):
+    def __init__(self, layer, allow_branches=True, allow_self_crossing=True, allow_points_outside_boundary=False):
         self.points = layer.points
         self.point_count = len(layer.points)
         self.lines = layer.line_segment_indexes
@@ -152,10 +154,16 @@ class Boundaries(object):
 
         self.allow_branches = allow_branches
         self.allow_self_crossing = allow_self_crossing
+        self.allow_points_outside_boundary = allow_points_outside_boundary
         self.branch_points = []
         self.boundaries = []
         self.non_boundary_points = []
         self.find_boundaries()
+
+    def __str__(self):
+        lines = [f"{len(self.boundaries)} boundaries ({self.point_count} points, {self.line_count} lines)"]
+        lines.extend([f"  boundary {i}: {b}" for i, b in enumerate(self.boundaries)])
+        return "\n".join(lines)
 
     def __len__(self):
         return len(self.boundaries)
@@ -203,11 +211,11 @@ class Boundaries(object):
         lines = self.lines
 
         adjacency_map = {}
-        non_boundary_points = set(xrange(0, self.point_count))
+        non_boundary_points = set(range(0, self.point_count))
 
         # Build up a map of adjacency lists: point index -> list of indexes
         # of adjacent points connected by line segments.
-        for line_index in xrange(self.line_count):
+        for line_index in range(self.line_count):
             point1 = lines.point1[line_index]
             point2 = lines.point2[line_index]
 
@@ -229,7 +237,7 @@ class Boundaries(object):
         progress_log.info("PULSE")
 
         branch_points = set()
-        for point, adjacent in adjacency_map.iteritems():
+        for point, adjacent in adjacency_map.items():
             if len(adjacent) > 2:
                 branch_points.add(point)
                 for a in adjacent:
@@ -238,7 +246,7 @@ class Boundaries(object):
 
         # find any endpoints of jetties and segments not connected to the boundary
         endpoints = []
-        for point, adjacent in adjacency_map.iteritems():
+        for point, adjacent in adjacency_map.items():
             if len(adjacent) == 1:
                 endpoints.append(point)
         while len(endpoints) > 0:
@@ -277,7 +285,7 @@ class Boundaries(object):
             previous_point = None
 
             # Start from an arbitrary point.
-            (point, adjacent) = adjacency_map.iteritems().next()
+            (point, adjacent) = next(iter(adjacency_map.items()))
             boundary.append(point)
             del(adjacency_map[point])
 
@@ -290,7 +298,7 @@ class Boundaries(object):
                 if len(adjacent) == 1:
                     raise PointsError(
                         "Only closed boundaries are supported.",
-                        points=(boundary[-2], boundary[-1], )
+                        error_points=(boundary[-2], boundary[-1], )
                         if len(boundary) >= 2
                         else (boundary[0], adjacent[0]),
                     )
@@ -303,7 +311,7 @@ class Boundaries(object):
                 else:
                     raise PointsError(
                         "Two points are connected by multiple line segments.",
-                        points=(previous_point, ) + tuple(adjacent),
+                        error_points=(previous_point, ) + tuple(adjacent),
                     )
 
                 previous_point = boundary[-1]
@@ -358,7 +366,7 @@ class Boundaries(object):
         self.non_boundary_points = non_boundary_points
 
         t = time.clock() - t0
-        print "DONE WITH BOUNDARY GENERATION! %f" % t
+        print("DONE WITH BOUNDARY GENERATION! %f" % t)
         progress_log.info("TIME_DELTA=Boundary generation")
 
     def check_boundary_crossings(self):
@@ -406,7 +414,7 @@ class Boundaries(object):
             error_points.update({point_indexes[index] for segment in intersecting_segments for item in segment for index in item[2:]})
 
         t = time.clock() - t0
-        print "DONE WITH BOUNDARY CROSSING CHECK! %f" % t
+        print("DONE WITH BOUNDARY CROSSING CHECK! %f" % t)
         progress_log.info("TIME_DELTA=Boundary crossing")
 
         return tuple(error_points)
@@ -430,7 +438,7 @@ class Boundaries(object):
         )
 
         t = time.clock() - t0
-        print "DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t
+        print("DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t)
         progress_log.info("TIME_DELTA=Points outside boundary")
         return outside_point_indices
 
@@ -444,10 +452,11 @@ class Boundaries(object):
             errors.add("Branching boundaries.")
             error_points.update(self.branch_points)
 
-        point_indexes = self.check_outside_outer_boundary()
-        if len(point_indexes) > 0:
-            errors.add("Points occur outside the outer boundary.")
-            error_points.update(point_indexes)
+        if not self.allow_points_outside_boundary:
+            point_indexes = self.check_outside_outer_boundary()
+            if len(point_indexes) > 0:
+                errors.add("Points occur outside the outer boundary.")
+                error_points.update(point_indexes)
 
         if not self.allow_self_crossing:
             point_indexes = self.check_boundary_crossings()
@@ -459,7 +468,7 @@ class Boundaries(object):
             # print "error points: %s" % sorted(list(error_points))
             raise PointsError(
                 "\n\n".join(errors),
-                points=tuple(error_points)
+                error_points=tuple(error_points)
             )
 
         return errors, error_points
@@ -524,7 +533,7 @@ def self_intersection_check(points):
     coordinates of the endpoint of the segment, and the indexes into :point:
     for both the start and end point in the segment.
     """
-    indices = range(len(points))
+    indices = list(range(len(points)))
     points = ([(tuple(points[i - 1]), tuple(points[i]), i, 0) for i in indices] + [(tuple(points[i]), tuple(points[i - 1]), i, 0) for i in indices])
     return general_intersection_check(points, [(0, len(indices) - 1)])
 
@@ -565,7 +574,7 @@ def general_intersection_check(points, boundary_min_max):
         seg_start, seg_end, index, seg_id = point
         if index not in open_segments:
             # Segment start point
-            for open_start, open_end, open_index, open_id in open_segments.values():
+            for open_start, open_end, open_index, open_id in list(open_segments.values()):
                 # ignore adjacent edges (note that the index number wraps
                 # around within each closed-loop boundary)
                 if (((seg_id != open_id) or ((boundary_min_max[seg_id][1] - boundary_min_max[seg_id][0]) > abs(index - open_index) > 1)) and segments_intersect(seg_start, seg_end, open_start, open_end)):

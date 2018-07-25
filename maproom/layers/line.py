@@ -13,8 +13,8 @@ from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
 
-from point import PointLayer
-import state
+from .point import PointLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -77,10 +77,10 @@ class LineLayer(PointLayer):
             raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True, style=None):
-        n = np.alen(f_points)
+        n = len(f_points)
         if style is not None:
             self.style = style
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                 0: n
@@ -104,11 +104,12 @@ class LineLayer(PointLayer):
             self.update_bounds()
 
     def set_simple_data(self, points):
-        count = np.alen(points)
+        count = len(points)
         lines = np.empty((count, 2), dtype=np.uint32)
-        lines[:,0] = np.arange(0, count, dtype=np.uint32)
-        lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
-        lines[count - 1, 1] = 0
+        if count > 0:
+            lines[:,0] = np.arange(0, count, dtype=np.uint32)
+            lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
+            lines[count - 1, 1] = 0
         self.set_data(points, 0.0, lines)
 
     def set_data_from_geometry(self, geom, style=None):
@@ -129,6 +130,14 @@ class LineLayer(PointLayer):
         self.set_data(points, 0.0, lines, style=style)
         for i, (s, c, ident) in enumerate(zip(starts, counts, identifiers)):
             self.line_segment_indexes.state[s:s + c] = state.POLYGON_NUMBER_SHIFT * i
+
+    def set_data_from_boundary_points(self, points, style=None):
+        count = np.alen(points)
+        lines = np.empty((count, 2), dtype=np.uint32)
+        lines[0:count, 0] = np.arange(0, count, dtype=np.uint32)
+        lines[0:count, 1] = np.arange(1, count + 1, dtype=np.uint32)
+        lines[count - 1, 1] = 0
+        self.set_data(points, 0.0, lines, style=style)
 
     def get_point_identifier(self, point_num):
         for s, e, ident in self.point_identifiers:
@@ -186,6 +195,11 @@ class LineLayer(PointLayer):
             np.array([(0, 0, 0, 0)], dtype=data_types.LINE_SEGMENT_DTYPE),
             count,
         ).view(np.recarray)
+
+    def reverse_line_direction(self):
+        temp = self.line_segment_indexes.point1.copy()
+        self.line_segment_indexes.point1 = self.line_segment_indexes.point2
+        self.line_segment_indexes.point2 = temp
 
     def clear_all_selections(self, mark_type=state.SELECTED):
         self.clear_all_point_selections(mark_type)
@@ -449,8 +463,7 @@ class LineLayer(PointLayer):
         return undo
 
     def merge_from_source_layers(self, layer_a, layer_b, depth_unit=""):
-        # Use superclass for points
-        super(LineLayer, self).merge_from_source_layers(layer_a, layer_b, depth_unit)
+        PointLayer.merge_from_source_layers(self, layer_a, layer_b, depth_unit)
 
         n = len(layer_a.line_segment_indexes) + len(layer_b.line_segment_indexes)
         self.line_segment_indexes = self.make_line_segment_indexes(n)
@@ -631,7 +644,7 @@ class LineEditLayer(LineLayer):
                     # use a dict to coalesce changes in multiple points on the
                     # same sub/ring to create a single change
                     new_points[(geom_index, sub_index, ring_index)] = (geom_ident, self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[s:e])
-        return new_points.values()
+        return list(new_points.values())
 
     def get_new_points_after_insert(self, pt1, pt2, new_index):
         new_points = {}
@@ -643,7 +656,7 @@ class LineEditLayer(LineLayer):
         ring_index = ident['ring_index']
         geom, geom_ident = self.parent_layer.get_geometry_from_object_index(self.object_index, sub_index, ring_index)
         # geom_index = geom_ident['geom_index']
-        new_points = self.make_points(e - s + 1)  # start to pt1; add new index, pt1 + 1 to e
+        new_points = data_types.make_points(e - s + 1)  # start to pt1; add new index, pt1 + 1 to e
         insertion_point = pt1 - s + 1
         new_points[0:insertion_point] = self.points[s:s + insertion_point]
         new_points[insertion_point] = self.points[new_index]

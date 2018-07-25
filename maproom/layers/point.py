@@ -12,8 +12,8 @@ from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
 
-from point_base import PointBaseLayer
-import state
+from .point_base import PointBaseLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -72,9 +72,9 @@ class PointLayer(PointBaseLayer):
         return PointBaseLayer.get_info_panel_text(self, prop)
 
     def highlight_exception(self, e):
-        if hasattr(e, "points") and e.points is not None:
+        if hasattr(e, "error_points") and e.error_points is not None:
             self.clear_all_selections(state.FLAGGED)
-            for p in e.points:
+            for p in e.error_points:
                 self.select_point(p, state.FLAGGED)
             self.manager.dispatch_event('refresh_needed')
 
@@ -82,7 +82,7 @@ class PointLayer(PointBaseLayer):
         n = np.alen(f_points)
         if style is not None:
             self.style = style
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points
             self.points.z[0:n] = f_depths
@@ -90,6 +90,9 @@ class PointLayer(PointBaseLayer):
             self.points.state = 0
 
         self.update_bounds()
+
+    def set_data_from_boundary_points(self, points, style=None):
+        self.set_data(points)
 
     def can_save(self):
         return self.can_save_as() and bool(self.file_path)

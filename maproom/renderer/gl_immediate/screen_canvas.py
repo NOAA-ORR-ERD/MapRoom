@@ -22,8 +22,8 @@ FormatHandler('recarray',
               ['numpy.recarray', ],
               )
 
-from renderer import ImmediateModeRenderer
-from picker import Picker
+from .renderer import ImmediateModeRenderer
+from .picker import Picker
 import maproom.library.rect as rect
 
 from ..gl.font import load_font_texture_with_alpha
@@ -277,7 +277,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         preventing unnecessary traffic to the external webserver.
         """
         timer = None
-        for saved_timer, saved_callback in self.minimum_delay_timers.values():
+        for saved_timer, saved_callback in list(self.minimum_delay_timers.values()):
             if callback == saved_callback:
                 timer = saved_timer
                 log.debug("found timer %d for callback %s" % (timer.GetId(), callback))

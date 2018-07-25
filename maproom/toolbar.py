@@ -6,7 +6,7 @@ from traits.api import on_trait_change
 
 from omnivore.framework.enthought_api import EditorAction
 
-import mouse_handler as modes
+from . import mouse_handler as modes
 
 valid_mouse_modes = {
     'VectorLayerToolBar': [
@@ -119,5 +119,5 @@ def get_all_toolbars():
     """Return a list of all toolbar definitions for inclusion in a toolbars list
     to be passed up to the Enthough library.
     """
-    toolbars = [get_toolbar_group(n) for n in valid_mouse_modes.keys()]
+    toolbars = [get_toolbar_group(n) for n in list(valid_mouse_modes.keys())]
     return toolbars

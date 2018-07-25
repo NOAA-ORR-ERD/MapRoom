@@ -22,11 +22,13 @@ def render_buffers_with_colors(
     cdef np.int32_t buffer_index
     cdef glBindBuffer_pointer glBindBuffer
 
-    if hasattr( pygl.platform.PLATFORM, "getExtensionProcedure" ):
+    glBindBuffer = <glBindBuffer_pointer>0
+    if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        glBindBuffer = \
-            <glBindBuffer_pointer><size_t>getExtensionProcedure( "glBindBuffer" )
-    else:
+        proc = getExtensionProcedure(b"glBindBuffer")
+        if proc is not None:
+            glBindBuffer = <glBindBuffer_pointer><size_t>proc
+    if glBindBuffer == <glBindBuffer_pointer>0:
         glBindBuffer = <glBindBuffer_pointer><size_t>gl.glBindBufferARB
 
     gl.glEnableClientState( gl.GL_VERTEX_ARRAY ) # FIXME: deprecated
@@ -62,6 +64,7 @@ def render_buffers_with_one_color(
     pygl,
     np.uint32_t alternate_type_index,
     gl.GLenum alternate_primitive_type,
+    np.uint32_t dashed_index,
 ):
     """
     Given an array of vertex buffer handles, a single color, an array of vertex
@@ -71,11 +74,13 @@ def render_buffers_with_one_color(
     cdef np.int32_t buffer_index
     cdef glBindBuffer_pointer glBindBuffer
 
-    if hasattr( pygl.platform.PLATFORM, "getExtensionProcedure" ):
+    glBindBuffer = <glBindBuffer_pointer>0
+    if hasattr(pygl.platform.PLATFORM, "getExtensionProcedure"):
         getExtensionProcedure = pygl.platform.PLATFORM.getExtensionProcedure
-        glBindBuffer = \
-            <glBindBuffer_pointer><size_t>getExtensionProcedure( "glBindBuffer" )
-    else:
+        proc = getExtensionProcedure(b"glBindBuffer")
+        if proc is not None:
+            glBindBuffer = <glBindBuffer_pointer><size_t>proc
+    if glBindBuffer == <glBindBuffer_pointer>0:
         glBindBuffer = <glBindBuffer_pointer><size_t>gl.glBindBufferARB
 
     gl.glEnableClientState( gl.GL_VERTEX_ARRAY ) # FIXME: deprecated
@@ -89,6 +94,9 @@ def render_buffers_with_one_color(
         )
         gl.glVertexPointer( 2, gl.GL_FLOAT, 0, NULL ) # FIXME: deprecated
 
+        if buffer_index == dashed_index:
+            gl.glEnable(gl.GL_LINE_STIPPLE)
+            gl.glLineStipple(6, 0x3333)
         if buffer_index == alternate_type_index:
             gl.glDrawArrays(
                 alternate_primitive_type,
@@ -101,6 +109,8 @@ def render_buffers_with_one_color(
                 0,
                 vertex_counts[ buffer_index ],
             )
+        if buffer_index == dashed_index:
+            gl.glDisable(gl.GL_LINE_STIPPLE)
 
     glBindBuffer( gl.GL_ARRAY_BUFFER, 0 )
 

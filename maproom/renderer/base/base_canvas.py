@@ -3,8 +3,8 @@ import time
 import math
 import numpy as np
 
-from renderer import BaseRenderer
-from picker import NullPicker
+from .renderer import BaseRenderer
+from .picker import NullPicker
 import maproom.library.rect as rect
 from maproom.library.projection import Projection
 import maproom.preferences
@@ -97,10 +97,10 @@ class BaseCanvas(object):
         if layer in self.layer_renderers:
             r = self.layer_renderers[layer]
             layer.rebuild_renderer(r, in_place)
-            log.debug("renderer rebuilt")
+            log.debug(f"renderer rebuilt for {layer}")
         else:
             log.warning("layer %s isn't in layer_renderers!" % layer)
-            for layer in self.layer_renderers.keys():
+            for layer in list(self.layer_renderers.keys()):
                 log.warning("  layer: %s" % layer)
 
     def begin_rendering_screen(self, projected_rect, screen_rect):
@@ -201,6 +201,7 @@ class BaseCanvas(object):
                 layer_draw_order.append((i, layer))
         affected_layers = self.project.layer_manager.update_linked_control_points()
         for layer in affected_layers:
+            log.debug(f"rebuilding layer {layer} to update control points")
             renderer = self.layer_renderers[layer]
             layer.rebuild_renderer(renderer, True)
 
@@ -232,7 +233,8 @@ class BaseCanvas(object):
                 else:  # not in pick-mode
                     if layer == selected:
                         control_points_layer = (layer, vis)
-                    layer.render(renderer, w_r, p_r, s_r, vis, picker)
+                    if not layer.draw_on_top_when_selected:
+                        layer.render(renderer, w_r, p_r, s_r, vis, picker)
             if delayed_pick_layer is not None:
                 layer, vis = delayed_pick_layer
                 renderer = self.layer_renderers[layer]
@@ -240,7 +242,10 @@ class BaseCanvas(object):
             if control_points_layer is not None:
                 layer, vis = control_points_layer
                 renderer = self.layer_renderers[layer]
-                layer.render(renderer, w_r, p_r, s_r, vis, picker, control_points_only=True)
+                if layer.draw_on_top_when_selected:
+                    layer.render(renderer, w_r, p_r, s_r, vis, picker)
+                else:
+                    layer.render(renderer, w_r, p_r, s_r, vis, picker, control_points_only=True)
 
         render_layers(layer_draw_order)
 
@@ -520,7 +525,7 @@ class BaseCanvas(object):
         relevant_points = projected_points[relevant_indexes]
 
         relevant_values = values[relevant_indexes]
-        labels = map(str, relevant_values)
+        labels = list(map(str, relevant_values))
         n = sum(map(len, labels))
 
         if (n == 0 or n > self.max_label_characters):

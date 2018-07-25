@@ -3,8 +3,8 @@ import wx
 
 from omnivore import get_image_path
 
-import renderer
-from mouse_handler import MouseHandler, PanMode
+from . import renderer
+from .mouse_handler import MouseHandler, PanMode
 
 """
 The RenderWindow class -- where the opengl rendering really takes place.
@@ -93,7 +93,7 @@ class LayerCanvas(renderer.ScreenCanvas):
 
     def do_jump_coords(self):
         prefs = self.project.task.preferences
-        from ui.dialogs import JumpCoordsDialog
+        from .ui.dialogs import JumpCoordsDialog
         dialog = JumpCoordsDialog(self, prefs.coordinate_display_format)
         if dialog.ShowModalWithFocus() == wx.ID_OK:
             self.projected_point_center = self.get_projected_point_from_world_point(dialog.lat_lon)
@@ -116,7 +116,7 @@ class LayerCanvas(renderer.ScreenCanvas):
             self.project.refresh()
 
     def do_find_points(self):
-        from ui.dialogs import FindPointDialog
+        from .ui.dialogs import FindPointDialog
         dialog = FindPointDialog(self.project)
         if dialog.ShowModalWithFocus() == wx.ID_OK:
             try:
@@ -128,10 +128,10 @@ class LayerCanvas(renderer.ScreenCanvas):
                     tlw.SetStatusText(error)
             except IndexError:
                 tlw = wx.GetApp().GetTopWindow()
-                tlw.SetStatusText(u"No point #%s in this layer" % values)
+                tlw.SetStatusText("No point #%s in this layer" % values)
             except ValueError:
                 tlw = wx.GetApp().GetTopWindow()
-                tlw.SetStatusText(u"Point number must be an integer, not '%s'" % values)
+                tlw.SetStatusText("Point number must be an integer, not '%s'" % values)
             except:
                 raise
         dialog.Destroy()

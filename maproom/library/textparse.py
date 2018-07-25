@@ -41,7 +41,7 @@ def parse_int_string(nputstr=""):
                 invalid.add(i)
     # Report invalid tokens before returning valid selection
     if invalid:
-        error = u"Invalid range: " + " ".join([unicode(i) for i in invalid])
+        error = "Invalid range: " + " ".join([str(i) for i in invalid])
     # ordered = list(selection)
     # ordered.sort()
     return selection, error
@@ -50,7 +50,7 @@ def parse_int_string(nputstr=""):
 def int_list_to_string(values):
     # from http://stackoverflow.com/questions/4628333/converting-a-list-of-integers-into-range-in-python
     def ranges(i):
-        for a, b in itertools.groupby(enumerate(i), lambda (x, y): y - x):
+        for a, b in itertools.groupby(enumerate(i), lambda x_y: x_y[1] - x_y[0]):
             b = list(b)
             yield b[0][1], b[-1][1]
 

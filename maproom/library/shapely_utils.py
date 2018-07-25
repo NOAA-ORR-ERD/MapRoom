@@ -6,7 +6,7 @@ from shapely.geometry import shape
 from shapely.wkt import loads
 from osgeo import ogr
 
-from accumulator import accumulator
+from .accumulator import accumulator
 
 import logging
 log = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ def get_fiona(uri):
         file_path = file_path[4:]
     try:
         source = fiona.open(str(file_path), 'r')
-    except fiona.errors.DriverError, e:
+    except fiona.errors.DriverError as e:
         raise DriverLoadFailure(e)
 
     if (source is None):
@@ -116,7 +116,7 @@ def load_shapely(uri):
         if not error:
             try:
                 geometry_list = convert_dataset(dataset, point_list)
-            except ValueError, e:
+            except ValueError as e:
                 error = str(e)
 
     if error:
@@ -270,3 +270,99 @@ def rebuild_geometry_list(geometry_list, changes):
             copy_maproom_attributes(new_geom, geom)
         geometry_list[gi] = new_geom
     return geometry_list
+
+
+def parse_geom(geom, point_list):
+    item = None
+    if geom.geom_type == 'MultiPolygon':
+        if True:
+            return None
+        item = [geom.geom_type]
+        for poly in geom.geoms:
+            points = np.array(poly.exterior.coords[:-1], dtype=np.float64)
+            index = len(point_list)
+            point_list.extend(points)
+            sub_item = [poly.geom_type, (index, len(points))]
+            for hole in poly.interiors:
+                points = np.asarray(hole.coords[:-1], dtype=np.float64)
+                index = len(point_list)
+                point_list.extend(points)
+                sub_item.append((index, len(points)))
+            item.append(sub_item)
+    elif geom.geom_type == 'Polygon':
+        points = np.array(geom.exterior.coords[:-1], dtype=np.float64)
+        index = len(point_list)
+        point_list.extend(points)
+        item = [geom.geom_type, (index, len(points))]
+        for hole in geom.interiors:
+            points = np.asarray(hole.coords[:-1], dtype=np.float64)
+            index = len(point_list)
+            point_list.extend(points)
+            item.append((index, len(points)))
+    elif geom.geom_type == 'LineString':
+        points = np.asarray(geom.coords, dtype=np.float64)
+        index = len(point_list)
+        point_list.extend(points)
+        item = [geom.geom_type, (index, len(points))]
+    elif geom.geom_type == 'Point':
+        points = np.asarray(geom.coords, dtype=np.float64)
+        index = len(point_list)
+        point_list.extend(points)
+        item = [geom.geom_type, (index, len(points))]
+    else:
+        log.warning(f"Unsupported geometry type {geom.geom_type}")
+    return item
+
+
+def parse_fiona(source, point_list):
+    # Note: all coordinate points are converted from
+    # shapely.coords.CoordinateSequence to normal numpy array
+
+    geometry_list = []
+    for f in source:
+        geom = shape(f['geometry'])
+        item = parse_geom(geom, point_list)
+        if geom is not None:
+            geometry_list.append(item)
+    return geometry_list
+
+def parse_ogr(dataset, point_list):
+    geometry_list = []
+    layer = dataset.GetLayer()
+    for feature in layer:
+        ogr_geom = feature.GetGeometryRef()
+        if ogr_geom is None:
+            continue
+        wkt = ogr_geom.ExportToWkt()
+        geom = loads(wkt)
+        item = parse_geom(geom, point_list)
+        if item is not None:
+            geometry_list.append(item)
+    return geometry_list
+
+def load_shapely2(uri):
+    geometry_list = []
+    point_list = accumulator(block_shape=(2,), dtype=np.float64)
+    point_list.append((np.nan, np.nan))  # zeroth point is a NaN so it can be used for deleted points
+    try:
+        # Try fiona first
+        error, source = get_fiona(uri)
+        geometry_list = parse_fiona(source, point_list)
+    except (DriverLoadFailure, ImportError):
+        # use GDAL instead
+        source = None
+        error, dataset = get_dataset(uri)
+        if not error:
+            try:
+                geometry_list = parse_ogr(dataset, point_list)
+            except ValueError as e:
+                error = str(e)
+
+    if error:
+        return (error, None, None)
+
+    # extra 1000 pts at the end to prevent resizing too often
+    extra_space_for_new_points = np.full((1000,2), np.nan)
+    point_list.extend(extra_space_for_new_points)
+
+    return ("", geometry_list, np.asarray(point_list))

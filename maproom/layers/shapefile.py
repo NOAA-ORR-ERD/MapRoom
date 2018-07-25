@@ -9,9 +9,9 @@ from ..library import rect
 from ..library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from ..library.shapely_utils import rebuild_geometry_list
 
-from base import Layer
-from polygon import PolygonLayer
-import state
+from .base import Layer
+from .polygon import PolygonLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)

@@ -31,9 +31,9 @@ a = Analysis(["%s.py" % appname],
 
 for pymod, path, tag in sorted(a.pure):
     if ".qt" in pymod or ".test" in pymod:
-        print "why is this still here?", pymod
+        print("why is this still here?", pymod)
     else:
-        print pymod, path, tag
+        print(pymod, path, tag)
 
 pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)

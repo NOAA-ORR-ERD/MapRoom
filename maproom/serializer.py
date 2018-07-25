@@ -4,8 +4,8 @@ import shlex
 from omnivore.utils.runtime import get_all_subclasses
 from omnivore.utils.file_guess import FileMetadata
 
-import command
-from layers.style import LayerStyle
+from . import command
+from .layers.style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)
@@ -154,11 +154,11 @@ class TextConverter(ArgumentConverter):
     def get_args(self, instance):
         """Return list of strings that can be used to reconstruct the instance
         """
-        return instance.encode("utf-8"),
+        return instance,
 
     def instance_from_args(self, args, manager, deserializer):
         text = args.pop(0)
-        return text.decode("utf-8")
+        return text
 
 
 class BoolConverter(ArgumentConverter):
@@ -274,7 +274,7 @@ class LayersConverter(ListIntConverter):
         for i in vals:
             invariant = int(i) + deserializer.layer_offset
             layer = manager.get_layer_by_invariant(invariant)
-            print "invariant=%d, layer=%s" % (invariant, layer)
+            print("invariant=%d, layer=%s" % (invariant, layer))
             layers.append(layer)
         return layers
 
@@ -316,7 +316,7 @@ class SerializedCommand(object):
                 values = c.get_args(value)
             except KeyError:
                 values = [value]
-            string_values = [quote(unicode(v).encode("utf-8")) for v in values]
+            string_values = [quote(str(v)) for v in values]
             output.append(" ".join(string_values))
 
         text = " ".join(output)

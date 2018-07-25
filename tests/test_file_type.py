@@ -49,7 +49,7 @@ def test_identify(filename, identifier):
 def test_negative_identity(filename, Recognizer):
     recognizer = Recognizer()
     guess = FileGuess(filename)
-    print filename, guess, Recognizer.id, recognizer.identify(guess)
+    print(filename, guess, Recognizer.id, recognizer.identify(guess))
     assert recognizer.identify(guess) != Recognizer.id
 
 # def test_not_identity():

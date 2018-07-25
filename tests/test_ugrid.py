@@ -16,9 +16,9 @@ class TestVerdatConversion(object):
         self.verdat = self.project.layer_manager.get_layer_by_invariant(1)
 
     def test_simple(self):
-        print self.verdat
+        print(self.verdat)
         assert 23 == np.alen(self.verdat.points)
-        print self.verdat.points
+        print(self.verdat.points)
         
         tris = TriangleLayer(manager=self.project.layer_manager)
         tris.triangulate_from_layer(self.verdat, None, None)
@@ -26,7 +26,7 @@ class TestVerdatConversion(object):
         loaders.save_layer(tris, "negative-depth-triangles.nc")
         
         t2 = self.project.raw_load_first_layer("negative-depth-triangles.nc", "application/x-nc_ugrid")
-        print t2.points
+        print(t2.points)
 
     def test_jetty(self):
         layer = self.verdat

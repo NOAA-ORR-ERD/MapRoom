@@ -20,8 +20,8 @@ from omnivore.utils.runtime import get_all_subclasses
 from ..library import rect
 
 # local package imports
-import state
-from style import LayerStyle
+from . import state
+from .style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ class Layer(HasTraits):
 
     restore_from_url = False
 
-    grouped_indicator_prefix = u"\u271a"  # a bold plus
+    grouped_indicator_prefix = "\u271a"  # a bold plus
 
     # False means it is a layer without bounds like grid, scale, tile, etc.
     # These types of layers can not be added to any group and will always be
@@ -103,9 +103,17 @@ class Layer(HasTraits):
 
     end_time = Float(0.0)
 
+    rebuild_needed = Bool(False)
+
+    ##### class attributes
+
+    has_control_points = False
+
     pickable = False  # is this a layer that support picking?
 
     transient_edit_layer = False
+
+    draw_on_top_when_selected = False
 
     visibility_items = []
 
@@ -124,7 +132,7 @@ class Layer(HasTraits):
         return "%s (%x)" % (self.name, id(self))
 
     def __str__(self):
-        return "%s layer '%s' (%s) %s" % (self.type, unicode(self.name).encode("utf-8"), "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
+        return "%s layer '%s' (%s) %s" % (self.type, self.name, "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
 
     @property
     def pretty_name(self):
@@ -218,6 +226,11 @@ class Layer(HasTraits):
         selection changes to this layer"""
         pass
 
+    def layer_deselected_hook(self):
+        """Hook to allow layer to display some feedback when the layer
+        selection is removed from this layer"""
+        pass
+
     def is_folder(self):
         return False
 
@@ -232,6 +245,14 @@ class Layer(HasTraits):
     def is_overlay(self):
         # flag if overlay layer, that is: layer that has some items in pixel
         # coordinates, not word coordinates.
+        return False
+
+    @property
+    def contains_overlays(self):
+        return False
+
+    @property
+    def can_rotate(self):
         return False
 
     def can_copy(self):
@@ -647,7 +668,7 @@ class Layer(HasTraits):
         targets = []
         if self.is_mergeable_with(other_layer):
             targets.append(self.find_merge_layer_class(other_layer))
-        if other_layer.is_mergeable_with(other_layer):
+        if other_layer.is_mergeable_with(self):
             targets.append(other_layer.find_merge_layer_class(self))
         if not targets:
             return
@@ -678,7 +699,7 @@ class Layer(HasTraits):
 
     def increment_change_count(self):
         self.change_count += 1
-        if (self.change_count == sys.maxint):
+        if (self.change_count == sys.maxsize):
             self.change_count = 0
 
     def can_crop(self):
@@ -736,6 +757,15 @@ class Layer(HasTraits):
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         pass
+
+    ##### User interface
+
+    def calc_context_menu_actions(self, object_type, object_index, world_point):
+        """Return actions that are appropriate when the right mouse button
+        context menu is displayed over a particular object within the layer.
+        """
+        print(f"no popup actions for {self}")
+        return []
 
 
 class EmptyLayer(Layer):

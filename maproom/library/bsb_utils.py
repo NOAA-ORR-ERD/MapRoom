@@ -121,4 +121,4 @@ if __name__ == "__main__":
             extract_from_zip(arg, "16450_1.KAP", "/tmp")
         else:
             p = BSBParser(arg)
-            print p.info
+            print(p.info)

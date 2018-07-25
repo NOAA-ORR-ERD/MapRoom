@@ -74,14 +74,14 @@ def km_to_string(km):
 def km_to_rounded_string(val, sigfigs=5, area=False):
     if val < 1.0:
         val *= 1000
-        unit = u"m"
+        unit = "m"
     else:
-        unit = u"km"
+        unit = "km"
     if area:
-        unit += u"\u00b2"
+        unit += "\u00b2"
     format = "%%.%dg" % (sigfigs)
     val = float(format % val)
-    return u"%s %s" % (val, unit)
+    return "%s %s" % (val, unit)
 
 
 def ft_to_string(ft):
@@ -95,14 +95,14 @@ def ft_to_string(ft):
 def mi_to_rounded_string(val, sigfigs=5, area=False):
     if val < 1.0:
         val *= 5280
-        unit = u"ft"
+        unit = "ft"
     else:
-        unit = u"mi"
+        unit = "mi"
     if area:
-        unit += u"\u00b2"
+        unit += "\u00b2"
     format = "%%.%dg" % (sigfigs)
     val = float(format % val)
-    return u"%s %s" % (val, unit)
+    return "%s %s" % (val, unit)
 
 
 def float_to_degrees_minutes_seconds(value, directions=None):
@@ -164,30 +164,30 @@ def check_min_sec(value):
 
 
 def format_lat_lon_degrees_minutes_seconds(longitude, latitude):
-    lon = u"%d°%d′%d″%s" % \
+    lon = "%d°%d′%d″%s" % \
         float_to_degrees_minutes_seconds(longitude, directions=("E", "W"))
-    lat = u"%d°%d′%d″%s" % \
+    lat = "%d°%d′%d″%s" % \
         float_to_degrees_minutes_seconds(latitude, directions=("N", "S"))
 
-    return u"%s, %s" % (lat, lon)
+    return "%s, %s" % (lat, lon)
 
 
 def format_lat_lon_degrees_minutes(longitude, latitude):
-    lon = u"%d° %0.4f′ %s" % \
+    lon = "%d° %0.4f′ %s" % \
         float_to_degrees_minutes(longitude, directions=("E", "W"))
-    lat = u"%d° %0.4f′ %s" % \
+    lat = "%d° %0.4f′ %s" % \
         float_to_degrees_minutes(latitude, directions=("N", "S"))
 
-    return u"%s, %s" % (lat, lon)
+    return "%s, %s" % (lat, lon)
 
 
 def format_lat_lon_degrees(longitude, latitude):
-    lon = u"%0.6f° %s" % \
+    lon = "%0.6f° %s" % \
         float_to_degrees(longitude, directions=("E", "W"))
-    lat = u"%0.6f° %s" % \
+    lat = "%0.6f° %s" % \
         float_to_degrees(latitude, directions=("N", "S"))
 
-    return u"%s, %s" % (lat, lon)
+    return "%s, %s" % (lat, lon)
 
 
 def format_coords_for_display(longitude, latitude, display_format):
@@ -208,7 +208,7 @@ def format_lat_line_label(latitude):
         minutes = 0
         degrees += 1
 
-    return u" %d° %d' %s " % (degrees, minutes, direction)
+    return " %d° %d' %s " % (degrees, minutes, direction)
 
 
 def format_lon_line_label(longitude):
@@ -220,7 +220,7 @@ def format_lon_line_label(longitude):
         minutes = 0
         degrees += 1
 
-    return u" %d° %d' %s " % (degrees, minutes, direction)
+    return " %d° %d' %s " % (degrees, minutes, direction)
 
 
 def lat_lon_from_format_string(lat_lon_string):

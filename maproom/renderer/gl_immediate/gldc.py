@@ -38,7 +38,7 @@ class GLDC(object):
         pass
 
     def DrawCircle(self, cx, cy, r):
-        print "DRAWCIRCLE!", cx, cy, r
+        print("DRAWCIRCLE!", cx, cy, r)
         # Simple rasterization from public domain algorithm
         # http://slabode.exofire.net/circle_draw.shtml
         num_segments = 128
@@ -75,7 +75,7 @@ class GLDC(object):
         self.DrawCircle(pt[0], pt[1], radius)
 
     def DrawEllipse(self, x, y, width, height):
-        print "DRAWELLIPSE!", x, y, width, height
+        print("DRAWELLIPSE!", x, y, width, height)
         sx = width / 2
         sy = height / 2
         cx = x + sx
@@ -125,14 +125,14 @@ class GLDC(object):
         pass
 
     def DrawLine(self, x1, y1, x2, y2):
-        print "DRAWLINE!", x1, y1, x2, y2
+        print("DRAWLINE!", x1, y1, x2, y2)
         gl.glBegin(gl.GL_LINE_STRIP)
         gl.glVertex(x1, y1, 0)
         gl.glVertex(x2, y2, 0)
         gl.glEnd()
 
     def DrawLineList(self, lines, pens=None):
-        print "DRAWLINELIST!", lines[0][0], lines[0][1], lines[1][0], lines[1][1], "..."
+        print("DRAWLINELIST!", lines[0][0], lines[0][1], lines[1][0], lines[1][1], "...")
         gl.glBegin(gl.GL_LINES)
         for line in lines:
             gl.glVertex(line[0], line[1], 0)
@@ -146,7 +146,7 @@ class GLDC(object):
         gl.glEnd()
 
     def DrawLines(self, points, xoffset=0, yoffset=0):
-        print "DRAWLINES!", points[0][0], points[0][1], points[1][0], points[1][1], "..."
+        print("DRAWLINES!", points[0][0], points[0][1], points[1][0], points[1][1], "...")
         gl.glBegin(gl.GL_LINE_STRIP)
         for point in points:
             gl.glVertex(point[0] + xoffset, point[1] + yoffset, 0)
@@ -179,7 +179,7 @@ class GLDC(object):
         pass
 
     def DrawRectangle(self, x, y, width, height):
-        print "DRAWRECTANGLE!", x, y, width, height
+        print("DRAWRECTANGLE!", x, y, width, height)
 
         def draw(mode):
             gl.glBegin(mode)
@@ -201,7 +201,7 @@ class GLDC(object):
         pass
 
     def DrawRectanglePointSize(self, pt, sz):
-        print "DRAWRECTANGLEPOINTSIZE!", pt, sz
+        print("DRAWRECTANGLEPOINTSIZE!", pt, sz)
         self.DrawRectangle(pt[0], pt[1], sz[0], sz[1])
 
     def DrawRectangle(self, rect):

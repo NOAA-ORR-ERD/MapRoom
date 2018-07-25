@@ -6,7 +6,7 @@ from traits.api import on_trait_change, Unicode, Str, Any, Float
 from ..library import rect
 from ..library.svg_utils import SVGOverlay
 
-from base import ScreenLayer
+from .base import ScreenLayer
 
 import logging
 log = logging.getLogger(__name__)

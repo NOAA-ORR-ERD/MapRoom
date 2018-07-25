@@ -1,6 +1,6 @@
 import numpy as np
 
-from command import Command, UndoInfo
+from .command import Command, UndoInfo
 
 import logging
 log = logging.getLogger(__name__)
@@ -130,6 +130,7 @@ class MovePointsCommand(Command):
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
         lf.layer_items_moved = True
+        lf.indexes_of_points_affected = self.indexes
         lf.layer_contents_added = True
         layer.points.x[self.indexes] += self.dx
         layer.points.y[self.indexes] += self.dy

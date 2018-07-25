@@ -14,8 +14,8 @@ from ..library import rect
 from ..library.depth_utils import convert_units
 from ..renderer import data_types
 
-from base import ProjectedLayer
-import state
+from .base import ProjectedLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ class PointBaseLayer(ProjectedLayer):
 
     def new_points(self, num=0):
         # fixme: this should be done differently...
-        self.points = self.make_points(num)
+        self.points = data_types.make_points(num)
 
     def empty(self):  # fixme: make a property?
         """
@@ -98,7 +98,7 @@ class PointBaseLayer(ProjectedLayer):
         n = np.alen(f_points)
         if style is not None:
             self.style = style
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points
             self.points.z = 0.0
@@ -294,7 +294,7 @@ class PointBaseLayer(ProjectedLayer):
         self.merged_points_index = len(layer_a.points)
 
         n = len(layer_a.points) + len(layer_b.points)
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         self.points[0: self.merged_points_index] = layer_a.points.copy()
         if depth_unit and layer_a.depth_unit != depth_unit:
             convert_units(self.points[0: self.merged_points_index].z, layer_a.depth_unit, depth_unit)
@@ -318,16 +318,15 @@ class PointBaseLayer(ProjectedLayer):
 
     def compute_projected_point_data(self):
         projection = self.manager.project.layer_canvas.projection
-        view = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy.astype(np.float32)
-        projected_point_data = np.zeros(
-            (len(self.points), 2),
-            dtype=np.float32
-        )
-        projected_point_data[:,0], projected_point_data[:,1] = projection(view[:,0], view[:,1])
-        if self.hidden_points is not None:
-            # OpenGL doesn't draw points that have a coordinate set to NaN
-            projected_point_data[self.hidden_points] = np.nan
-        return projected_point_data
+        return data_types.compute_projected_point_data(self.points, projection, self.hidden_points)
+
+    def update_affected_points(self,
+        indexes_affected: "list of indexes that have been moved"
+        ):
+        """Hook to update additional layer attributes when the points
+        specified by the index have been changed.
+        """
+        pass
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer

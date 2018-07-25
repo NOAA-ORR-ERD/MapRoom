@@ -7,7 +7,7 @@ from traits.api import Unicode, Str
 
 from ..library import rect, coordinates
 
-from base import ScreenLayer
+from .base import ScreenLayer
 
 import logging
 log = logging.getLogger(__name__)
@@ -176,10 +176,10 @@ class DecimalDegreeGridLines(GridLines):
         (degrees, direction) = \
             coordinates.float_to_degrees(latitude, directions=("N", "S"))
 
-        return u" %.2f° %s " % (degrees, direction)
+        return " %.2f° %s " % (degrees, direction)
 
     def format_lon_line_label(self, longitude):
         (degrees, direction) = \
             coordinates.float_to_degrees(longitude, directions=("E", "W"))
 
-        return u" %.2f° %s " % (degrees, direction)
+        return " %.2f° %s " % (degrees, direction)

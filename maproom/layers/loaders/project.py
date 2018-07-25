@@ -4,7 +4,7 @@ import zipfile
 
 from fs.opener import fsopen
 
-from common import BaseLoader
+from .common import BaseLoader
 
 import logging
 log = logging.getLogger(__name__)

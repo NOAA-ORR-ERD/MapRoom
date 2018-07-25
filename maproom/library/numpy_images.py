@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import cStringIO
+import io
 
 # FIXME: really weird error on macos when using py.test. The import of
 # docutils.core raises an exception about an invalid locale. Somehow,
@@ -42,7 +42,7 @@ def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
 
 
 def get_numpy_from_data(data):
-    image = Image.open(cStringIO.StringIO(data))
+    image = Image.open(io.BytesIO(data))
     if image.mode != "RGBA":
         image = image.convert("RGBA")
     arr = np.array(image)
@@ -60,7 +60,7 @@ def get_rect(w, h):
     arr = np.empty((h, w, 4), np.uint8)
 
     # just some indexes to keep track of which byte is which
-    R, G, B, A = range(4)
+    R, G, B, A = list(range(4))
 
     red, green, blue, alpha = (35, 142, 35, 128)
     # initialize all pixel values to the values passed in
@@ -257,4 +257,4 @@ if __name__ == "__main__":
     App = wx.App(False)
     OSR = OffScreenHTML(200)
     OSR.get_png(HTML, 'junk.png')
-    print OSR.get_numpy(HTML)
+    print(OSR.get_numpy(HTML))

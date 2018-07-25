@@ -1,5 +1,5 @@
 import numpy as np
-from cStringIO import StringIO
+from io import StringIO
 
 from shapely.geometry import LineString
 from shapely.geometry import Polygon
@@ -10,13 +10,13 @@ from traits.api import Any
 from traits.api import Str
 
 from ..library.Boundary import Boundary
-from ..library.Boundary import PointsError
+from ..errors import PointsError
 from ..library.shapely_utils import shapely_to_polygon
 from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 
-from point import PointLayer
-import state
+from .point import PointLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -49,6 +49,14 @@ class PolygonLayer(PointLayer):
         except:
             rings = 0
         return PointLayer.__str__(self) + ", %d rings" % rings
+
+    def is_mergeable_with(self, other_layer):
+        # FIXME: disable merge capability until the extra metadata (rings,
+        # geometry) can be merged correctly.
+        return False
+
+    def find_merge_layer_class(self, other_layer):
+        return None
 
     def get_info_panel_text(self, prop):
         if prop == "Polygon count":
@@ -91,7 +99,7 @@ class PolygonLayer(PointLayer):
         if style is not None:
             self.style = style
         n_points = np.alen(f_ring_points)
-        self.points = self.make_points(n_points)
+        self.points = data_types.make_points(n_points)
         if (n_points > 0):
             n_rings = np.alen(f_ring_starts)
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
@@ -116,7 +124,7 @@ class PolygonLayer(PointLayer):
 
             color_array = self.color_array()
             total = 0
-            for p in xrange(n_rings):
+            for p in range(n_rings):
                 c = self.rings.count[p]
                 self.point_adjacency_array.ring_index[total: total + c] = p
                 self.point_adjacency_array.next[total: total + c] = np.arange(total + 1, total + c + 1)
@@ -275,9 +283,9 @@ class PolygonLayer(PointLayer):
             poly = Polygon(points)
         else:
             poly = LineString(points)
-        if debug: print("points tuples:", points)
-        if debug: print("numpy:", points.__array_interface__, points.shape, id(points), points.flags)
-        if debug: print("shapely polygon:", poly.bounds)
+        if debug: print(("points tuples:", points))
+        if debug: print(("numpy:", points.__array_interface__, points.shape, id(points), points.flags))
+        if debug: print(("shapely polygon:", poly.bounds))
         return poly
 
     def crop_rectangle(self, w_r):
@@ -318,7 +326,7 @@ class PolygonLayer(PointLayer):
             poly = self.get_shapely_polygon(n)
             try:
                 cropped_poly = crop_rect.intersection(poly)
-            except Exception, e:
+            except Exception as e:
                 log.error("Shapely intersection exception: %s\npoly=%s\nvalid=%s" % (e, poly, poly.is_valid))
                 raise
 

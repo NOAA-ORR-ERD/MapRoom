@@ -3,22 +3,11 @@ import json
 
 from omnivore.framework.errors import ProgressCancelError
 
-from command import Command, UndoInfo
-from layers import AnnotationLayer
-from layers import CompassRose
-from layers import Timestamp
-from layers import EmptyLayer
-from layers import Graticule
-from layers import LineEditLayer
-from layers import LineLayer
-from layers import PolygonLayer
-from layers import TileLayer
-from layers import TriangleLayer
-from layers import WMSLayer
-from layers import RNCLoaderLayer
-from layers import loaders
-from vector_object_commands import get_parent_layer_data
-from vector_object_commands import restore_layers
+from .command import Command, UndoInfo
+from . import layers as ly
+from .layers import loaders
+from .vector_object_commands import get_parent_layer_data
+from .vector_object_commands import restore_layers
 
 import logging
 log = logging.getLogger(__name__)
@@ -50,10 +39,10 @@ class LoadLayersCommand(Command):
         try:
             progress_log.info("START=Loading %s" % self.metadata.uri)
             layers = loader.load_layers(self.metadata, manager=lm, regime=self.regime)
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             undo.flags.success = False
-            undo.flags.errors = [e.message]
-        except IOError, e:
+            undo.flags.errors = [str(e)]
+        except IOError as e:
             undo.flags.success = False
             undo.flags.errors = [str(e)]
         finally:
@@ -180,7 +169,7 @@ class PasteLayerCommand(Command):
         lm = editor.layer_manager
         before = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
-        json_data = json.loads(self.json_text)
+        json_data = json.loads(self.json_text.decode('utf-8'))
         mi = lm.get_insertion_multi_index(before)
         old_invariant_map = {}
         layer = lm.insert_json(json_data, editor, mi, old_invariant_map)
@@ -190,11 +179,11 @@ class PasteLayerCommand(Command):
         x = layer.points.x[drag]
         y = layer.points.y[drag]
         layer.move_control_point(drag, drag, self.center[0] - x, self.center[1] - y)
-        print "AFTER NEW LAYER POSITION"
+        print("AFTER NEW LAYER POSITION")
         layer.update_bounds()
 
         new_links = []
-        for old_invariant, new_layer in old_invariant_map.iteritems():
+        for old_invariant, new_layer in old_invariant_map.items():
             for dep_cp, truth_invariant, truth_cp, locked in new_layer.control_point_links:
                 # see if new truth layer has changed because it's also in the
                 # copied group
@@ -210,7 +199,7 @@ class PasteLayerCommand(Command):
 
         affected = layer.parents_affected_by_move()
         for parent in affected:
-            print "AFFECTED!", parent
+            print("AFFECTED!", parent)
             lf = undo.flags.add_layer_flags(parent)
             lf.layer_items_moved = True
         undo.data = (layer.invariant, saved_invariant, new_links)
@@ -372,6 +361,7 @@ class MergeLayersCommand(Command):
         undo.flags.refresh_needed = True
 
         layer = layer_a.merge_layer_into_new(layer_b, self.depth_unit)
+        log.debug("created merged layer: %s" % layer)
         if layer is None:
             undo.flags.success = False
             undo.flags.errors = ["Incompatible layer types for merge"]
@@ -438,7 +428,7 @@ class MoveLayerCommand(Command):
 
         # here we "re-get" the source layer so that it's replaced by a
         # placeholder and temporarily removed from the tree
-        temp_layer = EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_manager=lm)
         source_layer, children = lm.replace_layer(mi_source, temp_layer)
 
         # if we are inserting onto a folder, insert as the second item in the folder
@@ -462,7 +452,7 @@ class MoveLayerCommand(Command):
     def undo(self, editor):
         lm = editor.layer_manager
         mi_temp, = self.undo_info.data
-        temp_layer = EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_manager=lm)
         lm.insert_layer(mi_temp, temp_layer)
 
         source_layer = lm.get_layer_by_invariant(self.moved_layer)
@@ -497,18 +487,18 @@ class TriangulateLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        t_layer = TriangleLayer(manager=lm)
+        t_layer = ly.TriangleLayer(manager=lm)
         try:
             progress_log.info("START=Triangulating layer %s" % layer.name)
             t_layer.triangulate_from_layer(layer, self.q, self.a)
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             self.undo_info.flags.success = False
         except Exception as e:
             import traceback
-            print traceback.format_exc(e)
+            print(traceback.format_exc())
             progress_log.info("END")
             self.undo_info.flags.success = False
-            self.undo_info.flags.errors = [e.message]
+            self.undo_info.flags.errors = [str(e)]
             layer.highlight_exception(e)
         finally:
             progress_log.info("END")
@@ -570,19 +560,19 @@ class ToPolygonLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = PolygonLayer(manager=lm)
+        p = ly.PolygonParentLayer(manager=lm)
         try:
             progress_log.info("START=Boundary to polygon layer %s" % layer.name)
             boundaries = layer.get_all_boundaries()
-        except ProgressCancelError, e:
+        except ProgressCancelError as e:
             self.undo_info.flags.success = False
         except Exception as e:
             import traceback
-            print traceback.format_exc(e)
+            print(traceback.format_exc())
             progress_log.info("END")
             self.undo_info.flags.success = False
             layer.highlight_exception(e)
-            editor.window.error(e.message, "Boundary Error")
+            editor.window.error(str(e), "Boundary Error")
         finally:
             progress_log.info("END")
 
@@ -636,7 +626,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = LineLayer(manager=lm)
+        p = ly.LineLayer(manager=lm)
         points, segments = layer.get_points_lines()
         p.set_data(points, 0, segments)
         p.name = "Verdat from %s" % layer.name
@@ -661,11 +651,15 @@ class PolygonEditLayerCommand(Command):
         ('obj_index', 'int'),
     ]
 
-    def __init__(self, layer, obj_type, obj_index):
+    def __init__(self, layer, obj_type, obj_index, new_boundary=False, new_hole=False):
         Command.__init__(self, layer)
         self.obj_type = obj_type
+        self.new_boundary = new_boundary
+        if new_boundary:
+            obj_index = 0
         self.obj_index = obj_index
         self.name = layer.name
+        self.new_hole = new_hole
 
     def __str__(self):
         return "Editing Polygon from %s" % self.name
@@ -674,14 +668,18 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = LineEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, object_index=self.obj_index)
+        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, ring_index=self.obj_index, new_boundary=self.new_boundary, new_hole=self.new_hole)
 
-        # arbitrarily choose sub_index 0 and ring_index 0; we only need to get
-        # the shapely geometry object
-        geom, ident = layer.get_geometry_from_object_index(self.obj_index, 0, 0)
-
+        if self.new_boundary:
+            p.name = "New Boundary"
+            geom = []
+        elif self.new_hole:
+            p.name = "New Hole"
+            geom = []
+        else:
+            p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
+            geom, ident = layer.get_geometry_from_object_index(self.obj_index, 0, 0)
         p.set_data_from_geometry(geom)
-        p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
         old_layer, old_insertion_index = lm.replace_transient_layer(p, editor, after=layer)
         insertion_index = lm.get_multi_index_of_layer(p)
 
@@ -705,6 +703,97 @@ class PolygonEditLayerCommand(Command):
         if old_layer:
             lm.insert_layer(old_insertion_index, old_layer)
             lf = undo.flags.add_layer_flags(old_layer)
+            lf.select_layer = True
+        return undo
+
+
+class DeletePolygonCommand(Command):
+    short_name = "polygon_edit"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('obj_type', 'int'),
+        ('obj_index', 'int'),
+    ]
+
+    def __init__(self, layer, obj_type, obj_index):
+        Command.__init__(self, layer)
+        self.obj_type = obj_type
+        self.obj_index = obj_index
+        self.name = layer.name
+
+    def __str__(self):
+        return "Delete Polygon from %s" % self.name
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo_info = layer.get_undo_info()
+        layer.delete_ring(self.obj_index)
+        undo.data = undo_info
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        undo_info = self.undo_info.data
+        layer.restore_undo_info(undo_info)
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+        return undo
+
+
+
+class PolygonSaveEditLayerCommand(Command):
+    short_name = "polygon_save_edit"
+    serialize_order = [
+        ('layer', 'layer'),
+    ]
+
+    def __init__(self, layer):
+        Command.__init__(self, layer)
+        self.name = layer.name
+
+    def __str__(self):
+        return "Saving Edits from %s" % self.name
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        parent = layer.parent_layer
+        undo_info = parent.get_undo_info()
+        parent.commit_editing_layer(layer)
+        old_layer, old_insertion_index = lm.remove_transient_layer()
+        undo.data = parent, undo_info, old_layer, old_insertion_index
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(parent)
+        lf.select_layer = True
+
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer, undo_info, old_layer, old_insertion_index = self.undo_info.data
+        layer.restore_undo_info(undo_info)
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        if old_layer:
+            lm.insert_layer(old_insertion_index, old_layer)
+            lf2 = undo.flags.add_layer_flags(old_layer)
+            lf2.select_layer = True
+        else:
             lf.select_layer = True
         return undo
 

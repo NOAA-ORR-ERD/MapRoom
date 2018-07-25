@@ -2,7 +2,7 @@ import re
 
 from fs.opener import fsopen
 
-from common import BaseLoader
+from .common import BaseLoader
 
 WHITESPACE_PATTERN = re.compile("\s+")
 

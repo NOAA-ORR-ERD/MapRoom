@@ -9,8 +9,8 @@ from traits.api import Str
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
-from point import PointLayer
-import state
+from .point import PointLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class TriangleLayer(PointLayer):
 
     def set_data(self, f_points, f_depths, f_triangles):
         n = np.alen(f_points)
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                 0: n

@@ -28,7 +28,7 @@ def test_triangulate():
                         ( 5,  5),
                         ( 5,  2),
                         ),
-                       dtype=np.float32)
+                       dtype=np.float64)
     depths = np.array( (1, 2, 3, 4),
                               dtype=np.float32)
     lines = np.array( ((0,1),
@@ -37,24 +37,23 @@ def test_triangulate():
                        ),
                       dtype=np.uint32)
     holes = np.array( ((10, 10),),
-                      dtype = np.float32)
+                      dtype = np.float64)
     
     out_points_xy, out_points_z, out_lines, out_triangles  =  \
-          pytriangle.triangulate_simple(points,
-                                        depths,
-                                        lines,
-                                        holes,
-                                        )
+          pytriangle.triangulate_simple("", points, depths, lines, holes)
      
-    print "out_points_xy:", out_points_xy
-    print "out_points_z:",out_points_z
-    print "out_lines:",out_lines
-    print "out_triangles:",out_triangles
-    print out_points_xy.dtype
-    print out_triangles.dtype
+    print("out_points_xy:", out_points_xy)
+    print("out_points_z:",out_points_z)
+    print("out_lines:",out_lines)
+    print("out_triangles:",out_triangles)
+    print(out_points_xy.dtype)
+    print(out_triangles.dtype)
     
     assert_array_equal(points, out_points_xy)
     assert_array_equal(depths, out_points_z)
     
     
     #raise Exception
+
+if __name__ == "__main__":
+    test_triangulate()

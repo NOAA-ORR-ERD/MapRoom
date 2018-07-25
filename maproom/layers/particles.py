@@ -24,10 +24,10 @@ from omnivore.utils.parseutil import NumpyFloatExpression, ParseException
 from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils
 
-from folder import Folder
-from base import ProjectedLayer, ScreenLayer
-from point_base import PointBaseLayer
-import state
+from .folder import Folder
+from .base import ProjectedLayer, ScreenLayer
+from .point_base import PointBaseLayer
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ class ParticleFolder(Folder):
 
     start_index = Int(0)
 
-    end_index = Int(sys.maxint)
+    end_index = Int(sys.maxsize)
 
     scalar_subset_expression = Str("")
 
@@ -70,7 +70,7 @@ class ParticleFolder(Folder):
         else:
             names = dict()
         summary_names = dict()
-        for k, name in names.iteritems():
+        for k, name in names.items():
             if " (" in name and name .endswith(")"):
                 name, _ = name.rsplit(" (", 1)
             summary_names[k] = name
@@ -98,13 +98,13 @@ class ParticleFolder(Folder):
         children = self.get_particle_layers()
         r = {}
         for c in children:
-            for name, vals in c.scalar_value_ranges().iteritems():
+            for name, vals in c.scalar_value_ranges().items():
                 if name not in r:
                     r[name] = ([],[])
                 r[name][0].append(vals[0])
                 r[name][1].append(vals[1])
         ranges = {}
-        for name, vals in r.iteritems():
+        for name, vals in r.items():
             ranges[name] = (min(vals[0]), max(vals[1]))
         return ranges
 
@@ -229,7 +229,7 @@ class ParticleFolder(Folder):
         return self.is_using_colormap() and self.colormap.is_discrete
 
     def subset_using_logical_operation(self, operation):
-        print("folder: op=%s" % operation)
+        print(("folder: op=%s" % operation))
 
         self.scalar_subset_expression = operation
         children = self.get_particle_layers()
@@ -405,7 +405,7 @@ class ParticleLayer(PointBaseLayer):
     @classmethod
     def create_status_code_color_map(cls, status_code_names):
         status_code_colors = {}
-        for k, v in status_code_names.iteritems():
+        for k, v in status_code_names.items():
             status_code_colors[k] = cls.status_code_color_map.get(k, color_floats_to_int(1.0, 0, 0, 1.0))
         return status_code_colors
 
@@ -419,7 +419,7 @@ class ParticleLayer(PointBaseLayer):
 
     def scalar_value_ranges(self):
         ranges = {}
-        for name, vals in self.scalar_vars.iteritems():
+        for name, vals in self.scalar_vars.items():
             ranges[name] = (min(vals), max(vals))
         return ranges
 
@@ -463,7 +463,7 @@ class ParticleLayer(PointBaseLayer):
 
     def status_code_names_to_json(self):
         if self.status_code_names is not None:
-            return self.status_code_names.items()
+            return list(self.status_code_names.items())
 
     def status_code_names_from_json(self, json_data):
         jd = json_data['status_code_names']
@@ -474,7 +474,7 @@ class ParticleLayer(PointBaseLayer):
 
     def status_code_count_to_json(self):
         if self.status_code_count is not None:
-            return self.status_code_count.items()
+            return list(self.status_code_count.items())
 
     def status_code_count_from_json(self, json_data):
         jd = json_data['status_code_count']
@@ -486,7 +486,7 @@ class ParticleLayer(PointBaseLayer):
     def status_code_colors_to_json(self):
         if self.status_code_colors is not None:
             # force numbers to be python ints, not numpy. JSON can't serialize numpy
-            return [(k, int(v)) for k, v in self.status_code_colors.iteritems()]
+            return [(k, int(v)) for k, v in self.status_code_colors.items()]
 
     def status_code_colors_from_json(self, json_data):
         jd = json_data['status_code_colors']
@@ -497,7 +497,7 @@ class ParticleLayer(PointBaseLayer):
 
     def scalar_vars_to_json(self):
         d = []  # transform since numpy values can't be directly serialized
-        for name, values in self.scalar_vars.iteritems():
+        for name, values in self.scalar_vars.items():
             v = [name, str(values.dtype)]
             v.extend(values.tolist())
             d.append(v)
@@ -548,7 +548,7 @@ class ParticleLayer(PointBaseLayer):
     def from_json_sanity_check_after_load(self, json_data):
         if not self.status_code_count:
             self.status_code_count = {}
-            for k, v in self.status_code_names.iteritems():
+            for k, v in self.status_code_names.items():
                 count = 0
                 if v.endswith(")") and "(" in v:
                     _, text = v[:-1].rsplit("(", 1)
@@ -596,7 +596,7 @@ class ParticleLayer(PointBaseLayer):
     def set_colors_from_status_codes(self, update_count=False):
         log.debug("setting status code colors to: %s" % self.status_code_colors)
         colors = np.zeros(np.alen(self.points), dtype=np.uint32)
-        for code, color in self.status_code_colors.iteritems():
+        for code, color in self.status_code_colors.items():
             index = np.where(self.status_codes == code)
             colors[index] = color
             if update_count:
@@ -689,5 +689,5 @@ class ParticleLayer(PointBaseLayer):
         try:
             result = expression.eval(search_text)
             return result
-        except ParseException, e:
+        except ParseException as e:
             raise ValueError(e)

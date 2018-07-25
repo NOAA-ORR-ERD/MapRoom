@@ -16,11 +16,11 @@ from omnivore.utils.wx.download_manager import DownloadControl
 from omnivore.utils.wx.zoomruler import ZoomRuler
 from omnivore.utils.textutil import pretty_seconds, parse_pretty_seconds
 
-from layer_tree_control import LayerTreeControl
-from ui.info_panels import LayerInfoPanel, SelectionInfoPanel
-from ui.triangle_panel import TrianglePanel
-from ui.merge_panel import MergePointsPanel
-from ui.undo_panel import UndoHistoryPanel
+from .layer_tree_control import LayerTreeControl
+from .ui.info_panels import LayerInfoPanel, SelectionInfoPanel
+from .ui.triangle_panel import TrianglePanel
+from .ui.merge_panel import MergePointsPanel
+from .ui.undo_panel import UndoHistoryPanel
 
 import logging
 log = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ class TimelinePanel(ZoomRuler):
             end = start
 
         # Minimum of one hour
-        padding = divmod((end - start) / 10, 60)[0] * 60
+        padding = divmod((end - start) // 10, 60)[0] * 60
         if padding < 3600:
             padding = 3600
 
@@ -81,11 +81,13 @@ class TimelinePanel(ZoomRuler):
         return r
 
     def selection_started_callback(self, selected_ranges):
+        if self.editor is None: return
         log.debug("selection started: %s" % str(selected_ranges))
         self.current_marks_in_selection = set()
         self.editor.refresh()
 
     def selection_extended_callback(self, selected_ranges, marks_in_selection):
+        if self.editor is None: return
         log.debug("selection extended: %s" % str(selected_ranges))
         if marks_in_selection != self.current_marks_in_selection:
             self.editor.refresh()
@@ -94,38 +96,47 @@ class TimelinePanel(ZoomRuler):
             log.debug("no marks changed; no refresh needed")
 
     def selection_finished_callback(self, selected_ranges):
+        if self.editor is None: return
         log.debug("selection finished: %s" % str(selected_ranges))
         self.editor.refresh()
 
     def item_activation_callback(self, item):
+        if self.editor is None: return
         layers = [item]
         self.editor.set_layer_visibility(layers)
         self.editor.layer_tree_control.Refresh()
 
     def over_item_callback(self, pos, item):
+        if self.editor is None: return
         self.editor.status_message = str(item)
 
     def not_over_item_callback(self, pos):
+        if self.editor is None: return
         self.editor.status_message = ""
 
     def selected_item_callback(self, item):
+        if self.editor is None: return
         self.editor.layer_tree_control.set_edit_layer(item)
 
     def selection_cleared_callback(self):
+        if self.editor is None: return
         log.debug("selection cleared")
         self.current_time = None
         self.editor.refresh()
 
     def playback_start_callback(self):
+        if self.editor is None: return
         self.GetParent().play.SetLabel("Pause")
         self.editor.start_movie_recording()
 
     def playback_pause_callback(self):
+        if self.editor is None: return
         self.GetParent().play.SetLabel("Play")
         self.current_time = None
         self.editor.stop_movie_recording()
 
     def playback_callback(self, current_time):
+        if self.editor is None: return
         log.debug("playback for time: %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(current_time)))
         self.current_time = current_time
         self.editor.refresh()
@@ -430,6 +441,7 @@ class FlaggedPointPanel(wx.ListBox):
         self.task = task
         self.editor = None
         self.point_indexes = []
+        self.notification_count = 0
         wx.ListBox.__init__(self, parent, wx.ID_ANY, name="Flagged Points", **kwargs)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_click)
 
@@ -474,6 +486,7 @@ class FlaggedPointPanel(wx.ListBox):
     def set_flagged(self, point_indexes):
         self.point_indexes = list(point_indexes)
         self.Set([str(i) for i in point_indexes])
+        self.notification_count = len(point_indexes)
 
     def recalc_view(self):
         editor = self.task.active_editor
@@ -483,17 +496,11 @@ class FlaggedPointPanel(wx.ListBox):
             points = layer.get_flagged_point_indexes()
         except AttributeError:
             points = []
+        log.debug(f"flagged in {layer}: {str(points)}")
         self.set_flagged(points)
 
     def refresh_view(self):
         self.Refresh()
-
-    def activateSpringTab(self):
-        self.recalc_view()
-
-    def get_notification_count(self):
-        self.recalc_view()
-        return len(self.point_indexes)
 
 
 class DownloadPanel(DownloadControl):

@@ -5,20 +5,11 @@ import functools
 
 from fs.opener import opener, fsopen
 
-import library.rect as rect
+from .library import rect
 
-from layers import Graticule
-from layers import Layer
-from layers import LayerStyle
-from layers import LineLayer
-from layers import RootLayer
-from layers import Scale
-from layers import TriangleLayer
-from layers import AnnotationLayer
-from layers import TileLayer
-from layers import loaders
-from layers import LayerStyle, parse_styles_from_json, styles_to_json
-from command import UndoStack
+from . import layers as ly
+from .layers import loaders
+from .command import UndoStack
 
 # Enthought library imports.
 from traits.api import Any
@@ -31,7 +22,7 @@ from pyface.api import GUI
 from omnivore.framework.document import BaseDocument
 from omnivore.utils.jsonutil import collapse_json
 from omnivore.utils.fileutil import ExpandZip
-from library import colormap
+from .library import colormap
 
 import logging
 log = logging.getLogger(__name__)
@@ -40,7 +31,7 @@ log = logging.getLogger(__name__)
 class LayerManager(BaseDocument):
 
     """
-    Manages the layers (a tree of Layer).
+    Manages the layers (a tree of ly.Layer).
 
     A "multi_index" is a set of indexes taken in order, that give the location
     of a sub-tree or leaf within a tree. For instance,
@@ -126,20 +117,20 @@ class LayerManager(BaseDocument):
         index = 0
         self.next_invariant = -2
         self.default_styles = self.project.task.default_styles
-        layer = RootLayer(manager=self)
+        layer = ly.RootLayer(manager=self)
         self.insert_layer([index], layer)
 
         index += 1
-        grid = Graticule(manager=self)
+        grid = ly.Graticule(manager=self)
         self.insert_layer([index], grid)
         
         index += 1
-        scale = Scale(manager=self)
+        scale = ly.Scale(manager=self)
         self.insert_layer([index], scale)
 
         # Add hook to create layer instances for debugging purposes
         if "--debug-objects" in self.project.window.application.command_line_args:
-            import debug
+            from . import debug
             debug.debug_objects(self)
 
         return self
@@ -160,9 +151,9 @@ class LayerManager(BaseDocument):
 
     def debug_invariant(self):
         layers = self.flatten()
-        print "next invariant: %d" % self.next_invariant
+        print("next invariant: %d" % self.next_invariant)
         for layer in layers:
-            print "  %s: invariant=%d" % (layer, layer.invariant)
+            print("  %s: invariant=%d" % (layer, layer.invariant))
 
     def debug_structure(self, indent=""):
         lines = self.debug_structure_recursive(self.layers, indent)
@@ -172,7 +163,7 @@ class LayerManager(BaseDocument):
         result = []
 
         for item in tree:
-            if (isinstance(item, Layer)):
+            if (isinstance(item, ly.Layer)):
                 result.append(indent + str(self.get_multi_index_of_layer(item)) + " " + item.debug_info(indent))
             else:
                 result.extend(self.debug_structure_recursive(item, indent + "    "))
@@ -191,7 +182,7 @@ class LayerManager(BaseDocument):
         # json can't handle dictionaries with tuples as their keys, so have
         # to compress
         cplist = []
-        for entry, (truth, locked) in self.control_point_links.iteritems():
+        for entry, (truth, locked) in self.control_point_links.items():
             # retain compatibility with old versions, only add locked flag if
             # present
             if locked:
@@ -214,11 +205,11 @@ class LayerManager(BaseDocument):
         self.control_point_links = cpdict
 
     def default_styles_to_json(self):
-        return styles_to_json(self.default_styles)
+        return ly.styles_to_json(self.default_styles)
 
     def default_styles_from_json(self, json_data):
         sdict = json_data['default_styles']
-        d = parse_styles_from_json(sdict)
+        d = ly.parse_styles_from_json(sdict)
         self.update_default_styles(d)
 
     ##### Multi-index calculations
@@ -282,7 +273,7 @@ class LayerManager(BaseDocument):
 
     def get_multi_index_of_layer_recursive(self, layer, tree):
         for i, item in enumerate(tree):
-            if (isinstance(item, Layer)):
+            if (isinstance(item, ly.Layer)):
                 if (item == layer):
                     # in the case of folders, we return the multi-index to the parent,
                     # since the folder "layer" itself is just a pseudo-layer
@@ -331,7 +322,7 @@ class LayerManager(BaseDocument):
             if layer.is_overlay:
                 log.debug("Updating overlay bounds for %s" % str(layer))
                 layer.update_overlay_bounds()
-            elif layer.is_folder() and not layer.is_root():
+            elif layer.contains_overlays:
                 log.debug("Updating overlay bounds for %s" % str(layer))
                 layer.compute_bounding_rect()
                 layer.update_overlay_bounds()
@@ -362,11 +353,11 @@ class LayerManager(BaseDocument):
 
         # Make sure "other" is a valid style
         try:
-            s = LayerStyle()
+            s = ly.LayerStyle()
             s.parse(str(self.default_styles["other"]))
         except Exception:
             log.warning("Invalid style for other, using default")
-            self.default_styles["other"] = LayerStyle() # minimal default styles
+            self.default_styles["other"] = ly.LayerStyle() # minimal default styles
         for type_name in sorted(styles.keys()):
             style = self.default_styles[type_name]
             log.debug("style %s: %s" % (type_name, str(style)))
@@ -400,7 +391,7 @@ class LayerManager(BaseDocument):
         result = []
 
         for item in tree:
-            if (isinstance(item, Layer)):
+            if (isinstance(item, ly.Layer)):
                 result.append(item)
             else:
                 result.extend(self.flatten_recursive(item))
@@ -418,7 +409,7 @@ class LayerManager(BaseDocument):
         indexes.append(index)
         for item in tree:
             indexes[-1] = index
-            if (isinstance(item, Layer)):
+            if (isinstance(item, ly.Layer)):
                 result.append((tuple(indexes), item))
             else:
                 result.extend(self.flatten_with_indexes_recursive(item, indexes))
@@ -573,6 +564,16 @@ class LayerManager(BaseDocument):
         ret = self.flatten_recursive(l)
         return ret[1:]
 
+    def get_layer_parent(self, layer):
+        """Return the immediate parent
+        """
+        parents = None
+        mi = self.get_multi_index_of_layer(layer)
+        if mi is not None and len(mi) > 1:
+            mi[-1] = 0
+            parent = self.get_layer_by_multi_index(mi)
+        return parent
+
     def get_layer_parents(self, layer):
         """Return a list of parent layers, starting from the immediate parent
         and continuing to older ancestors but ignoring the root layer
@@ -668,7 +669,7 @@ class LayerManager(BaseDocument):
         result = []
         if tree is None: tree = self.layers
         for item in tree:
-            if (isinstance(item, Layer)):
+            if (isinstance(item, ly.Layer)):
                 if not (item.is_root() or item == skip_layer):
                     result.append(item)
                 if item.grouped:
@@ -678,7 +679,7 @@ class LayerManager(BaseDocument):
                 result.extend(self.get_playback_layers(skip_layer, item))
         return result
 
-    ##### Layer info
+    ##### ly.Layer info
 
     def has_user_created_layers(self):
         """Returns true if all the layers can be recreated automatically
@@ -694,8 +695,8 @@ class LayerManager(BaseDocument):
         if layer is not None:
             try:
                 layer.check_for_problems(window)
-            except Exception, e:
-                if hasattr(e, 'points'):
+            except Exception as e:
+                if hasattr(e, 'error_points'):
                     return e
                 else:
                     raise
@@ -761,7 +762,7 @@ class LayerManager(BaseDocument):
         callback = functools.partial(self.post_event, event)
         return callback
 
-    ##### Layer modification
+    ##### ly.Layer modification
 
     def update_map_server_ids(self, layer_type, before, after):
         """Change map server IDs after the server list has been reordered.
@@ -787,11 +788,11 @@ class LayerManager(BaseDocument):
 
     def add_layer(self, type=None, editor=None, before=None, after=None):
         if type == "grid":
-            layer = Graticule(manager=self)
+            layer = ly.Graticule(manager=self)
         elif type == "triangle":
-            layer = TriangleLayer(manager=self)
+            layer = ly.TriangleLayer(manager=self)
         else:
-            layer = LineLayer(manager=self)
+            layer = ly.LineLayer(manager=self)
         layer.new()
         self.insert_loaded_layer(layer, editor, before, after)
         self.dispatch_event('layers_changed')
@@ -867,7 +868,7 @@ class LayerManager(BaseDocument):
 
     def insert_json(self, json_data, editor, mi, old_invariant_map=None):
         mi = list(mi)  # operate on a copy, otherwise changes get returned
-        layer = Layer.load_from_json(json_data, self)[0]
+        layer = ly.Layer.load_from_json(json_data, self)[0]
         if old_invariant_map is not None:
             old_invariant_map[json_data['invariant']] = layer
         self.dispatch_event('layer_loaded', layer)
@@ -909,7 +910,7 @@ class LayerManager(BaseDocument):
             if layer.transient_edit_layer:
                 layer.invariant = self.transient_invariant
             elif not skip_invariant:
-                # Layers being loaded from a project file will have their
+                # ly.Layers being loaded from a project file will have their
                 # invariants already saved, so don't mess with them.
                 layer.invariant = self.get_next_invariant(invariant)
             if layer.is_folder() and not layer.is_root():
@@ -955,13 +956,17 @@ class LayerManager(BaseDocument):
             item = tree[at_multi_index[0]]
             return self.replace_layer_recursive(at_multi_index[1:], layer, item)
 
-    def replace_transient_layer(self, layer, editor, **kwargs):
+    def remove_transient_layer(self):
         old = self.find_transient_layer()
         if old:
             insertion_index = self.get_multi_index_of_layer(old)
             self.remove_layer_at_multi_index(insertion_index)
         else:
             insertion_index = None
+        return old, insertion_index
+
+    def replace_transient_layer(self, layer, editor, **kwargs):
+        old, insertion_index = self.remove_transient_layer()
         self.insert_loaded_layer(layer, editor, **kwargs)
         return old, insertion_index
 
@@ -1016,7 +1021,7 @@ class LayerManager(BaseDocument):
 
         """
         links = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             dep_invariant, dep_cp = dep[0], dep[1]
             if dep_invariant == layer.invariant:
                 truth_invariant, truth_cp = truth[0], truth[1]
@@ -1032,7 +1037,7 @@ class LayerManager(BaseDocument):
         dependent layer.
         """
         to_remove = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             log.debug("control_point_links: %s child of %s" % (dep, truth))
             dep_layer_invariant, dep_cp = dep[0], dep[1]
             if dep_layer_invariant == layer.invariant and (remove_cp < 0 or remove_cp == dep_cp) and (not locked or force):
@@ -1049,7 +1054,7 @@ class LayerManager(BaseDocument):
         and propagated to the dependent layer
         """
         layers = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             log.debug("control_point_links: update %s child of %s" % (dep, truth))
             truth_layer, truth_cp = self.get_layer_by_invariant(truth[0]), truth[1]
             dep_layer, dep_cp = self.get_layer_by_invariant(dep[0]), dep[1]
@@ -1064,7 +1069,7 @@ class LayerManager(BaseDocument):
         Used when deleting a layer.
         """
         to_remove = []
-        for dep, (truth, locked) in self.control_point_links.iteritems():
+        for dep, (truth, locked) in self.control_point_links.items():
             invariant, _ = dep[0], dep[1]
             if invariant == layer.invariant:
                 to_remove.append((dep, truth, locked))
@@ -1100,11 +1105,11 @@ class LayerManager(BaseDocument):
             extra_json = None
         for serialized_data in json:
             try:
-                loaded = Layer.load_from_json(serialized_data, self, batch_flags)
+                loaded = ly.Layer.load_from_json(serialized_data, self, batch_flags)
                 index = serialized_data['index']
                 order.append((index, loaded))
                 log.debug("processed json from layer %s" % loaded)
-            except RuntimeError, e:
+            except RuntimeError as e:
                 batch_flags.messages.append("ERROR: %s" % str(e))
         order.sort()
         log.debug("load_all_from_json: order: %s" % str(order))
@@ -1149,11 +1154,11 @@ class LayerManager(BaseDocument):
                     serialized_data['url'] = os.path.join(expanded_zip.root, relname)
                     log.debug("layer url %s" % serialized_data['url'])
                 try:
-                    loaded = Layer.load_from_json(serialized_data, self, batch_flags)
+                    loaded = ly.Layer.load_from_json(serialized_data, self, batch_flags)
                     index = serialized_data['index']
                     order.append((index, loaded))
                     log.debug("processed json from layer %s" % loaded)
-                except RuntimeError, e:
+                except RuntimeError as e:
                     batch_flags.messages.append("ERROR: %s" % str(e))
         order.sort()
         log.debug("load_all_from_zip: order: %s" % str(order))
@@ -1199,7 +1204,7 @@ class LayerManager(BaseDocument):
         layer_info = self.flatten_with_indexes()
         log.debug("layers are " + str(self.layers))
         log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
-        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
+        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in ly.Layer.get_subclasses().items()]))
 
         pre_json_data = self.calc_pre_json_data()
         post_json_data = self.calc_post_json_data(extra_json_data)
@@ -1244,10 +1249,10 @@ class LayerManager(BaseDocument):
 
                         try:
                             text = json.dumps(data, indent=4)
-                        except Exception, e:
+                        except Exception as e:
                             log.error("JSON failure %s, layer %s: data=%s" % (e, layer.name, repr(data)))
                             errors = []
-                            for k, v in data.iteritems():
+                            for k, v in data.items():
                                 small = {k: v}
                                 try:
                                     _ = json.dumps(small)
@@ -1261,59 +1266,15 @@ class LayerManager(BaseDocument):
                         zf.writestr(zip_path, processed)
                 zf.close()
 
-        except RuntimeError, e:
+        except RuntimeError as e:
             log.error("file save error: %s" % str(e))
             return "Failed saving %s: %s" % (file_path, e)
-        except Exception, e:
+        except Exception as e:
             import traceback
             log.error("file save error: %s\n%s" % (str(e), traceback.format_exc()))
             return "Failed saving %s: %s" % (file_path, e)
         # zf = zipfile.ZipFile(file_path)
         # print("\n".join(zf.namelist()))
-        return ""
-
-    def save_all_text(self, file_path, extra_json_data=None):
-        log.debug("saving layers in project file: " + file_path)
-        layer_info = self.flatten_with_indexes()
-        log.debug("layers are " + str(self.layers))
-        log.debug("layer info is:\n" + "\n".join([str(s) for s in layer_info]))
-        log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in Layer.get_subclasses().iteritems()]))
-        project = []
-        if extra_json_data is None:
-            extra_json_data = {}
-        for attr, to_json in self.get_to_json_attrs():
-            extra_json_data[attr] = to_json()
-        project.append("extra json data")
-        project.append(extra_json_data)
-        for index, layer in layer_info:
-            log.debug("index=%s, layer=%s, path=%s" % (index, layer, layer.file_path))
-            data = layer.serialize_json(index)
-            if data is not None:
-                try:
-                    text = json.dumps(data)
-                except Exception, e:
-                    log.error("JSON failure, layer %s: data=%s" % (layer.name, repr(data)))
-                    errors = []
-                    for k, v in data.iteritems():
-                        small = {k: v}
-                        try:
-                            _ = json.dumps(small)
-                        except Exception:
-                            errors.append((k, v))
-                    log.error("JSON failures at: %s" % ", ".join(["%s: %s" % (k, v) for k, v in errors]))
-                    return "Failed saving data in layer %s.\n\n%s" % (layer.name, e)
-
-                project.append(data)
-
-        try:
-            with fsopen(file_path, "wb") as fh:
-                fh.write("# -*- MapRoom project file -*-\n")
-                text = json.dumps(project, indent=4)
-                processed = collapse_json(text, 12)
-                fh.write(processed)
-                fh.write("\n")
-        except Exception, e:
-            return "Failed saving %s: %s" % (file_path, e)
         return ""
 
     def save_layer(self, layer, file_path, loader=None):
@@ -1326,21 +1287,21 @@ class LayerManager(BaseDocument):
 
 
 # def test():
-#     a = Layer()
+#     a = ly.Layer()
 #     a.name = "a"
-#     b = Layer()
+#     b = ly.Layer()
 #     b.name = "b"
-#     c = Layer()
+#     c = ly.Layer()
 #     c.name = "c"
-#     d = Layer()
+#     d = ly.Layer()
 #     d.name = "d"
-#     e = Layer()
+#     e = ly.Layer()
 #     e.name = "e"
-#     f = Layer()
+#     f = ly.Layer()
 #     f.name = "f"
-#     g = Layer()
+#     g = ly.Layer()
 #     g.name = "g"
-#     h = Layer()
+#     h = ly.Layer()
 #     h.name = "h"
 
 #     tree = [ [ a, b ], [c, [ d, e ] ], f, [ g, h ] ]

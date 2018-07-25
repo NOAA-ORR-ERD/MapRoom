@@ -4,7 +4,7 @@
 Assorted utilities for manipulating latitude and longitude values
 
 """
-from __future__ import unicode_literals
+
 
 __version__ = "1.4"
 
@@ -92,7 +92,7 @@ class LatLongConverter:
         DecDegrees = Sign * (d + m/60.0 + s/3600.0)
 
         if ustring:
-            return u"%.6f\xb0"%(DecDegrees)
+            return "%.6f\xb0"%(DecDegrees)
         else:
             return DecDegrees
 
@@ -115,9 +115,9 @@ class LatLongConverter:
         DecMinutes = round((DecDegrees - Degrees + 1e-14) * 60, 10)# add a tiny bit then round to avoid binary rounding issues
         if ustring:
             if Sign == 1:
-                return u"%i\xb0 %.3f'"%(Degrees, DecMinutes)
+                return "%i\xb0 %.3f'"%(Degrees, DecMinutes)
             else:
-                return u"-%i\xb0 %.3f'"%(Degrees, DecMinutes)
+                return "-%i\xb0 %.3f'"%(Degrees, DecMinutes)
         else:
             return (Sign*float(Degrees), DecMinutes) # float to preserve -0.0
 
@@ -144,9 +144,9 @@ class LatLongConverter:
         Seconds = round(((DecMinutes - Minutes) * 60), 10 )
         if ustring:
             if Sign == 1:
-                return u"%i\xb0 %i' %.2f\""%(Degrees, Minutes, Seconds)
+                return "%i\xb0 %i' %.2f\""%(Degrees, Minutes, Seconds)
             else:
-                return u"-%i\xb0 %i' %.2f\""%(Degrees, Minutes, Seconds)
+                return "-%i\xb0 %i' %.2f\""%(Degrees, Minutes, Seconds)
         else:
             return (Sign * float(Degrees), Minutes, Seconds)
 
@@ -256,11 +256,11 @@ class Latitude:
         """
 
         if   style == 1:
-            return u'''%0.2f\xb0 %s''' % self.degrees()
+            return '''%0.2f\xb0 %s''' % self.degrees()
         elif style == 2:
-            return u'''%d\xb0 %0.2f' %s''' % self.degrees_minutes()
+            return '''%d\xb0 %0.2f' %s''' % self.degrees_minutes()
         elif style == 3:
-            return u'''%d\xb0 %d' %0.2f" %s''' % self.degrees_minutes_seconds()
+            return '''%d\xb0 %d' %0.2f" %s''' % self.degrees_minutes_seconds()
         else:
             raise ValueError("style must be 1, 2, or 3")
 
@@ -270,7 +270,7 @@ class Latitude:
 
         Backward compatibility for Quixote rlink and Pylons inews.
         """
-        return self.format(style).replace(u"\xb0", u"&deg;")
+        return self.format(style).replace("\xb0", "&deg;")
 
 class Longitude(Latitude):
     """See Latitude docstring.

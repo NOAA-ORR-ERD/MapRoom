@@ -466,7 +466,7 @@ class ImmediateModeRenderer():
 
     def draw_polygons(self, layer, picker,
                       polygon_colors, line_color, line_width, style=None,
-                      broken_polygon_index=None):
+                      broken_polygon_index=None, editing_polygon_index=None):
         if self.triangle_vertex_buffers is None or self.polygon_count == 0:
             return
 
@@ -523,7 +523,8 @@ class ImmediateModeRenderer():
                 gl,
                 0 if broken_polygon_index is None else broken_polygon_index,
                 # If needed, render with one polygon border popped open.
-                gl.GL_LINE_LOOP if broken_polygon_index is None else gl.GL_LINE_STRIP
+                gl.GL_LINE_LOOP if broken_polygon_index is None else gl.GL_LINE_STRIP,
+                np.uint32(-1) if editing_polygon_index is None else editing_polygon_index
             )
         gl.glDisable(gl.GL_LINE_STIPPLE)
 

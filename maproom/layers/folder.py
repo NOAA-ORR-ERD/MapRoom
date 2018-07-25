@@ -5,13 +5,13 @@ from traits.api import Str
 from traits.api import Unicode
 
 # MapRoom imports
-from base import Layer
-from line import LineLayer
+from .base import Layer
+from .line import LineLayer
 from ..library import rect
 from ..renderer import data_types
 
 # local package imports
-import state
+from . import state
 
 import logging
 log = logging.getLogger(__name__)
@@ -38,6 +38,10 @@ class Folder(Layer):
         children = self.manager.get_layer_children(self)
         for layer in children:
             layer.set_visibility_when_checked(checked, project_layer_visibility)
+
+    def get_child_layers(self):
+        children = self.manager.get_layer_children(self)
+        return children
 
 
 class RootLayer(Folder):
@@ -78,7 +82,7 @@ class BoundedFolder(LineLayer, Folder):
             points = [(l, b), (r, b), (r, t), (l, t)]
         f_points = np.asarray(points, dtype=np.float32)
         n = np.alen(f_points)
-        self.points = self.make_points(n)
+        self.points = data_types.make_points(n)
         log.debug("SET_DATA_FROM_BOUNDS:start %s" % self)
         if (n > 0):
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n] = f_points

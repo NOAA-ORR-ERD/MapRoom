@@ -18,7 +18,7 @@ from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 #     before = "image/x-gdal"
 
 #     def identify(self, guess):
-#         byte_stream = guess.bytes
+#         byte_stream = guess.get_bytes()
 #         if byte_stream[0:8] == "\211HDF\r\n\032\n":
 #             return self.id
 
@@ -43,7 +43,7 @@ class MapRoomZipProjectRecognizer(RecognizerBase):
 
         # attempt to load as a uri
         try:
-            if zipfile.is_zipfile(guess.bytes):
+            if zipfile.is_zipfile(guess.bytes_as_stream):
                 return self.id
         except TypeError:
             # if there is an embedded zero in the byte stream, ZipFile fails
@@ -67,10 +67,10 @@ class UGRID_Recognizer(RecognizerBase):
     before = "image/x-gdal"
 
     def identify(self, guess):
-        byte_stream = guess.bytes
+        byte_stream = guess.get_bytes()
         # check if it is either HDF or CDF
-        if byte_stream[:3] == "CDF" or byte_stream[0:8] == "\211HDF\r\n\032\n":
-            if ('cf_role' in byte_stream) and ('mesh_topology' in byte_stream):
+        if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
+            if (b'cf_role' in byte_stream) and (b'mesh_topology' in byte_stream):
                 return self.id
 
 
@@ -89,8 +89,8 @@ class NC_ParticleRecognizer(RecognizerBase):
     before = "image/x-gdal"
 
     def identify(self, guess):
-        byte_stream = guess.bytes
+        byte_stream = guess.get_bytes()
         # check if is is HDF or CDF
-        if byte_stream[:3] == "CDF" or byte_stream[0:8] == "\211HDF\r\n\032\n":
-            if ('feature_type' in byte_stream) and ('particle_trajector' in byte_stream):
+        if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
+            if (b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream):
                 return self.id

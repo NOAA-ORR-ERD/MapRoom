@@ -78,12 +78,12 @@ _colors_full_map = {}
 # Set by reverse priority order.
 _colors_full_map.update(XKCD_COLORS)
 _colors_full_map.update({k.replace('grey', 'gray'): v
-                         for k, v in XKCD_COLORS.items()
+                         for k, v in list(XKCD_COLORS.items())
                          if 'grey' in k})
 _colors_full_map.update(CSS4_COLORS)
 _colors_full_map.update(TABLEAU_COLORS)
 _colors_full_map.update({k.replace('gray', 'grey'): v
-                         for k, v in TABLEAU_COLORS.items()
+                         for k, v in list(TABLEAU_COLORS.items())
                          if 'gray' in k})
 _colors_full_map.update(BASE_COLORS)
 _colors_full_map = _ColorMapping(_colors_full_map)
@@ -709,7 +709,7 @@ class LinearSegmentedColormap(Colormap):
         if (isinstance(colors[0], Sized) and len(colors[0]) == 2
                 and not isinstance(colors[0], six.string_types)):
             # List of value, color pairs
-            vals, colors = zip(*colors)
+            vals, colors = list(zip(*colors))
         else:
             vals = np.linspace(0, 1, len(colors))
 

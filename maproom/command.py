@@ -94,18 +94,18 @@ class UndoStack(list):
         return last
 
     def history_list(self):
-        h = [unicode(c).encode("utf-8") for c in self]
+        h = [str(c) for c in self]
         return h
 
     def serialize(self):
-        from serializer import Serializer
+        from .serializer import Serializer
         s = Serializer()
         for c in self:
             s.add(c)
         return s
 
     def unserialize_text(self, text, manager):
-        from serializer import TextDeserializer
+        from .serializer import TextDeserializer
 
         offset = manager.get_invariant_offset()
         s = TextDeserializer(text, offset)
@@ -125,6 +125,9 @@ class LayerStatus(object):
 
         # True if items within the layer have changed position only
         self.layer_items_moved = False
+
+        # List of points that have been changed, if command supports it
+        self.indexes_of_points_affected = []
 
         # True if items have been added to the layer
         self.layer_contents_added = False
@@ -261,6 +264,9 @@ class Command(object):
 
     def __str__(self):
         return "<unnamed command>"
+
+    def get_layer_in_layer_manager(self, layer_manager):
+        return layer_manager.get_layer_by_invariant(self.layer)
 
     def get_serialized_name(self):
         if self.short_name is None:

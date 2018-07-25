@@ -16,7 +16,7 @@ class TestVerdat(object):
     def test_simple(self):
         layer = self.verdat
         assert 23 == np.alen(layer.points)
-        print layer.points
+        print(layer.points)
         layer.check_for_problems(None)
     
     def test_save(self):

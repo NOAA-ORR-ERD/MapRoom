@@ -11,12 +11,12 @@ from traits.api import on_trait_change
 from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, TaskDynamicSubmenuGroup
 from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
-import pane_layout
-from menu_commands import AddLayerCommand, ToPolygonLayerCommand, ToVerdatLayerCommand, MergeLayersCommand, PasteLayerCommand, StartTimeCommand, EndTimeCommand
-from mouse_commands import ViewportCommand, NormalizeLongitudeCommand, SwapLatLonCommand
-from ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
-from library.thread_utils import BackgroundWMSDownloader
-from library.tile_utils import BackgroundTileDownloader
+from . import pane_layout
+from . import menu_commands as mec
+from . import mouse_commands as moc
+from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
+from .library.thread_utils import BackgroundWMSDownloader
+from .library.tile_utils import BackgroundTileDownloader
 from . import layers
 
 import logging
@@ -182,7 +182,7 @@ class SaveLayerGroup(TaskDynamicSubmenuGroup):
     def _get_items(self, layer=None):
         items = []
         if layer is not None:
-            from layers.loaders import valid_save_formats
+            from .layers.loaders import valid_save_formats
             valid = valid_save_formats(layer)
             if valid:
                 for item in valid:
@@ -274,7 +274,7 @@ class ZoomInAction(EditorAction):
     def perform(self, event):
         c = self.active_editor.layer_canvas
         units_per_pixel = c.zoom_in()
-        cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
+        cmd = moc.ViewportCommand(None, c.projected_point_center, units_per_pixel)
         self.active_editor.process_command(cmd)
 
 
@@ -286,7 +286,7 @@ class ZoomOutAction(EditorAction):
     def perform(self, event):
         c = self.active_editor.layer_canvas
         units_per_pixel = c.zoom_out()
-        cmd = ViewportCommand(None, c.projected_point_center, units_per_pixel)
+        cmd = moc.ViewportCommand(None, c.projected_point_center, units_per_pixel)
         self.active_editor.process_command(cmd)
 
 
@@ -298,7 +298,7 @@ class ZoomToFit(EditorAction):
     def perform(self, event):
         c = self.active_editor.layer_canvas
         center, units_per_pixel = c.calc_zoom_to_fit()
-        cmd = ViewportCommand(None, center, units_per_pixel)
+        cmd = moc.ViewportCommand(None, center, units_per_pixel)
         self.active_editor.process_command(cmd)
 
 
@@ -312,7 +312,7 @@ class ZoomToLayer(LayerAction):
         return layer.is_zoomable()
 
     def perform_on_layer(self, layer, event):
-        cmd = ViewportCommand(layer)
+        cmd = moc.ViewportCommand(layer)
         self.active_editor.process_command(cmd)
 
 
@@ -320,7 +320,7 @@ class NewLayerBaseAction(EditorAction):
     layer_class = None
 
     def perform(self, event):
-        cmd = AddLayerCommand(self.layer_class)
+        cmd = mec.AddLayerCommand(self.layer_class)
         self.active_editor.process_command(cmd)
 
 class NewVectorLayerAction(NewLayerBaseAction):
@@ -470,7 +470,7 @@ class ToPolygonLayerAction(EditorAction):
     def perform(self, event):
         edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
-            cmd = ToPolygonLayerCommand(edit_layer)
+            cmd = mec.ToPolygonLayerCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 
@@ -482,7 +482,7 @@ class ToVerdatLayerAction(EditorAction):
     def perform(self, event):
         edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
-            cmd = ToVerdatLayerCommand(edit_layer)
+            cmd = mec.ToVerdatLayerCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 
@@ -542,7 +542,7 @@ class MergeLayersAction(EditorAction):
                 else:
                     depth_unit = da
             if depth_unit is not None:
-                cmd = MergeLayersCommand(layer_a, layer_b, depth_unit)
+                cmd = mec.MergeLayersCommand(layer_a, layer_b, depth_unit)
                 project.process_command(cmd)
 
 
@@ -676,7 +676,7 @@ class DebugAnnotationLayersAction(EditorAction):
         GUI.invoke_later(self.after, self.active_editor)
 
     def after(self, project):
-        import debug
+        from . import debug
         lm = project.layer_manager
         undo = debug.debug_objects(lm)
         project.process_flags(undo.flags)
@@ -718,7 +718,7 @@ class DuplicateLayerAction(LayerAction):
         json_data = layer.serialize_json(-999, True)
         if json_data:
             text = json.dumps(json_data)
-            cmd = PasteLayerCommand(layer, text, self.active_editor.layer_canvas.world_center)
+            cmd = mec.PasteLayerCommand(layer, text, self.active_editor.layer_canvas.world_center)
             self.active_editor.process_command(cmd)
 
 
@@ -733,7 +733,7 @@ class ManageWMSAction(EditorAction):
             BackgroundWMSDownloader.set_known_hosts(items)
             event.task.remember_wms()
             self.active_editor.layer_manager.update_map_server_ids("wms", hosts, items)
-            self.active_editor.refresh(True)
+            self.active_editor.refresh()
         dlg.Destroy()
 
 
@@ -748,7 +748,7 @@ class ManageTileServersAction(EditorAction):
             BackgroundTileDownloader.set_known_hosts(items)
             event.task.remember_tile_servers()
             self.active_editor.layer_manager.update_map_server_ids("tiles", hosts, items)
-            self.active_editor.refresh(True)
+            self.active_editor.refresh()
         dlg.Destroy()
 
 
@@ -762,7 +762,7 @@ class ClearTileCacheAction(EditorAction):
             try:
                 for host in dlg.get_checked_items():
                     host.clear_cache(event.task.get_tile_cache_root())
-            except OSError, e:
+            except OSError as e:
                 event.task.window.window.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
 
         dlg.Destroy()
@@ -775,7 +775,7 @@ class NormalizeLongitudeAction(EditorAction):
     def perform(self, event):
         edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
-            cmd = NormalizeLongitudeCommand(edit_layer)
+            cmd = moc.NormalizeLongitudeCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 
@@ -786,7 +786,7 @@ class SwapLatLonAction(EditorAction):
     def perform(self, event):
         edit_layer = self.active_editor.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
-            cmd = SwapLatLonCommand(edit_layer)
+            cmd = moc.SwapLatLonCommand(edit_layer)
             self.active_editor.process_command(cmd)
 
 
@@ -835,11 +835,61 @@ class RenameLayerAction(LayerAction):
         GUI.invoke_later(self.active_editor.layer_tree_control.start_rename, layer)
 
 
+class EditLayerAction(EditorAction):
+    name = 'Edit Layer'
+    tooltip = 'Edit the currently selected layer'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'])
+        self.active_editor.process_command(cmd)
+
+
+class AddPolygonBoundaryAction(EditorAction):
+    name = 'Add Polygon'
+    tooltip = 'Add a new boundary polygon'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], new_boundary=True)
+        self.active_editor.process_command(cmd)
+
+
+class AddPolygonHoleAction(EditorAction):
+    name = 'Add Hole'
+    tooltip = 'Add a new hole polygon'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], new_hole=True)
+        self.active_editor.process_command(cmd)
+
+
+class DeletePolygonAction(EditorAction):
+    name = 'Delete Polygon'
+    tooltip = 'Remove a polygon or hole; note that if a polygon is removed, any holes in that polygon are also removed'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.DeletePolygonCommand(d['layer'], d['object_type'], d['object_index'])
+        self.active_editor.process_command(cmd)
+
+
+class SaveRingEditAction(EditorAction):
+    name = 'Save Changes in Polygon'
+    tooltip = 'Save the current edits in the parent polygon'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.PolygonSaveEditLayerCommand(d['layer'])
+        self.active_editor.process_command(cmd)
+
+
 class StartTimeAction(LayerAction):
     name = 'Start Time'
     tooltip = 'Set time that layer becomes active'
     dialog_info = 'Set start time of %s\nto start time of:'
-    cmd = StartTimeCommand
+    cmd = mec.StartTimeCommand
 
     def get_time(self, layer):
         return layer.start_time
@@ -854,7 +904,7 @@ class StartTimeAction(LayerAction):
 
         if dlg.ShowModal() == wx.ID_OK:
             source_layer = layers[dlg.GetSelection()]
-            print('You selected: %s\n' % source_layer)
+            print(('You selected: %s\n' % source_layer))
             cmd = self.cmd(layer, self.get_time(source_layer))
             self.active_editor.process_command(cmd)
 
@@ -863,7 +913,7 @@ class EndTimeAction(StartTimeAction):
     name = 'End Time'
     tooltip = 'Set time that layer stops being active'
     dialog_info = 'Set end time of %s\nto end time of:'
-    cmd = EndTimeCommand
+    cmd = mec.EndTimeCommand
 
     def get_time(self, layer):
         return layer.end_time
