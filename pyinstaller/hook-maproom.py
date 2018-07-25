@@ -136,6 +136,7 @@ subpkgs = [
     "pyface",
     "omnivore",
     "maproom",
+    "osgeo",
 ]
 
 datas = []
