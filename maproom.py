@@ -21,6 +21,20 @@ from docutils.core import publish_parts
 # Debugging turned on for readable exceptions on Enthought ui module import
 os.environ["ETS_DEBUG"] = "True"
 
+# Set GDAL_DATA environment variable, needed on windows to find support files
+# to use whhen converting coordinate systems upon load of shapefiles
+import osgeo.ogr
+found = os.path.join(os.path.dirname(osgeo.ogr.__file__), "data")
+if not os.path.exists(found):
+    try:
+        import fiona
+    except ImportError:
+        found = None
+    else:
+        found = os.path.join(os.path.dirname(fiona.__file__), "gdal_data")
+if found is not None:
+    os.environ["GDAL_DATA"] = found
+
 # Framework imports.
 from omnivore import get_image_path
 from omnivore.app_init import run, setup_frozen_logging
