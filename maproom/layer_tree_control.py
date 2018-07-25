@@ -48,7 +48,7 @@ class LayerTreeControl(wx.Panel):
         self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGING, self.handle_selection_changing)
         self.tree.Bind(treectrl.EVT_TREE_SEL_CHANGED, self.handle_selection_changed)
         self.tree.Bind(treectrl.EVT_TREE_ITEM_EXPANDING, self.handle_item_expanding)
-        self.tree.Bind(wx.EVT_LEFT_DCLICK, self.handle_start_rename)
+        #self.tree.Bind(wx.EVT_LEFT_DCLICK, self.handle_start_rename)
         self.tree.Bind(treectrl.EVT_TREE_BEGIN_LABEL_EDIT, self.handle_check_item_name)
         self.tree.Bind(treectrl.EVT_TREE_END_LABEL_EDIT, self.handle_process_rename)
 
