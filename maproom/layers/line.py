@@ -383,6 +383,27 @@ class LineLayer(PointLayer):
 
         # delete them from the layer
         self.points = np.delete(self.points, point_indexes, 0)
+
+        if len(point_indexes) == 1 and len(line_segment_indexes_to_be_deleted) == 2:
+            # Take over one line segment to connect the first and last points
+            point = point_indexes[0]
+            lsi = self.line_segment_indexes
+            removed = point_indexes[0]
+            line1 = line_segment_indexes_to_be_deleted[0]
+            line2 = line_segment_indexes_to_be_deleted[1]
+            connector = line_segment_indexes_to_be_deleted[0]
+            first = lsi.point1[line1] if point == lsi.point2[line1] else lsi.point2[line1]
+            last = lsi.point1[line2] if point == lsi.point2[line2] else lsi.point2[line2]
+            lsi.point1[line1] = first
+            lsi.point2[line1] = last
+
+            # make sure it isn't going to duplicate a line
+            matches = np.where((lsi.point1 == first) & (lsi.point2 == last))[0]
+            if len(matches) == 0:
+                matches = np.where((lsi.point1 == last) & (lsi.point2 == first))[0]
+            if len(matches) == 1:
+                line_segment_indexes_to_be_deleted = [line2]
+
         if (line_segment_indexes_to_be_deleted is not None):
             # then delete the line segments
             self.line_segment_indexes = np.delete(self.line_segment_indexes, line_segment_indexes_to_be_deleted, 0)
