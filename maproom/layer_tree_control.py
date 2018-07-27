@@ -342,7 +342,8 @@ class LayerTreeControl(wx.Panel):
     def handle_selection_changing(self, event):
         layer = self.get_edit_layer()
         log.debug("About to change from selected layer: %s" % layer)
-        layer.layer_deselected_hook()
+        if layer is not None:
+            layer.layer_deselected_hook()
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
