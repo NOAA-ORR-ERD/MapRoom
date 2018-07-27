@@ -156,15 +156,15 @@ def parse_bna_file2(uri, points_accumulator, regime=0):
         if len(pieces) != 3:
             raise RuntimeError("Error at line {0}. Expecting line with 3 items: primary name, secondary name & point count.".format(i))
         try:
-            feature_code = int(pieces[1].strip('"'))
+            feature_code = int(pieces[1].strip('" ,'))
         except ValueError:
             feature_code = 0
-        name = pieces[0].strip('"')
+        name = pieces[0].strip('" ,')
         if name.lower() in ['map bounds', 'mapbounds']:
             feature_code = 4
         elif name.lower() in ['spillable area', 'spillablearea']:
             feature_code = 5
-        feature_name = pieces[1].strip('"')
+        feature_name = pieces[1].strip('" ,')
         num_points = int(pieces[2])
 
         start_index = len(points_accumulator)
