@@ -169,7 +169,7 @@ class PasteLayerCommand(Command):
         lm = editor.layer_manager
         before = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
-        json_data = json.loads(self.json_text.decode('utf-8'))
+        json_data = json.loads(self.json_text)
         mi = lm.get_insertion_multi_index(before)
         old_invariant_map = {}
         layer = lm.insert_json(json_data, editor, mi, old_invariant_map)
