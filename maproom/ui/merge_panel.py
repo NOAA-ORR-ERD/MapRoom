@@ -184,7 +184,7 @@ class MergePointsPanel(wx.Panel):
         self.depth_slider.Enable(event.IsChecked())
 
     def find_duplicates(self, event):
-        if not self.IsShown():
+        if not self.IsShownOnScreen():
             # Hack for OS X: default buttons can still get Return key presses
             # even when the panel is hidden, which is not what we want.
             event.Skip()
