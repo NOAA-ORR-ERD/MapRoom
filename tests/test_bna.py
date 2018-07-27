@@ -1,5 +1,7 @@
 import os
 
+import pytest
+
 import numpy as np
 
 from mock import *
@@ -15,6 +17,7 @@ class TestBNA(object):
 
     def test_simple(self):
         layer = self.bna
+        layer.create_rings()
         assert 33 == len(layer.points)
         assert 3 == len(layer.rings)
         print(layer.points)
@@ -33,18 +36,20 @@ class TestBNAFailures(object):
         self.project = MockProject()
 
     def test_bad_missing_points(self):
-        cmd = self.project.load_file("../TestData/BNA/bad--missing_polygon_points.bna", "application/x-maproom-bna")
+        with pytest.raises(RuntimeError) as e:
+            cmd = self.project.load_file("../TestData/BNA/bad--missing_polygon_points.bna", "application/x-maproom-bna")
         bna = self.project.layer_manager.get_layer_by_invariant(1)
         assert bna == None
-        assert "line with 2 items" in cmd.undo_info.flags.errors[0]
+        assert "line with 2 items" in str(e)
         assert "scale" in str(self.project.layer_manager.flatten()).lower()
         assert "polygon" not in str(self.project.layer_manager.flatten()).lower()
 
     def test_extra_points(self):
-        cmd = self.project.load_file("../TestData/BNA/bad--extra_polygon_points.bna", "application/x-maproom-bna")
+        with pytest.raises(RuntimeError) as e:
+            cmd = self.project.load_file("../TestData/BNA/bad--extra_polygon_points.bna", "application/x-maproom-bna")
         bna = self.project.layer_manager.get_layer_by_invariant(1)
         assert bna == None
-        assert "line with 3 items" in cmd.undo_info.flags.errors[0]
+        assert "line with 3 items" in str(e)
         assert "scale" in str(self.project.layer_manager.flatten()).lower()
         assert "polygon" not in str(self.project.layer_manager.flatten()).lower()
 
