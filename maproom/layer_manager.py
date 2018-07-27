@@ -617,6 +617,27 @@ class LayerManager(BaseDocument):
 
         return ret
 
+    def get_flattened_children(self, layer):
+        """Return a list containing the hierarchy starting at the specified
+        layer and containing any children and descendents.
+
+        This potentially could include lists of lists of lists, as deep as the
+        hierarchy goes.
+        """
+        mi = self.get_multi_index_of_layer(layer)
+        l = self.get_layer_by_multi_index(mi)
+        if not isinstance(l, list):
+            return []
+
+        ret = []
+        for item in l[1:]:
+            if (isinstance(item, list)):
+                ret.append(item[0])
+                ret.extend(self.get_children(item[0]))
+            else:
+                ret.append(item)
+        return ret
+
     def get_layer_by_flattened_index(self, index):
         flattened = self.flatten()
         if index < len(flattened):

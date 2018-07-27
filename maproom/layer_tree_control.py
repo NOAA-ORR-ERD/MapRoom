@@ -441,7 +441,7 @@ class LayerTreeControl(wx.Panel):
     def enforce_group_attributes(self, parent):
         # sync up child attributes that need to be taken from the parent
         lm = self.project.layer_manager
-        for child in lm.get_children(parent):
+        for child in lm.get_flattened_children(parent):
             child.start_time = parent.start_time
             child.end_time = parent.end_time
 
