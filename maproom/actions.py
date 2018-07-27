@@ -885,6 +885,16 @@ class SaveRingEditAction(EditorAction):
         self.active_editor.process_command(cmd)
 
 
+class CancelRingEditAction(EditorAction):
+    name = 'Cancel Edit'
+    tooltip = 'Abandon the current edits in the parent polygon'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.PolygonCancelEditLayerCommand(d['layer'])
+        self.active_editor.process_command(cmd)
+
+
 class StartTimeAction(LayerAction):
     name = 'Start Time'
     tooltip = 'Set time that layer becomes active'

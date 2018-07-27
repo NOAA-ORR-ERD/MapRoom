@@ -132,9 +132,9 @@ class RingEditLayer(LineLayer):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
-        from ..actions import SaveRingEditAction
+        from ..actions import SaveRingEditAction, CancelRingEditAction
 
-        return [SaveRingEditAction]
+        return [SaveRingEditAction, CancelRingEditAction]
 
 
 class PolygonParentLayer(PointLayer):
