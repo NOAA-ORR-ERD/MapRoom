@@ -466,7 +466,7 @@ class ImmediateModeRenderer():
 
     def draw_polygons(self, layer, picker,
                       polygon_colors, line_color, line_width, style=None,
-                      broken_polygon_index=None, editing_polygon_index=None):
+                      broken_polygon_index=None, editing_polygon_indexes=None):
         if self.triangle_vertex_buffers is None or self.polygon_count == 0:
             return
 
@@ -515,6 +515,11 @@ class ImmediateModeRenderer():
                 gl.glEnable(gl.GL_LINE_STIPPLE)
             else:
                 gl.glLineWidth(line_width)
+            dashed_indexes = np.full(self.polygon_count, -1, dtype=np.int32)
+            if editing_polygon_indexes is not None:
+                dashed_indexes[editing_polygon_indexes] = 1
+            print("DASHED", dashed_indexes, editing_polygon_indexes)
+
             render_buffers_with_one_color(
                 self.line_vertex_buffers[: self.polygon_count],
                 line_color,
@@ -524,7 +529,7 @@ class ImmediateModeRenderer():
                 0 if broken_polygon_index is None else broken_polygon_index,
                 # If needed, render with one polygon border popped open.
                 gl.GL_LINE_LOOP if broken_polygon_index is None else gl.GL_LINE_STRIP,
-                np.uint32(-1) if editing_polygon_index is None else editing_polygon_index
+                dashed_indexes,
             )
         gl.glDisable(gl.GL_LINE_STIPPLE)
 

@@ -2,8 +2,6 @@ import os
 
 import numpy as np
 
-from pyugrid.ugrid import UGrid
-
 from mock import *
 
 from maproom.layers import loaders, TriangleLayer
@@ -34,6 +32,38 @@ class TestBNAShapefile(object):
         boundary = layer.select_outer_boundary()
         self.bna.create_rings()
         self.bna.replace_ring_with_resizing(0, boundary, True, False)
+        assert len(self.bna.rings) == 4
+
+    def test_add_commit_polygon(self):
+        uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
+        layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
+        layer.ring_indexes = [1]
+        layer.new_boundary = True
+        layer.new_hole = False
+        self.bna.commit_editing_layer(layer)
+        assert len(self.bna.rings) == 5
+        uri = os.path.join(os.getcwd(), "tmp.add_commit.shp")
+        loaders.save_layer(self.bna, uri)
+
+    def test_replace_polygon(self):
+        uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
+        layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
+        layer.ring_indexes = [1, 2]
+        layer.new_boundary = False
+        layer.num_boundaries = 2
+        layer.new_hole = False
+        self.bna.commit_editing_layer(layer)
+        assert len(self.bna.rings) == 3
+
+    def test_replace_and_add_polygon(self):
+        uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
+        layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
+        layer.ring_indexes = [1]
+        layer.new_boundary = False
+        layer.num_boundaries = 2
+        layer.new_hole = False
+        self.bna.commit_editing_layer(layer)
+        assert len(self.bna.rings) == 4
 
     def test_delete_polygon(self):
         self.bna.delete_ring(0)

@@ -845,6 +845,16 @@ class EditLayerAction(EditorAction):
         self.active_editor.process_command(cmd)
 
 
+class AddPolygonToEditLayerAction(EditorAction):
+    name = 'Add Polygon to Edit Layer'
+    tooltip = 'Add a polygon to the current editing layer'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['object_type'], d['object_index'])
+        self.active_editor.process_command(cmd)
+
+
 class AddPolygonBoundaryAction(EditorAction):
     name = 'Add Polygon'
     tooltip = 'Add a new boundary polygon'

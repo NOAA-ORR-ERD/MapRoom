@@ -3,7 +3,7 @@ import numpy as np
 import shapely.geometry as sg
 
 # Enthought library imports.
-from traits.api import Any, Int, Str, Bool
+from traits.api import Any, Int, Str, Bool, List
 
 from ..errors import PointsError
 from ..library.Boundary import Boundaries
@@ -34,11 +34,9 @@ class RingEditLayer(LineLayer):
 
     type = "ring_edit"
 
-    parent_point_index = Int
-
     ring_fill_color = Int
 
-    ring_index = Int
+    ring_indexes = List(Int)
 
     feature_code = Int
 
@@ -101,10 +99,18 @@ class RingEditLayer(LineLayer):
             self.reverse_line_direction()
             log.debug(f"reversed: area={area} cw={self.is_clockwise}")
 
+    def get_undo_info(self):
+        return (self.copy_points(), self.copy_bounds(), self.copy_lines(), list(self.ring_indexes))
+
+    def restore_undo_info(self, info):
+        self.points = info[0]
+        self.bounds = info[1]
+        self.line_segment_indexes = info[2]
+        self.ring_indexes = info[3]
+
     def set_data_from_parent_points(self, parent_points, index, count, feature_code, feature_name):
-        self.parent_point_index = index
-        self.parent_point_map = np.arange(index, index + count, dtype=np.uint32)
-        self.points = parent_points[self.parent_point_map]  # Copy!
+        parent_point_map = np.arange(index, index + count, dtype=np.uint32)
+        self.points = parent_points[parent_point_map]  # Copy!
         log.debug(f"polygon point index={index} count={count}")
         self.points.color = self.style.line_color
         self.points.state = 0
@@ -120,8 +126,22 @@ class RingEditLayer(LineLayer):
         self.ring_fill_color = color_array.get(feature_code, color_array[1])
         self.update_bounds()
 
-    def set_data_from_geometry(self, points):
+    # def append_from_parent_points(self, parent_points, index, count, feature_code, feature_name):
+    #     parent_point_map = np.arange(index, index + count, dtype=np.uint32)
+    #     points = parent_points[parent_point_map]  # Copy!
+    #     count, lines = self.calc_simple_data(points)
+    #     self.append_data(points, 0.0, lines)
+
+    def set_data_from_geometry(self, points, ring_index):
         self.set_simple_data(points)
+        self.ring_indexes.append(ring_index)
+
+    def add_polygon_from_parent_layer(self, ring_index):
+        geom, ident = self.parent_layer.get_geometry_from_object_index(ring_index, 0, 0)
+        count, lines = self.calc_simple_data(geom)
+        self.append_data(geom, 0.0, lines)
+        self.ring_indexes.append(ring_index)
+        self.update_bounds()
 
     def update_transient_layer(self, command):
         return None
@@ -132,9 +152,19 @@ class RingEditLayer(LineLayer):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
-        from ..actions import SaveRingEditAction, CancelRingEditAction
+        from .. import actions as a
 
-        return [SaveRingEditAction, CancelRingEditAction]
+        actions = [a.SaveRingEditAction, a.CancelRingEditAction]
+        print("OBUCEEUHOREHSOE", object_index)
+        if object_index is not None:
+            log.debug(f"object type {object_type} index {object_index}")
+            if not self.parent_layer.is_hole(object_index):
+                start, end, count, _, feature_code, _ = self.parent_layer.get_ring_state(object_index)
+                actions.append(None)
+                edit_action = a.AddPolygonToEditLayerAction(task=self.manager.project.task, object_index=object_index)
+                edit_action.name = f"Add Polygon to Edit Layer ({count} points, id={object_index})"
+                actions.append(edit_action)
+        return actions
 
 
 class PolygonParentLayer(PointLayer):
@@ -396,14 +426,20 @@ class PolygonParentLayer(PointLayer):
         self.geometry_list[start_ring_index:start_ring_index + count] = []
 
     def commit_editing_layer(self, layer):
-        log.debug(f"commiting layer {layer}, ring_index={layer.ring_index if layer is not None else -1}")
+        log.debug(f"commiting layer {layer}, ring_indexes={layer.ring_indexes if layer is not None else -1}")
         if layer is None:
             return
         log.warning("committing polygon edits, but only handling outer boundary at the moment")
         boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False, allow_points_outside_boundary=True)
         boundaries.check_errors(True)
-        for boundary in boundaries:
-            self.replace_ring_with_resizing(layer.ring_index, boundary, layer.new_boundary, layer.new_hole)
+        for i, boundary in enumerate(boundaries):
+            try:
+                ring_index = layer.ring_indexes[i]
+                new_boundary = layer.new_boundary
+            except IndexError:
+                ring_index = 0
+                new_boundary = True
+            self.replace_ring_with_resizing(ring_index, boundary, new_boundary, layer.new_hole)
 
     def replace_ring_with_resizing(self, ring_index, boundary, new_boundary, new_hole):
         # print(f"before: points={self.points} rings={self.ring_adjacency}")
@@ -493,7 +529,10 @@ class PolygonParentLayer(PointLayer):
         renderer.set_polygons(self.rings, self.point_adjacency_array)
 
     def can_render_for_picker(self, renderer):
-        return renderer.canvas.project.layer_tree_control.is_edit_layer(self)
+        if renderer.canvas.project.layer_tree_control.is_edit_layer(self):
+            return True
+        edit_layer = self.manager.find_transient_layer()
+        return edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering polygon folder layer!!! pick=%s" % (picker))
@@ -504,10 +543,10 @@ class PolygonParentLayer(PointLayer):
         if layer_visibility["polygons"]:
             edit_layer = self.manager.find_transient_layer()
             if edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self and not edit_layer.new_boundary and not edit_layer.new_hole:
-                ring_index = edit_layer.ring_index
+                ring_indexes = edit_layer.ring_indexes
             else:
-                ring_index = None
-            renderer.draw_polygons(self, picker, self.rings.color, color_floats_to_int(0, 0, 0, 1.0), 1, editing_polygon_index=ring_index)
+                ring_indexes = None
+            renderer.draw_polygons(self, picker, self.rings.color, color_floats_to_int(0, 0, 0, 1.0), 1, editing_polygon_indexes=ring_indexes)
 
     ##### User interface
 

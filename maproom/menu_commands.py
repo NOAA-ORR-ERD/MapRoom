@@ -668,7 +668,7 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, ring_index=self.obj_index, new_boundary=self.new_boundary, new_hole=self.new_hole)
+        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, new_boundary=self.new_boundary, new_hole=self.new_hole)
 
         if self.new_boundary:
             p.name = "New Boundary"
@@ -679,7 +679,7 @@ class PolygonEditLayerCommand(Command):
         else:
             p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
             geom, ident = layer.get_geometry_from_object_index(self.obj_index, 0, 0)
-        p.set_data_from_geometry(geom)
+        p.set_data_from_geometry(geom, self.obj_index)
         old_layer, old_insertion_index = lm.replace_transient_layer(p, editor, after=layer)
         insertion_index = lm.get_multi_index_of_layer(p)
 
@@ -704,6 +704,39 @@ class PolygonEditLayerCommand(Command):
             lm.insert_layer(old_insertion_index, old_layer)
             lf = undo.flags.add_layer_flags(old_layer)
             lf.select_layer = True
+        return undo
+
+
+class AddPolygonToEditLayerCommand(PolygonEditLayerCommand):
+    short_name = "polygon_add_edit"
+
+    def __str__(self):
+        return "Adding Polygon To Edit Layer"
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = layer.get_undo_info()
+        layer.add_polygon_from_parent_layer(self.obj_index)
+
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        # lf.select_layer = True
+        # lf.layer_loaded = True
+
+        return self.undo_info
+
+    def undo(self, editor):
+        layer = lm.get_layer_by_invariant(self.layer)
+        undo_info = self.undo_info.data
+        layer.restore_undo_info(undo_info)
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
         return undo
 
 

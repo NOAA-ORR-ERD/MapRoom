@@ -76,6 +76,17 @@ class LineLayer(PointLayer):
         else:
             raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
+    def copy_lines(self):
+        return self.line_segment_indexes.copy().view(np.recarray)
+
+    def get_undo_info(self):
+        return (self.copy_points(), self.copy_bounds(), self.copy_lines())
+
+    def restore_undo_info(self, info):
+        self.points = info[0]
+        self.bounds = info[1]
+        self.line_segment_indexes = info[2]
+
     def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True, style=None):
         if style is not None:
             self.style = style

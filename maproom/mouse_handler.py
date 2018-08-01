@@ -225,7 +225,9 @@ class MouseHandler(object):
                 self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
-            self.right_clicked_on_different_layer(event, e.clickable_object_in_layer)
+            world_point = c.get_world_point_from_screen_point(event.GetPosition())
+            layer = e.layer_tree_control.get_edit_layer()
+            self.right_clicked_on_different_layer(event, layer, e.clickable_object_in_layer, world_point)
         else:  # the mouse is not on a clickable object
             # fixme: there should be a reference to the layer manager in the RenderWindow
             # and we could get the selected layer from there -- or is selected purely a UI concept?
@@ -250,8 +252,10 @@ class MouseHandler(object):
     def right_clicked_on_empty_space(self, event, layer, world_point):
         self.right_clicked_on_interior(event, layer, None, None, world_point)
 
-    def right_clicked_on_different_layer(self, event, layer):
-        pass
+    def right_clicked_on_different_layer(self, event, layer, different_layer, world_point):
+        print(f"right clicked on different layer {different_layer}")
+        (other_layer, object_type, object_index) = self.current_object_under_mouse
+        self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
 
     def process_right_mouse_up(self, event):
         event.Skip()
