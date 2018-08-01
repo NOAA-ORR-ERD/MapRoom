@@ -77,39 +77,72 @@ class LineLayer(PointLayer):
             raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def set_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True, style=None):
-        n = len(f_points)
         if style is not None:
             self.style = style
-        self.points = data_types.make_points(n)
-        if (n > 0):
-            self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
-                0: n
-            ] = f_points
-            self.points.z[
-                0: n
-            ] = f_depths
-            self.points.color = self.style.line_color
-            self.points.state = 0
-
-        n = np.alen(f_line_segment_indexes)
-        self.line_segment_indexes = self.make_line_segment_indexes(n)
-        if (n > 0):
-            self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
-                0: n
-            ] = f_line_segment_indexes
-            self.line_segment_indexes.color = self.style.line_color
-            self.line_segment_indexes.state = 0
-
+        self.points, self.line_segment_indexes = self.calc_points_and_lines(f_points, f_depths, f_line_segment_indexes)
         if update_bounds:
             self.update_bounds()
 
-    def set_simple_data(self, points):
+    def resize_data(self, addl_points, addl_lines):
+        np = len(self.points)
+        points = data_types.make_points(np + addl_points)
+        points[0:np] = self.points
+        self.points = points
+        nl = len(self.line_segment_indexes)
+        lines = self.make_line_segment_indexes(nl + addl_lines)
+        lines[0:nl] = self.line_segment_indexes
+        self.line_segment_indexes = lines
+        return np, nl
+
+    def append_data(self, f_points, f_depths, f_line_segment_indexes, update_bounds=True, style=None):
+        if style is not None:
+            self.style = style
+        new_points, new_lines = self.calc_points_and_lines(f_points, f_depths, f_line_segment_indexes)
+        self.append_points_and_lines(new_points, new_lines, update_bounds)
+
+    def append_points_and_lines(self, new_points, new_lines, update_bounds=True):
+        point_index, line_index = self.resize_data(len(new_points), len(new_lines))
+        new_lines.point1 += point_index
+        new_lines.point2 += point_index
+        self.points[point_index:] = new_points
+        self.line_segment_indexes[line_index:] = new_lines
+        if update_bounds:
+            self.update_bounds()
+
+    def calc_points_and_lines(self, f_points, f_depths, f_line_segment_indexes):
+        n = len(f_points)
+        points = data_types.make_points(n)
+        if (n > 0):
+            points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
+                0: n
+            ] = f_points
+            points.z[
+                0: n
+            ] = f_depths
+            points.color = self.style.line_color
+            points.state = 0
+
+        n = np.alen(f_line_segment_indexes)
+        lines = self.make_line_segment_indexes(n)
+        if (n > 0):
+            lines.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
+                0: n
+            ] = f_line_segment_indexes
+            lines.color = self.style.line_color
+            lines.state = 0
+        return points, lines
+
+    def calc_simple_data(self, points):
         count = len(points)
         lines = np.empty((count, 2), dtype=np.uint32)
         if count > 0:
             lines[:,0] = np.arange(0, count, dtype=np.uint32)
             lines[:,1] = np.arange(1, count + 1, dtype=np.uint32)
             lines[count - 1, 1] = 0
+        return count, lines
+
+    def set_simple_data(self, points):
+        count, lines = self.calc_simple_data(points)
         self.set_data(points, 0.0, lines)
 
     def set_data_from_geometry(self, geom, style=None):
