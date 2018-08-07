@@ -651,15 +651,13 @@ class PolygonEditLayerCommand(Command):
         ('obj_index', 'int'),
     ]
 
-    def __init__(self, layer, obj_type, obj_index, new_boundary=False, new_hole=False):
+    def __init__(self, layer, obj_type, obj_index, feature_code, new_boundary):
         Command.__init__(self, layer)
         self.obj_type = obj_type
-        self.new_boundary = new_boundary
-        if new_boundary:
-            obj_index = 0
         self.obj_index = obj_index
         self.name = layer.name
-        self.new_hole = new_hole
+        self.feature_code = feature_code
+        self.new_boundary = new_boundary
 
     def __str__(self):
         return "Editing Polygon from %s" % self.name
@@ -668,17 +666,17 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, new_boundary=self.new_boundary, new_hole=self.new_hole)
+        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, feature_code=self.feature_code)
 
         if self.new_boundary:
             p.name = "New Boundary"
             geom = []
-        elif self.new_hole:
+        elif self.feature_code < 0:
             p.name = "New Hole"
             geom = []
         else:
             p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
-            geom, ident = layer.get_geometry_from_object_index(self.obj_index, 0, 0)
+            geom, feature_code = layer.get_geometry_from_object_index(self.obj_index, 0, 0)
         p.set_data_from_geometry(geom, self.obj_index)
         old_layer, old_insertion_index = lm.replace_transient_layer(p, editor, after=layer)
         insertion_index = lm.get_multi_index_of_layer(p)

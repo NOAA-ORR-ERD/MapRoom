@@ -42,10 +42,6 @@ class RingEditLayer(LineLayer):
 
     feature_name = Str
 
-    new_boundary = Bool
-
-    new_hole = Bool
-
     layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude", "Area"]
@@ -301,7 +297,8 @@ class PolygonParentLayer(PointLayer):
 
     def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
         points = self.get_ring_points(object_index)
-        return points, None
+        _, _, _, _, feature_code, _ = self.get_ring_state(object_index)
+        return points, feature_code
 
     def is_hole(self, ring_index):
         _, _, _, _, feature_code, _ = self.get_ring_state(ring_index)
@@ -433,22 +430,23 @@ class PolygonParentLayer(PointLayer):
         boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False, allow_points_outside_boundary=True)
         boundaries.check_errors(True)
         for i, boundary in enumerate(boundaries):
+            feature_code = layer.feature_code
             try:
                 ring_index = layer.ring_indexes[i]
-                new_boundary = layer.new_boundary
+                new_boundary = False
             except IndexError:
                 ring_index = 0
                 new_boundary = True
-            self.replace_ring_with_resizing(ring_index, boundary, new_boundary, layer.new_hole)
+            self.replace_ring_with_resizing(ring_index, boundary, feature_code, new_boundary)
 
-    def replace_ring_with_resizing(self, ring_index, boundary, new_boundary, new_hole):
+    def replace_ring_with_resizing(self, ring_index, boundary, feature_code, new_boundary):
         # print(f"before: points={self.points} rings={self.ring_adjacency}")
         insert_index, old_after_index = self.get_ring_start_end(ring_index)
         if new_boundary:
             # arbitrarily insert at beginning
             old_after_index = insert_index
             self.dup_geometry_list_entry(0)
-        elif new_hole:
+        elif feature_code < 0:
             # insert after indicated polygon so it becomes a hole of that one
             insert_index = old_after_index
             self.dup_geometry_list_entry(ring_index)
@@ -475,14 +473,9 @@ class PolygonParentLayer(PointLayer):
         r = data_types.make_ring_adjacency_array(new_num_points)
         r[:insert_index] = self.ring_adjacency[:insert_index]
         r[insert_index]['point_flag'] = -num_insert
-        r[new_after_index - 1]['point_flag'] = 2
+        r[new_after_index - 1]['point_flag'] = 2  # flag to signal end of polygon
         r[insert_index]['state'] = 0
         if num_insert > 0:
-            # feature code depends on type of polygon
-            if new_hole:
-                feature_code = -1
-            else:
-                feature_code = self.ring_adjacency[insert_index + 1]['state']
             r[insert_index + 1]['state'] = feature_code
         if num_insert > 1:
             # color
