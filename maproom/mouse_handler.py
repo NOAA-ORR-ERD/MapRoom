@@ -254,8 +254,11 @@ class MouseHandler(object):
 
     def right_clicked_on_different_layer(self, event, layer, different_layer, world_point):
         print(f"right clicked on different layer {different_layer}")
-        (other_layer, object_type, object_index) = self.current_object_under_mouse
-        self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
+        if self.current_object_under_mouse is not None:
+            (other_layer, object_type, object_index) = self.current_object_under_mouse
+            self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
+        else:
+            print(f"not under object of other layer")
 
     def process_right_mouse_up(self, event):
         event.Skip()
