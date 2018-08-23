@@ -685,7 +685,8 @@ class SelectionMode(MouseHandler):
                 self.clicked_on_interior(event, layer, object_index, world_point)
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
-            self.clicked_on_different_layer(event, e.clickable_object_in_layer)
+            world_point = c.get_world_point_from_screen_point(event.GetPosition())
+            self.clicked_on_different_layer(event, e.clickable_object_in_layer, world_point)
         else:  # the mouse is not on a clickable object
             # fixme: there should be a reference to the layer manager in the RenderWindow
             # and we could get the selected layer from there -- or is selected purely a UI concept?
@@ -807,7 +808,7 @@ class SelectionMode(MouseHandler):
     def clicked_on_empty_space(self, event, layer, world_point):
         pass
 
-    def clicked_on_different_layer(self, event, layer):
+    def clicked_on_different_layer(self, event, layer, world_point):
         c = self.layer_canvas
         e = c.project
         e.layer_tree_control.set_edit_layer(layer)
@@ -1013,6 +1014,11 @@ class PointEditMode(ObjectSelectionMode):
 
             cmd = moc.InsertPointCommand(layer, world_point)
             e.process_command(cmd)
+
+    def clicked_on_different_layer(self, event, other_layer, world_point):
+        log.debug("clicked on different layer: %s, point %s" % (other_layer, str(world_point)))
+        layer = self.layer_canvas.project.layer_tree_control.get_edit_layer()
+        self.clicked_on_empty_space(event, layer, world_point)
 
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
