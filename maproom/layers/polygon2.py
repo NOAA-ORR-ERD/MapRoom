@@ -135,7 +135,6 @@ class RingEditLayer(LineLayer):
     def add_polygon_from_parent_layer(self, ring_index):
         geom, ident = self.parent_layer.get_geometry_from_object_index(ring_index, 0, 0)
         count, lines = self.calc_simple_data(geom)
-        print(f"ADDING {lines}")
         self.append_data(geom, 0.0, lines)
         self.ring_indexes.append(ring_index)
         self.update_bounds()
@@ -152,7 +151,6 @@ class RingEditLayer(LineLayer):
         from .. import actions as a
 
         actions = [a.SaveRingEditAction, a.CancelRingEditAction]
-        print("OBUCEEUHOREHSOE", object_index)
         if object_index is not None:
             log.debug(f"object type {object_type} index {object_index}")
             if not self.parent_layer.is_hole(object_index) and object_index not in self.ring_indexes:
@@ -431,11 +429,10 @@ class PolygonParentLayer(PointLayer):
         log.debug(f"commiting layer {layer}, ring_indexes={layer.ring_indexes if layer is not None else -1}")
         if layer is None:
             return
-        log.warning("committing polygon edits, but only handling outer boundary at the moment")
         boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False, allow_points_outside_boundary=True)
         boundaries.check_errors(True)
         feature_code = layer.feature_code
-        print(f"boundaries: {boundaries}")
+        log.debug(f"boundaries: {boundaries}")
         for boundary in boundaries:
             try:
                 ring_index = layer.ring_indexes.pop()
@@ -448,7 +445,7 @@ class PolygonParentLayer(PointLayer):
             self.delete_ring(ring_index)
 
     def replace_ring_with_resizing(self, ring_index, boundary, feature_code, new_boundary):
-        print(f"replacing ring {ring_index}")
+        log.debug(f"replacing ring {ring_index}")
         insert_index, old_after_index = self.get_ring_start_end(ring_index)
         if new_boundary:
             # arbitrarily insert at beginning
