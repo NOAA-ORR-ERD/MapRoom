@@ -721,8 +721,8 @@ class AddPolygonToEditLayerCommand(PolygonEditLayerCommand):
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         lf = undo.flags.add_layer_flags(layer)
-        # lf.select_layer = True
-        # lf.layer_loaded = True
+        lf.select_layer = True
+        lf.layer_contents_added = True
 
         return self.undo_info
 

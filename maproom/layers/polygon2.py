@@ -38,7 +38,7 @@ class RingEditLayer(LineLayer):
 
     ring_indexes = List(Int)
 
-    feature_code = Int
+    feature_code = Int  # Feature code will apply to all polygons being edited
 
     feature_name = Str
 
@@ -135,6 +135,7 @@ class RingEditLayer(LineLayer):
     def add_polygon_from_parent_layer(self, ring_index):
         geom, ident = self.parent_layer.get_geometry_from_object_index(ring_index, 0, 0)
         count, lines = self.calc_simple_data(geom)
+        print(f"ADDING {lines}")
         self.append_data(geom, 0.0, lines)
         self.ring_indexes.append(ring_index)
         self.update_bounds()
@@ -154,8 +155,8 @@ class RingEditLayer(LineLayer):
         print("OBUCEEUHOREHSOE", object_index)
         if object_index is not None:
             log.debug(f"object type {object_type} index {object_index}")
-            if not self.parent_layer.is_hole(object_index):
-                start, end, count, _, feature_code, _ = self.parent_layer.get_ring_state(object_index)
+            if not self.parent_layer.is_hole(object_index) and object_index not in self.ring_indexes:
+                _, _, count, _, feature_code, _ = self.parent_layer.get_ring_state(object_index)
                 actions.append(None)
                 edit_action = a.AddPolygonToEditLayerAction(task=self.manager.project.task, object_index=object_index)
                 edit_action.name = f"Add Polygon to Edit Layer ({count} points, id={object_index})"
@@ -274,6 +275,10 @@ class PolygonParentLayer(PointLayer):
             color = None
         return start, end, count, state, feature_code, color
 
+    def get_feature_code(self, ring_index):
+        _, _, _, _, feature_code, _ = self.get_ring_state(ring_index)
+        return feature_code
+
     def get_ring_and_holes_start_end(self, ring_index):
         start, end, _, _, feature_code, _ = self.get_ring_state(ring_index)
         log.debug(f"found ring {ring_index}: {start}, {end}, {feature_code}")
@@ -297,11 +302,11 @@ class PolygonParentLayer(PointLayer):
 
     def get_geometry_from_object_index(self, object_index, sub_index, ring_index):
         points = self.get_ring_points(object_index)
-        _, _, _, _, feature_code, _ = self.get_ring_state(object_index)
+        feature_code = self.get_feature_code(object_index)
         return points, feature_code
 
     def is_hole(self, ring_index):
-        _, _, _, _, feature_code, _ = self.get_ring_state(ring_index)
+        feature_code = self.get_feature_code(ring_index)
         return feature_code < 0
 
     def get_shapely_polygon(self, start, end, debug=False):
@@ -429,18 +434,21 @@ class PolygonParentLayer(PointLayer):
         log.warning("committing polygon edits, but only handling outer boundary at the moment")
         boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False, allow_points_outside_boundary=True)
         boundaries.check_errors(True)
-        for i, boundary in enumerate(boundaries):
-            feature_code = layer.feature_code
+        feature_code = layer.feature_code
+        print(f"boundaries: {boundaries}")
+        for boundary in boundaries:
             try:
-                ring_index = layer.ring_indexes[i]
+                ring_index = layer.ring_indexes.pop()
                 new_boundary = False
             except IndexError:
                 ring_index = 0
                 new_boundary = True
             self.replace_ring_with_resizing(ring_index, boundary, feature_code, new_boundary)
+        for ring_index in layer.ring_indexes:
+            self.delete_ring(ring_index)
 
     def replace_ring_with_resizing(self, ring_index, boundary, feature_code, new_boundary):
-        # print(f"before: points={self.points} rings={self.ring_adjacency}")
+        print(f"replacing ring {ring_index}")
         insert_index, old_after_index = self.get_ring_start_end(ring_index)
         if new_boundary:
             # arbitrarily insert at beginning
@@ -535,7 +543,7 @@ class PolygonParentLayer(PointLayer):
             self.rebuild_renderer(renderer)
         if layer_visibility["polygons"]:
             edit_layer = self.manager.find_transient_layer()
-            if edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self and not edit_layer.new_boundary and not edit_layer.new_hole:
+            if edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self and edit_layer.ring_indexes:
                 ring_indexes = edit_layer.ring_indexes
             else:
                 ring_indexes = None
@@ -554,7 +562,7 @@ class PolygonParentLayer(PointLayer):
             edit_action = a.EditLayerAction(task=self.manager.project.task)
             actions = [edit_action]
             log.debug(f"object type {object_type} index {object_index}")
-            start, end, count, _, feature_code, _ = self.get_ring_state(object_index)
+            _, _, count, _, feature_code, _ = self.get_ring_state(object_index)
             if self.is_hole(object_index):
                 edit_action.name = f"Edit Hole ({count} points, id={object_index})"
             else:

@@ -841,7 +841,9 @@ class EditLayerAction(EditorAction):
 
     def perform(self, event):
         d = event.popup_data
-        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'])
+        layer = d['layer']
+        feature_code = layer.get_feature_code(d['object_index'])
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=feature_code, new_boundary=False)
         self.active_editor.process_command(cmd)
 
 
@@ -851,7 +853,7 @@ class AddPolygonToEditLayerAction(EditorAction):
 
     def perform(self, event):
         d = event.popup_data
-        cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['object_type'], d['object_index'])
+        cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['object_type'], d['object_index'], None, False)
         self.active_editor.process_command(cmd)
 
 
@@ -861,7 +863,9 @@ class AddPolygonBoundaryAction(EditorAction):
 
     def perform(self, event):
         d = event.popup_data
-        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], new_boundary=True)
+        layer = d['layer']
+        feature_code = layer.get_feature_code(d['object_index'])
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=feature_code, new_boundary=True)
         self.active_editor.process_command(cmd)
 
 
@@ -871,7 +875,7 @@ class AddPolygonHoleAction(EditorAction):
 
     def perform(self, event):
         d = event.popup_data
-        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], new_hole=True)
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=-1, new_boundary=True)
         self.active_editor.process_command(cmd)
 
 
