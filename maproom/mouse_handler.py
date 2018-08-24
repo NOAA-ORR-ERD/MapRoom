@@ -1496,6 +1496,9 @@ class AddPolylineMode(MouseHandler):
         if not self.mouse_moved_enough:
             self.mouse_moved_enough = self.check_mouse_moved_enough_to_drag(event)
 
+    def process_mouse_up_after_click(self, event):
+        self.finish_mouse_event(event)
+
     def process_mouse_up_after_drag(self, event):
         self.finish_mouse_event(event)
 
