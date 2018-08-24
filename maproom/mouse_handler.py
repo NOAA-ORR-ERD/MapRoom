@@ -32,6 +32,7 @@ class MouseHandler(object):
     toolbar_group = "other"
 
     mouse_too_close_pixel_tolerance = 8
+    dim_background_outside_selection = True
 
     def __init__(self, layer_canvas):
         self.layer_canvas = layer_canvas
@@ -157,7 +158,8 @@ class MouseHandler(object):
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
         effective_mode = c.get_effective_tool_mode(event)
-        log.debug("process_mouse_motion_down: panning=%s mode=%s" % (self.is_panning, effective_mode))
+        log.debug("process_mouse_motion_down: panning=%s box=%s mode=%s" % (self.is_panning, c.selection_box_is_being_defined, effective_mode))
+        c.mouse_move_position = event.GetPosition()
         if self.is_panning:
             e = c.project
             p = event.GetPosition()
@@ -182,6 +184,20 @@ class MouseHandler(object):
                 if not self.check_early_mouse_release(event):
                     self.is_panning = True
                 return
+            if c.selection_box_is_being_defined:
+                x1, y1, x2, y2 = rect.get_normalized_coordinates(c.mouse_down_position, event.GetPosition())
+                self.process_rect_select_motion_feedback(event, x1, y1, x2, y2)
+
+    def process_rect_select_motion_feedback(self, event, x1, y1, x2, y2):
+        c = self.layer_canvas
+        e = c.project
+        layer = e.layer_tree_control.get_edit_layer()
+        if (layer is not None):
+            log.debug(f"selection box: {x1},{y1} -> {x2},{y2}")
+            p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
+            w_r = c.get_world_rect_from_projected_rect(p_r)
+            self.select_objects_in_rect(event, w_r, layer)
+            c.render()
 
     def process_mouse_motion_with_selection(self, event):
         event.Skip()
@@ -407,6 +423,23 @@ class MouseHandler(object):
 
 
         """
+        self.render_snapped_point(renderer)
+
+    def render_rect_select_overlay(self, renderer):
+        c = self.layer_canvas
+        (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
+                                                           c.mouse_move_position)
+        if self.dim_background_outside_selection:
+            rects = c.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
+            for r in rects:
+                if (r != rect.EMPTY_RECT):
+                    renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
+            # small adjustments to make stipple overlap gray rects perfectly
+            y1 -= 1
+            x2 += 1
+        sp = [(x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)]
+        renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+        self.show_width_height((x1, y1), (x2, y1), (x1, y2))
         self.render_snapped_point(renderer)
 
     def get_current_object_info(self):
@@ -803,10 +836,12 @@ class SelectionMode(MouseHandler):
         pass
 
     def clicked_on_interior(self, event, layer, polygon_index, world_point):
-        pass
+        c = self.layer_canvas
+        c.selection_box_is_being_defined = True
 
     def clicked_on_empty_space(self, event, layer, world_point):
-        pass
+        c = self.layer_canvas
+        c.selection_box_is_being_defined = True
 
     def clicked_on_different_layer(self, event, layer, world_point):
         c = self.layer_canvas
@@ -814,7 +849,12 @@ class SelectionMode(MouseHandler):
         e.layer_tree_control.set_edit_layer(layer)
 
     def select_objects_in_rect(self, event, rect, layer):
-        raise RuntimeError("Abstract method")
+        layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+
+    def render_overlay(self, renderer):
+        c = self.layer_canvas
+        if c.mouse_is_down and c.selection_box_is_being_defined:
+            self.render_rect_select_overlay(renderer)
 
 
 class ObjectSelectionMode(SelectionMode):
@@ -881,10 +921,12 @@ class PointSelectionMode(ObjectSelectionMode):
 
     def clicked_on_empty_space(self, event, layer, world_point):
         # Mouse down only sets the initial point, after that it is ignored
+        c = self.layer_canvas
         self.reset_early_mouse_params()
         self.first_mouse_down_position = event.GetPosition()
         self.pending_selection = self.current_object_under_mouse
         self.is_panning = False
+        c.selection_box_is_being_defined = True
 
     def dragged_on_empty_space(self, event):
         if self.pending_selection is not None:
@@ -1188,20 +1230,7 @@ class RectSelectMode(MouseHandler):
     def render_overlay(self, renderer):
         c = self.layer_canvas
         if c.mouse_is_down:
-            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                               c.mouse_move_position)
-            if self.dim_background_outside_selection:
-                rects = c.get_surrounding_screen_rects(((x1, y1), (x2, y2)))
-                for r in rects:
-                    if (r != rect.EMPTY_RECT):
-                        renderer.draw_screen_rect(r, 0.0, 0.0, 0.0, 0.25)
-                # small adjustments to make stipple overlap gray rects perfectly
-                y1 -= 1
-                x2 += 1
-            sp = [(x1, y1), (x2, y1), (x2, y2), (x1, y2), (x1, y1)]
-            renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
-            self.show_width_height((x1, y1), (x2, y1), (x1, y2))
-        self.render_snapped_point(renderer)
+            self.render_rect_select_overlay(renderer)
 
 
 class RulerMode(RectSelectMode):

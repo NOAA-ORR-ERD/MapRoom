@@ -253,6 +253,7 @@ class PointBaseLayer(ProjectedLayer):
     def select_points_in_rect(self, is_toggle_mode, is_add_mode, w_r, mark_type=state.SELECTED):
         if (not is_toggle_mode and not is_add_mode):
             self.clear_all_point_selections()
+            is_add_mode = True
         indexes = np.where(np.logical_and(
             np.logical_and(self.points.x >= w_r[0][0], self.points.x <= w_r[1][0]),
             np.logical_and(self.points.y >= w_r[0][1], self.points.y <= w_r[1][1])))
