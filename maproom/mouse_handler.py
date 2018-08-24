@@ -42,6 +42,7 @@ class MouseHandler(object):
         self.after_first_mouse_up = False
         self.last_modifier_state = None
         self.mouse_up_too_close = False
+        self.mouse_moved_enough = False
         self.can_snap = False
         self.is_over_object = False
         self.current_object_under_mouse = None
@@ -64,6 +65,7 @@ class MouseHandler(object):
         # Mouse down only sets the initial point, after that it is ignored
         c = self.layer_canvas
         self.reset_early_mouse_params()
+        self.mouse_is_down = True
         self.first_mouse_down_position = event.GetPosition()
         effective_mode = c.get_effective_tool_mode(event)
         log.debug("process_mouse_down: %s" % effective_mode)
@@ -161,32 +163,36 @@ class MouseHandler(object):
         log.debug("process_mouse_motion_down: panning=%s box=%s mode=%s" % (self.is_panning, c.selection_box_is_being_defined, effective_mode))
         c.mouse_move_position = event.GetPosition()
         if self.is_panning:
-            e = c.project
-            p = event.GetPosition()
-            d_x = p[0] - c.mouse_down_position[0]
-            d_y = c.mouse_down_position[1] - p[1]
-            # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
-            if (d_x != 0 or d_y != 0):
-                # the user has panned the map
-                d_x_p = d_x * c.projected_units_per_pixel
-                d_y_p = d_y * c.projected_units_per_pixel
-                center = (c.projected_point_center[0] - d_x_p,
-                          c.projected_point_center[1] - d_y_p)
-                c.mouse_down_position = p
-
-                cmd = moc.ViewportCommand(None, center, c.projected_units_per_pixel)
-                e.process_command(cmd)
-                event.Skip()
-        else:
+            self.process_pan(event)
+        elif c.selection_box_is_being_defined:
+            x1, y1, x2, y2 = rect.get_normalized_coordinates(c.mouse_down_position, event.GetPosition())
+            self.process_rect_select_motion_feedback(event, x1, y1, x2, y2)
+        elif self.mouse_moved_enough:
             if self.pending_selection is not None:
                 self.process_mouse_motion_with_selection(event)
-            if effective_mode.__class__ == PanMode and not self.is_panning:
-                if not self.check_early_mouse_release(event):
-                    self.is_panning = True
-                return
-            if c.selection_box_is_being_defined:
-                x1, y1, x2, y2 = rect.get_normalized_coordinates(c.mouse_down_position, event.GetPosition())
-                self.process_rect_select_motion_feedback(event, x1, y1, x2, y2)
+            elif effective_mode.__class__ == PanMode and not self.is_panning:
+                self.is_panning = True
+        else:
+            self.mouse_moved_enough = self.check_mouse_moved_enough_to_drag(event)
+
+    def process_pan(self, event):
+        c = self.layer_canvas
+        e = c.project
+        p = event.GetPosition()
+        d_x = p[0] - c.mouse_down_position[0]
+        d_y = c.mouse_down_position[1] - p[1]
+        # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+        if (d_x != 0 or d_y != 0):
+            # the user has panned the map
+            d_x_p = d_x * c.projected_units_per_pixel
+            d_y_p = d_y * c.projected_units_per_pixel
+            center = (c.projected_point_center[0] - d_x_p,
+                      c.projected_point_center[1] - d_y_p)
+            c.mouse_down_position = p
+
+            cmd = moc.ViewportCommand(None, center, c.projected_units_per_pixel)
+            e.process_command(cmd)
+            event.Skip()
 
     def process_rect_select_motion_feedback(self, event, x1, y1, x2, y2):
         c = self.layer_canvas
@@ -199,6 +205,9 @@ class MouseHandler(object):
             self.select_objects_in_rect(event, w_r, layer)
             c.render()
 
+    def finish_rect_select(self, event, x1, y1, x2, y2):
+        pass
+
     def process_mouse_motion_with_selection(self, event):
         event.Skip()
 
@@ -208,27 +217,44 @@ class MouseHandler(object):
     def reset_early_mouse_params(self):
         self.mouse_up_too_close = False
         self.after_first_mouse_up = False
+        self.mouse_moved_enough = False
 
-    def check_early_mouse_release(self, event):
+    def check_mouse_moved_enough_to_drag(self, event):
         p = event.GetPosition()
         dx = p[0] - self.first_mouse_down_position[0]
         dy = p[1] - self.first_mouse_down_position[1]
         tol = self.mouse_too_close_pixel_tolerance
-        if abs(dx) < tol and abs(dy) < tol:
-            return True
-        return False
+        log.debug(f"moved enough: {dx} {dy}")
+        return abs(dx) >= tol or abs(dy) >= tol
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
+        print(f"process_mouse_up: moved enough: {self.mouse_moved_enough} down={c.mouse_is_down}")
+
+        if c.mouse_is_down:
+            if (c.selection_box_is_being_defined):
+                c.mouse_move_position = event.GetPosition()
+                (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position, c.mouse_move_position)
+                self.finish_rect_select(event, x1, y1, x2, y2)
+            elif self.mouse_moved_enough:
+                self.process_mouse_up_after_drag(event)
+            else:
+                self.process_mouse_up_after_click(event)
+
         c.mouse_is_down = False
-        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
         c.selection_box_is_being_defined = False
+
+    def process_mouse_up_after_drag(self, event):
+        pass
+
+    def process_mouse_up_after_click(self, event):
+        pass
 
     def process_right_mouse_down(self, event):
         c = self.layer_canvas
         e = c.project
 
-        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
+        if (e.clickable_object_mouse_is_over is not None): 
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
             print(f"right mouse down: {self} {layer} {object_type} {object_index}")
             if (e.clickable_object_is_ugrid_point()):
@@ -454,13 +480,13 @@ class MouseHandler(object):
     def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
         pass
 
-    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
+    def finish_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
         pass
 
     def rotated(self, world_d_x, world_d_y):
         pass
 
-    def finished_rotate(self, world_d_x, world_d_y):
+    def finish_rotate(self, world_d_x, world_d_y):
         pass
 
     def render_snapped_point(self, renderer):
@@ -532,20 +558,10 @@ class PanMode(MouseHandler):
             return self.layer_canvas.hand_closed_cursor
         return self.layer_canvas.hand_cursor
 
-    def process_mouse_up(self, event):
-        c = self.layer_canvas
-        if (not c.mouse_is_down):
-            c.selection_box_is_being_defined = False
-            return
-
-        c.mouse_is_down = False
-        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        c.selection_box_is_being_defined = False
+    def process_mouse_up_after_drag(self, event):
         if self.pending_selection is not None:
             layer, object_type, object_index = self.pending_selection
             c.project.layer_tree_control.set_edit_layer(layer)
-        self.is_panning = False
-        self.pending_selection = None
 
 
 class RNCSelectionMode(PanMode):
@@ -600,21 +616,14 @@ class RNCSelectionMode(PanMode):
 
     # def process_mouse_motion_down(self, event):
     #     if not self.is_panning:
-    #         if self.check_early_mouse_release(event):
+    #         if self.check_mouse_moved_enough_to_drag(event):
     #             return
     #         self.is_panning = True
     #     else:
     #         PanMode.process_mouse_motion_down(self, event)
 
-    def process_mouse_up(self, event):
+    def process_mouse_up_after_click(self, event):
         c = self.layer_canvas
-        if (not c.mouse_is_down):
-            c.selection_box_is_being_defined = False
-            return
-
-        c.mouse_is_down = False
-        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        c.selection_box_is_being_defined = False
         if not self.is_panning:
             rnc = self.get_rnc_object()
             if rnc is not None:
@@ -630,8 +639,6 @@ class RNCSelectionMode(PanMode):
                     log.info("LOADING RNC MAP #%s from %s in %d - %d" % (num, url, regime - 360, regime))
                     e = c.project
                     e.download_rnc(url, filename, num, regime)
-
-        self.is_panning = False
 
     def render_overlay(self, renderer):
         # draw outline of polygon object that's currently being moused-over
@@ -666,24 +673,13 @@ class PolygonSelectionMode(RNCSelectionMode):
     def get_long_help_text(self):
         return ""
 
-    def process_mouse_up(self, event):
-        c = self.layer_canvas
-        if (not c.mouse_is_down):
-            c.selection_box_is_being_defined = False
-            return
-
-        c.mouse_is_down = False
-        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
-        c.selection_box_is_being_defined = False
-        if not self.is_panning:
-            rnc = self.get_rnc_object()
-            if rnc is not None:
-                layer, object_type, object_index = rnc
-                cmd = mec.PolygonEditLayerCommand(layer, object_type, object_index)
-                c.project.process_command(cmd)
-                c.render(event)
-
-        self.is_panning = False
+    def process_mouse_up_after_click(self, event):
+        rnc = self.get_rnc_object()
+        if rnc is not None:
+            layer, object_type, object_index = rnc
+            cmd = mec.PolygonEditLayerCommand(layer, object_type, object_index)
+            c.project.process_command(cmd)
+            c.render(event)
 
 
 class SelectionMode(MouseHandler):
@@ -697,42 +693,42 @@ class SelectionMode(MouseHandler):
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_ARROW)
 
-    def process_left_down(self, event):
+    def process_click_on_object(self, event):
         c = self.layer_canvas
         e = c.project
-        proj_p = None
+        p = self.get_position(event)
+        proj_p = c.get_world_point_from_screen_point(p)
 
-        self.last_modifier_state = None
-        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            p = self.get_position(event)
-            proj_p = c.get_world_point_from_screen_point(p)
-
-            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-            if (e.clickable_object_is_ugrid_point()):
-                self.clicked_on_point(event, layer, object_index)
-            elif (e.clickable_object_is_ugrid_line()):
-                world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                self.clicked_on_line_segment(event, layer, object_index, world_point)
-            else:  # anything else is the interior
-                world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                self.clicked_on_interior(event, layer, object_index, world_point)
-        elif (e.clickable_object_in_layer is not None):
-            # clicked on something in different layer.
+        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+        if (e.clickable_object_is_ugrid_point()):
+            self.clicked_on_point(event, layer, object_index)
+        elif (e.clickable_object_is_ugrid_line()):
             world_point = c.get_world_point_from_screen_point(event.GetPosition())
-            self.clicked_on_different_layer(event, e.clickable_object_in_layer, world_point)
-        else:  # the mouse is not on a clickable object
-            # fixme: there should be a reference to the layer manager in the RenderWindow
-            # and we could get the selected layer from there -- or is selected purely a UI concept?
-            layer = e.layer_tree_control.get_edit_layer()
-            if (layer is not None):
-                if (event.ControlDown() or event.ShiftDown()):
-                    c.selection_box_is_being_defined = True
-                    c.CaptureMouse()
-                else:
-                    world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                    self.clicked_on_empty_space(event, layer, world_point)
-
+            self.clicked_on_line_segment(event, layer, object_index, world_point)
+        else:  # anything else is the interior
+            world_point = c.get_world_point_from_screen_point(event.GetPosition())
+            self.clicked_on_interior(event, layer, object_index, world_point)
         self.update_status_text(proj_p, None, True, self.get_help_text())
+
+    def process_click_on_different_layer(self, event):
+        c = self.layer_canvas
+        e = c.project
+        world_point = c.get_world_point_from_screen_point(event.GetPosition())
+        self.clicked_on_different_layer(event, e.clickable_object_in_layer, world_point)
+        self.update_status_text(None, None, True, self.get_help_text())
+
+    def process_click_on_nothing(self, event):
+        c = self.layer_canvas
+        e = c.project
+        layer = e.layer_tree_control.get_edit_layer()
+        if (layer is not None):
+            if (event.ControlDown() or event.ShiftDown()):
+                c.selection_box_is_being_defined = True
+                c.CaptureMouse()
+            else:
+                world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                self.clicked_on_empty_space(event, layer, world_point)
+        self.update_status_text(None, None, True, self.get_help_text())
 
     def process_mouse_motion_with_selection(self, event):
         c = self.layer_canvas
@@ -780,51 +776,52 @@ class SelectionMode(MouseHandler):
         else:
             self.dragged_on_empty_space(event)
 
-    def process_mouse_up(self, event):
+    def process_mouse_up_after_click(self, event):
         c = self.layer_canvas
         c.hide_from_picker(None)
-        if (not c.mouse_is_down):
-            c.selection_box_is_being_defined = False
-            return
-
         e = c.project
-        c.mouse_is_down = False
-        c.release_mouse()  # it's hard to know for sure when the mouse may be captured
+        if (e.clickable_object_mouse_is_over is not None):
+            self.process_click_on_object(event)
+        elif (e.clickable_object_in_layer is not None):
+            self.process_click_on_different_layer(event)
+        else:
+            self.process_click_on_nothing(event)
 
+    def process_mouse_up_after_drag(self, event):
+        c = self.layer_canvas
+        e = c.project
         if (c.selection_box_is_being_defined):
             c.mouse_move_position = event.GetPosition()
-            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position,
-                                                               c.mouse_move_position)
-            p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
-            w_r = c.get_world_rect_from_projected_rect(p_r)
-            layer = c.layer_tree_control.get_edit_layer()
-            if (layer is not None):
-                self.select_objects_in_rect(event, w_r, layer)
-            c.selection_box_is_being_defined = False
+            (x1, y1, x2, y2) = rect.get_normalized_coordinates(c.mouse_down_position, c.mouse_move_position)
+            self.finish_rect_select(event, x1, y1, x2, y2)
         elif (e.clickable_object_mouse_is_over is not None):
-            modifiers = event.GetModifiers()
-            last = self.last_modifier_state
-            if last is not None and last != modifiers:
-                modifiers = last
-            rotate = modifiers & wx.MOD_CMD
-            p = self.get_position(event)
-            w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
-            w_p1 = c.get_world_point_from_screen_point(p)
-            # print "move: %s" % str(c.mouse_move_position)
-            # print "down: %s" % str(c.mouse_down_position)
-            if rotate:
-                cmd = self.finished_rotate(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
-            else:
-                cmd = self.finished_drag(c.mouse_down_position, p, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
-            if cmd is not None:
-                e.process_command(cmd)
+            self.finish_over_object(event)
         c.selection_box_is_being_defined = False
 
         # This render is needed to update the picker buffer because the
         # rendered lines may have only been drawn in the overlay layer.  (Might
-        # possibly render twice if the finished_drag renders because the final
+        # possibly render twice if the finish_drag renders because the final
         # drag position is different from the last rendered drag position)
         c.render()
+
+    def finish_over_object(self, event):
+        c = self.layer_canvas
+        modifiers = event.GetModifiers()
+        last = self.last_modifier_state
+        if last is not None and last != modifiers:
+            modifiers = last
+        rotate = modifiers & wx.MOD_CMD
+        p = self.get_position(event)
+        w_p0 = c.get_world_point_from_screen_point(c.mouse_down_position)
+        w_p1 = c.get_world_point_from_screen_point(p)
+        # print "move: %s" % str(c.mouse_move_position)
+        # print "down: %s" % str(c.mouse_down_position)
+        if rotate:
+            cmd = self.finish_rotate(w_p1[0] - w_p0[0], w_p1[1] - w_p0[1])
+        else:
+            cmd = self.finish_drag(c.mouse_down_position, p, w_p1[0] - w_p0[0], w_p1[1] - w_p0[1], *self.snapped_point)
+        if cmd is not None:
+            e.process_command(cmd)
 
     def delete_key_pressed(self):
         self.layer_canvas.project.delete_selection()
@@ -876,7 +873,7 @@ class ObjectSelectionMode(SelectionMode):
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
         return cmd
 
-    def finished_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
+    def finish_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
         if world_d_x == 0 and world_d_y == 0:
             return
         (layer, object_type, object_index) = self.get_current_object_info()
@@ -888,7 +885,7 @@ class ObjectSelectionMode(SelectionMode):
         cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
         return cmd
 
-    def finished_rotate(self, world_d_x, world_d_y):
+    def finish_rotate(self, world_d_x, world_d_y):
         if world_d_x == 0 and world_d_y == 0:
             return
         (layer, object_type, object_index) = self.get_current_object_info()
@@ -932,7 +929,7 @@ class PointSelectionMode(ObjectSelectionMode):
         if self.pending_selection is not None:
             return
         if not self.is_panning:
-            if not self.check_early_mouse_release(event):
+            if self.check_mouse_moved_enough_to_drag(event):
                 self.is_panning = True
             return
         c = self.layer_canvas
@@ -1202,7 +1199,7 @@ class RectSelectMode(MouseHandler):
             c.selection_box_is_being_defined = False
             return
 
-        if not self.after_first_mouse_up and self.check_early_mouse_release(event):
+        if not self.after_first_mouse_up and not self.check_mouse_moved_enough_to_drag(event):
             self.mouse_up_too_close = True
             self.after_first_mouse_up = True
             return
@@ -1469,7 +1466,6 @@ class AddPolylineMode(MouseHandler):
         self.points = []
         self.cursor_point = None
         self.cumulative_distance = 0
-        self.mouse_moved_enough = False
 
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_CROSS)
@@ -1490,17 +1486,15 @@ class AddPolylineMode(MouseHandler):
         self.cursor_point = self.get_world_point(event)
         c.render(event)
         if not self.mouse_moved_enough:
-            self.mouse_moved_enough = not self.check_early_mouse_release(event)
+            self.mouse_moved_enough = self.check_mouse_moved_enough_to_drag(event)
 
     def process_mouse_motion_down(self, event):
         self.process_mouse_motion_up(event)
         if not self.mouse_moved_enough:
-            self.mouse_moved_enough = not self.check_early_mouse_release(event)
+            self.mouse_moved_enough = self.check_mouse_moved_enough_to_drag(event)
 
-    def process_mouse_up(self, event):
-        if self.mouse_moved_enough:
-            self.finish_mouse_event(event)
-            self.mouse_moved_enough = False
+    def process_mouse_up_after_drag(self, event):
+        self.finish_mouse_event(event)
 
     def finish_mouse_event(self, event):
         c = self.layer_canvas
@@ -1563,7 +1557,7 @@ class AddOverlayMode(MouseHandler):
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_CROSS)
 
-    def process_mouse_up(self, event):
+    def process_mouse_up_after_click(self, event):
         # After the first point, mouse up events add points
         c = self.layer_canvas
         e = c.project
