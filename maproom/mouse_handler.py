@@ -172,6 +172,8 @@ class MouseHandler(object):
                 self.process_mouse_motion_with_selection(event)
             elif effective_mode.__class__ == PanMode and not self.is_panning:
                 self.is_panning = True
+            else:
+                c.selection_box_is_being_defined = True
         else:
             self.mouse_moved_enough = self.check_mouse_moved_enough_to_drag(event)
 
@@ -206,7 +208,8 @@ class MouseHandler(object):
             c.render()
 
     def finish_rect_select(self, event, x1, y1, x2, y2):
-        pass
+        c = self.layer_canvas
+        c.render()
 
     def process_mouse_motion_with_selection(self, event):
         event.Skip()
