@@ -1362,8 +1362,7 @@ class ControlPointEditMode(ObjectSelectionMode):
     def prepare_drag_on_interior(self, event, layer, ignored_index, world_point):
         # Clicking on filled portion of polygon corresponds to clicking on the
         # center point: rigid body translation
-        log.debug("center point: %s" % layer.center_point_index)
-        self.clicked_on_point(event, layer, layer.center_point_index)
+        layer.set_anchor_point(layer.center_point_index, maintain_aspect=True)
 
     def prepare_drag_on_line_segment(self, event, layer, line_segment_index, world_point):
         layer.set_anchor_point(layer.center_point_index, maintain_aspect=True)
