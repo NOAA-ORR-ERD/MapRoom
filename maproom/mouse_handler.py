@@ -176,6 +176,36 @@ class MouseHandler(object):
                 c.selection_box_is_being_defined = True
         else:
             self.mouse_moved_enough = self.check_mouse_moved_enough_to_drag(event)
+            if self.mouse_moved_enough:
+                self.prepare_drag(event)
+
+    def prepare_drag(self, event):
+        c = self.layer_canvas
+        e = c.project
+        if e.clickable_object_mouse_is_over is None:
+            self.prepare_drag_on_empty_space(event)
+        else:
+            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+            if (e.clickable_object_is_ugrid_point()):
+                self.prepare_drag_on_point(event, layer, object_index)
+            elif (e.clickable_object_is_ugrid_line()):
+                world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                self.prepare_drag_on_line_segment(event, layer, object_index, world_point)
+            else:  # anything else is the interior
+                world_point = c.get_world_point_from_screen_point(event.GetPosition())
+                self.prepare_drag_on_interior(event, layer, object_index, world_point)
+
+    def prepare_drag_on_point(self, event, layer, object_index):
+        pass
+
+    def prepare_drag_on_line_segment(self, event, layer, object_index):
+        pass
+
+    def prepare_drag_on_interior(self, event, layer, object_index):
+        pass
+
+    def prepare_drag_on_empty_space(self, event, layer):
+        pass
 
     def process_pan(self, event):
         c = self.layer_canvas
@@ -1320,7 +1350,7 @@ class ControlPointEditMode(ObjectSelectionMode):
             return wx.Cursor(wx.CURSOR_HAND)
         return wx.Cursor(wx.CURSOR_ARROW)
 
-    def clicked_on_point(self, event, layer, point_index):
+    def prepare_drag_on_point(self, event, layer, point_index):
         c = self.layer_canvas
 
         if (event.ControlDown()):
@@ -1336,13 +1366,13 @@ class ControlPointEditMode(ObjectSelectionMode):
             self.can_snap = False
             c.hide_from_picker(None)
 
-    def clicked_on_interior(self, event, layer, ignored_index, world_point):
+    def prepare_drag_on_interior(self, event, layer, ignored_index, world_point):
         # Clicking on filled portion of polygon corresponds to clicking on the
         # center point: rigid body translation
         log.debug("center point: %s" % layer.center_point_index)
         self.clicked_on_point(event, layer, layer.center_point_index)
 
-    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+    def prepare_drag_on_line_segment(self, event, layer, line_segment_index, world_point):
         layer.set_anchor_point(layer.center_point_index, maintain_aspect=True)
 
     def select_objects_in_rect(self, event, rect, layer):
