@@ -8,6 +8,7 @@ from . import layers as ly
 from .layers import loaders
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers
+from .library.simplify import VWSimplifier
 
 import logging
 log = logging.getLogger(__name__)
@@ -761,6 +762,62 @@ class DeletePolygonCommand(Command):
         self.undo_info = undo = UndoInfo()
         undo_info = layer.get_undo_info()
         layer.delete_ring(self.obj_index)
+        undo.data = undo_info
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        undo_info = self.undo_info.data
+        layer.restore_undo_info(undo_info)
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+        return undo
+
+
+class SimplifyPolygonCommand(Command):
+    short_name = "polygon_simplify"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('obj_type', 'int'),
+        ('obj_index', 'int'),
+    ]
+
+    def __init__(self, layer, obj_type, obj_index, ratio=0.7):
+        Command.__init__(self, layer)
+        self.obj_type = obj_type
+        self.obj_index = obj_index
+        self.name = layer.name
+        self.ratio = ratio
+
+    def __str__(self):
+        return "Simplify Polygon from %s" % self.name
+
+    def coalesce(self, next_command):
+        if next_command.__class__ == self.__class__:
+            if next_command.layer == self.layer and next_command.obj_index == self.obj_index:
+                self.ratio = next_command.ratio
+                return True
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        layer = lm.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo_info = layer.get_undo_info()
+        points = layer.get_ring_points(self.obj_index)
+        simplifier = VWSimplifier(points)
+        print(points)
+        new_points = simplifier.from_ratio(self.ratio)
+        print(new_points)
+        layer.replace_ring(self.obj_index, new_points)
         undo.data = undo_info
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True

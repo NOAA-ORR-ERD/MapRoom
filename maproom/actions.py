@@ -889,6 +889,16 @@ class DeletePolygonAction(EditorAction):
         self.active_editor.process_command(cmd)
 
 
+class SimplifyPolygonAction(EditorAction):
+    name = 'Simplify Polygon'
+    tooltip = 'Remove points using Visvalingam algorithm'
+
+    def perform(self, event):
+        d = event.popup_data
+        cmd = mec.SimplifyPolygonCommand(d['layer'], d['object_type'], d['object_index'])
+        self.active_editor.process_command(cmd)
+
+
 class SaveRingEditAction(EditorAction):
     name = 'Save Changes in Polygon'
     tooltip = 'Save the current edits in the parent polygon'

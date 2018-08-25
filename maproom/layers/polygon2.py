@@ -440,12 +440,14 @@ class PolygonParentLayer(PointLayer):
             except IndexError:
                 ring_index = 0
                 new_boundary = True
-            self.replace_ring_with_resizing(ring_index, boundary, feature_code, new_boundary)
+            self.replace_ring(ring_index, boundary.get_points(), feature_code, new_boundary)
         for ring_index in layer.ring_indexes:
             self.delete_ring(ring_index)
 
-    def replace_ring_with_resizing(self, ring_index, boundary, feature_code, new_boundary):
+    def replace_ring(self, ring_index, points, feature_code=None, new_boundary=False):
         log.debug(f"replacing ring {ring_index}")
+        if feature_code is None:
+            feature_code = self.get_feature_code(ring_index)
         insert_index, old_after_index = self.get_ring_start_end(ring_index)
         if new_boundary:
             # arbitrarily insert at beginning
@@ -457,7 +459,7 @@ class PolygonParentLayer(PointLayer):
             self.dup_geometry_list_entry(ring_index)
         old_num_points = len(self.points)
 
-        insert_points = boundary.get_points()
+        insert_points = points
         num_insert = len(insert_points)
 
         # import pdb; pdb.set_trace()
@@ -470,7 +472,13 @@ class PolygonParentLayer(PointLayer):
 
         p = data_types.make_points(new_num_points)
         p[:insert_index] = self.points[:insert_index]
-        p[insert_index:new_after_index] = insert_points
+        print(self.points.dtype)
+        print(insert_points.dtype)
+        try:
+            p[insert_index:new_after_index] = insert_points
+        except ValueError:
+            # maybe they are just x,y values, not POINT_DTYPE records
+            p.view(data_types.POINT_XY_VIEW_DTYPE).xy[insert_index:new_after_index] = insert_points
         p[new_after_index:] = self.points[old_after_index:]
         self.points = p
 
@@ -565,6 +573,8 @@ class PolygonParentLayer(PointLayer):
             else:
                 edit_action.name = f"Edit Polygon ({count} points, id={object_index})"
                 actions.append(a.AddPolygonHoleAction)
+            actions.append(None)
+            actions.append(a.SimplifyPolygonAction)
             actions.append(None)
             actions.append(a.DeletePolygonAction)
         actions.append(a.AddPolygonBoundaryAction)
