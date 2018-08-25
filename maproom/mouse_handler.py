@@ -809,6 +809,7 @@ class SelectionMode(MouseHandler):
 
     def finish_over_object(self, event):
         c = self.layer_canvas
+        e = c.project
         modifiers = event.GetModifiers()
         last = self.last_modifier_state
         if last is not None and last != modifiers:
