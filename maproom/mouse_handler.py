@@ -1012,7 +1012,7 @@ class PointSelectionMode(ObjectSelectionMode):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
 
-class PointEditMode(ObjectSelectionMode):
+class PointEditMode(PointSelectionMode):
     icon = "add_points.png"
     menu_item_name = "Point Edit Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
@@ -1027,30 +1027,6 @@ class PointEditMode(ObjectSelectionMode):
             else:
                 return wx.Cursor(wx.CURSOR_HAND)
         return wx.Cursor(wx.CURSOR_PENCIL)
-
-    def clicked_on_point(self, event, layer, point_index):
-        c = self.layer_canvas
-        e = c.project
-
-        if (event.ControlDown()):
-            if (layer.is_point_selected(point_index)):
-                layer.deselect_point(point_index)
-            else:
-                layer.select_point(point_index)
-        elif (layer.is_point_selected(point_index)):
-            layer.clear_all_selections()
-        elif (event.ShiftDown()):
-            path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
-            if (path != []):
-                for p_index in path:
-                    layer.select_point(p_index)
-            else:
-                layer.select_point(point_index)
-        else:
-            layer.clear_all_selections()
-            layer.select_point(point_index)
-
-        e.refresh()
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_canvas
