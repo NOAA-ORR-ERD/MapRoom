@@ -1015,6 +1015,37 @@ class PointSelectionMode(ObjectSelectionMode):
         else:
             self.prepare_drag_on_point(event, layer, point_index)
 
+    def prepare_drag_on_line_segment(self, event, layer, line_segment_index, world_point):
+        c = self.layer_canvas
+        e = c.project
+
+        if (event.ControlDown()):
+            if (layer.is_line_segment_selected(line_segment_index)):
+                layer.deselect_line_segment(line_segment_index)
+            else:
+                layer.select_line_segment(line_segment_index)
+        elif (event.ShiftDown()):
+            path = layer.find_lines_on_shortest_path_from_line_to_selected_line(line_segment_index)
+            if (path != []):
+                for l_s_i in path:
+                    layer.select_line_segment(l_s_i)
+            else:
+                layer.select_line_segment(line_segment_index)
+        elif (layer.is_line_segment_selected(line_segment_index)):
+            pass
+        else:
+            layer.clear_all_selections()
+            layer.select_line_segment(line_segment_index)
+
+        e.refresh()
+
+    def clicked_on_line_segment(self, event, layer, point_index, world_point):
+        if layer.is_line_segment_selected(point_index):
+            layer.clear_all_selections()
+            self.layer_canvas.project.refresh()
+        else:
+            self.prepare_drag_on_line_segment(event, layer, point_index, world_point)
+
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
@@ -1034,6 +1065,9 @@ class PointEditMode(PointSelectionMode):
             else:
                 return wx.Cursor(wx.CURSOR_HAND)
         return wx.Cursor(wx.CURSOR_PENCIL)
+
+    def prepare_drag_on_line_segment(self, event, layer, line_segment_index, world_point):
+        pass
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_canvas
@@ -1120,6 +1154,9 @@ class LineEditMode(PointEditMode):
         e.refresh()
         if message:
             e.status_message = message
+
+    def prepare_drag_on_line_segment(self, event, layer, line_segment_index, world_point):
+        PointSelectionMode.prepare_drag_on_line_segment(self, event, layer, line_segment_index, world_point)
 
     def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_canvas
