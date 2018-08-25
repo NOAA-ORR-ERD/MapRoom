@@ -984,7 +984,7 @@ class PointSelectionMode(ObjectSelectionMode):
         ObjectSelectionMode.process_mouse_up(self, event)
         self.is_panning = False
 
-    def clicked_on_point(self, event, layer, point_index):
+    def prepare_drag_on_point(self, event, layer, point_index):
         c = self.layer_canvas
         e = c.project
 
