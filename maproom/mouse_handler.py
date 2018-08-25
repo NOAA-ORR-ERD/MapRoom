@@ -993,8 +993,6 @@ class PointSelectionMode(ObjectSelectionMode):
                 layer.deselect_point(point_index)
             else:
                 layer.select_point(point_index)
-        elif (layer.is_point_selected(point_index)):
-            layer.clear_all_selections()
         elif (event.ShiftDown()):
             path = layer.find_points_on_shortest_path_from_point_to_selected_point(point_index)
             if (path != []):
@@ -1002,11 +1000,20 @@ class PointSelectionMode(ObjectSelectionMode):
                     layer.select_point(p_index)
             else:
                 layer.select_point(point_index)
+        elif (layer.is_point_selected(point_index)):
+            pass
         else:
             layer.clear_all_selections()
             layer.select_point(point_index)
 
         e.refresh()
+
+    def clicked_on_point(self, event, layer, point_index):
+        if layer.is_point_selected(point_index):
+            layer.clear_all_selections()
+            self.layer_canvas.project.refresh()
+        else:
+            self.prepare_drag_on_point(event, layer, point_index)
 
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
