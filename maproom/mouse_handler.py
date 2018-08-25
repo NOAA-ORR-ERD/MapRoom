@@ -204,7 +204,7 @@ class MouseHandler(object):
     def prepare_drag_on_interior(self, event, layer, object_index):
         pass
 
-    def prepare_drag_on_empty_space(self, event, layer):
+    def prepare_drag_on_empty_space(self, event):
         pass
 
     def process_pan(self, event):
