@@ -275,7 +275,7 @@ class DrawVectorObjectCommand(StyledCommand):
         lf = undo.flags.add_layer_flags(layer)
         lf.select_layer = True
         lf.layer_loaded = True
-        lf.collapse = True
+        lf.collapse = False
 
         parent_layer_data = update_parent_bounds(layer, undo)
 
@@ -354,7 +354,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         return layer
 
     def perform_post(self, editor, lm, layer, undo):
-        layer.grouped = True
+        layer.grouped = False
         layer.name = self.ui_name
         style = layer.style  # use annotation layer parent style
 
