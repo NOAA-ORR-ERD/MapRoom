@@ -668,14 +668,15 @@ class PolygonEditLayerCommand(Command):
         self.undo_info = undo = UndoInfo()
         p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, feature_code=self.feature_code)
 
+        if self.feature_code < 0:
+            poly_type = "Hole"
+        else:
+            poly_type = "Boundary"
         if self.new_boundary:
-            p.name = "New Boundary"
-            geom = []
-        elif self.feature_code < 0:
-            p.name = "New Hole"
+            p.name = f"New {poly_type}"
             geom = []
         else:
-            p.name = "%d %d Editing Polygon from %s" % (self.obj_type, self.obj_index, layer.name)
+            p.name = f"Editing {poly_type} from {layer.name}"
             geom, feature_code = layer.get_geometry_from_object_index(self.obj_index, 0, 0)
         p.set_data_from_geometry(geom, self.obj_index)
         old_layer, old_insertion_index = lm.replace_transient_layer(p, editor, after=layer)
