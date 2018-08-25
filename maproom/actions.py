@@ -14,7 +14,7 @@ from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 from . import pane_layout
 from . import menu_commands as mec
 from . import mouse_commands as moc
-from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile
+from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile, SimplifyDialog
 from .library.thread_utils import BackgroundWMSDownloader
 from .library.tile_utils import BackgroundTileDownloader
 from . import layers
@@ -895,9 +895,9 @@ class SimplifyPolygonAction(EditorAction):
 
     def perform(self, event):
         d = event.popup_data
-        cmd = mec.SimplifyPolygonCommand(d['layer'], d['object_type'], d['object_index'])
-        self.active_editor.process_command(cmd)
-
+        dlg = SimplifyDialog(self.active_editor, d['layer'], d['object_type'], d['object_index'])
+        if dlg.ShowModal() != wx.ID_OK:
+            dlg.roll_back()
 
 class SaveRingEditAction(EditorAction):
     name = 'Save Changes in Polygon'

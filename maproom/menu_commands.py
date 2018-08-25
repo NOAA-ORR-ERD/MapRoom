@@ -8,7 +8,6 @@ from . import layers as ly
 from .layers import loaders
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers
-from .library.simplify import VWSimplifier
 
 import logging
 log = logging.getLogger(__name__)
@@ -791,12 +790,13 @@ class SimplifyPolygonCommand(Command):
         ('obj_index', 'int'),
     ]
 
-    def __init__(self, layer, obj_type, obj_index, ratio=0.7):
+    def __init__(self, layer, obj_type, obj_index, simplifier, ratio):
         Command.__init__(self, layer)
         self.obj_type = obj_type
         self.obj_index = obj_index
         self.name = layer.name
         self.ratio = ratio
+        self.simplifier = simplifier
 
     def __str__(self):
         return "Simplify Polygon from %s" % self.name
@@ -812,12 +812,10 @@ class SimplifyPolygonCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
         undo_info = layer.get_undo_info()
-        points = layer.get_ring_points(self.obj_index)
-        simplifier = VWSimplifier(points)
-        print(points)
-        new_points = simplifier.from_ratio(self.ratio)
-        print(new_points)
-        layer.replace_ring(self.obj_index, new_points)
+        new_points = self.simplifier.from_ratio(self.ratio)
+        print(f"RATIO: {self.ratio}, {len(new_points)} points")
+        if len(new_points > 2):
+            layer.replace_ring(self.obj_index, new_points)
         undo.data = undo_info
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True

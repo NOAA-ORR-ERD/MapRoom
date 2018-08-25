@@ -14,6 +14,10 @@ from ..mock import MockProject
 from ..library.thread_utils import BackgroundWMSDownloader
 from ..library.tile_utils import BackgroundTileDownloader
 from ..library.host_utils import WMSHost, OpenTileHost
+from ..library.simplify import VWSimplifier
+from .. import menu_commands as mec
+
+from .sliders import FloatSlider
 
 import logging
 log = logging.getLogger(__name__)
@@ -451,3 +455,64 @@ class TileServerDialog(ObjectEditDialog):
 def prompt_for_tile(parent, title, default=None):
     d = TileServerDialog(parent, title, default)
     return d.show_and_get_value()
+
+
+class SimplifyDialog(sc.SizedDialog):
+
+    def __init__(self, project, layer, obj_type, obj_index, initial_ratio=1.0):
+        sc.SizedDialog.__init__(self, project.control, wx.ID_ANY, "Simplify Polygon")
+
+        self.project = project
+        self.layer = layer
+        self.obj_index = obj_index
+        self.obj_type = obj_type
+
+        panel = self.GetContentsPane()
+        wx.StaticText(panel, -1, "Simplification Ratio (lower -> fewer polygons)")
+
+        self.slider = FloatSlider(panel, -1, initial_ratio, 0.001, 1.0)
+        self.slider.SetSizerProps(expand=True)
+        self.slider.Bind(wx.EVT_TEXT, self.OnText)
+
+        btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
+        self.ok_btn = self.FindWindowById(wx.ID_OK)
+        self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())
+
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+        self.Bind(wx.EVT_SLIDER, self.on_slider)
+
+        self.Fit()
+
+        points = layer.get_ring_points(self.obj_index).copy()
+        self.simplifier = VWSimplifier(points)
+        self.have_processed = False
+
+    def on_slider(self, evt):
+        cmd = mec.SimplifyPolygonCommand(self.layer, self.obj_type, self.obj_index, self.simplifier, self.slider.Value)
+        self.project.process_command(cmd)
+        self.have_processed = True
+
+    def ShowModalWithFocus(self):
+        self.coords_text.SetFocus()
+        return self.ShowModal()
+
+    def OnClose(self, event):
+        self.EndModal(wx.ID_CANCEL)
+        self.roll_back()
+
+    def roll_back(self):
+        if self.have_processed:
+            self.project.undo()
+
+    def OnText(self, event):
+        lat_lon_string = event.String
+
+        try:
+            self.lat_lon = coordinates.lat_lon_from_format_string(lat_lon_string)
+            self.coords_text.SetBackgroundColour("#FFFFFF")
+            valid = True
+        except:
+            self.lat_lon = None
+            self.coords_text.SetBackgroundColour("#FF8080")
+            valid = False
+        self.ok_btn.Enable(valid)
