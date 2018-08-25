@@ -1079,7 +1079,6 @@ class PointEditMode(PointSelectionMode):
             e.process_command(cmd)
 
             # FIXME: this hack is needed to force the cursor
-            c.render(event, True)
             self.current_object_under_mouse = e.clickable_object_mouse_is_over = c.get_object_at_mouse_position(event.GetPosition())
 
     def clicked_on_empty_space(self, event, layer, world_point):

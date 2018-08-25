@@ -837,8 +837,8 @@ class ProjectEditor(FrameworkEditor):
             b.layers_changed = True
         if f.refresh_needed:
             b.refresh_needed = True
-        if f.fast_viewport_refresh_needed:
-            b.fast_viewport_refresh_needed = True
+        if f.immediate_refresh_needed:
+            b.immediate_refresh_needed = True
         if f.errors:
             b.errors.append("When processing command '%s', the following errors were encountered:\n" % str(cmd))
             for e in f.errors:
@@ -876,7 +876,7 @@ class ProjectEditor(FrameworkEditor):
                 b.editable_properties_changed = True
             if lf.layer_contents_added or lf.layer_contents_deleted:
                 b.need_rebuild[layer] = False
-                b.refresh_needed = True
+                b.immediate_refresh_needed = True
             # Hidden layer check only displayed in current window, not any others
             # that are displaying this project
             if lf.hidden_layer_check:
@@ -930,9 +930,9 @@ class ProjectEditor(FrameworkEditor):
         overlay_affected = self.layer_manager.recalc_overlay_bounds()
         if overlay_affected:
             b.refresh_needed = True
-            b.fast_viewport_refresh_needed = False
+            b.immediate_refresh_needed = False
 
-        if b.fast_viewport_refresh_needed:
+        if b.immediate_refresh_needed:
             self.layer_canvas.render(immediately=True)
         if b.refresh_needed:
             self.layer_manager.refresh_needed = b

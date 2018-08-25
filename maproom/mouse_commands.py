@@ -50,7 +50,7 @@ class ViewportCommand(Command):
                 shifted = (shifted[0] + self.regime, shifted[1])
                 center = c.get_projected_point_from_world_point(shifted)
         c.set_viewport(center, units_per_pixel)
-        undo.flags.fast_viewport_refresh_needed = True
+        undo.flags.immediate_refresh_needed = True
         return undo
 
     def undo(self, editor):
@@ -209,7 +209,7 @@ class SwapLatLonCommand(Command):
         layer.update_bounds()
         center, units_per_pixel = c.calc_zoom_to_world_rect(layer.bounds)
         c.set_viewport(center, units_per_pixel)
-        undo.flags.fast_viewport_refresh_needed = True
+        undo.flags.immediate_refresh_needed = True
         return undo
 
     def undo(self, editor):

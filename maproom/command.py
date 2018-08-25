@@ -180,7 +180,7 @@ class BatchStatus(object):
 
         self.refresh_needed = False
 
-        self.fast_viewport_refresh_needed = False
+        self.immediate_refresh_needed = False
 
         # Any info messages will be added to this list
         self.messages = []
@@ -204,7 +204,7 @@ class CommandStatus(object):
         self.refresh_needed = False
 
         # True if only map window redraw needed
-        self.fast_viewport_refresh_needed = False
+        self.immediate_refresh_needed = False
 
         # True if projection changed on any layer
         self.projection_changed = False
