@@ -211,6 +211,9 @@ class MouseHandler(object):
         c = self.layer_canvas
         c.render()
 
+    def select_objects_in_rect(self, event, rect, layer):
+        pass
+
     def process_mouse_motion_with_selection(self, event):
         event.Skip()
 
