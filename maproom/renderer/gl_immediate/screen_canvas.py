@@ -174,7 +174,6 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
     def on_left_down(self, event):
         self.SetFocus()  # why would it not be focused?
         mode = self.get_effective_tool_mode(event)
-        self.forced_cursor = None
         self.mouse_is_down = True
         self.selection_box_is_being_defined = False
         self.mouse_down_position = event.GetPosition()
@@ -193,13 +192,11 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def on_left_up(self, event):
         mode = self.get_effective_tool_mode(event)
-        self.forced_cursor = None
         mode.process_mouse_up(event)
         self.set_cursor(mode)
 
     def on_middle_down(self, event):
         mode = self.get_effective_tool_mode(event)
-        self.forced_cursor = None
         self.mouse_is_down = True
         self.selection_box_is_being_defined = False
         self.mouse_down_position = event.GetPosition()
@@ -209,20 +206,17 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def on_middle_up(self, event):
         mode = self.get_effective_tool_mode(event)
-        self.forced_cursor = None
         self.mouse_is_down = False
         mode.process_middle_mouse_up(event)
         self.set_cursor(mode)
 
     def on_right_down(self, event):
         mode = self.get_effective_tool_mode(event)
-        self.forced_cursor = None
         mode.process_right_mouse_down(event)
         self.set_cursor(mode)
 
     def on_right_up(self, event):
         mode = self.get_effective_tool_mode(event)
-        self.forced_cursor = None
         mode.process_right_mouse_up(event)
         self.set_cursor(mode)
 
@@ -547,6 +541,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             log.debug("rendering")
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             BaseCanvas.render(self)
+            self.set_cursor()
             self.pending_render_count = 0
         else:
             log.debug("optimized out a render!!!!")

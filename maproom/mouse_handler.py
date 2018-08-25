@@ -136,7 +136,7 @@ class MouseHandler(object):
         c.release_mouse()
         # print "mouse is not down"
         self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
-        log.debug("process_mouse_motion_up: object under mouse: %s" % (str(self.current_object_under_mouse)))
+        log.debug(f"{self.__class__.__name__} process_mouse_motion_up: object under mouse: {str(self.current_object_under_mouse)}")
         obj = None
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
@@ -1077,11 +1077,10 @@ class PointEditMode(PointSelectionMode):
             e.clear_all_selections(False)
             cmd = moc.SplitLineCommand(layer, line_segment_index, world_point)
             e.process_command(cmd)
-            c.forced_cursor = wx.Cursor(wx.CURSOR_HAND)
-#            if not vis:
-#                e.status_message = "Split line in hidden layer %s" % layer.name
-#            else:
-#                layer.select_point(point_index)
+
+            # FIXME: this hack is needed to force the cursor
+            c.render(event, True)
+            self.current_object_under_mouse = e.clickable_object_mouse_is_over = c.get_object_at_mouse_position(event.GetPosition())
 
     def clicked_on_empty_space(self, event, layer, world_point):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)))

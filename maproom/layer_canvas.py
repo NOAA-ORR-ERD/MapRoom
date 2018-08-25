@@ -34,7 +34,6 @@ class LayerCanvas(renderer.ScreenCanvas):
         self.hand_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
         p = get_image_path("icons/hand_closed.ico", file=__name__)
         self.hand_closed_cursor = wx.Cursor(p, wx.BITMAP_TYPE_ICO, 16, 16)
-        self.forced_cursor = None
         self.set_mouse_handler(MouseHandler)  # dummy initial mouse handler
         self.default_pan_mode = PanMode(self)
 
@@ -63,11 +62,6 @@ class LayerCanvas(renderer.ScreenCanvas):
             self.ReleaseMouse()
 
     def set_cursor(self, mode=None):
-        if (self.forced_cursor is not None):
-            self.SetCursor(self.forced_cursor)
-            #
-            return
-
         if mode is None:
             mode = self.mouse_handler
         c = mode.get_cursor()
