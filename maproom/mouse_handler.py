@@ -871,11 +871,13 @@ class SelectionMode(MouseHandler):
 
     def clicked_on_interior(self, event, layer, polygon_index, world_point):
         c = self.layer_canvas
-        c.selection_box_is_being_defined = True
+        layer.clear_all_selections()
+        c.render(event)
 
     def clicked_on_empty_space(self, event, layer, world_point):
         c = self.layer_canvas
-        c.selection_box_is_being_defined = True
+        layer.clear_all_selections()
+        c.render(event)
 
     def clicked_on_different_layer(self, event, layer, world_point):
         c = self.layer_canvas
@@ -952,15 +954,6 @@ class PointSelectionMode(ObjectSelectionMode):
                 if e.clickable_object_is_ugrid_line() or e.clickable_object_is_ugrid_point():
                     return wx.Cursor(wx.CURSOR_HAND)
         return wx.Cursor(wx.CURSOR_ARROW)
-
-    def clicked_on_empty_space(self, event, layer, world_point):
-        # Mouse down only sets the initial point, after that it is ignored
-        c = self.layer_canvas
-        self.reset_early_mouse_params()
-        self.first_mouse_down_position = event.GetPosition()
-        self.pending_selection = self.current_object_under_mouse
-        self.is_panning = False
-        c.selection_box_is_being_defined = True
 
     def dragged_on_empty_space(self, event):
         if self.pending_selection is not None:
