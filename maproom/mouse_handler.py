@@ -1074,9 +1074,6 @@ class PointEditMode(PointSelectionMode):
         return wx.Cursor(wx.CURSOR_PENCIL)
 
     def prepare_drag_on_line_segment(self, event, layer, line_segment_index, world_point):
-        pass
-
-    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         c = self.layer_canvas
         e = c.project
 
@@ -1084,6 +1081,9 @@ class PointEditMode(PointSelectionMode):
             e.clear_all_selections(False)
             cmd = moc.SplitLineCommand(layer, line_segment_index, world_point)
             e.process_command(cmd)
+
+            # reset mouse down position so deltas start at the new point
+            c.mouse_down_position = event.GetPosition()
 
             # FIXME: this hack is needed to force the cursor
             self.current_object_under_mouse = e.clickable_object_mouse_is_over = c.get_object_at_mouse_position(event.GetPosition())
