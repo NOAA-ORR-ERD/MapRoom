@@ -573,6 +573,9 @@ class MouseHandler(object):
         s = "Width: %s, %s  Height: %s, %s" % (km_to_rounded_string(wkm), mi_to_rounded_string(wkm * .621371), km_to_rounded_string(hkm), mi_to_rounded_string(hkm * .621371))
         c.project.status_message = s
 
+    def select_objects_in_rect(self, event, rect, layer):
+        pass
+
 
 class PanMode(MouseHandler):
     """Mouse mode to pan the viewport
@@ -595,6 +598,7 @@ class PanMode(MouseHandler):
         return self.layer_canvas.hand_cursor
 
     def process_mouse_up_after_drag(self, event):
+        c = self.layer_canvas
         if self.pending_selection is not None:
             layer, object_type, object_index = self.pending_selection
             c.project.layer_tree_control.set_edit_layer(layer)
@@ -885,7 +889,10 @@ class SelectionMode(MouseHandler):
         e.layer_tree_control.set_edit_layer(layer)
 
     def select_objects_in_rect(self, event, rect, layer):
-        layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+        try:
+            layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
+        except AttributeError:
+            pass
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
