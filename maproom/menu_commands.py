@@ -532,13 +532,13 @@ class TriangulateLayerCommand(Command):
         lm.remove_layer_at_multi_index(insertion_index)
         if old_t_layer is not None:
             lm.insert_layer(insertion_index, old_t_layer, invariant=invariant)
+            lf = undo.flags.add_layer_flags(old_t_layer)
+            lf.select_layer = True
         lm.next_invariant = saved_invariant
 
         undo = UndoInfo()
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
-        lf = undo.flags.add_layer_flags(old_t_layer)
-        lf.select_layer = True
         return undo
 
 
