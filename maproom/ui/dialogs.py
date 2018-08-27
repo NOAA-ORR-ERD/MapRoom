@@ -468,7 +468,7 @@ class SimplifyDialog(sc.SizedDialog):
         self.obj_type = obj_type
 
         panel = self.GetContentsPane()
-        wx.StaticText(panel, -1, "Simplification Ratio (lower -> fewer polygons)")
+        wx.StaticText(panel, -1, "Simplification Ratio\n\nFewest segments                                                                          Most segments")
 
         self.slider = FloatSlider(panel, -1, initial_ratio, 0.001, 1.0)
         self.slider.SetSizerProps(expand=True)
