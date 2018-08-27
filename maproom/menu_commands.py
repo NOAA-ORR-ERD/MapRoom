@@ -815,7 +815,7 @@ class SimplifyPolygonCommand(Command):
         undo_info = layer.get_undo_info()
         new_points = self.simplifier.from_ratio(self.ratio)
         print(f"RATIO: {self.ratio}, {len(new_points)} points")
-        if len(new_points > 2):
+        if len(new_points) > 2:
             layer.replace_ring(self.obj_index, new_points)
         undo.data = undo_info
         undo.flags.layers_changed = True
