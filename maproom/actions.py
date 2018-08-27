@@ -70,7 +70,7 @@ class NewEmptyProjectAction(Action):
 
     def perform(self, event=None):
         task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
-        wx.CallAfter(task.new)
+        wx.CallAfter(event.task.window.application.load_file, "template://blank_project.maproom", task)
 
 
 class SaveProjectAction(EditorAction):

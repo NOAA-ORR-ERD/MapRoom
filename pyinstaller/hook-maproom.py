@@ -143,6 +143,7 @@ datas = []
 skipped = []
 maproom_allowed = set([
     "templates/RNCProdCat_latest.bna",
+    "templates/blank_project.maproom",
     "templates/default_project.maproom",
     "templates/maproom.project.default_layout",
     "renderer/gl/font.png",
