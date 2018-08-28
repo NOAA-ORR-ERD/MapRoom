@@ -82,12 +82,16 @@ class InfoField(object):
         if sys.platform.startswith("win"):
             self.ctrl.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
         self.extra_ctrls = self.create_extra_controls()
+        self.create_extra_event_handlers()
 
     def is_editable_control(self, ctrl):
         return ctrl == self.ctrl
 
     def create_extra_controls(self):
         return []
+
+    def create_extra_event_handlers(self):
+        pass
 
     def add_to_parent(self):
         self.panel.sizer.Add(self.parent, self.vertical_proportion, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.ALIGN_TOP, 0)
@@ -222,6 +226,13 @@ class TextEditField(InfoField):
         c.Bind(wx.EVT_TEXT, self.on_text_changed)
         c.SetEditable(True)
         return c
+
+    def create_extra_event_handlers(self):
+        self.ctrl.Bind(wx.EVT_KILL_FOCUS, self.lose_focus)
+
+    def lose_focus(self, evt):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        self.fill_data(layer)
 
     def fill_data(self, layer):
         try:
