@@ -64,7 +64,7 @@ def findChangeLogVersionForGit(options):
 def findLatestInGit(options):
     version = StrictVersion("0.0")
     tags = subprocess.Popen(["git", "tag", "-l"], stdout=subprocess.PIPE).communicate()[0]
-    for tag in tags.splitlines():
+    for tag in tags.decode('utf-8').splitlines():
         match = re.match(r'%s$' % versionre, tag)
         if match:
             found = StrictVersion(match.group(1))
@@ -114,7 +114,7 @@ def getGitChangeLogSuggestions(tag, options):
     top = "HEAD"
     suggestions = []
     text = subprocess.Popen(["git", "log", "--pretty=format:%ae--%B", "%s..%s" % (tag, top)], stdout=subprocess.PIPE).communicate()[0]
-    lines = text.splitlines()
+    lines = text.decode('utf-8').splitlines()
     print(lines)
     first = True
     for line in lines:
@@ -158,6 +158,7 @@ def replace(filename, block):
     current = []
     store = False
     for line in fh:
+        line = line.decode('utf-8')
         if store:
             current.append(line)
         if not line.strip(): # skip until first blank line
