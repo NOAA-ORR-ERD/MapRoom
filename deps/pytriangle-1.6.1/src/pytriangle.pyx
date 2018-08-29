@@ -111,12 +111,16 @@ def triangulate_simple(
     )
     child.daemon = True
     child.start()
+
+    # For a large amount of data, have to pull from the queue before joining
+    # the process. See https://bugs.python.org/issue8426
+    output = q.get(PROCESSING_TIMEOUT)
+
     child.join(PROCESSING_TIMEOUT)
     if child.is_alive():
         # timeout reached! Kill the process
         child.terminate()
         raise RuntimeError("Triangulation timeout.")
-    output = q.get_nowait()
     try:
         out_points_xy, out_points_z, out_lines, out_triangles = output
     except ValueError:
@@ -171,14 +175,20 @@ def triangulate_simple_child(
     out_data.trianglelist = NULL
     out_data.segmentlist = NULL
 
+    print(f"Calling triangulate")
     triangulate( switches, &in_data, &out_data, NULL )
+    print(f"Returned from triangulate")
 
     out_points_xy = np.PyArray_SimpleNewFromData(2, [out_data.numberofpoints, 2], np.NPY_DOUBLE, out_data.pointlist)
+    print(f"out_points_xy: {len(out_points_xy)}")
 
     out_points_z = np.PyArray_SimpleNewFromData(1, [out_data.numberofpoints], np.NPY_DOUBLE, out_data.pointattributelist).astype(np.float32)
+    print(f"out_points_z: {len(out_points_z)}")
 
     out_lines = np.PyArray_SimpleNewFromData(2, [out_data.numberofsegments, 2], np.NPY_INT, out_data.segmentlist)
+    print(f"out_lines: {len(out_lines)}")
 
     out_triangles = np.PyArray_SimpleNewFromData(2, [out_data.numberoftriangles, out_data.numberofcorners], np.NPY_INT, out_data.trianglelist)
+    print(f"out_triangles: {len(out_triangles)}")
 
     output_queue.put((out_points_xy, out_points_z, out_lines, out_triangles))
