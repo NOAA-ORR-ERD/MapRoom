@@ -549,7 +549,7 @@ class MultiSlider(wx.Panel):
                     drag = i
                     break
             if drag is None:
-                color = 0
+                color = 1
                 for i, sx in enumerate(self.separators):
                     print(x, sx)
                     if sx >= x:
