@@ -19,13 +19,44 @@ class AlwaysAlphaCCD(CCD.CubeColourDialog):
         self.mainSizer.Hide(self.showAlpha)
 
 
+if wx.Platform == "__WXMAC__":
+    color_dialog = wx.ColourDialog
+else:
+    color_dialog = AlwaysAlphaCCD
+
+
+def prompt_for_rgba(parent, color, custom=None, use_float=False):
+    data = wx.ColourData()
+    data.SetChooseFull(True)
+    if use_float:
+        color = [a * 255 for a in color]
+    data.SetColour(color)
+    if custom is not None:
+        for idx, clr in enumerate(custom.Colours):
+            if clr is not None:
+                data.SetCustomColour(idx, clr)
+
+    dlg = color_dialog(wx.GetTopLevelParent(parent), data)
+    changed = dlg.ShowModal() == wx.ID_OK
+
+    if changed:
+        data = dlg.GetColourData()
+        color = data.GetColour()
+        if use_float:
+            color = [float(c / 255.0) for c in color]
+        if custom is not None:
+            custom.Colours = \
+                [data.GetCustomColour(idx) for idx in range(0, 16)]
+    else:
+        color = None
+
+    dlg.Destroy()
+    return color
+
+
+
 class ColorSelectButton(ColorSelect):
     SetColor = ColorSelect.SetColour
-
-    if wx.Platform == "__WXMAC__":
-        color_dialog = wx.ColourDialog
-    else:
-        color_dialog = AlwaysAlphaCCD
 
     def MakeBitmap(self):
         """ Creates a bitmap representation of the current selected colour. """
@@ -66,28 +97,7 @@ class ColorSelectButton(ColorSelect):
         return bmp
 
     def OnClick(self, event):
-        # Override to use the CubeColourDialog instead of the standard platform
-        # color dialog
-        data = wx.ColourData()
-        data.SetChooseFull(True)
-        data.SetColour(self.colour)
-        if self.customColours:
-            for idx, clr in enumerate(self.customColours.Colours):
-                if clr is not None:
-                    data.SetCustomColour(idx, clr)
-
-        dlg = self.color_dialog(wx.GetTopLevelParent(self), data)
-        changed = dlg.ShowModal() == wx.ID_OK
-
-        if changed:
-            data = dlg.GetColourData()
-            self.SetColour(data.GetColour())
-            if self.customColours:
-                self.customColours.Colours = \
-                    [data.GetCustomColour(idx) for idx in range(0, 16)]
-
-        dlg.Destroy()
-
-        # moved after dlg.Destroy, since who knows what the callback will do...
-        if changed:
+        color = prompt_for_rgba(self, self.colour, self.customColours)
+        if color is not None:
+            self.SetColour(color)
             self.OnChange()

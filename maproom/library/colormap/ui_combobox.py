@@ -9,7 +9,7 @@ import numpy as np
 import numpy.random as rand
 
 from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, user_defined_discrete_colormaps, ListedBoundedColormap
-from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT
+from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT, prompt_for_rgba
 
 import logging
 log = logging.getLogger(__name__)
@@ -477,6 +477,7 @@ class MultiSlider(wx.Panel):
         wx.Panel.__init__(self, parent, id, *args, **kwargs)
         self.separators = []
         self.rectangles = []
+        self.label_width = []
 
         self.drag_cursor = wx.Cursor(wx.CURSOR_SIZEWE)
         self.separator_pen = wx.Pen(wx.WHITE, 3)
@@ -513,7 +514,7 @@ class MultiSlider(wx.Panel):
 
         if evt.LeftDown():
             self.CaptureMouse()
-            self.dragging = self.hit_test(x, y)
+            self.dragging, _, _ = self.hit_test(x, y)
             print(f"DRAGGING {self.dragging}")
             if self.dragging is not None:
                 self.SetCursor(self.drag_cursor)
@@ -522,10 +523,18 @@ class MultiSlider(wx.Panel):
         elif evt.LeftUp():
             if self.HasCapture():
                 self.ReleaseMouse()
-            self.dragging = None
             self.SetCursor(wx.NullCursor)
+            if self.dragging:
+                self.dragging = None
+            else:
+                _, color_index, value_index = self.hit_test(x, y)
+                if color_index is not None:
+                    self.change_color(color_index)
+                elif value_index is not None:
+                    self.change_value(value_index)
         elif evt.Moving():
-            if self.hit_test(x, y) is not None:
+            is_over_bin, _, _ = self.hit_test(x, y)
+            if is_over_bin is not None:
                 self.SetCursor(self.drag_cursor)
             else:
                 self.SetCursor(wx.NullCursor)
@@ -533,12 +542,28 @@ class MultiSlider(wx.Panel):
         evt.Skip()
 
     def hit_test(self, x, y):
-        if y > self.bar_height:
-            return
-        for i, sx in enumerate(self.separators[:-1]):
-            if abs(x - sx) < self.label_border:
-                return i
-        return None
+        drag = value = color = None
+        if y < self.bar_height:
+            for i, sx in enumerate(self.separators[:-1]):
+                if abs(x - sx) < self.label_border:
+                    drag = i
+                    break
+            if drag is None:
+                color = 0
+                for i, sx in enumerate(self.separators):
+                    print(x, sx)
+                    if sx >= x:
+                        break
+                    color += 1
+                else:
+                    # out of range
+                    color = None
+        elif y > self.bar_height + self.label_border and y < self.bar_height + self.label_border + self.label_height:
+            for i, sx in enumerate(self.separators[:-1]):
+                if abs(x - sx) < self.label_width[i]:
+                    value = i
+                    break
+        return drag, color, value
 
     def move_border(self, x):
         d = self.dragging
@@ -549,6 +574,15 @@ class MultiSlider(wx.Panel):
             value = self.x_to_value(x)
             p.bin_borders[self.dragging + 2] = value
             #self.separators[d] = x
+            self.update_borders()
+
+    def change_color(self, color_index):
+        p = self.GetParent()
+        color = p.bin_colors[color_index]
+        new_color = prompt_for_rgba(self, color, use_float=True)
+        print(f"index={color_index} old={color} new={new_color}")
+        if new_color is not None:
+            p.bin_colors[color_index] = np.asarray(new_color, dtype=np.float32)
             self.update_borders()
 
     def on_size(self, evt):
@@ -594,7 +628,9 @@ class MultiSlider(wx.Panel):
                 text_x = b
             dc.DrawRectangle(text_x - b, label_top, width + 2*b, label_top + self.label_height + 2*b)
             dc.DrawText(label, text_x, self.bar_height + 2*b)
+            self.label_width.append(width)
 
+        self.label_width = []
         draw_label(self.label_border)
         for sx in self.separators:
             draw_label(sx)
