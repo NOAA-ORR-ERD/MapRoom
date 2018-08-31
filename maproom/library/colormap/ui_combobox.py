@@ -1,6 +1,9 @@
 import collections
+import re
 
 import wx
+import wx.lib.scrolledpanel
+import wx.lib.splitter
 import wx.adv
 import numpy as np
 import numpy.random as rand
@@ -363,7 +366,16 @@ class DiscreteColormapDialog(wx.Dialog):
         self.populate_panel(name)
 
     def get_edited_colormap(self):
-        self.working_copy.name += "prime"
+        if self.working_copy.name.endswith("prime"):
+            self.working_copy.name += "1"
+        elif "prime" in self.working_copy.name:
+            match = re.match("(.*prime)([0-9]+)$", self.working_copy.name)
+            if match:
+                prefix = match.group(1)
+                val = int(match.group(2))
+                self.working_copy.name = prefix + str(val)
+            else:
+                self.working_copy.name += "prime"
         return self.working_copy
 
     def on_add_above(self, evt):
@@ -458,3 +470,308 @@ class DiscreteColormapDialog(wx.Dialog):
         self.bin_borders[0:0] = [None]  # Insert first dummy value
         self.working_copy.autoscale = True
         wx.CallAfter(self.update_panel_controls)
+
+
+class MultiSlider(wx.Panel):
+    def __init__(self, parent, id=-1, *args, **kwargs):
+        wx.Panel.__init__(self, parent, id, *args, **kwargs)
+        self.separators = []
+        self.rectangles = []
+
+        self.drag_cursor = wx.Cursor(wx.CURSOR_SIZEWE)
+        self.separator_pen = wx.Pen(wx.WHITE, 3)
+        self.background_brush = wx.Brush(wx.WHITE)
+        self.text_color = wx.BLACK
+        self.text_background = wx.WHITE
+        attr = self.GetDefaultAttributes()
+        self.SetBackgroundColour(attr.colBg)
+        if wx.Platform == "__WXMSW__":
+            fontsize = 8
+        else:
+            fontsize = 10
+        self.text_font = wx.Font(fontsize, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL)
+        self.label_border = 3
+        self.set_defaults()
+
+        self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Bind(wx.EVT_MOUSE_EVENTS, self.on_mouse)
+
+    def set_defaults(self):
+        dc = wx.MemoryDC()
+        dc.SetFont(self.text_font)
+        self.label_height = dc.GetCharHeight() + 3 * self.label_border
+        self.bar_height = 0
+        self.active_width = 0
+
+    def on_mouse(self, evt):
+        if not self.separators:
+            evt.Skip()
+            return
+
+        x, y = evt.GetPosition()
+
+        if evt.LeftDown():
+            self.CaptureMouse()
+            self.dragging = self.hit_test(x, y)
+            print(f"DRAGGING {self.dragging}")
+            if self.dragging is not None:
+                self.SetCursor(self.drag_cursor)
+        elif evt.Dragging() and self.dragging is not None:
+            self.move_border(x)
+        elif evt.LeftUp():
+            if self.HasCapture():
+                self.ReleaseMouse()
+            self.dragging = None
+            self.SetCursor(wx.NullCursor)
+        elif evt.Moving():
+            if self.hit_test(x, y) is not None:
+                self.SetCursor(self.drag_cursor)
+            else:
+                self.SetCursor(wx.NullCursor)
+
+        evt.Skip()
+
+    def hit_test(self, x, y):
+        if y > self.bar_height:
+            return
+        for i, sx in enumerate(self.separators[:-1]):
+            if abs(x - sx) < self.label_border:
+                return i
+        return None
+
+    def move_border(self, x):
+        d = self.dragging
+        lo = self.separators[d - 1] if d > 0 else self.label_border
+        hi = self.separators[d + 1] if d < len(self.separators) - 1 else self.full_width - self.label_border
+        if x > lo and x < hi:
+            p = self.GetParent()
+            value = self.x_to_value(x)
+            p.bin_borders[self.dragging + 2] = value
+            #self.separators[d] = x
+            self.update_borders()
+
+    def on_size(self, evt):
+        full = self.GetClientRect()
+        self.bar_height = full.height - self.label_height
+        self.full_height = full.height
+        self.full_width = full.width
+        self.active_width = full.width - 2 * self.label_border + 1
+        self.update_borders()
+
+    def on_paint(self, evt):
+        dc = wx.PaintDC(self)
+        self.draw(dc)
+
+    def draw(self, dc):
+        dc.SetPen(wx.TRANSPARENT_PEN)
+        dc.SetBrush(wx.Brush(self.GetBackgroundColour()))
+        dc.DrawRectangle(0, 0, self.full_width, self.full_height)
+        dc.SetBrush(self.background_brush)
+        dc.DrawRectangle(0, 0, self.full_width + 1, self.bar_height)
+        for x1, x2, color in self.rectangles:
+            print(f"drawing rect: {x1}->{x2} in {color}")
+            b = wx.Brush(color)
+            dc.SetBrush(b)
+            dc.DrawRectangle(x1, 0, x2, self.bar_height)
+        dc.SetPen(self.separator_pen)
+        dc.SetFont(self.text_font)
+        dc.SetTextBackground(self.text_background)
+        dc.SetTextForeground(self.text_color)
+        dc.SetBrush(wx.Brush(self.text_background))
+        b = self.label_border
+        label_top = self.bar_height + b
+
+        def draw_label(x):
+            value = self.x_to_value(x)
+            label = "%.3f" % value
+            dc.DrawLine(x, 0, x, label_top)
+            width, _ = dc.GetTextExtent(label)
+            text_x = x - width//2
+            if text_x + width > self.full_width:
+                text_x = self.full_width - width - b
+            elif text_x - b < 0:
+                text_x = b
+            dc.DrawRectangle(text_x - b, label_top, width + 2*b, label_top + self.label_height + 2*b)
+            dc.DrawText(label, text_x, self.bar_height + 2*b)
+
+        draw_label(self.label_border)
+        for sx in self.separators:
+            draw_label(sx)
+
+    def update_borders(self):
+        p = self.GetParent()
+        print(f"bin_colors:{p.bin_colors}")
+        print(f"bin_borders:{p.bin_borders}")
+        print(f"min/max: {p.values_min_max}")
+        lo, hi = p.values_min_max
+        width, height = self.GetSize()
+        last_pixel_pos = self.label_border
+        r = []
+        s = []
+        if len(p.bin_colors) > 1:
+            for c, v in zip(p.bin_colors[1:-1], p.bin_borders[2:]):
+                print(f"c={c}, v={v}")
+                color = [int(z*255) for z in c[0:3]]
+                perc = (v - lo) / (hi - lo)
+                pixel_pos = int(perc * self.active_width) + self.label_border
+                r.append((last_pixel_pos, pixel_pos, color))
+                s.append(pixel_pos)
+                print(f"splitter at {pixel_pos}")
+                last_pixel_pos = pixel_pos
+        self.rectangles = r
+        self.separators = s
+        self.Refresh()
+
+    def x_to_value(self, x):
+        perc = (x - self.label_border) / self.active_width
+        return self.GetParent().perc_to_value(perc)
+
+
+
+
+class GnomeColormapDialog(wx.Dialog):
+    def __init__(self, parent, current_colormap, values_min_max):
+        wx.Dialog.__init__(self, parent, -1, "Edit Discrete Colormaps", size=(500, -1))
+        self.bitmap_width = 300
+        self.bitmap_height = 30
+        self.working_copy = None
+        self.values_min_max = values_min_max
+
+        lsizer = wx.BoxSizer(wx.VERTICAL)
+
+        s = wx.StaticText(self, -1, "Known colormaps:")
+        lsizer.Add(s, 0, wx.EXPAND|wx.TOP, 10)
+        self.colormap_list = DiscreteOnlyColormapComboBox(self, -1, "colormap_list", popup_width=300)
+        self.colormap_list.Bind(wx.EVT_COMBOBOX, self.colormap_changed)
+        self.colormap_list.SetSelection(0)
+        lsizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
+
+        s = wx.StaticText(self, -1, "Current colormap:")
+        lsizer.Add(s, 0, wx.EXPAND|wx.TOP, 40)
+
+        self.colormap_name = wx.TextCtrl(self, -1, name="colormap_name")
+        lsizer.Add(self.colormap_name, 0, wx.EXPAND, 5)
+
+        self.splitter = MultiSlider(self, size=(800,50))
+
+        lsizer.Add(self.splitter, 1, wx.EXPAND | wx.ALL, 5)
+
+        # self.autoscale_button = wx.CheckBox(self, -1, "Automatically scale bins when switching view\nto new type of data")
+        # self.autoscale_button.Bind(wx.EVT_CHECKBOX, self.on_autoscale)
+        # lsizer.Add(self.autoscale_button, 0, wx.ALL|wx.CENTER|wx.TOP, 10)
+
+        btnsizer = wx.StdDialogButtonSizer()
+        btn = wx.Button(self, wx.ID_OK)
+        btn.SetDefault()
+        btnsizer.AddButton(btn)
+        btn = wx.Button(self, wx.ID_CANCEL)
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+
+        lsizer.AddStretchSpacer(1)
+        lsizer.Add(btnsizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 5)
+
+        self.SetSizer(lsizer)
+
+        self.populate_panel(current_colormap.name)
+        self.Fit()
+        self.Layout()
+
+    def populate_panel(self, name):
+        try:
+            d = get_colormap(name, True).copy()
+        except KeyError:
+            # not a valid discrete colormap name; start from the first item
+            name = self.colormap_list.colormap_name_order[0]
+            d = builtin_discrete_colormaps[name].copy()
+        self.colormap_list.set_selection_by_name(name)
+        self.colormap_name.SetValue(name)
+        self.working_copy = d
+        self.bin_borders = list(d.bin_borders)
+        self.bin_colors = list(d.bin_colors)
+        self.bin_borders[0:0] = [None]  # alternates color, val, color, val ... color
+        self.scale_data()
+        self.update_panel_controls()
+
+    def regenerate_colormap(self):
+        print("bin_borders(%d):%s" % (len(self.bin_borders), str(self.bin_borders)))
+        print("bin_colors(%d):%s" % (len(self.bin_colors), str(self.bin_colors)))
+        name = self.colormap_name.GetValue()
+        cmap = ListedBoundedColormap(self.bin_colors, name)
+        values = self.bin_borders[1:]
+        d = DiscreteColormap(name, cmap)
+        d.set_values(values)
+        self.working_copy = d
+
+    def update_bitmap(self):
+        self.regenerate_colormap()
+
+    def update_panel_controls(self):
+        self.update_bitmap()
+        self.splitter.update_borders()
+
+    def colormap_changed(self, evt):
+        name = self.colormap_list.get_selected_name()
+        self.populate_panel(name)
+
+    def get_edited_colormap(self):
+        if self.working_copy.name.endswith("prime"):
+            self.working_copy.name += "1"
+        elif "prime" in self.working_copy.name:
+            match = re.match("(.*prime)([0-9]+)$", self.working_copy.name)
+            if match:
+                prefix = match.group(1)
+                val = int(match.group(2))
+                self.working_copy.name = prefix + str(val)
+            else:
+                self.working_copy.name += "prime"
+        return self.working_copy
+
+    def boundary_changed(self, entry_num, val):
+        if entry_num == 0:
+            raise ValueError("How are you changing the hidden value?")
+        if entry_num < len(self.bin_borders) - 1 and val >= self.bin_borders[entry_num + 1]:
+            raise ValueError("%f is larger than next larger bin value %f" % (val, self.bin_borders[entry_num + 1]))
+        if entry_num > 1 and val <= self.bin_borders[entry_num - 1]:
+            raise ValueError("%f is larger than next smaller bin value %f" % (val, self.bin_borders[entry_num - 1]))
+        self.bin_borders[entry_num] = val
+        wx.CallAfter(self.update_bitmap)
+
+    def set_color(self, entry_num, color):
+        self.bin_colors[entry_num] = color
+        wx.CallAfter(self.update_bitmap)
+
+    def calc_percentages_of_bins(self):
+        if self.bin_borders[0] is None:
+            bins = self.bin_borders[1:]
+        else:
+            bins = self.bin_borders
+        lo = min(bins)
+        hi = max(bins)
+        delta = hi - lo
+        if delta == 0.0:
+            hi = lo + 1.0
+            delta = 1.0
+        new_bins = [(v - lo) / delta for v in bins]
+        return new_bins
+
+    def perc_to_value(self, perc):
+        lo, hi = self.values_min_max
+        value = lo + (hi - lo) * perc
+        print(f"perc_to_value: {perc}, {lo}, {hi}, {value}")
+        return value
+
+    def scale_data(self):
+        # Rescale current colormap to match data instead of autoscaling when
+        # map is loaded
+        if self.values_min_max is None:
+            log.debug("no min/max values specified when creating dialog box")
+        else:
+            temp = self.calc_percentages_of_bins()
+            lo, hi = self.values_min_max
+            if lo == hi:
+                hi += 1.0
+            delta = hi - lo
+            self.bin_borders = [(v * delta) + lo for v in temp]
+            self.bin_borders[0:0] = [None]  # Insert first dummy value
