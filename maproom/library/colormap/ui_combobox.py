@@ -570,7 +570,7 @@ class MultiSlider(wx.Panel):
         dc.SetBrush(self.background_brush)
         dc.DrawRectangle(0, 0, self.full_width + 1, self.bar_height)
         for x1, x2, color in self.rectangles:
-            print(f"drawing rect: {x1}->{x2} in {color}")
+            # print(f"drawing rect: {x1}->{x2} in {color}")
             b = wx.Brush(color)
             dc.SetBrush(b)
             dc.DrawRectangle(x1, 0, x2, self.bar_height)
@@ -614,7 +614,7 @@ class MultiSlider(wx.Panel):
                 print(f"c={c}, v={v}")
                 color = [int(z*255) for z in c[0:3]]
                 perc = (v - lo) / (hi - lo)
-                pixel_pos = int(perc * self.active_width) + self.label_border
+                pixel_pos = (perc * self.active_width) + self.label_border
                 r.append((last_pixel_pos, pixel_pos, color))
                 s.append(pixel_pos)
                 print(f"splitter at {pixel_pos}")
@@ -632,7 +632,7 @@ class MultiSlider(wx.Panel):
 
 class GnomeColormapDialog(wx.Dialog):
     def __init__(self, parent, current_colormap, values_min_max):
-        wx.Dialog.__init__(self, parent, -1, "Edit Discrete Colormaps", size=(500, -1))
+        wx.Dialog.__init__(self, parent, -1, "Edit Discrete Colormap", size=(500, -1))
         self.bitmap_width = 300
         self.bitmap_height = 30
         self.working_copy = None
@@ -640,21 +640,27 @@ class GnomeColormapDialog(wx.Dialog):
 
         lsizer = wx.BoxSizer(wx.VERTICAL)
 
-        s = wx.StaticText(self, -1, "Known colormaps:")
-        lsizer.Add(s, 0, wx.EXPAND|wx.TOP, 10)
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        s = wx.StaticText(self, -1, "Color Scheme:")
+        hsizer.Add(s, 0, wx.EXPAND|wx.ALL, 10)
         self.colormap_list = DiscreteOnlyColormapComboBox(self, -1, "colormap_list", popup_width=300)
         self.colormap_list.Bind(wx.EVT_COMBOBOX, self.colormap_changed)
         self.colormap_list.SetSelection(0)
-        lsizer.Add(self.colormap_list, 0, wx.EXPAND, 0)
+        hsizer.Add(self.colormap_list, 1, wx.EXPAND, 0)
+        lsizer.Add(hsizer, 0, wx.EXPAND|wx.ALL, 10)
 
-        s = wx.StaticText(self, -1, "Current colormap:")
-        lsizer.Add(s, 0, wx.EXPAND|wx.TOP, 40)
-
-        self.colormap_name = wx.TextCtrl(self, -1, name="colormap_name")
-        lsizer.Add(self.colormap_name, 0, wx.EXPAND, 5)
+        hsizer = wx.BoxSizer(wx.HORIZONTAL)
+        s = wx.StaticText(self, -1, "Add/Remove:")
+        hsizer.Add(s, 0, wx.EXPAND|wx.ALL, 10)
+        b = wx.Button(self, wx.ID_ADD, " + ")
+        b.Bind(wx.EVT_BUTTON, self.add_bin)
+        hsizer.Add(b, 0, wx.EXPAND, 0)
+        b = wx.Button(self, wx.ID_REMOVE, " - ")
+        b.Bind(wx.EVT_BUTTON, self.remove_bin)
+        hsizer.Add(b, 0, wx.EXPAND, 0)
+        lsizer.Add(hsizer, 0, wx.EXPAND|wx.ALL, 10)
 
         self.splitter = MultiSlider(self, size=(800,50))
-
         lsizer.Add(self.splitter, 1, wx.EXPAND | wx.ALL, 5)
 
         # self.autoscale_button = wx.CheckBox(self, -1, "Automatically scale bins when switching view\nto new type of data")
@@ -678,16 +684,41 @@ class GnomeColormapDialog(wx.Dialog):
         self.Fit()
         self.Layout()
 
-    def populate_panel(self, name):
+    def add_bin(self, evt):
+        b = self.bin_borders
+        new_border = (b[-2] + b[-1]) / 2
+        b[-1:-1] = [new_border]
+        index = len(b) - 2
+        c = self.bin_colors
+        try:
+            new_color = self.color_scheme_copy.bin_colors[index]
+        except IndexError:
+            new_color = self.color_scheme_copy.bin_colors[-1]
+        self.bin_colors[-1:-1] = [new_color]
+        self.splitter.update_borders()
+
+    def remove_bin(self, evt):
+        print(self.bin_borders)
+        print(self.bin_colors)
+        if len(self.bin_borders) < 4:
+            return
+        self.bin_borders[-2:-1] = []
+        self.bin_colors[-2:-1] = []
+        self.splitter.update_borders()
+
+    def get_colormap(self, name):
         try:
             d = get_colormap(name, True).copy()
         except KeyError:
             # not a valid discrete colormap name; start from the first item
             name = self.colormap_list.colormap_name_order[0]
             d = builtin_discrete_colormaps[name].copy()
+        return d
+
+    def populate_panel(self, name):
         self.colormap_list.set_selection_by_name(name)
-        self.colormap_name.SetValue(name)
-        self.working_copy = d
+        d = self.working_copy = self.get_colormap(name)
+        self.color_scheme_copy = self.working_copy.copy()
         self.bin_borders = list(d.bin_borders)
         self.bin_colors = list(d.bin_colors)
         self.bin_borders[0:0] = [None]  # alternates color, val, color, val ... color
@@ -697,7 +728,7 @@ class GnomeColormapDialog(wx.Dialog):
     def regenerate_colormap(self):
         print("bin_borders(%d):%s" % (len(self.bin_borders), str(self.bin_borders)))
         print("bin_colors(%d):%s" % (len(self.bin_colors), str(self.bin_colors)))
-        name = self.colormap_name.GetValue()
+        name = "custom"
         cmap = ListedBoundedColormap(self.bin_colors, name)
         values = self.bin_borders[1:]
         d = DiscreteColormap(name, cmap)
@@ -713,7 +744,7 @@ class GnomeColormapDialog(wx.Dialog):
 
     def colormap_changed(self, evt):
         name = self.colormap_list.get_selected_name()
-        self.populate_panel(name)
+        self.color_scheme_copy = self.get_colormap(name)
 
     def get_edited_colormap(self):
         if self.working_copy.name.endswith("prime"):
@@ -759,7 +790,6 @@ class GnomeColormapDialog(wx.Dialog):
     def perc_to_value(self, perc):
         lo, hi = self.values_min_max
         value = lo + (hi - lo) * perc
-        print(f"perc_to_value: {perc}, {lo}, {hi}, {value}")
         return value
 
     def scale_data(self):
