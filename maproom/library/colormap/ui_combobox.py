@@ -599,7 +599,7 @@ class MultiSlider(wx.Panel):
     def move_border(self, x):
         d = self.dragging
         value = self.x_to_value(x)
-        self.set_border_value(self, d, value)
+        self.set_border_value(d, value)
 
     def set_border_value(self, d, value):
         lo = self.separators[d - 1] if d > 0 else self.label_border
