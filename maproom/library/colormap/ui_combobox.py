@@ -8,11 +8,42 @@ import wx.adv
 import numpy as np
 import numpy.random as rand
 
+from omnivore.utils.wx.dialogs import SimplePromptDialog
+
 from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, user_defined_discrete_colormaps, ListedBoundedColormap
 from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT, prompt_for_rgba
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class FloatEntryDialog(SimplePromptDialog):
+    """Simple subclass of wx.TextEntryDialog to convert text result from
+    floating point if necessary.
+    """
+
+    def convert_text(self, text, return_error=False, default_base="dec", **kwargs):
+        try:
+            value = float(text)
+            error = ""
+        except (ValueError, TypeError) as e:
+            value = None
+            error = str(e)
+        if return_error:
+            return value, error
+        else:
+            return value
+
+
+def prompt_for_float(parent, message, title, default=None, return_error=False):
+    if default is not None:
+        default = str(float(default))
+    else:
+        default = ""
+    d = FloatEntryDialog(parent, message, title, default)
+    if default:
+        d.SetValue(default)
+    return d.show_and_get_value(return_error=return_error)
 
 
 class ColormapImage(object):
@@ -567,14 +598,18 @@ class MultiSlider(wx.Panel):
 
     def move_border(self, x):
         d = self.dragging
+        value = self.x_to_value(x)
+        self.set_border_value(self, d, value)
+
+    def set_border_value(self, d, value):
         lo = self.separators[d - 1] if d > 0 else self.label_border
         hi = self.separators[d + 1] if d < len(self.separators) - 1 else self.full_width - self.label_border
-        if x > lo and x < hi:
+        if value > self.x_to_value(lo) and value < self.x_to_value(hi):
             p = self.GetParent()
-            value = self.x_to_value(x)
-            p.bin_borders[self.dragging + 2] = value
-            #self.separators[d] = x
+            p.bin_borders[d + 2] = value
             self.update_borders()
+            return True
+        return False
 
     def change_color(self, color_index):
         p = self.GetParent()
@@ -584,6 +619,14 @@ class MultiSlider(wx.Panel):
         if new_color is not None:
             p.bin_colors[color_index] = np.asarray(new_color, dtype=np.float32)
             self.update_borders()
+
+    def change_value(self, value_index):
+        p = self.GetParent()
+        value = self.x_to_value(self.separators[value_index])
+        new_value = prompt_for_float(self, "New bin", "Edit Bin Value", value)
+        print(f"index={value_index} old={value} new={new_value}")
+        if not self.set_border_value(value_index, new_value):
+            print(f"value out of range")
 
     def on_size(self, evt):
         full = self.GetClientRect()
