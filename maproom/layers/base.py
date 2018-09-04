@@ -344,7 +344,7 @@ class Layer(HasTraits):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if m.endswith("_to_json")]
 
     def get_from_json_attrs(self):
-        return [(m[0:-10], getattr(self, m)) for m in dir(self) if m.endswith("_from_json")]
+        return [(m[0:-10], getattr(self, m)) for m in dir(self) if m.endswith("_from_json") and m != "load_from_json"]
 
     def unserialize_json(self, json_data, batch_flags):
         """Restore layer from json representation.
@@ -390,12 +390,12 @@ class Layer(HasTraits):
         for attr, from_json in self.get_from_json_attrs():
             try:
                 from_json(json_data)
-            except KeyError:
-                message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
+            except KeyError as e:
+                message = f"{attr} not present in layer {self.name}; attempting to continue ({str(e)})"
                 log.warning(message)
                 #batch_flags.messages.append("WARNING: %s" % message)
-            except TypeError:
-                log.warning("Skipping from_json function %s", from_json)
+            except TypeError as e:
+                log.warning(f"Skipping from_json function {from_json} ({str(e)})")
 
     def from_json_sanity_check_after_load(self, json_data):
         """Fix up any errors or missing data after json unserialization
