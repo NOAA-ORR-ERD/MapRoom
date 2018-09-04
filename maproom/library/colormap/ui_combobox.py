@@ -649,7 +649,7 @@ class MultiSlider(wx.Panel):
         dc.SetBrush(self.background_brush)
         dc.DrawRectangle(b, 0, self.active_width, self.bar_height)
         for x1, x2, color in self.rectangles:
-            # print(f"drawing rect: {x1}->{x2} in {color}")
+            print(f"drawing rect: {x1}->{x2},{self.bar_height} in {color}")
             dc.SetBrush(wx.Brush(color))
             dc.DrawRectangle(x1, 0, x2, self.bar_height)
         dc.SetPen(self.separator_pen)
@@ -679,10 +679,10 @@ class MultiSlider(wx.Panel):
 
     def update_borders(self):
         p = self.GetParent()
+        lo, hi = p.min_max
         print(f"bin_colors:{p.bin_colors}")
         print(f"bin_borders:{p.bin_borders}")
-        print(f"min/max: {p.values_min_max}")
-        lo, hi = p.values_min_max
+        print(f"min/max: {lo} {hi}")
         width, height = self.GetSize()
         last_pixel_pos = self.label_border
         r = []
@@ -762,6 +762,17 @@ class GnomeColormapDialog(wx.Dialog):
         self.Fit()
         self.Layout()
 
+    @property
+    def min_max(self):
+        try:
+            lo, hi = self.values_min_max
+        except TypeError:
+            lo = 0.0
+            hi = 100.0
+        if lo == hi:
+            hi += 1.0
+        return lo, hi
+
     def add_bin(self, evt):
         b = self.bin_borders
         new_border = (b[-2] + b[-1]) / 2
@@ -825,16 +836,7 @@ class GnomeColormapDialog(wx.Dialog):
         self.color_scheme_copy = self.get_colormap(name)
 
     def get_edited_colormap(self):
-        if self.working_copy.name.endswith("prime"):
-            self.working_copy.name += "1"
-        elif "prime" in self.working_copy.name:
-            match = re.match("(.*prime)([0-9]+)$", self.working_copy.name)
-            if match:
-                prefix = match.group(1)
-                val = int(match.group(2))
-                self.working_copy.name = prefix + str(val)
-            else:
-                self.working_copy.name += "prime"
+        self.regenerate_colormap()
         return self.working_copy
 
     def boundary_changed(self, entry_num, val):
@@ -866,7 +868,7 @@ class GnomeColormapDialog(wx.Dialog):
         return new_bins
 
     def perc_to_value(self, perc):
-        lo, hi = self.values_min_max
+        lo, hi = self.min_max
         value = lo + (hi - lo) * perc
         return value
 
@@ -877,9 +879,7 @@ class GnomeColormapDialog(wx.Dialog):
             log.debug("no min/max values specified when creating dialog box")
         else:
             temp = self.calc_percentages_of_bins()
-            lo, hi = self.values_min_max
-            if lo == hi:
-                hi += 1.0
+            lo, hi = self.min_max
             delta = hi - lo
             self.bin_borders = [(v * delta) + lo for v in temp]
             self.bin_borders[0:0] = [None]  # Insert first dummy value
