@@ -11,7 +11,7 @@ from . import buttons
 from ..layers import state, LayerStyle
 from ..library import coordinates
 from ..library import colormap
-from ..library.colormap.ui_combobox import ColormapComboBox, DiscreteColormapDialog
+from ..library.colormap.ui_combobox import ColormapComboBox, GnomeColormapDialog
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import StyleChangeCommand, StatusCodeColorCommand, SetAnchorCommand, ChangeDepthCommand, MovePointsCommand, TextCommand, BorderWidthCommand
 from ..menu_commands import RenameLayerCommand
@@ -1579,6 +1579,9 @@ class ColormapField(InfoField):
 class DiscreteColormapField(InfoField):
     display_label = False
 
+    def is_displayed(self, layer):
+        return layer.is_using_colormap()
+
     def fill_data(self, layer):
         pass
 
@@ -1591,7 +1594,7 @@ class DiscreteColormapField(InfoField):
         layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
-        d = DiscreteColormapDialog(self.panel.project.control, layer.colormap, layer.current_min_max)
+        d = GnomeColormapDialog(self.panel.project.control, layer.colormap, layer.current_min_max)
         ret = d.ShowModal()
         if ret != wx.ID_CANCEL:
             name = d.get_edited_colormap()
