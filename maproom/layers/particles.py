@@ -540,10 +540,13 @@ class ParticleLayer(PointBaseLayer):
         self.scalar_subset_expression = json_data['scalar_subset_expression']
 
     def colormap_to_json(self):
-        return self.colormap.name
+        return self.colormap.to_json()
 
     def colormap_from_json(self, json_data):
-        self.colormap = colormap.get_colormap(json_data['colormap'])
+        try:
+            self.colormap = colormap.DiscreteColormap.from_json(json_data['colormap'])
+        except (KeyError, TypeError):
+            self.colormap = colormap.get_colormap(json_data['colormap'])
 
     def from_json_sanity_check_after_load(self, json_data):
         if not self.status_code_count:
