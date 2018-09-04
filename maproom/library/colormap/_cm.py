@@ -1365,6 +1365,15 @@ _tab20c_data = (
 )
 
 
+_gnome_data = (
+    (0/255, 255/255, 255/255),
+    (0/255, 255/255, 255/255),
+    (87/255, 171/255, 255/255),
+    (0.0, 0.0, 158/255),
+    (0.0, 0.0, 158/255),
+    )
+
+
 datad = {
     'Blues': _Blues_data,
     'BrBG': _BrBG_data,
@@ -1430,6 +1439,7 @@ datad = {
     'terrain': _terrain_data,
     'winter': _winter_data,
     # Qualitative
+    'gnome': {'listed': _gnome_data},
     'Accent': {'listed': _Accent_data},
     'Dark2': {'listed': _Dark2_data},
     'Paired': {'listed': _Paired_data},

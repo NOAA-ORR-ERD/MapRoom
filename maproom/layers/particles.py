@@ -415,7 +415,7 @@ class ParticleLayer(PointBaseLayer):
         return names
 
     def _colormap_default(self):
-        return colormap.get_colormap("Dark2")
+        return colormap.get_colormap("gnome")
 
     def scalar_value_ranges(self):
         ranges = {}
