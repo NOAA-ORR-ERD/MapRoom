@@ -8,7 +8,7 @@ from pyface.api import ImageResource
 from . import sliders
 from . import dialogs
 from . import buttons
-from ..layers import state, LayerStyle
+from ..layers import state, LayerStyle, valid_legend_types
 from ..library import coordinates
 from ..library import colormap
 from ..library.colormap.ui_combobox import ColormapComboBox, GnomeColormapDialog
@@ -1605,6 +1605,30 @@ class DiscreteColormapField(InfoField):
         self.panel.project.update_info_panels(layer, True)
 
 
+class LegendTypeField(InfoField):
+    same_line = False
+
+    def fill_data(self, layer):
+        self.ctrl.Clear()
+        self.ctrl.Set(valid_legend_types)
+        index = self.ctrl.FindString(layer.legend_type)
+        self.ctrl.SetSelection(index)
+
+    def create_control(self):
+        names = []
+        c = wx.ComboBox(self.parent, -1, "", size=(self.default_width, -1), choices=names, style=wx.CB_READONLY)
+        c.Bind(wx.EVT_COMBOBOX, self.style_changed)
+        return c
+
+    def style_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        index = event.GetSelection()
+        layer.legend_type = valid_legend_types[index]
+        self.panel.project.refresh()
+
+
 class ScalarSummaryField(WholeLinePropertyField):
     alignment_style = wx.ALIGN_LEFT
 
@@ -1776,6 +1800,7 @@ class InfoPanel(PANELTYPE):
         "Point size": PointSizeField,
         "Scalar value expression": ScalarExpressionField,
         "Scalar value ranges": ScalarSummaryField,
+        "Legend type": LegendTypeField,
     }
 
     def create_fields(self, layer, fields):

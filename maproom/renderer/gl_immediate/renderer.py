@@ -627,11 +627,11 @@ class ImmediateModeRenderer():
             gl.glEnd()
         gl.glDisable(gl.GL_POLYGON_SMOOTH)
 
-    def draw_screen_box(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, width=1.0, stipple_factor=1, stipple_pattern=0xFFFF):
+    def draw_screen_box(self, r, red=0.0, green=0.0, blue=0.0, alpha=1.0, width=1.0, stipple_factor=1, stipple_pattern=0xFFFF, flip=True):
         c = self.canvas
-        # flip y to treat rect as normal screen coordinates
-        r = ((r[0][0], rect.height(c.screen_rect) - r[0][1]),
-             (r[1][0], rect.height(c.screen_rect) - r[1][1]))
+        if flip:
+            # flip y to treat rect as normal screen coordinates
+            r = ((r[0][0], rect.height(c.screen_rect) - r[0][1]), (r[1][0], rect.height(c.screen_rect) - r[1][1]))
 
         gl.glDisable(gl.GL_TEXTURE_2D)
         gl.glDisable(gl.GL_LINE_SMOOTH)

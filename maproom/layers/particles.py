@@ -15,7 +15,7 @@ import numpy as np
 import wx
 
 from traits.api import Any
-from traits.api import Int, Float
+from traits.api import Int, Float, List
 from traits.api import Str
 from traits.api import Unicode
 
@@ -34,6 +34,9 @@ log = logging.getLogger(__name__)
 # progress_log = logging.getLogger("progress")
 
 
+valid_legend_types = ["Text", "Scale"]
+
+
 class ParticleFolder(Folder):
     """Layer for vector annotation image
 
@@ -50,7 +53,7 @@ class ParticleFolder(Folder):
 
     scalar_subset_expression = Str("")
 
-    layer_info_panel = ["Start time", "End time", "Scalar value", "Scalar value expression", "Colormap", "Discrete colormap", "Status Code Color", "Outline color", "Point size"]
+    layer_info_panel = ["Start time", "End time", "Scalar value", "Scalar value expression", "Legend type", "Colormap", "Discrete colormap", "Status Code Color", "Outline color", "Point size"]
 
     selection_info_panel = ["Scalar value ranges"]
 
@@ -144,6 +147,21 @@ class ParticleFolder(Folder):
         children = self.get_particle_layers()
         for c in children:
             c.point_size = size
+
+    @property
+    def legend_type(self):
+        children = self.get_particle_layers()
+        sizes = set()
+        for c in self.manager.get_layer_children(self):
+            if hasattr(c, 'legend_type'):
+                return c.legend_type
+        return valid_legend_types[0]
+
+    @legend_type.setter
+    def legend_type(self, legend_type):
+        for c in self.manager.get_layer_children(self):
+            if hasattr(c, 'legend_type'):
+                c.legend_type = legend_type
 
     def start_index_to_json(self):
         return self.start_index
@@ -267,9 +285,17 @@ class ParticleLegend(ScreenLayer):
 
     tick_label_pixel_spacing = Int(4)
 
-    layer_info_panel = ["X location", "Y location"]
+    layer_info_panel = ["X location", "Y location", "Legend type"]
 
     source_particle_folder = Any(-1)
+
+    legend_type = Str("Text")
+
+    legend_labels = List(["Light", "Medium", "Heavy"])
+
+    legend_bucket_width = Int(20)
+
+    legend_bucket_height = Int(14)
 
     x_offset = 20
 
@@ -312,6 +338,12 @@ class ParticleLegend(ScreenLayer):
     def legend_pixel_height_from_json(self, json_data):
         self.legend_pixel_height = json_data['legend_pixel_height']
 
+    def legend_type_to_json(self):
+        return self.legend_type
+
+    def legend_type_from_json(self, json_data):
+        self.legend_type = json_data['legend_type']
+
     @property
     def is_renderable(self):
         return True
@@ -324,37 +356,107 @@ class ParticleLegend(ScreenLayer):
         parent = self.source_particle_folder
 
         if parent.current_scalar_var is not None:
-            c = parent.colormap
-            if parent.current_min_max == None:
-                labels1 = []
+            if self.legend_type == "Text":
+                self.render_text_legend(renderer, w_r, p_r, s_r)
             else:
-                labels1 = c.calc_labels(*parent.current_min_max)
-            log.debug("rendering legend: colormap: %s, min_max=%s" % (c, parent.current_min_max))
+                self.render_scale_legend(renderer, w_r, p_r, s_r)
 
-            label_width = 0
-            labels2 = []
-            for perc, text in labels1:
-                w, h = renderer.get_drawn_string_dimensions(text)
-                labels2.append((perc, text, w, h))
-                label_width = max(label_width, w)
-            label_width += self.tick_label_pixel_spacing
+    def calc_legend_xy(self, interior_width, interior_height, s_r):
+        w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - interior_width
+        h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset - interior_height
 
-            w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - self.legend_pixel_width - label_width
-            h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset - self.legend_pixel_height
+        x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
+        y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
+        return x, y
 
-            x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
-            y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
+    def render_scale_legend(self, renderer, w_r, p_r, s_r):
+        log.log(5, "Rendering scale legend!!!")
 
-            r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
-            colors = c.calc_rgba_texture()
+        parent = self.source_particle_folder
+        c = parent.colormap
+        if parent.current_min_max == None:
+            labels1 = []
+        else:
+            labels1 = c.calc_labels(*parent.current_min_max)
+        log.debug("rendering legend: colormap: %s, min_max=%s" % (c, parent.current_min_max))
+
+        label_width = 0
+        labels2 = []
+        for perc, text in labels1:
+            w, h = renderer.get_drawn_string_dimensions(text)
+            labels2.append((perc, text, w, h))
+            label_width = max(label_width, w)
+        label_width += self.tick_label_pixel_spacing
+
+        x, y = self.calc_legend_xy(self.legend_pixel_width + label_width, self.legend_pixel_height, s_r)
+
+        r = ((x,y), (x+self.legend_pixel_width,y-self.legend_pixel_height))
+        colors = c.calc_rgba_texture()
+        try:
+            lo, hi = parent.num_below_above()
+            up_color = c.over_rgba if hi > 0 else None
+            down_color = c.under_rgba if lo > 0 else None
+        except AttributeError:
+            # continuous colormap doesn't have values outside of bounds
+            up_color = down_color = None
+        renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing, up_color=up_color, down_color=down_color)
+
+    def render_text_legend(self, renderer, w_r, p_r, s_r):
+        log.log(5, "Rendering text legend!!!")
+
+        parent = self.source_particle_folder
+        c = parent.colormap
+
+        interior_width = 0
+        interior_height = self.tick_label_pixel_spacing
+        labels2 = []
+        row_height = []
+        for text in self.legend_labels:
+            w, h = renderer.get_drawn_string_dimensions(text)
+            interior_width = max(interior_width, w)
+            row_height.append(h)
+            h = max(h, self.legend_bucket_height)
+            interior_height += h + self.tick_label_pixel_spacing
+        interior_width += 2 * self.tick_label_pixel_spacing + self.legend_bucket_width + self.tick_label_pixel_spacing
+
+        x, y = self.calc_legend_xy(interior_width, interior_height, s_r)
+        r = ((x,y), (x+interior_width,y-interior_height))
+        colors = c.calc_rgba_texture()
+        try:
+            lo, hi = parent.num_below_above()
+            up_color = c.over_rgba if hi > 0 else None
+            down_color = c.under_rgba if lo > 0 else None
+        except AttributeError:
+            # continuous colormap doesn't have values outside of bounds
+            up_color = down_color = None
+        renderer.draw_screen_rect(r, 1.0, 1.0, 1.0, 1.0, flip=False)
+        renderer.draw_screen_box(r, flip=False)
+        x += self.tick_label_pixel_spacing
+        y -= self.tick_label_pixel_spacing
+        colors = c.bin_colors
+        color_index = 1
+        for text, h in zip(self.legend_labels, row_height):
+            h1 = self.legend_bucket_height
+            if h1 < h:
+                y1 = y - (h - h1) / 2
+                y2 = y
+                row_h = h
+            else:
+                y1 = y
+                y2 = y - (h1 - h) / 2
+                row_h = h1
+            r = ((x,y1), (x+self.legend_bucket_width, y1-h1))
             try:
-                lo, hi = parent.num_below_above()
-                up_color = c.over_rgba if hi > 0 else None
-                down_color = c.under_rgba if lo > 0 else None
-            except AttributeError:
-                # continuous colormap doesn't have values outside of bounds
-                up_color = down_color = None
-            renderer.draw_screen_textured_rect(r, colors, labels2, label_width, self.x_offset, self.y_offset, self.tick_pixel_width, self.tick_label_pixel_spacing, up_color=up_color, down_color=down_color)
+                c = colors[color_index]
+            except IndexError:
+                c = [.5, .5, .5, 1.0]
+            renderer.draw_screen_rect(r, c[0], c[1], c[2], c[3], flip=False)
+
+            renderer.draw_screen_string((x + self.legend_bucket_width + self.tick_label_pixel_spacing, y2), text, False)
+
+            y -= row_h + self.tick_label_pixel_spacing
+            color_index += 1
+
 
 
 class ParticleLayer(PointBaseLayer):
