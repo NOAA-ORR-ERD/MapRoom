@@ -641,23 +641,22 @@ class MultiSlider(wx.Panel):
         self.draw(dc)
 
     def draw(self, dc):
+        b = self.label_border
+        label_top = self.bar_height + b
         dc.SetPen(wx.TRANSPARENT_PEN)
         dc.SetBrush(wx.Brush(self.GetBackgroundColour()))
         dc.DrawRectangle(0, 0, self.full_width, self.full_height)
         dc.SetBrush(self.background_brush)
-        dc.DrawRectangle(0, 0, self.full_width + 1, self.bar_height)
+        dc.DrawRectangle(b, 0, self.active_width, self.bar_height)
         for x1, x2, color in self.rectangles:
             # print(f"drawing rect: {x1}->{x2} in {color}")
-            b = wx.Brush(color)
-            dc.SetBrush(b)
+            dc.SetBrush(wx.Brush(color))
             dc.DrawRectangle(x1, 0, x2, self.bar_height)
         dc.SetPen(self.separator_pen)
         dc.SetFont(self.text_font)
         dc.SetTextBackground(self.text_background)
         dc.SetTextForeground(self.text_color)
         dc.SetBrush(wx.Brush(self.text_background))
-        b = self.label_border
-        label_top = self.bar_height + b
 
         def draw_label(x):
             value = self.x_to_value(x)
