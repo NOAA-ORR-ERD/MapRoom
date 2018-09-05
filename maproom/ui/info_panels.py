@@ -1629,6 +1629,17 @@ class LegendTypeField(InfoField):
         self.panel.project.refresh()
 
 
+class LegendLabelsField(MultiLineTextField):
+    same_line = False
+
+    def get_value(self, layer):
+        return layer.legend_labels
+
+    def process_text_change(self, layer):
+        layer.legend_labels = self.ctrl.GetValue()
+        self.panel.project.refresh()
+
+
 class ScalarSummaryField(WholeLinePropertyField):
     alignment_style = wx.ALIGN_LEFT
 
@@ -1801,6 +1812,7 @@ class InfoPanel(PANELTYPE):
         "Scalar value expression": ScalarExpressionField,
         "Scalar value ranges": ScalarSummaryField,
         "Legend type": LegendTypeField,
+        "Legend labels": LegendLabelsField,
     }
 
     def create_fields(self, layer, fields):

@@ -15,7 +15,7 @@ import numpy as np
 import wx
 
 from traits.api import Any
-from traits.api import Int, Float, List
+from traits.api import Int, Float
 from traits.api import Str
 from traits.api import Unicode
 
@@ -285,13 +285,13 @@ class ParticleLegend(ScreenLayer):
 
     tick_label_pixel_spacing = Int(4)
 
-    layer_info_panel = ["X location", "Y location", "Legend type"]
+    layer_info_panel = ["X location", "Y location", "Legend type", "Legend labels"]
 
     source_particle_folder = Any(-1)
 
     legend_type = Str("Text")
 
-    legend_labels = List(["Light", "Medium", "Heavy"])
+    legend_labels = Str("Light\nMedium\nHeavy")
 
     legend_bucket_width = Int(20)
 
@@ -343,6 +343,12 @@ class ParticleLegend(ScreenLayer):
 
     def legend_type_from_json(self, json_data):
         self.legend_type = json_data['legend_type']
+
+    def legend_labels_to_json(self):
+        return self.legend_labels
+
+    def legend_labels_from_json(self, json_data):
+        self.legend_labels = json_data['legend_labels']
 
     @property
     def is_renderable(self):
@@ -409,9 +415,9 @@ class ParticleLegend(ScreenLayer):
 
         interior_width = 0
         interior_height = self.tick_label_pixel_spacing
-        labels2 = []
+        labels = self.legend_labels.splitlines()
         row_height = []
-        for text in self.legend_labels:
+        for text in labels:
             w, h = renderer.get_drawn_string_dimensions(text)
             interior_width = max(interior_width, w)
             row_height.append(h)
@@ -435,7 +441,7 @@ class ParticleLegend(ScreenLayer):
         y -= self.tick_label_pixel_spacing
         colors = c.bin_colors
         color_index = 1
-        for text, h in zip(self.legend_labels, row_height):
+        for text, h in zip(labels, row_height):
             h1 = self.legend_bucket_height
             if h1 < h:
                 y1 = y - (h - h1) / 2
