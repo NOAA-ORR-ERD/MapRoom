@@ -653,6 +653,7 @@ class ParticleLayer(PointBaseLayer):
     def colormap_from_json(self, json_data):
         try:
             self.colormap = colormap.DiscreteColormap.from_json(json_data['colormap'])
+            colormap.register_colormap(self.colormap)
         except (KeyError, TypeError):
             self.colormap = colormap.get_colormap(json_data['colormap'])
 
