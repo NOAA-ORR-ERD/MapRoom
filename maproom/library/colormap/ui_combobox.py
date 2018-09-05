@@ -10,7 +10,7 @@ import numpy.random as rand
 
 from omnivore.utils.wx.dialogs import SimplePromptDialog
 
-from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, user_defined_discrete_colormaps, ListedBoundedColormap
+from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, ListedBoundedColormap
 from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT, prompt_for_rgba
 
 import logging
@@ -108,7 +108,7 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
         self.SetPopupMinWidth(popup_width)
 
     def recalc_order(self):
-        self.colormap_name_order = sorted(user_defined_discrete_colormaps.keys()) + sorted(builtin_discrete_colormaps.keys()) + sorted(builtin_continuous_colormaps.keys())
+        self.colormap_name_order = sorted(builtin_discrete_colormaps.keys()) + sorted(builtin_continuous_colormaps.keys())
         self.discrete_start = 0
         self.continuous_start = len(builtin_discrete_colormaps)
 
@@ -175,7 +175,7 @@ class ColormapComboBox(wx.adv.OwnerDrawnComboBox):
 
 class DiscreteOnlyColormapComboBox(ColormapComboBox):
     def recalc_order(self):
-        self.colormap_name_order = sorted(user_defined_discrete_colormaps.keys()) + sorted(builtin_discrete_colormaps.keys())
+        self.colormap_name_order = sorted(builtin_discrete_colormaps.keys())
 
 
 class MultiSlider(wx.Panel):

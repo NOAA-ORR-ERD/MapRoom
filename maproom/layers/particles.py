@@ -757,16 +757,9 @@ class ParticleLayer(PointBaseLayer):
         self.manager.refresh_needed = None
         return var
 
-    def set_colormap(self, name):
-        try:
-            self.colormap = colormap.get_colormap(name)
-        except KeyError:
-            # it's not really a colormap name, it's a colormap class
-            self.colormap = name
-            colormap.register_colormap(name)
-        except ValueError:
-            prefs = self.manager.project.task.preferences
-            self.colormap = colormap.get_colormap(prefs.colormap_name)
+    def set_colormap(self, new_colormap):
+        self.colormap = new_colormap
+        colormap.register_colormap(new_colormap)
         self.set_colors_from_scalar(self.current_scalar_var)
 
     def get_selected_particle_layers(self, project):

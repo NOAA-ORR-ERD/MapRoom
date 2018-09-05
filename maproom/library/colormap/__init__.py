@@ -226,7 +226,6 @@ builtin_discrete_colormaps = {name:DiscreteColormap(name, cm.get_cmap(name)) for
 
 sample_discrete = colors.ListedColormap(['#ff0000', '#004400', '#007700', '#00aa00', '#0000ff'])
 builtin_discrete_colormaps['sample_lat'] = DiscreteColormap('sample_lat', sample_discrete)
-user_defined_discrete_colormaps = {}
 
 def get_colormap(name, discrete_only=False):
     if not discrete_only and name in builtin_continuous_colormaps:
@@ -235,34 +234,9 @@ def get_colormap(name, discrete_only=False):
     elif name in builtin_discrete_colormaps:
         log.debug("found colormap %s in builtin_discrete_colormaps" % name)
         return builtin_discrete_colormaps[name]
-    elif name in user_defined_discrete_colormaps:
-        log.debug("found colormap %s in user_defined_discrete_colormaps" % name)
-        return user_defined_discrete_colormaps[name]
     raise KeyError("unknown colormap '%s'" % name)
 
 def register_colormap(c):
-    global user_defined_discrete_colormaps
+    global builtin_discrete_colormaps
 
-    user_defined_discrete_colormaps[c.name] = c
-
-def user_defined_colormaps_to_json():
-    e = []
-    for name, colormap in user_defined_discrete_colormaps.items():
-        j = colormap.to_json()
-        e.append(colormap.to_json())
-    log.debug("serialized colormaps: %s" % (e))
-    return e
-
-def user_defined_colormaps_from_json(e):
-    try:
-        for j in e:
-            log.debug("restoring colormap item %s" % repr(j))
-            try:
-                c = DiscreteColormap.from_json(j)
-            except Exception as e:
-                log.error("%s: Failed parsing colormap for %s" % (e, repr(j)))
-            else:
-                builtin_discrete_colormaps[j['name']] = c
-    except Exception as e:
-        log.error("%s: Invalid colormap format in json", e)
-        raise
+    builtin_discrete_colormaps[c.name] = c

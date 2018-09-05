@@ -1197,13 +1197,11 @@ class LayerManager(BaseDocument):
     def process_pre_json_data(self, json):
         # pre json data is stuff that layers need to exist at the time they are
         # created
-        if "discrete_colormaps" in json:
-            colormap.user_defined_colormaps_from_json(json["discrete_colormaps"])
+        pass
 
     def calc_pre_json_data(self, pre_json_data=None):
         if pre_json_data is None:
             pre_json_data = {}
-        pre_json_data["discrete_colormaps"] = colormap.user_defined_colormaps_to_json()
         log.debug("pre json data:\n%s" % repr(pre_json_data))
         return pre_json_data
 
