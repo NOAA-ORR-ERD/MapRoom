@@ -1,3 +1,194 @@
+09/06/2018
+---------------------------
+Released 4.0rc8
+- RM Changed references to task.error to handle MSW issue when error occurs in popup
+- RM Fixed missing default value in merge layer action
+- RM Fixed colormap dropdown argument type error
+- RM Refs #910: moved colormap and metadata into particle folder so it can apply to all layers without a copy in each layer
+- RM Removed distinction between user defined colormaps and builtin colormaps
+- RM Added colormap to user defined list when loaded from json during particle layer load
+- RM Refs #910: added customizable labels for text legend
+- RM Refs #910: initial code for text legend
+- RM Fixed #914: added json serialization of colormap
+- RM Better error messages when _from_json method fails
+- RM Refs #914: replaced old colormap dialog with new gnome-style colormap
+- RM Refs #914: Fixed min/max calculations for colormap
+- RM Refs #914: added default GNOME colormap
+- RM Refs #914: fixed error in colorbar width
+- RM Refs #914: fixed bad parameter list
+- RM Added text editing for value labels
+- RM Refs #914: fixed reference to color index
+- RM Refs #914: Initial color support
+- RM Refs #914: added add/remove buttons for colormap bins
+- RM Refs #914: initial code for colormap dialog rewrite
+- RM Refs #915: fixed timeout when triangle returns large amount of data
+- RM make-changelog: fixed for py3
+- RM Refs #880: lose focus callback now checks to see if it's still on screen, otherwise the layer has probably changed
+- RM Fixed #880: re-render text field when it loses focus to allow correct units display
+- RM Fixed bad conditional in SimplifyPolygonCommand
+- RM Added better description in simplification dialog
+- RM Fixed argument list
+- RM Fixed empty project creation; now requires a blank document in the templates dir
+- RM Fixed undo for triangulation that was using None as the layer for the layer flags
+- RM Fixed line splitting such that mouse down + drag will split the line and move the point without releasing the mouse
+- RM Fixed some drag bugs
+- RM Force immediate refresh if layer contents have been added
+- RM Removed force_cursor hack needed after splitting a line
+- RM Fixed line selection in PointSelectionMode
+- RM Fixed deselection of points
+- RM Fixed bad arg list
+- RM Fixed point selection when in point edit mode
+- RM Fixed starting drag on point
+- RM Fixed annotation layer object if first drag is on interior
+- RM fixed mouse click on nothing so it deselects points
+- RM Fixed polygon hole editing so edit points show up in edit layer
+- RM Fixed bad argument list
+- RM Added dialog with slider to control simplification ratio
+- RM Fixed #911: ungroup annotiation layer compound objects by default
+- RM Added prepare_drag_* methods for control points that need some setup in the motion event before drag actually happens
+- RM Added missing select_objects_in_rect method of base class
+- RM Fixed #473: added basic polygon simplification
+- RM Fixed missing reference to project editor
+- RM Fixed annoying polygon/polyline clicking for adding points
+- RM Refs #445: fixed rectangular selection
+- RM Refs #445: WIP refactoring mouse handler so click on already selected object can start a drag
+- RM Refs #445: added rectangular selection of points
+- RM Changed some debug prints into log.debug
+- RM Refs #913: fixed point creation when mouse is over a background layer
+- RM Refs #913: basic merging of polygons by manually linking them
+- RM Fixed error when right clicking on a different layer, but somehow no object from that layer is under the mouse
+- RM WIP syncing polygons to boundary when committing changes
+- RM Refs #913: new context menu item to add polygon to existing polygon edit layer
+- RM Refactored line layer to have more convenience functions when creating/adding points and lines
+- RM Fixed PasteLayerCommand str/unicode error
+- RM Fixed grouping when there are groups inside of groups
+- RM Added check for valid layer before calling layer_deselected_hook
+- RM Fixed #912: changed IsShown to IsShownOnScreen, which is what we actualy want
+- RM Fixed #908: needed to strip quotes and blank chars
+- RM Fixed BNA tests for api changes
+- RM Added context menu entry to cancel edit of polygon
+
+07/25/2018
+---------------------------
+Released 4.0rc7
+- RM Updated version number to 4.0rc7
+- RM Added check for existence of mouse wheel scroll handler
+- RM Refs #906: added 'osgeo' to set of paths processed by collect_data_files, which fixes the problem on windows
+- RM Fixed #904: connect remaining endpoints if a single point is deleted
+- RM Fixed #905: fixed in framework and turned off double-click to rename
+- RM Fixed #902: fixed multipolygon loading
+- RM Fixed #906: manually add GDAL_DATA path to environment upon startup
+- RM Multiple polygons or holes can be added at the some time when editing a polygon layer
+- RM Added error checking and flagged points when editing polygons
+- RM Added MapRoomError base class, PointsError is a child, and added exception handling of MapRoomError in process_command
+- RM Changed PointsError to use error_points attribute instead of points
+- RM Fixed polygon parent layer ability to add points without using "Add Polygon"
+- RM Refs #902: attempt at handling projections when loading shapefiles
+- RM Converted prints to logging
+- RM Fixed #903: fixed marplot icon code generation to use python 3
+
+06/29/2018
+---------------------------
+Released 4.0rc6
+- RM Added title to context menu to show which polygon you are editing
+- RM Updated version string to 4.0rc6
+- RM Verdat to polygon now converts to new polygon layer
+- RM WIP polygon clipping for polygon2
+- RM Import cleanup, instead of from module import class1,class2,... use 'from . import module as m'
+- RM Refs #829: polygon/hole deletion
+- RM Refs #829: can now add new polygons or holes
+- RM Refs #829: fixed osgeo.ogr shapefile saving
+- RM Added area calculation for ring edit layer
+- RM Refs #829: fixed BNA loading as shapefiles
+- RM Refs #829: added saving of ring edit layer & undo
+- RM Fix crash when user mouses over timeline while file is loading (only happens at startup)
+- RM Fixed PolygonParentLayer to only show context menu if it's over a polygon
+- RM Fixed dashed line on polygon showing which is being edited; added edit layer action for popup menu
+- RM Moved the generation of the context menu actions into layer itself, rather than hardcoding EditLayerAction
+- RM Refn #829: Yet another attempt at polygon editing layer
+- RM Fixed pyinstaller on windows
+- RM Fixed pyinstaller to build debug apps that direct output to console
+- RM Updated pyinstaller scripts to py3
+- RM Refs #902: added debugging info to test_shapefile to print out rings & points
+- RM Fixed bug in PyOpenGL getExtensionProcedure where procedure names have to be specified in bytes, not str
+- RM Vast simplification of pytriangle.pyx: pass return data through a Queue rather than pipe serialization/deserialization
+- F Backported triangle fixes from py3 branch; added support for triangulating verdats with no boundaries
+- RM Added context menu to select polygon to edit
+- RM Fix for dashed polygon border not getting cleaned up when changing to a different layer
+- RM Added error message and default color for polygon editing
+- RM Refs #829: working version of polygon editing! At least moving, deleting, and creating points.
+- RM Changed debug print in Tessellator.pyx to be more helpful
+- RM Refs #829: added dashed line in polygon when editing
+- RM Refs #829: fixed point/polygon count in PolygonParentLayer
+- RM Refs #829: removed 1000 point buffer
+- RM Fixed #901: fixed bad conditional
+- RM Refs #829: fixed minor mistakes in shapefile_utils, parse_geom
+- RM Refs #829: added feature code & polygon color
+- RM Refs #829: added BNA saving, still need to track name/feature code somehow
+- RM WIP save shapefiles
+- RM Refs #829: load BNA files as an editable polygon layer
+- RM Refs #829: added update_affected_points in polygon child layers to update the position in the parent layer
+- RM More WIP: Added zeroth point as nan to use as proxy for deleted points in line segment index
+- RM Refs #829: WIP changes in polygon2 to support huge polygon sets
+- RM Added flag to show if layer can be rotated or not
+- RM Added contains_overlays flag so folders aren't unnecessarily forced to rebuild their renderers on a zoom
+- RM Refs #829: removed some debug prints
+- RM Refs #829: removed unneeded polygon hole layer
+- RM Refs #829: added 'draw_on_top_when_selected' to force renderer to draw polygon edit layer on top of polygon
+- RM Refs #829: calculate ring groups to provide holes in the tessellator
+- RM Refs #829: added area/cw/ccw calculations and line reversal for holes
+- RM Refs #829: added polygon fill color
+- RM Refs #829: Selecting a sub-layer in a polygon turns off the polygon display and turns on the verdat editing
+- RM Added get_layer_parent to return immediate parent, not full hierarchy like get_layer_parents
+- RM Initial rendering of polygons by aggregating children of folder layer
+- RM Fixed polygon loading to exclude duplicate start point
+- RM Moved ring and projected point computation into data_types.py
+- RM Fixed info panels for polygon2
+- RM Refs #829: initial rewrite of shapefiles to use nested verdat layers
+- RM Fixed str/bytes issues in FileGuess usage
+- RM Fixed #876: added polygon and polyline press-release-move-press-release to add a point in addition to the usual press-drag-release
+- RM Refs #876: added alternate method to create non polygon objects: click-release-move-click
+- RM Fixed notification count for flagged points
+- RM Fixed refresh to take True as an acceptable value, converts to empty BatchStatus
+- RM Fixed layer save that was attempting to use a URI to write to the os filesystem
+- RM Allow triangulation when the set of points has no explicitly defined boundary
+- RM Removed MapQuest tile service; no longer free
+- RM Disable BNA/shapefile layer merging until can figure out how to merge extra metadata (rings, geometry)
+- RM Py3 no longer has message attribute of exceptions; use str(exception) instead
+- RM Increased triangulation timeout (while waiting for computation to finish) to 10 seconds
+- RM bytes/str corrections in text file parsing
+- RM Removed encode('utf-8') from a few things that are already strings
+- RM Fixed layer copy/paste for str/bytes issues
+- RM Python 3 fixes for render/tesselator
+- RM Fixed call to refresh after manage wms/tile server dialog
+- RM Fixed raw png data so it's bytes, not str
+- RM Removed text-based project save format; only supporting zip format for writing
+- RM Fixed test_json for py3 that returns keys in the order inserted
+- RM format_exc doesn't take an exception as the argument; it looks at the global variable sys.last_traceback
+- RM Exception no longer has message in the constructor, have to make a message attr yourself
+- RM Fixed pytriangle for py3
+- RM Converted tests to py3
+- RM iixed some str/bytes issues in file type identification
+- RM Fixed numpy equality comparison
+- RM is_zipfile no longer takes byte array, needs byte stream
+- RM Fixed some more integer divisions
+- RM owslib is now supported upstream for WMS 1.3, so can install from pip and remove from omnivore-framework
+- RM Fixed some integer division
+- RM Fixed some str/bytes differences
+- RM Added python version to about dialog; fixed bytes to str for glGetString
+- RM changed queue local variable that was shadowing the module name
+- RM Added missing pytz dependency to install_requires
+- RM Fixed some import statements that 2to3 didn't get correct
+- RM Initial 2to3 run
+- RM Fixed #897: converted layer name/type to class attributes rather than traits
+- RM Refs #897: changed actions to use a base class passing the layer class instead of a name
+- RM Fixed #895: removed most checks for editor being None
+- RM Refs #894: fixed initial trait value to False instead of None to silence a trait warning
+- RM Fixed #898: changed attribute reference
+- RM Refs #894: initial code to support animated PNG saving of timeline playback
+- RM Fixed #893: added timeline layer that displays playback time or selected range time
+- RM Added new default layout file to data files bundled by pyinstaller
+
 04/26/2018
 ---------------------------
 Released 4.0rc5
