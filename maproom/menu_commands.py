@@ -572,7 +572,7 @@ class ToPolygonLayerCommand(Command):
             progress_log.info("END")
             self.undo_info.flags.success = False
             layer.highlight_exception(e)
-            editor.window.error(str(e), "Boundary Error")
+            editor.task.error(str(e), "Boundary Error")
         finally:
             progress_log.info("END")
 

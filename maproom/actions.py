@@ -499,7 +499,7 @@ class MergeLayersAction(EditorAction):
         layers = project.layer_manager.get_mergeable_layers()
 
         if len(layers) < 2:
-            project.window.error("Merge requires two vector layers.")
+            project.task.error("Merge requires two vector layers.")
             return
 
         layer_names = [str(layer.name) for layer in layers]
@@ -524,7 +524,7 @@ class MergeLayersAction(EditorAction):
             selections = []
         dialog.Destroy()
         if len(selections) != 2:
-            project.window.error("You must select exactly two layers to merge.")
+            project.task.error("You must select exactly two layers to merge.")
         else:
             layer_a = layers[selections[0]]
             layer_b = layers[selections[1]]
@@ -764,7 +764,7 @@ class ClearTileCacheAction(EditorAction):
                 for host in dlg.get_checked_items():
                     host.clear_cache(event.task.get_tile_cache_root())
             except OSError as e:
-                event.task.window.window.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
+                event.task.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
 
         dlg.Destroy()
 

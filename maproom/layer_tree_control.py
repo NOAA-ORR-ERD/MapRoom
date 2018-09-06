@@ -330,7 +330,7 @@ class LayerTreeControl(wx.Panel):
         mi_target = lm.get_multi_index_of_layer(target_layer)
 
         if (len(mi_target) > len(mi_source) and mi_target[0: len(mi_source)] == mi_source):
-            self.project.window.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
+            self.project.task.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
             self.tree.Refresh()
             return
 

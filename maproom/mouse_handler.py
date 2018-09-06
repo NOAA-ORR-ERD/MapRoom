@@ -1093,7 +1093,7 @@ class PointEditMode(PointSelectionMode):
         c = self.layer_canvas
         e = c.project
         if layer.is_folder():
-            e.window.error("You cannot add points to folder layers.", "Cannot Edit")
+            e.task.error("You cannot add points to folder layers.", "Cannot Edit")
             return
 
         if (not event.ControlDown() and not event.ShiftDown()):
@@ -1192,7 +1192,7 @@ class LineEditMode(PointEditMode):
         c = self.layer_canvas
         e = c.project
         if layer.is_folder():
-            e.window.error("You cannot add lines to folder layers.", "Cannot Edit")
+            e.task.error("You cannot add lines to folder layers.", "Cannot Edit")
             return
 
         if (not event.ControlDown() and not event.ShiftDown()):

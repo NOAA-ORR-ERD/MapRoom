@@ -992,7 +992,7 @@ class ProjectEditor(FrameworkEditor):
             data_obj = clipboard.get_paste_data_object(self)
             self.process_paste_data_object(data_obj)
         except clipboard.ClipboardError as e:
-            self.window.error(str(e), "Paste Error")
+            self.task.error(str(e), "Paste Error")
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
         print("Found data object %s" % data_obj)

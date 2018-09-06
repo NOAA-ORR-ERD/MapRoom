@@ -107,7 +107,7 @@ class TrianglePanel(wx.Panel):
             try:
                 q = float(self.angle_text_box.GetValue().strip())
             except:
-                project.window.error("The minimum angle you entered is not a valid number.", "Value Error")
+                project.task.error("The minimum angle you entered is not a valid number.", "Value Error")
 
                 return
 
@@ -116,7 +116,7 @@ class TrianglePanel(wx.Panel):
             try:
                 a = float(self.area_text_box.GetValue().strip())
             except:
-                project.window.error("The maximum area you entered is not a valid number.", "Value Error")
+                project.task.error("The maximum area you entered is not a valid number.", "Value Error")
 
                 return
 
@@ -128,8 +128,7 @@ class TrianglePanel(wx.Panel):
             if parent is not None:
                 layer = parent
         if (layer is None or not layer.has_points()):
-                project.window.error("To triangulate, use the Layers tree to select a layer that contains points.", "Triangulate")
-
+                project.task.error("To triangulate, use the Layers tree to select a layer that contains points.", "Triangulate")
                 return
 
         cmd = TriangulateLayerCommand(layer, q, a)

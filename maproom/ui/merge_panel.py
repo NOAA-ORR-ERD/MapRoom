@@ -194,7 +194,7 @@ class MergePointsPanel(wx.Panel):
         project = self.task.active_editor
         self.layer = project.layer_tree_control.get_edit_layer()
         if (self.layer is None or not self.layer.has_points() or len(self.layer.points) < 2 or not hasattr(self.layer, "find_duplicates")):
-            project.window.error("You must first select a layer with points in the layer tree.")
+            project.task.error("You must first select a layer with points in the layer tree.")
             self.layer = None
 
             return
