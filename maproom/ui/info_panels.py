@@ -1572,7 +1572,8 @@ class ColormapField(InfoField):
         wx.CallAfter(self.change_variable, layer, name)
 
     def change_variable(self, layer, name):
-        layer.set_colormap(name)
+        cmap = colormap.get_colormap(name)
+        layer.set_colormap(cmap)
         self.panel.project.update_info_panels(layer, True)
 
 
@@ -1597,11 +1598,11 @@ class DiscreteColormapField(InfoField):
         d = GnomeColormapDialog(self.panel.project.control, layer.colormap, layer.current_min_max)
         ret = d.ShowModal()
         if ret != wx.ID_CANCEL:
-            name = d.get_edited_colormap()
-            wx.CallAfter(self.change_variable, layer, name)
+            cmap = d.get_edited_colormap()
+            wx.CallAfter(self.change_variable, layer, cmap)
 
-    def change_variable(self, layer, name):
-        layer.set_colormap(name)
+    def change_variable(self, layer, cmap):
+        layer.set_colormap(cmap)
         self.panel.project.update_info_panels(layer, True)
 
 
