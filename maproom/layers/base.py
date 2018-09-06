@@ -406,6 +406,15 @@ class Layer(HasTraits):
         """
         pass
 
+    def restore_layer_relationships_after_load(self):
+        """Restore any layer relationships after all layers have been loaded
+
+        Subclasses can create missing metadata here if, say, loading an old
+        version of a save file which doesn't have all the data of a newer
+        version.
+        """
+        pass
+
     type_to_class_defs = {}
 
     @classmethod

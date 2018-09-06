@@ -53,9 +53,47 @@ class ParticleFolder(Folder):
 
     scalar_subset_expression = Str("")
 
+    current_min_max = Any(None)
+
+    current_scalar_var = Any(None)
+
+    scalar_min_max = Any({})
+
+    status_code_names = Any
+
+    status_code_colors = Any
+
+    colormap = Any
+
+    # FIXME: Arbitrary colors for now till we decide on values
+    status_code_color_map = {
+        7: color_floats_to_int(1.0, 0, 1.0, 1.0),  # off maps
+        12: color_floats_to_int(0.5, 0.5, 0.5, 1.0),  # to be removed
+        0: color_floats_to_int(0, 1.0, 0, 1.0),  # not released
+        10: color_floats_to_int(1.0, 1.0, 0, 1.0),  # evaporated
+        2: color_floats_to_int(0, 0, 0, 1.0),  # in water
+        3: color_floats_to_int(1.0, 0, 0, 1.0),  # on land
+    }
+
     layer_info_panel = ["Start time", "End time", "Scalar value", "Scalar value expression", "Legend type", "Colormap", "Discrete colormap", "Status Code Color", "Outline color", "Point size"]
 
     selection_info_panel = ["Scalar value ranges"]
+
+    # Trait initializers
+
+    def _colormap_default(self):
+        return colormap.get_colormap("gnome")
+
+    # class attributes
+
+    @classmethod
+    def create_status_code_color_map(cls, status_code_names):
+        status_code_colors = {}
+        for k, v in status_code_names.items():
+            status_code_colors[k] = cls.status_code_color_map.get(k, color_floats_to_int(1.0, 0, 0, 1.0))
+        return status_code_colors
+
+    # attribute properties
 
     @property
     def scalar_var_names(self):
@@ -65,37 +103,10 @@ class ParticleFolder(Folder):
             names.update(c.scalar_var_names)
         return names
 
-    @property
-    def status_code_names(self):
-        children = self.get_particle_layers()
-        if children:
-            names = children[0].status_code_names
-        else:
-            names = dict()
-        summary_names = dict()
-        for k, name in names.items():
-            if " (" in name and name .endswith(")"):
-                name, _ = name.rsplit(" (", 1)
-            summary_names[k] = name
-        return summary_names
-
-    @property
-    def current_min_max(self):
-        children = self.get_particle_layers()
-        if children:
-            current = children[0].current_min_max
-        else:
-            current = None
-        return current
-
-    @property
-    def current_scalar_var(self):
-        children = self.get_particle_layers()
-        if children:
-            current = children[0].current_scalar_var
-        else:
-            current = None
-        return current
+    def init_status_codes(self, status_code_names):
+        self.status_code_names = status_code_names
+        self.status_code_colors = self.create_status_code_color_map(status_code_names)
+        print(f"status code names: {self.status_code_names}")
 
     def scalar_value_ranges(self):
         children = self.get_particle_layers()
@@ -120,19 +131,11 @@ class ParticleFolder(Folder):
         return "\n".join(lines)
 
     @property
-    def colormap(self):  # Raises IndexError if no children
-        return self.get_particle_layers()[0].colormap
-
-    @property
-    def status_code_colors(self):
-        log.debug("Creating status code colors for %s" % self)
-        status_code_names = self.status_code_names
-        status_code_colors = ParticleLayer.create_status_code_color_map(status_code_names)
-        return status_code_colors
-
-    @property
     def status_code_count(self):
         return {name:1 for name in self.status_code_names}
+
+    def status_code_label(self, code):
+        return f"{self.status_code_names[code]}"
 
     @property
     def point_size(self):
@@ -180,6 +183,106 @@ class ParticleFolder(Folder):
 
     def scalar_subset_expression_from_json(self, json_data):
         self.scalar_subset_expression = json_data['scalar_subset_expression']
+
+    def current_scalar_var_to_json(self):
+        return self.current_scalar_var
+
+    def current_scalar_var_from_json(self, json_data):
+        self.current_scalar_var = json_data['current_scalar_var']
+
+    def current_min_max_to_json(self):
+        return self.current_min_max
+
+    def current_min_max_from_json(self, json_data):
+        self.current_min_max = json_data['current_min_max']
+
+    def scalar_min_max_to_json(self):
+        return self.scalar_min_max
+
+    def scalar_min_max_from_json(self, json_data):
+        self.scalar_min_max = json_data['scalar_min_max']
+
+    def status_code_names_to_json(self):
+        if self.status_code_names is not None:
+            return list(self.status_code_names.items())
+
+    def status_code_names_from_json(self, json_data):
+        jd = json_data['status_code_names']
+        if jd is not None:
+            self.status_code_names = dict(jd)
+        else:
+            self.status_code_names = None
+
+    def status_code_colors_to_json(self):
+        if self.status_code_colors is not None:
+            # force numbers to be python ints, not numpy. JSON can't serialize numpy
+            return [(k, int(v)) for k, v in self.status_code_colors.items()]
+
+    def status_code_colors_from_json(self, json_data):
+        jd = json_data['status_code_colors']
+        if jd is not None:
+            self.status_code_colors = dict(jd)
+        else:
+            self.status_code_colors = None
+
+    def colormap_to_json(self):
+        return self.colormap.to_json()
+
+    def colormap_from_json(self, json_data):
+        try:
+            self.colormap = colormap.DiscreteColormap.from_json(json_data['colormap'])
+            colormap.register_colormap(self.colormap)
+        except (KeyError, TypeError):
+            self.colormap = colormap.get_colormap(json_data['colormap'])
+
+    def restore_layer_relationships_after_load(self):
+        children = self.manager.get_layer_children(self)
+        log.debug(f"restoring layer relationships: {self}")
+        for first in children:
+            try:
+                b = first.backward_compatibility_json
+            except AttributeError:
+                pass
+            else:
+                log.warning(f"checking backward compatibility json data from {first}: {b}")
+                if self.status_code_colors is None:
+                    log.warning(f"using status_code_colors from: {b['status_code_colors']}")
+                    self.status_code_colors = b.get('status_code_colors', None)
+                if self.status_code_names is None:
+                    log.warning(f"using status_code_names from: {b['status_code_names']}")
+                    self.status_code_names = b.get('status_code_names', None)
+                if not self.scalar_min_max:
+                    log.warning(f"using scalar_min_max from: {b['scalar_min_max']}")
+                    self.scalar_min_max = b.get('scalar_min_max', None)
+                if self.current_scalar_var is None:
+                    log.warning(f"using current_scalar_var from: {b['current_scalar_var']}")
+                    self.current_scalar_var = b.get('current_scalar_var', None)
+                if self.current_min_max is None:
+                    log.warning(f"using current_min_max from: {b['current_min_max']}")
+                    self.current_min_max = b.get('current_min_max', None)
+                if self.scalar_subset_expression is None:
+                    log.warning(f"using scalar_subset_expression from: {b['scalar_subset_expression']}")
+                    self.scalar_subset_expression = b.get('scalar_subset_expression', None)
+                if self.colormap is None:
+                    log.warning(f"using colormap from: {b['colormap']}")
+                    self.set_colormap(b.get('colormap', None))
+                break
+
+        found_legend = False
+        for layer in children:
+            log.debug(f"restoring layer relationships for child: {layer}")
+            layer.source_particle_folder = self
+            try:
+                layer.update_status_code_count()
+            except AttributeError:
+                pass
+            if hasattr(layer, "legend_type"):
+                found_legend = True
+        if not found_legend:
+            layer = ParticleLegend(manager=self.manager, source_particle_folder=self)
+            self.manager.insert_loaded_layer(layer, first_child_of=self)
+        self.set_scalar_var(self.current_scalar_var)
+        self.subset_using_logical_operation(self.scalar_subset_expression)
 
     def get_particle_layers(self):
         timesteps = []
@@ -229,14 +332,35 @@ class ParticleFolder(Folder):
         project.refresh()
 
     def set_scalar_var(self, var):
-        children = self.get_particle_layers()
-        for c in children:
-            c.set_scalar_var(var)
+        if var is not None and self.is_using_colormap(var):
+            lo, hi = self.scalar_min_max[var]
+            self.current_min_max = lo, hi
+            self.colormap.adjust_bounds(lo, hi)
+            self.set_colors_from_colormap(var, self.colormap)
+        else:
+            log.error("%s not in scalar data for layer %s" % (var, self))
+            self.set_colors_from_status_codes()
+            var = None
+        self.current_scalar_var = var
 
-    def set_colormap(self, name):
+    def set_colors_from_colormap(self, var, colormap):
         children = self.get_particle_layers()
         for c in children:
-            c.set_colormap(name)
+            c.recalc_colors_from_colormap(var, colormap)
+            self.manager.layer_contents_changed = c
+            self.manager.refresh_needed = None
+
+    def set_colors_from_status_codes(self):
+        children = self.get_particle_layers()
+        for c in children:
+            c.recalc_colors_from_status_codes()
+            self.manager.layer_contents_changed = c
+            self.manager.refresh_needed = None
+
+    def set_colormap(self, new_colormap):
+        self.colormap = new_colormap
+        colormap.register_colormap(new_colormap)
+        self.set_colors_from_colormap(self.current_scalar_var, self.colormap)
 
     def is_using_colormap(self, var=None):
         if var is None:
@@ -474,7 +598,7 @@ class ParticleLayer(PointBaseLayer):
 
     type = "particle"
 
-    layer_info_panel = ["Scalar value", "Scalar value expression", "Point size", "Outline color", "Status Code Color"]
+    layer_info_panel = ["Point size", "Outline color", "Status Code Color"]
 
     selection_info_panel = ["Scalar value ranges"]
 
@@ -482,48 +606,31 @@ class ParticleLayer(PointBaseLayer):
 
     status_codes = Any  # numpy list matching array size of points
 
-    status_code_names = Any
-
-    status_code_colors = Any
-
     status_code_count = Any({})
 
     scalar_vars = Any({})
 
-    scalar_min_max = Any({})
+    source_particle_folder = Any(-1)
 
-    current_min_max = Any(None)
+    def init_from_parent(self):
+        self.recalc_colors_from_status_codes(True)
+        print(f"  {self}: status code count: {self.status_code_count}")
 
-    current_scalar_var = Any(None)
+    @property
+    def status_code_names(self):
+        return self.source_particle_folder.status_code_names
 
-    scalar_subset_expression = Str("")
+    @property
+    def status_code_colors(self):
+        return self.source_particle_folder.status_code_colors
 
-    colormap = Any
-
-    # FIXME: Arbitrary colors for now till we decide on values
-    status_code_color_map = {
-        7: color_floats_to_int(1.0, 0, 1.0, 1.0),  # off maps
-        12: color_floats_to_int(0.5, 0.5, 0.5, 1.0),  # to be removed
-        0: color_floats_to_int(0, 1.0, 0, 1.0),  # not released
-        10: color_floats_to_int(1.0, 1.0, 0, 1.0),  # evaporated
-        2: color_floats_to_int(0, 0, 0, 1.0),  # in water
-        3: color_floats_to_int(1.0, 0, 0, 1.0),  # on land
-    }
-
-    @classmethod
-    def create_status_code_color_map(cls, status_code_names):
-        status_code_colors = {}
-        for k, v in status_code_names.items():
-            status_code_colors[k] = cls.status_code_color_map.get(k, color_floats_to_int(1.0, 0, 0, 1.0))
-        return status_code_colors
+    def status_code_label(self, code):
+        return f"{self.status_code_names[code]} ({self.status_code_count[code]})"
 
     @property
     def scalar_var_names(self):
         names = set(self.scalar_vars.keys())
         return names
-
-    def _colormap_default(self):
-        return colormap.get_colormap("gnome")
 
     def scalar_value_ranges(self):
         ranges = {}
@@ -538,6 +645,10 @@ class ParticleLayer(PointBaseLayer):
             r = ranges[name]
             lines.append("%s: %f-%f" % (name, r[0], r[1]))
         return "\n".join(lines)
+
+    def is_using_colormap(self, var=None):
+        print(self)
+        return self.source_particle_folder.is_using_colormap(var)
 
     # JSON Serialization
 
@@ -569,17 +680,6 @@ class ParticleLayer(PointBaseLayer):
             else:
                 self.status_codes = np.zeros(0, np.uint32)
 
-    def status_code_names_to_json(self):
-        if self.status_code_names is not None:
-            return list(self.status_code_names.items())
-
-    def status_code_names_from_json(self, json_data):
-        jd = json_data['status_code_names']
-        if jd is not None:
-            self.status_code_names = dict(jd)
-        else:
-            self.status_code_names = None
-
     def status_code_count_to_json(self):
         if self.status_code_count is not None:
             return list(self.status_code_count.items())
@@ -590,18 +690,6 @@ class ParticleLayer(PointBaseLayer):
             self.status_code_count = dict(jd)
         else:
             self.status_code_count = {}
-
-    def status_code_colors_to_json(self):
-        if self.status_code_colors is not None:
-            # force numbers to be python ints, not numpy. JSON can't serialize numpy
-            return [(k, int(v)) for k, v in self.status_code_colors.items()]
-
-    def status_code_colors_from_json(self, json_data):
-        jd = json_data['status_code_colors']
-        if jd is not None:
-            self.status_code_colors = dict(jd)
-        else:
-            self.status_code_colors = None
 
     def scalar_vars_to_json(self):
         d = []  # transform since numpy values can't be directly serialized
@@ -623,41 +711,7 @@ class ParticleLayer(PointBaseLayer):
         else:
             self.scalar_vars = None
 
-    def scalar_min_max_to_json(self):
-        return self.scalar_min_max
-
-    def scalar_min_max_from_json(self, json_data):
-        self.scalar_min_max = json_data['scalar_min_max']
-
-    def current_scalar_var_to_json(self):
-        return self.current_scalar_var
-
-    def current_scalar_var_from_json(self, json_data):
-        self.current_scalar_var = json_data['current_scalar_var']
-
-    def current_min_max_to_json(self):
-        return self.current_min_max
-
-    def current_min_max_from_json(self, json_data):
-        self.current_min_max = json_data['current_min_max']
-
-    def scalar_subset_expression_to_json(self):
-        return self.scalar_subset_expression
-
-    def scalar_subset_expression_from_json(self, json_data):
-        self.scalar_subset_expression = json_data['scalar_subset_expression']
-
-    def colormap_to_json(self):
-        return self.colormap.to_json()
-
-    def colormap_from_json(self, json_data):
-        try:
-            self.colormap = colormap.DiscreteColormap.from_json(json_data['colormap'])
-            colormap.register_colormap(self.colormap)
-        except (KeyError, TypeError):
-            self.colormap = colormap.get_colormap(json_data['colormap'])
-
-    def from_json_sanity_check_after_load(self, json_data):
+    def update_status_code_count(self):
         if not self.status_code_count:
             self.status_code_count = {}
             for k, v in self.status_code_names.items():
@@ -666,9 +720,22 @@ class ParticleLayer(PointBaseLayer):
                     _, text = v[:-1].rsplit("(", 1)
                     count = int(text)
                 self.status_code_count[k] = count
-        self.recalc_colors_from_colormap()
-        self.subset_using_logical_operation(self.scalar_subset_expression)
 
+    # Backward compatibility loaders
+    def from_json_sanity_check_after_load(self, json_data):
+        b = {}
+        jd = json_data.get('status_code_names', None)
+        b['status_code_names'] = dict(jd) if jd is not None else None
+        jd = json_data.get('status_code_colors', None)
+        b['status_code_colors'] = dict(jd) if jd is not None else None
+        b['scalar_min_max'] = json_data.get('scalar_min_max', None)
+        b['current_scalar_var'] = json_data.get('current_scalar_var', None)
+        b['current_min_max'] = json_data.get('current_min_max', None)
+        b['scalar_subset_expression'] = json_data.get('scalar_subset_expression', None)
+        jd = json_data.get('colormap', None)
+        b['colormap'] = colormap.get_colormap(jd) if jd is not None else None
+        print(f"SANITY!!!!!!! {b}")
+        self.backward_compatibility_json = b
     #
 
     def layer_selected_hook(self):
@@ -694,18 +761,15 @@ class ParticleLayer(PointBaseLayer):
     def show_unselected_layer_info_for(self, layer):
         return layer.type == self.type
 
-    def set_data(self, f_points, status_codes, status_code_names, scalar_vars):
+    def set_data(self, f_points, status_codes, scalar_vars):
         PointBaseLayer.set_data(self, f_points)
         # force status codes to fall into range of valid colors
         self.status_codes = status_codes
-        self.status_code_names = dict(status_code_names)
         self.status_code_count = {}
-        self.status_code_colors = self.create_status_code_color_map(status_code_names)
         self.scalar_vars = scalar_vars
-        self.set_colors_from_status_codes(True)
         self.hidden_points = None
 
-    def set_colors_from_status_codes(self, update_count=False):
+    def recalc_colors_from_status_codes(self, update_count=False):
         log.debug("setting status code colors to: %s" % self.status_code_colors)
         colors = np.zeros(np.alen(self.points), dtype=np.uint32)
         for code, color in self.status_code_colors.items():
@@ -713,34 +777,13 @@ class ParticleLayer(PointBaseLayer):
             colors[index] = color
             if update_count:
                 num = len(index[0])
-                self.status_code_names[code] += " (%d)" % num
                 self.status_code_count[code] = num
         self.points.color = colors
 
-    def set_scalar_var(self, var):
-        var = self.set_colors_from_scalar(var)
-        self.current_scalar_var = var
-
-    def is_using_colormap(self, var=None):
-        if var is None:
-            var = self.current_scalar_var
-        return var != "status codes" and var in self.scalar_var_names
-
-    def recalc_colors_from_colormap(self, var=None):
-        if var is None:
-            var = self.current_scalar_var
-        if var is not None and self.is_using_colormap(var):
-            values = self.scalar_vars[var]
-            lo, hi = self.scalar_min_max[var]
-            self.current_min_max = lo, hi
-            self.colormap.adjust_bounds(lo, hi)
-            colors = self.colormap.get_opengl_colors(values)
-            self.points.color = colors
-        else:
-            log.error("%s not in scalar data for layer %s" % (var, self))
-            self.set_colors_from_status_codes()
-            var = None
-        return var
+    def recalc_colors_from_colormap(self, var, colormap):
+        values = self.scalar_vars[var]
+        colors = colormap.get_opengl_colors(values)
+        self.points.color = colors
 
     def num_below_above(self):
         var = self.current_scalar_var
@@ -751,16 +794,8 @@ class ParticleLayer(PointBaseLayer):
             return num_lo, num_hi
         return 0, 0
 
-    def set_colors_from_scalar(self, var):
-        var = self.recalc_colors_from_colormap(var)
-        self.manager.layer_contents_changed = self
-        self.manager.refresh_needed = None
-        return var
-
-    def set_colormap(self, new_colormap):
-        self.colormap = new_colormap
-        colormap.register_colormap(new_colormap)
-        self.set_colors_from_scalar(self.current_scalar_var)
+    def get_particle_layers(self):
+        return self.source_particle_folder.get_particle_layers()
 
     def get_selected_particle_layers(self, project):
         return [self]
@@ -777,7 +812,6 @@ class ParticleLayer(PointBaseLayer):
         ProjectedLayer.set_style(self, style)
 
     def subset_using_logical_operation(self, operation):
-        self.scalar_subset_expression = operation
         log.debug("using operation %s" % operation)
         try:
             matches = self.get_matches(operation)

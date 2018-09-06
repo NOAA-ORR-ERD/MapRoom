@@ -137,15 +137,16 @@ class ParticleLoader(BaseLayerLoader):
         warnings = []
         layers = []
         folder_min_max = {}
+        folder_status_code_names = {}
         # loop through all the time steps in the file.
         for (points, status_codes, code_map, timecode, warning, scalar_vars, scalar_min_max) in nc_particles_file_loader(metadata.uri):
-            layer = ParticleLayer(manager=manager)
+            layer = ParticleLayer(manager=manager, source_particle_folder=parent)
             layer.file_path = metadata.uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
             layer.name = timecode.isoformat().rsplit(':', 1)[0]
             # print timecode, type(timecode), layer.name, timecode.tzinfo
             progress_log.info("Finished loading %s" % layer.name)
-            layer.set_data(points, status_codes, code_map, scalar_vars)
+            layer.set_data(points, status_codes, scalar_vars)
             layer.set_datetime(timecode)
             layers.append(layer)
             if warning:
@@ -161,23 +162,24 @@ class ParticleLoader(BaseLayerLoader):
                     folder_min_max[k] = (float(min(lo, flo)), float(max(hi, fhi)))
                 else:
                     folder_min_max[k] = (float(lo), float(hi))
+            folder_status_code_names.update(code_map)
 
         progress_log.info("Finished loading %s" % metadata.uri)
         layers.reverse()
 
+        # now we can tell the folder what the overall min/max are because
+        # we've seen all the layers.
+        parent.scalar_min_max = folder_min_max
+        parent.init_status_codes(folder_status_code_names)
+
         # The end time for each time step defaults to the start time of the
         # subsequent step
         end_time = layers[0].start_time
-        for layer in layers[1:]:
-            layer.end_time = end_time
-            end_time = layer.start_time
-
-        for layer in layers:
-            # now we can tell the layer what the overall min/max are because
-            # we've seen all the layers. Note that all layers will point to the
-            # same min/max dictionary, so updating the min/max values will
-            # affect all layers. Which is what we want.
-            layer.scalar_min_max = folder_min_max
+        for i, layer in enumerate(layers):
+            layer.init_from_parent()
+            if i > 0:
+                layer.end_time = end_time
+                end_time = layer.start_time
 
         legend = ParticleLegend(manager=manager, source_particle_folder=parent)
         layers[0:0] = [parent, legend]

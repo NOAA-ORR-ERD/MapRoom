@@ -1305,7 +1305,7 @@ class StatusCodeColorField(InfoField):
             if layer.status_code_count[code] == 0:
                 continue
             hbox = wx.BoxSizer(wx.HORIZONTAL)
-            label = wx.StaticText(self.ctrl, label=code_map[code], style=wx.ST_ELLIPSIZE_END)
+            label = wx.StaticText(self.ctrl, label=layer.status_code_label(code), style=wx.ST_ELLIPSIZE_END)
             hbox.Add(label, 99, wx.ALIGN_CENTER)
             hbox.AddStretchSpacer(1)
             color = tuple(int(255 * c) for c in int_to_color_floats(code_colors[code])[0:3])
@@ -1331,7 +1331,7 @@ class StatusCodeColorField(InfoField):
         layer = self.panel.project.layer_tree_control.get_edit_layer()
         if (layer is None):
             return
-        layers = layer.get_selected_particle_layers(self.panel.project)
+        layers = layer.get_particle_layers()
         cmd = StatusCodeColorCommand(layers, code, int_color)
         self.process_command(cmd)
 

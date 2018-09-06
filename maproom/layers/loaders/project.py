@@ -75,5 +75,6 @@ class ZipProjectLoader(BaseLoader):
                     layer_data, extra = manager.load_all_from_zip(zf, batch_flags)
                     layers = manager.add_all(layer_data)
                     batch_flags.layers.extend(layers)
+                    manager.restore_layer_relationships_after_load()
                     return extra
         return "Not a MapRoom project zipfile!"

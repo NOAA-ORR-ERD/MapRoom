@@ -1189,6 +1189,12 @@ class LayerManager(BaseDocument):
         self.add_cleanup_function(functools.partial(expanded_zip.cleanup))
         return order, extra_json
 
+    def restore_layer_relationships_after_load(self):
+        # calculate bound starting at leaf layers and working back up to folder
+        # layers
+        for layer in self.flatten():
+            layer.restore_layer_relationships_after_load()
+
     ##### Layer save
 
     def save_all(self, file_path, extra_json_data=None):
