@@ -528,6 +528,7 @@ class MergeLayersAction(EditorAction):
         else:
             layer_a = layers[selections[0]]
             layer_b = layers[selections[1]]
+            depth_unit = None
             if hasattr(layer_a, "depth_unit") and hasattr(layer_b, "depth_unit"):
                 da = layer_a.depth_unit
                 db = layer_b.depth_unit
