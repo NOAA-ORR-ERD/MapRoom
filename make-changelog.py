@@ -158,7 +158,6 @@ def replace(filename, block):
     current = []
     store = False
     for line in fh:
-        line = line.decode('utf-8')
         if store:
             current.append(line)
         if not line.strip(): # skip until first blank line
@@ -172,9 +171,10 @@ def replace(filename, block):
     fh.close()
 
 if __name__=='__main__':
-    usage="usage: %prog [-m module] [-o file] [-n variablename file] [-t template] [files...]"
+    usage="usage: %prog [-m module] [-o file] [-n variablename file] [-t template] [-g git-tag] [files...]"
     parser=OptionParser(usage=usage)
     parser.add_option("-v", "--verbose", action="store_true", help="print debugging info")
+    parser.add_option("-g", "--git-tag", action="store", help="use this tag instead of most recently found tag")
     parser.add_option("--dry-run", action="store_true", help="don't actually change anything")
     parser.add_option("--version", action="store_true", help="display current version and exit")
     parser.add_option("--next-version", action="store_true", help="display what would be the next version and exit")
@@ -194,6 +194,9 @@ if __name__=='__main__':
     version, latest_date, versions = findLatestChangeLogVersion(options)
     print("latest from changelog: %s" % version)
     print("all from changelog: %s" % str(versions))
+    if options.git_tag:
+        print(f"overriding latest tagged version with {options.git_tag}")
+        tagged_version = options.git_tag
 
     import importlib
     module = importlib.import_module("maproom.Version")
