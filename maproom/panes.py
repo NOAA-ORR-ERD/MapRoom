@@ -365,16 +365,16 @@ class TimelinePlaybackPanel(wx.Panel):
         self.timeline.editor = self.timeline.task.active_editor
         self.timeline.rebuild(self.timeline)
         log.debug("step rate %d num %d" % (self.timeline.step_rate, self.timeline.num_marks))
-        if self.timeline.step_rate == 0 and self.timeline.num_marks > 0:
-            if self.timeline.num_marks > 0:
-                interval = (self.timeline.highest_marker_value - self.timeline.lowest_marker_value) / self.timeline.num_marks
+        if self.timeline.step_rate == 0 and self.timeline.num_marks > 1:
+            if self.timeline.num_marks > 1:
+                interval = (self.timeline.highest_marker_value - self.timeline.lowest_marker_value) / (self.timeline.num_marks - 1)
                 self.timeline.step_rate = 1
                 log.debug(str((step_values_as_seconds, interval, interval/2, self.timeline._length)))
-                self.timeline.step_value = step_values_as_seconds[bisect.bisect(step_values_as_seconds, interval / 2)]
+                self.timeline.step_value = step_values_as_seconds[bisect.bisect_left(step_values_as_seconds, interval)]
             if self.timeline.step_rate == 0:
                 self.timeline.step_rate = 1
                 self.timeline.step_value = 600
-            log.debug("NEW TIMESTEP!!! %d / %d" % (self.timeline.step_value, self.timeline.step_rate))
+            log.debug(f"new timestep from interval {interval}: {self.timeline.step_value} / {self.timeline.step_rate}")
         self.update_ui()
 
     def refresh_view(self):

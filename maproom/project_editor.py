@@ -429,7 +429,7 @@ class ProjectEditor(FrameworkEditor):
         # Deselect all layers because it's designed to be used as post-
         # processing image
         self.layer_tree_control.set_edit_layer(None)
-        self.layer_canvas.render()  # force update including deselected layer
+        self.layer_canvas.render_callback(immediately=True)  # force update including deselected layer
         return self.layer_canvas.get_canvas_as_image()
 
     def print_preview(self):
@@ -467,9 +467,18 @@ class ProjectEditor(FrameworkEditor):
         if self.latest_movie is not None:
             self.latest_movie.save(path)
 
-    def add_frame_to_movie(self):
-        print(("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time))))
-        self.latest_movie.append(self.get_numpy_image())
+    def add_frame_to_movie(self, debug=False):
+        if not self.timeline.timeline.is_beyond_playback_stop_value:
+            print("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
+            frame = self.get_numpy_image()
+            if debug:
+                frame_number = len(self.latest_movie.frames)
+                h, w, depth = frame.shape
+                image = wx.Image(w, h, frame)
+                image.SaveFile("movie_frame_%03d.png" % frame_number, wx.BITMAP_TYPE_PNG)
+            self.latest_movie.append(frame)
+        else:
+            print("Skipping image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
 
     @property
     def most_recent_uri(self):
