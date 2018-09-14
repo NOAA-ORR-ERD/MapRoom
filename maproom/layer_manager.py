@@ -121,6 +121,10 @@ class LayerManager(BaseDocument):
         self.insert_layer([index], layer)
 
         index += 1
+        grid = ly.Timestamp(manager=self)
+        self.insert_layer([index], grid)
+
+        index += 1
         grid = ly.Graticule(manager=self)
         self.insert_layer([index], grid)
         
