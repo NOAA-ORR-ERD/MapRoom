@@ -465,7 +465,7 @@ class ProjectEditor(FrameworkEditor):
 
     def save_latest_movie(self, path):
         if self.latest_movie is not None:
-            self.latest_movie.save(path.encode("utf-8"))
+            self.latest_movie.save(path)
 
     def add_frame_to_movie(self):
         print(("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time))))
