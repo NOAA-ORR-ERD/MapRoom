@@ -476,7 +476,7 @@ class ProjectEditor(FrameworkEditor):
                 h, w, depth = frame.shape
                 image = wx.Image(w, h, frame)
                 image.SaveFile("movie_frame_%03d.png" % frame_number, wx.BITMAP_TYPE_PNG)
-            self.latest_movie.append(frame)
+            self.latest_movie.append(frame, delay=int(self.timeline.timeline.step_rate * 1000))
         else:
             print("Skipping image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
 
