@@ -210,6 +210,10 @@ class MultiSlider(wx.Panel):
         self.label_height = dc.GetCharHeight() + 3 * self.label_border
         self.bar_height = 0
         self.active_width = 0
+        self.dragging = None
+        self.might_be_dragging_text_box = None
+        self.x_start_dragging = 0
+        self.x_drag_threshhold = 5
 
     def on_mouse(self, evt):
         if not self.separators:
@@ -220,17 +224,23 @@ class MultiSlider(wx.Panel):
 
         if evt.LeftDown():
             self.CaptureMouse()
-            self.dragging, _, _ = self.hit_test(x, y)
-            print(f"DRAGGING {self.dragging}")
+            self.x_start_dragging = x
+            self.dragging, _, self.might_be_dragging_text_box = self.hit_test(x, y)
+            print(f"DRAGGING {self.dragging} {self.might_be_dragging_text_box}")
             if self.dragging is not None:
                 self.SetCursor(self.drag_cursor)
-        elif evt.Dragging() and self.dragging is not None:
-            self.move_border(x)
+        elif evt.Dragging():
+            if self.might_be_dragging_text_box is not None and abs(x - self.x_start_dragging) >= self.x_drag_threshhold:
+                self.dragging = self.might_be_dragging_text_box
+                self.might_be_dragging_text_box = None
+                self.SetCursor(self.drag_cursor)
+            if self.dragging is not None:
+                self.move_border(x)
         elif evt.LeftUp():
             if self.HasCapture():
                 self.ReleaseMouse()
             self.SetCursor(wx.NullCursor)
-            if self.dragging:
+            if self.dragging is not None:
                 self.dragging = None
             else:
                 _, color_index, value_index = self.hit_test(x, y)
