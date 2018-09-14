@@ -1,3 +1,13 @@
+09/14/2018
+---------------------------
+Released 4.0rc9
+- RM Fixed playback frame rate in generated APNG file
+- RM Fixed off-by-one frame rendering error when creating playback movies
+- RM Added timestamp layer to default empty layer manager
+- RM Added timestamp layer to default project
+- RM Fixed #917: added threshhold for mouse drag on text box to drag divider
+- RM Fixed #923: fixed str/unicode issue with apng library
+
 09/06/2018
 ---------------------------
 Released 4.0rc8
