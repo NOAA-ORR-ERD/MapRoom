@@ -36,7 +36,7 @@ class RingEditLayer(LineLayer):
 
     ring_fill_color = Int
 
-    ring_indexes = List(Int)
+    ring_indexes = Any
 
     feature_code = Int  # Feature code will apply to all polygons being edited
 
@@ -57,6 +57,9 @@ class RingEditLayer(LineLayer):
         style.line_color = style.default_highlight_color
         log.debug("_style_default for %s: %s" % (self.type, str(style)))
         return style
+
+    def _ring_indexes_default(self):
+        return list()
 
     @property
     def area(self):
