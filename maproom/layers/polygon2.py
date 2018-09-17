@@ -133,7 +133,8 @@ class RingEditLayer(LineLayer):
 
     def set_data_from_geometry(self, points, ring_index):
         self.set_simple_data(points)
-        self.ring_indexes.append(ring_index)
+        if ring_index is not None:
+            self.ring_indexes.append(ring_index)
 
     def add_polygon_from_parent_layer(self, ring_index):
         geom, ident = self.parent_layer.get_geometry_from_object_index(ring_index, 0, 0)
@@ -262,9 +263,12 @@ class PolygonParentLayer(PointLayer):
         return p
 
     def get_ring_state(self, ring_index):
+        if ring_index is None:
+            raise IndexError
         start, end = self.get_ring_start_end(ring_index)
         count = -self.ring_adjacency[start]['point_flag']
         state = self.ring_adjacency[start]['state']
+        import pdb; pdb.set_trace()
         if count > 1:
             feature_code = self.ring_adjacency[start + 1]['state']
             if count > 2:
@@ -554,7 +558,7 @@ class PolygonParentLayer(PointLayer):
             if edit_layer is not None and hasattr(edit_layer, 'parent_layer') and edit_layer.parent_layer == self and edit_layer.ring_indexes:
                 ring_indexes = edit_layer.ring_indexes
             else:
-                ring_indexes = None
+                ring_indexes = []
             renderer.draw_polygons(self, picker, self.rings.color, color_floats_to_int(0, 0, 0, 1.0), 1, editing_polygon_indexes=ring_indexes)
 
     ##### User interface

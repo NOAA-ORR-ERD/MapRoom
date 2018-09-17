@@ -865,7 +865,10 @@ class AddPolygonBoundaryAction(EditorAction):
     def perform(self, event):
         d = event.popup_data
         layer = d['layer']
-        feature_code = layer.get_feature_code(d['object_index'])
+        try:
+            feature_code = layer.get_feature_code(d['object_index'])
+        except IndexError:
+            feature_code = 1
         cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=feature_code, new_boundary=True)
         self.active_editor.process_command(cmd)
 

@@ -516,7 +516,7 @@ class ImmediateModeRenderer():
             else:
                 gl.glLineWidth(line_width)
             dashed_indexes = np.full(self.polygon_count, -1, dtype=np.int32)
-            if editing_polygon_indexes is not None:
+            if editing_polygon_indexes is not None and len(editing_polygon_indexes) > 0:
                 dashed_indexes[editing_polygon_indexes] = 1
             print("DASHED", dashed_indexes, editing_polygon_indexes)
 
