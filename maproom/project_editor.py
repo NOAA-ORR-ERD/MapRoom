@@ -147,7 +147,7 @@ class ProjectEditor(FrameworkEditor):
             document = LayerManager.create(self)
             document.metadata = metadata.clone_traits()
             batch_flags = BatchStatus()
-            print("FIXME: Add load project command that clears all layers")
+            # FIXME: Add load project command that clears all layers
             extra = loader.load_project(metadata, document, batch_flags)
             self.document = self.layer_manager = document
             self.create_layout(extra)
@@ -461,7 +461,7 @@ class ProjectEditor(FrameworkEditor):
         self.latest_movie = apng.APNG()
 
     def stop_movie_recording(self):
-        print(("Recorded %d frames" % len(self.latest_movie.frames)))
+        log.debug("Recorded %d frames" % len(self.latest_movie.frames))
 
     def save_latest_movie(self, path):
         if self.latest_movie is not None:
@@ -469,7 +469,7 @@ class ProjectEditor(FrameworkEditor):
 
     def add_frame_to_movie(self, debug=False):
         if not self.timeline.timeline.is_beyond_playback_stop_value:
-            print("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
+            log.debug("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
             frame = self.get_numpy_image()
             if debug:
                 frame_number = len(self.latest_movie.frames)
@@ -478,7 +478,7 @@ class ProjectEditor(FrameworkEditor):
                 image.SaveFile("movie_frame_%03d.png" % frame_number, wx.BITMAP_TYPE_PNG)
             self.latest_movie.append(frame, delay=int(self.timeline.timeline.step_rate * 1000))
         else:
-            print("Skipping image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
+            log.debug("Skipping image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
 
     @property
     def most_recent_uri(self):
@@ -542,7 +542,7 @@ class ProjectEditor(FrameworkEditor):
 
     def on_layout_changed(self, evt):
         layout = self.control.calc_layout()
-        print((json.dumps(layout)))
+        log.debug("on_layout_changed: new tilemanager layout {json.dumps(layout)}")
 
     def get_default_layout(self):
         try:
@@ -551,7 +551,6 @@ class ProjectEditor(FrameworkEditor):
             log.error("no default layout")
             e = {}
         else:
-            print(("DEFAULT LAYOUT", data))
             try:
                 e = json.loads(data)
             except ValueError:
@@ -775,12 +774,12 @@ class ProjectEditor(FrameworkEditor):
     def threaded_image_loaded(self, data):
         log.debug("threaded image loaded called")
         (layer, map_server_id), wms_request = data
-        print("event happed on %s for map server id %d" % (layer, map_server_id))
-        print("wms_request:", wms_request)
+        log.debug("event happed on %s for map server id %d" % (layer, map_server_id))
+        log.debug(f"wms_request: {wms_request}")
         if layer.is_valid_threaded_result(map_server_id, wms_request):
             wx.CallAfter(self.layer_canvas.render)
         else:
-            print("Throwing away result from old map server id")
+            log.debug("Throwing away result from old map server id")
 
     # New Command processor
 
@@ -983,7 +982,7 @@ class ProjectEditor(FrameworkEditor):
             if edit_layer is not None:
                 json_data = edit_layer.serialize_json(-999, children=True)
                 text = json.dumps(json_data, indent=4)
-                print("clipboard object: json data", text)
+                # print("clipboard object: json data", text)
                 data_obj = wx.CustomDataObject("maproom")
                 data_obj.SetData(text.encode('utf-8'))
                 retval = "layer %s" % edit_layer.name
@@ -1004,9 +1003,9 @@ class ProjectEditor(FrameworkEditor):
             self.task.error(str(e), "Paste Error")
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
-        print("Found data object %s" % data_obj)
+        # print("Found data object %s" % data_obj)
         text = clipboard.get_data_object_value(data_obj, "maproom")
-        print("value:", text)
+        # print("value:", text)
         edit_layer = self.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
             cmd = mec.PasteLayerCommand(edit_layer, text, self.layer_canvas.world_center)

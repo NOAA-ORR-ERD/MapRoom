@@ -108,7 +108,7 @@ class TileLayer(ProjectedLayer):
 
     def resize(self, renderer, world_rect, proj_rect, screen_rect):
         zoom_level = renderer.canvas.zoom_level
-        log.debug("RESIZE: zoom=%d image data zoom=%d", (zoom_level, self.image_data.zoom_level))
+        log.debug(f"RESIZE: zoom={zoom_level} image data zoom={self.image_data.zoom_level}")
         self.current_proj = ((proj_rect[0][0], proj_rect[0][1]), (proj_rect[1][0], proj_rect[1][1]))
         self.current_world = ((world_rect[0][0], world_rect[0][1]), (world_rect[1][0], world_rect[1][1]))
         if zoom_level < 0:
@@ -120,7 +120,7 @@ class TileLayer(ProjectedLayer):
         self.image_data.update_tiles(zoom_level, self.current_world, self.manager, (self, self.map_server_id))
 
     def zoom_changed(self, canvas):
-        log.debug("ZOOM CHANGED: %d" % canvas.zoom_level)
+        log.debug(f"ZOOM CHANGED: {canvas.zoom_level}")
         self.image_data.update_tiles(canvas.zoom_level, self.current_world, self.manager, (self, self.map_server_id))
         self.change_count += 1  # Force info panel update
         canvas.project.update_info_panels(self, True)

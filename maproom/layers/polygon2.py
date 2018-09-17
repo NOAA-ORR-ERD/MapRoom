@@ -532,7 +532,7 @@ class PolygonParentLayer(PointLayer):
         pass
 
     def rebuild_renderer(self, renderer, in_place=False):
-        log.debug("rebuilding polygon2 {self.name}")
+        log.debug(f"rebuilding polygon2 {self.name}")
         if self.rings is None:
             self.create_rings()
         projection = self.manager.project.layer_canvas.projection
