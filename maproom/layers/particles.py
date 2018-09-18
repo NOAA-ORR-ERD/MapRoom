@@ -733,7 +733,10 @@ class ParticleLayer(PointBaseLayer):
         b['current_min_max'] = json_data.get('current_min_max', None)
         b['scalar_subset_expression'] = json_data.get('scalar_subset_expression', None)
         jd = json_data.get('colormap', None)
-        b['colormap'] = colormap.get_colormap(jd) if jd is not None else None
+        try:
+            b['colormap'] = colormap.get_colormap(jd) if jd is not None else None
+        except KeyError:
+            b['colormap'] = colormap.get_colormap('tab20')
         print(f"SANITY!!!!!!! {b}")
         self.backward_compatibility_json = b
     #
