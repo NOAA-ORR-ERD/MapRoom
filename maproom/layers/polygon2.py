@@ -8,7 +8,7 @@ from traits.api import Any, Int, Str, Bool, List
 from ..errors import PointsError
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
-
+from ..library.shapefile_utils import GeomInfo
 from . import PointLayer, LineLayer, Folder, state
 
 import logging
@@ -180,8 +180,6 @@ class PolygonParentLayer(PointLayer):
 
     rebuild_needed = Bool(False)
 
-    point_list = Any
-
     geometry_list = Any
 
     ring_adjacency = Any
@@ -211,6 +209,30 @@ class PolygonParentLayer(PointLayer):
                 return str(polygon_count)
             return "0"
         return LineLayer.get_info_panel_text(self, prop)
+
+    # JSON Serialization
+
+    def ring_adjacency_to_json(self):
+        if self.ring_adjacency is not None:
+            return self.ring_adjacency.tolist()
+
+    def ring_adjacency_from_json(self, json_data):
+        jd = json_data['ring_adjacency']
+        if jd is not None:
+            self.ring_adjacency = np.array([tuple(i) for i in jd], data_types.RING_ADJACENCY_DTYPE).view(np.recarray)
+        else:
+            raise RuntimeError("Missing adjacency array from old save file")
+
+    def geometry_list_to_json(self):
+        if self.geometry_list is not None:
+            return self.geometry_list
+
+    def geometry_list_from_json(self, json_data):
+        jd = json_data['geometry_list']
+        if jd is not None:
+            self.geometry_list = [GeomInfo(*i) for i in jd]
+
+    # ring utilities
 
     def copy_ring(self, start_index, points, feature_code, color):
         count = len(points)
