@@ -13,7 +13,7 @@ class TestBNA(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/BNA/00003polys_000035pts.bna", "application/x-maproom-bna")
-        self.bna = self.project.layer_manager.get_layer_by_invariant(1)
+        self.bna = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile")
 
     def test_simple(self):
         layer = self.bna
@@ -27,7 +27,7 @@ class TestBNA(object):
         loaders.save_layer(self.bna, "test.bna")
         self.project.load_file("test.bna", "application/x-maproom-bna")
         self.orig = self.bna
-        self.bna = self.project.layer_manager.get_layer_by_invariant(2)
+        self.bna = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile", 2)
         assert self.orig != self.bna
         self.test_simple()
 
@@ -38,7 +38,7 @@ class TestBNAFailures(object):
     def test_bad_missing_points(self):
         with pytest.raises(RuntimeError) as e:
             cmd = self.project.load_file("../TestData/BNA/bad--missing_polygon_points.bna", "application/x-maproom-bna")
-        bna = self.project.layer_manager.get_layer_by_invariant(1)
+        bna = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile")
         assert bna == None
         assert "line with 2 items" in str(e)
         assert "scale" in str(self.project.layer_manager.flatten()).lower()
@@ -47,7 +47,7 @@ class TestBNAFailures(object):
     def test_extra_points(self):
         with pytest.raises(RuntimeError) as e:
             cmd = self.project.load_file("../TestData/BNA/bad--extra_polygon_points.bna", "application/x-maproom-bna")
-        bna = self.project.layer_manager.get_layer_by_invariant(1)
+        bna = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile")
         assert bna == None
         assert "line with 3 items" in str(e)
         assert "scale" in str(self.project.layer_manager.flatten()).lower()

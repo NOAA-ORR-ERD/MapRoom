@@ -125,7 +125,7 @@ class TestTileLayer(object):
     
     def test_load(self):
         self.project.load_file(self.project_file, "application/x-maproom-project-zip")
-        t = self.project.layer_manager.get_layer_by_invariant(1)
+        t = self.project.layer_manager.get_nth_oldest_layer_of_type("tiles", 1)
         assert t.map_server_id == 5
 
 

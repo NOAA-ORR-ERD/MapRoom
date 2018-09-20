@@ -18,24 +18,30 @@ class TestBasic(object):
 
     def test_sub_layer_delete(self):
         lm = self.manager
-        
+        expected_invariant = lm.next_invariant
+
         self.project.load_file(self.logfile, "application/x-maproom-command-log")
+        expected_invariant += 1
 
         a1 = AnnotationLayer(manager=lm)
         lm.insert_layer([3], a1)
+        expected_invariant += 1
         
         a = OverlayTextObject(manager=lm)
         a.set_location((6.6637485204,-1.40163099748))
         lm.insert_layer([3, 1], a)
+        expected_invariant += 1
         
         a = RectangleVectorObject(manager=lm)
         a.set_opposite_corners(
             (-16.6637485204,-1.40163099748),
             (9.65688930428,-19.545688433))
         lm.insert_layer([3, 2], a)
+        expected_invariant += 1
         
         a2 = AnnotationLayer(manager=lm)
         lm.insert_layer([3, 3], a2)
+        expected_invariant += 1
         
         a = PolylineObject(manager=lm)
         a.set_points([
@@ -47,6 +53,7 @@ class TestBasic(object):
             ])
         a.style.fill_style = 0
         lm.insert_layer([3, 3, 1], a)
+        expected_invariant += 1
         
         # Calculate bounds of the annotation layers to set up their
         # points/lines arrays
@@ -57,7 +64,7 @@ class TestBasic(object):
         mi = lm.get_multi_index_of_layer(a1)
         print("mi", mi)
         
-        assert 7 == lm.next_invariant
+        assert expected_invariant == lm.next_invariant
         print(lm)
         
         cmd = DeleteLayerCommand(a1)
@@ -65,9 +72,9 @@ class TestBasic(object):
         assert undo.flags.success
         
         print(lm)
-        assert 7 == lm.next_invariant
+        assert expected_invariant == lm.next_invariant
         self.project.undo()
-        assert 7 == lm.next_invariant
+        assert expected_invariant == lm.next_invariant
         print(lm)
         
         # remove last layer and see if invariant changes
@@ -76,9 +83,9 @@ class TestBasic(object):
         assert undo.flags.success
         
         print(lm)
-        assert 6 == lm.next_invariant
+        assert expected_invariant - 1 == lm.next_invariant
         self.project.undo()
-        assert 7 == lm.next_invariant
+        assert expected_invariant == lm.next_invariant
         print(lm)
 
 

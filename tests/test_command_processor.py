@@ -11,7 +11,7 @@ class TestVerdatUndo(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/Verdat/000689pts.verdat", "application/x-maproom-verdat")
-        self.layer = self.project.layer_manager.get_layer_by_invariant(1)
+        self.layer = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 1)
 
     def test_add_points(self):
         world_point = (-118.0, 33.0)
@@ -68,7 +68,7 @@ class TestVerdatDelete(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/Verdat/duplicate-points.verdat", "application/x-maproom-verdat")
-        self.layer = self.project.layer_manager.get_layer_by_invariant(1)
+        self.layer = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 1)
 
     def test_delete(self):
         orig_lsi = np.copy(self.layer.line_segment_indexes)

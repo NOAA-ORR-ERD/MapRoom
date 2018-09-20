@@ -11,7 +11,7 @@ class TestVerdat(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/Verdat/negative-depth-triangles.verdat", "application/x-maproom-verdat")
-        self.verdat = self.project.layer_manager.get_layer_by_invariant(1)
+        self.verdat = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 1)
 
     def test_simple(self):
         layer = self.verdat
@@ -23,7 +23,7 @@ class TestVerdat(object):
         loaders.save_layer(self.verdat, "test.verdat")
         self.project.load_file("test.verdat", "application/x-maproom-verdat")
         self.orig = self.verdat
-        self.verdat = self.project.layer_manager.get_layer_by_invariant(2)
+        self.verdat = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 2)
         assert self.orig != self.verdat
         self.test_simple()
 

@@ -451,6 +451,18 @@ class LayerManager(BaseDocument):
 
     ##### Locate layers
 
+    def get_nth_oldest_layer_of_type(self, layer_type, count=1):
+        oldest = []
+        layers = self.flatten()
+        for layer in layers:
+            if layer.type == layer_type:
+                oldest.append((layer.invariant, layer))
+        oldest.sort()  # smaller invariants are inserted before larger ones
+        try:
+            return oldest[count-1][1]
+        except IndexError:
+            return None
+
     def get_layer_by_invariant(self, invariant):
         layers = self.flatten()
         for layer in layers:

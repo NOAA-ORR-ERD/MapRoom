@@ -12,7 +12,7 @@ class TestVerdat(object):
         self.project = MockProject()
         uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000026pts.verdat")
         self.project.load_file(uri, "application/x-maproom-verdat")
-        self.verdat = self.project.layer_manager.get_layer_by_invariant(1)
+        self.verdat = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 1)
 
     def test_simple(self):
         print(self.verdat)
@@ -22,7 +22,7 @@ class TestVerdat(object):
     def test_append(self):
         uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
         self.project.load_file(uri, "application/x-maproom-verdat")
-        layer = self.project.layer_manager.get_layer_by_invariant(2)
+        layer = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 2)
         self.verdat.append_points_and_lines(layer.points, layer.line_segment_indexes)
         print(self.verdat)
         assert 37 == np.alen(self.verdat.points)

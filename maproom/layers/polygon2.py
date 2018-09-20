@@ -338,6 +338,7 @@ class PolygonParentLayer(PointLayer):
         return feature_code < 0
 
     def get_shapely_polygon(self, start, end, debug=False):
+        p = self.points
         points = np.c_[p.x[start:end], p.y[start:end]]
         points = np.require(points, np.float64, ["C", "OWNDATA"])
         if np.alen(points) > 2:
@@ -373,30 +374,32 @@ class PolygonParentLayer(PointLayer):
                 raise
 
             if not cropped_poly.is_empty:
-                new_point_tount += len(cropped_poly.exterior.coords.xy)
-                cropped_list.append(geom, state, num_points, cropped_poly)
+                num_points = len(cropped_poly.exterior.coords.xy)
+                new_point_count += num_points
+                cropped_list.append((geom, state, num_points, cropped_poly))
 
         log.debug(f"{len(cropped_list)} cropped polygons")
         p = data_types.make_points(new_point_count)
         p = data_types.make_ring_adjacency_array(new_point_count)
 
         # FIXME: WIP, not working yet!
+        total_points = 0
         def add_polygon(shapely_poly, geom, state):
             points = np.require(cropped_poly.exterior.coords.xy, np.float64, ["C", "OWNDATA"])
             num_points = points.shape[1]
-            p[self.total_points:, :] = points.T
+            p[total_points:, :] = points.T
 
         for geom, state, num_points, cropped_poly in cropped_list:
             points = np.require(cropped_poly.exterior.coords.xy, np.float64, ["C", "OWNDATA"])
             count = points.shape[1]
             if cropped_poly.geom_type == "MultiPolygon":
                 for i, p in enumerate(cropped_poly):
-                    new_polys.add_polygon(p, geom, state)
+                    add_polygon(p, geom, state)
                 continue
             elif not hasattr(cropped_poly, 'exterior'):
                 log.debug("Temporarily skipping %s" % cropped_poly.geom_type)
                 continue
-            new_polys.add_polygon(cropped_poly, geom, state)
+            add_polygon(cropped_poly, geom, state)
 
         old_state = self.get_undo_info()
         self.points = p

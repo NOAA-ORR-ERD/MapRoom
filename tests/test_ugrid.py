@@ -13,7 +13,7 @@ class TestVerdatConversion(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/Verdat/negative-depth-triangles.verdat", "application/x-maproom-verdat")
-        self.verdat = self.project.layer_manager.get_layer_by_invariant(1)
+        self.verdat = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 1)
 
     def test_jetty(self):
         layer = self.verdat
@@ -29,7 +29,7 @@ class TestJetty(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/Verdat/jetty.verdat", "application/x-maproom-verdat")
-        self.verdat = self.project.layer_manager.get_layer_by_invariant(1)
+        self.verdat = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 1)
     
     def add_segments(self, point_list):
         start = point_list[0]
@@ -59,7 +59,7 @@ class TestJetty(object):
 
     def test_jetty_save_as_ugrid(self):
         self.create_jetty()
-        uri = "tmp.jetty.nc"
+        uri = os.path.normpath(os.getcwd() + "/tmp.jetty.nc")
         loaders.save_layer(self.verdat, uri)
         layer = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
         assert 16 == np.alen(layer.line_segment_indexes)
@@ -86,7 +86,7 @@ class TestJetty(object):
 
     def test_channel_save_as_ugrid(self):
         self.create_channel()
-        uri = "tmp.channel.nc"
+        uri = os.path.normpath(os.getcwd() + "/tmp.channel.nc")
         loaders.save_layer(self.verdat, uri)
         layer = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
         assert 15 == np.alen(layer.line_segment_indexes)

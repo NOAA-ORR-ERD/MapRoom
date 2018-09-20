@@ -11,7 +11,7 @@ class TestBNAShapefile(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/BNA/00003polys_000035pts.bna", "application/x-maproom-bna")
-        self.bna = self.project.layer_manager.get_layer_by_invariant(1)
+        self.bna = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile", 1)
         self.bna.create_rings()
 
     def test_simple(self):
@@ -31,15 +31,14 @@ class TestBNAShapefile(object):
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
         boundary = layer.select_outer_boundary()
         self.bna.create_rings()
-        self.bna.replace_ring_with_resizing(0, boundary, True, False)
+        self.bna.replace_ring(0, boundary.get_points(), 0, True)
         assert len(self.bna.rings) == 4
 
     def test_add_commit_polygon(self):
         uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
-        layer.ring_indexes = [1]
-        layer.new_boundary = True
-        layer.new_hole = False
+        layer.feature_code = 0
+        layer.ring_indexes = []
         self.bna.commit_editing_layer(layer)
         assert len(self.bna.rings) == 5
         uri = os.path.join(os.getcwd(), "tmp.add_commit.shp")
@@ -48,6 +47,7 @@ class TestBNAShapefile(object):
     def test_replace_polygon(self):
         uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
+        layer.feature_code = 0
         layer.ring_indexes = [1, 2]
         layer.new_boundary = False
         layer.num_boundaries = 2
@@ -58,6 +58,7 @@ class TestBNAShapefile(object):
     def test_replace_and_add_polygon(self):
         uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
+        layer.feature_code = 0
         layer.ring_indexes = [1]
         layer.new_boundary = False
         layer.num_boundaries = 2
@@ -73,7 +74,7 @@ class TestESRIShapefile(object):
     def setup(self):
         self.project = MockProject()
         self.project.load_file("../TestData/Shapefiles/square.shp", "application/x-maproom-shapefile")
-        self.layer = self.project.layer_manager.get_layer_by_invariant(1)
+        self.layer = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile", 1)
         self.layer.create_rings()
 
     def test_delete_polygon(self):
