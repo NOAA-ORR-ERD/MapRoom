@@ -1,3 +1,16 @@
+09/20/2018
+---------------------------
+Released 4.0rc10
+- RM Fixed test case failures
+- RM Turned off rebuild_needed flag in polygon2 so it doesn't try to rebuild for every screen refresh after a change
+- RM Fixed #922: added command to restore shapefiles from 4.0rc8 and earlier save files
+- RM Added some log.debug calls
+- RM Refs #922: added missing JSON serialization for PolygonParentLayer
+- RM Refs #922: fall back to tab20 colormap if old save file is using custom colormap
+- RM Changed some prints to log.debug
+- RM Fixed #925: fixed code to recognize that ring index of None means adding a new polygon
+- RM Fixed #924: popping an element from a List(Int) trait doesn't produce an IndexError as expected, but a TraitError.
+
 09/14/2018
 ---------------------------
 Released 4.0rc9
