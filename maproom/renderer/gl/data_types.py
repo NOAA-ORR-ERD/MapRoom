@@ -150,6 +150,7 @@ def compute_projected_point_data(points, projection, hidden_points=None):
 
 def iter_geom(geom_list):
     for item in geom_list:
+        log.debug(f"processing geometry list item {item}")
         geom_type = item[0]
         if geom_type == "MultiPolygon":
             # MultiPolygon is list of lists

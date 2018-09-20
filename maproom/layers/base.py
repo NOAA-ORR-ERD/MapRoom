@@ -388,6 +388,7 @@ class Layer(HasTraits):
             self.file_path = json_data['url']
             self.mime = json_data['mime']
         for attr, from_json in self.get_from_json_attrs():
+            log.debug(f"{self.name}: restoring json using {from_json}")
             try:
                 from_json(json_data)
             except KeyError as e:
