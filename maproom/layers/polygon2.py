@@ -563,6 +563,7 @@ class PolygonParentLayer(PointLayer):
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         # renderer.set_rings(self.ring_adjacency)
         renderer.set_polygons(self.rings, self.point_adjacency_array)
+        self.rebuild_needed = False
 
     def can_render_for_picker(self, renderer):
         if renderer.canvas.project.layer_tree_control.is_edit_layer(self):
