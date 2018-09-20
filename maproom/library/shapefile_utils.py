@@ -9,7 +9,7 @@ from shapely.wkt import loads
 from osgeo import ogr, osr
 import pyproj
 
-from .shapely_utils import DriverLoadFailure, get_fiona, get_dataset
+from .shapely_utils import DriverLoadFailure, get_fiona, get_dataset, add_maproom_attributes_to_shapely_geom
 from .accumulator import accumulator
 
 import logging
@@ -91,6 +91,26 @@ def parse_ogr(dataset, point_list):
             if item is not None:
                 geometry_list.append(item)
     return geometry_list
+
+def parse_from_old_json(json_data):
+    geometry_list = []
+    point_list = accumulator(block_shape=(2,), dtype=np.float64)
+    for entry in json_data:
+        if entry[0] == "v2":
+            name = entry[1]
+            feature_code = entry[2]
+            wkt = entry[3]
+        else:
+            name = ""
+            feature_code = 0
+            wkt = entry
+        geom = loads(wkt)
+        add_maproom_attributes_to_shapely_geom(geom, name, feature_code)
+        item = parse_geom(geom, point_list)
+        if item is not None:
+            geometry_list.append(item)
+    points = np.asarray(point_list)
+    return ("", geometry_list, points)
 
 
 def load_shapefile(uri):

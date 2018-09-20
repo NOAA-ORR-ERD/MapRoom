@@ -8,7 +8,7 @@ from traits.api import Any, Int, Str, Bool, List
 from ..errors import PointsError
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
-from ..library.shapefile_utils import GeomInfo
+from ..library.shapefile_utils import GeomInfo, parse_from_old_json
 from . import PointLayer, LineLayer, Folder, state
 
 import logging
@@ -232,7 +232,9 @@ class PolygonParentLayer(PointLayer):
         if jd is not None:
             self.geometry_list = [GeomInfo(*i) for i in jd]
 
-    # ring utilities
+    def geometry_from_json(self, json_data):
+        _, geometry_list, points = parse_from_old_json(json_data['geometry'])
+        self.set_geometry(points, geometry_list)
 
     def copy_ring(self, start_index, points, feature_code, color):
         count = len(points)
@@ -290,7 +292,6 @@ class PolygonParentLayer(PointLayer):
         start, end = self.get_ring_start_end(ring_index)
         count = -self.ring_adjacency[start]['point_flag']
         state = self.ring_adjacency[start]['state']
-        import pdb; pdb.set_trace()
         if count > 1:
             feature_code = self.ring_adjacency[start + 1]['state']
             if count > 2:
