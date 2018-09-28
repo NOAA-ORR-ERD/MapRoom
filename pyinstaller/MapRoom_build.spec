@@ -32,7 +32,7 @@ a = Analysis(["%s.py" % appname],
              hiddenimports=[],
              hookspath=['.'],
              runtime_hooks=[],
-             excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'Cython', 'sphinx', 'nose', 'pygments'],
+             excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'Cython', 'sphinx', 'nose', 'pygments', 'pytest'],
              cipher=block_cipher)
 
 for pymod, path, tag in sorted(a.pure):
