@@ -9,6 +9,7 @@ from . library import rect
 from . import mouse_commands as moc
 from . import vector_object_commands as voc
 from . import menu_commands as mec
+from .renderer.gl_immediate.picker import POINTS_PICKER_OFFSET
 
 class NoObjectError(RuntimeError):
     pass
@@ -1085,8 +1086,10 @@ class PointEditMode(PointSelectionMode):
             # reset mouse down position so deltas start at the new point
             c.mouse_down_position = event.GetPosition()
 
-            # FIXME: this hack is needed to force the cursor
-            self.current_object_under_mouse = e.clickable_object_mouse_is_over = c.get_object_at_mouse_position(event.GetPosition())
+            # FIXME: this hack is needed to force the cursor AND to allow
+            # dragging to occur on the newly created point without needing
+            # to click it again.
+            self.current_object_under_mouse = (layer, POINTS_PICKER_OFFSET, cmd.undo_point.index)
 
     def clicked_on_empty_space(self, event, layer, world_point):
         log.debug("clicked on empty space: layer %s, point %s" % (layer, str(world_point)))
