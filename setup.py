@@ -371,35 +371,47 @@ def remove_numpy_tests(basedir):
     fh.write(tester_replace)
     fh.close()
 
+install_requires = [
+    'numpy',
+    'pyopengl',
+    'pyopengl_accelerate',
+    'pyproj',
+    'cython',
+    'shapely',
+    'owslib>=0.16',
+    'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
+    'coverage',
+    'pytest-cov',
+    'docutils',
+    'markdown',
+    'reportlab',
+    'docutils',
+    'pyparsing',
+    'requests',
+    'python-dateutil',
+    'pytz',
+    'cftime',  # required by netcdf4 but not always installed?
+    'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
+    'wxpython>=4.0.1',
+    'pillow',
+    'urllib3',
+    'certifi',
+    'chardet',
+    'idna',
+]
+try:
+    import omnivore
+except ImportError:
+    install_requires.append('omnivore-framework>=2.0a1')
+
+
 try:
     setup(
         name="Maproom",
         version=full_version,
         description="High-performance 2d mapping",
         author="NOAA",
-        install_requires = [
-            'numpy',
-            'pyopengl',
-            'pyopengl_accelerate',
-            'pyproj',
-            'cython',
-            'shapely',
-            'owslib>=0.16',
-            'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
-            'coverage',
-            'pytest-cov',
-            'docutils',
-            'markdown',
-            'reportlab',
-            'docutils',
-            'pyparsing',
-            'requests',
-            'python-dateutil',
-            'pytz',
-            'netCDF4',
-            'omnivore-framework>=2.0a1',
-            'wxpython>=4.0.1',
-            ],
+        install_requires=install_requires,
         setup_requires=[
             'packaging',
         ],
