@@ -654,10 +654,13 @@ class PolygonEditLayerCommand(Command):
     def __init__(self, layer, obj_type, obj_index, feature_code, new_boundary):
         Command.__init__(self, layer)
         self.obj_type = obj_type
-        self.obj_index = obj_index
         self.name = layer.name
         self.feature_code = feature_code
         self.new_boundary = new_boundary
+        if new_boundary:
+            self.obj_index = None
+        else:
+            self.obj_index = obj_index
 
     def __str__(self):
         return "Editing Polygon from %s" % self.name
