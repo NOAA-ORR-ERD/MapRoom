@@ -281,6 +281,7 @@ class MaproomProjectTask(FrameworkTask):
         return [
             actions.NewVectorLayerAction(),
             actions.NewAnnotationLayerAction(),
+            actions.NewShapefileLayerAction(),
             actions.NewWMSLayerAction(),
             actions.NewTileLayerAction(),
             actions.NewCompassRoseLayerAction(),

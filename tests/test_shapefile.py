@@ -4,8 +4,39 @@ import numpy as np
 
 from mock import *
 
-from maproom.layers import loaders, TriangleLayer
+from maproom.layers import loaders, PolygonParentLayer
 from maproom.library.Boundary import Boundaries, PointsError
+
+from maproom.renderer.gl.data_types import make_points_from_xy
+
+
+class TestEmptyShapefile(object):
+    def setup(self):
+        self.project = MockProject()
+
+    def test_empty_layer(self):
+        lm = self.project.layer_manager
+        layer = PolygonParentLayer(manager=lm)
+        layer.new()
+        lm.insert_loaded_layer(layer)
+
+        points = make_points_from_xy([(1.,2.), (1., 5.), (0., 3.)])
+        layer.replace_ring(0, points, True)
+        assert 1 == len(layer.rings)
+        assert 1 == len(layer.geometry_list)
+        assert 3 == len(layer.ring_adjacency)
+
+        points = make_points_from_xy([(8.,2.), (9., 5.), (8., 3.), (9.,3.)])
+        layer.replace_ring(0, points)
+        assert 1 == len(layer.rings)
+        assert 1 == len(layer.geometry_list)
+        assert 4 == len(layer.ring_adjacency)
+
+        points = make_points_from_xy([(8.,5.), (9., 7.), (8., 4.), (9.,1.), (10., 4.)])
+        layer.replace_ring(0, points, new_boundary=True)
+        assert 2 == len(layer.rings)
+        assert 2 == len(layer.geometry_list)
+        assert 9 == len(layer.ring_adjacency)
 
 class TestBNAShapefile(object):
     def setup(self):

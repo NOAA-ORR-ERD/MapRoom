@@ -366,6 +366,12 @@ class NewTileLayerAction(NewLayerBaseAction):
     layer_class = layers.TileLayer
 
 
+class NewShapefileLayerAction(NewLayerBaseAction):
+    name = 'New Shapefile/Polygon Layer'
+    tooltip = 'Create new layer of polygons'
+    layer_class = layers.PolygonParentLayer
+
+
 class NewRNCLayerAction(EditorAction):
     name = 'New RNC Download Selection Layer (-360 - 0)'
     tooltip = 'Create new layer for downloading RNC images in the -360 to 0 map regime'

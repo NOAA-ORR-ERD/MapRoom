@@ -113,6 +113,16 @@ def make_points(count):
     ).view(np.recarray)
 
 
+def make_points_from_xy(xy_values):
+    xy_values = np.asarray(xy_values, dtype=np.float32)
+    print(xy_values)
+    points = make_points(len(xy_values))
+    points.z = 0.
+    points.x = xy_values[:,0]
+    points.y = xy_values[:,1]
+    return points
+
+
 def make_polygons(count):
     return np.repeat(
         np.array([(0, 0, 0, 0, 0)], dtype=POLYGON_DTYPE),

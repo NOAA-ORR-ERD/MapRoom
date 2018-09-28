@@ -192,6 +192,23 @@ class PolygonParentLayer(PointLayer):
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
+    def _geometry_list_default(self):
+        return []
+
+    def _ring_adjacency_default(self):
+        _, ring_adjacency = data_types.compute_rings([], [], feature_code_to_color)
+        return ring_adjacency
+
+    def _rings_default(self):
+        return []
+
+    def _points_default(self):
+        self.point_adjacency_array = data_types.make_point_adjacency_array(0)
+        return data_types.make_points(0)
+
+    def _point_adjacency_array_default(self):
+        return data_types.make_point_adjacency_array(0)
+
     def _style_default(self):
         style = self.manager.get_default_style_for(self)
         style.use_next_default_color()
@@ -242,7 +259,6 @@ class PolygonParentLayer(PointLayer):
             return
         end = start_index + count
         self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start_index:end] = points[:]
-        self.ring_adjacency
         self.ring_adjacency[start_index]['point_flag'] = -count
         self.ring_adjacency[start_index + count - 1]['point_flag'] = 2
         self.ring_adjacency[start_index]['state'] = 0
@@ -250,6 +266,18 @@ class PolygonParentLayer(PointLayer):
             self.ring_adjacency[start_index + 1]['state'] = feature_code
         if count > 2:
             self.ring_adjacency[start_index + 2]['state'] = color
+
+    def create_first_ring(self, points, feature_code, color):
+        num_new_points = len(points)
+        print("PONITS", points)
+        self.points = data_types.make_points(num_new_points)
+        self.ring_adjacency = data_types.make_ring_adjacency_array(num_new_points)
+        feature_code = 1
+        self.copy_ring(0, points, feature_code, feature_code_to_color[feature_code])
+        g = GeomInfo(start_index=0, count=num_new_points, name="New Polygon", feature_code=feature_code, feature_name="None")
+        self.geometry_list = [g]
+        self.create_rings()
+        self.rebuild_needed = True
 
     def set_data_from_boundaries(self, boundaries):
         num_new_points = 0
@@ -262,7 +290,7 @@ class PolygonParentLayer(PointLayer):
         index = 0
         for i, b in enumerate(boundaries):
             points = b.get_xy_points()
-            self.copy_ring(index, points, 1, 0x12345678)
+            self.copy_ring(index, points, 1, feature_code_to_color[1])
             index += len(points)
 
         self.create_rings()
@@ -481,7 +509,14 @@ class PolygonParentLayer(PointLayer):
         log.debug(f"replacing ring {ring_index}")
         if feature_code is None:
             feature_code = self.get_feature_code(ring_index)
-        insert_index, old_after_index = self.get_ring_start_end(ring_index)
+        try:
+            insert_index, old_after_index = self.get_ring_start_end(ring_index)
+        except IndexError:
+            self.create_first_ring(points.view(data_types.POINT_XY_VIEW_DTYPE).xy, 1, feature_code_to_color[1])
+            print("SOEUHCROEHUOE", points)
+            print("SOEUHCROEHUOE", points.view(data_types.POINT_XY_VIEW_DTYPE).xy[:])
+            return
+        print("ZMVWQJMKMQJKMQJZMK", points)
         if new_boundary:
             # arbitrarily insert at beginning
             old_after_index = insert_index
@@ -505,8 +540,6 @@ class PolygonParentLayer(PointLayer):
 
         p = data_types.make_points(new_num_points)
         p[:insert_index] = self.points[:insert_index]
-        print(self.points.dtype)
-        print(insert_points.dtype)
         try:
             p[insert_index:new_after_index] = insert_points
         except ValueError:
@@ -559,7 +592,7 @@ class PolygonParentLayer(PointLayer):
 
     def rebuild_renderer(self, renderer, in_place=False):
         log.debug(f"rebuilding polygon2 {self.name}")
-        if self.rings is None:
+        if self.rings is None or len(self.rings) == 0:
             self.create_rings()
         projection = self.manager.project.layer_canvas.projection
         projected_point_data = data_types.compute_projected_point_data(self.points, projection)
