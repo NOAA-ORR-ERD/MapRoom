@@ -14,6 +14,7 @@ class TestBNA(object):
         self.project = MockProject()
         self.project.load_file("../TestData/BNA/00003polys_000035pts.bna", "application/x-maproom-bna")
         self.bna = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile")
+        self.bna.create_rings()
 
     def test_simple(self):
         layer = self.bna
@@ -24,7 +25,8 @@ class TestBNA(object):
         layer.check_for_problems(None)
     
     def test_save(self):
-        loaders.save_layer(self.bna, "test.bna")
+        uri = os.path.join(os.getcwd(), "test.bna")
+        loaders.save_layer(self.bna, uri)
         self.project.load_file("test.bna", "application/x-maproom-bna")
         self.orig = self.bna
         self.bna = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile", 2)
