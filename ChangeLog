@@ -1,3 +1,17 @@
+09/28/2018
+---------------------------
+Released 4.0rc11
+- RM Fixed triangle timeout handling when mesh quality angle is large enough that the pytriangle code doesn't converge and never returns
+- RM Fixed uri in verdat tests
+- RM Fixed error in BNA test that only showed up on MacOS
+- RM Fixed #930: force the newly created point to be the active object, rather than using the x/y location and picker to determine it
+- RM Fixed #929: added menu item to add new polygon layer
+- RM Fixed #928: "add new polygon" should never refer to object index
+- RM Added pytest to excluded packages when building release binaries
+- RM Added missing package dependencies to setup.py
+- RM Fixed #927: added check to verify there are loadable layers before recognizing as a shapefile
+- RM Refs #926: added sample ChesapeakeBay.bna
+
 09/20/2018
 ---------------------------
 Released 4.0rc10
