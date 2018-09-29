@@ -1,4 +1,5 @@
 import multiprocessing
+import queue
 import cython
 import numpy as np
 cimport numpy as np
@@ -49,7 +50,7 @@ cdef extern from "triangle.h":
     )
 
 
-cdef unsigned int PROCESSING_TIMEOUT = 10
+cdef unsigned int PROCESSING_TIMEOUT = 5
 
 
 @cython.boundscheck( False )
@@ -114,12 +115,19 @@ def triangulate_simple(
 
     # For a large amount of data, have to pull from the queue before joining
     # the process. See https://bugs.python.org/issue8426
-    output = q.get(PROCESSING_TIMEOUT)
+    try:
+        output = q.get(True, PROCESSING_TIMEOUT)
+    except queue.Empty:
+        timeout = True
+    else:
+        timeout = False
 
     child.join(PROCESSING_TIMEOUT)
     if child.is_alive():
         # timeout reached! Kill the process
         child.terminate()
+        timeout = True
+    if timeout:
         raise RuntimeError("Triangulation timeout.")
     try:
         out_points_xy, out_points_z, out_lines, out_triangles = output
