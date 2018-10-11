@@ -1,5 +1,5 @@
 
-from omnivore.utils.runtime import get_all_subclasses
+from omnivore_framework.utils.runtime import get_all_subclasses
 
 import logging
 log = logging.getLogger(__name__)

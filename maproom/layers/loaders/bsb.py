@@ -3,7 +3,7 @@ import os
 import wx
 
 
-from omnivore.framework.errors import ProgressCancelError
+from omnivore_framework.framework.errors import ProgressCancelError
 
 from maproom.layers import RasterLayer
 from maproom.library.bsb_utils import BSBParser

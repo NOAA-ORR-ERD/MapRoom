@@ -3,7 +3,7 @@
 # Enthought library imports.
 from traits.api import List
 
-from omnivore.framework.plugin import FrameworkPlugin
+from omnivore_framework.framework.plugin import FrameworkPlugin
 
 from .preferences import MaproomPreferencesPane
 
@@ -19,7 +19,7 @@ class MaproomPlugin(FrameworkPlugin):
     # 'IPlugin' interface ##################################################
 
     # The plugin's unique identifier.
-    id = 'omnivore.tasks'
+    id = 'omnivore_framework.tasks'
 
     # The plugin's name (suitable for displaying to the user).
     name = 'MapRoom'

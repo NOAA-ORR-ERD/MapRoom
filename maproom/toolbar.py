@@ -4,7 +4,7 @@ from pyface.tasks.action.api import SToolBar
 from traits.api import Any
 from traits.api import on_trait_change
 
-from omnivore.framework.enthought_api import EditorAction
+from omnivore_framework.framework.enthought_api import EditorAction
 
 from . import mouse_handler as modes
 

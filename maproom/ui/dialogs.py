@@ -5,7 +5,7 @@ import wx
 import wx.lib.sized_controls as sc
 import wx.lib.buttons as buttons
 
-from omnivore.utils.wx.dialogs import ObjectEditDialog
+from omnivore_framework.utils.wx.dialogs import ObjectEditDialog
 
 from ..library import coordinates
 from ..library.textparse import parse_int_string

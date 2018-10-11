@@ -4,7 +4,7 @@ gdal.UseExceptions()
 
 from traits.api import HasTraits, provides
 
-from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
+from omnivore_framework.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 import logging
 log = logging.getLogger(__name__)

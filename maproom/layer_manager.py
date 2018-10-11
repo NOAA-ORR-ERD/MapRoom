@@ -19,9 +19,9 @@ from traits.api import Int
 from traits.api import List
 from pyface.api import GUI
 
-from omnivore.framework.document import BaseDocument
-from omnivore.utils.jsonutil import collapse_json
-from omnivore.utils.fileutil import ExpandZip
+from omnivore_framework.framework.document import BaseDocument
+from omnivore_framework.utils.jsonutil import collapse_json
+from omnivore_framework.utils.fileutil import ExpandZip
 from .library import colormap
 
 import logging

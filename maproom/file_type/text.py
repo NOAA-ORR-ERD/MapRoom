@@ -1,6 +1,6 @@
 from traits.api import HasTraits, provides
 
-from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
+from omnivore_framework.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 from maproom.serializer import magic_template
 from maproom.library.lat_lon_parser import parse_coordinate_text

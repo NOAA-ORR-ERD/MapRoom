@@ -1,7 +1,7 @@
 import json
 
 
-from omnivore.framework.errors import ProgressCancelError
+from omnivore_framework.framework.errors import ProgressCancelError
 
 from .command import Command, UndoInfo
 from . import layers as ly

@@ -75,7 +75,7 @@ from traits.api import List
 
 
 class MaproomFileRecognizerPlugin(Plugin):
-    """ A plugin that contributes to the omnivore.file_type.recognizer extension point. """
+    """ A plugin that contributes to the omnivore_framework.file_type.recognizer extension point. """
 
     # 'IPlugin' interface ##################################################
 
@@ -87,7 +87,7 @@ class MaproomFileRecognizerPlugin(Plugin):
 
     # This tells us that the plugin contributes the value of this trait to the
     # 'greetings' extension point.
-    recognizer = List(recognizers, contributes_to='omnivore.file_recognizer')
+    recognizer = List(recognizers, contributes_to='omnivore_framework.file_recognizer')
 
 
 plugins = [MaproomFileRecognizerPlugin()]

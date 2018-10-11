@@ -4,7 +4,7 @@ from fs.opener import opener
 
 from traits.api import HasTraits, provides
 
-from omnivore.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
+from omnivore_framework.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
 # replaced with the UGRID_Recognizer
 # @provides(IFileRecognizer)

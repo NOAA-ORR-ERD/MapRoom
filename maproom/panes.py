@@ -10,11 +10,11 @@ from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 
 # Enthought library imports.
 
-from omnivore.framework.panes import FrameworkPane, FrameworkFixedPane
-from omnivore.utils.wx.popuputil import SpringTabs
-from omnivore.utils.wx.download_manager import DownloadControl
-from omnivore.utils.wx.zoomruler import ZoomRuler
-from omnivore.utils.textutil import pretty_seconds, parse_pretty_seconds
+from omnivore_framework.framework.panes import FrameworkPane, FrameworkFixedPane
+from omnivore_framework.utils.wx.popuputil import SpringTabs
+from omnivore_framework.utils.wx.download_manager import DownloadControl
+from omnivore_framework.utils.wx.zoomruler import ZoomRuler
+from omnivore_framework.utils.textutil import pretty_seconds, parse_pretty_seconds
 
 from .layer_tree_control import LayerTreeControl
 from .ui.info_panels import LayerInfoPanel, SelectionInfoPanel

@@ -36,8 +36,8 @@ if found is not None:
     os.environ["GDAL_DATA"] = found
 
 # Framework imports.
-from omnivore import get_image_path
-from omnivore.app_init import run, setup_frozen_logging
+from omnivore_framework import get_image_path
+from omnivore_framework.app_init import run, setup_frozen_logging
 
 # Local imports.
 from maproom.pane_layout import task_id_with_pane_layout
@@ -82,9 +82,9 @@ def main(argv):
 
     # Override location of help pages so we don't get the framework user guide
     from traits.trait_base import get_resource_path
-    import omnivore.help
-    omnivore.help.help_dirs = ["maproom/help"]
-    omnivore.help.root_resource_path = get_resource_path(1)
+    import omnivore_framework.help
+    omnivore_framework.help.help_dirs = ["maproom/help"]
+    omnivore_framework.help.root_resource_path = get_resource_path(1)
 
     plugins = [ MaproomPlugin() ]
     

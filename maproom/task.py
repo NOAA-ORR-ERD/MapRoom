@@ -18,8 +18,8 @@ from traits.api import Unicode
 from traits.api import on_trait_change
 from traits.api import provides
 
-from omnivore.framework.task import FrameworkTask
-from omnivore.framework.i_about import IAbout
+from omnivore_framework.framework.task import FrameworkTask
+from omnivore_framework.framework.i_about import IAbout
 
 from .project_editor import ProjectEditor
 from . import pane_layout
@@ -32,7 +32,7 @@ from .library.known_hosts import default_wms_hosts, default_tile_hosts
 from .layers import LayerStyle, parse_styles_from_json, styles_to_json
 
 from . import actions
-from omnivore.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction, SaveAsImageAction
+from omnivore_framework.framework.actions import PreferencesAction, CutAction, CopyAction, PasteAction, OpenLogDirectoryAction, SaveAsImageAction
 
 import logging
 log = logging.getLogger(__name__)
@@ -142,7 +142,7 @@ class MaproomProjectTask(FrameworkTask):
             pass
         try:
             import omnivore
-            desc += "  Omnivore %s\n" % omnivore.__version__
+            desc += "  Omnivore %s\n" % omnivore_framework.__version__
         except:
             pass
         return desc

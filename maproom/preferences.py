@@ -10,7 +10,7 @@ from traits.api import Str
 from traitsui.api import HGroup, VGroup, Item, Label, \
     View, RangeEditor
 
-from omnivore.framework.preferences import FrameworkPreferences
+from omnivore_framework.framework.preferences import FrameworkPreferences
 
 # fixme:
 # Some hard_coded stuff just to put it in a central place -- should be handled smarter

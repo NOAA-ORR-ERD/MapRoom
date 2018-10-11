@@ -8,8 +8,8 @@ from traits.api import Any
 from traits.api import Str
 from traits.api import on_trait_change
 
-from omnivore.framework.enthought_api import Action, ActionItem, EditorAction, TaskDynamicSubmenuGroup
-from omnivore.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
+from omnivore_framework.framework.enthought_api import Action, ActionItem, EditorAction, TaskDynamicSubmenuGroup
+from omnivore_framework.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
 
 from . import pane_layout
 from . import menu_commands as mec
@@ -672,7 +672,7 @@ class OpenLogAction(Action):
     def perform(self, event):
         app = event.task.window.application
         filename = app.get_log_file_name("command_log", ".mrc")
-        app.load_file(filename, task_id="omnivore.framework.text_edit_task")
+        app.load_file(filename, task_id="omnivore_framework.framework.text_edit_task")
 
 
 class DebugAnnotationLayersAction(EditorAction):

@@ -87,7 +87,7 @@ progress_log = logging.getLogger("progress")
 
 
 def load_layers_from_url(url, mime, manager=None):
-    from omnivore.utils.file_guess import FileGuess
+    from omnivore_framework.utils.file_guess import FileGuess
 
     guess = FileGuess(url)
     guess.metadata.mime = mime

@@ -17,12 +17,12 @@ from traits.api import Str
 from traits.api import List
 from traits.api import on_trait_change
 
-from omnivore.framework.editor import FrameworkEditor
-from omnivore.framework.errors import ProgressCancelError
-import omnivore.framework.clipboard as clipboard
-from omnivore.utils.wx.popuputil import PopupStatusBar
-from omnivore.utils.wx.tilemanager import TileManager
-from omnivore.templates import get_template
+from omnivore_framework.framework.editor import FrameworkEditor
+from omnivore_framework.framework.errors import ProgressCancelError
+import omnivore_framework.framework.clipboard as clipboard
+from omnivore_framework.utils.wx.popuputil import PopupStatusBar
+from omnivore_framework.utils.wx.tilemanager import TileManager
+from omnivore_framework.templates import get_template
 
 # Local imports.
 from .errors import MapRoomError

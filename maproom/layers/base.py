@@ -14,7 +14,7 @@ from traits.api import Int
 from traits.api import Str
 from traits.api import Unicode
 
-from omnivore.utils.runtime import get_all_subclasses
+from omnivore_framework.utils.runtime import get_all_subclasses
 
 # MapRoom imports
 from ..library import rect

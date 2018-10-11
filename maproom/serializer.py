@@ -1,8 +1,8 @@
 import re
 import shlex
 
-from omnivore.utils.runtime import get_all_subclasses
-from omnivore.utils.file_guess import FileMetadata
+from omnivore_framework.utils.runtime import get_all_subclasses
+from omnivore_framework.utils.file_guess import FileMetadata
 
 from . import command
 from .layers.style import LayerStyle

@@ -1,7 +1,7 @@
 
 import wx
 
-from omnivore import get_image_path
+from omnivore_framework import get_image_path
 
 from . import renderer
 from .mouse_handler import MouseHandler, PanMode
