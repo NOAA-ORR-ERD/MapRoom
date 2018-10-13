@@ -392,17 +392,14 @@ install_requires = [
     'pytz',
     'cftime',  # required by netcdf4 but not always installed?
     'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
-    'wxpython>=4.0.1',
+    'wxpython>=4.0.3',
     'pillow',
     'urllib3',
     'certifi',
     'chardet',
     'idna',
+    'omnivore-framework>=3'
 ]
-try:
-    import omnivore
-except ImportError:
-    install_requires.append('omnivore-framework>=2.0a1')
 
 
 try:
