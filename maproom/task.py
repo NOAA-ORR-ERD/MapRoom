@@ -141,7 +141,7 @@ class MaproomProjectTask(FrameworkTask):
         except:
             pass
         try:
-            import omnivore
+            import omnivore_framework
             desc += "  Omnivore %s\n" % omnivore_framework.__version__
         except:
             pass
