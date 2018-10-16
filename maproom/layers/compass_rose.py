@@ -1,18 +1,15 @@
 # coding=utf8
 
 # Enthought library imports.
-from traits.api import on_trait_change, Unicode, Str, Any, Float
+from traits.api import Str
 
-from ..library import rect
-from ..library.svg_utils import SVGOverlay
-
-from .base import ScreenLayer
+from .svg import SVGLayer
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class CompassRose(ScreenLayer):
+class CompassRose(SVGLayer):
     """Compass Rose layer
 
     Shows a compass rose or north-up arrow as a graphic overlay
@@ -20,12 +17,6 @@ class CompassRose(ScreenLayer):
     name = "Compass Rose"
 
     type = "compass_rose"
-
-    x_percentage = Float(1.0)
-
-    y_percentage = Float(0.0)
-
-    magnification = Float(0.2)
 
     # Sample compass rose from ElfQrin - Own work, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=15810328
     svg_source = Str("""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -133,79 +124,3 @@ class CompassRose(ScreenLayer):
      id="path3573"
      d="M 7.1136,47.324 7.175,45.3269 C 7.1898,44.8845 7.2311,44.4696 7.2988,44.0802 7.1792,44.2273 7.0289,44.4463 6.8469,44.7374 6.3029,45.6126 5.7166,46.4328 5.089,47.2001 5.0435,46.925 5.0064,46.6032 4.9789,46.2349 4.9504,45.8677 4.9366,45.5449 4.9366,45.2676 c 0,-0.3905 0.037,-0.7017 0.1101,-0.9345 0.073,-0.2328 0.2127,-0.4868 0.4169,-0.7641 -0.3884,0.0434 -0.6974,0.1661 -0.9249,0.3693 -0.2286,0.2022 -0.3429,0.4096 -0.3429,0.6223 0,0.0794 0.0211,0.1588 0.0645,0.2392 0.0519,0.0974 0.0783,0.1619 0.0783,0.1958 0,0.0529 -0.018,0.0974 -0.0518,0.1334 C 4.2529,45.1639 4.2106,45.1808 4.1619,45.1808 4.0952,45.1808 4.0412,45.1512 4,45.0909 3.9449,45.0125 3.9164,44.912 3.9164,44.7871 c 0,-0.1873 0.0539,-0.3799 0.1629,-0.5768 0.108,-0.1958 0.253,-0.3577 0.4329,-0.4847 0.1799,-0.127 0.3842,-0.2201 0.6138,-0.2773 0.126,-0.0317 0.3376,-0.0635 0.635,-0.0963 0.1016,-0.0127 0.2022,-0.0264 0.3017,-0.0402 -0.4488,0.6287 -0.6731,1.2626 -0.6731,1.9039 0,0.2001 0.0148,0.6001 0.0465,1.1991 0.1217,-0.146 0.2318,-0.2878 0.3313,-0.4244 0.0688,-0.0952 0.2466,-0.3587 0.5334,-0.7905 0.4635,-0.7028 0.8096,-1.1981 1.0393,-1.4849 0.1608,-0.1989 0.3429,-0.3841 0.545,-0.5556 -0.1979,0.78 -0.2974,1.8987 -0.2974,3.3581 L 8.3656,45.5534 C 8.5751,45.293 8.7858,44.9893 8.9995,44.6432 9.2144,44.2971 9.3551,44.0209 9.4229,43.8135 9.4663,43.679 9.4885,43.552 9.4885,43.4325 9.4885,43.315 9.461,43.1912 9.4081,43.0599 9.3742,42.9774 9.3583,42.9181 9.3583,42.8811 c 0,-0.0561 0.0201,-0.1038 0.0603,-0.1419 0.0403,-0.0381 0.0911,-0.0571 0.1535,-0.0571 0.0783,0 0.1408,0.0349 0.1863,0.1058 0.0656,0.0953 0.0984,0.2212 0.0984,0.3779 0,0.2084 -0.0709,0.4836 -0.2149,0.8244 -0.1439,0.3418 -0.4624,0.8393 -0.9567,1.4944 -0.6371,0.8382 -1.161,1.4509 -1.5716,1.8394 z"
      class="fil3 str1" /></svg>""")
-
-    svg = Any
-
-    skip_on_insert = True
-
-    # class attributes
-
-    bounded = False
-
-    layer_info_panel = ["X location", "Y location", "Magnification"]
-
-    x_offset = 10
-    y_offset = 10
-
-    def _svg_default(self):
-        return SVGOverlay(self.svg_source)
-
-    @on_trait_change('svg_source')
-    def svg_changed(self):
-        self.svg = self._svg_default()
-
-    ##### serialization
-
-    def x_percentage_to_json(self):
-        return self.x_percentage
-
-    def x_percentage_from_json(self, json_data):
-        self.x_percentage = json_data['x_percentage']
-
-    def y_percentage_to_json(self):
-        return self.y_percentage
-
-    def y_percentage_from_json(self, json_data):
-        self.y_percentage = json_data['y_percentage']
-
-    def magnification_to_json(self):
-        return self.magnification
-
-    def magnification_from_json(self, json_data):
-        self.magnification = json_data['magnification']
-
-    def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
-        if picker.is_active:
-            return
-        log.log(5, "Rendering compass rose!!! pick=%s" % (picker))
-
-        if self.svg.height > 0:
-            object_ar = self.svg.width / self.svg.height
-        else:
-            object_ar = 1.0
-
-        usable_w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset
-        usable_h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset
-        if usable_h > 0:
-            usable_ar = usable_w / usable_h
-        else:
-            usable_ar = 1.0
-
-        if object_ar > usable_ar:
-            # wider object than screen, so max based on width
-            max_w = usable_w
-            max_h = usable_h / object_ar
-        else:
-            # taller object than screen; max based on height
-            max_h = usable_h
-            max_w = usable_w / usable_ar
-
-        w = max_w * self.magnification
-        h = max_h * self.magnification
-
-        x = s_r[0][0] + ((usable_w - w) * self.x_percentage) + self.x_offset
-        y = s_r[1][1] - ((usable_h - h) * self.y_percentage) - self.y_offset
-
-        r = rect.get_rect_of_points([(x, y), (x + w, y - h)])
-
-        renderer.draw_screen_svg(r, self.svg)

@@ -336,6 +336,12 @@ class NewLonLatLayerAction(NewLayerBaseAction):
     layer_class = layers.Graticule
 
 
+class NewNOAALogoLayerAction(NewLayerBaseAction):
+    name = 'New NOAA Logo Layer'
+    tooltip = 'Create new NOAA logo overlay layer'
+    layer_class = layers.NOAALogo
+
+
 class NewCompassRoseLayerAction(NewLayerBaseAction):
     name = 'New Compass Rose Layer'
     tooltip = 'Create new compass rose or north-up arrow layer'

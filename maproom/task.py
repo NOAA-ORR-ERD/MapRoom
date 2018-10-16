@@ -284,6 +284,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.NewShapefileLayerAction(),
             actions.NewWMSLayerAction(),
             actions.NewTileLayerAction(),
+            actions.NewNOAALogoLayerAction(),
             actions.NewCompassRoseLayerAction(),
             actions.NewTimestampLayerAction(),
             actions.NewLonLatLayerAction(),
