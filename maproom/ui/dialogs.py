@@ -241,6 +241,7 @@ class StyleDialog(wx.Dialog):
 
         # reset to first item in list
         self.obj_list.SetSelection(0)
+        self.set_layer_display(0)
 
         self.savebtn = wx.CheckBox(self, -1, "Save these styles as the default for future projects")
 
@@ -273,6 +274,9 @@ class StyleDialog(wx.Dialog):
 
     def on_category(self, evt):
         index = evt.GetSelection()
+        self.set_layer_display(index)
+
+    def set_layer_display(self, index):
         layer = self.use_layer(index)
         self.info.display_panel_for_layer(self.mock_project, layer)
 
