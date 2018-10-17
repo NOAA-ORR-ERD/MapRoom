@@ -409,6 +409,8 @@ class MaproomProjectTask(FrameworkTask):
                 self.window.application.restore_perspective(self.window, self)
             self.activated()
             self.window.application.successfully_loaded_event = source.metadata.uri
+            if editor.document.uri.startswith("template:"):
+                editor.document.update_default_styles(self.default_styles)
         elif not window_opening:
             log.debug("starting empty task")
             FrameworkTask.new(self, source, **kwargs)

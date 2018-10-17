@@ -57,20 +57,24 @@ class NewProjectAction(Action):
     name = 'New Default Project'
     tooltip = 'Open a new copy of the default project'
 
+    template = None
+
     def perform(self, event=None):
         task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
-        wx.CallAfter(event.task.window.application.load_file, task.about_application, task)
+        wx.CallAfter(self.load_template, task)
+
+    def load_template(self, task):
+        template = self.template if self.template is not None else task.about_application
+        task.window.application.load_file(template, task)
 
 
-class NewEmptyProjectAction(Action):
+class NewEmptyProjectAction(NewProjectAction):
     """ An action for creating a new empty file that can be edited by a particular task
     """
     name = 'New Empty Project'
     tooltip = 'Open an empty grid to create new layers'
 
-    def perform(self, event=None):
-        task = event.task.window.application.find_or_create_task_of_type(pane_layout.task_id_with_pane_layout)
-        wx.CallAfter(event.task.window.application.load_file, "template://blank_project.maproom", task)
+    template = "template://blank_project.maproom"
 
 
 class SaveProjectAction(EditorAction):
