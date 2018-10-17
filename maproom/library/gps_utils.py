@@ -21,13 +21,13 @@ class Waypoint:
     @classmethod
     def fromxml(cls, r):
         w = cls()
-        w.lat = r.attrib['lat']
-        w.lon = r.attrib['lon']
+        w.lat = float(r.attrib['lat'])
+        w.lon = float(r.attrib['lon'])
         for t in r.getchildren():
             if t.tag.endswith("name"):
                 w.name = t.text
             elif t.tag.endswith("ele"):
-                w.ele = t.text
+                w.ele = float(t.text)
             elif t.tag.endswith("desc"):
                 w.desc = t.text
             elif t.tag.endswith("cmt"):
@@ -54,11 +54,11 @@ class Trackpoint:
     @classmethod
     def fromxml(cls, r):
         w = cls()
-        w.lat = r.attrib['lat']
-        w.lon = r.attrib['lon']
+        w.lat = float(r.attrib['lat'])
+        w.lon = float(r.attrib['lon'])
         for t in r.getchildren():
             if t.tag.endswith("ele"):
-                w.ele = t.text
+                w.ele = float(t.text)
             elif t.tag.endswith("time"):
                 w.time = date_parser.parse(t.text)
         return w
@@ -95,7 +95,7 @@ class GarminGPSDataset(GPSDataset):
                 #self.name = r.findtext(f"{self.XMLNS}name")
                 for t in r.getchildren():
                     if t.tag.endswith("name"):
-                        self.name = t
+                        self.name = t.text
                     elif t.tag.endswith("trkseg"):
                         for trk in t.getchildren():
                             w = Trackpoint.fromxml(trk)
