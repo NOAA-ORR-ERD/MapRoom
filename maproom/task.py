@@ -303,6 +303,7 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions_Menu_Layer_LayerUtilGroup(self):
         return [
             actions.TriangulateLayerAction(),
+            actions.ConvexHullAction(),
             actions.ToPolygonLayerAction(),
             actions.ToVerdatLayerAction(),
             actions.MergeLayersAction(),

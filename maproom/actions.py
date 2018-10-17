@@ -502,6 +502,46 @@ class ToVerdatLayerAction(EditorAction):
             self.active_editor.process_command(cmd)
 
 
+class ConvexHullAction(EditorAction):
+    name = 'Convex Hull'
+    tooltip = 'Create convex hull of a set of points'
+    enabled_name = 'multiple_layers'
+    image = ImageResource('merge.png')
+
+    def perform(self, event):
+        GUI.invoke_later(self.show_dialog, self.active_editor)
+
+    def show_dialog(self, project):
+        layers = project.layer_manager.flatten()
+
+        if len(layers) < 1:
+            project.task.error("Convex hull requires at least one layer.")
+            return
+
+        layer_names = [str(layer.name) for layer in layers]
+
+        import wx
+        dialog = wx.MultiChoiceDialog(
+            project.window.control,
+            "Please select at least one layer.",
+            "Point Layers",
+            layer_names
+        )
+
+        result = dialog.ShowModal()
+        if result == wx.ID_OK:
+            selections = dialog.GetSelections()
+        else:
+            selections = []
+        dialog.Destroy()
+        selected_layers = [layers[s] for s in selections]
+        if len(selected_layers) < 1:
+            project.task.error("You must select a layer.")
+        else:
+            cmd = mec.ConvexHullCommand(selected_layers)
+            project.process_command(cmd)
+
+
 class MergeLayersAction(EditorAction):
     name = 'Merge Layers'
     tooltip = 'Merge two vector layers'
