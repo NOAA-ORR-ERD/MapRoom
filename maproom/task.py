@@ -457,13 +457,16 @@ class MaproomProjectTask(FrameworkTask):
     @classmethod
     def can_edit(cls, document):
         mime = document.metadata.mime
-        return (mime.startswith("image") or
+        can_edit = (mime.startswith("image") or
                 mime.startswith("application/x-maproom-") or
                 mime == "application/x-nc_ugrid" or
                 mime == "application/x-nc_particles" or
                 mime == "text/latlon" or
                 mime == "text/lonlat"
                 )
+        if not can_edit:
+            log.warning(f"MapRoom doesn't know how to edit {mime}")
+        return can_edit
 
     @classmethod
     def get_match_score(cls, document):
