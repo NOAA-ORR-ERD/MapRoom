@@ -960,6 +960,7 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
         return get_numpy_from_marplot_icon('marplot_drum.png')
 
     def set_location(self, p1):
+        p1 = np.asarray(p1)
         p = np.concatenate((p1, p1), 0)  # flatten to 1D
         c = p[self.corners_from_flat].reshape(-1, 2)
         cp = self.get_control_points_from_corners(c)
@@ -1073,6 +1074,7 @@ class OverlayScalableImageObject(OverlayImageObject):
         self.rebuild_needed = True  # Force rebuild to change image color
 
     def set_location_and_size(self, p1, w, h):
+        p1 = np.asarray(p1)
         self.text_width = w
         self.text_height = h
         p = np.concatenate((p1, p1), 0)  # flatten to 1D
