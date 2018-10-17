@@ -1,5 +1,5 @@
 pyopengl
-pyopengl-accelerate
+# pyopengl-accelerate # not in conda anywhere I can find it
 cython
 pillow
 reportlab
@@ -19,6 +19,13 @@ pytest-cov
 pyinstaller
 shapely
 pytz
-setuptools==19.2
+setuptools
 docutils
 markdown
+# # only available via pip
+# omnivore-framework
+# pyopengl-accelerate
+
+# for development
+ipython
+pytest

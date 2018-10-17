@@ -70,8 +70,11 @@ def triangulate_simple(
     the resulting output points.
 
     Because an unsuccessful triangulation might exit() or hang, this function
-    spawns a separate process to actually perform the triangulation, thereby 
+    spawns a separate process to actually perform the triangulation, thereby
     preventing any negative impact from disturbing the caller.
+
+    :param param_text: command line parameters to pass to triangle as text.
+    :type param_text: string -- same as what you would put on the command line triangle
 
     :param points_xy: geographic points to triangulate
     :type points_xy: Nx2 numpy array of type float, where each row is the 2D
@@ -102,7 +105,7 @@ def triangulate_simple(
     :raises: RuntimeError in the case of a triangulation timeout
     :raises: EOFError in the case of an unsuccessful triangulation
     """
-    
+
     # if not isinstance( param_text, unicode ):
     #     raise ValueError( "requires text input, got %s" % type( param_text ) )
     q = multiprocessing.Queue()
