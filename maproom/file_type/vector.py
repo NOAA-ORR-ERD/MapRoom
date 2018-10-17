@@ -17,7 +17,7 @@ class OGRRecognizer(RecognizerBase):
     """
     id = "application/x-maproom-shapefile"
 
-    before = "text/*"
+    after = "text/garmin-gpx"
 
     def identify(self, guess):
         try:

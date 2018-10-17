@@ -2,7 +2,8 @@ from traits.api import HasTraits, provides
 
 from omnivore_framework.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
-from maproom.serializer import magic_template
+# These imports need to include the package for the cog script in the __init__.py to work
+from maproom.magic import magic_template
 from maproom.library.lat_lon_parser import parse_coordinate_text
 
 @provides(IFileRecognizer)
@@ -95,7 +96,7 @@ class PlainTextRecognizer(RecognizerBase):
 
     before = "text/plain"
 
-    after = "text/*"
+    after = "text/xml"
 
     def identify(self, guess):
         if guess.likely_text:
@@ -103,3 +104,20 @@ class PlainTextRecognizer(RecognizerBase):
             mime, _, _ = parse_coordinate_text(byte_stream)
             if mime is not None:
                 return mime
+
+@provides(IFileRecognizer)
+class GarminGPSRecognizer(RecognizerBase):
+    """Finds GPS track files based on their XML contents
+    
+    """
+    id = "text/garmin-gpx"
+
+    # OGR recognizes track files, so this needs to be before that
+    #before = "application/x-maproom-shapefile"
+    before = "text/xml"
+
+    def identify(self, guess):
+        if guess.likely_text:
+            byte_stream = guess.get_bytes()
+            if b'xmlns="http://www.topografix.com/GPX/1/1"' in byte_stream:
+                return self.id

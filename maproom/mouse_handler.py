@@ -1408,17 +1408,41 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
         e = c.project
-        p1 = c.get_projected_point_from_screen_point((x1, y1))
-        p2 = c.get_projected_point_from_screen_point((x2, y2))
-        cp1 = c.get_world_point_from_projected_point(p1)
-        cp2 = c.get_world_point_from_projected_point(p2)
         layer = c.project.layer_tree_control.get_edit_layer()
-        if (layer is not None):
+        if (layer is None):
+            return
+        try:
+            cmd = self.get_vector_object_screen_point_command(layer, x1, y1, x2, y2)
+        except NotImplementedError:
+            p1 = c.get_projected_point_from_screen_point((x1, y1))
+            p2 = c.get_projected_point_from_screen_point((x2, y2))
+            cp1 = c.get_world_point_from_projected_point(p1)
+            cp2 = c.get_world_point_from_projected_point(p2)
             cmd = self.get_vector_object_command(layer, cp1, cp2)
-            e.process_command(cmd, ControlPointEditMode)
+        e.process_command(cmd, ControlPointEditMode)
+
+    def get_vector_object_screen_point_command(self, layer, x1, y1, x2, y2, style=None):
+        raise NotImplementedError
 
     def get_vector_object_command(self, layer, cp1, cp2, style=None):
         return self.vector_object_command(layer, cp1, cp2, style)
+
+
+class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
+    icon = "shape_text.png"
+    menu_item_name = "Add Text"
+    menu_item_tooltip = "Add a new text overlay"
+    vector_object_command = voc.AddTextCommand
+
+    def get_vector_object_screen_point_command(self, layer, x1, y1, x2, y2, style=None):
+        c = self.layer_canvas
+        w = abs(x2 - x1)
+        h = abs(y2 - y1)
+        mx = (x1 + x2) / 2
+        my = (y1 + y2) / 2
+        p = c.get_projected_point_from_screen_point((mx, my))
+        cp = c.get_world_point_from_projected_point(p)
+        return self.vector_object_command(layer, cp, style, w, h)
 
 
 class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
@@ -1629,16 +1653,6 @@ class AddOverlayMode(MouseHandler):
 
     def get_vector_object_command(self, layer, cp, style=None):
         return self.vector_object_command(layer, cp, style)
-
-
-class AddOverlayTextMode(AddOverlayMode):
-    icon = "shape_text.png"
-    menu_item_name = "Add Text"
-    menu_item_tooltip = "Add a new text overlay"
-    vector_object_command = voc.AddTextCommand
-
-    def get_vector_object_command(self, layer, cp, style=None):
-        return self.vector_object_command(layer, cp, style, 300, 250)
 
 
 class AddOverlayIconMode(AddOverlayMode):

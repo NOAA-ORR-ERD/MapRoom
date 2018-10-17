@@ -646,6 +646,27 @@ class TransparencyField(FloatSliderField):
             c.textCtrl.SetBackgroundColour("#FF8080")
 
 
+class IconSizeField(TransparencyField):
+    def get_params(self):
+        return 8, 64, 16
+
+    def get_layer_style(self, layer, size):
+        return LayerStyle(icon_pixel_size=size)
+
+    def get_value(self, layer):
+        return layer.style.icon_pixel_size
+
+    def slider_changed(self, event):
+        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        if (layer is None):
+            return
+        c = self.ctrl
+        style = self.get_layer_style(layer, int(c.GetValue()))
+        cmd = StyleChangeCommand(layer, style)
+        wx.CallAfter(self.process_command, cmd)
+
+
+
 class ColorPickerField(InfoField):
     same_line = True
 
@@ -1785,6 +1806,7 @@ class InfoPanel(PANELTYPE):
         "Text": OverlayTextField,
         "Text format": TextFormatField,
         "Marplot icon": MarplotIconField,
+        "Icon size": IconSizeField,
         "Start time": ParticleStartField,
         "End time": ParticleEndField,
         "Status Code Color": StatusCodeColorField,

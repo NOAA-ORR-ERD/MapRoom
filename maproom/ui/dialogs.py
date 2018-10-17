@@ -189,7 +189,7 @@ class IconDialog(wx.Dialog):
 
 
 class StyleDialog(wx.Dialog):
-    displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon"]
+    displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon", "Icon size"]
 
     def __init__(self, project, layers):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))
@@ -241,6 +241,7 @@ class StyleDialog(wx.Dialog):
 
         # reset to first item in list
         self.obj_list.SetSelection(0)
+        self.set_layer_display(0)
 
         self.savebtn = wx.CheckBox(self, -1, "Save these styles as the default for future projects")
 
@@ -273,6 +274,9 @@ class StyleDialog(wx.Dialog):
 
     def on_category(self, evt):
         index = evt.GetSelection()
+        self.set_layer_display(index)
+
+    def set_layer_display(self, index):
         layer = self.use_layer(index)
         self.info.display_panel_for_layer(self.mock_project, layer)
 

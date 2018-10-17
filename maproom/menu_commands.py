@@ -6,6 +6,7 @@ from omnivore_framework.framework.errors import ProgressCancelError
 from .command import Command, UndoInfo
 from . import layers as ly
 from .layers import loaders
+from .library import point_utils
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers
 
@@ -330,6 +331,61 @@ class DeleteLayerCommand(Command):
         lf = self.undo_info.flags.add_layer_flags(layer)
         lf.select_layer = True
         return self.undo_info
+
+
+class ConvexHullCommand(Command):
+    short_name = "convex_hull"
+    serialize_order = [
+        ('layers', 'layers'),
+    ]
+
+    def __init__(self, layers):
+        Command.__init__(self)
+        self.layers = [ly.invariant for ly in layers]
+
+    def __str__(self):
+        return "Convex Hull"
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        saved_invariant = lm.next_invariant
+        self.undo_info = undo = UndoInfo()
+        layers = [lm.get_layer_by_invariant(i) for i in self.layers]
+        log.debug(f"convex hull from: {layers}")
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+
+        layer, error = point_utils.create_convex_hull(layers, lm)
+
+        log.debug("created convex hull layer: %s" % layer)
+        if layer is None:
+            undo.flags.success = False
+            undo.flags.errors = [error]
+        else:
+            lm.insert_layer(None, layer)
+            lf = undo.flags.add_layer_flags(layer)
+            lf.select_layer = True
+            lf.layer_loaded = True
+
+            undo.data = (layer.invariant, saved_invariant)
+
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        invariant, saved_invariant = self.undo_info.data
+        layer = lm.get_layer_by_invariant(invariant)
+        insertion_index = lm.get_multi_index_of_layer(layer)
+
+        # Only remove the reference to the layer in the layer manager, leave
+        # all the layer info around so that it can be undone
+        lm.remove_layer_at_multi_index(insertion_index)
+        lm.next_invariant = saved_invariant
+
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        return undo
 
 
 class MergeLayersCommand(Command):

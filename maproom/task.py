@@ -284,6 +284,7 @@ class MaproomProjectTask(FrameworkTask):
             actions.NewShapefileLayerAction(),
             actions.NewWMSLayerAction(),
             actions.NewTileLayerAction(),
+            actions.NewNOAALogoLayerAction(),
             actions.NewCompassRoseLayerAction(),
             actions.NewTimestampLayerAction(),
             actions.NewLonLatLayerAction(),
@@ -302,6 +303,7 @@ class MaproomProjectTask(FrameworkTask):
     def get_actions_Menu_Layer_LayerUtilGroup(self):
         return [
             actions.TriangulateLayerAction(),
+            actions.ConvexHullAction(),
             actions.ToPolygonLayerAction(),
             actions.ToVerdatLayerAction(),
             actions.MergeLayersAction(),
@@ -408,6 +410,8 @@ class MaproomProjectTask(FrameworkTask):
                 self.window.application.restore_perspective(self.window, self)
             self.activated()
             self.window.application.successfully_loaded_event = source.metadata.uri
+            if editor.document.uri.startswith("template:"):
+                editor.document.update_default_styles(self.default_styles)
         elif not window_opening:
             log.debug("starting empty task")
             FrameworkTask.new(self, source, **kwargs)
@@ -456,13 +460,17 @@ class MaproomProjectTask(FrameworkTask):
     @classmethod
     def can_edit(cls, document):
         mime = document.metadata.mime
-        return (mime.startswith("image") or
+        can_edit = (mime.startswith("image") or
                 mime.startswith("application/x-maproom-") or
                 mime == "application/x-nc_ugrid" or
                 mime == "application/x-nc_particles" or
                 mime == "text/latlon" or
-                mime == "text/lonlat"
+                mime == "text/lonlat" or
+                mime == "text/garmin-gpx"
                 )
+        if not can_edit:
+            log.warning(f"MapRoom doesn't know how to edit {mime}")
+        return can_edit
 
     @classmethod
     def get_match_score(cls, document):

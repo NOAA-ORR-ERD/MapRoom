@@ -49,7 +49,7 @@
 #            if cls.__module__.startswith(modname):
 #                names.append(name)
 #    if names:
-#       cog.outl("from %s import %s" % (modname, ", ".join(names)))
+#       cog.outl("from .%s import %s" % (modname, ", ".join(names)))
 #       for name in names:
 #           cog.outl("loaders.append(%s())" % name)
 # ]]]*/
@@ -60,6 +60,8 @@ from .bsb import BSBLoader
 loaders.append(BSBLoader())
 from .gdal import GDALLoader
 loaders.append(GDALLoader())
+from .gps import GarminGPSLoader
+loaders.append(GarminGPSLoader())
 from .logfile import CommandLogLoader
 loaders.append(CommandLogLoader())
 from .nc_particles import ParticleLoader
