@@ -30,6 +30,8 @@ class MapRoomZipProjectRecognizer(RecognizerBase):
     """
     id = "application/x-maproom-project-zip"
 
+    before = "application/x-maproom-project-json"
+
     def identify(self, guess):
         fs, relpath = opener.parse(guess.metadata.uri)
         if not fs.hassyspath(relpath):

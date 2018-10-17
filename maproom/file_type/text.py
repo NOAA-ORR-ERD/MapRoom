@@ -96,7 +96,7 @@ class PlainTextRecognizer(RecognizerBase):
 
     before = "text/plain"
 
-    after = "text/*"
+    after = "text/xml"
 
     def identify(self, guess):
         if guess.likely_text:
@@ -113,7 +113,8 @@ class GarminGPSRecognizer(RecognizerBase):
     id = "text/garmin-gpx"
 
     # OGR recognizes track files, so this needs to be before that
-    before = "application/x-maproom-shapefile"
+    #before = "application/x-maproom-shapefile"
+    before = "text/xml"
 
     def identify(self, guess):
         if guess.likely_text:

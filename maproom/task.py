@@ -462,7 +462,8 @@ class MaproomProjectTask(FrameworkTask):
                 mime == "application/x-nc_ugrid" or
                 mime == "application/x-nc_particles" or
                 mime == "text/latlon" or
-                mime == "text/lonlat"
+                mime == "text/lonlat" or
+                mime == "text/garmin-gpx"
                 )
         if not can_edit:
             log.warning(f"MapRoom doesn't know how to edit {mime}")
