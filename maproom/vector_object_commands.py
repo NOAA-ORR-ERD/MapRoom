@@ -380,6 +380,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         lm.insert_loaded_layer(text, editor, **kwargs)
         lf = undo.flags.add_layer_flags(text)
         lf.layer_loaded = True
+        lf.select_layer = True
 
         # The line's control point is always 1 because it's the endpoint,
         # and the text box's control point is zero because it's the one
