@@ -189,7 +189,7 @@ class IconDialog(wx.Dialog):
 
 
 class StyleDialog(wx.Dialog):
-    displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon"]
+    displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon", "Icon size"]
 
     def __init__(self, project, layers):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))

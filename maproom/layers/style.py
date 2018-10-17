@@ -139,7 +139,15 @@ class LayerStyle(object):
         'icon_marker'
     ]
 
-    valid = set(stylev7_serialization_order)
+    stylev8_serialization_order = [
+        'line_color', 'line_stipple', 'line_stipple_factor',
+        'line_width', 'line_start_marker', 'line_end_marker',
+        'fill_color', 'fill_style', 'outline_color',
+        'text_color', 'font', 'font_size', 'text_format',
+        'icon_marker', 'icon_pixel_size'
+    ]
+
+    valid = set(stylev8_serialization_order)
 
     def __init__(self, **kwargs):
         if len(kwargs):
@@ -168,6 +176,7 @@ class LayerStyle(object):
             self.font_size = self.default_font_size
             self.text_format = 1
             self.icon_marker = 320  # Shapes/Cross
+            self.icon_pixel_size = 16
 
     def __str__(self):
         args = [self.get_str(i) for i in self.stylev7_serialization_order]

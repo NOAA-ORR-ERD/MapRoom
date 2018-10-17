@@ -407,7 +407,7 @@ class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
     def perform_post(self, editor, lm, layer, undo):
         DrawArrowTextBoxCommand.perform_post(self, editor, lm, layer, undo)
         icon = OverlayIconObject(manager=lm)
-        icon.set_location_and_size(self.cp1, 32, 32)
+        icon.set_location(self.cp1)
         icon.set_style(layer.style)
         kwargs = {'first_child_of': layer}
         lm.insert_loaded_layer(icon, editor, **kwargs)
@@ -541,6 +541,6 @@ class AddIconCommand(DrawVectorObjectCommand):
 
     def get_vector_object_layer(self, lm):
         layer = self.vector_object_class(manager=lm)
-        layer.set_location_and_size(self.point, 32, 32)
+        layer.set_location(self.point)
         layer.set_style(self.style)
         return layer

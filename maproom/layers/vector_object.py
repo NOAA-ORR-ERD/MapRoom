@@ -1167,7 +1167,7 @@ class OverlayIconObject(OverlayScalableImageObject):
 
     type = "overlay_icon_obj"
 
-    layer_info_panel = ["Marplot icon", "Color"]
+    layer_info_panel = ["Marplot icon", "Icon size", "Color"]
 
     anchor_point_index = Int(8)  # Defaults to center point as the anchor
 
@@ -1178,6 +1178,12 @@ class OverlayIconObject(OverlayScalableImageObject):
     border_width = Int(5)
 
     min_size = Int(10)
+
+    def set_style(self, style):
+        OverlayScalableImageObject.set_style(self, style)
+        self.text_width = self.style.icon_pixel_size
+        self.text_height = self.style.icon_pixel_size
+        self.rebuild_needed = True  # Force rebuild to change icon size
 
     def fit_to_bounding_box(self, current_bounds, new_bounds):
         # Don't do anything... The icon shouldn't scale with the parent scaling
@@ -1550,7 +1556,7 @@ class ArrowTextIconLayer(ArrowTextBoxLayer):
 
     type = "arrowtexticon"
 
-    layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color", "Marplot icon"]
+    layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color", "Marplot icon", "Icon size"]
 
     def use_layer_for_bounding_rect(self, layer):
         # Defaults to using all layers in boundary rect calculation

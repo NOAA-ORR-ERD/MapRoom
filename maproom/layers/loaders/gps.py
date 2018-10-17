@@ -51,8 +51,8 @@ class GarminGPSLoader(BaseLayerLoader):
         gps = GarminGPSDataset(xml)
         for waypoint in gps.waypoints:
             layer = OverlayIconObject(manager=manager)
-            layer.set_location_and_size((waypoint.lon, waypoint.lat), 32, 32)
-            #layer.set_style(self.style)
+            layer.set_location((waypoint.lon, waypoint.lat))
+            layer.set_style(None)
             layer.name = f"{waypoint.name}: {waypoint.time}"
             layers.append(layer)
 
@@ -61,6 +61,7 @@ class GarminGPSLoader(BaseLayerLoader):
             points.append((point.lon, point.lat))
         layer = PolylineObject(manager=manager)
         layer.set_points(points)
+        layer.set_style(None)
         layer.name = gps.name
         layers.append(layer)
 
