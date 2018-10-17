@@ -5,15 +5,12 @@ from omnivore_framework.utils.runtime import get_all_subclasses
 from omnivore_framework.utils.file_guess import FileMetadata
 
 from . import command
+from . import magic
 from .layers.style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)
 
-
-magic_version = 1
-magic_template = "# NOAA MapRoom Command File, v"
-magic_header = "%s%d" % (magic_template, magic_version)
 
 # shlex quote routine modified from python 3 to allow [ and ] unquoted for lists
 _find_unsafe = re.compile(r'[^\w@%+=:,./[\]-]').search
@@ -41,7 +38,7 @@ class Serializer(object):
         self.serialized_commands = []
 
     def __str__(self):
-        lines = [magic_header]
+        lines = [magic.magic_header]
         for cmd in self.serialized_commands:
             lines.append(str(cmd))
         return "\n".join(lines)
@@ -66,7 +63,7 @@ class TextDeserializer(object):
         lines = text.splitlines(True)
         self.header = lines.pop(0)
         self.lines = lines
-        if not self.header.startswith(magic_template):
+        if not self.header.startswith(magic.magic_template):
             raise RuntimeError("Not a MapRoom log file!")
 
     def iter_cmds(self, manager):

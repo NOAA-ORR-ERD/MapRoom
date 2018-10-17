@@ -2,7 +2,8 @@ from traits.api import HasTraits, provides
 
 from omnivore_framework.file_type.i_file_recognizer import IFileRecognizer, RecognizerBase
 
-from maproom.serializer import magic_template
+# These imports need to include the package for the cog script in the __init__.py to work
+from maproom.magic import magic_template
 from maproom.library.lat_lon_parser import parse_coordinate_text
 
 @provides(IFileRecognizer)
