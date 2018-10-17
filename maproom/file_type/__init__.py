@@ -48,7 +48,7 @@
 #            if cls.__module__.startswith(modname):
 #                names.append(name)
 #    if names:
-#       cog.outl("from %s import %s" % (modname, ", ".join(names)))
+#       cog.outl("from .%s import %s" % (modname, ", ".join(names)))
 #       for name in names:
 #           cog.outl("recognizers.append(%s())" % name)
 # ]]]*/
@@ -59,9 +59,10 @@ recognizers.append(NC_ParticleRecognizer())
 recognizers.append(UGRID_Recognizer())
 from .image import GDALRecognizer
 recognizers.append(GDALRecognizer())
-from .text import BNARecognizer, BSBRecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, PlainTextRecognizer, VerdatRecognizer
+from .text import BNARecognizer, BSBRecognizer, GarminGPSRecognizer, MapRoomCommandRecognizer, MapRoomProjectRecognizer, PlainTextRecognizer, VerdatRecognizer
 recognizers.append(BNARecognizer())
 recognizers.append(BSBRecognizer())
+recognizers.append(GarminGPSRecognizer())
 recognizers.append(MapRoomCommandRecognizer())
 recognizers.append(MapRoomProjectRecognizer())
 recognizers.append(PlainTextRecognizer())

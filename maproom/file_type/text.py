@@ -104,3 +104,19 @@ class PlainTextRecognizer(RecognizerBase):
             mime, _, _ = parse_coordinate_text(byte_stream)
             if mime is not None:
                 return mime
+
+@provides(IFileRecognizer)
+class GarminGPSRecognizer(RecognizerBase):
+    """Finds GPS track files based on their XML contents
+    
+    """
+    id = "text/garmin-gpx"
+
+    # OGR recognizes track files, so this needs to be before that
+    before = "application/x-maproom-shapefile"
+
+    def identify(self, guess):
+        if guess.likely_text:
+            byte_stream = guess.get_bytes()
+            if b'xmlns="http://www.topografix.com/GPX/1/1"' in byte_stream:
+                return self.id
