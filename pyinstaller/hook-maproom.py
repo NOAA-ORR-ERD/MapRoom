@@ -120,7 +120,7 @@ subpkgs = [
     "traitsui",
     "traitsui.wx",
     "pyface",
-    "omnivore",
+    "omnivore_framework",
     "maproom",
 ]
 
@@ -134,7 +134,7 @@ if DEBUG:
 subpkgs = [
     "traitsui",
     "pyface",
-    "omnivore",
+    "omnivore_framework",
     "maproom",
     "osgeo",
 ]
@@ -191,4 +191,4 @@ for suffix in get_suffixes():
     if suffix[2] == 3:  # C_EXTENSION
         gdal_pyd_path = os.path.join(gdal_folder, '_gdal%s' % suffix[0])
         if os.path.exists(gdal_pyd_path):
-            binaries = [(gdal_pyd_path, ""), ]
+            binaries = [(gdal_pyd_path, "."), ]
