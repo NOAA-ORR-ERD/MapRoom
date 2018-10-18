@@ -362,6 +362,7 @@ class ConvexHullCommand(Command):
             undo.flags.success = False
             undo.flags.errors = [error]
         else:
+            layer.name = "Convex Hull"
             lm.insert_layer(None, layer)
             lf = undo.flags.add_layer_flags(layer)
             lf.select_layer = True
