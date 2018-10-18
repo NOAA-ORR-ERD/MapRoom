@@ -199,13 +199,14 @@ class ProjectEditor(FrameworkEditor):
             log.debug("loading %s" % metadata)
             cmd = mec.LoadLayersCommand(metadata, regime)
             self.process_command(cmd)
-            layers = cmd.undo_info.affected_layers()
-            if len(layers) == 1:
-                cmd = moc.ViewportCommand(layers[0], regime=regime)
-            else:
-                center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
-                cmd = moc.ViewportCommand(None, center, units_per_pixel, regime=regime)
-            self.process_command(cmd)
+            if 'regime' not in kwargs:
+                layers = cmd.undo_info.affected_layers()
+                if len(layers) == 1:
+                    cmd = moc.ViewportCommand(layers[0])
+                else:
+                    center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
+                    cmd = moc.ViewportCommand(None, center, units_per_pixel)
+                self.process_command(cmd)
         document.read_only = document.metadata.check_read_only()
 
     def parse_extra_json(self, json, batch_flags):
