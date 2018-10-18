@@ -455,16 +455,14 @@ class MoveLayerCommand(Command):
         ('moved_layer', 'layer'),
         ('target_layer', 'layer'),
         ('before', 'bool'),
-        ('in_folder', 'bool'),
     ]
 
-    def __init__(self, moved_layer, target_layer, before, in_folder):
+    def __init__(self, moved_layer, target_layer, before):
         Command.__init__(self)
         self.moved_layer = moved_layer.invariant
         self.name = str(moved_layer.name)
         self.target_layer = target_layer.invariant
         self.before = before
-        self.in_folder = in_folder
 
     def __str__(self):
         return "Move Layer %s" % (self.name)
@@ -492,9 +490,7 @@ class MoveLayerCommand(Command):
         # (the first item in the folder is the folder pseudo-layer)
         if (target_layer.is_root()):
             mi_target = [1]
-        elif target_layer.is_folder() and self.in_folder:
-            mi_target.append(1)
-        else:
+        elif self.before is not None:
             if not self.before:
                 mi_target[-1] = mi_target[-1] + 1
         lm.insert_layer(mi_target, source_layer, invariant=self.moved_layer)

@@ -583,11 +583,13 @@ class LayerManager(BaseDocument):
     def get_layer_parent(self, layer):
         """Return the immediate parent
         """
-        parents = None
+        parent = None
         mi = self.get_multi_index_of_layer(layer)
         if mi is not None and len(mi) > 1:
             mi[-1] = 0
             parent = self.get_layer_by_multi_index(mi)
+        else:
+            parent = self.get_layer_by_multi_index([0])
         return parent
 
     def get_layer_parents(self, layer):

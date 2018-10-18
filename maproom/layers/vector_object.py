@@ -74,6 +74,9 @@ class VectorObjectLayer(LineLayer):
     def can_copy(self):
         return True
 
+    def can_reparent_to(self, potential_parent_layer):
+        return potential_parent_layer.can_contain_annotations
+
     def check_for_problems(self, window):
         pass
 
@@ -1414,6 +1417,14 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     def has_groupable_objects(self):
         return True
 
+    def can_reparent_to(self, potential_parent_layer):
+        # The annotation folder itself can be a child of anything
+        return True
+
+    @property
+    def can_contain_annotations(self):
+        return True
+
     def set_border_width(self, width):
         self.border_width = width
         children = self.manager.get_layer_children(self)
@@ -1510,6 +1521,9 @@ class ArrowTextBoxLayer(AnnotationLayer):
     layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color"]
 
     selection_info_panel = ["Text", "Text format", "Anchor point", "Anchor latitude", "Anchor longitude", "Width", "Height", "Area"]
+
+    def can_reparent_to(self, potential_parent_layer):
+        return potential_parent_layer.can_contain_annotations
 
     def get_layer_of_anchor(self):
         return self.get_text_box()

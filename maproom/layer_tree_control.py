@@ -336,8 +336,21 @@ class LayerTreeControl(wx.Panel):
 
         before = event.IsDroppedBeforeItem()
         in_folder = event.IsDroppedInFolder()
-        cmd = MoveLayerCommand(source_layer, target_layer, before, in_folder)
-        self.project.process_command(cmd)
+        if in_folder:
+            mi_target.append(1)
+            parent_layer = target_layer
+            target_layer = lm.get_layer_by_multi_index(mi_target)
+            before = None
+        else:
+            # either dropped before or after target layer
+            parent_layer = lm.get_layer_parent(target_layer)
+
+        if source_layer.can_reparent_to(parent_layer):
+            cmd = MoveLayerCommand(source_layer, target_layer, before)
+            self.project.process_command(cmd)
+        else:
+            self.project.task.error(f"You cannot move a {source_layer.name} layer into a {parent_layer.name} layer", "Invalid Layer Move")
+            self.tree.Refresh()
 
     def handle_selection_changing(self, event):
         layer = self.get_edit_layer()

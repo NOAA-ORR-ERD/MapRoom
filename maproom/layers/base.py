@@ -282,6 +282,19 @@ class Layer(HasTraits):
         """
         return []
 
+    def can_reparent_to(self, potential_parent_layer):
+        """ Check to see if the current layer can be reparented to the specified
+        layer. Used by the layer_tree_control to potentially abort the reordering
+        of the layer hierarchy if e.g. a annotation object is moved outside an
+        annotation layer.
+        """
+        return True
+
+    @property
+    def can_contain_annotations(self):
+        """ Can this layer contain annotation layer objects?"""
+        return False
+
     def get_undo_info(self):
         """ Return a copy of any data needed to restore the state of the layer
 
