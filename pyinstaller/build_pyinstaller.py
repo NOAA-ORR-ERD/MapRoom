@@ -100,8 +100,25 @@ elif mac:
     #shutil.copytree(build_app, dest_app, True)
     run(['/usr/bin/ditto', '-arch', 'x86_64', build_app, dest_app])
 
-    print("Signing (with self-signed cert)")
-    run(["codesign", "-s", "test1", "--deep", dest_app])
+    # print("Signing (with self-signed cert)")
+    # run(["codesign", "-s", "test1", "--deep", dest_app])
+
+    print("Signing NOAA Cert")
+    run(["codesign",
+         "-s",
+         "Developer ID Application: National Oceanic and Atmospheric Administration",
+         "--deep",
+         "--force",
+         "--timestamp=none",
+         "--verbose",
+         dest_app])
 
     print("Zipping %s" % dest_zip)
     run(['tar', 'cfj', dest_zip, '-C', dest_dir, final_app])
+
+    print("Signing zip file")
+    run(["codesign", "-s", "Developer ID Application: National Oceanic and Atmospheric Administration", "--deep", dest_zip])
+
+# useful signing commands:
+# spctl -a -t exec -vv MapRoom.app
+# spctl -a -t open -vv dest_zip
