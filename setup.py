@@ -398,7 +398,9 @@ install_requires = [
     'certifi',
     'chardet',
     'idna',
-    'omnivore-framework>=3'
+    'omnivore-framework>=3',
+    'packaging',
+    'pyinstaller'
 ]
 
 
