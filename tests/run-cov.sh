@@ -2,10 +2,10 @@
 
 case $PATH in
 	*conda*)
-        ./py.testw --no-cov
+        ./py.testw
         ;;
     *)
-	    py.test --no-cov
+	    py.test
 	    ;;
 esac
 RESULT=$?
