@@ -260,7 +260,7 @@ class DrawVectorObjectCommand(StyledCommand):
         saved_invariant = lm.next_invariant
         layer = self.get_vector_object_layer(lm)
         event_layer = lm.get_layer_by_invariant(self.layer)
-        parent_layer = lm.find_vector_object_insert_layer(event_layer)
+        parent_layer = lm.find_vector_object_insert_layer(event_layer, layer)
         if parent_layer is None:
             undo.flags.refresh_needed = True
             undo.flags.success = False

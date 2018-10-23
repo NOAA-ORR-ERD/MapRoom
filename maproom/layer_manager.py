@@ -484,7 +484,7 @@ class LayerManager(BaseDocument):
                 break
         return [pos]
 
-    def find_vector_object_insert_layer(self, event_layer):
+    def find_vector_object_insert_layer(self, event_layer, vector_object):
         """Find the appropriate layer to insert a vector object, given the
         layer on which the event occurred.
 
@@ -496,9 +496,8 @@ class LayerManager(BaseDocument):
         None is returned if the top-level annotation layer is also grouped.
         """
         while not event_layer.is_root():
-            if event_layer.is_folder():
-                if not event_layer.grouped:
-                    return event_layer
+            if event_layer.is_folder() and event_layer.can_contain_vector_object(vector_object):
+                return event_layer
             event_layer = self.get_folder_of_layer(event_layer)
         return None
 

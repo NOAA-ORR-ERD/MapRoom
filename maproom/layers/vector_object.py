@@ -1425,6 +1425,9 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     def can_contain_annotations(self):
         return True
 
+    def can_contain_vector_object(self, potential_vector_object_layer):
+        return True
+
     def set_border_width(self, width):
         self.border_width = width
         children = self.manager.get_layer_children(self)
@@ -1524,6 +1527,9 @@ class ArrowTextBoxLayer(AnnotationLayer):
 
     def can_reparent_to(self, potential_parent_layer):
         return potential_parent_layer.can_contain_annotations
+
+    def can_contain_vector_object(self, potential_vector_object_layer):
+        return False
 
     def get_layer_of_anchor(self):
         return self.get_text_box()
