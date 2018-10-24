@@ -1,3 +1,40 @@
+10/23/2018
+---------------------------
+Released 4.0rc12
+- RM Force new vector objects to be created at root annotation layer
+- RM Default tests run without coverage; added run-cov.sh to include coverage
+- RM Added packaging and pyinstaller to setup dependencies
+- RM Prevent NC particle files from being recognized a generic netcdf files
+- RM Prevent annotation layer objects from being moved outside a parent annotation layer
+- RM Added code signing with NOAA developer cert
+- RM Fixed pyinstaller hook for omnivore_framework and pyinstaller 3.4 error
+- RM Changed layer name of created convex hull layer
+- RM Fixed RNC map so it doesn't change zoom level when loading
+- CB added test to pytriangle for convex hull
+- RM Added convex hull operation as a tutorial on adding a new capability
+- RM Fixed references to omnivore_framework in test suite
+- RM Select text box when creating arrow-text-(icon) objects
+- RM Fixed style dialog to correctly show style settings for first layer
+- RM Fixed default style loading for new projects
+- RM Write out stylev8 by default
+- RM Added icon size to style, changed to stylev8
+- RM Added GPS track layer
+- RM Fixed attributes that should be float and text
+- RM Force numpy array in set_* routines for overlay layers
+- RM Add warning message if task doesn't know about the MIME you're trying to load
+- RM Added Garmin gpx file recognizer
+- RM Moved maproom project magic header text into its own file with no deps
+- RM Mostly working Garmin GPS parser
+- RM WIP gps track file parsing
+- RM Added GPS test data
+- RM Re-added logo wrapping around NOAA logo
+- RM Removed small text wrapping around NOAA logo
+- RM Added NOAA logo layer as SVG overlay
+- RM Changed to use click and drag rectangle to create size of text box
+- RM Fixed version number display of omnivore framework
+- RM Updated setup.py for new omnivore-framework version
+- RM Initial conversion to omnivore_framework
+
 09/28/2018
 ---------------------------
 Released 4.0rc11
