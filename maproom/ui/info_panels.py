@@ -234,6 +234,7 @@ class TextEditField(InfoField):
         if self.ctrl.IsShownOnScreen():
             layer = self.panel.project.layer_tree_control.get_edit_layer()
             self.fill_data(layer)
+        evt.Skip()
 
     def fill_data(self, layer):
         try:
