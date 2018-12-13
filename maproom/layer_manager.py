@@ -1093,11 +1093,15 @@ class LayerManager(BaseDocument):
         """
         layers = []
         for dep, (truth, locked) in self.control_point_links.items():
-            log.debug("control_point_links: update %s child of %s" % (dep, truth))
             truth_layer, truth_cp = self.get_layer_by_invariant(truth[0]), truth[1]
             dep_layer, dep_cp = self.get_layer_by_invariant(dep[0]), dep[1]
-            dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
-            layers.append(dep_layer)
+            log.debug(f"control_point_links: update {dep} (layer {dep_layer}) child of {truth} (layer {truth}))")
+            try:
+                dep_layer.copy_control_point_from(dep_cp, truth_layer, truth_cp)
+            except AttributeError as e:
+                log.error(f"{e}: failed copying control point: {dep} (layer {dep_layer}) child of {truth} (layer {truth}))")
+            else:
+                layers.append(dep_layer)
         return layers
 
     def remove_all_links_to_layer(self, layer):
