@@ -679,7 +679,7 @@ class RNCSelectionMode(PanMode):
                     # submit download to downloader!
                     log.info("LOADING RNC MAP #%s from %s in %d - %d" % (num, url, regime - 360, regime))
                     e = c.project
-                    e.download_rnc(url, filename, num, regime)
+                    e.download_rnc(url, filename, num, regime, confirm=True, name=name)
 
     def render_overlay(self, renderer):
         # draw outline of polygon object that's currently being moused-over
