@@ -12,21 +12,6 @@ import logging
 log = logging.getLogger(__name__)
 
 
-# shlex quote routine modified from python 3 to allow [ and ] unquoted for lists
-_find_unsafe = re.compile(r'[^\w@%+=:,./[\]-]').search
-
-
-def quote(s):
-    """Return a shell-escaped version of the string *s*."""
-    if not s:
-        return "''"
-    if _find_unsafe(s) is None:
-        return s
-    # use single quotes, and put single quotes into double quotes
-    # the string $'b is then quoted as '$'"'"'b'
-    return "'" + s.replace("'", "'\"'\"'") + "'"
-
-
 class UnknownCommandError(RuntimeError):
     pass
 
@@ -65,6 +50,9 @@ class TextDeserializer(object):
         self.lines = lines
         if not self.header.startswith(magic.magic_template):
             raise RuntimeError("Not a MapRoom log file!")
+        self.version = int(self.header[len(magic.magic_template):])
+        if self.version == 1:
+            self.layer_offset -= 1
 
     def iter_cmds(self, manager):
         build_multiline = ""
@@ -137,8 +125,18 @@ class LayerConverter(ArgumentConverter):
     def instance_from_args(self, args, manager, deserializer):
         val = args.pop(0)
         try:
-            id = int(val)
-            layer = manager.get_layer_by_invariant(id + deserializer.layer_offset)
+            invariant = int(val)
+            log.debug(f"LayerConverter: deserialized invariant={invariant}")
+            if invariant < 0:
+                if deserializer.version == 1 and invariant == -3:
+                    invariant = manager.transient_invariant
+            else:
+                # only add layer offset on permanent layers. Transient layers
+                # will have invariants less than zero and must be referenced
+                # that way.
+                invariant += deserializer.layer_offset
+            log.debug(f"LayerConverter: actual invariant={invariant}")
+            layer = manager.get_layer_by_invariant(invariant)
         except:
             # Old way: save layer references by name
             layer = manager.get_layer_by_name(val)
@@ -325,3 +323,18 @@ class SerializedCommand(object):
             return cls.converters[stype]
         except KeyError:
             return cls.converters[None]
+
+
+# shlex quote routine modified from python 3 to allow [ and ] unquoted for lists
+_find_unsafe = re.compile(r'[^\w@%+=:,./[\]-]').search
+
+
+def quote(s):
+    """Return a shell-escaped version of the string *s*."""
+    if not s:
+        return "''"
+    if _find_unsafe(s) is None:
+        return s
+    # use single quotes, and put single quotes into double quotes
+    # the string $'b is then quoted as '$'"'"'b'
+    return "'" + s.replace("'", "'\"'\"'") + "'"

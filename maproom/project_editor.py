@@ -47,6 +47,7 @@ from .ui.undo_panel import UndoHistoryPanel
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
+autosave_log = logging.getLogger("autosave")
 
 
 class ProjectEditor(FrameworkEditor):
@@ -90,6 +91,8 @@ class ProjectEditor(FrameworkEditor):
     clickable_object_in_layer = Any
 
     last_refresh = Float(0.0)
+
+    in_batch_processing = Bool
 
     layer_visibility = Dict()
 
@@ -167,10 +170,16 @@ class ProjectEditor(FrameworkEditor):
             self.view_document(self.document)
         elif hasattr(loader, "iter_log"):
             line = 0
+            document = LayerManager.create(self)
+            document.metadata = metadata.clone_traits()
+            self.document = self.layer_manager = document
+            self.create_layout("")
             batch_flags = BatchStatus()
+            self.in_batch_processing = True
+            errors = None
             for cmd in loader.iter_log(metadata, self.layer_manager):
                 line += 1
-                errors = None
+                autosave_log.debug(f"processing line #{line}: {cmd}")
                 try:
                     undo = self.process_batch_command(cmd, batch_flags)
                     if not undo.flags.success:
@@ -191,8 +200,9 @@ class ProjectEditor(FrameworkEditor):
                 header.extend(errors)
                 text = "\n".join(header)
                 self.task.error(text, "Error restoring from command log")
-            self.perform_batch_flags(None, batch_flags)
+            self.in_batch_processing = False
             self.view_document(self.document)
+            self.perform_batch_flags(None, batch_flags)
         else:
             if not hasattr(self, 'layer_tree_control'):
                 self.create_layout({})
@@ -814,6 +824,11 @@ class ProjectEditor(FrameworkEditor):
                 self.perform_batch_flags(command, b)
                 history = self.layer_manager.undo_stack.serialize()
                 self.window.application.save_log(str(history), "command_log", ".mrc")
+                name = self.window.application.get_log_file_name("command_log", ".mrc")
+                latest = os.path.join(os.path.dirname(name), "latest.mrc")
+                import shutil
+                shutil.copy(name, latest)
+
                 if new_mouse_mode is not None:
                     self.mouse_mode_factory = new_mouse_mode
                     self.update_layer_selection_ui()

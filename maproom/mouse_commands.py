@@ -51,6 +51,11 @@ class ViewportCommand(Command):
                 center = c.get_projected_point_from_world_point(shifted)
         c.set_viewport(center, units_per_pixel)
         undo.flags.immediate_refresh_needed = True
+
+        # reset command params so autosave file set zoom without recalculation
+        self.layer = None
+        self.center = center
+        self.units_per_pixel = units_per_pixel
         return undo
 
     def undo(self, editor):
@@ -71,7 +76,10 @@ class InsertPointCommand(Command):
         self.world_point = world_point
 
     def __str__(self):
-        return "Add Point #%d" % self.undo_info.index
+        try:
+            return "Add Point #%d" % self.undo_info.index
+        except AttributeError:
+            return "Add Point"
 
     def perform(self, editor):
         layer = editor.layer_manager.get_layer_by_invariant(self.layer)
@@ -407,7 +415,10 @@ class DeleteLinesCommand(Command):
         self.undo_line = None
 
     def __str__(self):
-        old_points, old_line_segments, old_line_indexes = self.undo_info.data
+        try:
+            old_points, old_line_segments, old_line_indexes = self.undo_info.data
+        except AttributeError:
+            return "Delete Points/Lines"
         if len(old_line_indexes) == 0:
             if len(self.point_indexes) == 1:
                 return "Delete Point #%d" % self.point_indexes[0]

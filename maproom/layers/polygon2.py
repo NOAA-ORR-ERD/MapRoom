@@ -478,6 +478,7 @@ class PolygonParentLayer(PointLayer):
         log.debug(f"points {self.points}")
         self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, geom_list, feature_code_to_color)
         log.debug(f"adjacency {self.ring_adjacency}")
+        self.create_rings()
 
     def dup_geometry_list_entry(self, ring_index_to_copy):
         g = self.geometry_list[ring_index_to_copy]

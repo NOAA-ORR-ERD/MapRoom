@@ -702,6 +702,8 @@ class PolygonEditLayerCommand(Command):
         ('layer', 'layer'),
         ('obj_type', 'int'),
         ('obj_index', 'int'),
+        ('feature_code', 'int'),
+        ('new_boundary', 'bool'),
     ]
 
     def __init__(self, layer, obj_type, obj_index, feature_code, new_boundary):
@@ -796,7 +798,7 @@ class AddPolygonToEditLayerCommand(PolygonEditLayerCommand):
 
 
 class DeletePolygonCommand(Command):
-    short_name = "polygon_edit"
+    short_name = "polygon_del"
     serialize_order = [
         ('layer', 'layer'),
         ('obj_type', 'int'),

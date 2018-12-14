@@ -52,6 +52,8 @@ class LayerManager(BaseDocument):
 
     next_invariant = Int(0)
 
+    root_invariant = Int(0)
+
     default_styles = Any
 
     layer_loaded = Event
@@ -82,7 +84,7 @@ class LayerManager(BaseDocument):
     control_point_links = Dict(Any)
 
     # Transient layer always uses invariant
-    transient_invariant = -3
+    transient_invariant = -99
 
     def _undo_stack_default(self):
         return UndoStack()
@@ -115,7 +117,8 @@ class LayerManager(BaseDocument):
         # changes, modify next_invariant to match! next_invariant = 1 - (# of
         # calls to insert_layer)
         index = 0
-        self.next_invariant = -2
+        self.root_invariant = -3
+        self.next_invariant = self.root_invariant
         self.default_styles = self.project.task.default_styles
         layer = ly.RootLayer(manager=self)
         self.insert_layer([index], layer)

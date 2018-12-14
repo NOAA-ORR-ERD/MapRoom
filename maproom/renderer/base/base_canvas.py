@@ -164,6 +164,11 @@ class BaseCanvas(object):
     def render(self, event=None):
         if not self.is_screen_ready():
             return
+
+        if self.project.in_batch_processing:
+            log.debug("Skipping render in batch processing mode")
+            return
+
         # Get interactive console here:
 #        import traceback
 #        traceback.print_stack();
