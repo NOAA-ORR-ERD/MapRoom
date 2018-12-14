@@ -512,11 +512,11 @@ class ProjectEditor(FrameworkEditor):
                 return path
 
     def download_rnc(self, url, filename, map_id, regime, confirm=False, name=None):
+        if confirm:
+            if not self.task.confirm(f"Download and display RNC #{map_id}?\n\n{name}", "Confirm RNC Download"):
+                return
         kap = self.check_rnc_map(url, filename, map_id)
         if not kap:
-            if confirm:
-                if not self.task.confirm(f"Download RNC #{map_id}?\n\n{name}", "Confirm RNC Download"):
-                    return
             self.download_file(url, None, self.process_rnc_download, (filename, regime))
         else:
             self.window.application.load_file(kap, self.task, regime=regime)
