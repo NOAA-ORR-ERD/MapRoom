@@ -1,3 +1,11 @@
+12/14/2018
+---------------------------
+Released 4.0rc13
+- RM Refs #934: moved confirmation dialog so it is shown before displaying previously downloaded RNC maps as well
+- RM Fixed #934: added RNC confirmation dialog
+- RM Refs #940: workaround to allow load while ignoring errors in linked points
+- RM Fixed #931: windows focus event handlers must end with skip or BadThings(tm) happen to the ability to move the cursor to different fields
+
 10/23/2018
 ---------------------------
 Released 4.0rc12
