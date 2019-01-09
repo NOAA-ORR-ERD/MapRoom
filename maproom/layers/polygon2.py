@@ -113,7 +113,7 @@ class RingEditLayer(LineLayer):
         log.debug(f"polygon point index={index} count={count}")
         self.points.color = self.style.line_color
         self.points.state = 0
-        lsi = self.make_line_segment_indexes(count)
+        lsi = data_types.make_line_segment_indexes(count)
         lsi.point1[0:count] = np.arange(0, count, dtype=np.uint32)
         lsi.point2[0:count] = np.arange(1, count + 1, dtype=np.uint32)
         lsi.point2[count - 1] = 0

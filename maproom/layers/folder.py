@@ -92,7 +92,7 @@ class BoundedFolder(LineLayer, Folder):
 
             lines = [(0, 1), (1, 2), (2, 3), (3, 0)]
             n = len(lines)
-            self.line_segment_indexes = self.make_line_segment_indexes(n)
+            self.line_segment_indexes = data_types.make_line_segment_indexes(n)
             self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[0: n] = lines
             self.line_segment_indexes.color = self.style.line_color
             self.line_segment_indexes.state = 0

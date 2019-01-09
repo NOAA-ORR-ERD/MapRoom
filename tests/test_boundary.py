@@ -5,6 +5,7 @@ import numpy as np
 from mock import *
 
 from maproom.library.Boundary import Boundaries
+from maproom.renderer import data_types
 
 
 class TestVerdatPolygonCrossing(object):
@@ -42,16 +43,52 @@ class TestVerdatPolygonCrossing(object):
         assert set(error_points) == set((14829, 14830, 14831, 5979, 5980, 5981, 5982, 14823, 14824, 14825, 9898, 9899, 9901, 9902, 9903, 9907, 9908, 9909, 9910, 9911, 9912, 14826))
 
 
+class TestBoundary(object):
+    def setup(self):
+        self.points = data_types.make_points(30)
+        self.points['x'] = 0.0
+        self.points['y'] = 0.0
+        self.points['z'] = 0.0
+
+    def test_complete_polygons(self):
+        line_indexes = list(range(len(self.points) - 1))
+        rot = line_indexes[1:] + line_indexes[:1]
+        lines = data_types.make_line_segment_indexes(len(line_indexes))
+        i = 0
+        for start, end in zip(line_indexes, rot):
+            lines[i].point1 = start
+            lines[i].point2 = end
+            i += 1
+        print(lines)
+        layer = Layer()
+        layer.points = self.points
+        layer.line_segment_indexes = lines
+
+        # make two polygons by creating a break
+        lines[4].point2 = 0
+        lines[8].point2 = 5
+
+        # make polyline by pointing last line to unused point
+        lines[-1].point2 = len(self.points) - 1
+        print(lines)
+
+        boundaries = Boundaries(layer)
+        print(boundaries)
+
 
 if __name__ == "__main__":
     import time
     
-    t = TestVerdatPolygonCrossing()
+    t = TestBoundary()
     t.setup()
-    t.test_verdat_is_self_intersecting()
-    t.test_verdat_is_overlapping()
-    t.test_large_verdat_is_self_intersecting()
-    t.test_large_verdat_is_overlapping()
+    t.test_complete_polygons()
+
+    # t = TestVerdatPolygonCrossing()
+    # t.setup()
+    # t.test_verdat_is_self_intersecting()
+    # t.test_verdat_is_overlapping()
+    # t.test_large_verdat_is_self_intersecting()
+    # t.test_large_verdat_is_overlapping()
         
 #    iterations = 1
 #    

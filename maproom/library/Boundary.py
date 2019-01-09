@@ -19,7 +19,7 @@ class Boundary(object):
         self.area = area
 
     def __str__(self):
-        return f"{len(self.points)} points, area={self.area}"
+        return f"{len(self.point_indexes)} points, area={self.area}"
 
     def __len__(self):
         return len(self.point_indexes)
@@ -161,7 +161,7 @@ class Boundaries(object):
         self.find_boundaries()
 
     def __str__(self):
-        lines = [f"{len(self.boundaries)} boundaries ({self.point_count} points, {self.line_count} lines)"]
+        lines = [f"{len(self.boundaries)} boundaries ({self.point_count} points, {self.line_count} lines, {len(self.non_boundary_points)} non-boundary points)"]
         lines.extend([f"  boundary {i}: {b}" for i, b in enumerate(self.boundaries)])
         return "\n".join(lines)
 
@@ -227,9 +227,9 @@ class Boundaries(object):
             adjacent1 = adjacency_map.setdefault(point1, [])
             adjacent2 = adjacency_map.setdefault(point2, [])
 
-            if point2 not in adjacent1:
+            if point2 not in adjacent1 or True:
                 adjacent1.append(point2)
-            if point1 not in adjacent2:
+            if point1 not in adjacent2 or True:
                 adjacent2.append(point1)
             non_boundary_points.discard(point1)
             non_boundary_points.discard(point2)
@@ -251,9 +251,9 @@ class Boundaries(object):
                 endpoints.append(point)
         while len(endpoints) > 0:
             endpoint = endpoints.pop()
-    #        print "BEFORE REMOVING ENDPOINT %d: " % endpoint
-    #        for point, adjacent in adjacency_map.iteritems():
-    #            print "  point: %d  adjacent: %s" % (point, adjacent)
+            # print("BEFORE REMOVING ENDPOINT %d: " % endpoint)
+            # for point, adjacent in adjacency_map.items():
+            #     print("  point: %d  adjacent: %s" % (point, adjacent))
 
             # check if other points are connected to this point, otherwise we have
             # found the other end of the segment and can skip to the next endpoint

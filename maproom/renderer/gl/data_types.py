@@ -123,6 +123,13 @@ def make_points_from_xy(xy_values):
     return points
 
 
+def make_line_segment_indexes(count):
+    return np.repeat(
+        np.array([(0, 0, 0, 0)], dtype=LINE_SEGMENT_DTYPE),
+        count,
+    ).view(np.recarray)
+
+
 def make_polygons(count):
     return np.repeat(
         np.array([(0, 0, 0, 0, 0)], dtype=POLYGON_DTYPE),

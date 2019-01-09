@@ -56,7 +56,7 @@ class LineLayer(PointLayer):
 
     def new(self):
         super(LineLayer, self).new()
-        self.line_segment_indexes = self.make_line_segment_indexes(0)
+        self.line_segment_indexes = data_types.make_line_segment_indexes(0)
 
     def get_info_panel_text(self, prop):
         if prop == "Line segment count":
@@ -100,7 +100,7 @@ class LineLayer(PointLayer):
         points[0:np] = self.points
         self.points = points
         nl = len(self.line_segment_indexes)
-        lines = self.make_line_segment_indexes(nl + addl_lines)
+        lines = data_types.make_line_segment_indexes(nl + addl_lines)
         lines[0:nl] = self.line_segment_indexes
         self.line_segment_indexes = lines
         return np, nl
@@ -134,7 +134,7 @@ class LineLayer(PointLayer):
             points.state = 0
 
         n = np.alen(f_line_segment_indexes)
-        lines = self.make_line_segment_indexes(n)
+        lines = data_types.make_line_segment_indexes(n)
         if (n > 0):
             lines.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[
                 0: n
@@ -233,12 +233,6 @@ class LineLayer(PointLayer):
         else:
             return None
         return boundaries[0]
-
-    def make_line_segment_indexes(self, count):
-        return np.repeat(
-            np.array([(0, 0, 0, 0)], dtype=data_types.LINE_SEGMENT_DTYPE),
-            count,
-        ).view(np.recarray)
 
     def reverse_line_direction(self):
         temp = self.line_segment_indexes.point1.copy()
@@ -531,7 +525,7 @@ class LineLayer(PointLayer):
         PointLayer.merge_from_source_layers(self, layer_a, layer_b, depth_unit)
 
         n = len(layer_a.line_segment_indexes) + len(layer_b.line_segment_indexes)
-        self.line_segment_indexes = self.make_line_segment_indexes(n)
+        self.line_segment_indexes = data_types.make_line_segment_indexes(n)
         self.line_segment_indexes[
             0: len(layer_a.line_segment_indexes)
         ] = layer_a.line_segment_indexes.copy()
