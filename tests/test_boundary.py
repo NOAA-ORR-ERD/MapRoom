@@ -75,13 +75,131 @@ class TestBoundary(object):
         boundaries = Boundaries(layer)
         print(boundaries)
 
+    def test_polylines(self):
+        line_indexes = [
+            0,1,
+
+            1,2,
+            2,3,
+            1,5,
+            5,6,
+            6,7,
+            7,3,
+
+            7,11,
+            11,15,
+            8,9,
+            9,10,
+            13,14,
+            14,11,
+        ]
+        lines = data_types.make_line_segment_indexes(len(line_indexes)//2)
+        i = 0
+        for start, end in zip(line_indexes[::2], line_indexes[1::2]):
+            lines[i].point1 = start
+            lines[i].point2 = end
+            i += 1
+        print(lines)
+        layer = Layer()
+        layer.points = self.points
+        layer.line_segment_indexes = lines
+
+        boundaries = Boundaries(layer)
+        print(boundaries)
+
+        # need copies of points array because it must be modified when
+        # branching points are found
+        point1 = lines.point1[:].astype(np.int32)
+        point2 = lines.point2[:].astype(np.int32)
+        scratch = np.zeros(len(lines), dtype=np.int32)
+        connection_count = np.zeros(len(self.points), dtype=np.int32)
+        polylines = []
+        while True:
+            connection_count[:] = 0
+
+            # this doesn't handle duplicated point indexes
+            # connection_count[lines.point1] += 1
+            # connection_count[lines.point2] += 1
+
+            # this works
+            c = np.bincount(point1[point1 >= 0], minlength=(len(connection_count))).astype(np.int32)
+            connection_count += c
+            c = np.bincount(point2[point2 >= 0], minlength=(len(connection_count))).astype(np.int32)
+            connection_count += c
+            print(f"loop: connection_count={connection_count}")
+
+            endpoints = np.where(connection_count == 1)[0]
+            print(endpoints)
+            if len(endpoints) == 0:
+                print(f"No more polyline endpoints")
+                break
+
+            # polylines will start at an endpoint and end when the point has 1
+            # connection (ends at another endpoint) or has more than 2 connections
+            # (ends at a branch point)
+            for endpoint in endpoints:
+                if connection_count[endpoint] == 0:
+                    print(f"already checked endpoint {endpoint}")
+                    continue
+                else:
+                    print(f"starting from {endpoint}")
+                polyline_len = 0
+                scratch[polyline_len] = endpoint
+                polyline_len += 1
+                while True:
+                    # each time through this loop, we assume there's only one line
+                    # segment that matches this endpoint because we start at
+                    # segment that has only one other endpoint and continue until
+                    # it stops or there's a branch.
+                    line_index = np.where(point1 == endpoint)[0]
+                    if len(line_index) > 0:
+                        other_end = point2[line_index[0]]
+                        used = "point1"
+                    else:
+                        line_index = np.where(point2 == endpoint)[0]
+                        other_end = point1[line_index[0]]
+                        used = "point2"
+                    print(f"connecting to {other_end}")
+
+                    scratch[polyline_len] = other_end
+                    polyline_len += 1
+
+                    # check connectivity of the other end
+                    line_index1 = np.where(point1 == other_end)[0]
+                    line_index2 = np.where(point2 == other_end)[0]
+                    count = len(line_index1) + len(line_index2)
+
+                    # remove line segments as we process them
+                    point1[line_index] = point2[line_index] = -1
+                    if count == 0:
+                        # something bad happened
+                        raise IndexError(f"missing endpoint connected to {endpoint}")
+                    elif count == 1 or count > 2:
+                        # end of the line; the other end only points to the
+                        # starting point
+                        connection_count[other_end] -= 1
+                        polylines.append(np.array(scratch[0:polyline_len]))
+                        break
+                    endpoint = other_end
+                print(f"found polyline {polylines[-1]})")
+
+        print(F"polyline summary: {polylines}")
+        lines = data_types.make_line_segment_indexes(len(point1))
+        lines.point1 = point1
+        lines.point2 = point2
+        layer.line_segment_indexes = lines
+
+        boundaries = Boundaries(layer)
+        print(boundaries)
+
+
 
 if __name__ == "__main__":
     import time
     
     t = TestBoundary()
     t.setup()
-    t.test_complete_polygons()
+    t.test_polylines()
 
     # t = TestVerdatPolygonCrossing()
     # t.setup()
