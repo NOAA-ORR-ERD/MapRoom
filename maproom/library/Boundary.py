@@ -181,7 +181,7 @@ class Boundary(Polyline):
 
 
 class Boundaries(object):
-    def __init__(self, layer, allow_branches=True, allow_self_crossing=True, allow_points_outside_boundary=False):
+    def __init__(self, layer, allow_branches=True, allow_self_crossing=True, allow_points_outside_boundary=False, allow_polylines=True):
         self.points = layer.points
         self.point_count = len(layer.points)
         self.lines = layer.line_segment_indexes
@@ -190,6 +190,7 @@ class Boundaries(object):
         self.allow_branches = allow_branches
         self.allow_self_crossing = allow_self_crossing
         self.allow_points_outside_boundary = allow_points_outside_boundary
+        self.allow_polylines = allow_polylines
         self.branch_points = []
         self.boundaries = []
         self.polylines = []
@@ -226,7 +227,7 @@ class Boundaries(object):
         return None
 
     def extract_polylines(self, point1, point2):
-        scratch = np.zeros(len(self.lines), dtype=np.int32)
+        scratch = np.zeros(len(self.points), dtype=np.int32)
         connection_count = np.zeros(len(self.points), dtype=np.int32)
         self.polylines = []
         self.branch_points = []
@@ -480,6 +481,11 @@ class Boundaries(object):
         if len(self.branch_points) > 0 and not self.allow_branches:
             errors.add("Branching boundaries.")
             error_points.update(self.branch_points)
+
+        if len(self.polylines) > 0 and not self.allow_polylines:
+            errors.add("Unclosed polygons.")
+            for p in self.polylines:
+                error_points.update(p.point_indexes)
 
         if not self.allow_points_outside_boundary:
             point_indexes = self.check_outside_outer_boundary()

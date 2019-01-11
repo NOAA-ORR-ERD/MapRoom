@@ -491,7 +491,7 @@ class PolygonParentLayer(PointLayer):
         log.debug(f"commiting layer {layer}, ring_indexes={layer.ring_indexes if layer is not None else -1}")
         if layer is None:
             return
-        boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False, allow_points_outside_boundary=True)
+        boundaries = Boundaries(layer, allow_branches=False, allow_self_crossing=False, allow_points_outside_boundary=True, allow_polylines=False)
         boundaries.check_errors(True)
         feature_code = layer.feature_code
         log.debug(f"boundaries: {boundaries}")
