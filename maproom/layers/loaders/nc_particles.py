@@ -93,7 +93,7 @@ class nc_particles_file_loader():
             if var in data:
                 d = data[var]
                 log.debug("timestep %d: %s" % (self.current_timestep, (var, d.dtype, d.shape)))
-                if len(d.shape) == 1:
+                if len(d) > 0 and len(d.shape) == 1:
                     d = np.delete(d, bogus[0], 0)
                     scalar_vars[var] = d
                     scalar_min_max[var] = (min(d), max(d))
