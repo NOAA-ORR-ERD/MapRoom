@@ -1,4 +1,4 @@
-# Maproom application using the Peppy2 framework
+# Maproom application using the sawx framework
 
 # Uncomment to enable OpenGL command tracing (very slow).  This must occur
 # before any import of OpenGL which is why it's here.  :)
@@ -18,9 +18,6 @@ import os
 import docutils
 from docutils.core import publish_parts
 
-# Debugging turned on for readable exceptions on Enthought ui module import
-os.environ["ETS_DEBUG"] = "True"
-
 # Set GDAL_DATA environment variable, needed on windows to find support files
 # to use whhen converting coordinate systems upon load of shapefiles
 import osgeo.ogr
@@ -36,12 +33,9 @@ if found is not None:
     os.environ["GDAL_DATA"] = found
 
 # Framework imports.
-from omnivore_framework import get_image_path
-from omnivore_framework.app_init import run, setup_frozen_logging
-
-# Local imports.
-from maproom.pane_layout import task_id_with_pane_layout
-from maproom.plugin import MaproomPlugin
+from sawx.application import SawxApp
+from sawx.filesystem import get_image_path
+from sawx.startup import run, setup_frozen_logging
 
 # Imports for py2exe/py2app
 import wx
@@ -74,22 +68,8 @@ def main(argv):
     """ Run the application.
     """
     logging.basicConfig(level=logging.WARNING)
-    for toolkit in ['pyface', 'envisage', 'traits', 'traitsui', 'apptools']:
-        _ = logging.getLogger(toolkit)
-        _.setLevel(logging.WARNING)
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
-
-    # Override location of help pages so we don't get the framework user guide
-    from traits.trait_base import get_resource_path
-    import omnivore_framework.help
-    omnivore_framework.help.help_dirs = ["maproom/help"]
-    omnivore_framework.help.root_resource_path = get_resource_path(1)
-
-    plugins = [ MaproomPlugin() ]
-    
-    import maproom.file_type
-    plugins.extend(maproom.file_type.plugins)
 
     if "--trace" in argv:
         import sys
@@ -98,9 +78,22 @@ def main(argv):
         sys.settrace(trace_calls)
 
     import maproom
-    image_path = [get_image_path("icons", maproom)]
-    template_path = [get_image_path("templates", maproom)]
-    run(plugins=plugins, image_path=image_path, template_path=template_path, use_eggs=False, startup_task=task_id_with_pane_layout, application_name="MapRoom")
+    image_paths = [get_image_path("icons", maproom)]
+    template_paths = [get_image_path("templates", maproom)]
+    help_paths = ["maproom/help"]
+
+    from maproom._version import __version__
+    SawxApp.app_name = "MapRoom"
+    SawxApp.default_uri = "template://default_project.maproom"
+    SawxApp.about_image = "icon://maproom_large.png"
+    SawxApp.about_version = __version__
+    SawxApp.about_description = "High-performance 2d mapping"
+    SawxApp.about_html = f"""<h2>{SawxApp.app_name} {SawxApp.about_version}</h2>
+
+<h3>{SawxApp.about_description}</h3>
+
+<p><img src="{SawxApp.about_image}">"""
+    run(SawxApp, image_paths, template_paths, help_paths)
 
     logging.shutdown()
 
