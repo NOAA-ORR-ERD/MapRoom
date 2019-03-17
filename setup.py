@@ -195,6 +195,10 @@ setup(
             'layer_manager = maproom.layer_manager',
         ],
 
+        "sawx.editors": [
+            'editor = maproom.editor',
+        ],
+
         "sawx.remember": [
             'styles = maproom.styles',
             'servers = maproom.servers',

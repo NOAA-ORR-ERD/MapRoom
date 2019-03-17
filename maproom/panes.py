@@ -10,7 +10,6 @@ from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 
 # Enthought library imports.
 
-from omnivore_framework.framework.panes import FrameworkPane, FrameworkFixedPane
 from sawx.ui.popuputil import SpringTabs
 from sawx.ui.download_manager import DownloadControl
 from sawx.ui.zoomruler import ZoomRuler
@@ -539,7 +538,7 @@ class DownloadPanel(DownloadControl):
         return self.num_active
 
 
-class HtmlHelpPane(FrameworkPane):
+class HtmlHelpPane(PyClickableHtmlWindow):
     # TaskPane interface ###################################################
 
     id = 'maproom.html_help_pane'
@@ -557,10 +556,9 @@ class HtmlHelpPane(FrameworkPane):
     </ul>|end list
     """
 
-    def create_contents(self, parent):
-        control = PyClickableHtmlWindow(parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE, size=(400, 300))
-        control.SetPage(self.get_help_text())
-        return control
+    def __init__(self, parent):
+        PyClickableHtmlWindow.__init__(self, parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE, size=(400, 300))
+        self.SetPage(self.get_help_text())
 
     def get_help_text(self):
         lines = ["<table><tr><th>%s</th><th>%s</th>" % (self.code_header, self.desc_header)]

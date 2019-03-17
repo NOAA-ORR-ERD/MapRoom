@@ -5,7 +5,7 @@ from sawx.errors import ProgressCancelError
 
 from .command import Command, UndoInfo
 from . import layers as ly
-from .layers import loaders
+from . import loaders
 from .library import point_utils
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers

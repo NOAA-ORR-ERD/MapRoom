@@ -4,7 +4,6 @@ import sawx.ui.customtreectrl as treectrl
 
 from .layers import Layer
 from .menu_commands import MoveLayerCommand, RenameLayerCommand
-from . import actions
 
 
 import logging

@@ -3,12 +3,11 @@ import wx
 import wx.adv
 from wx.lib.expando import ExpandoTextCtrl
 
-from pyface.api import ImageResource
-
 from . import sliders
 from . import dialogs
 from . import buttons
-from ..layers import state, LayerStyle, valid_legend_types
+from ..styles import LayerStyle
+from ..layers import state, valid_legend_types
 from ..library import coordinates
 from ..library import colormap
 from ..library.colormap.ui_combobox import ColormapComboBox, GnomeColormapDialog

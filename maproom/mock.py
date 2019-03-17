@@ -1,13 +1,13 @@
 import os
 
-from sawx.utils.file_guess import FileGuess
-
+from . import loaders
+from .styles import LayerStyle
 from .layer_manager import LayerManager
-from .layers import Layer, loaders, LayerStyle
+from .layers import Layer
 from .library.Boundary import Boundaries
 from .library.projection import Projection
 from .library.host_utils import HostCache
-from .library.known_hosts import default_tile_hosts
+from .servers import default_tile_hosts
 from .command import UndoStack, BatchStatus
 from .menu_commands import LoadLayersCommand
 
