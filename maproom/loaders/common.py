@@ -4,8 +4,14 @@ import tempfile
 import shutil
 
 from sawx.filesystem import fsopen as open
+from sawx.errors import ProgressCancelError
 
-from maproom.library.Boundary import Boundaries, PointsError
+from ..library.Boundary import Boundaries, PointsError
+from ..command import UndoInfo
+
+import logging
+log = logging.getLogger(__name__)
+progress_log = logging.getLogger("progress")
 
 
 class BaseLoader(object):
@@ -49,6 +55,53 @@ class BaseLoader(object):
                 name = self.extension_name(ext)
                 wildcards.append("%s (*%s)|*%s" % (name, ext, ext))
         return "|".join(wildcards)
+
+    def load_layers_from_uri(self, uri, manager, **kwargs):
+        undo = UndoInfo()
+        try:
+            progress_log.info("START=Loading %s" % uri)
+            layers = self.load_layers(uri, manager, **kwargs)
+        except ProgressCancelError as e:
+            undo.flags.success = False
+            undo.flags.errors = [str(e)]
+        except IOError as e:
+            undo.flags.success = False
+            undo.flags.errors = [str(e)]
+        finally:
+            progress_log.info("END")
+
+        if undo.flags.success:
+            if layers is None:
+                undo.flags.success = False
+                undo.flags.errors = [f"Invalid layer data in {uri} for {self.name} layer"]
+            else:
+                errors = []
+                warnings = []
+                for layer in layers:
+                    if layer.load_error_string != "":
+                        errors.append(layer.load_error_string)
+                    if layer.load_warning_string != "":
+                        warnings.append(layer.load_warning_string)
+                if errors:
+                    undo.flags.success = False
+                    undo.flags.errors = errors
+                if warnings:
+                    undo.flags.message = warnings
+
+            if undo.flags.success:
+                manager.add_layers(layers, None)
+                first = True
+                for layer in layers:
+                    lf = undo.flags.add_layer_flags(layer)
+                    if first:
+                        lf.select_layer = True
+                        first = False
+                    lf.layer_loaded = True
+
+                undo.flags.layers_changed = True
+                undo.flags.refresh_needed = True
+
+        return undo
 
 
 class BaseLayerLoader(BaseLoader):

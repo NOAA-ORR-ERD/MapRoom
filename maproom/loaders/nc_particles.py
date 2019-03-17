@@ -26,7 +26,7 @@ def identify_mime(header, fh):
     # check if is is HDF or CDF
     if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
         if (b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream):
-            return dict(mime="application/x-nc_particles", loader=ParticleLoader)
+            return dict(mime="application/x-nc_particles", loader=ParticleLoader())
 
 
 class nc_particles_file_loader():

@@ -72,6 +72,7 @@ class LayerManager(SawxDocument):
 
     def __init__(self, file_metadata):
         self.project = None
+        self.default_styles = styles.copy_default_styles()
         self.layers = []
 
         # if the project is loaded from a zip file, the ExpandZip object is
@@ -110,7 +111,6 @@ class LayerManager(SawxDocument):
 
     def set_project(self, project):
         self.project = project
-        self.default_styles = styles.default_styles
 
         # # Add hook to create layer instances for debugging purposes
         # if "--debug-objects" in self.project.window.application.command_line_args:
@@ -167,7 +167,13 @@ class LayerManager(SawxDocument):
         loader = self.file_metadata["loader"]
         batch_flags = BatchStatus()
         # FIXME: Add load project command that clears all layers
-        extra = loader.load_project(self.uri, self, batch_flags)
+        try:
+            loader.load_project  # test
+        except AttributeError:
+            undo = loader.load_layers_from_uri(self.uri, self)
+            extra = undo.flags
+        else:
+            extra = loader.load_project(self.uri, self, batch_flags)
         # self.create_layout(extra)
         # self.parse_extra_json(extra, batch_flags)
         # self.loaded_project_extra_json = extra
@@ -801,17 +807,17 @@ class LayerManager(SawxDocument):
         #
         return n
 
-    def dispatch_event(self, event, value=True):  # refactor out
-        log.debug("dispatching event %s = %s" % (event, value))
-        setattr(self, event, value)
+    # def dispatch_event(self, event, value=True):  # refactor out
+    #     log.debug("dispatching event %s = %s" % (event, value))
+    #     setattr(self, event, value)
 
-    def post_event(self, event_name, *args):  # refactor out
-        log.debug("event: %s.  args=%s" % (event_name, str(args)))
+    # def post_event(self, event_name, *args):  # refactor out
+    #     log.debug("event: %s.  args=%s" % (event_name, str(args)))
 
-    def get_event_callback(self, event):  # refactor out
-        import functools
-        callback = functools.partial(self.post_event, event)
-        return callback
+    # def get_event_callback(self, event):  # refactor out
+    #     import functools
+    #     callback = functools.partial(self.post_event, event)
+    #     return callback
 
     ##### ly.Layer modification
 
@@ -846,32 +852,21 @@ class LayerManager(SawxDocument):
             layer = ly.LineLayer(manager=self)
         layer.new()
         self.insert_loaded_layer(layer, editor, before, after)
-        self.dispatch_event('layers_changed')
+        # self.dispatch_event('layers_changed')
         if editor is not None:
             wx.CallAfter(editor.layer_tree_control.set_edit_layer, layer)
         return layer
 
-    def add_layers(self, layers, is_project, editor):
+    def add_layers(self, layers, editor=None):
         layers = layers[:]  # work on copy so we don't mess up the caller's list
         parent = None
-        if is_project:
-            # remove all other layers so the project can be inserted in the
-            # correct order
-            existing = self.flatten()
-            for layer in existing:
-                if not layer.is_root():
-                    self.remove_layer(layer)
-
-            # layers are inserted from the beginning, so reverse loaded layers
-            # so they won't show up backwards
-            layers.reverse()
-        else:
-            if layers[0].is_folder():
-                parent = layers.pop(0)
-                self.insert_loaded_layer(parent, editor)
+        if layers[0].is_folder():
+            parent = layers.pop(0)
+            self.insert_loaded_layer(parent, editor)
 
         for layer in layers:
-            layer.check_projection(editor.task)
+            if editor is not None:
+                layer.check_projection(editor.task)
             if not layer.load_error_string:
                 self.insert_loaded_layer(layer, editor, last_child_of=parent)
         return layers
@@ -911,7 +906,7 @@ class LayerManager(SawxDocument):
         return layers
 
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
-        self.dispatch_event('layer_loaded', layer)
+        # self.dispatch_event('layer_loaded', layer)
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of, layer.background, layer.opaque, layer.bounded)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
@@ -922,7 +917,7 @@ class LayerManager(SawxDocument):
         layer = ly.Layer.load_from_json(json_data, self)[0]
         if old_invariant_map is not None:
             old_invariant_map[json_data['invariant']] = layer
-        self.dispatch_event('layer_loaded', layer)
+        # self.dispatch_event('layer_loaded', layer)
         self.insert_layer(mi, layer)
         if json_data['children']:
             mi.append(1)

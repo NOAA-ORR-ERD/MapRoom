@@ -330,7 +330,7 @@ _fallback_styles = {
 
 _default_styles = {}
 
-def copy_default_styles(self):
+def copy_default_styles():
     d = {}
     for type_name, style in _default_styles.items():
         d[type_name] = style.get_copy()
@@ -347,7 +347,7 @@ def replace_default_styles(styles):
         if type_name not in _default_styles:
             _default_styles[type_name] = style.get_copy()
 
-def override_default_styles(cls, styles):
+def override_default_styles(styles):
     global _default_styles
 
     if styles:
@@ -357,7 +357,7 @@ def override_default_styles(cls, styles):
 def default_styles_read_only(type_name):
     return DefaultStyle.default_styles.get(type_name, self._default_styles["other"])
 
-def remember_styles(self, override_styles=None):
+def remember_styles(override_styles=None):
     DefaultStyle.override_default_styles(override_styles)
     data = styles_to_json(self._default_styles)
     persistence.save_json_data("styles", data)

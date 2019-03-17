@@ -22,7 +22,7 @@ def identify_mime(header, fh):
     if not is_binary:
         if header.startswith(b"DOGS"):
             mime = "application/x-maproom-verdat"
-            return dict(mime=mime, loader=VerdatLoader)
+            return dict(mime=mime, loader=VerdatLoader())
 
 
 class VerdatLoader(BaseLayerLoader):
@@ -36,19 +36,19 @@ class VerdatLoader(BaseLayerLoader):
 
     points_per_tick = 5000
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         layer = LineLayer(manager=manager)
 
-        progress_log.info("Loading from %s" % metadata.uri)
+        progress_log.info("Loading from %s" % uri)
         (layer.load_error_string,
          f_points,
          f_depths,
          f_line_segment_indexes,
-         layer.depth_unit) = load_verdat_file(metadata.uri)
+         layer.depth_unit) = load_verdat_file(uri)
         if (layer.load_error_string == ""):
-            progress_log.info("Finished loading %s" % metadata.uri)
+            progress_log.info("Finished loading %s" % uri)
             layer.set_data(f_points, f_depths, f_line_segment_indexes)
-            layer.file_path = metadata.uri
+            layer.file_path = uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
