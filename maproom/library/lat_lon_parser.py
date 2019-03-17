@@ -54,7 +54,7 @@ import numpy as np
 
 from .unit_conversion import LatLongConverter  # from: https://github.com/NOAA-ORR-ERD/PyNUCOS
 
-from omnivore_framework.utils.textutil import check_for_matching_lines, parse_for_matching_lines
+from sawx.utils.textutil import check_for_matching_lines, parse_for_matching_lines
 
 
 # new test version -- much simpler

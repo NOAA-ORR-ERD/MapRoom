@@ -20,8 +20,8 @@ from traits.api import on_trait_change
 from omnivore_framework.framework.editor import FrameworkEditor
 from omnivore_framework.framework.errors import ProgressCancelError
 import omnivore_framework.framework.clipboard as clipboard
-from omnivore_framework.utils.wx.popuputil import PopupStatusBar
-from omnivore_framework.utils.wx.tilemanager import TileManager
+from sawx.ui.popuputil import PopupStatusBar
+from sawx.ui.tilemanager import TileManager
 from omnivore_framework.templates import get_template
 
 # Local imports.
@@ -324,49 +324,6 @@ class ProjectEditor(FrameworkEditor):
                 self.layer_canvas.set_center(json["projected_point_center"])
         self.loaded_project_extra_json = None
         log.debug("using center: %s, upp=%f" % (str(self.layer_canvas.projected_point_center), self.layer_canvas.projected_units_per_pixel))
-
-    def save(self, path=None, prompt=False):
-        """ Saves the contents of the editor in a maproom project file
-        """
-        if path is None:
-            path = self.document.uri
-        if prompt or not path:
-            default_dir = self.best_file_save_dir
-            default_file = ""
-            dialog = FileDialog(parent=self.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom", default_directory=default_dir, default_filename=default_file)
-            if dialog.open() == OK:
-                path = dialog.path
-            else:
-                return
-        if not path:
-            path = "%s.maproom" % self.name
-
-        prefs = self.task.preferences
-        if prefs.check_errors_on_save:
-            if not self.check_all_layers_for_errors(True):
-                return
-
-        error = self.save_project(path)
-        if error:
-            self.task.error(error)
-        else:
-            self.layer_manager.undo_stack.set_save_point()
-
-            # Update tab name.  Note that dirty must be changed in order for
-            # the trait to be updated, so force a change if needed.  Also,
-            # update the URI first because trait callbacks happen immediately
-            # and because properties are used for the editor name, no trait
-            # event gets called on updating the metadata URI.
-            self.layer_manager.metadata.uri = path
-            if not self.dirty:
-                self.dirty = True
-            self.dirty = self.layer_manager.undo_stack.is_dirty()
-
-            # Push URL to top of recent files list
-            self.window.application.successfully_saved_event = self.layer_manager.metadata.uri
-
-            # refresh window name in case filename has changed
-            self.task._active_editor_tab_change(None)
 
     def save_project(self, path):
         try:

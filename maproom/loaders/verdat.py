@@ -2,7 +2,8 @@ import os
 import numpy as np
 import re
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
+from sawx.utils.textutil import guessBinary
 
 from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import Boundaries, PointsError
@@ -14,6 +15,14 @@ import logging
 progress_log = logging.getLogger("progress")
 
 WHITESPACE_PATTERN = re.compile("\s+")
+
+
+def identify_mime(header, fh):
+    is_binary = guessBinary(header)
+    if not is_binary:
+        if header.startswith(b"DOGS"):
+            mime = "application/x-maproom-verdat"
+            return dict(mime=mime, loader=VerdatLoader)
 
 
 class VerdatLoader(BaseLayerLoader):
@@ -66,7 +75,7 @@ def load_verdat_file(uri):
     depths = accumulator(dtype=np.float32)
     line_segment_indexes = accumulator(block_shape=(2,), dtype=np.uint32)
 
-    in_file = fsopen(uri, "r")
+    in_file = open(uri, "r")
 
     header_line = in_file.readline().strip()
     header = WHITESPACE_PATTERN.split(header_line)

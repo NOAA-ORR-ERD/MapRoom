@@ -2,7 +2,8 @@ import re
 import json
 import zipfile
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
+from sawx.utils.textutil import guessBinary
 
 from .common import BaseLoader
 
@@ -11,6 +12,17 @@ log = logging.getLogger(__name__)
 
 
 WHITESPACE_PATTERN = re.compile("\s+")
+
+
+def identify_mime(header, fh):
+    is_binary = guessBinary(header)
+    if is_binary:
+        fh.seek(0)
+        if zipfile.is_zipfile(fh):
+            return dict(mime="application/x-maproom-project-zip", loader=ZipProjectLoader())
+    else:
+        if header.startswith(b"# -*- MapRoom project file -*-"):
+            return dict(mime="application/x-maproom-project-json", loader=ProjectLoader())
 
 
 class ProjectLoader(BaseLoader):
@@ -24,9 +36,9 @@ class ProjectLoader(BaseLoader):
 
     load_type = "project"
 
-    def load_project(self, metadata, manager, batch_flags):
+    def load_project(self, uri, manager, batch_flags):
         project = []
-        with fsopen(metadata.uri, "r") as fh:
+        with open(uri, "r") as fh:
             line = fh.readline()
             if line != "# -*- MapRoom project file -*-\n":
                 return "Not a MapRoom project file!"
@@ -49,13 +61,9 @@ class ZipProjectLoader(BaseLoader):
 
     load_type = "project"
 
-    def load_project(self, metadata, manager, batch_flags):
-        log.debug("project file: %s" % metadata.uri)
-        fh = None
-        try:
-            fh = metadata.syspath
-        except TypeError:
-            fh = metadata.get_stream()
+    def load_project(self, uri, manager, batch_flags):
+        log.debug("project file: %s" % uri)
+        fh = open(uri, "rb")
         if zipfile.is_zipfile(fh):
             log.debug("found zipfile")
             with zipfile.ZipFile(fh, 'r') as zf:

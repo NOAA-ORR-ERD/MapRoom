@@ -1,6 +1,6 @@
 import re
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
 
 from .common import BaseLoader
 

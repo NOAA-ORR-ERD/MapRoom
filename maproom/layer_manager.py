@@ -3,13 +3,16 @@ import json
 import zipfile
 import functools
 
-from fs.opener import opener, fsopen
+import wx
+
+from sawx.filesystem import fsopen as open
 
 from .library import rect
 
 from . import layers as ly
-from .layers import loaders
-from .command import UndoStack
+from . import loaders
+from . import styles
+from .command import UndoStack, BatchStatus
 
 # Enthought library imports.
 from traits.api import Any
@@ -17,18 +20,17 @@ from traits.api import Dict
 from traits.api import Event
 from traits.api import Int
 from traits.api import List
-from pyface.api import GUI
 
-from omnivore_framework.framework.document import BaseDocument
-from omnivore_framework.utils.jsonutil import collapse_json
-from omnivore_framework.utils.fileutil import ExpandZip
+from sawx.document import SawxDocument
+from sawx.utils.jsonutil import collapse_json
+from sawx.utils.fileutil import ExpandZip
 from .library import colormap
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class LayerManager(BaseDocument):
+class LayerManager(SawxDocument):
 
     """
     Manages the layers (a tree of ly.Layer).
@@ -41,20 +43,6 @@ class LayerManager(BaseDocument):
     The first layer in the overall list and in each sublist is assumed to be a "folder" layer, whose only
     purpose at present is to hold the folder name.
     """
-    project = Any
-
-    # if the project is loaded from a zip file, the ExpandZip object is stored
-    # here so the unpacked directory can be referenced when re-saving the
-    # project
-    zip_file_source = Any
-
-    layers = List(Any)
-
-    next_invariant = Int(0)
-
-    root_invariant = Int(0)
-
-    default_styles = Any
 
     layer_loaded = Event
 
@@ -79,37 +67,21 @@ class LayerManager(BaseDocument):
 
     threaded_image_loaded = Event
 
-    # Linked control points are slaves of a truth layer: a dict that maps the
-    # dependent layer/control point to the truth layer/control point
-    control_point_links = Dict(Any)
-
     # Transient layer always uses invariant
     transient_invariant = -99
 
-    def _undo_stack_default(self):
-        return UndoStack()
+    def __init__(self, file_metadata):
+        self.project = None
+        self.layers = []
 
-    ##### Python special methods
+        # if the project is loaded from a zip file, the ExpandZip object is
+        # stored here so the unpacked directory can be referenced when re-
+        # saving the project
+        self.zip_file_source = None
 
-    def __str__(self):
-        root = self.get_layer_by_multi_index([0])
-        layers = self.get_children(root)
-        return str(layers)
-
-    ##### Creation/destruction
-
-    @classmethod
-    def create(cls, project):
-        """Convenience function to create a new, empty LayerManager
-
-        Since classes that use Traits can't seem to use an __init__ method,
-        we are forced to use a convenience function to initialize non-traits
-        members.  Trying to define layers using _layers_default results
-        in recursion from the print statement in insert_layers trying to
-        references self.layers which isn't yet defined.
-        """
-        self = cls()
-        self.project = project
+        # Linked control points are slaves of a truth layer: a dict that maps
+        # the dependent layer/control point to the truth layer/control point
+        self.control_point_links = {}
 
         # In order for the serializer to correcly map the layer invariant to
         # the actual layer, the next_invariant must be preset so first user
@@ -119,7 +91,6 @@ class LayerManager(BaseDocument):
         index = 0
         self.root_invariant = -3
         self.next_invariant = self.root_invariant
-        self.default_styles = self.project.task.default_styles
         layer = ly.RootLayer(manager=self)
         self.insert_layer([index], layer)
 
@@ -135,12 +106,25 @@ class LayerManager(BaseDocument):
         scale = ly.Scale(manager=self)
         self.insert_layer([index], scale)
 
-        # Add hook to create layer instances for debugging purposes
-        if "--debug-objects" in self.project.window.application.command_line_args:
-            from . import debug
-            debug.debug_objects(self)
+        SawxDocument.__init__(self, file_metadata)
 
-        return self
+    def set_project(self, project):
+        self.project = project
+        self.default_styles = styles.default_styles
+
+        # # Add hook to create layer instances for debugging purposes
+        # if "--debug-objects" in self.project.window.application.command_line_args:
+        #     from . import debug
+        #     debug.debug_objects(self)
+
+    ##### Python special methods
+
+    def __str__(self):
+        root = self.get_layer_by_multi_index([0])
+        layers = self.get_children(root)
+        return str(layers)
+
+    ##### destruction
 
     def destroy(self):
         # fixme: why do layers need a destroy() method???
@@ -176,6 +160,32 @@ class LayerManager(BaseDocument):
                 result.extend(self.debug_structure_recursive(item, indent + "    "))
 
         return result
+
+    #### Load
+
+    def load_raw_data(self):
+        loader = self.file_metadata["loader"]
+        batch_flags = BatchStatus()
+        # FIXME: Add load project command that clears all layers
+        extra = loader.load_project(self.uri, self, batch_flags)
+        # self.create_layout(extra)
+        # self.parse_extra_json(extra, batch_flags)
+        # self.loaded_project_extra_json = extra
+        # log.debug("Clearing timeline")
+        # self.timeline.clear_marks()
+        # self.layer_tree_control.clear_all_items()
+        # self.layer_tree_control.rebuild()
+        # self.layer_tree_control.select_initial_layer()
+        # self.perform_batch_flags(None, batch_flags)
+
+        # Clear modified flag
+        self.undo_stack.set_save_point()
+        # self.dirty = self.layer_manager.undo_stack.is_dirty()
+        # self.mouse_mode_factory = mouse_handler.PanMode
+        # self.view_document(self.document)
+    
+    def calc_raw_data(self, raw):
+        pass
 
     ##### Serialization
 
@@ -838,7 +848,7 @@ class LayerManager(BaseDocument):
         self.insert_loaded_layer(layer, editor, before, after)
         self.dispatch_event('layers_changed')
         if editor is not None:
-            GUI.invoke_later(editor.layer_tree_control.set_edit_layer, layer)
+            wx.CallAfter(editor.layer_tree_control.set_edit_layer, layer)
         return layer
 
     def add_layers(self, layers, is_project, editor):
@@ -1221,8 +1231,19 @@ class LayerManager(BaseDocument):
 
     ##### Layer save
 
-    def save_all(self, file_path, extra_json_data=None):
-        return self.save_all_zip(file_path, extra_json_data)
+    def verify_ok_to_save(self):
+        prefs = self.project.preferences
+        if prefs.check_errors_on_save:
+            return self.project.check_all_layers_for_errors(True)
+        else:
+            return True
+
+    def save_raw_data(self, uri, raw_data):
+        extra_json = self.project.current_extra_json
+        return self.save_all_zip(uri, extra_json_data)
+
+    def calc_raw_data_to_save(self):
+        return None
 
     def process_pre_json_data(self, json):
         # pre json data is stuff that layers need to exist at the time they are
@@ -1258,7 +1279,7 @@ class LayerManager(BaseDocument):
         pre_json_data = self.calc_pre_json_data()
         post_json_data = self.calc_post_json_data(extra_json_data)
         try:
-            with fsopen(file_path, "wb") as fh:
+            with open(file_path, "wb") as fh:
                 zf = zipfile.ZipFile(fh, mode='w', compression=zipfile.ZIP_DEFLATED)
                 try:
                     zf.writestr("pre json data", json.dumps(pre_json_data))
@@ -1334,6 +1355,15 @@ class LayerManager(BaseDocument):
             return error
         return "No selected layer."
 
+    #### file recognition
+
+    @classmethod
+    def can_load_file_exact(cls, file_metadata):
+        return "loader" in file_metadata
+ 
+    @classmethod
+    def can_load_file_generic(cls, file_metadata):
+        False
 
 # def test():
 #     a = ly.Layer()

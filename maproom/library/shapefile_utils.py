@@ -1,7 +1,7 @@
 import collections
 
 import numpy as np
-from fs.opener import opener, fsopen
+from sawx.filesystem import fsopen as open
 
 from shapely.geometry import Polygon
 from shapely.geometry import shape
@@ -149,7 +149,7 @@ def load_shapefile(uri):
 
 
 def parse_bna_file2(uri, points_accumulator, regime=0):
-    f = fsopen(uri, "r")
+    f = open(uri, "r")
     s = f.read()
     f.close()
     lines = s.splitlines()

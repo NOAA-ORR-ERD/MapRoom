@@ -1,12 +1,12 @@
 import re
 import shlex
 
-from omnivore_framework.utils.runtime import get_all_subclasses
-from omnivore_framework.utils.file_guess import FileMetadata
+from sawx.utils.runtime import get_all_subclasses
+from sawx.utils.file_guess import FileMetadata
 
 from . import command
 from . import magic
-from .layers.style import LayerStyle
+from .style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)

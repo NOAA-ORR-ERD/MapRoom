@@ -164,9 +164,9 @@ install_requires = [
     'certifi',
     'chardet',
     'idna',
-    'omnivore-framework>=3',
     'packaging',
-    'pyinstaller'
+    'pyinstaller',
+    'glsvg',
 ]
 
 
@@ -184,12 +184,22 @@ setup(
     package_data=package_data,
     ext_modules=ext_modules,
     app=["maproom.py"],
-    entry_points = """
+    entry_points = {
+        "sawx.loaders": [
+            'verdat = maproom.loaders.verdat',
+            'project = maproom.loaders.project',
+            'nc_particles = maproom.loaders.nc_particles',
+        ],
 
-    [envisage.plugins]
-    omnivore.tasks = maproom.plugin:MaproomPlugin
+        "sawx.documents": [
+            'layer_manager = maproom.layer_manager',
+        ],
 
-    """,
+        "sawx.remember": [
+            'styles = maproom.styles',
+            'servers = maproom.servers',
+        ],
+    },
     options=options,
     zip_safe = False,
 )

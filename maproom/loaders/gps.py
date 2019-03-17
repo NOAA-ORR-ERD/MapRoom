@@ -8,7 +8,7 @@ import os
 import numpy as np
 #import re
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
 
 from .common import BaseLayerLoader
 from ...library.gps_utils import GarminGPSDataset

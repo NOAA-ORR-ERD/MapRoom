@@ -9,7 +9,7 @@ from traits.api import Str
 from traits.api import on_trait_change
 
 from omnivore_framework.framework.enthought_api import Action, ActionItem, EditorAction, TaskDynamicSubmenuGroup
-from omnivore_framework.utils.wx.dialogs import ListReorderDialog, CheckItemDialog
+from sawx.ui.dialogs import ListReorderDialog, CheckItemDialog
 
 from . import pane_layout
 from . import menu_commands as mec
@@ -233,7 +233,7 @@ class DefaultStyleAction(EditorAction):
         if status == wx.ID_OK:
             project.layer_manager.update_default_styles(dialog.get_styles())
             if dialog.save_for_future:
-                project.task.remember_styles(project.layer_manager.default_styles)
+                style.remember_styles(project.layer_manager.default_styles)
             if dialog.apply_to_current:
                 project.layer_manager.apply_default_styles()
 

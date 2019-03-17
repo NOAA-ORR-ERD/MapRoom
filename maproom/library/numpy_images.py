@@ -20,13 +20,14 @@ import markdown
 
 import cgi
 
-from pyface.api import ImageResource
+# from pyface.api import ImageResource
 
 import logging
 log = logging.getLogger(__name__)
 
 
 def get_numpy_from_marplot_icon(icon_path, r=0, g=128, b=128):
+    # FIXME: this is based on old pyface code. Is it still used any more?
     image = ImageResource(icon_path)
     bitmap = image.create_bitmap()
     arr = np.empty((bitmap.Height, bitmap.Width, 4), np.uint8)

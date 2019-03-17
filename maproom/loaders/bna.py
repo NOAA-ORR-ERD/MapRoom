@@ -1,6 +1,6 @@
 import os
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
 import numpy as np
 from shapely.geometry import Polygon, LineString
 

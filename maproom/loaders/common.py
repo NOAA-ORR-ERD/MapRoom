@@ -3,9 +3,8 @@ import glob
 import tempfile
 import shutil
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
 
-from maproom.layers import state
 from maproom.library.Boundary import Boundaries, PointsError
 
 
@@ -64,6 +63,8 @@ class BaseLayerLoader(BaseLoader):
         raise NotImplementedError
 
     def save_layer(self, uri, layer):
+        from maproom.layers import state
+
         # Save the layer inside an empty directory because we can't assume that
         # the layer will only overwrite a single file. ESRI shapefile data is
         # spread among at least 3 file, for instance. Everything that's created

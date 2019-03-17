@@ -2,7 +2,7 @@ import os
 
 from traits.trait_base import get_resource_path
 
-from omnivore_framework.utils.fileutil import get_latest_file
+from sawx.utils.fileutil import get_latest_file
 
 
 def get_template_path(name):

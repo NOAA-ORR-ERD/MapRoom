@@ -1,5 +1,4 @@
 import numpy as np
-from fs.opener import opener
 
 from shapely.geometry import Polygon
 from shapely.geometry import shape
@@ -73,20 +72,17 @@ def get_fiona(uri):
         import fiona
 
     if True:
+        # force disabling of fiona
         raise ImportError("fiona not found")
-    fs, relpath = opener.parse(uri)
-    if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for OGR: %s" % uri)
-    file_path = fs.getsyspath(relpath)
-    if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
-        file_path = file_path[4:]
+    if uri.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
+        uri = uri[4:]
     try:
-        source = fiona.open(str(file_path), 'r')
+        source = fiona.open(str(uri), 'r')
     except fiona.errors.DriverError as e:
         raise DriverLoadFailure(e)
 
     if (source is None):
-        return ("Unable to load the shapefile " + file_path, None)
+        return ("Unable to load the shapefile " + uri, None)
 
     return "", source
 

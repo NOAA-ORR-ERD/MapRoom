@@ -3,8 +3,6 @@ import time
 import datetime
 import calendar
 
-from fs.errors import ResourceNotFoundError
-
 # Enthought library imports.
 from traits.api import Any
 from traits.api import Bool
@@ -14,14 +12,14 @@ from traits.api import Int
 from traits.api import Str
 from traits.api import Unicode
 
-from omnivore_framework.utils.runtime import get_all_subclasses
+from sawx.utils.runtime import get_all_subclasses
 
 # MapRoom imports
 from ..library import rect
+from ..styles import LayerStyle
 
 # local package imports
 from . import state
-from .style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)
@@ -457,7 +455,7 @@ class Layer(HasTraits):
             log.debug("Loading layers from url %s" % json_data['url'])
             try:
                 loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
-            except ResourceNotFoundError:
+            except OSError:
                 raise RuntimeError("Failed loading from %s" % json_data['url'])
 
             # need to restore other metadata that isn't part of the URL load

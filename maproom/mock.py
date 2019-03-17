@@ -1,6 +1,6 @@
 import os
 
-from omnivore_framework.utils.file_guess import FileGuess
+from sawx.utils.file_guess import FileGuess
 
 from .layer_manager import LayerManager
 from .layers import Layer, loaders, LayerStyle

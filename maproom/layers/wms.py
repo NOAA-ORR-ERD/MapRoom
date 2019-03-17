@@ -9,6 +9,7 @@ from traits.api import Unicode
 from ..library import rect
 from ..renderer import ImageData
 from ..renderer import alpha_from_int
+from .. import servers
 
 from .base import ProjectedLayer
 
@@ -61,19 +62,19 @@ class WMSLayer(ProjectedLayer):
     ##### Traits
 
     def _map_server_id_default(self):
-        return self.manager.project.task.get_default_wms_id()
+        return servers.get_default_wms_id()
 
     ##### Serialization
 
     def map_server_id_to_json(self):
         # get a representative URL to use as the reference in the project file
         # so we can restore the correct tile server
-        wms_host = self.manager.project.task.get_wms_server_by_id(self.map_server_id)
+        wms_host = servers.get_wms_server_by_id(self.map_server_id)
         return wms_host.url
 
     def map_server_id_from_json(self, json_data):
         url = json_data['map_server_id']
-        index = self.manager.project.task.get_wms_server_id_from_url(url)
+        index = servers.get_wms_server_id_from_url(url)
         if index is not None:
             self.map_server_id = index
 
@@ -152,7 +153,7 @@ class WMSLayer(ProjectedLayer):
             self.rebuild_needed = True
 
     def wms_rebuild(self, canvas):
-        downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
+        downloader = servers.get_threaded_wms_by_id(self.map_server_id)
         if downloader.is_valid():
             if self.map_layers is None:
                 self.map_layers = set(downloader.server.get_default_layers())
@@ -201,7 +202,7 @@ class WMSLayer(ProjectedLayer):
     # Utility routines used by info_panels to abstract the server info
 
     def get_downloader(self, server_id):
-        return self.manager.project.task.get_threaded_wms_by_id(server_id)
+        return servers.get_threaded_wms_by_id(server_id)
 
     def get_server_names(self):
-        return self.manager.project.task.get_known_wms_names()
+        return servers.get_known_wms_names()

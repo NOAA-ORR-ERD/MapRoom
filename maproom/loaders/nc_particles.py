@@ -8,7 +8,7 @@ import os
 import numpy as np
 #import re
 
-from fs.opener import opener
+from sawx.filesystem import fsopen as open
 
 from .common import BaseLayerLoader
 from maproom.layers.particles import ParticleLayer, ParticleFolder, ParticleLegend
@@ -18,6 +18,15 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 from post_gnome import nc_particles
+
+
+def identify_mime(header, fh):
+    fh.seek(0)
+    byte_stream = fh.read()
+    # check if is is HDF or CDF
+    if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
+        if (b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream):
+            return dict(mime="application/x-nc_particles", loader=ParticleLoader)
 
 
 class nc_particles_file_loader():

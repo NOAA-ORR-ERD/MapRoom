@@ -19,7 +19,7 @@ from traits.api import Int, Float
 from traits.api import Str
 from traits.api import Unicode
 
-from omnivore_framework.utils.parseutil import NumpyFloatExpression, ParseException
+from sawx.utils.parseutil import NumpyFloatExpression, ParseException
 
 from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils

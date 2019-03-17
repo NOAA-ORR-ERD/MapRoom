@@ -15,6 +15,7 @@ from ..library import rect
 from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, mi_to_rounded_string
 from ..library.Boundary import Boundary
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_color_uint8, int_to_html_color_string, alpha_from_int, ImageData, data_types
+from .. import styles
 
 from .line import LineLayer
 from .folder import BoundedFolder
@@ -1437,7 +1438,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     def get_renderer_colors(self):
         """Hook to allow subclasses to override style colors
         """
-        style = self.manager.project.task.default_styles_read_only("ui")
+        style = styles.default_styles_read_only("ui")
         line_color = style.line_color
         r, g, b, a = int_to_color_floats(line_color)
         point_color = color_floats_to_int(r, g, b, 1.0)
@@ -1504,7 +1505,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
         if self.manager.project.layer_tree_control.get_edit_layer() == self:
-            style = self.manager.project.task.default_styles_read_only("ui")
+            style = styles.default_styles_read_only("ui")
             renderer.outline_object(self, picker, style)
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):

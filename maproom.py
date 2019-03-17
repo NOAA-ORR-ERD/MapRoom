@@ -69,7 +69,7 @@ def main(argv):
     """
     logging.basicConfig(level=logging.WARNING)
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
+    # logger.setLevel(logging.INFO)
 
     if "--trace" in argv:
         import sys

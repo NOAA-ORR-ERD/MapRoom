@@ -2,7 +2,7 @@ import wx
 
 import numpy as np
 
-from omnivore_framework import get_image_path
+from sawx.filesystem import get_image_path
 
 from .font_extents import FONT_EXTENTS
 
