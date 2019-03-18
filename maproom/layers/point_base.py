@@ -317,8 +317,7 @@ class PointBaseLayer(ProjectedLayer):
     def swap_lat_lon(self):
         self.points.x, self.points.y = self.points.y, self.points.x.copy()
 
-    def compute_projected_point_data(self):
-        projection = self.manager.project.layer_canvas.projection
+    def compute_projected_point_data(self, projection):
         return data_types.compute_projected_point_data(self.points, projection, self.hidden_points)
 
     def update_affected_points(self,
@@ -333,7 +332,8 @@ class PointBaseLayer(ProjectedLayer):
         """Update renderer
 
         """
-        projected_point_data = self.compute_projected_point_data()
+        projection = renderer.canvas.projection
+        projected_point_data = self.compute_projected_point_data(projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):

@@ -41,6 +41,8 @@ autosave_log = logging.getLogger("autosave")
 class ProjectEditor(SawxEditor):
     """Editor for MapRoom layers
     """
+    task_id = "maproom.project"
+
     preferences_module = "maproom.preferences"
 
     printable = True
@@ -279,7 +281,7 @@ class ProjectEditor(SawxEditor):
             # all layers
             self.update_default_visibility(warn=True)
         else:
-            self.layer_visibility = self.get_default_visibility()
+            self.layer_visibility = self.calc_default_visibility()
         if "commands" in json:
             for cmd in self.layer_manager.undo_stack.unserialize_text(json["commands"], self.layer_manager):
                 self.process_batch_command(cmd, batch_flags)
@@ -378,12 +380,12 @@ class ProjectEditor(SawxEditor):
 
     def save_as_template(self, name):
         path = self.window.application.get_user_dir_filename("project_templates", name)
-        if not os.path.exists(path) or self.task.confirm("Replace existing template %s?" % name, "Replace Template"):
+        if not os.path.exists(path) or self.frame.confirm("Replace existing template %s?" % name, "Replace Template"):
             error = self.save_project(path)
             if error:
-                self.task.error(error)
+                self.frame.error(error)
             else:
-                self.task.templates_changed = True  # update template submenu
+                self.frame.templates_changed = True  # update template submenu
 
     def get_savepoint(self):
         layer = self.layer_tree_control.get_edit_layer()
@@ -404,7 +406,7 @@ class ProjectEditor(SawxEditor):
             fh.write(str(serializer))
             fh.close()
         except IOError as e:
-            self.task.error(str(e))
+            self.frame.error(str(e))
         self.layer_manager.undo_stack.pop_command()
 
     def save_layer(self, path, loader=None):
@@ -414,7 +416,7 @@ class ProjectEditor(SawxEditor):
         if layer is None:
             return
 
-        prefs = self.task.preferences
+        prefs = self.preferences
         if prefs.check_errors_on_save:
             if not self.check_all_layers_for_errors(True):
                 return
@@ -427,7 +429,7 @@ class ProjectEditor(SawxEditor):
         finally:
             progress_log.info("END")
         if error:
-            self.task.error(error)
+            self.frame.error(error)
         else:
             self.window.application.successfully_loaded_event = path
         self.layer_metadata_changed(layer)
@@ -499,19 +501,19 @@ class ProjectEditor(SawxEditor):
         if not req.is_cancelled:
             if error is None:
                 log.debug("loaded RNC map %s for map %s" % (req.path, req.extra_data))
-                prefs = self.task.preferences
+                prefs = self.preferences
                 kap = extract_from_zip(req.path, req.extra_data[0], prefs.bsb_directory)
                 if kap:
-                    self.window.application.load_file(kap, self.task, regime=req.extra_data[1])
+                    self.frame.load_file(kap, self, regime=req.extra_data[1])
                 else:
-                    self.task.error("The metadata in %s\nhas a problem: map %s doesn't exist" % (req.path, req.extra_data))
+                    self.frame.error("The metadata in %s\nhas a problem: map %s doesn't exist" % (req.path, req.extra_data))
             else:
-                self.task.error("Error downloading %s:\n%s" % (req.url, error))
+                self.frame.error("Error downloading %s:\n%s" % (req.url, error))
 
     def check_rnc_map(self, url, filename, map_id):
         # Check for existence of already downloaded RNC map. This assumes the
         # layout BSB_ROOT/<map number>/<filename>
-        prefs = self.task.preferences
+        prefs = self.preferences
         if prefs.bsb_directory:
             path = os.path.join(prefs.bsb_directory, "BSB_ROOT", map_id, filename)
             log.debug("checking for RNC file %s" % path)
@@ -520,13 +522,13 @@ class ProjectEditor(SawxEditor):
 
     def download_rnc(self, url, filename, map_id, regime, confirm=False, name=None):
         if confirm:
-            if not self.task.confirm(f"Download and display RNC #{map_id}?\n\n{name}", "Confirm RNC Download"):
+            if not self.frame.confirm(f"Download and display RNC #{map_id}?\n\n{name}", "Confirm RNC Download"):
                 return
         kap = self.check_rnc_map(url, filename, map_id)
         if not kap:
             self.download_file(url, None, self.process_rnc_download, (filename, regime))
         else:
-            self.window.application.load_file(kap, self.task, regime=regime)
+            self.frame.load_file(kap, self, regime=regime)
 
     def download_file(self, url, filename, callback, extra_data):
         if filename is None:
@@ -554,7 +556,7 @@ class ProjectEditor(SawxEditor):
 
     def get_default_layout(self):
         try:
-            data = get_template("%s.default_layout" % self.task.id)
+            data = get_template("%s.default_layout" % self.task_id)
         except OSError:
             log.error("no default layout")
             e = {}
@@ -566,7 +568,9 @@ class ProjectEditor(SawxEditor):
                 e = {}
         return e
 
-    def create_layout(self, json):
+    def create_layout(self):
+        json = self.document.extra_metadata
+
         panel = self.control
         if "tile_manager" in json:
             layout = json
@@ -600,23 +604,27 @@ class ProjectEditor(SawxEditor):
         self.selection_info = SelectionInfoPanel(panel, self, size=(200, 200))
         panel.add(self.selection_info, "selection_info", use_close_button=False)
 
-        self.triangle_panel = TrianglePanel(panel, self.task)
+        self.triangle_panel = TrianglePanel(panel, self)
         panel.add(self.triangle_panel, "triangle_panel", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.merge_points_panel = MergePointsPanel(panel, self.task)
+        self.merge_points_panel = MergePointsPanel(panel, self)
         panel.add(self.merge_points_panel, "merge_points_panel", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.undo_history = UndoHistoryPanel(panel, self.task)
+        self.undo_history = UndoHistoryPanel(panel, self)
         panel.add(self.undo_history, "undo_history", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.flagged_control = panes.FlaggedPointPanel(panel, self.task)
+        self.flagged_control = panes.FlaggedPointPanel(panel, self)
         panel.add(self.flagged_control, "flagged_control", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.download_control = panes.DownloadPanel(panel, self.task)
+        self.download_control = panes.DownloadPanel(panel, self)
         panel.add(self.download_control, "download_control", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.timeline = panes.TimelinePlaybackPanel(panel, self.task)
+        self.timeline = panes.TimelinePlaybackPanel(panel, self)
         panel.add_footer(self.timeline)
+
+        batch_flags = json.get('batch_flags_from_load', {})
+        self.parse_extra_json(json, batch_flags)
+
 
     # Traits event handlers
 
@@ -807,7 +815,7 @@ class ProjectEditor(SawxEditor):
             try:
                 undo = self.process_batch_command(command, b)
             except MapRoomError as e:
-                self.task.error(str(e), "Error Processing Command")
+                self.frame.error(str(e), "Error Processing Command")
                 if hasattr(e, 'error_points'):
                     layer = command.get_layer_in_layer_manager(self.layer_manager)
                     layer.highlight_exception(e)
@@ -961,9 +969,9 @@ class ProjectEditor(SawxEditor):
             self.layer_tree_control.set_edit_layer(b.select_layer)
 
         if b.errors:
-            self.task.error("\n".join(b.errors))
+            self.frame.error("\n".join(b.errors))
         if b.messages:
-            self.task.information("\n".join(b.messages), "Messages")
+            self.frame.information("\n".join(b.messages), "Messages")
 
         self.undo_history.update_history()
 
@@ -1013,7 +1021,7 @@ class ProjectEditor(SawxEditor):
             data_obj = clipboard.get_paste_data_object(self)
             self.process_paste_data_object(data_obj)
         except clipboard.ClipboardError as e:
-            self.task.error(str(e), "Paste Error")
+            self.frame.error(str(e), "Paste Error")
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
         # print("Found data object %s" % data_obj)
@@ -1084,9 +1092,9 @@ class ProjectEditor(SawxEditor):
         if error == "cancel":
             return
         elif error is not None:
-            self.task.error(error, edit_layer.name)
+            self.frame.error(error, edit_layer.name)
         elif status is None:
-            self.task.error("No complete boundary", edit_layer.name)
+            self.frame.error("No complete boundary", edit_layer.name)
         else:
             self.update_layer_contents_ui()
             self.refresh()
@@ -1142,7 +1150,7 @@ class ProjectEditor(SawxEditor):
         else:
             m = None
 
-        if m is not None and not self.task.confirm(m):
+        if m is not None and not self.frame.confirm(m):
             return
 
         cmd = mec.DeleteLayerCommand(layer)
@@ -1170,12 +1178,12 @@ class ProjectEditor(SawxEditor):
         elif error is not None:
             edit_layer.highlight_exception(error)
             if save_message:
-                all_ok = self.task.confirm(str(error), "Layer Contains Problems; Save Anyway?")
+                all_ok = self.frame.confirm(str(error), "Layer Contains Problems; Save Anyway?")
             else:
-                self.task.error(str(error), "Layer Contains Problems")
+                self.frame.error(str(error), "Layer Contains Problems")
         else:
             edit_layer.clear_flagged(refresh=True)
-            self.task.information("Layer %s OK" % edit_layer.name, "No Problems Found")
+            self.frame.information("Layer %s OK" % edit_layer.name, "No Problems Found")
         log.debug(f"check_for_errors in {edit_layer}: {error}")
         self.flagged_control.recalc_view()
         return all_ok
@@ -1205,16 +1213,16 @@ class ProjectEditor(SawxEditor):
         elif messages:
             if save_message:
                 msg = "Layers Contains Problems; Save Anyway?"
-                all_ok = self.task.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
+                all_ok = self.frame.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
             else:
                 msg = "Layers With Problems"
-                self.task.information("\n\n".join(messages), msg)
+                self.frame.information("\n\n".join(messages), msg)
         else:
             for layer in self.layer_manager.flatten():
                 layer.clear_flagged()
             self.layer_manager.refresh_needed = None
             if not save_message:
-                self.task.information("Layers OK", "No Problems Found")
+                self.frame.information("Layers OK", "No Problems Found")
         return all_ok
 
     def editor_summary(self):

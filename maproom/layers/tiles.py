@@ -95,17 +95,17 @@ class TileLayer(ProjectedLayer):
             self.image_data = None
             self.rebuild_needed = False
         if self.image_data is None:
-            projection = self.manager.project.layer_canvas.projection
+            projection = renderer.canvas.projection
             downloader = self.get_downloader(self.map_server_id)
             self.image_data = TileImageData(projection, downloader, renderer)
             self.name = downloader.host.name
-            self.manager.project.layer_metadata_changed(self)
+            renderer.canvas.project.layer_metadata_changed(self)
         if self.image_data is not None:
             renderer.set_tiles(self.image_data)
             self.image_data.add_tiles(self.threaded_request_results, renderer.image_tiles)
             renderer.image_tiles.reorder_tiles(self.image_data)
             self.change_count += 1  # Force info panel update
-            self.manager.project.layer_canvas.project.update_info_panels(self, True)
+            renderer.canvas.project.update_info_panels(self, True)
 
     def resize(self, renderer, world_rect, proj_rect, screen_rect):
         zoom_level = renderer.canvas.zoom_level

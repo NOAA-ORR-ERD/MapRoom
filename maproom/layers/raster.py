@@ -128,7 +128,7 @@ class RasterLayer(ProjectedLayer):
         if not self.image_data:
             return
 
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         renderer.set_image_projection(self.image_data, projection)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):

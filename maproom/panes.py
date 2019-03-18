@@ -10,6 +10,7 @@ from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 
 # Enthought library imports.
 
+from sawx import preferences
 from sawx.ui.popuputil import SpringTabs
 from sawx.ui.download_manager import DownloadControl
 from sawx.ui.zoomruler import ZoomRuler
@@ -26,10 +27,9 @@ log = logging.getLogger(__name__)
 
 
 class TimelinePanel(ZoomRuler):
-    def __init__(self, parent, task, **kwargs):
+    def __init__(self, parent, editor, **kwargs):
         ZoomRuler.__init__(self, parent, **kwargs)
-        self.task = task
-        self.editor = None
+        self.editor = editor
         self.current_time = None
  
     def init_playback(self):
@@ -302,7 +302,7 @@ class TimeStepDialog(wx.Dialog, TimeStepPanelMixin):
 
 
 class TimelinePlaybackPanel(wx.Panel):
-    def __init__(self, parent, task, *args, **kwargs):
+    def __init__(self, parent, editor, *args, **kwargs):
         wx.Panel.__init__(self, parent, *args, **kwargs)
         self.SetName("Timeline")
 
@@ -316,7 +316,7 @@ class TimelinePlaybackPanel(wx.Panel):
         self.steps.Bind(wx.EVT_BUTTON, self.on_steps)
         sizer.Add(self.steps, 0, wx.EXPAND)
 
-        self.timeline = TimelinePanel(self, task)
+        self.timeline = TimelinePanel(self, editor)
         sizer.Add(self.timeline, 1, wx.EXPAND|wx.LEFT, 5)
 
         self.SetSizer(sizer)
@@ -361,7 +361,6 @@ class TimelinePlaybackPanel(wx.Panel):
 
     def recalc_view(self):
         log.debug("timeline recalc_view")
-        self.timeline.editor = self.timeline.task.active_editor
         self.timeline.rebuild(self.timeline)
         log.debug("step rate %d num %d" % (self.timeline.step_rate, self.timeline.num_marks))
         if self.timeline.step_rate == 0 and self.timeline.num_marks > 1:
@@ -436,9 +435,8 @@ class TimelinePlaybackPanel(wx.Panel):
 #        self.Fit()
 
 class FlaggedPointPanel(wx.ListBox):
-    def __init__(self, parent, task, **kwargs):
-        self.task = task
-        self.editor = None
+    def __init__(self, parent, editor, **kwargs):
+        self.editor = editor
         self.point_indexes = []
         self.notification_count = 0
         wx.ListBox.__init__(self, parent, wx.ID_ANY, name="Flagged Points", **kwargs)
@@ -478,7 +476,7 @@ class FlaggedPointPanel(wx.ListBox):
 
     def process_index(self, index):
         point_index = self.point_indexes[index]
-        editor = self.task.active_editor
+        editor = self.editor
         layer = editor.layer_tree_control.get_edit_layer()
         editor.layer_canvas.do_center_on_point_index(layer, point_index)
 
@@ -488,8 +486,7 @@ class FlaggedPointPanel(wx.ListBox):
         self.notification_count = len(point_indexes)
 
     def recalc_view(self):
-        editor = self.task.active_editor
-        self.editor = editor
+        editor = self.editor
         layer = editor.layer_tree_control.get_edit_layer()
         try:
             points = layer.get_flagged_point_indexes()
@@ -503,29 +500,23 @@ class FlaggedPointPanel(wx.ListBox):
 
 
 class DownloadPanel(DownloadControl):
-    def __init__(self, parent, task, **kwargs):
-        self.task = task
-        self.editor = None
-        downloader = self.task.window.application.get_downloader()
+    def __init__(self, parent, editor, **kwargs):
+        self.editor = editor
+        downloader = wx.GetApp().get_downloader()
         DownloadControl.__init__(self, parent, downloader, size=(400, -1), name="Downloads", **kwargs)
 
     # turn the superclass attribute path into a property so we can override it
     # and pull out the paths from the preferences
     @property
     def path(self):
-        prefs = self.task.preferences
-        if prefs.download_directory:
-            path = prefs.download_directory
-        else:
-            path = self.task.window.application.user_data_dir
+        path = preferences.download_directory
         log.debug("download path: %s" % path)
         return path
 
     @path.setter
     def path(self, value):
         if value:
-            prefs = self.task.preferences
-            prefs.download_directory = value
+            preferences.download_directory = value
 
     def refresh_view(self):
         self.Refresh()

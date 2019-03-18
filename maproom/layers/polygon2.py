@@ -595,7 +595,7 @@ class PolygonParentLayer(PointLayer):
         log.debug(f"rebuilding polygon2 {self.name}")
         if self.rings is None or len(self.rings) == 0:
             self.create_rings()
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         projected_point_data = data_types.compute_projected_point_data(self.points, projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         # renderer.set_rings(self.ring_adjacency)

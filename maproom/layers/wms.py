@@ -107,7 +107,7 @@ class WMSLayer(ProjectedLayer):
             return wms_result.world_rect, wms_result.get_image_array(), wms_result.error
 
     def rebuild_renderer(self, renderer, in_place=False):
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         if self.rebuild_needed:
             renderer.release_textures()
             self.image_data = None
@@ -133,7 +133,7 @@ class WMSLayer(ProjectedLayer):
             self.download_status_text = ("error", error)
 
             self.change_count += 1  # Force info panel update
-            self.manager.project.layer_canvas.project.update_info_panels(self, True)
+            renderer.canvas.project.update_info_panels(self, True)
         if self.image_data is not None:
             renderer.set_image_projection(self.image_data, projection)
             self.rebuild_needed = False

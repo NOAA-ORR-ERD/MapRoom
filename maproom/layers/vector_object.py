@@ -737,7 +737,7 @@ class ScaledImageObject(RectangleVectorObject):
         """Update renderer
 
         """
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         if self.image_data is None:
             raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[1], raw.shape[0])

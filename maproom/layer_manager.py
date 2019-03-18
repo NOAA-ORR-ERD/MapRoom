@@ -71,7 +71,6 @@ class LayerManager(SawxDocument):
     transient_invariant = -99
 
     def __init__(self, file_metadata):
-        self.project = None
         self.default_styles = styles.copy_default_styles()
         self.layers = []
 
@@ -109,8 +108,8 @@ class LayerManager(SawxDocument):
 
         SawxDocument.__init__(self, file_metadata)
 
-    def set_project(self, project):
-        self.project = project
+    # def set_project(self, project):
+    #     self.project = project
 
         # # Add hook to create layer instances for debugging purposes
         # if "--debug-objects" in self.project.window.application.command_line_args:
@@ -171,9 +170,12 @@ class LayerManager(SawxDocument):
             loader.load_project  # test
         except AttributeError:
             undo = loader.load_layers_from_uri(self.uri, self)
-            extra = undo.flags
+            batch_flags = undo.flags
+            extra = {}
         else:
             extra = loader.load_project(self.uri, self, batch_flags)
+        self.extra_metadata = extra
+        self.extra_metadata['batch_flags_from_load'] = batch_flags
         # self.create_layout(extra)
         # self.parse_extra_json(extra, batch_flags)
         # self.loaded_project_extra_json = extra
