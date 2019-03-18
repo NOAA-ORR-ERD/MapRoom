@@ -1,6 +1,7 @@
 import os
 
 from sawx import persistence
+from sawx.preferences import SawxPreferences
 
 # fixme:
 # Some hard_coded stuff just to put it in a central place -- should be handled smarter
@@ -9,17 +10,7 @@ from sawx import persistence
 DEFAULT_PROJECTION_STRING = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +over +no_defs"
 
 
-class MaproomPreferences:
-    """ The preferences helper for the Framework application.
-    """
-
-    # 'PreferencesHelper' interface ########################################
-
-    # The path to the preference node that contains the preferences.
-    preferences_path = 'maproom'
-
-    # Preferences ##########################################################
-
+class MaproomPreferences(SawxPreferences):
     # Lat/lon degree display format
     coordinate_display_format = [
         "degrees decimal minutes",
@@ -40,7 +31,7 @@ class MaproomPreferences:
         self.zoom_speed = "Slow"
 
         # display scale legend by default
-        self.self.show_scale = True
+        self.show_scale = True
 
         # check for layer errors on file save
         self.check_errors_on_save = True
@@ -49,15 +40,15 @@ class MaproomPreferences:
         self.identify_layers = True
 
         # minimum number of pixels between grid lines
-        grid_spacing_low = 25
-        grid_spacing_high = 200
-        grid_spacing = 100
+        self.grid_spacing_low = 25
+        self.grid_spacing_high = 200
+        self.grid_spacing = 100
 
-        download_directory = persistence.get_user_data("Downloads")
+        self.download_directory = persistence.get_user_dir("Downloads")
 
-        bsb_directory = persistence.get_user_data("BSB")
+        self.bsb_directory = persistence.get_user_dir("BSB")
 
-        colormap_name = "gist_heat"
+        self.colormap_name = "gist_heat"
 
 
 # class MaproomPreferencesPane(PreferencesPane):

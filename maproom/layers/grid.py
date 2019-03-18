@@ -32,7 +32,7 @@ class Graticule(ScreenLayer):
     LINE_COLOR = (0, 0, 0, 0.75)
 
     def resize(self, renderer, world_rect, screen_rect):
-        prefs = renderer.canvas.project.task.preferences
+        prefs = renderer.canvas.project.preferences
         if prefs.coordinate_display_format == "decimal degrees":
             self.grid = DecimalDegreeGridLines()
         else:

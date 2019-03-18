@@ -374,7 +374,7 @@ class PointCoordinateField(TextEditField):
         i = self.get_point_index(layer)
         if i < 0:
             return ""
-        prefs = self.panel.project.task.preferences
+        prefs = self.panel.project.preferences
         coords_text = coordinates.format_coords_for_display(layer.points.x[i], layer.points.y[i], prefs.coordinate_display_format)
         lat_text, long_text = coords_text.split(", ")
         if "long" in self.field_name:

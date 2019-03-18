@@ -87,9 +87,9 @@ class PointBaseLayer(ProjectedLayer):
 
     # fixme: can we remove all the visibility stuff???
     # and if not -- this shouldn't have any references to labels
-    def get_visibility_dict(self):
+    def get_visibility_dict(self, project):
         # fixme: why not call self.get_visibility_dict ?
-        d = ProjectedLayer.get_visibility_dict(self)
+        d = ProjectedLayer.get_visibility_dict(self, project)
         # fixme: and why do I need to mess with label visibility here?
         d["labels"] = False
         return d

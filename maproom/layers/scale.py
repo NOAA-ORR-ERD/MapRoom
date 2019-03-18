@@ -69,8 +69,8 @@ class Scale(ScreenLayer):
     def y_percentage_from_json(self, json_data):
         self.y_percentage = json_data['y_percentage']
 
-    def get_visibility_dict(self):
-        prefs = self.manager.project.task.preferences
+    def get_visibility_dict(self, project):
+        prefs = project.preferences
         d = dict()
         d["layer"] = prefs.show_scale
         return d

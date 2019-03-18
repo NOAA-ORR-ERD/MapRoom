@@ -558,7 +558,7 @@ class Layer(HasTraits):
     def check_projection(self, task):
         pass
 
-    def get_visibility_dict(self):
+    def get_visibility_dict(self, project):
         # fixme: you'be GOT to be kidding me!
         # shouldn't visibility be governed by the layer manager?
         # or each layer has its own sub-layer visibility

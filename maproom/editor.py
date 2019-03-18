@@ -39,21 +39,23 @@ autosave_log = logging.getLogger("autosave")
 
 
 class ProjectEditor(SawxEditor):
-    """The wx implementation of a ProjectEditor.
-
-    See the IProjectEditor interface for the API documentation.
+    """Editor for MapRoom layers
     """
+    preferences_module = "maproom.preferences"
 
     printable = True
 
     imageable = True
 
-    # NOTE: Class attribute!
     clipboard_style = None
 
-    ###########################################################################
-    # 'FrameworkEditor' interface.
-    ###########################################################################
+    #### document matching
+
+    @classmethod
+    def can_edit_document_exact(cls, document):
+        return hasattr(document, "layers")
+
+    #### init
 
     def __init__(self, document, **kwargs):
         SawxEditor.__init__(self, document, **kwargs)
@@ -152,7 +154,7 @@ class ProjectEditor(SawxEditor):
     def calc_default_visibility(self):
         layer_visibility = dict()
         for layer in self.layer_manager.flatten():
-            layer_visibility[layer] = layer.get_visibility_dict()
+            layer_visibility[layer] = layer.get_visibility_dict(self)
         return layer_visibility
 
     def update_default_visibility(self, warn=False):
@@ -160,7 +162,7 @@ class ProjectEditor(SawxEditor):
             if layer not in self.layer_visibility:
                 if warn:
                     log.warning("adding default visibility for layer %s" % layer)
-                self.layer_visibility[layer] = layer.get_visibility_dict()
+                self.layer_visibility[layer] = layer.get_visibility_dict(self)
 
     def set_layer_visibility(self, visible_layers, layers=None):
         if layers is None:
@@ -459,7 +461,7 @@ class ProjectEditor(SawxEditor):
     # @on_trait_change('layer_manager:layer_loaded')
     def layer_loaded(self, layer):
         log.debug("layer_loaded called for %s" % layer)
-        self.layer_visibility[layer] = layer.get_visibility_dict()
+        self.layer_visibility[layer] = layer.get_visibility_dict(self)
 
     # @on_trait_change('layer_manager:layers_changed')
     def layers_changed(self, batch_status):
