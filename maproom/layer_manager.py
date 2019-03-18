@@ -232,7 +232,7 @@ class LayerManager(SawxDocument):
 
     def default_styles_from_json(self, json_data):
         sdict = json_data['default_styles']
-        d = ly.parse_styles_from_json(sdict)
+        d = styles.parse_styles_from_json(sdict)
         self.update_default_styles(d)
 
     ##### Multi-index calculations
@@ -371,17 +371,17 @@ class LayerManager(SawxDocument):
 
     ##### Style
 
-    def update_default_styles(self, styles):
-        self.default_styles = styles
+    def update_default_styles(self, new_styles):
+        self.default_styles = new_styles
 
         # Make sure "other" is a valid style
         try:
-            s = ly.LayerStyle()
+            s = styles.LayerStyle()
             s.parse(str(self.default_styles["other"]))
         except Exception:
             log.warning("Invalid style for other, using default")
-            self.default_styles["other"] = ly.LayerStyle() # minimal default styles
-        for type_name in sorted(styles.keys()):
+            self.default_styles["other"] = styles.LayerStyle() # minimal default styles
+        for type_name in sorted(new_styles.keys()):
             style = self.default_styles[type_name]
             log.debug("style %s: %s" % (type_name, str(style)))
 
