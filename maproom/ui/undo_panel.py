@@ -6,8 +6,8 @@ progress_log = logging.getLogger("progress")
 
 
 class UndoHistoryPanel(wx.Panel):
-    def __init__(self, parent, task):
-        self.task = task
+    def __init__(self, parent, editor):
+        self.editor = editor
         wx.Panel.__init__(self, parent, wx.ID_ANY, name="Undo History")
 
         # Mac/Win needs this, otherwise background color is black
@@ -24,11 +24,8 @@ class UndoHistoryPanel(wx.Panel):
         self.sizer.Layout()
         self.Fit()
 
-    def set_task(self, task):
-        self.task = task
-
     def update_history(self):
-        project = self.task.active_editor
+        project = self.editor
         summary = project.layer_manager.undo_stack.history_list()
         self.history.Set(summary)
         index = project.layer_manager.undo_stack.insert_index

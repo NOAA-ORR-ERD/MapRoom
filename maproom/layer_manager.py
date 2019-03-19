@@ -85,6 +85,7 @@ class LayerManager(SawxDocument):
         self.insert_layer([index], scale)
 
         SawxDocument.__init__(self, file_metadata)
+        self.undo_stack = UndoStack()  # replace sawx undo stack with our own
 
         self.layer_loaded_event = EventHandler(self)
         self.layers_changed_event = EventHandler(self)

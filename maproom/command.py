@@ -34,11 +34,12 @@ class UndoStack(list):
         cmd.last_flags = undo_info.flags
         return undo_info
 
+    @property
     def can_undo(self):
         return self.insert_index > 0
 
     def get_undo_command(self):
-        if self.can_undo():
+        if self.can_undo:
             return self[self.insert_index - 1]
 
     def undo(self, editor):
@@ -51,11 +52,12 @@ class UndoStack(list):
         cmd.last_flags = undo_info.flags
         return undo_info
 
+    @property
     def can_redo(self):
         return self.insert_index < len(self)
 
     def get_redo_command(self):
-        if self.can_redo():
+        if self.can_redo:
             return self[self.insert_index]
 
     def redo(self, editor):

@@ -2,11 +2,10 @@ import re
 import shlex
 
 from sawx.utils.runtime import get_all_subclasses
-from sawx.utils.file_guess import FileMetadata
 
 from . import command
 from . import magic
-from .style import LayerStyle
+from .styles import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)

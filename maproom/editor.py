@@ -14,6 +14,7 @@ from sawx.ui.popuputil import PopupStatusBar
 from sawx.ui.tilemanager import TileManager
 from sawx.templates import get_template
 from sawx.events import EventHandler
+from sawx import persistence
 
 # Local imports.
 from .errors import MapRoomError
@@ -399,7 +400,7 @@ class ProjectEditor(SawxEditor):
         return error
 
     def save_as_template(self, name):
-        path = self.window.application.get_user_dir_filename("project_templates", name)
+        path = persistence.get_user_dir_filename("project_templates", name)
         if not os.path.exists(path) or self.frame.confirm("Replace existing template %s?" % name, "Replace Template"):
             error = self.save_project(path)
             if error:
@@ -451,7 +452,7 @@ class ProjectEditor(SawxEditor):
         if error:
             self.frame.error(error)
         else:
-            self.window.application.successfully_loaded_event = path
+            self.save_success(path)
         self.layer_metadata_changed(layer)
         self.update_layer_selection_ui()
 
@@ -464,7 +465,7 @@ class ProjectEditor(SawxEditor):
 
     def print_preview(self):
         import os
-        temp = os.path.join(self.window.application.cache_dir, "preview.pdf")
+        temp = os.path.join(persistence.cache_dir, "preview.pdf")
         self.save_as_pdf(temp)
         try:
             os.startfile(temp)
@@ -854,8 +855,8 @@ class ProjectEditor(SawxEditor):
                     b.editable_properties_changed = override_editable_properties_changed
                 self.perform_batch_flags(command, b)
                 history = self.layer_manager.undo_stack.serialize()
-                self.window.application.save_log(str(history), "command_log", ".mrc")
-                name = self.window.application.get_log_file_name("command_log", ".mrc")
+                persistence.save_log(str(history), "command_log", ".mrc")
+                name = persistence.get_log_file_name("command_log", ".mrc")
                 latest = os.path.join(os.path.dirname(name), "latest.mrc")
                 import shutil
                 shutil.copy(name, latest)
