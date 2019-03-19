@@ -84,13 +84,15 @@ def main(argv):
 
     from maproom._version import __version__
     SawxApp.app_name = "MapRoom"
+    SawxApp.app_version = __version__
+    SawxApp.app_description = "High-performance 2d mapping"
+    SawxApp.app_icon = "icon://maproom.ico"
+    SawxApp.app_website = "http://www.noaa.gov"
     SawxApp.default_uri = "template://default_project.maproom"
     SawxApp.about_image = "icon://maproom_large.png"
-    SawxApp.about_version = __version__
-    SawxApp.about_description = "High-performance 2d mapping"
-    SawxApp.about_html = f"""<h2>{SawxApp.app_name} {SawxApp.about_version}</h2>
+    SawxApp.about_html = f"""<h2>{SawxApp.app_name} {SawxApp.app_version}</h2>
 
-<h3>{SawxApp.about_description}</h3>
+<h3>{SawxApp.app_description}</h3>
 
 <p><img src="{SawxApp.about_image}">"""
     run(SawxApp, image_paths, template_paths, help_paths)
