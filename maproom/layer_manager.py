@@ -52,6 +52,22 @@ class LayerManager(SawxDocument):
         self.default_styles = styles.copy_default_styles()
         self.layers = []
 
+        self.layer_loaded_event = EventHandler(self)
+        self.layers_changed_event = EventHandler(self)
+        self.layer_contents_changed_event = EventHandler(self)
+        self.layer_contents_changed_in_place_event = EventHandler(self)
+        
+        # when points are deleted from a layer the indexes of the points in the
+        # merge dialog box become invalid; so this event will trigger the
+        # user to re-find duplicates in order to create a valid list again
+        self.layer_contents_deleted_event = EventHandler(self)
+
+        self.layer_metadata_changed_event = EventHandler(self)
+        self.projection_changed_event = EventHandler(self)
+        self.refresh_needed_event = EventHandler(self)
+        self.background_refresh_needed_event = EventHandler(self)
+        self.threaded_image_loaded_event = EventHandler(self)
+
         # if the project is loaded from a zip file, the ExpandZip object is
         # stored here so the unpacked directory can be referenced when re-
         # saving the project
@@ -86,22 +102,6 @@ class LayerManager(SawxDocument):
 
         SawxDocument.__init__(self, file_metadata)
         self.undo_stack = UndoStack()  # replace sawx undo stack with our own
-
-        self.layer_loaded_event = EventHandler(self)
-        self.layers_changed_event = EventHandler(self)
-        self.layer_contents_changed_event = EventHandler(self)
-        self.layer_contents_changed_in_place_event = EventHandler(self)
-        
-        # when points are deleted from a layer the indexes of the points in the
-        # merge dialog box become invalid; so this event will trigger the
-        # user to re-find duplicates in order to create a valid list again
-        self.layer_contents_deleted_event = EventHandler(self)
-
-        self.layer_metadata_changed_event = EventHandler(self)
-        self.projection_changed_event = EventHandler(self)
-        self.refresh_needed_event = EventHandler(self)
-        self.background_refresh_needed_event = EventHandler(self)
-        self.threaded_image_loaded_event = EventHandler(self)
 
     # def set_project(self, project):
     #     self.project = project
@@ -903,7 +903,7 @@ class LayerManager(SawxDocument):
         return layers
 
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
-        # self.dispatch_event('layer_loaded', layer)
+        self.layer_loaded_event(layer)
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of, layer.background, layer.opaque, layer.bounded)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
@@ -914,7 +914,7 @@ class LayerManager(SawxDocument):
         layer = ly.Layer.load_from_json(json_data, self)[0]
         if old_invariant_map is not None:
             old_invariant_map[json_data['invariant']] = layer
-        # self.dispatch_event('layer_loaded', layer)
+        self.layer_loaded_event(layer)
         self.insert_layer(mi, layer)
         if json_data['children']:
             mi.append(1)
