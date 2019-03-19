@@ -13,6 +13,7 @@ import sawx.clipboard as clipboard
 from sawx.ui.popuputil import PopupStatusBar
 from sawx.ui.tilemanager import TileManager
 from sawx.templates import get_template
+from sawx.events import EventHandler
 
 # Local imports.
 from .errors import MapRoomError
@@ -240,13 +241,13 @@ class ProjectEditor(SawxEditor):
 
         # temporary variable set in load process and used in setting the
         # initial view
-        loaded_project_extra_json = None
+        self.loaded_project_extra_json = None
 
         # can_paste_style is set by copy_style if there's a style that can be
         # applied
-        can_paste_style = False
+        self.can_paste_style = False
 
-        latest_movie = None
+        self.latest_movie = None
 
         # Force mouse mode toolbar to be blank so that the initial trait change
         # that occurs during initialization of this class doesn't match a real
@@ -254,8 +255,27 @@ class ProjectEditor(SawxEditor):
         # during the first trait change in response to
         # update_layer_selection_ui and there will be an empty between named
         # toolbars
-        mouse_mode_toolbar = ""
-        mouse_mode_factory = mouse_handler.SelectionMode
+        self.mouse_mode_toolbar = ""
+        self.mouse_mode_factory = mouse_handler.SelectionMode
+
+    def create_event_bindings(self):
+        doc = self.layer_manager
+        doc.layer_loaded_event += self.layer_loaded
+        doc.layers_changed_event += self.layers_changed
+        doc.layer_contents_changed_event += self.layer_contents_changed
+        doc.layer_contents_changed_in_place_event += self.layer_contents_changed_in_place
+        
+        # # when points are deleted from a layer the indexes of the points in the
+        # # merge dialog box become invalid; so this event will trigger the
+        # # user to re-find duplicates in order to create a valid list again
+        doc.layer_contents_deleted_event += self.layer_contents_deleted
+        
+        doc.layer_metadata_changed_event += self.layer_metadata_changed
+        # doc.projection_changed_event += EventHandler(self)
+        doc.refresh_needed_event += self.refresh
+        doc.background_refresh_needed_event += self.background_refresh
+        doc.threaded_image_loaded_event += self.threaded_image_loaded
+
 
     @property
     def current_layer(self):
@@ -628,13 +648,13 @@ class ProjectEditor(SawxEditor):
 
     # Traits event handlers
 
-    # @on_trait_change('layer_manager:layer_loaded')
-    def layer_loaded(self, layer):
+    def layer_loaded(self, evt):
+        layer = evt[0]
         log.debug("layer_loaded called for %s" % layer)
         self.layer_visibility[layer] = layer.get_visibility_dict(self)
 
-    # @on_trait_change('layer_manager:layers_changed')
-    def layers_changed(self, batch_status):
+    def layers_changed(self, evt):
+        batch_status = evt[0]
         log.debug("layers_changed called!!!")
         try:
             collapse = batch_status.collapse
@@ -646,26 +666,27 @@ class ProjectEditor(SawxEditor):
         self.timeline.recalc_view()
 
     def update_layer_menu_ui(self, edit_layer):
-        if edit_layer is not None:
-            self.can_copy = edit_layer.can_copy()
-            self.can_paste = True
-            self.can_paste_style = self.clipboard_style is not None
-            self.layer_can_save = edit_layer.can_save()
-            self.layer_can_save_as = edit_layer.can_save_as()
-            self.layer_selected = not edit_layer.is_root()
-            self.layer_zoomable = edit_layer.is_zoomable()
-            self.layer_above = self.layer_manager.is_raisable(edit_layer)
-            self.layer_below = self.layer_manager.is_lowerable(edit_layer)
-        else:
-            self.can_copy = False
-            self.can_paste = False
-            self.can_paste_style = False
-            self.layer_can_save = False
-            self.layer_can_save_as = False
-            self.layer_selected = False
-            self.layer_zoomable = False
-            self.layer_above = False
-            self.layer_below = False
+        # if edit_layer is not None:
+        #     self.can_copy = edit_layer.can_copy()
+        #     self.can_paste = True
+        #     self.can_paste_style = self.clipboard_style is not None
+        #     self.layer_can_save = edit_layer.can_save()
+        #     self.layer_can_save_as = edit_layer.can_save_as()
+        #     self.layer_selected = not edit_layer.is_root()
+        #     self.layer_zoomable = edit_layer.is_zoomable()
+        #     self.layer_above = self.layer_manager.is_raisable(edit_layer)
+        #     self.layer_below = self.layer_manager.is_lowerable(edit_layer)
+        # else:
+        #     self.can_copy = False
+        #     self.can_paste = False
+        #     self.can_paste_style = False
+        #     self.layer_can_save = False
+        #     self.layer_can_save_as = False
+        #     self.layer_selected = False
+        #     self.layer_zoomable = False
+        #     self.layer_above = False
+        #     self.layer_below = False
+        pass
 
     def update_layer_selection_ui(self, edit_layer=None):
         if edit_layer is None:
@@ -681,28 +702,28 @@ class ProjectEditor(SawxEditor):
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_info_panels(edit_layer)
         self.update_layer_contents_ui(edit_layer)
-        self.task.layer_selection_changed = edit_layer
+        # self.task.layer_selection_changed = edit_layer
 
     def update_layer_contents_ui(self, edit_layer=None):
         if edit_layer is None:
             edit_layer = self.layer_tree_control.get_edit_layer()
         if edit_layer is not None:
-            self.layer_has_points = edit_layer.has_points()
-            self.layer_has_selection = edit_layer.has_selection()
-            self.layer_has_flagged = edit_layer.has_flagged()
-            self.layer_has_boundaries = edit_layer.has_boundaries()
-            self.layer_is_groupable = edit_layer.has_groupable_objects()
+        #     self.layer_has_points = edit_layer.has_points()
+        #     self.layer_has_selection = edit_layer.has_selection()
+        #     self.layer_has_flagged = edit_layer.has_flagged()
+        #     self.layer_has_boundaries = edit_layer.has_boundaries()
+        #     self.layer_is_groupable = edit_layer.has_groupable_objects()
             layer_name = edit_layer.name
         else:
-            self.layer_has_points = False
-            self.layer_has_selection = False
-            self.layer_has_flagged = False
-            self.layer_has_boundaries = False
-            self.layer_is_groupable = False
+        #     self.layer_has_points = False
+        #     self.layer_has_selection = False
+        #     self.layer_has_flagged = False
+        #     self.layer_has_boundaries = False
+        #     self.layer_is_groupable = False
             layer_name = "Current Layer"
         log.debug("has_points=%s, has_selection = %s, has_flagged=%s, has_boundaries = %s" % (self.layer_has_points, self.layer_has_selection, self.layer_has_flagged, self.layer_has_boundaries))
         self.layer_info.SetName(layer_name)
-        self.update_undo_redo()
+        pass
 
     def update_info_panels(self, layer, force=False):
         edit_layer = self.layer_tree_control.get_edit_layer()
@@ -719,32 +740,40 @@ class ProjectEditor(SawxEditor):
             return
 
     # @on_trait_change('layer_manager:undo_stack_changed')
-    def undo_stack_changed(self):
+    def undo_stack_changed(self, evt):
         log.debug("undo_stack_changed called!!!")
         self.refresh()
 
     # @on_trait_change('layer_manager:layer_contents_changed')
-    def layer_contents_changed(self, layer):
+    def layer_contents_changed(self, evt):
+        layer = evt[0]
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
     # @on_trait_change('layer_manager:layer_contents_changed_in_place')
-    def layer_contents_changed_in_place(self, layer):
+    def layer_contents_changed_in_place(self, evt):
+        layer = evt[0]
         log.debug("layer_contents_changed_in_place called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer, in_place=True)
 
     # @on_trait_change('layer_manager:layer_contents_deleted')
-    def layer_contents_deleted(self, layer):
+    def layer_contents_deleted(self, evt):
+        layer = evt[0]
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
     # @on_trait_change('layer_manager:layer_metadata_changed')
-    def layer_metadata_changed(self, layer):
+    def layer_metadata_changed(self, evt):
+        layer = evt[0]
         log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
 
     # @on_trait_change('layer_manager:refresh_needed')
-    def refresh(self, batch_flags=None):
+    def refresh(self, evt=None):
+        if evt is None:
+            batch_flags = None
+        else:
+            batch_flags = evt[0]
         log.debug("refresh called; batch_flags=%s" % batch_flags)
         if self.control is None:
             return
@@ -762,7 +791,7 @@ class ProjectEditor(SawxEditor):
             # of the cursor position.
             current = None
         else:
-            current = self.window.control.FindFocus()
+            current = self.control.FindFocus()
 
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
@@ -778,7 +807,7 @@ class ProjectEditor(SawxEditor):
         self.control.Refresh()
 
     # @on_trait_change('layer_manager:background_refresh_needed')
-    def background_refresh(self):
+    def background_refresh(self, evt):
         log.debug("background refresh called")
         t = time.clock()
         if t < self.last_refresh + 0.5:
@@ -787,9 +816,9 @@ class ProjectEditor(SawxEditor):
         self.refresh()
 
     # @on_trait_change('layer_manager:threaded_image_loaded')
-    def threaded_image_loaded(self, data):
-        log.debug("threaded image loaded called")
-        (layer, map_server_id), wms_request = data
+    def threaded_image_loaded(self, evt):
+        log.debug(f"threaded image loaded called: {evt}")
+        (layer, map_server_id), wms_request = evt
         log.debug("event happed on %s for map server id %d" % (layer, map_server_id))
         log.debug(f"wms_request: {wms_request}")
         if layer.is_valid_threaded_result(map_server_id, wms_request):
@@ -809,7 +838,7 @@ class ProjectEditor(SawxEditor):
             # handlers and causing UI sizing and redrawing. Preventing the
             # immediate updates with the Freeze/Thaw pair seems to fix it.
             if sys.platform == "darwin":
-                self.window.control.Freeze()
+                self.control.Freeze()
 
             b = BatchStatus()
             try:
@@ -836,7 +865,7 @@ class ProjectEditor(SawxEditor):
                     self.update_layer_selection_ui()
         finally:
             if sys.platform == "darwin":
-                self.window.control.Thaw()
+                self.control.Thaw()
         return undo
 
     def process_flags(self, flags):
@@ -947,14 +976,14 @@ class ProjectEditor(SawxEditor):
         # displaying this project
         for layer, in_place in b.need_rebuild.items():
             if in_place:
-                self.layer_manager.layer_contents_changed_in_place = layer
+                self.layer_manager.layer_contents_changed_in_place_event(layer)
             else:
-                self.layer_manager.layer_contents_changed = layer
+                self.layer_manager.layer_contents_changed_event(layer)
 
         if b.layers_changed:
-            self.layer_manager.layers_changed = b
+            self.layer_manager.layers_changed_event(b)
         if b.metadata_changed:
-            self.layer_manager.layer_metadata_changed = True
+            self.layer_manager.layer_metadata_changed_event(True)
 
         overlay_affected = self.layer_manager.recalc_overlay_bounds()
         if overlay_affected:
@@ -964,7 +993,7 @@ class ProjectEditor(SawxEditor):
         if b.immediate_refresh_needed:
             self.layer_canvas.render(immediately=True)
         if b.refresh_needed:
-            self.layer_manager.refresh_needed = b
+            self.layer_manager.refresh_needed_event(b)
         if b.select_layer:
             self.layer_tree_control.set_edit_layer(b.select_layer)
 

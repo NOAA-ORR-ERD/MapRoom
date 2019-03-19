@@ -277,7 +277,7 @@ class TileRequest(UnskippableRequest):
             log.error("Error %s loading %s" % (e, self.url))
             self.error = e
         if self.manager is not None:
-            self.manager.threaded_image_loaded = (self.event_data, self)
+            self.manager.threaded_image_loaded_event(self.event_data, self)
 
     def get_image_array(self):
         try:

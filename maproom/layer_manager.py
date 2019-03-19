@@ -6,6 +6,7 @@ import functools
 import wx
 
 from sawx.filesystem import fsopen as open
+from sawx.events import EventHandler
 
 from .library import rect
 
@@ -43,29 +44,6 @@ class LayerManager(SawxDocument):
     The first layer in the overall list and in each sublist is assumed to be a "folder" layer, whose only
     purpose at present is to hold the folder name.
     """
-
-    layer_loaded = Event
-
-    layers_changed = Event
-
-    layer_contents_changed = Event
-
-    layer_contents_changed_in_place = Event
-
-    # when points are deleted from a layer the indexes of the points in the
-    # merge dialog box become invalid; so this event will trigger the user to
-    # re-find duplicates in order to create a valid list again
-    layer_contents_deleted = Event
-
-    layer_metadata_changed = Event
-
-    projection_changed = Event
-
-    refresh_needed = Event
-
-    background_refresh_needed = Event
-
-    threaded_image_loaded = Event
 
     # Transient layer always uses invariant
     transient_invariant = -99
@@ -107,6 +85,22 @@ class LayerManager(SawxDocument):
         self.insert_layer([index], scale)
 
         SawxDocument.__init__(self, file_metadata)
+
+        self.layer_loaded_event = EventHandler(self)
+        self.layers_changed_event = EventHandler(self)
+        self.layer_contents_changed_event = EventHandler(self)
+        self.layer_contents_changed_in_place_event = EventHandler(self)
+        
+        # when points are deleted from a layer the indexes of the points in the
+        # merge dialog box become invalid; so this event will trigger the
+        # user to re-find duplicates in order to create a valid list again
+        self.layer_contents_deleted_event = EventHandler(self)
+
+        self.layer_metadata_changed_event = EventHandler(self)
+        self.projection_changed_event = EventHandler(self)
+        self.refresh_needed_event = EventHandler(self)
+        self.background_refresh_needed_event = EventHandler(self)
+        self.threaded_image_loaded_event = EventHandler(self)
 
     # def set_project(self, project):
     #     self.project = project

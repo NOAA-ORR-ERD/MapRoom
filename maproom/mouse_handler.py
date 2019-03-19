@@ -53,6 +53,9 @@ class MouseHandler(object):
         self.wheel_scroll_count = 0
         self.use_every_nth_wheel_scroll = 5
 
+    def __str__(self):
+        return self.__class__.__name__
+
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_ARROW)
 
