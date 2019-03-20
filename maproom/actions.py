@@ -259,7 +259,6 @@ class picker_framebuffer(SawxAction):
 class zoom_in(SawxAction):
     name = 'Zoom In'
     tooltip = 'Increase magnification'
-#    image = ImageResource('zoom_in')
 
     def perform(self, action_key):
         c = self.editor.layer_canvas
@@ -271,7 +270,6 @@ class zoom_in(SawxAction):
 class zoom_out(SawxAction):
     name = 'Zoom Out'
     tooltip = 'Decrease magnification'
-#    image = ImageResource('zoom_out')
 
     def perform(self, action_key):
         c = self.editor.layer_canvas
@@ -283,7 +281,6 @@ class zoom_out(SawxAction):
 class zoom_to_fit(SawxAction):
     name = 'Zoom to Fit'
     tooltip = 'Set magnification to show all layers'
-#    image = ImageResource('zoom_fit')
 
     def perform(self, action_key):
         c = self.editor.layer_canvas
@@ -296,7 +293,6 @@ class zoom_to_layer(LayerAction):
     name = 'Zoom to Layer'
     tooltip = 'Set magnification to show current layer'
     enabled_name = 'layer_zoomable'
-#    image = ImageResource('zoom_to_layer')
 
     def is_popup_enabled(self, ui_state, layer):
         return layer.is_zoomable()
@@ -392,7 +388,6 @@ class delete_layer(LayerAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
     enabled_name = 'layer_selected'
-#    image = ImageResource('delete_layer')
 
     def is_popup_enabled(self, ui_state, layer):
         return True  # layer may not be selected using context menu
@@ -405,7 +400,6 @@ class raise_layer(LayerAction):
     name = 'Raise Layer'
     tooltip = 'Move layer up in the stacking order'
     enabled_name = 'layer_above'
-#    image = ImageResource('raise.png')
 
     def is_popup_enabled(self, ui_state, layer):
         return ui_state.layer_manager.is_raisable(layer)
@@ -418,7 +412,6 @@ class raise_to_top(LayerAction):
     name = 'Raise Layer To Top'
     tooltip = 'Move layer to the top'
     enabled_name = 'layer_above'
-#    image = ImageResource('raise_to_top.png')
 
     def is_popup_enabled(self, ui_state, layer):
         return ui_state.layer_manager.is_raisable(layer)
@@ -431,7 +424,6 @@ class lower_to_bottom(LayerAction):
     name = 'Lower Layer To Bottom'
     tooltip = 'Move layer to the bottom'
     enabled_name = 'layer_below'
-#    image = ImageResource('lower_to_bottom.png')
 
     def is_popup_enabled(self, ui_state, layer):
         return ui_state.layer_manager.is_lowerable(layer)
@@ -444,7 +436,6 @@ class lower_layer(LayerAction):
     name = 'Lower Layer'
     tooltip = 'Move layer down in the stacking order'
     enabled_name = 'layer_below'
-#    image = ImageResource('lower.png')
 
     def is_popup_enabled(self, ui_state, layer):
         return ui_state.layer_manager.is_lowerable(layer)
@@ -457,7 +448,6 @@ class triangulate_layer(SawxAction):
     name = 'Triangulate Layer'
     tooltip = 'Create triangular mesh'
     enabled_name = 'layer_has_points'
-#    image = ImageResource('triangulate.png')
 
     def perform(self, action_key):
         e = self.editor
@@ -492,7 +482,6 @@ class convex_hull(SawxAction):
     name = 'Convex Hull'
     tooltip = 'Create convex hull of a set of points'
     enabled_name = 'multiple_layers'
-#    image = ImageResource('merge.png')
 
     def perform(self, action_key):
         GUI.invoke_later(self.show_dialog, self.editor)
@@ -532,7 +521,6 @@ class merge_layers(SawxAction):
     name = 'Merge Layers'
     tooltip = 'Merge two vector layers'
     enabled_name = 'multiple_layers'
-#    image = ImageResource('merge.png')
 
     def perform(self, action_key):
         GUI.invoke_later(self.show_dialog, self.editor)
@@ -593,7 +581,6 @@ class merge_points(SawxAction):
     name = 'Merge Duplicate Points'
     tooltip = 'Merge points within a layer'
     enabled_name = 'layer_has_points'
-#    image = ImageResource('merge_duplicates.png')
 
     def perform(self, action_key):
         e = self.editor
@@ -604,7 +591,6 @@ class jump_to_coords(SawxAction):
     name = 'Jump to Coordinates'
     
     tooltip = 'Center the screen on the specified coordinates'
-#    image = ImageResource('jump.png')
 
     def perform(self, action_key):
         GUI.invoke_later(self.editor.layer_canvas.do_jump_coords)
@@ -614,7 +600,6 @@ class clear_selection(SawxAction):
     name = 'Clear Selection'
     enabled_name = 'layer_has_selection'
     tooltip = 'Deselects all selected items in the current layer'
-#    image = ImageResource('clear_selection.png')
 
     def perform(self, action_key):
         GUI.invoke_later(self.editor.clear_selection)
@@ -625,7 +610,6 @@ class delete_selection(SawxAction):
     
     enabled_name = 'layer_has_selection'
     tooltip = 'Deletes the selected items in the current layer'
-#    image = ImageResource('delete_selection.png')
 
     def perform(self, action_key):
         # FIXME: OS X hack! DELETE key in the menu overrides any text field
@@ -847,7 +831,6 @@ class group_layer(LayerAction):
     name = 'Group Sublayers'
     tooltip = 'Group all children of the selected layer into a single unit'
     enabled_name = 'layer_is_groupable'
-#    image = ImageResource('shape_group.png')
 
     def is_popup_enabled(self, ui_state, layer):
         return layer.has_groupable_objects() and not layer.grouped
@@ -860,7 +843,6 @@ class ungroup_layer(LayerAction):
     name = 'Ungroup Into Sublayers'
     tooltip = 'Remove grouping and display child layers'
     enabled_name = 'layer_is_groupable'
-#    image = ImageResource('shape_ungroup.png')
 
     def is_popup_enabled(self, ui_state, layer):
         return layer.has_groupable_objects() and layer.grouped

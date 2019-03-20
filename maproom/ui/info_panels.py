@@ -3,6 +3,8 @@ import wx
 import wx.adv
 from wx.lib.expando import ExpandoTextCtrl
 
+from sawx import art
+
 from . import sliders
 from . import dialogs
 from . import buttons
@@ -159,11 +161,10 @@ class BooleanLabelField(SimplePropertyField):
     def create_extra_controls(self):
         b = buttons.GenBitmapToggleButton(self.parent, -1, None, style=wx.BORDER_NONE | wx.BU_EXACTFIT)  # BU_EXACTFIT removes padding
         b.Bind(wx.EVT_BUTTON, self.on_toggled)
-        image = ImageResource('eye-closed.png')
-        bitmap = image.create_bitmap()
+        bitmap = art.find_bitmap('eye-closed')
         b.SetBitmapLabel(bitmap)
-        image = ImageResource('eye-open.png')
-        b.SetBitmapSelected(image.create_bitmap())
+        bitmap = art.find_bitmap('eye-open')
+        b.SetBitmapSelected(bitmap)
         b.SetInitialSize()
         self.toggle = b
         return [self.toggle]
