@@ -182,7 +182,7 @@ class VectorObjectLayer(LineLayer):
         """Update renderer
 
         """
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         r, g, b, a = int_to_color_floats(self.style.line_color)
         point_color, line_color = self.get_renderer_colors()
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
@@ -771,7 +771,7 @@ class OverlayMixin(object):
 
     def update_world_control_points(self, renderer):
         self.calc_control_points_from_screen(renderer.canvas)
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         renderer.set_points(projected_point_data, None, None)
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
         self.update_bounds(True)

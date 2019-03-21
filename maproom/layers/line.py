@@ -636,7 +636,7 @@ class LineLayer(PointLayer):
         """Update display canvas data with the data in this layer
 
         """
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], self.line_segment_indexes.color)
 

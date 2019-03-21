@@ -318,7 +318,7 @@ class TriangleLayer(PointLayer):
         """Update display canvas data with the data in this layer
 
         """
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         triangles = self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
         tri_points_color = self.get_triangle_point_colors()

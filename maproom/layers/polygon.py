@@ -373,7 +373,7 @@ class PolygonLayer(PointLayer):
         return undo
 
     def rebuild_renderer(self, renderer, in_place=False):
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_polygons(self.rings, self.point_adjacency_array)
 
