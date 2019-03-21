@@ -17,15 +17,15 @@ WHITESPACE_PATTERN = re.compile("\s+")
 
 
 class TextMixin(object):
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         layer = LineLayer(manager=manager)
 
-        progress_log.info("Loading from %s" % metadata.uri)
-        layer.load_error_string, f_points, f_depths, f_line_segment_indexes = self.load_text(metadata.uri)
+        progress_log.info("Loading from %s" % uri)
+        layer.load_error_string, f_points, f_depths, f_line_segment_indexes = self.load_text(uri)
         if (layer.load_error_string == ""):
-            progress_log.info("Finished loading %s" % metadata.uri)
+            progress_log.info("Finished loading %s" % uri)
             layer.set_data(f_points, f_depths, f_line_segment_indexes)
-            layer.file_path = metadata.uri
+            layer.file_path = uri
             layer.name = "%s (%s)" % (os.path.split(layer.file_path)[1], self.mime)
             layer.mime = self.mime
         return [layer]

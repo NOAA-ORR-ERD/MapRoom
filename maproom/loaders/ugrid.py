@@ -2,7 +2,7 @@ import os
 import numpy as np
 import re
 
-from fs.opener import opener
+from sawx.filesystem import filesystem_path
 from pyugrid.ugrid import UGrid, UVar
 
 from .common import BaseLayerLoader
@@ -10,6 +10,16 @@ from maproom.layers import LineLayer, TriangleLayer
 from maproom.renderer import data_types
 
 WHITESPACE_PATTERN = re.compile("\s+")
+
+
+def identify_mime(uri, fh, header):
+    fh.seek(0)
+    byte_stream = fh.read()
+    # check if it is either HDF or CDF
+    if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
+        if not ((b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream)):
+            # only recognize here if wouldn't be recognized as a particle file
+            return dict(mime=UGridLoader.mime, loader=UGridLoader())
 
 
 class UGridLoader(BaseLayerLoader):
@@ -27,13 +37,13 @@ class UGridLoader(BaseLayerLoader):
             return found.pop()
         return None
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         layers = []
 
-        fs, relpath = opener.parse(metadata.uri)
-        if not fs.hassyspath(relpath):
-            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % metadata.uri)
-        path = fs.getsyspath(relpath)
+        try:
+            path = filesystem_path(uri)
+        except OSError:
+            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % uri)
         ug = UGrid.from_ncfile(path, load_data=True)
         dataset = self.find_depths(ug)
         if dataset:
@@ -42,7 +52,7 @@ class UGridLoader(BaseLayerLoader):
             depths = 0.0
         if ug.edges is not None and len(ug.edges) > 0:
             layer = LineLayer(manager=manager)
-            layer.file_path = metadata.uri
+            layer.file_path = uri
             layer.set_data(ug.nodes, depths, ug.edges)
             layer.depth_unit = dataset.attributes.get('units', 'unknown')
             layer.name = os.path.split(layer.file_path)[1]
@@ -51,7 +61,7 @@ class UGridLoader(BaseLayerLoader):
 
         if ug.faces is not None and len(ug.faces) > 0:
             layer = TriangleLayer(manager=manager)
-            layer.file_path = metadata.uri
+            layer.file_path = uri
             layer.set_data(ug.nodes, depths, ug.faces)
             layer.depth_unit = dataset.attributes.get('units', 'unknown')
             layer.name = os.path.split(layer.file_path)[1]

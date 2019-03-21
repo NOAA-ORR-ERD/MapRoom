@@ -17,7 +17,7 @@ progress_log = logging.getLogger("progress")
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-def identify_mime(header, fh):
+def identify_mime(uri, fh, header):
     is_binary = guessBinary(header)
     if not is_binary:
         if header.startswith(b"DOGS"):

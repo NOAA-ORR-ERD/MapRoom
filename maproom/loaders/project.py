@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-def identify_mime(header, fh):
+def identify_mime(uri, fh, header):
     is_binary = guessBinary(header)
     if is_binary:
         fh.seek(0)

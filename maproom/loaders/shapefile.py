@@ -3,14 +3,46 @@ import os
 from osgeo import ogr, osr
 import numpy as np
 
+from sawx.filesystem import filesystem_path
+
 from maproom.library.shapefile_utils import load_shapefile, load_bna_items
 from maproom.layers import PolygonParentLayer
-from ...renderer import data_types
+from ..renderer import data_types
 from .common import BaseLayerLoader
 
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
+
+
+def identify_mime(uri, fh, header):
+    try:
+        file_path = filesystem_path(uri)
+    except OSError:
+        log.debug(f"{uri} not on local filesystem, GDAL won't load it.")
+        return None
+    if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
+        file_path = file_path[4:]
+    try:
+        dataset = ogr.Open(file_path)
+    except RuntimeError:
+        log.debug("OGR can't open %s; not an image")
+        return None
+    if dataset is not None and dataset.GetLayerCount() > 0:
+        # check to see if there are any valid layers because some CSV files
+        # seem to be recognized as having layers but have no geometry.
+        count = 0
+        for layer_index in range(dataset.GetLayerCount()):
+            layer = dataset.GetLayer(layer_index)
+            for feature in layer:
+                ogr_geom = feature.GetGeometryRef()
+                print(f"ogr_geom for {layer} = {ogr_geom}")
+                if ogr_geom is None:
+                    continue
+                count += 1
+        if count > 0:
+            return dict(mime="image/x-maproom-shapefile", loader=ShapefileLoader())
+    return None
 
 
 def write_boundaries_as_shapefile(filename, layer, boundaries):
@@ -102,22 +134,22 @@ class ShapefileLoader(BaseLayerLoader):
     def load_uri_as_items(self, uri):
         return load_shapefile(uri)
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         """May return one or two layers; points are placed in a separate layer
         so they can be rendered and operated on like a regular points layer
         """
-        file_path = metadata.uri
+        file_path = uri
 
         layers = []
         parent = PolygonParentLayer(manager=manager)
         # parent.grouped = True
         parent.grouped = False
-        parent.file_path = metadata.uri
+        parent.file_path = uri
         parent.name = os.path.split(file_path)[1]
         parent.mime = self.mime
         layers.append(parent)
 
-        parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(metadata.uri)
+        parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(uri)
         geom_type = geometry_list[0]
         items = geometry_list[1:]
         if log.isEnabledFor(logging.DEBUG):

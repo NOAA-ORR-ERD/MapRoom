@@ -189,6 +189,11 @@ setup(
             'verdat = maproom.loaders.verdat',
             'project = maproom.loaders.project',
             'nc_particles = maproom.loaders.nc_particles',
+            'ugrid = maproom.loaders.ugrid',
+            'bna = maproom.loaders.bna',
+            'gps = maproom.loaders.gps',
+            'gdal = maproom.loaders.gdal',
+            'shapefile = maproom.loaders.shapefile',
         ],
 
         "sawx.documents": [

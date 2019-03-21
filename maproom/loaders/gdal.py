@@ -1,10 +1,11 @@
 import os
 import time
 
-from fs.opener import opener
 import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
+
+from sawx.filesystem import filesystem_path
 
 import maproom.library.Bitmap as Bitmap
 from maproom.renderer import ImageData
@@ -17,6 +18,36 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
+def identify_mime(uri, fh, header):
+    try:
+        file_path = filesystem_path(uri)
+    except OSError:
+        log.debug(f"{uri} not on local filesystem, GDAL won't load it.")
+        return None
+    if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
+        file_path = file_path[4:]
+    try:
+        dataset = gdal.Open(file_path)
+    except RuntimeError:
+        log.debug("OGR can't open %s; not an image")
+        return None
+    if dataset is not None and dataset.GetLayerCount() > 0:
+        # check to see if there are any valid layers because some CSV files
+        # seem to be recognized as having layers but have no geometry.
+        count = 0
+        for layer_index in range(dataset.GetLayerCount()):
+            layer = dataset.GetLayer(layer_index)
+            for feature in layer:
+                ogr_geom = feature.GetGeometryRef()
+                print(f"ogr_geom for {layer} = {ogr_geom}")
+                if ogr_geom is None:
+                    continue
+                count += 1
+        if count > 0:
+            return dict(mime="image/x-gdal", loader=GDALLoader())
+    return None
+
+
 class GDALLoader(BaseLayerLoader):
     mime = "image/*"
 
@@ -25,15 +56,15 @@ class GDALLoader(BaseLayerLoader):
     def can_load(self, metadata):
         return metadata.mime.startswith("image/")
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         layer = RasterLayer(manager=manager)
 
-        log.info("Loading from %s" % metadata.uri)
-        progress_log.info("Loading from %s" % metadata.uri)
-        (layer.load_error_string, layer.image_data) = load_image_file(metadata.uri)
+        log.info("Loading from %s" % uri)
+        progress_log.info("Loading from %s" % uri)
+        (layer.load_error_string, layer.image_data) = load_image_file(uri)
         if (layer.load_error_string == ""):
-            progress_log.info("Finished loading %s" % metadata.uri)
-            layer.file_path = metadata.uri
+            progress_log.info("Finished loading %s" % uri)
+            layer.file_path = uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
             layer.update_bounds()

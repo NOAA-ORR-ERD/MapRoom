@@ -1,6 +1,8 @@
 import os
 
 from sawx.filesystem import fsopen as open
+from sawx.utils.textutil import guessBinary
+
 import numpy as np
 from shapely.geometry import Polygon, LineString
 
@@ -8,11 +10,20 @@ from maproom.library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from maproom.layers import PolygonLayer, RNCLoaderLayer, PolygonShapefileLayer
 
 from .common import BaseLayerLoader
-from .shapefile import write_layer_as_shapefile
+from .shapefile import BNAShapefileLoader, write_layer_as_shapefile
 
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
+
+
+def identify_mime(uri, fh, header):
+    is_binary = guessBinary(header)
+    if not is_binary and uri.lower().endswith(".bna"):
+        lines = header.splitlines()
+        if b".KAP" in lines[0]:
+            return dict(mime="application/x-maproom-rncloader", loader=RNCLoader())
+        return dict(mime="application/x-maproom-bna", loader=BNAShapefileLoader())
 
 
 class RNCLoader(BaseLayerLoader):
@@ -26,19 +37,19 @@ class RNCLoader(BaseLayerLoader):
 
     layer_class = RNCLoaderLayer
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         layer = self.layer_class(manager=manager)
 
         (layer.load_error_string,
          f_ring_points,
          f_ring_starts,
          f_ring_counts,
-         f_ring_identifiers) = load_bna_file(metadata.uri, kwargs.get("regime", 0))
+         f_ring_identifiers) = load_bna_file(uri, kwargs.get("regime", 0))
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
             layer.set_data(f_ring_points, f_ring_starts, f_ring_counts,
                            f_ring_identifiers)
-            layer.file_path = metadata.uri
+            layer.file_path = uri
             layer.name = os.path.split(layer.file_path)[1]
             layer.mime = self.mime
         return [layer]
@@ -48,7 +59,7 @@ class RNCLoader(BaseLayerLoader):
 
 
 def parse_bna_file(uri, regime=0):
-    f = fsopen(uri, "r")
+    f = open(uri, "r")
     s = f.read()
     f.close()
     lines = s.splitlines()
