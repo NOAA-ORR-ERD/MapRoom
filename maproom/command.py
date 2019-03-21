@@ -156,6 +156,17 @@ class LayerStatus(object):
         # True if the item should be shown collapsed in the tree list
         self.collapse = False
 
+    def __str__(self):
+        flags = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            val = getattr(self, name)
+            if val is None or not val or hasattr(val, "__call__"):
+                continue
+            flags.append("%s=%s" % (name, val))
+        return ", ".join(flags)
+
 
 class BatchStatus(object):
     def __init__(self):
@@ -190,6 +201,19 @@ class BatchStatus(object):
         # Any error messages will be added to this list
         self.errors = []
 
+    def __str__(self):
+        flags = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            val = getattr(self, name)
+            if val is None or not val or hasattr(val, "__call__"):
+                continue
+            flags.append("%s=%s" % (name, val))
+        return ", ".join(flags)
+
+    __repr__ = __str__
+
 
 class CommandStatus(object):
     def __init__(self):
@@ -221,6 +245,17 @@ class CommandStatus(object):
         lf = LayerStatus(layer)
         self.layer_flags.append(lf)
         return lf
+
+    def __str__(self):
+        flags = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            val = getattr(self, name)
+            if val is None or not val or hasattr(val, "__call__"):
+                continue
+            flags.append("%s=%s" % (name, val))
+        return ", ".join(flags)
 
 
 class UndoInfo(object):
