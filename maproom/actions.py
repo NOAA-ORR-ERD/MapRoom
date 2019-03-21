@@ -29,8 +29,10 @@ class LayerAction(SawxAction):
     Provides a common framework for usage in menubars and popup menus
     """
     def calc_enabled(self, action_key):
-        if hasattr(self, 'enabled_name'):
-            return getattr(self.editor, self.enabled_name)
+        layer = self.get_layer(action_key)
+        return self.is_enabled_for_layer(action_key, layer)
+
+    def is_enabled_for_layer(self, action_key, layer):
         return True
 
     def get_layer(self, action_key):
@@ -39,9 +41,9 @@ class LayerAction(SawxAction):
     def perform(self, action_key):
         layer = self.get_layer(action_key)
         if layer is not None:
-            self.perform_on_layer(layer, event)
+            self.perform_on_layer(layer, action_key)
 
-    def perform_on_layer(self, layer, event):
+    def perform_on_layer(self, action_key, layer):
         log.warning("Missing perform_on_layer method for %s" % self.name)
 
 
@@ -187,7 +189,9 @@ class save_layer_as(SawxListAction):
 class save_movie(SawxAction):
     name = 'Save Latest Playback...'
     loader = Any
-    enabled_name = 'latest_movie'
+
+    def calc_enabled(self, action_key):
+        return bool(self.editor.latest_movie)
 
     def perform(self, action_key):
         dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="PNG Movies (*.png)|*.png")
@@ -198,7 +202,9 @@ class save_movie(SawxAction):
 class revert_project(SawxAction):
     name = 'Revert Project'
     tooltip = 'Revert project to last saved version'
-    enabled_name = 'document.can_revert'
+
+    def calc_enabled(self, action_key):
+        return self.editor.document.can_revert
 
     def perform(self, action_key):
         message = "Revert project from\n\n%s?" % self.editor.document.metadata.uri
@@ -211,7 +217,7 @@ class default_style(SawxAction):
     tooltip = 'Choose the line, fill and font styles'
 
     def perform(self, action_key):
-        GUI.invoke_later(self.show_dialog, self.editor)
+        self.show_dialog(self.editor)
 
     def show_dialog(self, project):
         dialog = StyleDialog(project, layers.styleable_layers)
@@ -232,7 +238,7 @@ class bounding_box(SawxAction):
     def perform(self, action_key):
         value = not self.editor.layer_canvas.debug_show_bounding_boxes
         self.editor.layer_canvas.debug_show_bounding_boxes = value
-        GUI.invoke_later(self.editor.layer_canvas.render)
+        self.editor.layer_canvas.render()
 
     @on_trait_change('active_editor')
     def _update_checked(self, ui_state):
@@ -248,7 +254,7 @@ class picker_framebuffer(SawxAction):
     def perform(self, action_key):
         value = not self.editor.layer_canvas.debug_show_picker_framebuffer
         self.editor.layer_canvas.debug_show_picker_framebuffer = value
-        GUI.invoke_later(self.editor.layer_canvas.render)
+        self.editor.layer_canvas.render()
 
     @on_trait_change('active_editor')
     def _update_checked(self, ui_state):
@@ -292,12 +298,11 @@ class zoom_to_fit(SawxAction):
 class zoom_to_layer(LayerAction):
     name = 'Zoom to Layer'
     tooltip = 'Set magnification to show current layer'
-    enabled_name = 'layer_zoomable'
 
-    def is_popup_enabled(self, ui_state, layer):
+    def is_enabled_for_layer(self, action_key, layer):
         return layer.is_zoomable()
 
-    def perform_on_layer(self, layer, event):
+    def perform_on_layer(self, action_key, layer):
         cmd = moc.ViewportCommand(layer)
         self.editor.process_command(cmd)
 
@@ -387,104 +392,103 @@ class new_rnc_layer360(SawxAction):
 class delete_layer(LayerAction):
     name = 'Delete Layer'
     tooltip = 'Remove the layer from the project'
-    enabled_name = 'layer_selected'
 
-    def is_popup_enabled(self, ui_state, layer):
-        return True  # layer may not be selected using context menu
+    def is_enabled_for_layer(self, action_key, layer):
+        return not layer.is_root()
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.delete_selected_layer, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.delete_selected_layer(layer)
 
 
 class raise_layer(LayerAction):
     name = 'Raise Layer'
     tooltip = 'Move layer up in the stacking order'
-    enabled_name = 'layer_above'
 
-    def is_popup_enabled(self, ui_state, layer):
-        return ui_state.layer_manager.is_raisable(layer)
+    def is_enabled_for_layer(self, action_key, layer):
+        return self.editor.layer_manager.is_raisable(layer)
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.layer_tree_control.raise_selected_layer, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_tree_control.raise_selected_layer(layer)
 
 
 class raise_to_top(LayerAction):
     name = 'Raise Layer To Top'
     tooltip = 'Move layer to the top'
-    enabled_name = 'layer_above'
 
-    def is_popup_enabled(self, ui_state, layer):
-        return ui_state.layer_manager.is_raisable(layer)
+    def is_enabled_for_layer(self, action_key, layer):
+        return self.editor.layer_manager.is_raisable(layer)
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.layer_tree_control.raise_to_top, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_tree_control.raise_to_top(layer)
 
 
 class lower_to_bottom(LayerAction):
     name = 'Lower Layer To Bottom'
     tooltip = 'Move layer to the bottom'
-    enabled_name = 'layer_below'
 
-    def is_popup_enabled(self, ui_state, layer):
-        return ui_state.layer_manager.is_lowerable(layer)
+    def is_enabled_for_layer(self, action_key, layer):
+        return self.editor.layer_manager.is_lowerable(layer)
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.layer_tree_control.lower_to_bottom, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_tree_control.lower_to_bottom(layer)
 
 
 class lower_layer(LayerAction):
     name = 'Lower Layer'
     tooltip = 'Move layer down in the stacking order'
-    enabled_name = 'layer_below'
 
-    def is_popup_enabled(self, ui_state, layer):
-        return ui_state.layer_manager.is_lowerable(layer)
+    def is_enabled_for_layer(self, action_key, layer):
+        return self.editor.layer_manager.is_lowerable(layer)
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.layer_tree_control.lower_selected_layer, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_tree_control.lower_selected_layer(layer)
 
 
-class triangulate_layer(SawxAction):
+class triangulate_layer(LayerAction):
     name = 'Triangulate Layer'
     tooltip = 'Create triangular mesh'
-    enabled_name = 'layer_has_points'
 
-    def perform(self, action_key):
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_points()
+
+    def perform_on_layer(self, action_key, layer):
         e = self.editor
         e.control.force_focus(e.triangle_panel)
 
 
-class to_polygon_layer(SawxAction):
+class to_polygon_layer(LayerAction):
     name = 'Convert to Polygon Layer'
     tooltip = 'Create new polygon layer from boundaries of current layer'
-    enabled_name = 'layer_has_boundaries'
 
-    def perform(self, action_key):
-        edit_layer = self.editor.layer_tree_control.get_edit_layer()
-        if edit_layer is not None:
-            cmd = mec.ToPolygonLayerCommand(edit_layer)
-            self.editor.process_command(cmd)
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_boundaries()
+
+    def perform_on_layer(self, action_key, layer):
+        cmd = mec.ToPolygonLayerCommand(layer)
+        self.editor.process_command(cmd)
 
 
-class to_verdat_layer(SawxAction):
+class to_verdat_layer(LayerAction):
     name = 'Convert to Editable Layer'
     tooltip = 'Create new editable layer from rings of current layer'
-    enabled_name = 'layer_has_boundaries'
 
-    def perform(self, action_key):
-        edit_layer = self.editor.layer_tree_control.get_edit_layer()
-        if edit_layer is not None:
-            cmd = mec.ToVerdatLayerCommand(edit_layer)
-            self.editor.process_command(cmd)
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_boundaries()
+
+    def perform_on_layer(self, action_key, layer):
+        cmd = mec.ToVerdatLayerCommand(layer)
+        self.editor.process_command(cmd)
 
 
 class convex_hull(SawxAction):
     name = 'Convex Hull'
     tooltip = 'Create convex hull of a set of points'
-    enabled_name = 'multiple_layers'
+
+    def calc_enabled(self, action_key):
+        return self.editor.layer_manager.count_layers() > 1
 
     def perform(self, action_key):
-        GUI.invoke_later(self.show_dialog, self.editor)
+        self.show_dialog(self.editor)
 
     def show_dialog(self, project):
         layers = project.layer_manager.flatten()
@@ -520,10 +524,12 @@ class convex_hull(SawxAction):
 class merge_layers(SawxAction):
     name = 'Merge Layers'
     tooltip = 'Merge two vector layers'
-    enabled_name = 'multiple_layers'
+
+    def calc_enabled(self, action_key):
+        return self.editor.layer_manager.count_layers() > 1
 
     def perform(self, action_key):
-        GUI.invoke_later(self.show_dialog, self.editor)
+        self.show_dialog(self.editor)
 
     def show_dialog(self, project):
         layers = project.layer_manager.get_mergeable_layers()
@@ -577,12 +583,14 @@ class merge_layers(SawxAction):
                 project.process_command(cmd)
 
 
-class merge_points(SawxAction):
+class merge_points(LayerAction):
     name = 'Merge Duplicate Points'
     tooltip = 'Merge points within a layer'
-    enabled_name = 'layer_has_points'
 
-    def perform(self, action_key):
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_points()
+
+    def perform_on_layer(self, action_key, layer):
         e = self.editor
         e.control.force_focus(e.merge_points_panel)
 
@@ -593,25 +601,28 @@ class jump_to_coords(SawxAction):
     tooltip = 'Center the screen on the specified coordinates'
 
     def perform(self, action_key):
-        GUI.invoke_later(self.editor.layer_canvas.do_jump_coords)
+        self.editor.layer_canvas.do_jump_coords()
 
 
-class clear_selection(SawxAction):
+class clear_selection(LayerAction):
     name = 'Clear Selection'
-    enabled_name = 'layer_has_selection'
     tooltip = 'Deselects all selected items in the current layer'
 
-    def perform(self, action_key):
-        GUI.invoke_later(self.editor.clear_selection)
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_selection()
+
+    def perform_on_layer(self, action_key, layer):
+        self.editor.clear_selection()
 
 
-class delete_selection(SawxAction):
+class delete_selection(LayerAction):
     name = 'Delete Selection'
-    
-    enabled_name = 'layer_has_selection'
     tooltip = 'Deletes the selected items in the current layer'
 
-    def perform(self, action_key):
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_selection()
+
+    def perform_on_layer(self, action_key, layer):
         # FIXME: OS X hack! DELETE key in the menu overrides any text field
         # usage, so we have to catch it here and force the textctrl to do the
         # delete programmatically
@@ -626,63 +637,67 @@ class delete_selection(SawxAction):
             else:
                 active.Remove(start, end)
         else:
-            GUI.invoke_later(self.editor.delete_selection)
+            self.editor.delete_selection()
 
 
 class clear_flagged(SawxAction):
     name = 'Clear Flagged'
-    enabled_name = 'layer_has_flagged'
     tooltip = 'Deselects all flagged items in the current layer'
 
-    def perform(self, action_key):
-        GUI.invoke_later(self.editor.clear_all_flagged)
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_flagged()
+
+    def perform_on_layer(self, action_key, layer):
+        self.editor.clear_all_flagged()
 
 
 class flagged_to_selection(SawxAction):
     name = 'Select Flagged'
-    enabled_name = 'layer_has_flagged'
     tooltip = 'Select all flagged items in the current layer'
 
-    def perform(self, action_key):
-        GUI.invoke_later(self.editor.select_all_flagged)
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_flagged()
+
+    def perform_on_layer(self, action_key, layer):
+        self.editor.select_all_flagged()
 
 
-class boundary_to_selection(SawxAction):
+class boundary_to_selection(LayerAction):
     name = 'Select Boundary'
-    enabled_name = 'layer_has_points'
     tooltip = 'Select the boundary of the current layer'
 
-    def perform(self, action_key):
-        GUI.invoke_later(self.editor.select_boundary)
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_points()
+
+    def perform_on_layer(self, action_key, layer):
+        self.editor.select_boundary()
 
 
-class find_points(SawxAction):
+class find_points(LayerAction):
     name = 'Find Points'
-    
-    enabled_name = 'layer_has_points'
     tooltip = 'Find and highlight points or ranges of points'
 
-    def perform(self, action_key):
-        GUI.invoke_later(self.editor.layer_canvas.do_find_points)
+    def is_enabled_for_layer(self, action_key, layer):
+        return layer.has_points()
+
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_canvas.do_find_points()
 
 
 class check_selected_layer(LayerAction):
     name = 'Check Layer For Errors'
-    
-    enabled_name = 'layer_selected'
     tooltip = 'Check for valid layer construction'
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.check_for_errors, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.check_for_errors(layer)
 
 
 class check_all_layers(SawxAction):
     name = 'Check All Layers For Errors'
-    
     tooltip = 'Check for valid layer construction'
 
     def perform(self, action_key):
-        GUI.invoke_later(self.editor.check_all_layers_for_errors)
+        self.editor.check_all_layers_for_errors()
 
 
 class open_log(SawxAction):
@@ -699,9 +714,6 @@ class debug_annotation_layers(SawxAction):
     tooltip = 'Create a sample annotation layer with examples of all vector objects'
 
     def perform(self, action_key):
-        GUI.invoke_later(self.after, self.editor)
-
-    def after(self, project):
         from . import debug
         lm = project.layer_manager
         undo = debug.debug_objects(lm)
@@ -713,9 +725,10 @@ class debug_annotation_layers(SawxAction):
 
 class copy_style(SawxAction):
     name = 'Copy Style'
-    
     tooltip = 'Copy the style of the current selection'
-    enabled_name = 'can_copy'
+
+    def calc_enabled(self, action_key):
+        return self.editor.can_copy
 
     def perform(self, action_key):
         self.editor.copy_style()
@@ -723,9 +736,10 @@ class copy_style(SawxAction):
 
 class paste_style(SawxAction):
     name = 'Paste Style'
-    
     tooltip = 'Apply the style from the clipboard'
-    enabled_name = 'can_paste_style'
+
+    def calc_enabled(self, action_key):
+        return self.editor.clipboard_style is not None
 
     def perform(self, action_key):
         self.editor.paste_style()
@@ -733,14 +747,12 @@ class paste_style(SawxAction):
 
 class duplicate_layer(LayerAction):
     name = 'Duplicate Layer'
-    
     tooltip = 'Duplicate the current layer'
-    enabled_name = 'can_copy'
 
-    def is_popup_enabled(self, ui_state, layer):
+    def is_enabled_for_layer(self, action_key, layer):
         return hasattr(layer, "center_point_index")  # only vector layers
 
-    def perform_on_layer(self, layer, event):
+    def perform_on_layer(self, action_key, layer):
         json_data = layer.serialize_json(-999, True)
         if json_data:
             text = json.dumps(json_data)
@@ -805,15 +817,13 @@ class normalize_longitude(SawxAction):
             self.editor.process_command(cmd)
 
 
-class swap_lat_lon(SawxAction):
+class swap_lat_lon(LayerAction):
     name = 'Swap Lat && Lon'
     tooltip = 'Exchange coordinate pairs to repair an incorrectly formatted input file'
 
-    def perform(self, action_key):
-        edit_layer = self.editor.layer_tree_control.get_edit_layer()
-        if edit_layer is not None:
-            cmd = moc.SwapLatLonCommand(edit_layer)
-            self.editor.process_command(cmd)
+    def perform_on_layer(self, action_key, layer):
+        cmd = moc.SwapLatLonCommand(layer)
+        self.editor.process_command(cmd)
 
 
 class debug_layer_manager(SawxAction):
@@ -830,33 +840,31 @@ class debug_layer_manager(SawxAction):
 class group_layer(LayerAction):
     name = 'Group Sublayers'
     tooltip = 'Group all children of the selected layer into a single unit'
-    enabled_name = 'layer_is_groupable'
 
-    def is_popup_enabled(self, ui_state, layer):
+    def is_enabled_for_layer(self, action_key, layer):
         return layer.has_groupable_objects() and not layer.grouped
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.layer_tree_control.group_children, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_tree_control.group_children(layer)
 
 
 class ungroup_layer(LayerAction):
     name = 'Ungroup Into Sublayers'
     tooltip = 'Remove grouping and display child layers'
-    enabled_name = 'layer_is_groupable'
 
-    def is_popup_enabled(self, ui_state, layer):
+    def is_enabled_for_layer(self, action_key, layer):
         return layer.has_groupable_objects() and layer.grouped
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.layer_tree_control.ungroup_children, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_tree_control.ungroup_children(layer)
 
 
 class rename_layer(LayerAction):
     name = 'Rename Layer'
     tooltip = 'Rename layer'
 
-    def perform_on_layer(self, layer, event):
-        GUI.invoke_later(self.editor.layer_tree_control.start_rename, layer)
+    def perform_on_layer(self, action_key, layer):
+        self.editor.layer_tree_control.start_rename(layer)
 
 
 class edit_layer(SawxAction):
@@ -955,7 +963,7 @@ class start_time(LayerAction):
     def get_time(self, layer):
         return layer.start_time
 
-    def perform_on_layer(self, layer, event):
+    def perform_on_layer(self, action_key, layer):
         layers = self.editor.layer_manager.get_playback_layers(layer)
         dlg = wx.SingleChoiceDialog(
                 self.editor.layer_tree_control, self.dialog_info % layer.name, self.name,
