@@ -58,6 +58,7 @@ class BaseLoader(object):
 
     def load_layers_from_uri(self, uri, manager, **kwargs):
         undo = UndoInfo()
+        saved_invariant = manager.next_invariant
         try:
             progress_log.info("START=Loading %s" % uri)
             layers = self.load_layers(uri, manager, **kwargs)
@@ -100,6 +101,7 @@ class BaseLoader(object):
 
                 undo.flags.layers_changed = True
                 undo.flags.refresh_needed = True
+                undo.data = (layers, saved_invariant)
 
         return undo
 

@@ -14,6 +14,7 @@ from . import layers as ly
 from . import loaders
 from . import styles
 from .command import UndoStack, BatchStatus
+from .menu_commands import LoadLayersCommand
 
 # Enthought library imports.
 from traits.api import Any
@@ -164,22 +165,15 @@ class LayerManager(SawxDocument):
         try:
             loader.load_project  # test
         except AttributeError:
-            undo = loader.load_layers_from_uri(self.uri, self)
-            batch_flags = undo.flags
-            extra = {}
+            cmd = LoadLayersCommand(self.uri, loader)
+            extra = {'command_from_load': cmd}
+            # undo = loader.load_layers_from_uri(self.uri, self)
+            # batch_flags = undo.flags
+            # extra = {'batch_flags_from_load': batch_flags}
         else:
             extra = loader.load_project(self.uri, self, batch_flags)
+            extra['batch_flags_from_load'] = batch_flags
         self.extra_metadata = extra
-        self.extra_metadata['batch_flags_from_load'] = batch_flags
-        # self.create_layout(extra)
-        # self.parse_extra_json(extra, batch_flags)
-        # self.loaded_project_extra_json = extra
-        # log.debug("Clearing timeline")
-        # self.timeline.clear_marks()
-        # self.layer_tree_control.clear_all_items()
-        # self.layer_tree_control.rebuild()
-        # self.layer_tree_control.select_initial_layer()
-        # self.perform_batch_flags(None, batch_flags)
 
         # Clear modified flag
         self.undo_stack.set_save_point()

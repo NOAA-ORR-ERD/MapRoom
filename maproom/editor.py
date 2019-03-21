@@ -643,9 +643,36 @@ class ProjectEditor(SawxEditor):
         self.timeline = panes.TimelinePlaybackPanel(panel, self)
         panel.add_footer(self.timeline)
 
-        batch_flags = json.get('batch_flags_from_load', {})
+        batch_flags = json.get('batch_flags_from_load', BatchStatus())
         self.parse_extra_json(json, batch_flags)
+        self.perform_batch_flags(None, batch_flags)
 
+        try:
+            cmd = json['command_from_load']
+        except KeyError:
+            pass
+        else:
+            # ViewportCommand will fail because the screen doesn't yet have a
+            # size, so wait until after controls are realized on screen
+            wx.CallAfter(self.process_command_from_load, cmd)
+
+    def process_command_from_load(self, cmd):
+        self.process_command(cmd)
+        layers = cmd.undo_info.affected_layers()
+        if len(layers) == 1:
+            cmd = moc.ViewportCommand(layers[0])
+        else:
+            center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
+            cmd = moc.ViewportCommand(None, center, units_per_pixel)
+        self.process_command(cmd)
+        self.layer_manager.undo_stack.set_save_point()
+
+        log.debug("Clearing timeline")
+        self.timeline.clear_marks()
+        self.layer_tree_control.clear_all_items()
+        self.layer_tree_control.rebuild()
+        self.layer_tree_control.select_initial_layer()
+        self.mouse_mode_factory = mouse_handler.PanMode
 
     # Traits event handlers
 
@@ -776,8 +803,6 @@ class ProjectEditor(SawxEditor):
         else:
             batch_flags = evt[0]
         log.debug("refresh called; batch_flags=%s" % batch_flags)
-        if self.control is None:
-            return
         if batch_flags is None or batch_flags is True:
             batch_flags = BatchStatus()
 
@@ -851,6 +876,7 @@ class ProjectEditor(SawxEditor):
                     layer.highlight_exception(e)
                 undo = None
             else:
+                log.debug(f"processed command {command}: flags={undo.flags}")
                 if override_editable_properties_changed is not None:
                     b.editable_properties_changed = override_editable_properties_changed
                 self.perform_batch_flags(command, b)
@@ -912,6 +938,7 @@ class ProjectEditor(SawxEditor):
                 b.messages.append("- %s" % f.message)
             b.messages.append("")
         for lf in f.layer_flags:
+            log.debug(f"processing layer flags: {lf}")
             layer = lf.layer
             if layer in b.layers:
                 log.debug("layer %s already in batch flags" % layer)
@@ -946,7 +973,7 @@ class ProjectEditor(SawxEditor):
                 # only the last layer in the list will be selected
                 b.select_layer = layer
             if lf.layer_loaded:
-                self.layer_manager.layer_loaded = layer
+                self.layer_manager.layer_loaded_event(layer)
                 b.layers_changed = True
             if lf.layer_metadata_changed:
                 b.metadata_changed = True
@@ -964,7 +991,7 @@ class ProjectEditor(SawxEditor):
         """Perform the UI updates given the BatchStatus flags
 
         """
-        log.debug("perform_batch_flags layers affected: %s" % str(b.layers))
+        log.debug(f"perform_batch_flags {b} layers affected: {b.layers}")
         for layer in b.layers:
             layer.increment_change_count()
             if layer.transient_edit_layer:
@@ -1250,7 +1277,7 @@ class ProjectEditor(SawxEditor):
         else:
             for layer in self.layer_manager.flatten():
                 layer.clear_flagged()
-            self.layer_manager.refresh_needed = None
+            self.layer_manager.refresh_needed_event(None)
             if not save_message:
                 self.frame.information("Layers OK", "No Problems Found")
         return all_ok

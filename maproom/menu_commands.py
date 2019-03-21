@@ -18,6 +18,41 @@ progress_log = logging.getLogger("progress")
 class LoadLayersCommand(Command):
     short_name = "load"
     serialize_order = [
+        ('uri', 'text'),
+        ('loader', 'loader'),
+        ('regime', 'int', 0),
+    ]
+
+    def __init__(self, uri, loader, regime=0):
+        Command.__init__(self)
+        self.uri = uri
+        self.loader = loader
+        self.regime = regime
+
+    def __str__(self):
+        return "Load Layers From %s" % self.uri
+
+    def perform(self, editor):
+        self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager)
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        layers, saved_invariant = self.undo_info.data
+
+        for layer in layers:
+            lm.remove_layer(layer)
+        lm.next_invariant = saved_invariant
+
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        return undo
+
+
+class OldLoadLayersCommand(Command):
+    short_name = "load"
+    serialize_order = [
         ('metadata', 'file_metadata'),
         ('regime', 'int', 0),
     ]
