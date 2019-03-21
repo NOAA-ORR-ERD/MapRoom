@@ -95,7 +95,10 @@ class SortableHost(object):
         return self.name < other.name
 
     def __eq__(self, other):
-        return self.url == other.url
+        try:
+            return self.url == other.url
+        except:
+            return False
 
     def label_helper(self):
         extra = " (default)" if self.default else ""
@@ -172,7 +175,10 @@ class TileHost(SortableHost):
         return hash(self.urls[0])
 
     def __eq__(self, other):
-        return set(self.urls) == set(other.urls)
+        try:
+            return set(self.urls) == set(other.urls)
+        except:
+            return False
 
     def is_in_url_list(self, url):
         return url in self.urls
