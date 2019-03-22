@@ -104,8 +104,12 @@ class LayerManager(SawxDocument):
         SawxDocument.__init__(self, file_metadata)
         self.undo_stack = UndoStack()  # replace sawx undo stack with our own
 
-    # def set_project(self, project):
-    #     self.project = project
+        # LayerManagers are *almost* independent of the project. Right now it
+        # isn't possible to have multiple views of a project because there are
+        # references to the project in a few vector object classes that are
+        # positioned relative to the screen. The project will be set once it is
+        # added into a ProjectEditor
+        self.project = None
 
         # # Add hook to create layer instances for debugging purposes
         # if "--debug-objects" in self.project.window.application.command_line_args:

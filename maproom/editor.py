@@ -223,6 +223,7 @@ class ProjectEditor(SawxEditor):
     def __init__(self, document, **kwargs):
         SawxEditor.__init__(self, document, **kwargs)
         self.layer_manager = document
+        self.layer_manager.project = self
         self.layer_zoomable = False
         self.layer_can_save = False
         self.layer_can_save_as = False
