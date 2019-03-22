@@ -139,10 +139,11 @@ def get_dataset(uri):
     # disable the default error handler so errors don't end up on stderr
     gdal.PushErrorHandler("CPLQuietErrorHandler")
 
-    fs, relpath = opener.parse(uri)
-    if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for GDAL: %s" % uri)
-    file_path = fs.getsyspath(relpath)
+    try:
+        file_path = filesystem_path(uri)
+    except OSError:
+        log.debug(f"{uri} not on local filesystem, GDAL won't load it.")
+        return None
     if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
         file_path = file_path[4:]
     dataset = gdal.Open(str(file_path))

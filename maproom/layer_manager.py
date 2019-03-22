@@ -6,6 +6,7 @@ import functools
 import wx
 
 from sawx.filesystem import fsopen as open
+from sawx.filesystem import filesystem_path
 from sawx.events import EventHandler
 
 from .library import rect
@@ -1296,14 +1297,11 @@ class LayerManager(SawxDocument):
 
                             # save all files into zip file
                             for p in paths:
+                                try:
+                                    p = filesystem_path(p)
+                                except:
+                                    raise RuntimeError("Can't yet handle URIs not on local filesystem")
                                 basename = os.path.basename(p)
-                                if "://" in p:
-                                    # handle URI format
-                                    fs, relpath = opener.parse(p)
-                                    if fs.hassyspath(relpath):
-                                        p = fs.getsyspath(relpath)
-                                    else:
-                                        raise RuntimeError("Can't yet handle URIs not on local filesystem")
                                 archive_name = zip_root + basename
                                 zf.write(p, archive_name, zipfile.ZIP_STORED)
 

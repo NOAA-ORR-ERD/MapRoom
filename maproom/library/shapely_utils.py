@@ -5,6 +5,8 @@ from shapely.geometry import shape
 from shapely.wkt import loads
 from osgeo import ogr
 
+from sawx.filesystem import filesystem_path
+
 from .accumulator import accumulator
 
 import logging
@@ -20,13 +22,14 @@ def get_dataset(uri):
     doesn't support URIs, only files on the local filesystem
     """
 
-    fs, relpath = opener.parse(uri)
-    if not fs.hassyspath(relpath):
-        raise RuntimeError("Only file URIs are supported for OGR: %s" % uri)
-    file_path = fs.getsyspath(relpath)
-    if file_path.startswith("\\\\?\\"):  # OGR doesn't support extended filenames
+    try:
+        file_path = filesystem_path(uri)
+    except OSError:
+        log.debug(f"{uri} not on local filesystem, GDAL won't load it.")
+        return None
+    if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
         file_path = file_path[4:]
-    dataset = ogr.Open(str(file_path))
+    dataset = ogr.Open(file_path)
 
     if (dataset is None):
         return ("Unable to load the shapefile " + file_path, None)
