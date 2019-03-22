@@ -25,6 +25,7 @@ from .command import UndoStack, BatchStatus
 from . import mouse_handler
 from . import menu_commands as mec
 from . import mouse_commands as moc
+from . import toolbar
 from .library.bsb_utils import extract_from_zip
 from .library import apng
 from . import panes
@@ -209,7 +210,7 @@ class ProjectEditor(SawxEditor):
         None,
     ]
 
-    module_search_order = ["maproom.actions", "sawx.actions"]
+    module_search_order = ["maproom.actions", "maproom.toolbar", "sawx.actions"]
 
     #### document matching
 
@@ -656,6 +657,9 @@ class ProjectEditor(SawxEditor):
             # size, so wait until after controls are realized on screen
             wx.CallAfter(self.process_command_from_load, cmd)
 
+        # force toolbar update to pick up the correct default mouse mode
+        wx.CallAfter(self.update_layer_selection_ui)
+
     def process_command_from_load(self, cmd):
         self.process_command(cmd)
         layers = cmd.undo_info.affected_layers()
@@ -722,15 +726,26 @@ class ProjectEditor(SawxEditor):
         if edit_layer is not None:
             # leave mouse_mode set to current setting
             self.mouse_mode_toolbar = edit_layer.mouse_mode_toolbar
-            # self.mouse_mode_factory = toolbar.get_valid_mouse_mode(self.mouse_mode_factory, self.mouse_mode_toolbar)
+            self.mouse_mode_factory = toolbar.get_valid_mouse_mode(self.mouse_mode_factory, self.mouse_mode_toolbar)
         else:
             self.mouse_mode_factory = mouse_handler.SelectionMode
+
+        self.update_toolbar_for_mouse_mode()
+
         self.update_layer_menu_ui(edit_layer)
         self.layer_canvas.set_mouse_handler(self.mouse_mode_factory)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_info_panels(edit_layer)
         self.update_layer_contents_ui(edit_layer)
         # self.task.layer_selection_changed = edit_layer
+
+    def update_toolbar_for_mouse_mode(self):
+        # Creating an object attribute that will shadow the class attribute
+        self.toolbar_desc = list(self.__class__.toolbar_desc)
+        name = self.mouse_mode_toolbar
+        tools = toolbar.valid_mouse_modes.get(self.mouse_mode_toolbar, [])
+        self.toolbar_desc.extend(tools)
+        self.frame.rebuild_toolbar()
 
     def update_layer_contents_ui(self, edit_layer=None):
         if edit_layer is None:

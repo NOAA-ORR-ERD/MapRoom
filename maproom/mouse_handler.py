@@ -26,7 +26,7 @@ class MouseHandler(object):
 
     This is an object-based control system of mouse modes
     """
-    icon = "help.png"
+    icon = "help"
     menu_item_name = "Generic Mouse Handler"
     menu_item_tooltip = "Tooltip for generic mouse handler"
     editor_trait_for_enabled = ""
@@ -584,7 +584,7 @@ class MouseHandler(object):
 class PanMode(MouseHandler):
     """Mouse mode to pan the viewport
     """
-    icon = "pan.png"
+    icon = "pan"
     menu_item_name = "Pan Mode"
     menu_item_tooltip = "Scroll the viewport by holding down the mouse"
     editor_trait_for_enabled = ""
@@ -611,7 +611,7 @@ class PanMode(MouseHandler):
 class RNCSelectionMode(PanMode):
     """Mouse mode to pan the viewport
     """
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "RNC Chart Selection Mode"
     menu_item_tooltip = "Select an RNC chart to download"
     editor_trait_for_enabled = ""
@@ -699,7 +699,7 @@ class RNCSelectionMode(PanMode):
 class PolygonSelectionMode(RNCSelectionMode):
     """Mouse mode to select rings
     """
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "Polygon Selection Mode"
     menu_item_tooltip = "Select a polygon"
     editor_trait_for_enabled = ""
@@ -731,7 +731,7 @@ class SelectionMode(MouseHandler):
 
     This is a precursor to an object-based control system of mouse modes
     """
-    icon = "select.png"
+    icon = "select"
     toolbar_group = "select"
 
     def get_cursor(self):
@@ -947,7 +947,7 @@ class PointSelectionMode(ObjectSelectionMode):
     """Combo of PanMode and PointEdit mode, but only allowing points/lines
     to be selected and moved, not added to or deleted.
     """
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "Point Selection Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1062,7 +1062,7 @@ class PointSelectionMode(ObjectSelectionMode):
 
 
 class PointEditMode(PointSelectionMode):
-    icon = "add_points.png"
+    icon = "add_points"
     menu_item_name = "Point Edit Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1122,7 +1122,7 @@ class PointEditMode(PointSelectionMode):
 
 
 class LineEditMode(PointEditMode):
-    icon = "add_lines.png"
+    icon = "add_lines"
     menu_item_name = "Line Edit Mode"
     menu_item_tooltip = "Edit and add lines in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1292,7 +1292,7 @@ class RectSelectMode(MouseHandler):
 
 
 class RulerMode(RectSelectMode):
-    icon = "ruler.png"
+    icon = "ruler"
     menu_item_name = "Measure Distance"
     menu_item_tooltip = "Measure the great-circle distance between two points"
     toolbar_group = "view"
@@ -1312,7 +1312,7 @@ class RulerMode(RectSelectMode):
 
 
 class ZoomRectMode(RectSelectMode):
-    icon = "zoom_box.png"
+    icon = "zoom_box"
     menu_item_name = "Zoom Mode"
     menu_item_tooltip = "Zoom in to increase magnification of the current layer"
     toolbar_group = "view"
@@ -1330,7 +1330,7 @@ class ZoomRectMode(RectSelectMode):
 
 
 class CropRectMode(RectSelectMode):
-    icon = "crop.png"
+    icon = "crop"
     menu_item_name = "Crop Mode"
     menu_item_tooltip = "Crop the current layer"
     toolbar_group = "view"
@@ -1348,7 +1348,7 @@ class CropRectMode(RectSelectMode):
 
 
 class ControlPointEditMode(ObjectSelectionMode):
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "Control Point Edit Mode"
     menu_item_tooltip = "Select objects and move control points in the current layer"
 
@@ -1432,7 +1432,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
 
 
 class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_text.png"
+    icon = "shape_text"
     menu_item_name = "Add Text"
     menu_item_tooltip = "Add a new text overlay"
     vector_object_command = voc.AddTextCommand
@@ -1449,21 +1449,21 @@ class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_square.png"
+    icon = "shape_square"
     menu_item_name = "Add Rectangle"
     menu_item_tooltip = "Add a new rectangle or square"
     vector_object_command = voc.DrawRectangleCommand
 
 
 class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_ellipse.png"
+    icon = "shape_ellipse"
     menu_item_name = "Add Ellipse"
     menu_item_tooltip = "Add a new ellipse or circle"
     vector_object_command = voc.DrawEllipseCommand
 
 
 class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_arrow_text.png"
+    icon = "shape_arrow_text"
     menu_item_name = "Add Arrow/Text Box"
     menu_item_tooltip = "Add a new arrow and text box combo object"
     vector_object_command = voc.DrawArrowTextBoxCommand
@@ -1481,14 +1481,14 @@ class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddArrowTextIconMode(AddArrowTextMode):
-    icon = "shape_arrow_text_icon.png"
+    icon = "shape_arrow_text_icon"
     menu_item_name = "Add Arrow/Text/Icon Box"
     menu_item_tooltip = "Add a new arrow/text box/icon combo object"
     vector_object_command = voc.DrawArrowTextIconCommand
 
 
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_circle.png"
+    icon = "shape_circle"
     menu_item_name = "Add Circle"
     menu_item_tooltip = "Add a new circle from center point"
     vector_object_command = voc.DrawCircleCommand
@@ -1517,7 +1517,7 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddLineMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_line.png"
+    icon = "shape_line"
     menu_item_name = "Add Line"
     menu_item_tooltip = "Add a new line"
     vector_object_command = voc.DrawLineCommand
@@ -1539,7 +1539,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddPolylineMode(MouseHandler):
-    icon = "shape_polyline.png"
+    icon = "shape_polyline"
     menu_item_name = "Add Polyline"
     menu_item_tooltip = "Add a new polyline"
     vector_object_command = voc.DrawPolylineCommand
@@ -1619,7 +1619,7 @@ class AddPolylineMode(MouseHandler):
 
 
 class AddPolygonMode(AddPolylineMode):
-    icon = "shape_polygon.png"
+    icon = "shape_polygon"
     menu_item_name = "Add Polygon"
     menu_item_tooltip = "Add a new polygon"
     vector_object_command = voc.DrawPolygonCommand
@@ -1659,7 +1659,7 @@ class AddOverlayMode(MouseHandler):
 
 
 class AddOverlayIconMode(AddOverlayMode):
-    icon = "shape_icon.png"
+    icon = "shape_icon"
     menu_item_name = "Add Icon"
     menu_item_tooltip = "Add a new Marplot icon"
     vector_object_command = voc.AddIconCommand
