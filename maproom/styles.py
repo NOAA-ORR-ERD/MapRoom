@@ -355,11 +355,11 @@ def override_default_styles(styles):
             _default_styles[type_name] = style.get_copy()
 
 def default_styles_read_only(type_name):
-    return DefaultStyle.default_styles.get(type_name, self._default_styles["other"])
+    return _default_styles.get(type_name, _default_styles["other"])
 
 def remember_styles(override_styles=None):
-    DefaultStyle.override_default_styles(override_styles)
-    data = styles_to_json(self._default_styles)
+    override_default_styles(override_styles)
+    data = styles_to_json(_default_styles)
     persistence.save_json_data("styles", data)
 
 
