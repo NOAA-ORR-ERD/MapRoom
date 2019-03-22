@@ -91,7 +91,7 @@ class save_project_as(SawxAction):
         return "save_file_as"
 
     def perform(self, action_key):
-        self.editor.save(prompt=True)
+        self.editor.save_as()
 
 
 class save_project_template(SawxAction):

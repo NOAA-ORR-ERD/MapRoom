@@ -224,7 +224,7 @@ class LayerManager(SawxDocument):
         self.control_point_links = cpdict
 
     def default_styles_to_json(self):
-        return ly.styles_to_json(self.default_styles)
+        return styles.styles_to_json(self.default_styles)
 
     def default_styles_from_json(self, json_data):
         sdict = json_data['default_styles']
@@ -744,10 +744,10 @@ class LayerManager(SawxDocument):
                 return True
         return False
 
-    def check_layer(self, layer, window):
+    def check_layer(self, layer):
         if layer is not None:
             try:
-                layer.check_for_problems(window)
+                layer.check_for_problems()
             except Exception as e:
                 if hasattr(e, 'error_points'):
                     return e
@@ -1231,7 +1231,7 @@ class LayerManager(SawxDocument):
 
     def save_raw_data(self, uri, raw_data):
         extra_json = self.project.current_extra_json
-        return self.save_all_zip(uri, extra_json_data)
+        return self.save_all_zip(uri, extra_json)
 
     def calc_raw_data_to_save(self):
         return None

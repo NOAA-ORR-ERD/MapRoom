@@ -211,7 +211,7 @@ class PolygonLayer(PointLayer):
     def identifiers_from_json(self, json_data):
         self.ring_identifiers = json_data['identifiers']
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         problems = []
         # record log messages from the shapely package
         templog = logging.getLogger("shapely.geos")

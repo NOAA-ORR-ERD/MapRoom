@@ -78,7 +78,7 @@ class VectorObjectLayer(LineLayer):
     def can_reparent_to(self, potential_parent_layer):
         return potential_parent_layer.can_contain_annotations
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         pass
 
     def rotation_to_json(self):

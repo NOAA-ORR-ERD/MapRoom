@@ -552,7 +552,7 @@ class Layer(HasTraits):
     def set_dependent_of(self, layer):
         self.dependent_of = layer.invariant
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         pass
 
     def check_projection(self, task):

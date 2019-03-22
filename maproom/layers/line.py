@@ -208,7 +208,7 @@ class LineLayer(PointLayer):
         else:
             self.line_segment_indexes = jd
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         # determine the boundaries in the parent layer
         boundaries = Boundaries(self, allow_branches=False, allow_self_crossing=False)
         boundaries.check_errors(True)

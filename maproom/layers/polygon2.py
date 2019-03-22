@@ -588,7 +588,7 @@ class PolygonParentLayer(PointLayer):
         self.create_rings()
         self.rebuild_needed = True
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         pass
 
     def rebuild_renderer(self, renderer, in_place=False):

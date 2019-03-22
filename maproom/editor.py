@@ -1238,7 +1238,7 @@ class ProjectEditor(SawxEditor):
 
         try:
             progress_log.info("START=Checking layer %s" % edit_layer.name)
-            error = self.layer_manager.check_layer(edit_layer, self.window)
+            error = self.layer_manager.check_layer(edit_layer)
         except ProgressCancelError:
             error = "cancel"
         finally:
@@ -1268,7 +1268,7 @@ class ProjectEditor(SawxEditor):
             progress_log.info("START=Checking all layers for errors")
             for layer in self.layer_manager.flatten():
                 progress_log.info("TITLE=Checking layer %s" % layer.name)
-                error = self.layer_manager.check_layer(layer, self.window)
+                error = self.layer_manager.check_layer(layer)
                 if error is not None:
                     messages.append("%s: %s" % (layer.name, str(error)))
                     layer.highlight_exception(error)
