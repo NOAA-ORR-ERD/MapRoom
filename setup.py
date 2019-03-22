@@ -194,6 +194,7 @@ setup(
             'gps = maproom.loaders.gps',
             'gdal = maproom.loaders.gdal',
             'shapefile = maproom.loaders.shapefile',
+            'text = maproom.loaders.text',
         ],
 
         "sawx.documents": [
