@@ -27,24 +27,13 @@ def identify_mime(uri, fh, header):
     if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
         file_path = file_path[4:]
     try:
+        log.debug(f"attempting to open {uri} with gdal")
         dataset = gdal.Open(file_path)
     except RuntimeError:
         log.debug("OGR can't open %s; not an image")
         return None
-    if dataset is not None and dataset.GetLayerCount() > 0:
-        # check to see if there are any valid layers because some CSV files
-        # seem to be recognized as having layers but have no geometry.
-        count = 0
-        for layer_index in range(dataset.GetLayerCount()):
-            layer = dataset.GetLayer(layer_index)
-            for feature in layer:
-                ogr_geom = feature.GetGeometryRef()
-                print(f"ogr_geom for {layer} = {ogr_geom}")
-                if ogr_geom is None:
-                    continue
-                count += 1
-        if count > 0:
-            return dict(mime="image/x-gdal", loader=GDALLoader())
+    if dataset is not None and dataset.RasterCount > 0:
+        return dict(mime="image/x-gdal", loader=GDALLoader())
     return None
 
 
