@@ -185,8 +185,10 @@ setup(
     ext_modules=ext_modules,
     app=["maproom.py"],
     entry_points = {
+        # NOTE: entry points are processed lexicographically, not in the order
+        # specified, so force e.g. verdat loader to come before text loader
         "sawx.loaders": [
-            'verdat = maproom.loaders.verdat',
+            '1verdat = maproom.loaders.verdat',
             'project = maproom.loaders.project',
             'nc_particles = maproom.loaders.nc_particles',
             'ugrid = maproom.loaders.ugrid',
