@@ -827,20 +827,6 @@ class LayerManager(SawxDocument):
 
     ##### Add layers
 
-    def add_layer(self, type=None, editor=None, before=None, after=None):
-        if type == "grid":
-            layer = ly.Graticule(manager=self)
-        elif type == "triangle":
-            layer = ly.TriangleLayer(manager=self)
-        else:
-            layer = ly.LineLayer(manager=self)
-        layer.new()
-        self.insert_loaded_layer(layer, editor, before, after)
-        # self.dispatch_event('layers_changed')
-        if editor is not None:
-            wx.CallAfter(editor.layer_tree_control.set_edit_layer, layer)
-        return layer
-
     def add_layers(self, layers, editor=None):
         layers = layers[:]  # work on copy so we don't mess up the caller's list
         parent = None
