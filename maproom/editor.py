@@ -386,6 +386,16 @@ class ProjectEditor(SawxEditor):
 
         log.debug("using center: %s, upp=%f" % (str(self.layer_canvas.projected_point_center), self.layer_canvas.projected_units_per_pixel))
 
+        self.layer_tree_control.clear_all_items()
+        self.layer_tree_control.rebuild()
+        self.layer_tree_control.select_initial_layer()
+        self.mouse_mode_factory = mouse_handler.PanMode
+
+        self.rebuild_document_properties()
+
+        # force toolbar update to pick up the correct default mouse mode
+        self.update_layer_selection_ui()
+
     def save_project(self, path):
         try:
             progress_log.info("START=Saving %s" % path)
@@ -640,6 +650,8 @@ class ProjectEditor(SawxEditor):
 
         self.timeline = panes.TimelinePlaybackPanel(panel, self)
         panel.add_footer(self.timeline)
+        log.debug("Clearing timeline")
+        self.timeline.clear_marks()
 
         batch_flags = json.get('batch_flags_from_load', BatchStatus())
         self.parse_extra_json(json, batch_flags)
@@ -648,16 +660,13 @@ class ProjectEditor(SawxEditor):
         try:
             cmd = json['command_from_load']
         except KeyError:
-            # A project file doesn't have any post-load commands, so force the
-            # default viewport positioning after load
-            wx.CallAfter(self.init_view_properties)
+            pass
         else:
             # ViewportCommand will fail because the screen doesn't yet have a
             # size, so wait until after controls are realized on screen
             wx.CallAfter(self.process_command_from_load, cmd)
 
-        # force toolbar update to pick up the correct default mouse mode
-        wx.CallAfter(self.update_layer_selection_ui)
+        wx.CallAfter(self.init_view_properties)
 
     def process_command_from_load(self, cmd):
         self.process_command(cmd)
@@ -669,13 +678,6 @@ class ProjectEditor(SawxEditor):
             cmd = moc.ViewportCommand(None, center, units_per_pixel)
         self.process_command(cmd)
         self.layer_manager.undo_stack.set_save_point()
-
-        log.debug("Clearing timeline")
-        self.timeline.clear_marks()
-        self.layer_tree_control.clear_all_items()
-        self.layer_tree_control.rebuild()
-        self.layer_tree_control.select_initial_layer()
-        self.mouse_mode_factory = mouse_handler.PanMode
 
     # Traits event handlers
 
