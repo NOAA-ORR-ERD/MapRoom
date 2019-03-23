@@ -242,10 +242,6 @@ class ProjectEditor(SawxEditor):
         self.in_batch_processing = False
         self.layer_visibility = self.calc_default_visibility()
 
-        # temporary variable set in load process and used in setting the
-        # initial view
-        self.loaded_project_extra_json = None
-
         # can_paste_style is set by copy_style if there's a style that can be
         # applied
         self.can_paste_style = False
@@ -377,17 +373,17 @@ class ProjectEditor(SawxEditor):
         self.timeline.recalc_view()
 
     def init_view_properties(self):
-        # Set default view
-        self.layer_canvas.zoom_to_fit()
-
         # Override default view if provided in project file
-        json = self.loaded_project_extra_json
+        json = self.document.extra_metadata
         if json is not None:
             if "projected_units_per_pixel" in json:
                 self.layer_canvas.set_units_per_pixel(json["projected_units_per_pixel"])
             if "projected_point_center" in json:
                 self.layer_canvas.set_center(json["projected_point_center"])
-        self.loaded_project_extra_json = None
+        else:
+            # Set default view
+            self.layer_canvas.zoom_to_fit()
+
         log.debug("using center: %s, upp=%f" % (str(self.layer_canvas.projected_point_center), self.layer_canvas.projected_units_per_pixel))
 
     def save_project(self, path):
@@ -652,7 +648,9 @@ class ProjectEditor(SawxEditor):
         try:
             cmd = json['command_from_load']
         except KeyError:
-            pass
+            # A project file doesn't have any post-load commands, so force the
+            # default viewport positioning after load
+            wx.CallAfter(self.init_view_properties)
         else:
             # ViewportCommand will fail because the screen doesn't yet have a
             # size, so wait until after controls are realized on screen
