@@ -138,13 +138,13 @@ class BaseLayerLoader(BaseLoader):
                 layer.clear_all_selections(state.FLAGGED)
                 for p in e.error_points:
                     layer.select_point(p, state.FLAGGED)
-                layer.manager.dispatch_event('refresh_needed')
+                layer.manager.refresh_needed_event(True)
             error = str(e)
 
         if (not error and temp_file and os.path.exists(temp_file)):
             if layer.get_num_points_selected(state.FLAGGED):
                 layer.clear_all_selections(state.FLAGGED)
-                layer.manager.dispatch_event('refresh_needed')
+                layer.manager.refresh_needed_event(True)
             try:
                 uri_base = os.path.dirname(uri)
                 print(f"uri={uri} uri_base={uri_base}")

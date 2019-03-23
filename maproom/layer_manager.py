@@ -803,18 +803,6 @@ class LayerManager(SawxDocument):
         #
         return n
 
-    # def dispatch_event(self, event, value=True):  # refactor out
-    #     log.debug("dispatching event %s = %s" % (event, value))
-    #     setattr(self, event, value)
-
-    # def post_event(self, event_name, *args):  # refactor out
-    #     log.debug("event: %s.  args=%s" % (event_name, str(args)))
-
-    # def get_event_callback(self, event):  # refactor out
-    #     import functools
-    #     callback = functools.partial(self.post_event, event)
-    #     return callback
-
     ##### ly.Layer modification
 
     def update_map_server_ids(self, layer_type, before, after):

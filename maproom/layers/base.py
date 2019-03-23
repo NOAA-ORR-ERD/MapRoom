@@ -13,6 +13,7 @@ from traits.api import Str
 from traits.api import Unicode
 
 from sawx.utils.runtime import get_all_subclasses
+from sawx.loader import identify_file
 
 # MapRoom imports
 from ..library import rect
@@ -450,15 +451,19 @@ class Layer(HasTraits):
         kls = cls.type_to_class(t)
         log.debug("load_from_json: found type %s, class=%s" % (t, kls))
         if 'url' in json_data and kls.restore_from_url:
-            from maproom.layers import loaders
+            url = json_data['url']
+            file_metadata = identify_file(url)
+            print(f"file metadata: {file_metadata}")
+            loader = file_metadata["loader"]
 
-            log.debug("Loading layers from url %s" % json_data['url'])
+            log.debug(f"Loading layers from {url} using {loader}")
             try:
-                loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
+                undo_info = loader.load_layers_from_uri(url, manager)
             except OSError:
-                raise RuntimeError("Failed loading from %s" % json_data['url'])
+                raise RuntimeError(f"Failed loading from {url}")
 
             # need to restore other metadata that isn't part of the URL load
+            layers = undo_info.data[0]
             layers[0].unserialize_json(json_data, batch_flags)
         else:
             log.debug("Loading layers from json encoded data")
