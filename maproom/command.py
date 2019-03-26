@@ -162,7 +162,10 @@ class LayerStatus(object):
             if name.startswith("_"):
                 continue
             val = getattr(self, name)
-            if val is None or not val or hasattr(val, "__call__"):
+
+            # note: using 'is False' here instead of not in case the argument
+            # is a numpy array (which fails)
+            if val is None or val is False or hasattr(val, "__call__"):
                 continue
             flags.append("%s=%s" % (name, val))
         return ", ".join(flags)
@@ -207,7 +210,10 @@ class BatchStatus(object):
             if name.startswith("_"):
                 continue
             val = getattr(self, name)
-            if val is None or not val or hasattr(val, "__call__"):
+
+            # note: using 'is False' here instead of not in case the argument
+            # is a numpy array (which fails)
+            if val is None or val is False or hasattr(val, "__call__"):
                 continue
             flags.append("%s=%s" % (name, val))
         return ", ".join(flags)
