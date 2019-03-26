@@ -180,6 +180,7 @@ class BaseCanvas(object):
         s_r = self.get_screen_rect()
         p_r = self.get_projected_rect_from_screen_rect(s_r)
         w_r = self.get_world_rect_from_projected_rect(p_r)
+        log.debug(f"screen: {s_r}\nprojected: {p_r}\nworld: {w_r}")
 
         if not self.begin_rendering_screen(p_r, s_r):
             return

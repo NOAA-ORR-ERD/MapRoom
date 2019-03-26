@@ -46,6 +46,7 @@ class Graticule(ScreenLayer):
         degrees_lat_per_pixel = float(rect.height(world_rect)) / float(rect.height(screen_rect))
 
         self.lon_step = self.grid.get_step_size(ref_pixel_size * degrees_lon_per_pixel)
+        log.debug(f"world: {world_rect}\nscreen: {screen_rect}\nlat/lon steps: {self.lat_step},{self.lon_step}\nlat/lon degrees per pixel: {degrees_lat_per_pixel}, {degrees_lon_per_pixel}\n")
         self.lon_steps = np.arange(
             world_rect[0][0] + self.lon_step - world_rect[0][0] % self.lon_step,
             world_rect[1][0],

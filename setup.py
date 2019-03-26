@@ -141,7 +141,7 @@ install_requires = [
     'numpy',
     'pyopengl',
     'pyopengl_accelerate',
-    'pyproj',
+    'pyproj==1.9.6',  # pyproj version 2 fails outside the -180/+180 range
     'cython',
     'shapely',
     'owslib>=0.16',
