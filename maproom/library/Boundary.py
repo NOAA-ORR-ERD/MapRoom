@@ -123,10 +123,10 @@ class Boundary(Polyline):
 
         while inside is False:
             # pick three random boundary points and take the average of their coordinates
-            (point1, point2, point3) = random.sample(self.point_indexes, 3)
+            p = np.random.choice(self.point_indexes, 3)
 
-            candidate_x = (points.x[point1] + points.x[point2] + points.x[point3]) / 3.0
-            candidate_y = (points.y[point1] + points.y[point2] + points.y[point3]) / 3.0
+            candidate_x = (points.x[p[0]] + points.x[p[1]] + points.x[p[2]]) / 3.0
+            candidate_y = (points.y[p[0]] + points.y[p[1]] + points.y[p[2]]) / 3.0
 
             inside = point_in_polygon(
                 points_x=points.x,

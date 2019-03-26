@@ -115,6 +115,7 @@ class TrianglePanel(wx.Panel):
 
                 return
 
+        project = self.editor
         layer = project.layer_tree_control.get_edit_layer()
         if layer.type == "triangle":
             # If attempting to triangulate a triangle layer, check if it is an
