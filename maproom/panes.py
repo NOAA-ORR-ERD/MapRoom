@@ -509,14 +509,14 @@ class DownloadPanel(DownloadControl):
     # and pull out the paths from the preferences
     @property
     def path(self):
-        path = preferences.download_directory
+        path = self.editor.preferences.download_directory
         log.debug("download path: %s" % path)
         return path
 
     @path.setter
     def path(self, value):
         if value:
-            preferences.download_directory = value
+            self.editor.preferences.download_directory = value
 
     def refresh_view(self):
         self.Refresh()
