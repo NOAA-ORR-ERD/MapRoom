@@ -54,8 +54,8 @@ def trace_calls(frame, event, arg):
     func_line_no = frame.f_lineno
     func_filename = co.co_filename
     caller = frame.f_back
-    caller_line_no = caller.f_lineno
-    caller_filename = caller.f_code.co_filename
+    caller_line_no = caller.f_lineno if caller is not None else "<none>"
+    caller_filename = caller.f_code.co_filename if caller is not None else "<none>"
     f = caller_filename + func_filename
     if "trait_notifiers.py" in f or "trait_handlers" in f or "has_traits" in f or "logging" in f or "envisage" in f or "sre_" in f:
         return
@@ -63,6 +63,29 @@ def trace_calls(frame, event, arg):
         (func_name, func_line_no, func_filename,
          caller_line_no, caller_filename))
     return
+
+
+from maproom._version import __version__
+
+class MapRoomApp(SawxApp):
+    app_name = "MapRoom"
+    app_version = __version__
+    app_description = "High-performance 2d mapping"
+    app_icon = "icon://maproom.ico"
+    app_website = "http://www.noaa.gov"
+    default_uri = "template://default_project.maproom"
+    about_image = "icon://maproom_large.png"
+    about_html = f"""<h2>{SawxApp.app_name} {SawxApp.app_version}</h2>
+
+<h3>{SawxApp.app_description}</h3>
+
+<p><img src="{SawxApp.about_image}">"""
+
+    def shutdown_subprocesses(self):
+        from maproom.servers import stop_threaded_processing
+        stop_threaded_processing()
+        SawxApp.shutdown_subprocesses(self)
+
 
 def main(argv):
     """ Run the application.
@@ -81,21 +104,7 @@ def main(argv):
     image_paths = [get_image_path("icons", maproom)]
     template_paths = [get_image_path("templates", maproom)]
     help_paths = ["maproom/help"]
-
-    from maproom._version import __version__
-    SawxApp.app_name = "MapRoom"
-    SawxApp.app_version = __version__
-    SawxApp.app_description = "High-performance 2d mapping"
-    SawxApp.app_icon = "icon://maproom.ico"
-    SawxApp.app_website = "http://www.noaa.gov"
-    SawxApp.default_uri = "template://default_project.maproom"
-    SawxApp.about_image = "icon://maproom_large.png"
-    SawxApp.about_html = f"""<h2>{SawxApp.app_name} {SawxApp.app_version}</h2>
-
-<h3>{SawxApp.app_description}</h3>
-
-<p><img src="{SawxApp.about_image}">"""
-    run(SawxApp, image_paths, template_paths, help_paths)
+    run(MapRoomApp, image_paths, template_paths, help_paths)
 
     logging.shutdown()
 
