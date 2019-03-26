@@ -438,6 +438,22 @@ class ProjectEditor(SawxEditor):
             self.frame.error(str(e))
         self.layer_manager.undo_stack.pop_command()
 
+    #### layer load/save
+
+    def can_load_file(self, file_metadata):
+        """Override in subclass if possible to load files into existing editor
+        """
+        loader = file_metadata["loader"]
+        return not hasattr(loader, "load_project")
+
+    def load_file(self, file_metadata):
+        """Override in subclass to actually load file into existing editor
+        """
+        uri = file_metadata["uri"]
+        loader = file_metadata["loader"]
+        cmd = mec.LoadLayersCommand(uri, loader)
+        self.process_command_from_load(cmd)
+
     def save_layer(self, path, loader=None):
         """ Saves the contents of the current layer in an appropriate file
         """
@@ -664,11 +680,11 @@ class ProjectEditor(SawxEditor):
         else:
             # ViewportCommand will fail because the screen doesn't yet have a
             # size, so wait until after controls are realized on screen
-            wx.CallAfter(self.process_command_from_load, cmd)
+            wx.CallAfter(self.process_command_from_load, cmd, True)
 
         wx.CallAfter(self.init_view_properties)
 
-    def process_command_from_load(self, cmd):
+    def process_command_from_load(self, cmd, set_save_point=False):
         self.process_command(cmd)
         layers = cmd.undo_info.affected_layers()
         if len(layers) == 1:
@@ -677,7 +693,8 @@ class ProjectEditor(SawxEditor):
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
             cmd = moc.ViewportCommand(None, center, units_per_pixel)
         self.process_command(cmd)
-        self.layer_manager.undo_stack.set_save_point()
+        if set_save_point:
+            self.layer_manager.undo_stack.set_save_point()
 
     # Traits event handlers
 
