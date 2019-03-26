@@ -18,6 +18,7 @@ from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile, SimplifyDi
 from .library.thread_utils import BackgroundWMSDownloader
 from .library.tile_utils import BackgroundTileDownloader
 from . import layers
+from . import servers
 
 import logging
 log = logging.getLogger(__name__)
@@ -117,7 +118,7 @@ class load_project_template(SawxListAction):
     def perform(self, action_key):
         name = self.get_item(action_key)
         uri = persistence.get_user_dir_filename('project_templates', name)
-        self.editor.frame.load_file(uri, event.task)
+        self.editor.frame.load_file(uri, self.editor)
 
 
 class save_command_log(SawxAction):
@@ -194,7 +195,7 @@ class save_movie(SawxAction):
         return bool(self.editor.latest_movie)
 
     def perform(self, action_key):
-        dialog = FileDialog(parent=event.task.window.control, action='save as', wildcard="PNG Movies (*.png)|*.png")
+        dialog = FileDialog(parent=self.editor.control, action='save as', wildcard="PNG Movies (*.png)|*.png")
         if dialog.open() == OK:
             self.editor.save_latest_movie(dialog.path)
 
@@ -208,7 +209,7 @@ class revert_project(SawxAction):
 
     def perform(self, action_key):
         message = "Revert project from\n\n%s?" % self.editor.document.metadata.uri
-        if event.task.confirm(message=message, title='Revert Project?'):
+        if self.editor.frame.confirm(message=message, title='Revert Project?'):
             self.editor.load_omnivore_document(self.editor.document)
 
 
@@ -376,7 +377,7 @@ class new_rnc_layer(SawxAction):
     def perform(self, action_key):
         from maproom.templates import get_template_path
         path = get_template_path("RNCProdCat_*.bna")
-        self.editor.frame.load_file(path, event.task, regime=0)
+        self.editor.frame.load_file(path, self.editor, regime=0)
 
 
 class new_rnc_layer360(SawxAction):
@@ -386,7 +387,7 @@ class new_rnc_layer360(SawxAction):
     def perform(self, action_key):
         from maproom.templates import get_template_path
         path = get_template_path("RNCProdCat_*.bna")
-        self.editor.frame.load_file(path, event.task, regime=360)
+        self.editor.frame.load_file(path, self.editor, regime=360)
 
 
 class delete_layer(LayerAction):
@@ -494,7 +495,7 @@ class convex_hull(SawxAction):
         layers = project.layer_manager.flatten()
 
         if len(layers) < 1:
-            project.task.error("Convex hull requires at least one layer.")
+            project.frame.error("Convex hull requires at least one layer.")
             return
 
         layer_names = [str(layer.name) for layer in layers]
@@ -515,7 +516,7 @@ class convex_hull(SawxAction):
         dialog.Destroy()
         selected_layers = [layers[s] for s in selections]
         if len(selected_layers) < 1:
-            project.task.error("You must select a layer.")
+            project.frame.error("You must select a layer.")
         else:
             cmd = mec.ConvexHullCommand(selected_layers)
             project.process_command(cmd)
@@ -535,7 +536,7 @@ class merge_layers(SawxAction):
         layers = project.layer_manager.get_mergeable_layers()
 
         if len(layers) < 2:
-            project.task.error("Merge requires two vector layers.")
+            project.frame.error("Merge requires two vector layers.")
             return
 
         layer_names = [str(layer.name) for layer in layers]
@@ -560,7 +561,7 @@ class merge_layers(SawxAction):
             selections = []
         dialog.Destroy()
         if len(selections) != 2:
-            project.task.error("You must select exactly two layers to merge.")
+            project.frame.error("You must select exactly two layers to merge.")
         else:
             layer_a = layers[selections[0]]
             layer_b = layers[selections[1]]
@@ -765,11 +766,11 @@ class manage_wms_servers(SawxAction):
 
     def perform(self, action_key):
         hosts = BackgroundWMSDownloader.get_known_hosts()
-        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: a.label_helper(), prompt_for_wms, "Manage WMS Servers", default_helper=lambda a,v: a.default_helper(v))
+        dlg = ListReorderDialog(self.editor.control, hosts, lambda a: a.label_helper(), prompt_for_wms, "Manage WMS Servers", default_helper=lambda a,v: a.default_helper(v))
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundWMSDownloader.set_known_hosts(items)
-            event.task.remember_wms()
+            servers.remember_wms()
             self.editor.layer_manager.update_map_server_ids("wms", hosts, items)
             self.editor.refresh()
         dlg.Destroy()
@@ -780,11 +781,11 @@ class manage_tile_servers(SawxAction):
 
     def perform(self, action_key):
         hosts = BackgroundTileDownloader.get_known_hosts()
-        dlg = ListReorderDialog(event.task.window.control, hosts, lambda a: a.label_helper(), prompt_for_tile, "Manage Tile Servers", default_helper=lambda a,v: a.default_helper(v))
+        dlg = ListReorderDialog(self.editor.control, hosts, lambda a: a.label_helper(), prompt_for_tile, "Manage Tile Servers", default_helper=lambda a,v: a.default_helper(v))
         if dlg.ShowModal() == wx.ID_OK:
             items = dlg.get_items()
             BackgroundTileDownloader.set_known_hosts(items)
-            event.task.remember_tile_servers()
+            servers.remember_tile_servers()
             self.editor.layer_manager.update_map_server_ids("tiles", hosts, items)
             self.editor.refresh()
         dlg.Destroy()
@@ -795,13 +796,13 @@ class clear_tile_cache(SawxAction):
 
     def perform(self, action_key):
         hosts = BackgroundTileDownloader.get_known_hosts()
-        dlg = CheckItemDialog(event.task.window.control, hosts, lambda a: getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
+        dlg = CheckItemDialog(self.editor.control, hosts, lambda a: getattr(a, 'name'), title="Clear Tile Cache", instructions="Clear cache of selected tile servers:")
         if dlg.ShowModal() == wx.ID_OK:
             try:
                 for host in dlg.get_checked_items():
-                    host.clear_cache(event.task.get_tile_cache_root())
+                    host.clear_cache(servers.get_tile_cache_root())
             except OSError as e:
-                event.task.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
+                self.editor.error("Error clearing cache for %s\n\n%s" % (host.name, str(e)))
 
         dlg.Destroy()
 

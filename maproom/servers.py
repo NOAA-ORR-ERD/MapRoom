@@ -89,6 +89,11 @@ def get_default_wms_id():
     index, host = BackgroundWMSDownloader.get_default_host()
     return index
 
+def remember_wms():
+    hosts = BackgroundWMSDownloader.get_known_hosts()
+    persistence.save_json_data("wms_servers", hosts)
+
+
 # Tile servers
 
 def get_tile_cache_root():
@@ -122,6 +127,9 @@ def get_default_tile_server_id():
     index, host = BackgroundTileDownloader.get_default_host()
     return index
 
+def remember_tile_servers():
+    hosts = BackgroundTileDownloader.get_known_hosts()
+    persistence.save_json_data("tile_servers", hosts)
 
 # persistence
 
@@ -137,8 +145,5 @@ def restore_from_last_time():
     BackgroundTileDownloader.set_known_hosts(hosts)
 
 def remember_for_next_time():
-    hosts = BackgroundWMSDownloader.get_known_hosts()
-    persistence.save_json_data("wms_servers", hosts)
-
-    hosts = BackgroundTileDownloader.get_known_hosts()
-    persistence.save_json_data("tile_servers", hosts)
+    remember_wms()
+    remember_tile_servers()
