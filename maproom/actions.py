@@ -42,7 +42,7 @@ class LayerAction(SawxAction):
     def perform(self, action_key):
         layer = self.get_layer(action_key)
         if layer is not None:
-            self.perform_on_layer(layer, action_key)
+            self.perform_on_layer(action_key, layer)
 
     def perform_on_layer(self, action_key, layer):
         log.warning("Missing perform_on_layer method for %s" % self.name)
