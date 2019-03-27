@@ -80,7 +80,7 @@ class LayerTreeControl(wx.Panel):
         if (item is None):
             return None
         (layer, ) = self.tree.GetItemData(item)
-        log.debug("current edit layer: %s", layer)
+        # log.debug("current edit layer: %s", layer)
 
         return layer
 
@@ -210,7 +210,7 @@ class LayerTreeControl(wx.Panel):
         # self.Thaw()
         if selected:
             self.set_edit_layer(selected)
-            self.project.update_layer_selection_ui(selected)
+#            self.project.update_layer_selection_ui(selected)
 
     def add_layers_recursive(self, layer_tree, parent, expanded_state):
         if (len(layer_tree) == 0):
@@ -353,21 +353,22 @@ class LayerTreeControl(wx.Panel):
 
     def handle_selection_changing(self, event):
         layer = self.get_edit_layer()
-        log.debug("About to change from selected layer: %s" % layer)
+        log.debug(f"handle_selection_changing: About to change from selected layer: {layer}")
         if layer is not None:
             layer.layer_deselected_hook()
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
         layer = self.get_edit_layer()
-        log.debug("Currently selected layer: %s" % layer)
+        log.debug(f"handle_selection_changed: Currently selected layer: {layer}")
         self.project.update_layer_selection_ui(layer)
+        #wx.CallAfter(self.project.update_layer_selection_ui, layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         prefs = self.project.preferences
         if prefs.identify_layers and self.user_selected_layer:
             layer.layer_selected_hook()
         self.user_selected_layer = False
-        self.project.refresh()
+        #self.project.refresh()
         self.project.status_message = str(layer)
         lm = self.project.layer_manager
         sel = lm.get_multi_index_of_layer(layer)
