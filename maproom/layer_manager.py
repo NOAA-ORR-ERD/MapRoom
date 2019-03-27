@@ -1145,6 +1145,10 @@ class LayerManager(SawxDocument):
             try:
                 from_json(extra_json)
             except KeyError:
+                if attr == "default_styles":
+                    # it's ok if default_styles don't exist; the user's saved defaults will
+                    # be loaded instead.
+                    continue
                 message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
                 log.warning(message)
                 batch_flags.messages.append("WARNING: %s" % message)
@@ -1224,15 +1228,21 @@ class LayerManager(SawxDocument):
         log.debug("pre json data:\n%s" % repr(pre_json_data))
         return pre_json_data
 
-    def calc_post_json_data(self, extra_json_data=None):
+    def calc_post_json_data(self, extra_json_data=None, skip_post_json_data_keys=None):
         if extra_json_data is None:
             extra_json_data = {}
+        if skip_post_json_data_keys is None:
+            skip_post_json_data_keys = []
+        skip = set(skip_post_json_data_keys)
         for attr, to_json in self.get_to_json_attrs():
-            extra_json_data[attr] = to_json()
+            if attr in skip:
+                log.debug(f"skipping post_json_data attribute {attr}")
+            else:
+                extra_json_data[attr] = to_json()
         log.debug("post json data:\n%s" % repr(extra_json_data))
         return extra_json_data
 
-    def save_all_zip(self, file_path, extra_json_data=None):
+    def save_all_zip(self, file_path, extra_json_data=None, skip_post_json_data_keys=None):
         """Save all layers into a zip file that includes any referenced images,
         shapefiles, etc. so the file becomes portable and usable on other
         systems.
@@ -1245,7 +1255,7 @@ class LayerManager(SawxDocument):
         log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in ly.Layer.get_subclasses().items()]))
 
         pre_json_data = self.calc_pre_json_data()
-        post_json_data = self.calc_post_json_data(extra_json_data)
+        post_json_data = self.calc_post_json_data(extra_json_data, skip_post_json_data_keys)
         try:
             with open(file_path, "wb") as fh:
                 zf = zipfile.ZipFile(fh, mode='w', compression=zipfile.ZIP_DEFLATED)

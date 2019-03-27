@@ -395,10 +395,10 @@ class ProjectEditor(SawxEditor):
         # force toolbar update to pick up the correct default mouse mode
         self.update_layer_selection_ui()
 
-    def save_project(self, path):
+    def save_project(self, path, **args):
         try:
             progress_log.info("START=Saving %s" % path)
-            error = self.layer_manager.save_all(path, self.current_extra_json)
+            error = self.layer_manager.save_all_zip(path, self.current_extra_json, **args)
         except ProgressCancelError as e:
             error = str(e)
         finally:
@@ -408,8 +408,11 @@ class ProjectEditor(SawxEditor):
 
     def save_as_template(self, name):
         path = persistence.get_user_dir_filename("project_templates", name)
+        log.debug(f"saving template to {path}")
         if not os.path.exists(path) or self.frame.confirm("Replace existing template %s?" % name, "Replace Template"):
-            error = self.save_project(path)
+            # skip default styles when saving templates, otherwise those styles will
+            # always override the user's saved default styles
+            error = self.save_project(path, skip_post_json_data_keys=["default_styles"])
             if error:
                 self.frame.error(error)
             else:
