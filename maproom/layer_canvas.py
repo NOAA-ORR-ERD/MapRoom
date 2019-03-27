@@ -49,7 +49,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         self.update_renderers()
 
     def get_edit_layer(self):
-        return self.project.layer_tree_control.get_edit_layer()
+        return self.project.current_layer
 
     def set_mouse_handler(self, mode):
         self.release_mouse()

@@ -37,7 +37,7 @@ class LayerAction(SawxAction):
         return True
 
     def get_layer(self, action_key):
-        return self.editor.layer_tree_control.get_edit_layer()
+        return self.editor.current_layer
 
     def perform(self, action_key):
         layer = self.get_layer(action_key)
@@ -802,7 +802,7 @@ class normalize_longitude(SawxAction):
     tooltip = 'Adjust longitudes so the map lies between 0 and 360W'
 
     def perform(self, action_key):
-        edit_layer = self.editor.layer_tree_control.get_edit_layer()
+        edit_layer = self.editor.current_layer
         if edit_layer is not None:
             cmd = moc.NormalizeLongitudeCommand(edit_layer)
             self.editor.process_command(cmd)

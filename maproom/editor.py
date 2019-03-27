@@ -416,7 +416,7 @@ class ProjectEditor(SawxEditor):
                 self.frame.templates_changed = True  # update template submenu
 
     def get_savepoint(self):
-        layer = self.layer_tree_control.get_edit_layer()
+        layer = self.current_layer
         cmd = mec.SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
         return cmd
 
@@ -456,7 +456,7 @@ class ProjectEditor(SawxEditor):
     def save_layer(self, path, loader=None):
         """ Saves the contents of the current layer in an appropriate file
         """
-        layer = self.layer_tree_control.get_edit_layer()
+        layer = self.current_layer
         if layer is None:
             return
 
@@ -744,7 +744,7 @@ class ProjectEditor(SawxEditor):
 
     def update_layer_selection_ui(self, edit_layer=None):
         if edit_layer is None:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
         if edit_layer is not None:
             # leave mouse_mode set to current setting
             self.mouse_mode_toolbar = edit_layer.mouse_mode_toolbar
@@ -771,7 +771,7 @@ class ProjectEditor(SawxEditor):
 
     def update_layer_contents_ui(self, edit_layer=None):
         if edit_layer is None:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
         if edit_layer is not None:
         #     self.layer_has_points = edit_layer.has_points()
         #     self.layer_has_selection = edit_layer.has_selection()
@@ -791,7 +791,7 @@ class ProjectEditor(SawxEditor):
         pass
 
     def update_info_panels(self, layer, force=False):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer == layer:
             self.layer_info.display_panel_for_layer(self, layer, force)
             self.selection_info.display_panel_for_layer(self, layer, force)
@@ -860,7 +860,7 @@ class ProjectEditor(SawxEditor):
         if not sys.platform.startswith('darwin'):
             self.control.Update()
 
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         self.update_layer_contents_ui(edit_layer)
         self.update_layer_menu_ui(edit_layer)
         self.layer_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
@@ -1093,7 +1093,7 @@ class ProjectEditor(SawxEditor):
             data_obj.SetText(text)
             retval = "%d characters" % len(text)
         else:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
             if edit_layer is not None:
                 json_data = edit_layer.serialize_json(-999, children=True)
                 text = json.dumps(json_data, indent=4)
@@ -1121,19 +1121,19 @@ class ProjectEditor(SawxEditor):
         # print("Found data object %s" % data_obj)
         text = clipboard.get_data_object_value(data_obj, "maproom")
         # print("value:", text)
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             cmd = mec.PasteLayerCommand(edit_layer, text, self.layer_canvas.world_center)
             self.process_command(cmd)
 
     def copy_style(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             self.__class__.clipboard_style = edit_layer.style.get_copy()
             self.can_paste_style = True
 
     def paste_style(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             style = self.clipboard_style
             if style is not None:
@@ -1141,34 +1141,34 @@ class ProjectEditor(SawxEditor):
                 self.process_command(cmd)
 
     def clear_selection(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             edit_layer.clear_all_selections()
             self.update_layer_contents_ui()
             self.refresh()
 
     def delete_selection(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             cmd = edit_layer.delete_all_selected_objects()
             self.process_command(cmd)
 
     def clear_all_flagged(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             edit_layer.clear_flagged(refresh=False)
             self.update_layer_contents_ui()
             self.refresh()
 
     def select_all_flagged(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             edit_layer.select_flagged(refresh=False)
             self.update_layer_contents_ui()
             self.refresh()
 
     def select_boundary(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is None:
             return
 
@@ -1234,7 +1234,7 @@ class ProjectEditor(SawxEditor):
 
     def delete_selected_layer(self, layer=None):
         if layer is None:
-            layer = self.layer_tree_control.get_edit_layer()
+            layer = self.current_layer
         if layer is None:
             self.window.status_bar.message = "Selected layer to delete!."
             return
@@ -1253,7 +1253,7 @@ class ProjectEditor(SawxEditor):
     def check_for_errors(self, edit_layer=None, save_message=False):
         error = None
         if edit_layer is None:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
         if edit_layer is None:
             return
 

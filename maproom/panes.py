@@ -477,7 +477,7 @@ class FlaggedPointPanel(wx.ListBox):
     def process_index(self, index):
         point_index = self.point_indexes[index]
         editor = self.editor
-        layer = editor.layer_tree_control.get_edit_layer()
+        layer = editor.current_layer
         editor.layer_canvas.do_center_on_point_index(layer, point_index)
 
     def set_flagged(self, point_indexes):
@@ -487,7 +487,7 @@ class FlaggedPointPanel(wx.ListBox):
 
     def recalc_view(self):
         editor = self.editor
-        layer = editor.layer_tree_control.get_edit_layer()
+        layer = editor.current_layer
         try:
             points = layer.get_flagged_point_indexes()
         except AttributeError:

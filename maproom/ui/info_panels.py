@@ -175,7 +175,7 @@ class BooleanLabelField(SimplePropertyField):
         self.toggle.SetToggle(vis)
 
     def on_toggled(self, evt):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         self.set_visibility(layer, evt.GetIsDown())
@@ -232,7 +232,7 @@ class TextEditField(InfoField):
 
     def lose_focus(self, evt):
         if self.ctrl.IsShownOnScreen():
-            layer = self.panel.project.layer_tree_control.get_edit_layer()
+            layer = self.panel.project.current_layer
             self.fill_data(layer)
         evt.Skip()
 
@@ -262,7 +262,7 @@ class TextEditField(InfoField):
         return self.ctrl.GetValue()
 
     def on_text_changed(self, evt):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         self.process_text_change(layer)
@@ -437,7 +437,7 @@ class AnchorPointField(InfoField):
         return c
 
     def anchor_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -507,7 +507,7 @@ class DepthUnitField(DropDownField):
         return layer.depth_unit
 
     def drop_down_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         layer.depth_unit = self.ctrl.GetString(self.ctrl.GetSelection())
@@ -528,7 +528,7 @@ class FlaggedPointsField(DropDownField):
         return self.get_choices(layer)[0]
 
     def drop_down_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         c = self.ctrl
@@ -578,7 +578,7 @@ class XPercentageField(FloatSliderField):
         layer.x_percentage = self.normalize(val)
 
     def slider_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         c = self.ctrl
@@ -633,7 +633,7 @@ class TransparencyField(FloatSliderField):
         return t
 
     def slider_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         c = self.ctrl
@@ -658,7 +658,7 @@ class IconSizeField(TransparencyField):
         return layer.style.icon_pixel_size
 
     def slider_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         c = self.ctrl
@@ -689,7 +689,7 @@ class ColorPickerField(InfoField):
     def color_changed(self, event):
         color = [float(c / 255.0) for c in event.GetValue()]
         int_color = color_floats_to_int(*color)
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         style = self.get_style(int_color)
@@ -800,7 +800,7 @@ class LineStyleField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -829,7 +829,7 @@ class BorderWidthField(InfoField):
         return c
 
     def width_from_list(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = self.display_widths[event.GetSelection()]
@@ -837,7 +837,7 @@ class BorderWidthField(InfoField):
         self.process_command(cmd)
 
     def width_from_text(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         try:
@@ -863,7 +863,7 @@ class LineWidthField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -890,7 +890,7 @@ class FillStyleField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -917,7 +917,7 @@ class MultiLineTextField(InfoField):
             self.ctrl.ChangeValue(text)
 
     def on_text_changed(self, evt):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         self.process_text_change(layer)
@@ -984,7 +984,7 @@ class TextFormatField(InfoField):
                 pane.visible = (index == item)
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1045,7 +1045,7 @@ class FontStyleField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1070,7 +1070,7 @@ class FontSizeField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1101,7 +1101,7 @@ class MarkerField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1145,7 +1145,7 @@ class MarplotIconField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         marker = self.get_marker(layer)
@@ -1270,7 +1270,7 @@ class ParticleField(InfoField):
         return c
 
     def timestep_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         index = event.GetSelection()
@@ -1350,7 +1350,7 @@ class StatusCodeColorField(InfoField):
         code = self.color_ctrls[id(ctrl)]
         color = [float(c / 255.0) for c in event.GetValue()]
         int_color = color_floats_to_int(*color)
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         layers = layer.get_particle_layers()
@@ -1373,7 +1373,7 @@ class MapServerField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1411,7 +1411,7 @@ class MapOverlayField(InfoField):
         return c
 
     def overlay_selected(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         item = event.GetSelection()
@@ -1432,7 +1432,7 @@ class MapOverlayField(InfoField):
         self.ctrl.PopupMenu(popup, event.GetPosition())
 
     def on_menu(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         downloader = layer.get_downloader(layer.map_server_id)
@@ -1499,7 +1499,7 @@ class ServerReloadField(InfoField):
         return c
 
     def on_press(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
@@ -1558,7 +1558,7 @@ class ScalarChoiceField(InfoField):
         return c
 
     def variable_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         index = event.GetSelection()
@@ -1587,7 +1587,7 @@ class ColormapField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         name = self.ctrl.get_selected_name()
@@ -1614,7 +1614,7 @@ class DiscreteColormapField(InfoField):
         return b
 
     def on_edit_colormap(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         d = GnomeColormapDialog(self.panel.project.control, layer.colormap, layer.current_min_max)
@@ -1644,7 +1644,7 @@ class LegendTypeField(InfoField):
         return c
 
     def style_changed(self, event):
-        layer = self.panel.project.layer_tree_control.get_edit_layer()
+        layer = self.panel.project.current_layer
         if (layer is None):
             return
         index = event.GetSelection()

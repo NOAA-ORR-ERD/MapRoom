@@ -1504,13 +1504,13 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         # set new bounding rect every time
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-        if renderer.canvas.project.layer_tree_control.get_edit_layer() == self:
+        if renderer.canvas.project.current_layer == self:
             style = styles.default_styles_read_only("ui")
             renderer.outline_object(self, picker, style)
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
-        if renderer.canvas.project.layer_tree_control.get_edit_layer() == self:
+        if renderer.canvas.project.current_layer == self:
             renderer.draw_points(self, picker, self.point_size)
 
 

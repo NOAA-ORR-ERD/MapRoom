@@ -37,7 +37,7 @@ class FindPointDialog(sc.SizedDialog):
         btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())
 
-        self.layer = project.layer_tree_control.get_edit_layer()
+        self.layer = project.current_layer
 
         # Note: indexes are stored in zero-based array but need to be displayed
         # to the user as one-based
@@ -197,7 +197,7 @@ class StyleDialog(wx.Dialog):
 
         self.mock_project = MockProject(add_tree_control=True, default_styles=self.lm.default_styles)
         self.mock_project.control = None
-        self.other = self.mock_project.layer_tree_control.get_edit_layer()
+        self.other = self.mock_project.current_layer
         self.other.type = "other"
         self.other.name = "other"
         self.other.layer_info_panel = self.displayed_style_types

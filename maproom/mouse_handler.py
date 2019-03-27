@@ -145,7 +145,7 @@ class MouseHandler(object):
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
             c.project.clickable_object_in_layer = layer
-            sel = c.project.layer_tree_control.get_edit_layer()
+            sel = c.project.current_layer
             if (layer == sel):
                 obj = c.project.clickable_object_mouse_is_over = self.current_object_under_mouse
             elif sel is not None and sel.show_unselected_layer_info_for(layer):
@@ -233,7 +233,7 @@ class MouseHandler(object):
     def process_rect_select_motion_feedback(self, event, x1, y1, x2, y2):
         c = self.layer_canvas
         e = c.project
-        layer = e.layer_tree_control.get_edit_layer()
+        layer = e.current_layer
         if (layer is not None):
             log.debug(f"selection box: {x1},{y1} -> {x2},{y2}")
             p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
@@ -308,12 +308,12 @@ class MouseHandler(object):
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
             world_point = c.get_world_point_from_screen_point(event.GetPosition())
-            layer = e.layer_tree_control.get_edit_layer()
+            layer = e.current_layer
             self.right_clicked_on_different_layer(event, layer, e.clickable_object_in_layer, world_point)
         else:  # the mouse is not on a clickable object
             # fixme: there should be a reference to the layer manager in the RenderWindow
             # and we could get the selected layer from there -- or is selected purely a UI concept?
-            layer = e.layer_tree_control.get_edit_layer()
+            layer = e.current_layer
             world_point = c.get_world_point_from_screen_point(event.GetPosition())
             self.right_clicked_on_empty_space(event, layer, world_point)
 
@@ -760,7 +760,7 @@ class SelectionMode(MouseHandler):
     def process_click_on_nothing(self, event):
         c = self.layer_canvas
         e = c.project
-        layer = e.layer_tree_control.get_edit_layer()
+        layer = e.current_layer
         if (layer is not None):
             if (event.ControlDown() or event.ShiftDown()):
                 c.selection_box_is_being_defined = True
@@ -1110,7 +1110,7 @@ class PointEditMode(PointSelectionMode):
 
     def clicked_on_different_layer(self, event, other_layer, world_point):
         log.debug("clicked on different layer: %s, point %s" % (other_layer, str(world_point)))
-        layer = self.layer_canvas.project.layer_tree_control.get_edit_layer()
+        layer = self.layer_canvas.project.current_layer
         self.clicked_on_empty_space(event, layer, world_point)
 
     def select_objects_in_rect(self, event, rect, layer):
@@ -1337,7 +1337,7 @@ class CropRectMode(RectSelectMode):
         p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
         w_r = c.get_world_rect_from_projected_rect(p_r)
         # print "CROPPING!!!!  ", w_r
-        layer = c.project.layer_tree_control.get_edit_layer()
+        layer = c.project.current_layer
         if (layer is not None and layer.can_crop()):
             cmd = moc.CropRectCommand(layer, w_r)
             e.process_command(cmd)
@@ -1407,7 +1407,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
         e = c.project
-        layer = c.project.layer_tree_control.get_edit_layer()
+        layer = c.project.current_layer
         if (layer is None):
             return
         try:
@@ -1598,7 +1598,7 @@ class AddPolylineMode(MouseHandler):
         c = self.layer_canvas
         e = c.project
         if len(self.points) > 1:
-            layer = e.layer_tree_control.get_edit_layer()
+            layer = e.current_layer
             if (layer is not None):
                 cmd = self.vector_object_command(layer, self.points)
                 e.process_command(cmd, ControlPointEditMode)
@@ -1644,7 +1644,7 @@ class AddOverlayMode(MouseHandler):
         # After the first point, mouse up events add points
         c = self.layer_canvas
         e = c.project
-        layer = e.layer_tree_control.get_edit_layer()
+        layer = e.current_layer
         if (layer is not None):
             cp = self.get_world_point(event)
             cmd = self.get_vector_object_command(layer, cp)
