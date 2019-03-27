@@ -402,6 +402,9 @@ class RNCLoaderLayer(PolygonLayer):
 
     layer_info_panel = ["Polygon count"]
 
+    def is_zoomable(self):
+        return False
+
     def color_array(self):
         # set up feature code to color map
         green = color_floats_to_int(0.25, 0.5, 0, 0.10)

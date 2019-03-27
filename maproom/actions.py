@@ -370,31 +370,9 @@ class new_shapefile_layer(NewLayerBaseAction):
     layer_class = layers.PolygonParentLayer
 
 
-class regime_west(SawxRadioAction):
-    name = 'Regime: 360W - 0'
-    tooltip = 'Set the current regime to west of the prime meridian'
-
-    def calc_checked(self, action_key):
-        return self.editor.regime < 180
-
-    def perform(self, action_key):
-        self.editor.regime = 0
-
-
-class regime_east(SawxRadioAction):
-    name = 'Regime: 0 - 360E'
-    tooltip = 'Set the current regime to east of the prime meridian'
-
-    def calc_checked(self, action_key):
-        return self.editor.regime > 180
-
-    def perform(self, action_key):
-        self.editor.regime = 360
-
-
 class new_rnc_layer(SawxAction):
     name = 'New RNC Download Selection Layer'
-    tooltip = 'Create new layer for downloading RNC images in the current regime'
+    tooltip = 'Create new layer for downloading RNC images'
 
     def perform(self, action_key):
         from maproom.templates import get_template_path

@@ -134,9 +134,6 @@ class ProjectEditor(SawxEditor):
             "picker_framebuffer",
         ],
         ["Layer",
-            "regime_west",
-            "regime_east",
-            None,
             "new_vector_layer",
             "new_annotation_layer",
             "new_shapefile_layer",
@@ -249,8 +246,6 @@ class ProjectEditor(SawxEditor):
         self.can_paste_style = False
 
         self.latest_movie = None
-
-        self.regime = 0  # 0 for -180 to 180; 360 for 0 - 360
 
         # Force mouse mode toolbar to be blank so that the initial trait change
         # that occurs during initialization of this class doesn't match a real
@@ -692,11 +687,16 @@ class ProjectEditor(SawxEditor):
         self.process_command(cmd)
         layers = cmd.undo_info.affected_layers()
         if len(layers) == 1:
-            cmd = moc.ViewportCommand(layers[0], regime=self.regime)
+            layer = layers[0]
+            if layer.is_zoomable():
+                cmd = moc.ViewportCommand(layer)
+            else:
+                cmd = None
         else:
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
-            cmd = moc.ViewportCommand(None, center, units_per_pixel, regime=self.regime)
-        self.process_command(cmd)
+            cmd = moc.ViewportCommand(None, center, units_per_pixel)
+        if cmd is not None:
+            self.process_command(cmd)
         if set_save_point:
             self.layer_manager.undo_stack.set_save_point()
 

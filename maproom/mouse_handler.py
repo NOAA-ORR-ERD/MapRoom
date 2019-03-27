@@ -675,13 +675,9 @@ class RNCSelectionMode(PanMode):
                 name, num, filename, url = self.parse_rnc_object(rnc)
                 if url:
                     p = self.get_world_point(event)
-                    # if p[0] > 0:
-                    #     regime = 360
-                    # else:
-                    #     regime = 0
                     # submit download to downloader!
                     e = c.project
-                    log.info("LOADING RNC MAP #%s from %s in %d - %d" % (num, url, e.regime - 360, e.regime))
+                    log.info("LOADING RNC MAP #%s from %s" % (num, url))
                     e.download_rnc(url, filename, num, confirm=True, name=name)
 
     def render_overlay(self, renderer):

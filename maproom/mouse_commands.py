@@ -12,14 +12,12 @@ class ViewportCommand(Command):
         ('layer', 'layer'),
         ('center', 'point'),
         ('units_per_pixel', 'float'),
-        ('regime', 'int'),
     ]
 
-    def __init__(self, layer, center=None, units_per_pixel=None, regime=0):
+    def __init__(self, layer, center=None, units_per_pixel=None):
         Command.__init__(self, layer)
         self.center = center
         self.units_per_pixel = units_per_pixel
-        self.regime = regime
 
     def __str__(self):
         return "Viewport Change"
@@ -41,14 +39,6 @@ class ViewportCommand(Command):
         elif self.center is not None:
             center, units_per_pixel = self.center, self.units_per_pixel
 
-        # Only shift the viewport if requesting the 0-360 regime AND the center
-        # point is in the -360 - 0 range. It's possible that the center is
-        # already in the 0 - 360 range.
-        if self.regime > 0:
-            shifted = c.get_world_point_from_projected_point(center)
-            if shifted[0] < 0:
-                shifted = (shifted[0] + self.regime, shifted[1])
-                center = c.get_projected_point_from_world_point(shifted)
         c.set_viewport(center, units_per_pixel)
         undo.flags.immediate_refresh_needed = True
 

@@ -31,7 +31,7 @@ class LoadLayersCommand(Command):
         return "Load Layers From %s" % self.uri
 
     def perform(self, editor):
-        self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager, regime=editor.regime)
+        self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager)
         editor.load_success(self.uri)
         return self.undo_info
 

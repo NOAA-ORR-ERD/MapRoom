@@ -44,7 +44,7 @@ class RNCLoader(BaseLayerLoader):
          f_ring_points,
          f_ring_starts,
          f_ring_counts,
-         f_ring_identifiers) = load_bna_file(uri, kwargs.get("regime", 0))
+         f_ring_identifiers) = load_bna_file(uri, regimes=[0, 360])
         progress_log.info("Creating layer...")
         if (layer.load_error_string == ""):
             layer.set_data(f_ring_points, f_ring_starts, f_ring_counts,
@@ -58,7 +58,7 @@ class RNCLoader(BaseLayerLoader):
         save_bna_file(fh, layer)
 
 
-def parse_bna_file(uri, regime=0):
+def parse_bna_file(uri):
     f = open(uri, "r")
     s = f.read()
     f.close()
@@ -130,7 +130,7 @@ def parse_bna_file(uri, regime=0):
     return items, total_points
 
 
-def load_bna_file(uri, regime):
+def load_bna_file(uri, regimes=None):
     """
     used by the code below, to separate reading the file from creating the special maproom objects.
     reads the data in the file, and returns:
@@ -147,6 +147,11 @@ def load_bna_file(uri, regime):
     """
     items, total_points = parse_bna_file(uri)
     num_polygons = len(items)
+
+    if regimes is None:
+        regimes = [0]
+    total_points *= len(regimes)
+    num_polygons *= len(regimes)
     all_polygon_points = np.zeros((total_points, 2), dtype=np.float64)
     polygon_starts = np.zeros((num_polygons,), dtype=np.uint32)
     polygon_counts = np.zeros((num_polygons,), dtype=np.uint32)
@@ -154,20 +159,21 @@ def load_bna_file(uri, regime):
 
     polygon_index = 0
     start_index = 0
-    for name, feature_type, feature_code, num_points, is_polygon, item_points in items:
-        ring_identifiers.append(
-            {'name': name,
-             'feature_code': feature_code}
-        )
-        last_index = start_index + num_points
-        p = item_points[0:num_points]
-        p[:,0] += regime
-        all_polygon_points[start_index:last_index, :] = p
-        polygon_starts[polygon_index] = start_index
-        polygon_counts[polygon_index] = num_points
-        polygon_index += 1
-        total_points += num_points
-        start_index = last_index
+    for regime in regimes:
+        for name, feature_type, feature_code, num_points, is_polygon, item_points in items:
+            ring_identifiers.append(
+                {'name': name,
+                 'feature_code': feature_code}
+            )
+            last_index = start_index + num_points
+            p = item_points[0:num_points]
+            p[:,0] += regime
+            all_polygon_points[start_index:last_index, :] = p
+            polygon_starts[polygon_index] = start_index
+            polygon_counts[polygon_index] = num_points
+            polygon_index += 1
+            total_points += num_points
+            start_index = last_index
 
     return ("",
             all_polygon_points,

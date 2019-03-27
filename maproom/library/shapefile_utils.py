@@ -148,7 +148,7 @@ def load_shapefile(uri):
     return ("", geometry_list, points)
 
 
-def parse_bna_file2(uri, points_accumulator, regime=0):
+def parse_bna_file2(uri, points_accumulator):
     f = open(uri, "r")
     s = f.read()
     f.close()
@@ -204,7 +204,6 @@ def parse_bna_file2(uri, points_accumulator, regime=0):
                 num_points -= 1
                 continue
             polygon_points[j, :] = p
-        polygon_points[:,0] += regime
         points_accumulator.extend(polygon_points[:num_points])
 
         # A negative num_points value indicates that this is a line
