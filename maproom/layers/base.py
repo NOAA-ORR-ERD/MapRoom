@@ -786,7 +786,7 @@ class Layer(HasTraits):
 
     ##### User interface
 
-    def calc_context_menu_actions(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, object_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """

@@ -148,22 +148,20 @@ class RingEditLayer(LineLayer):
 
     ##### User interface
 
-    def calc_context_menu_actions(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, object_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
         from .. import actions as a
 
-        actions = [a.SaveRingEditAction, a.CancelRingEditAction]
+        desc = ["save_ring_edit", "cancel_ring_edit"]
         if object_index is not None:
             log.debug(f"object type {object_type} index {object_index}")
             if not self.parent_layer.is_hole(object_index) and object_index not in self.ring_indexes:
                 _, _, count, _, feature_code, _ = self.parent_layer.get_ring_state(object_index)
-                actions.append(None)
-                edit_action = a.AddPolygonToEditLayerAction(task=self.manager.project.task, object_index=object_index)
-                edit_action.name = f"Add Polygon to Edit Layer ({count} points, id={object_index})"
-                actions.append(edit_action)
-        return actions
+                desc.extend([None, "add_polygon_to_edit_layer"])
+                a.add_polygon_to_edit_layer.name = f"Add Polygon to Edit Layer ({count} points, id={object_index})"
+        return desc
 
 
 class PolygonParentLayer(PointLayer):
@@ -624,26 +622,22 @@ class PolygonParentLayer(PointLayer):
 
     ##### User interface
 
-    def calc_context_menu_actions(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, object_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
         from .. import actions as a
 
-        actions = []
+        desc = []
         if object_index is not None:
-            edit_action = a.EditLayerAction(task=self.manager.project.task)
-            actions = [edit_action]
+            desc = ["edit_layer"]
             log.debug(f"object type {object_type} index {object_index}")
             _, _, count, _, feature_code, _ = self.get_ring_state(object_index)
             if self.is_hole(object_index):
-                edit_action.name = f"Edit Hole ({count} points, id={object_index})"
+                a.edit_layer.name = f"Edit Hole ({count} points, id={object_index})"
             else:
-                edit_action.name = f"Edit Polygon ({count} points, id={object_index})"
-                actions.append(a.AddPolygonHoleAction)
-            actions.append(None)
-            actions.append(a.SimplifyPolygonAction)
-            actions.append(None)
-            actions.append(a.DeletePolygonAction)
-        actions.append(a.AddPolygonBoundaryAction)
-        return actions
+                a.edit_layer.name = f"Edit Polygon ({count} points, id={object_index})"
+                desc.append("add_polygon_hole")
+            desc.extend([None, "simplify_polygon", None, "delete_polygon"])
+        desc.append("add_polygon_boundary")
+        return desc

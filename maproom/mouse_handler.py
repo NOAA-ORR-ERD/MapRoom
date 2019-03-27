@@ -325,11 +325,11 @@ class MouseHandler(object):
 
     def right_clicked_on_interior(self, event, layer, object_type, object_index, world_point):
         print(f"Right clicked on {layer}")
-        menu = layer.calc_context_menu_actions(object_type, object_index, world_point)
-        if menu:
+        menu_desc = layer.calc_context_menu_desc(object_type, object_index, world_point)
+        if menu_desc:
             c = self.layer_canvas
             e = c.project
-            e.popup_context_menu_from_actions(self.layer_canvas, menu, popup_data={'layer':layer, 'object_type':object_type, 'object_index':object_index})
+            e.show_popup(menu_desc, popup_data={'layer':layer, 'object_type':object_type, 'object_index':object_index})
 
     def right_clicked_on_empty_space(self, event, layer, world_point):
         self.right_clicked_on_interior(event, layer, None, None, world_point)

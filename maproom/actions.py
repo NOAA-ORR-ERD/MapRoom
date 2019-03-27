@@ -863,7 +863,7 @@ class edit_layer(SawxAction):
     tooltip = 'Edit the currently selected layer'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         layer = d['layer']
         feature_code = layer.get_feature_code(d['object_index'])
         cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=feature_code, new_boundary=False)
@@ -875,7 +875,7 @@ class add_polygon_to_edit_layer(SawxAction):
     tooltip = 'Add a polygon to the current editing layer'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['object_type'], d['object_index'], None, False)
         self.editor.process_command(cmd)
 
@@ -885,7 +885,7 @@ class add_polygon_boundary(SawxAction):
     tooltip = 'Add a new boundary polygon'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         layer = d['layer']
         try:
             feature_code = layer.get_feature_code(d['object_index'])
@@ -900,7 +900,7 @@ class add_polygon_hole(SawxAction):
     tooltip = 'Add a new hole polygon'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=-1, new_boundary=True)
         self.editor.process_command(cmd)
 
@@ -910,7 +910,7 @@ class delete_polygon(SawxAction):
     tooltip = 'Remove a polygon or hole; note that if a polygon is removed, any holes in that polygon are also removed'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         cmd = mec.DeletePolygonCommand(d['layer'], d['object_type'], d['object_index'])
         self.editor.process_command(cmd)
 
@@ -920,7 +920,7 @@ class simplify_polygon(SawxAction):
     tooltip = 'Remove points using Visvalingam algorithm'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         dlg = SimplifyDialog(self.editor, d['layer'], d['object_type'], d['object_index'])
         if dlg.ShowModal() != wx.ID_OK:
             dlg.roll_back()
@@ -930,7 +930,7 @@ class save_ring_edit(SawxAction):
     tooltip = 'Save the current edits in the parent polygon'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         cmd = mec.PolygonSaveEditLayerCommand(d['layer'])
         self.editor.process_command(cmd)
 
@@ -940,7 +940,7 @@ class cancel_ring_edit(SawxAction):
     tooltip = 'Abandon the current edits in the parent polygon'
 
     def perform(self, action_key):
-        d = event.popup_data
+        d = self.popup_data
         cmd = mec.PolygonCancelEditLayerCommand(d['layer'])
         self.editor.process_command(cmd)
 
