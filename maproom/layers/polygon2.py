@@ -517,13 +517,14 @@ class PolygonParentLayer(PointLayer):
             return
         log.debug(f"insert_index={insert_index}, old_after_index={old_after_index}, points={points}")
         if new_boundary:
-            # arbitrarily insert at beginning
-            old_after_index = insert_index
-            self.dup_geometry_list_entry(0)
-        elif feature_code < 0 and new_boundary:
-            # insert after indicated polygon so it becomes a hole of that one
-            insert_index = old_after_index
-            self.dup_geometry_list_entry(ring_index)
+            if feature_code < 0:
+                # insert after indicated polygon so it becomes a hole of that one
+                insert_index = old_after_index
+                self.dup_geometry_list_entry(ring_index)
+            else:
+                # arbitrarily insert at beginning
+                old_after_index = insert_index
+                self.dup_geometry_list_entry(0)
         old_num_points = len(self.points)
 
         insert_points = points
