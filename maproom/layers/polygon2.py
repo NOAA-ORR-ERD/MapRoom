@@ -512,15 +512,15 @@ class PolygonParentLayer(PointLayer):
             insert_index, old_after_index = self.get_ring_start_end(ring_index)
         except IndexError:
             self.create_first_ring(points.view(data_types.POINT_XY_VIEW_DTYPE).xy, 1, feature_code_to_color[1])
-            print("SOEUHCROEHUOE", points)
-            print("SOEUHCROEHUOE", points.view(data_types.POINT_XY_VIEW_DTYPE).xy[:])
+            log.debug(points)
+            log.debug(points.view(data_types.POINT_XY_VIEW_DTYPE).xy[:])
             return
-        print("ZMVWQJMKMQJKMQJZMK", points)
+        log.debug(f"insert_index={insert_index}, old_after_index={old_after_index}, points={points}")
         if new_boundary:
             # arbitrarily insert at beginning
             old_after_index = insert_index
             self.dup_geometry_list_entry(0)
-        elif feature_code < 0:
+        elif feature_code < 0 and new_boundary:
             # insert after indicated polygon so it becomes a hole of that one
             insert_index = old_after_index
             self.dup_geometry_list_entry(ring_index)
