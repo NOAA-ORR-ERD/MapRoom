@@ -162,7 +162,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
                 err += "\n\nThis is especially common on Windows 10 machines, because Windows 10 does not require OpenGL 2.1 support. However, support is typically available with a driver update from the graphics hardware manufacturer."
 
             self.gl_driver_error_message = err
-            wx.CallAfter(self.project.task.error, err, "OpenGL Error")
+            wx.CallAfter(self.project.frame.error, err, "OpenGL Error")
 
     def on_resize(self, event):
         if not self.is_canvas_initialized:

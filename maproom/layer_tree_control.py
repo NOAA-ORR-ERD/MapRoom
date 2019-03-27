@@ -329,7 +329,7 @@ class LayerTreeControl(wx.Panel):
         mi_target = lm.get_multi_index_of_layer(target_layer)
 
         if (len(mi_target) > len(mi_source) and mi_target[0: len(mi_source)] == mi_source):
-            self.project.task.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
+            self.project.frame.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
             self.tree.Refresh()
             return
 
@@ -348,7 +348,7 @@ class LayerTreeControl(wx.Panel):
             cmd = MoveLayerCommand(source_layer, target_layer, before)
             self.project.process_command(cmd)
         else:
-            self.project.task.error(f"You cannot move a {source_layer.name} layer into a {parent_layer.name} layer", "Invalid Layer Move")
+            self.project.frame.error(f"You cannot move a {source_layer.name} layer into a {parent_layer.name} layer", "Invalid Layer Move")
             self.tree.Refresh()
 
     def handle_selection_changing(self, event):

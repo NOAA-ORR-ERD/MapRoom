@@ -560,7 +560,7 @@ class Layer(HasTraits):
     def check_for_problems(self):
         pass
 
-    def check_projection(self, task):
+    def check_projection(self):
         pass
 
     def get_visibility_dict(self, project):

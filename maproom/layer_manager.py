@@ -836,7 +836,7 @@ class LayerManager(SawxDocument):
 
         for layer in layers:
             if editor is not None:
-                layer.check_projection(editor.task)
+                layer.check_projection()
             if not layer.load_error_string:
                 self.insert_loaded_layer(layer, editor, last_child_of=parent)
         return layers
@@ -852,7 +852,7 @@ class LayerManager(SawxDocument):
             for layer in layer_list:
                 log.debug("adding %s at %s" % (str(layer), str(mi)))
                 if editor is not None:
-                    layer.check_projection(editor.task)
+                    layer.check_projection()
                 if len(mi) > 1:
                     # check to see if it's a folder layer, and if so it would
                     # have been serialized with a 0 as the last multi index.

@@ -8,6 +8,7 @@ from sawx import art
 from . import sliders
 from . import dialogs
 from . import buttons
+from .. import servers
 from ..styles import LayerStyle
 from ..layers import state, valid_legend_types
 from ..library import coordinates
@@ -1502,7 +1503,7 @@ class ServerReloadField(InfoField):
         layer = self.panel.project.current_layer
         if (layer is None):
             return
-        downloader = self.panel.project.task.get_threaded_wms_by_id(layer.map_server_id)
+        downloader = servers.get_threaded_wms_by_id(layer.map_server_id)
         downloader.get_server_config()
         layer.wms_rebuild(self.panel.project.layer_canvas)
 
