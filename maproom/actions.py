@@ -8,7 +8,7 @@ from traits.api import Str
 from traits.api import on_trait_change
 
 from sawx import persistence
-from sawx.action import SawxAction, SawxListAction
+from sawx.action import SawxAction, SawxListAction, SawxRadioAction
 from sawx.ui.dialogs import ListReorderDialog, CheckItemDialog
 
 from . import pane_layout
@@ -370,24 +370,36 @@ class new_shapefile_layer(NewLayerBaseAction):
     layer_class = layers.PolygonParentLayer
 
 
+class regime_west(SawxRadioAction):
+    name = 'Regime: 360W - 0'
+    tooltip = 'Set the current regime to west of the prime meridian'
+
+    def calc_checked(self, action_key):
+        return self.editor.regime < 180
+
+    def perform(self, action_key):
+        self.editor.regime = 0
+
+
+class regime_east(SawxRadioAction):
+    name = 'Regime: 0 - 360E'
+    tooltip = 'Set the current regime to east of the prime meridian'
+
+    def calc_checked(self, action_key):
+        return self.editor.regime > 180
+
+    def perform(self, action_key):
+        self.editor.regime = 360
+
+
 class new_rnc_layer(SawxAction):
-    name = 'New RNC Download Selection Layer (-360 - 0)'
-    tooltip = 'Create new layer for downloading RNC images in the -360 to 0 map regime'
+    name = 'New RNC Download Selection Layer'
+    tooltip = 'Create new layer for downloading RNC images in the current regime'
 
     def perform(self, action_key):
         from maproom.templates import get_template_path
         path = get_template_path("RNCProdCat_*.bna")
-        self.editor.frame.load_file(path, self.editor, regime=0)
-
-
-class new_rnc_layer360(SawxAction):
-    name = 'New RNC Download Selection Layer (0 - 360)'
-    tooltip = 'Create new layer for downloading RNC images in the 0 to 360 map regime'
-
-    def perform(self, action_key):
-        from maproom.templates import get_template_path
-        path = get_template_path("RNCProdCat_*.bna")
-        self.editor.frame.load_file(path, self.editor, regime=360)
+        self.editor.frame.load_file(path, self.editor)
 
 
 class delete_layer(LayerAction):

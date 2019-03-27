@@ -20,105 +20,19 @@ class LoadLayersCommand(Command):
     serialize_order = [
         ('uri', 'text'),
         ('loader', 'loader'),
-        ('regime', 'int', 0),
     ]
 
-    def __init__(self, uri, loader, regime=0):
+    def __init__(self, uri, loader):
         Command.__init__(self)
         self.uri = uri
         self.loader = loader
-        self.regime = regime
 
     def __str__(self):
         return "Load Layers From %s" % self.uri
 
     def perform(self, editor):
-        self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager)
+        self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager, regime=editor.regime)
         editor.load_success(self.uri)
-        return self.undo_info
-
-    def undo(self, editor):
-        lm = editor.layer_manager
-        layers, saved_invariant = self.undo_info.data
-
-        for layer in layers:
-            lm.remove_layer(layer)
-        lm.next_invariant = saved_invariant
-
-        undo = UndoInfo()
-        undo.flags.layers_changed = True
-        undo.flags.refresh_needed = True
-        return undo
-
-
-class OldLoadLayersCommand(Command):
-    short_name = "load"
-    serialize_order = [
-        ('metadata', 'file_metadata'),
-        ('regime', 'int', 0),
-    ]
-
-    def __init__(self, metadata, regime=0):
-        Command.__init__(self)
-        self.metadata = metadata
-        self.regime = regime
-
-    def __str__(self):
-        return "Load Layers From %s" % self.metadata.uri
-
-    def perform(self, editor):
-        self.undo_info = undo = UndoInfo()
-        lm = editor.layer_manager
-        saved_invariant = lm.next_invariant
-        loader = loaders.get_loader(self.metadata)
-        if hasattr(loader, "load_query"):
-            loader.load_query(self.metadata, lm)
-        try:
-            progress_log.info("START=Loading %s" % self.metadata.uri)
-            layers = loader.load_layers(self.metadata, manager=lm, regime=self.regime)
-        except ProgressCancelError as e:
-            undo.flags.success = False
-            undo.flags.errors = [str(e)]
-        except IOError as e:
-            undo.flags.success = False
-            undo.flags.errors = [str(e)]
-        finally:
-            progress_log.info("END")
-
-        if not undo.flags.success:
-            return undo
-
-        if layers is None:
-            undo.flags.success = False
-            undo.flags.errors = ["Unknown file type %s for %s" % (self.metadata.mime, self.metadata.uri)]
-        else:
-            errors = []
-            warnings = []
-            for layer in layers:
-                if layer.load_error_string != "":
-                    errors.append(layer.load_error_string)
-                if layer.load_warning_string != "":
-                    warnings.append(layer.load_warning_string)
-            if errors:
-                undo.flags.success = False
-                undo.flags.errors = errors
-            if warnings:
-                undo.flags.message = warnings
-
-        if undo.flags.success:
-            lm.add_layers(layers, False, editor)
-            first = True
-            for layer in layers:
-                lf = undo.flags.add_layer_flags(layer)
-                if first:
-                    lf.select_layer = True
-                    first = False
-                lf.layer_loaded = True
-
-            undo.flags.layers_changed = True
-            undo.flags.refresh_needed = True
-            undo.data = (layers, saved_invariant)
-
         return self.undo_info
 
     def undo(self, editor):

@@ -675,14 +675,14 @@ class RNCSelectionMode(PanMode):
                 name, num, filename, url = self.parse_rnc_object(rnc)
                 if url:
                     p = self.get_world_point(event)
-                    if p[0] > 0:
-                        regime = 360
-                    else:
-                        regime = 0
+                    # if p[0] > 0:
+                    #     regime = 360
+                    # else:
+                    #     regime = 0
                     # submit download to downloader!
-                    log.info("LOADING RNC MAP #%s from %s in %d - %d" % (num, url, regime - 360, regime))
                     e = c.project
-                    e.download_rnc(url, filename, num, regime, confirm=True, name=name)
+                    log.info("LOADING RNC MAP #%s from %s in %d - %d" % (num, url, e.regime - 360, e.regime))
+                    e.download_rnc(url, filename, num, confirm=True, name=name)
 
     def render_overlay(self, renderer):
         # draw outline of polygon object that's currently being moused-over

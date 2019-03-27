@@ -134,6 +134,9 @@ class ProjectEditor(SawxEditor):
             "picker_framebuffer",
         ],
         ["Layer",
+            "regime_west",
+            "regime_east",
+            None,
             "new_vector_layer",
             "new_annotation_layer",
             "new_shapefile_layer",
@@ -144,7 +147,6 @@ class ProjectEditor(SawxEditor):
             "new_timestamp_layer",
             "new_lon_lat_layer",
             "new_rnc_layer",
-            "new_rnc_layer360",
             None,
             "triangulate_layer",
             "convex_hull",
@@ -247,6 +249,8 @@ class ProjectEditor(SawxEditor):
         self.can_paste_style = False
 
         self.latest_movie = None
+
+        self.regime = 0  # 0 for -180 to 180; 360 for 0 - 360
 
         # Force mouse mode toolbar to be blank so that the initial trait change
         # that occurs during initialization of this class doesn't match a real
@@ -547,9 +551,9 @@ class ProjectEditor(SawxEditor):
             if error is None:
                 log.debug("loaded RNC map %s for map %s" % (req.path, req.extra_data))
                 prefs = self.preferences
-                kap = extract_from_zip(req.path, req.extra_data[0], prefs.bsb_directory)
+                kap = extract_from_zip(req.path, req.extra_data, prefs.bsb_directory)
                 if kap:
-                    self.frame.load_file(kap, self, regime=req.extra_data[1])
+                    self.frame.load_file(kap, self)
                 else:
                     self.frame.error("The metadata in %s\nhas a problem: map %s doesn't exist" % (req.path, req.extra_data))
             else:
@@ -565,15 +569,15 @@ class ProjectEditor(SawxEditor):
             if os.path.exists(path):
                 return path
 
-    def download_rnc(self, url, filename, map_id, regime, confirm=False, name=None):
+    def download_rnc(self, url, filename, map_id, confirm=False, name=None):
         if confirm:
             if not self.frame.confirm(f"Download and display RNC #{map_id}?\n\n{name}", "Confirm RNC Download"):
                 return
         kap = self.check_rnc_map(url, filename, map_id)
         if not kap:
-            self.download_file(url, None, self.process_rnc_download, (filename, regime))
+            self.download_file(url, None, self.process_rnc_download, filename)
         else:
-            self.frame.load_file(kap, self, regime=regime)
+            self.frame.load_file(kap, self)
 
     def download_file(self, url, filename, callback, extra_data):
         if filename is None:
@@ -688,10 +692,10 @@ class ProjectEditor(SawxEditor):
         self.process_command(cmd)
         layers = cmd.undo_info.affected_layers()
         if len(layers) == 1:
-            cmd = moc.ViewportCommand(layers[0])
+            cmd = moc.ViewportCommand(layers[0], regime=self.regime)
         else:
             center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
-            cmd = moc.ViewportCommand(None, center, units_per_pixel)
+            cmd = moc.ViewportCommand(None, center, units_per_pixel, regime=self.regime)
         self.process_command(cmd)
         if set_save_point:
             self.layer_manager.undo_stack.set_save_point()
