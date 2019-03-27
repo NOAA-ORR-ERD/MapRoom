@@ -62,12 +62,16 @@ class MockTree(object):
 class MockProject(object):
     def __init__(self, add_tree_control=False, default_styles=None):
         self.window = MockWindow()
-        self.task = MockTask(self.window, default_styles)
+#        self.task = MockTask(self.window, default_styles)
         self.layer_canvas = MockCanvas()
-        self.layer_manager = LayerManager.create(self)
+        self.layer_manager = LayerManager(None)
         if add_tree_control:
             self.layer_tree_control = MockTree()
             self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
+
+    @property
+    def current_layer(self):
+        return self.layer_tree_control.get_edit_layer()
 
     def raw_load_all_layers(self, uri, mime):
         guess = FileGuess(uri)

@@ -189,6 +189,9 @@ class LayerManager(SawxDocument):
     def calc_raw_data(self, raw):
         pass
 
+    def create_empty(self):
+        self.file_metadata = {'uri': ''}
+
     ##### Serialization
 
     def get_to_json_attrs(self):

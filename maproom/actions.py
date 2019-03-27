@@ -19,6 +19,7 @@ from .library.thread_utils import BackgroundWMSDownloader
 from .library.tile_utils import BackgroundTileDownloader
 from . import layers
 from . import servers
+from . import styles
 
 import logging
 log = logging.getLogger(__name__)
@@ -226,7 +227,7 @@ class default_style(SawxAction):
         if status == wx.ID_OK:
             project.layer_manager.update_default_styles(dialog.get_styles())
             if dialog.save_for_future:
-                style.remember_styles(project.layer_manager.default_styles)
+                styles.remember_styles(project.layer_manager.default_styles)
             if dialog.apply_to_current:
                 project.layer_manager.apply_default_styles()
 
