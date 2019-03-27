@@ -492,7 +492,7 @@ class convex_hull(SawxAction):
 
         import wx
         dialog = wx.MultiChoiceDialog(
-            project.window.control,
+            project.control,
             "Please select at least one layer.",
             "Point Layers",
             layer_names
@@ -533,7 +533,7 @@ class merge_layers(SawxAction):
 
         import wx
         dialog = wx.MultiChoiceDialog(
-            project.window.control,
+            project.control,
             "Please select two vector layers to merge together into one layer.\n\nOnly those layers that support merging are listed.",
             "Merge Layers",
             layer_names
@@ -560,7 +560,7 @@ class merge_layers(SawxAction):
                 da = layer_a.depth_unit
                 db = layer_b.depth_unit
                 if da != db:
-                    dialog = wx.SingleChoiceDialog(project.window.control, "Choose units for merged layer", "Depth Units", [da, db])
+                    dialog = wx.SingleChoiceDialog(project.control, "Choose units for merged layer", "Depth Units", [da, db])
                     result = dialog.ShowModal()
                     if result == wx.ID_OK:
                         depth_unit = dialog.GetStringSelection()

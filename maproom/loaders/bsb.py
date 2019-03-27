@@ -34,7 +34,7 @@ class BSBLoader(BaseLoader):
             dataset = None  # close the GDAL dataset
 
         self.selected = []
-        dlg = wx.MultiChoiceDialog(manager.project.window.control, "Select images from BSB file", "Choose Images", items)
+        dlg = wx.MultiChoiceDialog(manager.project.control, "Select images from BSB file", "Choose Images", items)
         if (dlg.ShowModal() == wx.ID_OK):
             selections = dlg.GetSelections()
             for index in selections:
