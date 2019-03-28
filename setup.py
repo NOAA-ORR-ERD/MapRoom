@@ -167,7 +167,8 @@ install_requires = [
     'pyinstaller',
     'glsvg',
 ]
-if sys.platform != "win32":
+#if sys.platform != "win32":
+if False:  # disabling for everybody temporarily
     # pyopengl_accelerate can fail on windows, sometimes. It's not necessary,
     # so by default I'm not including it.
     install_requires.extend([
