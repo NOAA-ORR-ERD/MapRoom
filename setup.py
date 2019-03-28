@@ -140,10 +140,9 @@ package_data = {
 install_requires = [
     'numpy',
     'pyopengl',
-    'pyopengl_accelerate',
     'pyproj==1.9.6',  # pyproj version 2 fails outside the -180/+180 range
     'cython',
-    'shapely',
+    'shapely<1.7',
     'owslib>=0.16',
     'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
     'coverage',
@@ -168,7 +167,12 @@ install_requires = [
     'pyinstaller',
     'glsvg',
 ]
-
+if sys.platform != "win32":
+    # pyopengl_accelerate can fail on windows, sometimes. It's not necessary,
+    # so by default I'm not including it.
+    install_requires.extend([
+        'pyopengl_accelerate',
+    ])
 
 setup(
     name="MapRoom",
