@@ -1,7 +1,6 @@
 import re
 
 from sawx.filesystem import fsopen as open
-from sawx.utils.textutil import guessBinary
 
 from ..magic import magic_template
 from .common import BaseLoader
@@ -9,9 +8,8 @@ from .common import BaseLoader
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-def identify_mime(uri, fh, header):
-    is_binary = guessBinary(header)
-    if not is_binary and header.startswith(magic_template.encode('utf-8')):
+def identify_loader(file_guess):
+    if file_guess.is_text and file_guess.sample_data.startswith(magic_template.encode('utf-8')):
         return dict(mime=CommandLogLoader.mime, loader=CommandLogLoader())
 
 

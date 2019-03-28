@@ -20,9 +20,8 @@ progress_log = logging.getLogger("progress")
 from post_gnome import nc_particles
 
 
-def identify_mime(uri, fh, header):
-    fh.seek(0)
-    byte_stream = fh.read()
+def identify_loader(file_guess):
+    byte_stream = file_guess.all_data
     # check if is is HDF or CDF
     if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
         if (b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream):

@@ -15,11 +15,11 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
-def identify_mime(uri, fh, header):
+def identify_loader(file_guess):
     try:
-        file_path = filesystem_path(uri)
+        file_path = file_guess.filesystem_path
     except OSError:
-        log.debug(f"{uri} not on local filesystem, GDAL won't load it.")
+        log.debug(f"{file_guess.uri} not on local filesystem, GDAL won't load it.")
         return None
     if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
         file_path = file_path[4:]

@@ -3,7 +3,6 @@ import numpy as np
 import re
 
 from sawx.filesystem import fsopen as open
-from sawx.utils.textutil import guessBinary
 
 from maproom.library.accumulator import accumulator
 from maproom.library.lat_lon_parser import parse_coordinate_text
@@ -17,11 +16,9 @@ progress_log = logging.getLogger("progress")
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-def identify_mime(uri, fh, header):
-    is_binary = guessBinary(header)
-    if not is_binary:
-        fh.seek(0)
-        byte_stream = fh.read()
+def identify_loader(file_guess):
+    if file_guess.is_text:
+        byte_stream = file_guess.all_data
         mime, _, _ = parse_coordinate_text(byte_stream)
         if mime is not None:
             if mime == "text/latlon":

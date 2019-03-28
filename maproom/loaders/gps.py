@@ -9,7 +9,6 @@ import numpy as np
 #import re
 
 from sawx.filesystem import fsopen as open
-from sawx.utils.textutil import guessBinary
 
 from .common import BaseLayerLoader
 from ..library.gps_utils import GarminGPSDataset
@@ -20,10 +19,9 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
-def identify_mime(uri, fh, header):
-    is_binary = guessBinary(header)
-    if not is_binary:
-        if b'xmlns="http://www.topografix.com/GPX/1/1"' in header:
+def identify_loader(file_guess):
+    if file_guess.is_text:
+        if b'xmlns="http://www.topografix.com/GPX/1/1"' in file_guess.sample_data:
                 return dict(mime="text/garmin-gpx", loader=GarminGPSLoader())
 
 

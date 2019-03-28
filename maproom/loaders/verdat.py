@@ -3,7 +3,6 @@ import numpy as np
 import re
 
 from sawx.filesystem import fsopen as open
-from sawx.utils.textutil import guessBinary
 
 from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import Boundaries, PointsError
@@ -17,10 +16,9 @@ progress_log = logging.getLogger("progress")
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-def identify_mime(uri, fh, header):
-    is_binary = guessBinary(header)
-    if not is_binary:
-        if header.startswith(b"DOGS"):
+def identify_loader(file_guess):
+    if file_guess.is_text:
+        if file_guess.sample_data.startswith(b"DOGS"):
             mime = "application/x-maproom-verdat"
             return dict(mime=mime, loader=VerdatLoader())
 

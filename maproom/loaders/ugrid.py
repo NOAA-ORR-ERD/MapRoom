@@ -12,9 +12,8 @@ from maproom.renderer import data_types
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-def identify_mime(uri, fh, header):
-    fh.seek(0)
-    byte_stream = fh.read()
+def identify_loader(file_guess):
+    byte_stream = file_guess.all_data
     # check if it is either HDF or CDF
     if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
         if not ((b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream)):

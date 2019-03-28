@@ -3,7 +3,6 @@ import json
 import zipfile
 
 from sawx.filesystem import fsopen as open
-from sawx.utils.textutil import guessBinary
 
 from .common import BaseLoader
 
@@ -14,14 +13,12 @@ log = logging.getLogger(__name__)
 WHITESPACE_PATTERN = re.compile("\s+")
 
 
-def identify_mime(uri, fh, header):
-    is_binary = guessBinary(header)
-    if is_binary:
-        fh.seek(0)
-        if zipfile.is_zipfile(fh):
+def identify_loader(file_guess):
+    if file_guess.is_binary:
+        if file_guess.is_zipfile:
             return dict(mime="application/x-maproom-project-zip", loader=ZipProjectLoader())
     else:
-        if header.startswith(b"# -*- MapRoom project file -*-"):
+        if file_guess.sample_data.startswith(b"# -*- MapRoom project file -*-"):
             return dict(mime="application/x-maproom-project-json", loader=ProjectLoader())
 
 

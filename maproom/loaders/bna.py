@@ -1,7 +1,6 @@
 import os
 
 from sawx.filesystem import fsopen as open
-from sawx.utils.textutil import guessBinary
 
 import numpy as np
 from shapely.geometry import Polygon, LineString
@@ -17,10 +16,9 @@ log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
 
-def identify_mime(uri, fh, header):
-    is_binary = guessBinary(header)
-    if not is_binary and uri.lower().endswith(".bna"):
-        lines = header.splitlines()
+def identify_loader(file_guess):
+    if not file_guess.is_binary and file_guess.uri.lower().endswith(".bna"):
+        lines = file_guess.sample_data.splitlines()
         if b".KAP" in lines[0]:
             return dict(mime="application/x-maproom-rncloader", loader=RNCLoader())
         return dict(mime="application/x-maproom-bna", loader=BNAShapefileLoader())
