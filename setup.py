@@ -188,19 +188,20 @@ setup(
         # NOTE: entry points are processed lexicographically, not in the order
         # specified, so force e.g. verdat loader to come before text loader
         "sawx.loaders": [
-            '1verdat = maproom.loaders.verdat',
-            'project = maproom.loaders.project',
-            'nc_particles = maproom.loaders.nc_particles',
-            'ugrid = maproom.loaders.ugrid',
-            'bna = maproom.loaders.bna',
-            'gps = maproom.loaders.gps',
-            'gdal = maproom.loaders.gdal',
-            'shapefile = maproom.loaders.shapefile',
-            'text = maproom.loaders.text',
+            '01verdat = maproom.loaders.verdat',
+            '00project = maproom.loaders.project',
+            '08nc_particles = maproom.loaders.nc_particles',
+            '08ugrid = maproom.loaders.ugrid',
+            '10bna = maproom.loaders.bna',
+            '10gps = maproom.loaders.gps',
+            '10cmd = maproom.loaders.logfile',
+            '20gdal = maproom.loaders.gdal',
+            '20shapefile = maproom.loaders.shapefile',
+            '90text = maproom.loaders.text',
         ],
 
         "sawx.documents": [
-            'layer_manager = maproom.layer_manager',
+            '00layer_manager = maproom.layer_manager',
         ],
 
         "sawx.editors": [

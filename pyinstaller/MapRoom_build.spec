@@ -22,16 +22,68 @@ import sys
 sys.modules['FixTk'] = None
 
 import os
+import pkg_resources
 
 pathex = [os.path.abspath("..")]
+
+# Found sample code to include entry points inside the bundle at:
+# https://github.com/pyinstaller/pyinstaller/issues/3050
+
+hook_ep_packages = dict()
+hiddenimports = set()
+# List of packages that should have their Distutils entrypoints included.
+ep_packages = ["sawx.loaders", "sawx.documents", "sawx.remember", "sawx.editors"]
+
+if ep_packages:
+    for ep_package in ep_packages:
+        for ep in pkg_resources.iter_entry_points(ep_package):
+            if ep_package in hook_ep_packages:
+                package_entry_point = hook_ep_packages[ep_package]
+            else:
+                package_entry_point = []
+                hook_ep_packages[ep_package] = package_entry_point
+            package_entry_point.append(f"{ep.name} = {ep.module_name}")
+            hiddenimports.add(ep.module_name)
+
+    try:
+        os.mkdir('./generated')
+    except FileExistsError:
+        pass
+
+    for group, package_entry_point in hook_ep_packages.items():
+        package_entry_point.sort()
+
+    with open("./generated/pkg_resources_hook.py", "w") as f:
+        f.write(f"""# Runtime hook generated from spec file to support pkg_resources entrypoints.
+ep_packages = {hook_ep_packages}
+
+if ep_packages:
+    import pkg_resources
+    default_iter_entry_points = pkg_resources.iter_entry_points
+
+    def hook_iter_entry_points(group, name=None):
+        if group in ep_packages and ep_packages[group]:
+            eps = ep_packages[group]
+            for ep in eps:
+                parsedEp = pkg_resources.EntryPoint.parse(ep)
+                parsedEp.dist = pkg_resources.Distribution()
+                yield parsedEp
+        else:
+            return default_iter_entry_points(group, name)
+
+    pkg_resources.iter_entry_points = hook_iter_entry_points
+""")
+
+print(hook_ep_packages)
+
 
 a = Analysis(["%s.py" % appname],
              pathex=pathex,
              binaries=None,
              datas=None,
-             hiddenimports=[],
+             hiddenimports=list(hiddenimports),
              hookspath=['.'],
-             runtime_hooks=[],
+             runtime_hooks=["./generated/pkg_resources_hook.py"],
              excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'Cython', 'sphinx', 'nose', 'pygments', 'pytest'],
              cipher=block_cipher)
 
@@ -55,13 +107,13 @@ if sys.platform == "darwin":
         debug=DEBUG,
         strip=not DEBUG,
         upx=not DEBUG,
-        console=False,
+        console=not DEBUG,
         icon=icon)
     coll = COLLECT(exe,
         a.binaries,
         a.zipfiles,
         a.datas,
-        strip=None,
+        strip=not DEBUG,
         upx=not DEBUG,
         name=appname)
     app = BUNDLE(coll,
