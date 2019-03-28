@@ -128,8 +128,11 @@ def load_shapefile(uri):
             layer = dataset.GetLayer()
             sref = layer.GetSpatialRef()
             if sref is not None:
-                source = pyproj.Proj(sref.ExportToProj4())
-                log.debug(f"load_shapefile: source projection {source.srs}")
+                try:
+                    source = pyproj.Proj(sref.ExportToProj4())
+                    log.debug(f"load_shapefile: source projection {source.srs}")
+                except RuntimeError as e:
+                    log.error(f"error in source projection: {e}")
                 target = pyproj.Proj(init='epsg:4326')
                 log.debug(f"load_shapefile: target projection: {target.srs}")
             try:
