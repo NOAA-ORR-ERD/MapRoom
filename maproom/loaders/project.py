@@ -15,7 +15,7 @@ WHITESPACE_PATTERN = re.compile("\s+")
 
 def identify_loader(file_guess):
     if file_guess.is_binary:
-        if file_guess.is_zipfile:
+        if file_guess.is_zipfile and file_guess.zipfile_contains("pre json data"):
             return dict(mime="application/x-maproom-project-zip", loader=ZipProjectLoader())
     else:
         if file_guess.sample_data.startswith(b"# -*- MapRoom project file -*-"):

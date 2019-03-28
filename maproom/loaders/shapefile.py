@@ -4,6 +4,7 @@ from osgeo import ogr, osr
 import numpy as np
 
 from sawx.filesystem import filesystem_path
+from sawx.utils.fileutil import ExpandZip
 
 from maproom.library.shapefile_utils import load_shapefile, load_bna_items
 from maproom.layers import PolygonParentLayer
@@ -16,6 +17,8 @@ progress_log = logging.getLogger("progress")
 
 
 def identify_loader(file_guess):
+    if file_guess.is_zipfile and file_guess.zipfile_contains_extension(".shp"):
+            return dict(mime="application/x-maproom-shapefile-zip", loader=ZipShapefileLoader())
     try:
         file_path = file_guess.filesystem_path
     except OSError:
@@ -168,6 +171,15 @@ class ShapefileLoader(BaseLayerLoader):
             write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
         else:
             write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection)
+
+
+class ZipShapefileLoader(ShapefileLoader):
+    mime = "application/x-maproom-shapefile-zip"
+
+    def load_uri_as_items(self, uri):
+        expanded_zip = ExpandZip(uri)
+        filename = expanded_zip.find_extension(".shp")
+        return load_shapefile(filename)
 
 
 def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
