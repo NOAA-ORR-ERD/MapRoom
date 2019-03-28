@@ -1397,6 +1397,7 @@ class ControlPointEditMode(ObjectSelectionMode):
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
+#from profilehooks import profile
 
 class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     dim_background_outside_selection = False
@@ -1404,6 +1405,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     vector_object_command = None
     toolbar_group = "annotation"
 
+#    @profile
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
         e = c.project
