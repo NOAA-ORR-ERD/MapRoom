@@ -166,6 +166,7 @@ install_requires = [
     'packaging',
     'pyinstaller',
     'glsvg',
+    'lat-lon-parser',
 ]
 #if sys.platform != "win32":
 if False:  # disabling for everybody temporarily
