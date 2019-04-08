@@ -584,8 +584,8 @@ class XPercentageField(FloatSliderField):
             return
         c = self.ctrl
         self.set_value(layer, c.GetValue())
-        layer.manager.layer_contents_changed = layer
-        layer.manager.refresh_needed = None
+        layer.manager.layer_contents_changed_event(layer)
+        layer.manager.refresh_needed_event(None)
 
 class YPercentageField(XPercentageField):
     def get_value(self, layer):
