@@ -82,7 +82,7 @@ class save_project(SawxAction):
         return self.editor.is_dirty
 
     def perform(self, action_key):
-        self.editor.save()
+        self.editor.save_to_uri()
 
 
 class save_project_as(SawxAction):
@@ -90,10 +90,13 @@ class save_project_as(SawxAction):
     tooltip = 'Save the current project with a new name'
 
     def calc_icon_name(self, action_key):
-        return "save_file_as"
+        return "save_as"
 
     def perform(self, action_key):
-        self.editor.save_as()
+        e = self.editor
+        path = e.frame.prompt_local_file_dialog("Save Project As", save=True, default_filename=e.document.root_name)
+        if path is not None:
+            e.save_to_uri(path)
 
 
 class save_project_template(SawxAction):
