@@ -31,7 +31,7 @@ class PointLayer(PointBaseLayer):
 
     type = "point"
 
-    mouse_mode_toolbar = Str("VectorLayerToolBar")
+    mouse_mode_toolbar = "VectorLayerToolBar"
 
     merged_points_index = Int(0)
 

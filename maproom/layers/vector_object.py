@@ -45,7 +45,7 @@ class VectorObjectLayer(LineLayer):
 
     type = "vector_object"
 
-    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
+    mouse_mode_toolbar = "AnnotationLayerToolBar"
 
     rotation = Float(0.0)
 
@@ -1405,7 +1405,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     type = "annotation"
 
-    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
+    mouse_mode_toolbar = "AnnotationLayerToolBar"
 
     layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color"]
 

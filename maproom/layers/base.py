@@ -59,6 +59,8 @@ class Layer(HasTraits):
     # serializable.
     type = ""
 
+    mouse_mode_toolbar = "BaseLayerToolBar"
+
     # Traits
 
     # invariant is sort of a serial number of the layer in a LayerManager: an
@@ -83,8 +85,6 @@ class Layer(HasTraits):
     bounds = Any(rect.NONE_RECT)
 
     grouped = Bool
-
-    mouse_mode_toolbar = Str("BaseLayerToolBar")
 
     # this is any change that might affect the properties panel (e.g., number
     # of points selected)

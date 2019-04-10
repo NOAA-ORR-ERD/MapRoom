@@ -29,7 +29,7 @@ class PolygonLayer(PointLayer):
     """
     type = "polygon"
 
-    mouse_mode_toolbar = Str("PolygonLayerToolBar")
+    mouse_mode_toolbar = "PolygonLayerToolBar"
 
     rings = Any
 
@@ -398,7 +398,7 @@ class RNCLoaderLayer(PolygonLayer):
     """
     type = "rncloader"
 
-    mouse_mode_toolbar = Str("RNCToolBar")
+    mouse_mode_toolbar = "RNCToolBar"
 
     layer_info_panel = ["Polygon count"]
 
