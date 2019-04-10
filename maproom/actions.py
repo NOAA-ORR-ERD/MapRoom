@@ -119,31 +119,20 @@ class save_command_log(SawxAction):
     tooltip = 'Save a copy of the command log'
 
     def perform(self, action_key):
-        path = self.editor.frame.prompt_local_file_dialog("Save Command Log", save=True, wildcard="MapRoom Command Log Files (*.mrc)|*.mrc")
+        path = self.editor.frame.prompt_local_file_dialog("Save Command Log", save=True, default_filename=self.editor.document.root_name, wildcard="MapRoom Command Log Files (*.mrc)|*.mrc")
         if path:
             self.editor.save_log(dialog.path)
 
 
 class save_layer(SawxAction):
-    name = 'Save Layer'
+    name = 'Save Layer...'
     tooltip = 'Save the currently selected layer'
 
     def calc_enabled(self, action_key):
         return self.editor.current_layer.can_save()
 
     def perform(self, action_key):
-        self.editor.save_layer(None)
-
-
-class save_layer_as(SawxAction):
-    name = 'Save Layer As...'
-    tooltip = 'Save the current project with a new name'
-
-    def calc_enabled(self, action_key):
-        return self.editor.current_layer.can_save_as()
-
-    def perform(self, action_key):
-        path = self.editor.frame.prompt_local_file_dialog("Save Layer", save=True)
+        path = self.editor.frame.prompt_local_file_dialog("Save Layer", save=True, default_filename=self.editor.current_layer.name)
         if path:
             self.editor.save_layer(path)
 
@@ -175,7 +164,7 @@ class save_layer_as(SawxListAction):
 
     def perform(self, action_key):
         item = self.get_item(action_key)
-        path = self.editor.frame.prompt_local_file_dialog("Save Layer", save=True, wildcard=item.loader.get_file_dialog_wildcard())
+        path = self.editor.frame.prompt_local_file_dialog("Save Layer", save=True, default_filename=self.editor.document.root_name, wildcard=item.loader.get_file_dialog_wildcard())
         if path:
             self.editor.save_layer(path)
 
@@ -188,9 +177,9 @@ class save_movie(SawxAction):
         return bool(self.editor.latest_movie)
 
     def perform(self, action_key):
-        dialog = FileDialog(parent=self.editor.control, action='save as', wildcard="PNG Movies (*.png)|*.png")
-        if dialog.open() == OK:
-            self.editor.save_latest_movie(dialog.path)
+        path = self.editor.frame.prompt_local_file_dialog("Save Playback", save=True, default_filename=self.editor.document.root_name, wildcard="PNG Movies (*.png)|*.png")
+        if path:
+            self.editor.save_latest_movie(path)
 
 
 class revert_project(SawxAction):

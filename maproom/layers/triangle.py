@@ -86,7 +86,7 @@ class TriangleLayer(PointLayer):
 
         self.update_bounds()
 
-    def can_save_as(self):
+    def can_save(self):
         return True
 
     def triangles_to_json(self):

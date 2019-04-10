@@ -194,7 +194,7 @@ class LineLayer(PointLayer):
         self.points.color = color
         self.line_segment_indexes.color = color
 
-    def can_save_as(self):
+    def can_save(self):
         return True
 
     def lines_to_json(self):

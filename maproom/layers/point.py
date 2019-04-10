@@ -94,9 +94,6 @@ class PointLayer(PointBaseLayer):
     def set_data_from_boundary_points(self, points, style=None):
         self.set_data(points)
 
-    def can_save(self):
-        return self.can_save_as() and bool(self.file_path)
-
     # JSON Serialization
 
     def default_depth_to_json(self):

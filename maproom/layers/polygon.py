@@ -190,7 +190,7 @@ class PolygonLayer(PointLayer):
             all_lines = np.vstack([all_lines, lines])
         return points, all_lines
 
-    def can_save_as(self):
+    def can_save(self):
         return True
 
     def polygons_to_json(self):
