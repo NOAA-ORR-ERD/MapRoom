@@ -9,6 +9,7 @@ from traits.api import on_trait_change
 
 from sawx import persistence
 from sawx.action import SawxAction, SawxListAction, SawxRadioAction
+from sawx.actions import save_file, save_as
 from sawx.ui.dialogs import ListReorderDialog, CheckItemDialog
 
 from . import pane_layout
@@ -71,32 +72,20 @@ class new_empty_project(new_project):
     template = "template://blank_project.maproom"
 
 
-class save_project(SawxAction):
+class save_project(save_file):
     name = 'Save Project'
     tooltip = 'Save the current project'
 
     def calc_icon_name(self, action_key):
         return "save_file"
 
-    def calc_enabled(self, action_key):
-        return self.editor.is_dirty
 
-    def perform(self, action_key):
-        self.editor.save_to_uri()
-
-
-class save_project_as(SawxAction):
+class save_project_as(save_as):
     name = 'Save Project As...'
     tooltip = 'Save the current project with a new name'
 
     def calc_icon_name(self, action_key):
         return "save_as"
-
-    def perform(self, action_key):
-        e = self.editor
-        path = e.frame.prompt_local_file_dialog("Save Project As", save=True, default_filename=e.document.root_name)
-        if path is not None:
-            e.save_to_uri(path)
 
 
 class save_project_template(SawxAction):
