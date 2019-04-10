@@ -169,6 +169,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
             self.gl_driver_error_message = err
             wx.CallAfter(self.project.frame.error, err, "OpenGL Error")
+        else:
+            log.error(f"GL driver status: {self.is_gl_driver_ok}")
 
     def on_resize(self, event):
         if not self.is_canvas_initialized:

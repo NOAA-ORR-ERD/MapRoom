@@ -23,7 +23,8 @@ class CanvasImageDialog(wx.Dialog):
         self.SetSizer(sizer)
 
         size = canvas_source.GetSize()
-        canvas = canvas_source.__class__(self, project=canvas_source.project, size=size)
+        self.project = self.copy_project(canvas_source.project)
+        canvas = canvas_source.__class__(self, project=self.project, size=size)
         sizer.Add(canvas, 1, wx.ALL|wx.EXPAND, self.border)
         self.canvas = canvas
         self.canvas_source = canvas_source
@@ -44,13 +45,28 @@ class CanvasImageDialog(wx.Dialog):
         # Don't call self.Fit() otherwise the dialog buttons are zero height
         sizer.Fit(self)
 
+    def copy_project(self, source_project):
+        p = source_project.__class__(source_project.document)
+        p.layer_visibility = source_project.layer_visibility
+        p.long_status = source_project.long_status
+        p.layer_tree_control = source_project.layer_tree_control
+        # p. = source_project.layer_info
+        # p. = source_project.selection_info
+        # p. = source_project.triangle_panel
+        # p. = source_project.merge_points_panel
+        p.undo_history = source_project.undo_history
+        # p. = source_project.flagged_control
+        # p. = source_project.download_control
+        p.timeline = source_project.timeline
+        return p
+
     def sync_from_source(self):
         if not self.is_synced:
             print(f"syncing from {self.canvas_source}")
             c = self.canvas
             c.copy_viewport_from(self.canvas_source)
             c.Refresh()
-            c.update_renderers()
+            c.rebuild_renderers()
             c.render_callback(immediately=True)
             self.is_synced = True
 
@@ -72,6 +88,9 @@ class CanvasImageDialog(wx.Dialog):
             image = self.canvas.get_canvas_as_image()
         else:
             image = None
+        print("DESTROYING DIALOG")
+        self.canvas.is_gl_driver_ok = False
+        self.canvas.on_draw = self.canvas.on_erase
         self.Destroy()
         return image
 
