@@ -161,7 +161,7 @@ class TimeStepEvent(wx.CommandEvent):
 
 step_values = ['10m', '20m', '30m', '40m', '45m', '60m', '90m', '120m', '3hr', '4hr', '5hr', '6hr', '8hr', '10hr', '12hr', '16h', '24hr', '36hr', '48hr', '3d', '4d', '5d', '6d', '7d', '2wk', '3wk', '4wk']
 step_values_as_seconds = [parse_pretty_seconds(a) for a in step_values]
-rate_values = ['100ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
+rate_values = ['100ms', '200ms', '500ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
 rate_values_as_seconds = [parse_pretty_seconds(a) for a in rate_values]
 
 class TimeStepPanelMixin(object):
@@ -312,7 +312,7 @@ class TimelinePlaybackPanel(wx.Panel):
         self.play.Bind(wx.EVT_BUTTON, self.on_play)
         sizer.Add(self.play, 0, wx.EXPAND)
 
-        self.steps = wx.Button(self, -1, "MM", style=wx.BU_EXACTFIT)
+        self.steps = wx.Button(self, -1, "1m / 200ms", style=wx.BU_EXACTFIT)
         self.steps.Bind(wx.EVT_BUTTON, self.on_steps)
         sizer.Add(self.steps, 0, wx.EXPAND)
 
@@ -366,7 +366,7 @@ class TimelinePlaybackPanel(wx.Panel):
         if self.timeline.step_rate == 0 and self.timeline.num_marks > 1:
             if self.timeline.num_marks > 1:
                 interval = (self.timeline.highest_marker_value - self.timeline.lowest_marker_value) / (self.timeline.num_marks - 1)
-                self.timeline.step_rate = 1
+                self.timeline.step_rate = .2
                 log.debug(str((step_values_as_seconds, interval, interval/2, self.timeline._length)))
                 self.timeline.step_value = step_values_as_seconds[bisect.bisect_left(step_values_as_seconds, interval)]
             if self.timeline.step_rate == 0:
