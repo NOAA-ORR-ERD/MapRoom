@@ -2,11 +2,6 @@ import sys
 import wx
 import json
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-from traits.api import on_trait_change
-
 from sawx import persistence
 from sawx.action import SawxAction, SawxListAction, SawxRadioAction
 from sawx.actions import save_file, save_as
@@ -171,7 +166,6 @@ class save_layer_as(SawxListAction):
 
 class save_movie(SawxAction):
     name = 'Save Latest Playback...'
-    loader = Any
 
     def calc_enabled(self, action_key):
         return bool(self.editor.latest_movie)
@@ -213,36 +207,30 @@ class default_style(SawxAction):
                 project.layer_manager.apply_default_styles()
 
 
-class bounding_box(SawxAction):
+class bounding_box(SawxRadioAction):
     name = 'Show Bounding Boxes'
     tooltip = 'Display or hide bounding boxes for each layer'
-    style = 'toggle'
 
     def perform(self, action_key):
         value = not self.editor.layer_canvas.debug_show_bounding_boxes
         self.editor.layer_canvas.debug_show_bounding_boxes = value
         self.editor.layer_canvas.render()
 
-    @on_trait_change('active_editor')
-    def _update_checked(self, ui_state):
-        if self.editor:
-            self.checked = self.editor.layer_canvas.debug_show_bounding_boxes
+    def calc_checked(self, action_key):
+        return self.editor.layer_canvas.debug_show_bounding_boxes
 
 
-class picker_framebuffer(SawxAction):
+class picker_framebuffer(SawxRadioAction):
     name = 'Show Picker Framebuffer'
     tooltip = 'Display the picker framebuffer instead of the normal view'
-    style = 'toggle'
 
     def perform(self, action_key):
         value = not self.editor.layer_canvas.debug_show_picker_framebuffer
         self.editor.layer_canvas.debug_show_picker_framebuffer = value
         self.editor.layer_canvas.render()
 
-    @on_trait_change('active_editor')
-    def _update_checked(self, ui_state):
-        if self.editor:
-            self.checked = self.editor.layer_canvas.debug_show_picker_framebuffer
+    def calc_checked(self, action_key):
+        return self.editor.layer_canvas.debug_show_picker_framebuffer
 
 
 class zoom_in(SawxAction):
