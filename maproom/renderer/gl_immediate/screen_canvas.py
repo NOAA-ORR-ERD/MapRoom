@@ -26,7 +26,7 @@ from .renderer import ImmediateModeRenderer
 from .picker import Picker
 import maproom.library.rect as rect
 
-from ..gl.font import load_font_texture_with_alpha
+from ..gl.font import load_font_texture
 from ..gl import data_types
 from .. import BaseCanvas
 from .. import int_to_color_floats
@@ -43,12 +43,23 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     shared_context = None
 
+    font_texture = None
+
     @classmethod
     def init_context(cls, canvas):
         # Only one GLContext is needed for the entire application -- this way,
         # textures can be shared among views.
         if cls.shared_context is None:
             cls.shared_context = glcanvas.GLContext(canvas)
+
+    @classmethod
+    def init_font_texture(cls):
+        # Texture creation must be deferred until after the call to SetCurrent
+        # so that the GLContext is attached to the actual window. The texture
+        # itself is shared among views, but each instance uses its own VBO so
+        # they don't stomp over each other
+        if cls.font_texture is None:
+            cls.font_texture, cls.font_texture_size, cls.font_extents = load_font_texture()
 
     def __init__(self, *args, **kwargs):
         project = kwargs.pop('project')
@@ -66,10 +77,6 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.pending_render_count = 0
 
         BaseCanvas.__init__(self, project)
-
-        # Texture creation must be deferred until after the call to SetCurrent
-        # so that the GLContext is attached to the actual window
-        self.font_texture = None
 
         # Only bind paint event; others depend on window being realized
         self.Bind(wx.EVT_PAINT, self.on_draw)
@@ -137,8 +144,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
                 # this has to be here because the window has to exist before creating
                 # textures and making the renderer
                 try:
-                    if self.font_texture is None:
-                        self.init_font()
+                    self.init_font()
                 except gl.GLError:
                     log.error("Caught GLError on initialization; likely OpenGL driver is not current")
                     self.is_gl_driver_ok = False
@@ -287,35 +293,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         r = ImmediateModeRenderer(self, layer)
         return r
 
-    def load_font_texture(self):
-        buffer_with_alpha, extents = load_font_texture_with_alpha()
-        width = buffer_with_alpha.shape[0]
-        height = buffer_with_alpha.shape[1]
-
-        texture = gl.glGenTextures(1)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, texture)
-        gl.glTexImage2D(
-            gl.GL_TEXTURE_2D,
-            0,
-            gl.GL_RGBA8,
-            width,
-            height,
-            0,
-            gl.GL_RGBA,
-            gl.GL_UNSIGNED_BYTE,
-            buffer_with_alpha.tostring(),
-        )
-        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
-        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
-
-        # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
-
-        return (texture, (width, height), extents)
-
     def init_font(self, max_label_characters=1000):
-        (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
+        self.init_font_texture()
         self.max_label_characters = max_label_characters
 
         self.screen_vertex_data = np.zeros(
