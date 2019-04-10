@@ -6,6 +6,7 @@ import numpy as np
 from traits.api import Unicode, Str
 
 from ..library import rect, coordinates
+from ..renderer import alpha_from_int
 
 from .base import ScreenLayer
 
@@ -27,6 +28,8 @@ class Graticule(ScreenLayer):
     bounded = False
 
     background = True
+
+    layer_info_panel = ["Transparency"]
 
     LINE_WIDTH = 1.0
     LINE_COLOR = (0, 0, 0, 0.75)
@@ -73,6 +76,8 @@ class Graticule(ScreenLayer):
         # print "lat_step = " + str(self.lat_step)
         # print "world_rect = " + str(world_rect)
 
+        alpha = alpha_from_int(self.style.line_color)
+
         for longitude in self.lon_steps:
 
             # print "  longitude = " + str(longitude)
@@ -82,8 +87,7 @@ class Graticule(ScreenLayer):
             s_p = render_window.get_screen_point_from_world_point(w_p)
             s = self.grid.format_lon_line_label(longitude)
             size = renderer.get_drawn_string_dimensions(s)
-            renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5),
-                                      (s_p[0], screen_rect[1][1]))
+            renderer.draw_screen_line((s_p[0], screen_rect[0][1] + size[1] + 5), (s_p[0], screen_rect[1][1]), alpha=alpha)
             """
             for offset in xrange( 200 ):
                 renderer.draw_screen_string( ( s_p[ 0 ] - size[ 0 ] / 2, screen_rect[ 0 ][ 1 ] + offset * 2 ), s )
@@ -99,8 +103,7 @@ class Graticule(ScreenLayer):
             s_p = render_window.get_screen_point_from_world_point(w_p)
             s = self.grid.format_lat_line_label(latitude)
             size = renderer.get_drawn_string_dimensions(s)
-            renderer.draw_screen_line((screen_rect[0][0], s_p[1]),
-                                      (screen_rect[1][0] - size[0] - 5, s_p[1]))
+            renderer.draw_screen_line((screen_rect[0][0], s_p[1]), (screen_rect[1][0] - size[0] - 5, s_p[1]), alpha=alpha)
             renderer.draw_screen_string(
                 (screen_rect[1][0] - size[0] - 3, s_p[1] - size[1] / 2 - 1), s)
 
