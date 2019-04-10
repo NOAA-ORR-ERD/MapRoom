@@ -392,6 +392,12 @@ class TimelinePlaybackPanel(wx.Panel):
         else:
             self.timeline.start_playback()
 
+    def start_playback(self):
+        self.timeline.start_playback()
+
+    def pause_playback(self):
+        self.timeline.pause_playback()
+
     def on_steps(self, evt):
         btn = evt.GetEventObject()
         wx.CallAfter(self.on_steps_cb, btn)

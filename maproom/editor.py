@@ -519,6 +519,7 @@ class ProjectEditor(SawxEditor):
     def start_movie_recording(self):
         log.debug("Starting movie recording")
         self.latest_movie = apng.APNG()
+        self.latest_movie_size = None
 
     def stop_movie_recording(self):
         log.debug("Recorded %d frames" % len(self.latest_movie.frames))
@@ -531,9 +532,15 @@ class ProjectEditor(SawxEditor):
         if not self.timeline.timeline.is_beyond_playback_stop_value:
             log.debug("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
             frame = self.get_numpy_image()
+            h, w, depth = frame.shape
+            if self.latest_movie_size is None:
+                self.latest_movie_size = (w, h)
+            else:
+                if self.latest_movie_size != (w, h):
+                    self.timeline.pause_playback()
+                    self.frame.error("Don't resize window during playback.", "Playback Stopped")
             if debug:
                 frame_number = len(self.latest_movie.frames)
-                h, w, depth = frame.shape
                 image = wx.Image(w, h, frame)
                 image.SaveFile("movie_frame_%03d.png" % frame_number, wx.BITMAP_TYPE_PNG)
             self.latest_movie.append(frame, delay=int(self.timeline.timeline.step_rate * 1000))
