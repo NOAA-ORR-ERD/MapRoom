@@ -6,6 +6,7 @@ from sawx import persistence
 from sawx.action import SawxAction, SawxListAction, SawxRadioAction
 from sawx.actions import save_file, save_as
 from sawx.ui.dialogs import ListReorderDialog, CheckItemDialog
+from sawx.filesystem import find_latest_template_path
 
 from . import pane_layout
 from . import menu_commands as mec
@@ -345,8 +346,7 @@ class new_rnc_layer(SawxAction):
     tooltip = 'Create new layer for downloading RNC images'
 
     def perform(self, action_key):
-        from maproom.templates import get_template_path
-        path = get_template_path("RNCProdCat_*.bna")
+        path = find_latest_template_path("RNCProdCat_*.bna")
         self.editor.frame.load_file(path, self.editor)
 
 
