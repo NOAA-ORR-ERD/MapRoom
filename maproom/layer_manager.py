@@ -17,13 +17,6 @@ from . import styles
 from .command import UndoStack, BatchStatus
 from .menu_commands import LoadLayersCommand
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Dict
-from traits.api import Event
-from traits.api import Int
-from traits.api import List
-
 from sawx.document import SawxDocument
 from sawx.utils.jsonutil import collapse_json
 from sawx.utils.fileutil import ExpandZip
@@ -87,19 +80,19 @@ class LayerManager(SawxDocument):
         index = 0
         self.root_invariant = -3
         self.next_invariant = self.root_invariant
-        layer = ly.RootLayer(manager=self)
+        layer = ly.RootLayer(self)
         self.insert_layer([index], layer)
 
         index += 1
-        grid = ly.Timestamp(manager=self)
+        grid = ly.Timestamp(self)
         self.insert_layer([index], grid)
 
         index += 1
-        grid = ly.Graticule(manager=self)
+        grid = ly.Graticule(self)
         self.insert_layer([index], grid)
         
         index += 1
-        scale = ly.Scale(manager=self)
+        scale = ly.Scale(self)
         self.insert_layer([index], scale)
 
         SawxDocument.__init__(self, file_metadata)

@@ -2,15 +2,6 @@ import math
 
 import numpy as np
 
-
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Float
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
 from ..library import rect
 from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, mi_to_rounded_string
 from ..library.Boundary import Boundary
@@ -47,12 +38,6 @@ class VectorObjectLayer(LineLayer):
 
     mouse_mode_toolbar = "AnnotationLayerToolBar"
 
-    rotation = Float(0.0)
-
-    border_width = Int(10)
-
-    # class attributes
-
     has_control_points = True
 
     use_color_cycling = False
@@ -64,6 +49,12 @@ class VectorObjectLayer(LineLayer):
     control_point_color = color_floats_to_int(0, 0, 0, 1.0)
 
     control_point_names = [""]
+
+    def __init__(self, manager):
+        super().__init__(manager)
+
+        self.rotation = 0.0
+        self.border_width = 10
 
     def __str__(self):
         return LineLayer.__str__(self) + ", bb: %s" % str(self.bounds)
@@ -718,7 +709,9 @@ class ScaledImageObject(RectangleVectorObject):
 
     layer_info_panel = ["Transparency"]
 
-    image_data = Any
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.image_data = None
 
     def get_image_array(self):
         from maproom.library.numpy_images import get_square
@@ -828,9 +821,11 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
 
     type = "overlay_line_obj"
 
-    screen_dx = Float(-1)
+    def __init__(self, manager):
+        LineVectorObject.__init__(self, manager)
 
-    screen_dy = Float(-1)
+        self.screen_dx = -1
+        self.screen_dy = -1
 
     def get_undo_info(self):
         return (self.copy_points(), self.copy_bounds(), self.screen_dx, self.screen_dy)
@@ -932,17 +927,22 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
     layer_info_panel = ["Transparency"]
 
-    image_data = Any
-
-    anchor_point_index = Int(8)  # Defaults to center point as the anchor
-
-    show_flagged_anchor_point = Bool(True)
-
     # Screen y coords are backwards from world y coords (screen y increases
     # downward)
     screen_offset_from_center = np.asarray(
         ((-0.5, 0.5), (0.5, 0.5), (0.5, -0.5), (-0.5, -0.5), (0, 0.5), (0.5, 0), (0, -0.5), (-0.5, 0), (0, 0)),
         dtype=np.float32)
+
+    def __init__(self, manager, show_flagged_anchor_point=True):
+        RectangleVectorObject.__init__(self, manager)
+
+        self.image_data = None
+        self.anchor_point_index = 8  # Defaults to center point as the anchor
+        self.show_flagged_anchor_point = show_flagged_anchor_point
+        self.init_overlay_attributes()
+
+    def init_overlay_attributes(self):
+        return
 
     def anchor_point_index_to_json(self):
         return self.anchor_point_index
@@ -1045,11 +1045,10 @@ class OverlayScalableImageObject(OverlayImageObject):
 
     type = "overlay_scalable_image_obj"
 
-    text_width = Float(-1)
-
-    text_height = Float(-1)
-
-    border_width = Int(0)
+    def init_overlay_attributes(self):
+        self.text_width = -1
+        self.text_height = -1
+        self.border_width = 0
 
     def get_undo_info(self):
         return (self.copy_points(), self.copy_bounds(), self.text_width, self.text_height, self.border_width)
@@ -1126,13 +1125,13 @@ class OverlayTextObject(OverlayScalableImageObject):
 
     type = "overlay_text_obj"
 
-    user_text = Unicode("<b>New Label</b>")
-
-    border_width = Int(4)
-
     layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color"]
 
     selection_info_panel = ["Text", "Text format", "Anchor point"]
+
+    def init_overlay_attributes(self):
+        self.user_text = "<b>New Label</b>"
+        self.border_width = 4
 
     def user_text_to_json(self):
         return self.user_text
@@ -1173,15 +1172,12 @@ class OverlayIconObject(OverlayScalableImageObject):
 
     layer_info_panel = ["Marplot icon", "Icon size", "Color"]
 
-    anchor_point_index = Int(8)  # Defaults to center point as the anchor
-
-    text_width = Float(32)
-
-    text_height = Float(32)
-
-    border_width = Int(5)
-
-    min_size = Int(10)
+    def init_overlay_attributes(self):
+        self.anchor_point_index = 8  # Defaults to center point as the anchor
+        self.text_width = 32
+        self.text_height = 32
+        self.border_width = 5
+        self.min_size = 10
 
     def set_style(self, style):
         OverlayScalableImageObject.set_style(self, style)

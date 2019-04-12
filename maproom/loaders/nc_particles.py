@@ -134,7 +134,7 @@ class ParticleLoader(BaseLayerLoader):
         :param manager: The layer manager
 
         """
-        parent = ParticleFolder(manager=manager)
+        parent = ParticleFolder(manager)
         parent.file_path = uri
         parent.mime = self.mime  # fixme: tricky here, as one file has multiple layers
         parent.name = os.path.split(parent.file_path)[1]
@@ -145,7 +145,7 @@ class ParticleLoader(BaseLayerLoader):
         folder_status_code_names = {}
         # loop through all the time steps in the file.
         for (points, status_codes, code_map, timecode, warning, scalar_vars, scalar_min_max) in nc_particles_file_loader(uri):
-            layer = ParticleLayer(manager=manager, source_particle_folder=parent)
+            layer = ParticleLayer(manager, parent)
             layer.file_path = uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
             layer.name = timecode.isoformat().rsplit(':', 1)[0]
@@ -186,7 +186,7 @@ class ParticleLoader(BaseLayerLoader):
                 layer.end_time = end_time
                 end_time = layer.start_time
 
-        legend = ParticleLegend(manager=manager, source_particle_folder=parent)
+        legend = ParticleLegend(manager, parent)
         layers[0:0] = [parent, legend]
         if warnings:
             warnings[0:0] = ["The following layers have spurious values. Those values have been removed.\n"]

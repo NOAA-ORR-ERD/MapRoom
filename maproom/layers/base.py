@@ -3,15 +3,6 @@ import time
 import datetime
 import calendar
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Float
-from traits.api import HasTraits
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
 from sawx.utils.runtime import get_all_subclasses
 from sawx.loader import identify_file
 
@@ -26,7 +17,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Layer(HasTraits):
+class Layer:
     """Base Layer class with some abstract methods.
     """
     # Class attributes
@@ -61,50 +52,7 @@ class Layer(HasTraits):
 
     mouse_mode_toolbar = "BaseLayerToolBar"
 
-    # Traits
-
-    # invariant is sort of a serial number of the layer in a LayerManager: an
-    # id that doesn't change when the layer is renamed or reordered.  It is
-    # unique within a particular instance of a LayerManager, and gets created
-    # when the layer is added to a LayerManager.  Initial value of -999 is a
-    # flag to indicate that the invariant hasn't been initialized.
-    invariant = Int(-999)
-
-    # the invariant of the parent layer (used in triangulation so that a
-    # retriangulation will replace the older triangulation.
-    dependent_of = Int(-1)
-
-    mime = Str("")
-
-    skip_on_insert = Bool(False)
-
-    file_path = Unicode
-
-    style = Any
-
-    bounds = Any(rect.NONE_RECT)
-
-    grouped = Bool
-
-    # this is any change that might affect the properties panel (e.g., number
-    # of points selected)
-    change_count = Int(0)
-
-    load_error_string = Str
-
-    load_warning_string = Str
-
-    load_warning_details = Str
-
-    manager = Any
-
-    start_time = Float(0.0)
-
-    end_time = Float(0.0)
-
-    rebuild_needed = Bool(False)
-
-    ##### class attributes
+    skip_on_insert = False
 
     has_control_points = False
 
@@ -120,7 +68,42 @@ class Layer(HasTraits):
 
     selection_info_panel = []
 
-    def _style_default(self):
+    def __init__(self, manager):
+        self.manager = manager
+
+        # invariant is sort of a serial number of the layer in a LayerManager:
+        # an id that doesn't change when the layer is renamed or reordered.  It
+        # is unique within a particular instance of a LayerManager, and gets
+        # created when the layer is added to a LayerManager.  Initial value of
+        # -999 is a flag to indicate that the invariant hasn't been
+        # initialized.
+        self.invariant = -999
+
+        # the invariant of the parent layer (used in triangulation so that a
+        # retriangulation will replace the older triangulation.
+        self.dependent_of = -1
+
+        self.mime = ""
+        self.file_path = ""
+
+        self.style = self.calc_initial_style()
+        self.bounds = rect.NONE_RECT
+        self.grouped = False
+
+        # this is any change that might affect the properties panel (e.g.,
+        # number of points selected)
+        self.change_count = 0
+
+        self.load_error_string = ""
+        self.load_warning_string = ""
+        self.load_warning_details = ""
+
+        self.start_time = 0.0
+        self.end_time = 0.0
+
+        self.rebuild_needed = False
+
+    def calc_initial_style(self):
         style = self.manager.get_default_style_for(self)
         if self.use_color_cycling:
             style.use_next_default_color()
@@ -431,9 +414,8 @@ class Layer(HasTraits):
         if not cls.type_to_class_defs:
             subclasses = get_all_subclasses(Layer)
             for kls in subclasses:
-                layer = kls()
-                if layer.type:
-                    cls.type_to_class_defs[layer.type] = kls
+                if kls.type:
+                    cls.type_to_class_defs[kls.type] = kls
         return cls.type_to_class_defs
 
     @classmethod
@@ -806,3 +788,41 @@ class ProjectedLayer(Layer):
 class ScreenLayer(Layer):
     def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
         log.debug("Layer %s doesn't have screen objects to render" % self.name)
+
+
+class StickyLayer(ScreenLayer):
+    layer_info_panel = ["X location", "Y location"]
+
+    x_offset = 10
+    y_offset = 10
+
+    def __init__(self, manager, x_percentage=None, y_percentage=None):
+        super().__init__(manager)
+        self.x_percentage = 0.0 if x_percentage is None else x_percentage
+        self.y_percentage = 0.0 if y_percentage is None else y_percentage
+
+    def x_percentage_to_json(self):
+        return self.x_percentage
+
+    def x_percentage_from_json(self, json_data):
+        self.x_percentage = json_data['x_percentage']
+
+    def y_percentage_to_json(self):
+        return self.y_percentage
+
+    def y_percentage_from_json(self, json_data):
+        self.y_percentage = json_data['y_percentage']
+
+
+class StickyResizableLayer(StickyLayer):
+    layer_info_panel = ["X location", "Y location", "Magnification"]
+
+    def __init__(self, manager, x_percentage=None, y_percentage=None, magnification=None):
+        super().__init__(manager, x_percentage, y_percentage)
+        self.magnification = 0.2 if magnification is None else magnification
+
+    def magnification_to_json(self):
+        return self.magnification
+
+    def magnification_from_json(self, json_data):
+        self.magnification = json_data['magnification']

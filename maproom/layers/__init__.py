@@ -22,4 +22,4 @@ from . import state
 
 
 # List for style defaults: each class of object has its own default style
-styleable_layers = [LineVectorObject(), PolylineObject(), RectangleVectorObject(), EllipseVectorObject(), CircleVectorObject(), PolygonObject(), OverlayTextObject(), OverlayIconObject(), ArrowTextBoxLayer(), ArrowTextIconLayer(), ParticleLayer()]
+styleable_layers = [LineVectorObject, PolylineObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, PolygonObject, OverlayTextObject, OverlayIconObject, ArrowTextBoxLayer, ArrowTextIconLayer, ParticleLayer]

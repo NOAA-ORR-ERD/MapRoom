@@ -5,10 +5,6 @@ from shapely.geometry import LineString
 from shapely.geometry import Polygon
 from shapely.geometry import box
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-
 from ..library.Boundary import Boundary
 from ..errors import PointsError
 from ..library.shapely_utils import shapely_to_polygon
@@ -31,17 +27,17 @@ class PolygonLayer(PointLayer):
 
     mouse_mode_toolbar = "PolygonLayerToolBar"
 
-    rings = Any
-
-    point_adjacency_array = Any  # parallels the points array
-
-    ring_identifiers = Any
-
     visibility_items = ["points", "polygons"]
 
     layer_info_panel = ["Polygon count"]
 
     selection_info_panel = []
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.rings = None
+        self.point_adjacency_array = None  # parallels the points array
+        self.ring_identifiers = None
 
     def __str__(self):
         try:

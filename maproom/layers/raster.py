@@ -1,9 +1,3 @@
-
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-from traits.api import Unicode
-
 from ..library import rect
 
 from ..renderer import NullPicker
@@ -28,17 +22,17 @@ class RasterLayer(ProjectedLayer):
 
     opaque = True
 
-    # Traits
-
     name = "Raster"
 
     type = "image"
 
-    image_data = Any
-
     layer_info_panel = ["Transparency", "Raster size", "Memory used"]
 
     selection_info_panel = []
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.image_data = None
 
     def test_contents_equal(self, other):
         """Test routine to compare layers"""

@@ -1,9 +1,5 @@
 import numpy as np
 
-# Enthought library imports.
-from traits.api import Str
-from traits.api import Unicode
-
 # MapRoom imports
 from .base import Layer
 from .line import LineLayer

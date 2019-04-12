@@ -4,12 +4,6 @@ Layer type to be used as a base class for layers with points
 """
 import numpy as np
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-from traits.api import Unicode
-from traits.api import Float
-
 from ..library import rect
 from ..library.depth_utils import convert_units
 from ..renderer import data_types
@@ -31,21 +25,20 @@ class PointBaseLayer(ProjectedLayer):
 
     type = "base_point"
 
-    points = Any
-
-    hidden_points = Any  # numpy array listing indexes of points to hide
-
-    point_size = Float(4.0)
-
-    selected_point_size = Float(15.0)
-
-    selected_line_width = Float(10.0)
-
     visibility_items = ["points"]
 
     layer_info_panel = ["Point count"]
 
     selection_info_panel = []
+
+    def __init__(self, manager):
+        super().__init__(manager)
+
+        self.points = None
+        self.hidden_points = None  # numpy array listing indexes of points to hide
+        self.point_size = 4.0
+        self.selected_point_size = 15.0
+        self.selected_line_width = 10.0
 
     def __str__(self):
         return ProjectedLayer.__str__(self) + ", %d points" % (self.num_points)

@@ -1,9 +1,4 @@
-
 from shapely.wkt import loads
-
-# Enthought library imports.
-from traits.api import List
-from traits.api import Str
 
 from ..library import rect
 from ..library.shapely_utils import add_maproom_attributes_to_shapely_geom
@@ -24,13 +19,15 @@ class PolygonShapefileLayer(PolygonLayer):
     """
     type = "shapefile"
 
-    geometry = List
-
     use_color_cycling = True
 
     layer_info_panel = ["Shapefile Objects", "Polygon count"]
 
     selection_info_panel = []
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.geometry = []
 
     def __str__(self):
         num = len(self.geometry)

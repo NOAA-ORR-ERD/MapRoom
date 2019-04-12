@@ -1,12 +1,5 @@
 import queue
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
 from ..renderer import TileImageData
 from ..renderer import alpha_from_int
 from .. import servers
@@ -30,38 +23,26 @@ class TileLayer(ProjectedLayer):
 
     selection_info_panel = ["Tile server"]
 
-    map_server_id = Int
-
-    image_data = Any(None)
-
-    current_size = Any(None)  # holds tuple of screen size
-
-    current_proj = Any(None)  # holds rect of projected coords
-
-    current_world = Any(None)  # holds rect of world coords
-
-    current_zoom = Int(-1)  # holds map zoom level
-
-    rebuild_needed = Bool(True)
-
-    threaded_request_results = Any
-
-    download_status_text = Any(None)
-
-    checkerboard_when_loading = False
-
-    # class attributes
-
     bounded = False
 
     background = True
 
     opaque = True
 
-    ##### Traits
+    checkerboard_when_loading = False
 
-    def _map_server_id_default(self):
-        return servers.get_default_tile_server_id()
+    def __init__(self, manager):
+        super().__init__(manager)
+
+        self.map_server_id = servers.get_default_tile_server_id()
+        self.image_data = None
+        self.current_size = None  # holds tuple of screen size
+        self.current_proj = None  # holds rect of projected coords
+        self.current_world = None  # holds rect of world coords
+        self.current_zoom = -1  # holds map zoom level
+        self.rebuild_needed = True
+        self.threaded_request_results = queue.Queue()
+        self.download_status_text = None
 
     ##### Serialization
 
@@ -77,9 +58,6 @@ class TileLayer(ProjectedLayer):
         index = servers.get_tile_server_id_from_url(url)
         if index is not None:
             self.map_server_id = index
-
-    def _threaded_request_results_default(self):
-        return queue.Queue()
 
     def is_valid_threaded_result(self, map_server_id, tile_request):
         if map_server_id == self.map_server_id:

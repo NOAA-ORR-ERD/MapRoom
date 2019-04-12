@@ -1,11 +1,3 @@
-
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
 from ..library import rect
 from ..renderer import ImageData
 from ..renderer import alpha_from_int
@@ -31,27 +23,7 @@ class WMSLayer(ProjectedLayer):
 
     selection_info_panel = ["Map server", "Map layer"]
 
-    map_server_id = Int
-
-    map_layers = Any(None)  # holds a set of names representing shown overlay layers
-
-    image_data = Any
-
-    current_size = Any(None)  # holds tuple of screen size
-
-    current_proj = Any(None)  # holds rect of projected coords
-
-    current_world = Any(None)  # holds rect of world coords
-
-    rebuild_needed = Bool(True)
-
-    threaded_request_ready = Any(None)
-
-    download_status_text = Any(None)
-
     checkerboard_when_loading = False
-
-    # class attributes
 
     bounded = False
 
@@ -59,10 +31,18 @@ class WMSLayer(ProjectedLayer):
 
     opaque = True
 
-    ##### Traits
+    def __init__(self, manager):
+        super().__init__(manager)
 
-    def _map_server_id_default(self):
-        return servers.get_default_wms_id()
+        self.map_server_id = servers.get_default_wms_id()
+        self.map_layers = None
+        self.image_data = None
+        self.current_size = None  # holds tuple of screen size
+        self.current_proj = None  # holds rect of projected coords
+        self.current_world = None  # holds rect of world coords
+        self.rebuild_needed = True
+        self.threaded_request_ready = None
+        self.download_status_text = None
 
     ##### Serialization
 
@@ -164,7 +144,7 @@ class WMSLayer(ProjectedLayer):
                 self.rebuild_needed = True
                 canvas.render()
             self.name = downloader.host.name
-            canvas.project.layer_metadata_changed(self)
+            self.manager.layer_metadata_changed_event(self)
         else:
             self.download_status_text = None
             # Try again, waiting till we get a successful contact

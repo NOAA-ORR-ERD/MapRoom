@@ -1,11 +1,5 @@
 import numpy as np
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
 from ..library.scipy_ckdtree import cKDTree
 from ..library.Boundary import Boundaries
 from ..library.shapely_utils import shapely_to_polygon
@@ -29,10 +23,6 @@ class LineLayer(PointLayer):
 
     type = "line"
 
-    line_segment_indexes = Any
-
-    point_identifiers = Any
-
     pickable = True  # this is a layer that supports picking
 
     use_color_cycling = True
@@ -40,6 +30,11 @@ class LineLayer(PointLayer):
     visibility_items = ["points", "lines", "labels"]
 
     layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.line_segment_indexes = None
+        self.point_identifiers = None
 
     def __str__(self):
         return PointLayer.__str__(self) + ", %d lines" % self.num_lines
@@ -680,15 +675,15 @@ class LineEditLayer(LineLayer):
 
     type = "line_edit"
 
-    parent_layer = Any
-
-    object_type = Int
-
-    object_index = Int
-
     layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     transient_edit_layer = True
+
+    def __init__(self, manager, parent_layer, object_type, object_index=-1):
+        super().__init__(manager)
+        self.parent_layer = parent_layer
+        self.object_type = object_type
+        self.object_index = object_index
 
     def get_new_points_after_move(self, indexes):
         new_points = {}

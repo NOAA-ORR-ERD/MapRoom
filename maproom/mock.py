@@ -52,8 +52,8 @@ class MockTask(object):
 
 
 class MockTree(object):
-    def __init__(self):
-        self.layer = Layer()
+    def __init__(self, manager):
+        self.layer = Layer(manager)
 
     def get_edit_layer(self):
         return self.layer
@@ -66,7 +66,7 @@ class MockProject(object):
         self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager(None)
         if add_tree_control:
-            self.layer_tree_control = MockTree()
+            self.layer_tree_control = MockTree(self.layer_manager)
             self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
 
     @property

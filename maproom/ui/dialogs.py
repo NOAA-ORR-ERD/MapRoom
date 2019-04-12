@@ -191,7 +191,7 @@ class IconDialog(wx.Dialog):
 class StyleDialog(wx.Dialog):
     displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon", "Icon size"]
 
-    def __init__(self, project, layers):
+    def __init__(self, project, layer_classes):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))
         self.lm = project.layer_manager
 
@@ -207,11 +207,10 @@ class StyleDialog(wx.Dialog):
         def set_style_override(self, style):
             self.style.copy_from(style)
 
-        self.styleable_layers = list(layers)
+        self.styleable_layers = [ly(self.lm) for ly in layer_classes]
         self.styleable_layers.append(self.other)
         for v in self.styleable_layers:
             self.mock_project.layer_manager.insert_layer([2], v)
-            v.manager = self.lm
             v.style = self.lm.get_default_style_for(v)
             v.set_style = types.MethodType(set_style_override, v)
 

@@ -1,13 +1,5 @@
 import numpy as np
 
-# Enthought library imports.
-from traits.api import Enum
-from traits.api import Float
-from traits.api import Int
-from traits.api import Property
-from traits.api import Str
-from traits.api import Unicode
-
 from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
@@ -33,14 +25,6 @@ class PointLayer(PointBaseLayer):
 
     mouse_mode_toolbar = "VectorLayerToolBar"
 
-    merged_points_index = Int(0)
-
-    default_depth = Float(1.0)
-
-    depth_unit = Property(Str)
-
-    _depth_unit = Enum("unknown", "meters", "feet", "fathoms")
-
     pickable = True  # is this a layer that support picking?
 
     visibility_items = ["points", "labels"]
@@ -49,11 +33,18 @@ class PointLayer(PointBaseLayer):
 
     selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]
 
-    # Trait setters/getters
-    def _get_depth_unit(self):
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.merged_points_index = 0
+        self.default_depth = 1.0
+        self._depth_unit = "unknown"
+
+    @property
+    def depth_unit(self):
         return self._depth_unit
 
-    def _set_depth_unit(self, unit):
+    @depth_unit.setter
+    def depth_unit(self, unit):
         unit = unit.lower()
         if unit in ['meter', 'meters', 'm']:
             unit = 'meters'

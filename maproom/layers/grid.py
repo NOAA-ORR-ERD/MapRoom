@@ -2,9 +2,6 @@
 import bisect
 import numpy as np
 
-# Enthought library imports.
-from traits.api import Unicode, Str
-
 from ..library import rect, coordinates
 from ..renderer import alpha_from_int
 
@@ -22,8 +19,6 @@ class Graticule(ScreenLayer):
     type = "grid"
 
     skip_on_insert = True
-
-    # class attributes
 
     bounded = False
 

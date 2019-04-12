@@ -2,10 +2,6 @@ import numpy as np
 
 from pytriangle import triangulate_simple
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
@@ -25,13 +21,15 @@ class TriangleLayer(PointLayer):
 
     mouse_mode_toolbar = "BaseLayerToolBar"
 
-    triangles = Any
-
     visibility_items = ["points", "triangles", "labels"]
 
     use_color_cycling = True
 
     layer_info_panel = ["Triangle count", "Show depth shading"]
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.triangles = None
 
     def __str__(self):
         try:

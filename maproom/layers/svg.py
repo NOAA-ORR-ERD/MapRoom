@@ -1,18 +1,15 @@
 # coding=utf8
 
-# Enthought library imports.
-from traits.api import on_trait_change, Unicode, Str, Any, Float
-
 from ..library import rect
 from ..library.svg_utils import SVGOverlay
 
-from .base import ScreenLayer
+from .base import StickyResizableLayer
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class SVGLayer(ScreenLayer):
+class SVGLayer(StickyResizableLayer):
     """SVG screen layer
 
     Shows an svg as an overlay layer
@@ -21,54 +18,33 @@ class SVGLayer(ScreenLayer):
 
     type = "svg"
 
-    x_percentage = Float(1.0)
-
-    y_percentage = Float(0.0)
-
-    magnification = Float(0.2)
-
     # SVG source text goes here
-    svg_source = Str("")
-
-    svg = Any
+    default_svg_source = ""
 
     skip_on_insert = True
 
-    # class attributes
-
     bounded = False
 
-    layer_info_panel = ["X location", "Y location", "Magnification"]
+    def __init__(self, manager, svg_source=None, x_percentage=1.0, y_percentage=0.0, magnification=0.2):
+        super().__init__(manager, x_percentage, y_percentage, magnification)
+        self._svg = None
+        self._svg_source = None
+        self.svg_source = self.default_svg_source if svg_source is None else svg_source
 
-    x_offset = 10
-    y_offset = 10
+    @property
+    def svg(self):
+        if self._svg is None:
+            self._svg = SVGOverlay(self.svg_source)
+        return self._svg
 
-    def _svg_default(self):
-        return SVGOverlay(self.svg_source)
+    @property
+    def svg_source(self):
+        return self._svg_source
 
-    @on_trait_change('svg_source')
-    def svg_changed(self):
-        self.svg = self._svg_default()
-
-    ##### serialization
-
-    def x_percentage_to_json(self):
-        return self.x_percentage
-
-    def x_percentage_from_json(self, json_data):
-        self.x_percentage = json_data['x_percentage']
-
-    def y_percentage_to_json(self):
-        return self.y_percentage
-
-    def y_percentage_from_json(self, json_data):
-        self.y_percentage = json_data['y_percentage']
-
-    def magnification_to_json(self):
-        return self.magnification
-
-    def magnification_from_json(self, json_data):
-        self.magnification = json_data['magnification']
+    @svg_source.setter
+    def svg_source(self, value):
+        self._svg_source = value
+        self._svg = None  # force recreation of svg overlay
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if picker.is_active:

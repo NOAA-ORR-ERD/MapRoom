@@ -68,7 +68,7 @@ class AddLayerCommand(Command):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
-        layer = self.layer_class(manager=lm)
+        layer = self.layer_class(lm)
 
         layer.new()
         lm.insert_loaded_layer(layer, editor, self.before, self.after)
@@ -433,7 +433,7 @@ class MoveLayerCommand(Command):
 
         # here we "re-get" the source layer so that it's replaced by a
         # placeholder and temporarily removed from the tree
-        temp_layer = ly.EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_lm)
         source_layer, children = lm.replace_layer(mi_source, temp_layer)
 
         # if we are inserting onto a folder, insert as the second item in the folder
@@ -455,7 +455,7 @@ class MoveLayerCommand(Command):
     def undo(self, editor):
         lm = editor.layer_manager
         mi_temp, = self.undo_info.data
-        temp_layer = ly.EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_lm)
         lm.insert_layer(mi_temp, temp_layer)
 
         source_layer = lm.get_layer_by_invariant(self.moved_layer)
@@ -490,7 +490,7 @@ class TriangulateLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        t_layer = ly.TriangleLayer(manager=lm)
+        t_layer = ly.TriangleLayer(lm)
         try:
             progress_log.info("START=Triangulating layer %s" % layer.name)
             t_layer.triangulate_from_layer(layer, self.q, self.a)
@@ -563,7 +563,7 @@ class ToPolygonLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = ly.PolygonParentLayer(manager=lm)
+        p = ly.PolygonParentLayer(lm)
         try:
             progress_log.info("START=Boundary to polygon layer %s" % layer.name)
             boundaries = layer.get_all_boundaries()
@@ -629,7 +629,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = ly.LineLayer(manager=lm)
+        p = ly.LineLayer(lm)
         points, segments = layer.get_points_lines()
         p.set_data(points, 0, segments)
         p.name = "Verdat from %s" % layer.name
@@ -674,7 +674,7 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, feature_code=self.feature_code)
+        p = ly.RingEditLayer(lm, layer, self.obj_type, self.feature_code)
 
         if self.feature_code < 0:
             poly_type = "Hole"
