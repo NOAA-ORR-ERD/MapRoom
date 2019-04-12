@@ -234,6 +234,22 @@ class picker_framebuffer(SawxRadioAction):
         return self.editor.layer_canvas.debug_show_picker_framebuffer
 
 
+class save_layout(SawxAction):
+    name = 'Save Layout'
+    tooltip = 'Save UI layout as default for subsequent projects'
+
+    def perform(self, action_key):
+        self.editor.save_user_defined_default_layout()
+
+
+class restore_default_layout(SawxAction):
+    name = 'Restore Default Layout'
+    tooltip = 'Restore the UI layout to the application default'
+
+    def perform(self, action_key):
+        self.editor.restore_default_layout(False)
+
+
 class zoom_in(SawxAction):
     name = 'Zoom In'
     tooltip = 'Increase magnification'

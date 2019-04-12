@@ -12,7 +12,7 @@ from sawx.errors import ProgressCancelError
 import sawx.clipboard as clipboard
 from sawx.ui.popuputil import PopupStatusBar
 from sawx.ui.tilemanager import TileManager
-from sawx.templates import get_template
+from sawx.persistence import get_template, save_template
 from sawx.events import EventHandler
 from sawx import persistence
 
@@ -132,6 +132,11 @@ class ProjectEditor(SawxEditor):
             None,
             "bounding_box",
             "picker_framebuffer",
+            None,
+            ["UI Layout",
+                "save_layout",
+                "restore_default_layout",
+            ],
         ],
         ["Layer",
             "new_vector_layer",
@@ -610,9 +615,9 @@ class ProjectEditor(SawxEditor):
         layout = self.control.calc_layout()
         log.debug("on_layout_changed: new tilemanager layout {json.dumps(layout)}")
 
-    def get_default_layout(self):
+    def get_default_layout(self, include_user_defined=True):
         try:
-            data = get_template("%s.default_layout" % self.task_id)
+            data = get_template("%s.default_layout" % self.task_id, include_user_defined)
         except OSError:
             log.error("no default layout")
             e = {}
@@ -624,12 +629,20 @@ class ProjectEditor(SawxEditor):
                 e = {}
         return e
 
+    def restore_default_layout(self, include_user_defined=True):
+        layout = self.get_default_layout(include_user_defined)
+        self.control.restore_layout(layout)
+
+    def save_user_defined_default_layout(self):
+        layout = self.control.calc_layout()
+        text = json.dumps(layout)
+        save_template("%s.default_layout" % self.task_id, text, False)
+
     def create_layout(self):
         json = self.document.extra_metadata
 
         panel = self.control
-        layout = self.get_default_layout()
-        panel.restore_layout(layout)
+        self.restore_default_layout()
 
         # Mac can occasionally fail to get an OpenGL context, so creation of
         # the layer canvas can fail. Attempting to work around by giving it
