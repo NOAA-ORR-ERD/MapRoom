@@ -313,7 +313,6 @@ class ProjectEditor(SawxEditor):
             "projected_point_center": self.layer_canvas.projected_point_center,
             "projected_units_per_pixel": self.layer_canvas.projected_units_per_pixel,
             "timeline": self.timeline.serialize_json(),
-            "tile_manager": self.control.calc_layout()["tile_manager"]
             }
 
     def layer_visibility_to_json(self):
@@ -629,10 +628,7 @@ class ProjectEditor(SawxEditor):
         json = self.document.extra_metadata
 
         panel = self.control
-        if "tile_manager" in json:
-            layout = json
-        else:
-            layout = self.get_default_layout()
+        layout = self.get_default_layout()
         panel.restore_layout(layout)
 
         # Mac can occasionally fail to get an OpenGL context, so creation of
