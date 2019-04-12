@@ -332,15 +332,15 @@ class ParticleFolder(Folder):
         children = self.get_particle_layers()
         for c in children:
             c.recalc_colors_from_colormap(var, colormap)
-            self.manager.layer_contents_changed = c
-            self.manager.refresh_needed = None
+            self.manager.layer_contents_changed_event(c)
+        self.manager.refresh_needed_event(None)
 
     def set_colors_from_status_codes(self):
         children = self.get_particle_layers()
         for c in children:
             c.recalc_colors_from_status_codes()
-            self.manager.layer_contents_changed = c
-            self.manager.refresh_needed = None
+            self.manager.layer_contents_changed_event(c)
+        self.manager.refresh_needed_event(None)
 
     def set_colormap(self, new_colormap):
         self.colormap = new_colormap
