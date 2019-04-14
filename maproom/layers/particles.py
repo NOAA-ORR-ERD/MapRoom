@@ -331,8 +331,9 @@ class ParticleFolder(Folder):
     def set_colors_from_colormap(self, var, colormap):
         children = self.get_particle_layers()
         for c in children:
-            c.recalc_colors_from_colormap(var, colormap)
-            self.manager.layer_contents_changed_event(c)
+            if var in c.scalar_vars:
+                c.recalc_colors_from_colormap(var, colormap)
+                self.manager.layer_contents_changed_event(c)
         self.manager.refresh_needed_event(None)
 
     def set_colors_from_status_codes(self):
