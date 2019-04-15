@@ -119,7 +119,7 @@ class MouseHandler(object):
             items.append("Zoom level=%.2f" % c.zoom_level)
         if instructions:
             items.append(instructions)
-        e.status_message = " ".join(items)
+        e.frame.status_message(" ".join(items))
 
         obj_text = ""
         long_text = ""
@@ -129,7 +129,7 @@ class MouseHandler(object):
             if not long_text:
                 long_text = self.get_long_help_text()
 
-        e.debug_message = obj_text
+        e.frame.status_message(obj_text, True)
         e.long_status.show_status_text(long_text, multiline=True)
 
     def process_mouse_motion_up(self, event):
