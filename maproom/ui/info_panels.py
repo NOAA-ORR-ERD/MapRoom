@@ -16,7 +16,7 @@ from ..library import colormap
 from ..library.colormap.ui_combobox import ColormapComboBox, GnomeColormapDialog
 from ..library.textparse import parse_int_string, int_list_to_string
 from ..mouse_commands import StyleChangeCommand, StatusCodeColorCommand, SetAnchorCommand, ChangeDepthCommand, MovePointsCommand, TextCommand, BorderWidthCommand
-from ..menu_commands import RenameLayerCommand
+from .. import menu_commands as mec
 from ..vector_object_commands import MoveControlPointCommand
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_wx_colour
 from ..library.marplot_icons import marplot_icon_id_to_name
@@ -289,7 +289,7 @@ class LayerNameField(TextEditField):
 
     def process_text_change(self, layer):
         name = self.ctrl.GetValue()
-        cmd = RenameLayerCommand(layer, name)
+        cmd = mec.RenameLayerCommand(layer, name)
         self.process_command(cmd)
         self.ctrl.SetFocus()
 
@@ -1690,6 +1690,41 @@ class ScalarExpressionField(TextEditField):
         self.panel.project.refresh()
 
 
+class ButtonActionField(InfoField):
+    display_label = False
+
+    button_label = ""
+
+    def fill_data(self, layer):
+        pass
+
+    def create_control(self):
+        c = wx.Button(self.parent, -1, self.button_label)
+        c.Bind(wx.EVT_BUTTON, self.button_pressed)
+        return c
+
+    def button_pressed(self, event):
+        pass
+
+
+class SaveChangesInPolygon(ButtonActionField):
+    button_label = "Save Changes in Polygon"
+
+    def button_pressed(self, event):
+        layer = self.panel.project.current_layer
+        cmd = mec.PolygonSaveEditLayerCommand(layer)
+        self.panel.project.process_command(cmd)
+
+
+class CancelEditInPolygon(ButtonActionField):
+    button_label = "Cancel Edit"
+
+    def button_pressed(self, event):
+        layer = self.panel.project.current_layer
+        cmd = mec.PolygonCancelEditLayerCommand(layer)
+        self.panel.project.process_command(cmd)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
@@ -1838,6 +1873,8 @@ class InfoPanel(PANELTYPE):
         "Scalar value ranges": ScalarSummaryField,
         "Legend type": LegendTypeField,
         "Legend labels": LegendLabelsField,
+        "Save polygon": SaveChangesInPolygon,
+        "Cancel polygon": CancelEditInPolygon,
     }
 
     def create_fields(self, layer, fields):

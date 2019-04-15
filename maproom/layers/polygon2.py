@@ -31,7 +31,7 @@ class RingEditLayer(LineLayer):
 
     type = "ring_edit"
 
-    layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
+    layer_info_panel = ["Point count", "Line segment count", "Color", "Save polygon", "Cancel polygon"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude", "Area"]
 
