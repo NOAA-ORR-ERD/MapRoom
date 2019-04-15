@@ -173,7 +173,7 @@ class PolygonParentLayer(PointLayer):
 
     visibility_items = ["points", "lines", "labels"]
 
-    layer_info_panel = ["Point count", "Polygon count", "Flagged points", "Color"]
+    layer_info_panel = ["Point count", "Polygon count"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
