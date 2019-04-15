@@ -63,6 +63,8 @@ class LayerManager(SawxDocument):
         self.background_refresh_needed_event = EventHandler(self)
         self.threaded_image_loaded_event = EventHandler(self)
 
+        self.loader_class = None
+
         # if the project is loaded from a zip file, the ExpandZip object is
         # stored here so the unpacked directory can be referenced when re-
         # saving the project
@@ -156,8 +158,13 @@ class LayerManager(SawxDocument):
 
     #### Load
 
+    @property
+    def can_revert(self):
+        return hasattr(self.loader_class, "load_project")
+
     def load_raw_data(self):
         loader = self.file_metadata["loader"]
+        self.loader_class = loader.__class__
         batch_flags = BatchStatus()
         # FIXME: Add load project command that clears all layers
         try:

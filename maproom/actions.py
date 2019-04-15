@@ -185,9 +185,11 @@ class revert_project(SawxAction):
         return self.editor.document.can_revert
 
     def perform(self, action_key):
-        message = "Revert project from\n\n%s?" % self.editor.document.metadata.uri
+        uri = self.editor.document.uri
+        message = "Revert project from\n\n%s?" % uri
         if self.editor.frame.confirm(message=message, title='Revert Project?'):
-            self.editor.load_omnivore_document(self.editor.document)
+            self.editor.frame.load_file(uri, self.editor)
+            self.editor.frame.close_editor(self.editor)
 
 
 class default_style(SawxAction):
