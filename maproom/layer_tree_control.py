@@ -365,14 +365,15 @@ class LayerTreeControl(wx.Panel):
         #wx.CallAfter(self.project.update_layer_selection_ui, layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         prefs = self.project.preferences
-        if prefs.identify_layers and self.user_selected_layer:
-            layer.layer_selected_hook()
-        self.user_selected_layer = False
-        #self.project.refresh()
         self.project.status_message = str(layer)
         lm = self.project.layer_manager
         sel = lm.get_multi_index_of_layer(layer)
         log.debug("Multi-index of selected layer: %s" % sel)
+
+        if prefs.identify_layers and self.user_selected_layer:
+            layer.layer_selected_hook()
+            lm.refresh_needed_event(None)
+        self.user_selected_layer = False
 
     def handle_start_rename(self, event):
         (clicked_item, flags) = self.tree.HitTest(event.GetPosition())
