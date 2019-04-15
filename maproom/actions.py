@@ -617,7 +617,7 @@ class delete_selection(LayerAction):
             self.editor.delete_selection()
 
 
-class clear_flagged(SawxAction):
+class clear_flagged(LayerAction):
     name = 'Clear Flagged'
     tooltip = 'Deselects all flagged items in the current layer'
 
@@ -628,7 +628,7 @@ class clear_flagged(SawxAction):
         self.editor.clear_all_flagged()
 
 
-class flagged_to_selection(SawxAction):
+class flagged_to_selection(LayerAction):
     name = 'Select Flagged'
     tooltip = 'Select all flagged items in the current layer'
 
