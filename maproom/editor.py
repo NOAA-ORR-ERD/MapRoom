@@ -261,6 +261,9 @@ class ProjectEditor(SawxEditor):
         self.mouse_mode_toolbar = ""
         self.mouse_mode_factory = mouse_handler.SelectionMode
 
+    def prepare_destroy(self):
+        self.layer_canvas = None
+
     def create_event_bindings(self):
         doc = self.layer_manager
         doc.layer_loaded_event += self.layer_loaded
