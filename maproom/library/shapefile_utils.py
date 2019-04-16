@@ -31,33 +31,33 @@ def parse_geom(geom, point_list):
         for poly in geom.geoms:
             points = np.array(poly.exterior.coords[:-1], dtype=np.float64)
             index = len(point_list)
-            point_list.extend(points)
+            point_list.extend(points[:,0:2])
             sub_item = [poly.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
             for hole in poly.interiors:
                 points = np.asarray(hole.coords[:-1], dtype=np.float64)
                 index = len(point_list)
-                point_list.extend(points)
+                point_list.extend(points[:,0:2])
                 sub_item.append(GeomInfo(index, len(points), name, -feature_code, feature_name))
             item.append(sub_item)
     elif geom.geom_type == 'Polygon':
         points = np.array(geom.exterior.coords[:-1], dtype=np.float64)
         index = len(point_list)
-        point_list.extend(points)
+        point_list.extend(points[:,0:2])
         item = [geom.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
         for hole in geom.interiors:
             points = np.asarray(hole.coords[:-1], dtype=np.float64)
             index = len(point_list)
-            point_list.extend(points)
+            point_list.extend(points[:,0:2])
             item.append(GeomInfo(index, len(points), name, -feature_code, feature_name))
     elif geom.geom_type == 'LineString':
         points = np.asarray(geom.coords, dtype=np.float64)
         index = len(point_list)
-        point_list.extend(points)
+        point_list.extend(points[:,0:2])
         item = [geom.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
     elif geom.geom_type == 'Point':
         points = np.asarray(geom.coords, dtype=np.float64)
         index = len(point_list)
-        point_list.extend(points)
+        point_list.extend(points[:,0:2])
         item = [geom.geom_type, GeomInfo(index, len(points), name, feature_code, feature_name)]
     else:
         log.warning(f"Unsupported geometry type {geom.geom_type}")
@@ -139,6 +139,8 @@ def load_shapefile(uri):
                 geometry_list = parse_ogr(dataset, point_list)
             except ValueError as e:
                 error = str(e)
+                import traceback
+                print(traceback.format_exc())
 
     if error:
         return (error, None, None)
