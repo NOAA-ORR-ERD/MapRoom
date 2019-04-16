@@ -91,7 +91,6 @@ class ParticleFolder(Folder):
     def init_status_codes(self, status_code_names):
         self.status_code_names = status_code_names
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
-        print(f"status code names: {self.status_code_names}")
 
     def scalar_value_ranges(self):
         children = self.get_particle_layers()
@@ -357,7 +356,7 @@ class ParticleFolder(Folder):
         return self.is_using_colormap() and self.colormap.is_discrete
 
     def subset_using_logical_operation(self, operation):
-        print(("folder: op=%s" % operation))
+        log.debug(f"subset_using_logical_operation: op={operation}")
 
         self.scalar_subset_expression = operation
         children = self.get_particle_layers()
@@ -609,7 +608,6 @@ class ParticleLayer(PointBaseLayer):
         return "\n".join(lines)
 
     def is_using_colormap(self, var=None):
-        print(self)
         return self.source_particle_folder.is_using_colormap(var)
 
     # JSON Serialization
@@ -699,7 +697,6 @@ class ParticleLayer(PointBaseLayer):
             b['colormap'] = colormap.get_colormap(jd) if jd is not None else None
         except KeyError:
             b['colormap'] = colormap.get_colormap('tab20')
-        print(f"SANITY!!!!!!! {b}")
         self.backward_compatibility_json = b
     #
 

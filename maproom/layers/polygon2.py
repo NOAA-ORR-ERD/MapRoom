@@ -247,7 +247,6 @@ class PolygonParentLayer(PointLayer):
 
     def create_first_ring(self, points, feature_code, color):
         num_new_points = len(points)
-        print("PONITS", points)
         self.points = data_types.make_points(num_new_points)
         self.ring_adjacency = data_types.make_ring_adjacency_array(num_new_points)
         feature_code = 1

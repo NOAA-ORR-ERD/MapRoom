@@ -431,7 +431,7 @@ class Layer:
         if 'url' in json_data and kls.restore_from_url:
             url = json_data['url']
             file_metadata = identify_file(url)
-            print(f"file metadata: {file_metadata}")
+            # print(f"file metadata: {file_metadata}")
             loader = file_metadata["loader"]
 
             log.debug(f"Loading layers from {url} using {loader}")
@@ -768,7 +768,7 @@ class Layer:
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
-        print(f"no popup actions for {self}")
+        log.warning(f"no popup actions for {self}")
         return []
 
 
