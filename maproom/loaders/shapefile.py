@@ -219,6 +219,8 @@ ext_to_driver_name = {
     ".kml": "KML",
 }
 
+need_projection = set(["ESRI Shapefile"])
+
 
 def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
     # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
@@ -230,6 +232,8 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
         driver_name = ext_to_driver_name[ext]
     except KeyError:
         raise RuntimeError(f"Unknown shapefile extension '{ext}'")
+
+    using_projection = driver_name in need_projection
 
     driver = ogr.GetDriverByName(driver_name)
     shapefile = driver.CreateDataSource(filename)
@@ -268,7 +272,10 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
         if feature_code >= 0:
             add_poly()
         
-        x, y = projection(points.x[first_index:first_index+count], points.y[first_index:first_index+count])
+        if using_projection:
+            x, y = projection(points.x[first_index:first_index+count], points.y[first_index:first_index+count])
+        else:
+            x, y = points.x[first_index:first_index+count], points.y[first_index:first_index+count]
         for index in range(0, count):
             dest_ring.AddPoint(x[index], y[index])
 
