@@ -2,7 +2,6 @@ import time
 
 import math
 import numpy as np
-import wx
 
 from .renderer import BaseRenderer
 from .picker import NullPicker
@@ -12,87 +11,6 @@ import maproom.preferences
 
 import logging
 log = logging.getLogger(__name__)
-
-
-class CanvasImageDialog(wx.Dialog):
-    border = 5
-
-    def __init__(self, parent, canvas_source):
-        wx.Dialog.__init__(self, parent, -1, "Image To Save", size=(700, 500), pos=wx.DefaultPosition, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        self.SetSizer(sizer)
-
-        size = canvas_source.GetSize()
-        self.project = self.copy_project(canvas_source.project)
-        canvas = canvas_source.__class__(self, project=self.project, size=size)
-        sizer.Add(canvas, 1, wx.ALL|wx.EXPAND, self.border)
-        self.canvas = canvas
-        self.canvas_source = canvas_source
-        self.is_synced = False
-
-        btnsizer = wx.StdDialogButtonSizer()
-        self.ok_btn = wx.Button(self, wx.ID_SAVE)
-        self.ok_btn.SetDefault()
-        btnsizer.AddButton(self.ok_btn)
-        btn = wx.Button(self, wx.ID_CANCEL)
-        btnsizer.AddButton(btn)
-        btnsizer.Realize()
-        sizer.Add(btnsizer, 0, wx.ALL|wx.EXPAND, self.border)
-
-        self.Bind(wx.EVT_BUTTON, self.on_button)
-        self.Bind(wx.EVT_PAINT, self.on_draw)
-
-        # Don't call self.Fit() otherwise the dialog buttons are zero height
-        sizer.Fit(self)
-
-    def copy_project(self, source_project):
-        p = source_project.__class__(source_project.document)
-        p.layer_visibility = source_project.layer_visibility
-        p.long_status = source_project.long_status
-        p.layer_tree_control = source_project.layer_tree_control
-        # p. = source_project.layer_info
-        # p. = source_project.selection_info
-        # p. = source_project.triangle_panel
-        # p. = source_project.merge_points_panel
-        p.undo_history = source_project.undo_history
-        # p. = source_project.flagged_control
-        # p. = source_project.download_control
-        p.timeline = source_project.timeline
-        return p
-
-    def sync_from_source(self):
-        if not self.is_synced:
-            print(f"syncing from {self.canvas_source}")
-            c = self.canvas
-            c.copy_viewport_from(self.canvas_source)
-            c.Refresh()
-            c.rebuild_renderers()
-            c.render_callback(immediately=True)
-            self.is_synced = True
-
-    def on_draw(self, evt):
-        self.canvas.on_draw(evt)  # initialize GL 
-        self.sync_from_source()
-        evt.Skip()
-
-    def on_button(self, evt):
-        if evt.GetId() == wx.ID_SAVE:
-            self.EndModal(wx.ID_SAVE)
-        else:
-            self.EndModal(wx.ID_CANCEL)
-        evt.Skip()
-
-    def show_and_get_image(self):
-        result = self.ShowModal()
-        if result == wx.ID_SAVE:
-            image = self.canvas.get_canvas_as_image()
-        else:
-            image = None
-        print("DESTROYING DIALOG")
-        self.canvas.is_gl_driver_ok = False
-        self.canvas.on_draw = self.canvas.on_erase
-        self.Destroy()
-        return image
 
 
 class BaseCanvas(object):
@@ -130,10 +48,6 @@ class BaseCanvas(object):
 
     def get_native_control(self):
         raise NotImplementedError
-
-    def get_image_from_dialog(self):
-        d = CanvasImageDialog(self.get_native_control(), self)
-        return d.show_and_get_image()
 
     def debug_structure(self, indent=""):
         lines = ["layer_canvas summary:"]

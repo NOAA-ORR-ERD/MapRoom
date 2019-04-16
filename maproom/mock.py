@@ -16,6 +16,11 @@ class MockApplication(object):
     command_line_args = []
 
 
+class MockFrame(object):
+    def status_message(self, message, debug=False):
+        pass
+
+
 class MockCanvas(object):
     def __init__(self):
         self.projection = Projection("+proj=merc +units=m +over")
@@ -68,6 +73,7 @@ class MockProject(object):
         if add_tree_control:
             self.layer_tree_control = MockTree(self.layer_manager)
             self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
+        self.frame = MockFrame()
 
     @property
     def current_layer(self):

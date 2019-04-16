@@ -493,11 +493,13 @@ class ProjectEditor(SawxEditor):
         # Deselect all layers because it's designed to be used as post-
         # processing image
         self.layer_tree_control.set_edit_layer(None)
-        if True:
-            self.layer_canvas.render_callback(immediately=True)  # force update including deselected layer
-            return self.layer_canvas.get_canvas_as_image()
-        else:
-            return self.layer_canvas.get_image_from_dialog()
+        return self.layer_canvas.get_image_from_dialog()
+
+    def get_numpy_image_before_prompt(self):
+        raw_data = self.get_numpy_image()
+        if raw_data is None:
+            raise RuntimeError("save cancelled")
+        return raw_data
 
     def print_preview(self):
         import os
