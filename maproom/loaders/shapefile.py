@@ -162,15 +162,17 @@ class ShapefileLoader(BaseLayerLoader):
         layers.append(parent)
 
         parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(uri)
-        geom_type = geometry_list[0]
-        items = geometry_list[1:]
-        if log.isEnabledFor(logging.DEBUG):
-            print(geom_type)
-            for item in geometry_list[1:]:
-                print(item)
-            print()
         if (parent.load_error_string == ""):
+            geom_type = geometry_list[0]
+            items = geometry_list[1:]
+            if log.isEnabledFor(logging.DEBUG):
+                print(geom_type)
+                for item in geometry_list[1:]:
+                    print(item)
+                print()
             parent.set_geometry(point_list, geometry_list)
+        else:
+            log.error(parent.load_error_string)
         return layers
 
     def save_to_local_file(self, filename, layer):
@@ -202,14 +204,28 @@ class ZipShapefileLoader(ShapefileLoader):
         return load_shapefile(filename)
 
 
+ext_to_driver_name = {
+    ".shp": "ESRI Shapefile",
+    ".json": "GeoJSON",
+    ".geojson": "GeoJSON",
+    ".kml": "KML",
+}
+
+
 def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
     # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
     srs = osr.SpatialReference()
     srs.ImportFromProj4(projection.srs)
 
-    driver = ogr.GetDriverByName('ESRI Shapefile')
+    _, ext = os.path.splitext(filename)
+    try:
+        driver_name = ext_to_driver_name[ext]
+    except KeyError:
+        raise RuntimeError("Unknown shapefile extension '{ext}'")
+
+    driver = ogr.GetDriverByName(driver_name)
     shapefile = driver.CreateDataSource(filename)
-    print(f"writing {filename}, srs={srs}")
+    log.debug(f"writing {filename}, driver={driver}, srs={srs}")
     shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
 
     file_point_index = 0

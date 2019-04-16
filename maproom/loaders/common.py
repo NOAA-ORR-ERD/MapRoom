@@ -129,6 +129,7 @@ class BaseLayerLoader(BaseLoader):
             uri = layer.file_path
         temp_dir = tempfile.mkdtemp()
         temp_file = os.path.join(temp_dir, os.path.basename(uri))
+        log.debug(f"save_layer: temp_file = {temp_file}")
 
         try:
             error = self.save_to_local_file(temp_file, layer)
@@ -148,7 +149,7 @@ class BaseLayerLoader(BaseLoader):
                 layer.manager.refresh_needed_event(True)
             try:
                 uri_base = os.path.dirname(uri)
-                print(f"uri={uri} uri_base={uri_base}")
+                log.debug(f"save_layers: uri={uri} uri_base={uri_base}")
                 for path in glob.glob(os.path.join(temp_dir, "*")):
                     filename = os.path.basename(path)
                     dest_uri = uri_base + "/" + filename
