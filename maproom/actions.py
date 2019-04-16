@@ -141,6 +141,9 @@ class LoaderForExt:
     def __str__(self):
         return "%s (%s)" % (self.loader.extension_name(self.ext), self.ext)
 
+    def __eq__(self, other):
+        return self.loader.__class__ == other.loader.__class__ and self.loader.ext == other.loader.ext
+
 
 class save_layer_as(SawxListAction):
     """ A menu for changing the active task in a task window.
