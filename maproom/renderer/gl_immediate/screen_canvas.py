@@ -615,7 +615,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def render_callback(self, immediately=False):
         log.debug("immediately: %s pending renders: %d" % (immediately, self.pending_render_count))
-        if immediately or self.pending_render_count > 0:
+        if self.is_canvas_initialized and (immediately or self.pending_render_count > 0):
             log.debug("rendering")
             self.SetCurrent(self.shared_context)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
