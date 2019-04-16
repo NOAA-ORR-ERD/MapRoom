@@ -16,7 +16,7 @@ def get_known_loaders():
 
     if _loaders is None:
         _loaders = get_all_subclasses(common.BaseLoader)
-    print(f"known loaders: {_loaders}")
+    log.debug(f"known loaders: {_loaders}")
     return _loaders
 
 def load_layers_from_url(url, mime, manager=None):
@@ -50,13 +50,13 @@ def load_layers(metadata, manager=None, **kwargs):
 
 def valid_save_formats(layer):
     valid = []
-    print(f"checking layer {layer.type}")
+    log.debug(f"checking layer {layer.type}")
     for loader in get_known_loaders():
         loader = loader()
-        print(f"checking loader {loader}")
+        log.debug(f"checking loader {loader}")
         if loader.can_save_layer(layer):
             valid.append((loader, "%s: %s" % (loader.name, loader.get_pretty_extension_list())))
-    print(f"valid: {valid}")
+    log.debug(f"valid: {valid}")
     return valid
 
 
