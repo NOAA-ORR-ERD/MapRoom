@@ -1,10 +1,11 @@
 import os
+import glob
 
 from osgeo import ogr, osr
 import numpy as np
 
 from sawx.filesystem import filesystem_path
-from sawx.utils.fileutil import ExpandZip
+from sawx.utils.fileutil import ExpandZip, save_to_flat_zip
 
 from maproom.library.shapefile_utils import load_shapefile, load_bna_items
 from maproom.layers import PolygonParentLayer
@@ -177,11 +178,7 @@ class ShapefileLoader(BaseLayerLoader):
 
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
-        desc = self.extension_desc[ext]
-        if ext == ".bna":
-            write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
-        else:
-            write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection)
+        write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection)
 
 
 class ZipShapefileLoader(ShapefileLoader):
@@ -195,13 +192,24 @@ class ZipShapefileLoader(ShapefileLoader):
 
     name = "Zipped Shapefile"
 
-    # def can_save_layer(self, layer):
-    #     return False
-
     def load_uri_as_items(self, uri):
         expanded_zip = ExpandZip(uri)
         filename = expanded_zip.find_extension(".shp")
         return load_shapefile(filename)
+
+    def save_to_local_file(self, filename, layer):
+        filename, ext = os.path.splitext(filename)
+        filename += ".shp"  # force OGR to use ESRI Shapefile
+        super().save_to_local_file(filename, layer)
+        return filename
+
+    def gather_save_files(self, temp_dir, uri):
+        # instead of moving files, zip them up and store at uri
+        files = glob.glob(os.path.join(temp_dir, "*"))
+        if len(files) == 1 and os.path.is_dir(files[0]):
+            files = glob.glob(os.path.join(files[0], "*"))
+        save_to_flat_zip(uri, files)
+        log.debug(f"gather_save_files: saved to zip {uri}")
 
 
 ext_to_driver_name = {
@@ -221,7 +229,7 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
     try:
         driver_name = ext_to_driver_name[ext]
     except KeyError:
-        raise RuntimeError("Unknown shapefile extension '{ext}'")
+        raise RuntimeError(f"Unknown shapefile extension '{ext}'")
 
     driver = ogr.GetDriverByName(driver_name)
     shapefile = driver.CreateDataSource(filename)
@@ -326,8 +334,8 @@ class BNAShapefileLoader(ShapefileLoader):
     def load_uri_as_items(self, uri):
         return load_bna_items(uri)
 
-    def save_to_fh(self, fh, layer):
-        save_bna_file(fh, layer)
+    def save_to_local_file(self, filename, layer):
+        write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
 
 
 if __name__ == "__main__":
