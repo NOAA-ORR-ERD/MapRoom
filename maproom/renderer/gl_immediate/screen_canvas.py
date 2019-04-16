@@ -90,6 +90,7 @@ class CanvasImageDialog(wx.Dialog):
         # p. = source_project.download_control
         p.timeline = source_project.timeline
         p.frame = MockFrame()
+        p.control = source_project.control
         return p
 
     def sync_from_source(self):
