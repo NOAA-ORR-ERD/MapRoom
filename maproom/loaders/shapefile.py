@@ -10,6 +10,7 @@ from maproom.library.shapefile_utils import load_shapefile, load_bna_items
 from maproom.layers import PolygonParentLayer
 from ..renderer import data_types
 from .common import BaseLayerLoader
+from .bna import save_bna_file
 
 import logging
 log = logging.getLogger(__name__)
@@ -17,8 +18,16 @@ progress_log = logging.getLogger("progress")
 
 
 def identify_loader(file_guess):
-    if file_guess.is_zipfile and file_guess.zipfile_contains_extension(".shp"):
+    if file_guess.is_text and file_guess.uri.lower().endswith(".bna"):
+        lines = file_guess.sample_lines
+        if b".KAP" not in lines[0]:
+            return dict(mime="application/x-maproom-bna", loader=BNAShapefileLoader())
+    if file_guess.is_zipfile:
+        if file_guess.zipfile_contains_extension(".shp"):
             return dict(mime="application/x-maproom-shapefile-zip", loader=ZipShapefileLoader())
+        else:
+            # should we bail if it's an unknown zipfile? Can OGR open zipped data?
+            pass
     try:
         file_path = file_guess.filesystem_path
     except OSError:
@@ -176,6 +185,17 @@ class ShapefileLoader(BaseLayerLoader):
 class ZipShapefileLoader(ShapefileLoader):
     mime = "application/x-maproom-shapefile-zip"
 
+    extensions = [".zip"]
+
+    extension_desc = {
+        ".zip": "Zipped ESRI Shapefile",
+    }
+
+    name = "Zipped Shapefile"
+
+    # def can_save_layer(self, layer):
+    #     return False
+
     def load_uri_as_items(self, uri):
         expanded_zip = ExpandZip(uri)
         filename = expanded_zip.find_extension(".shp")
@@ -289,6 +309,9 @@ class BNAShapefileLoader(ShapefileLoader):
 
     def load_uri_as_items(self, uri):
         return load_bna_items(uri)
+
+    def save_to_fh(self, fh, layer):
+        save_bna_file(fh, layer)
 
 
 if __name__ == "__main__":

@@ -33,6 +33,9 @@ class ProjectLoader(BaseLoader):
 
     load_type = "project"
 
+    def can_save_layer(self, layer):
+        return False
+
     def load_project(self, uri, manager, batch_flags):
         project = []
         with open(uri, "r") as fh:
@@ -57,6 +60,9 @@ class ZipProjectLoader(BaseLoader):
     name = "MapRoom Project Zip File"
 
     load_type = "project"
+
+    def can_save_layer(self, layer):
+        return False
 
     def load_project(self, uri, manager, batch_flags):
         log.debug("project file: %s" % uri)

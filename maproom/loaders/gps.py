@@ -37,6 +37,9 @@ class GarminGPSLoader(BaseLayerLoader):
     extensions = [".gpx"]
     name = "gpx"
 
+    def can_save_layer(self, layer):
+        return False
+
     def load_layers(self, uri, manager, **kwargs):
         """
         load the nc_particles file

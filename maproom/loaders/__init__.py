@@ -1,9 +1,23 @@
 import os
 
+from sawx.utils.runtime import get_all_subclasses
+
+from . import common
+
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
+
+_loaders = None
+
+def get_known_loaders():
+    global _loaders
+
+    if _loaders is None:
+        _loaders = get_all_subclasses(common.BaseLoader)
+    print(f"known loaders: {_loaders}")
+    return _loaders
 
 def load_layers_from_url(url, mime, manager=None):
     from sawx.utils.file_guess import FileGuess
@@ -15,7 +29,7 @@ def load_layers_from_url(url, mime, manager=None):
 
 
 def get_loader(metadata):
-    for loader in loaders:
+    for loader in get_known_loaders():
         log.debug("trying loader %s" % loader.name)
         if loader.can_load(metadata):
             log.debug(" loading using loader %s!" % loader.name)
@@ -24,7 +38,7 @@ def get_loader(metadata):
 
 
 def load_layers(metadata, manager=None, **kwargs):
-    for loader in loaders:
+    for loader in get_known_loaders():
         log.debug("trying loader %s" % loader.name)
         if loader.can_load(metadata):
             log.debug(" loading using loader %s!" % loader.name)
@@ -36,9 +50,13 @@ def load_layers(metadata, manager=None, **kwargs):
 
 def valid_save_formats(layer):
     valid = []
-    for loader in loaders:
+    print(f"checking layer {layer.type}")
+    for loader in get_known_loaders():
+        loader = loader()
+        print(f"checking loader {loader}")
         if loader.can_save_layer(layer):
             valid.append((loader, "%s: %s" % (loader.name, loader.get_pretty_extension_list())))
+    print(f"valid: {valid}")
     return valid
 
 
@@ -62,7 +80,8 @@ def save_layer(layer, uri, saver=None):
 
     if not saver:
         savers = []
-        for loader in loaders:
+        for loader in get_known_loaders():
+            loader = loader()
             if loader.can_save_layer(layer):
                 savers.append(loader)
         saver = find_best_saver(savers, ext)

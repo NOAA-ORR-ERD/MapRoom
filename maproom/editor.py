@@ -463,7 +463,7 @@ class ProjectEditor(SawxEditor):
         cmd = mec.LoadLayersCommand(uri, loader)
         self.process_command_from_load(cmd)
 
-    def save_layer(self, path, loader=None):
+    def save_layer(self, path, loader=None, ext=None):
         """ Saves the contents of the current layer in an appropriate file
         """
         layer = self.current_layer

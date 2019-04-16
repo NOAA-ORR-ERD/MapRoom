@@ -47,13 +47,14 @@ class BaseLoader(object):
     def get_pretty_extension_list(self):
         return ", ".join(self.extensions)
 
-    def get_file_dialog_wildcard(self):
+    def get_file_dialog_wildcard(self, requested_ext=None):
         # Using only the first extension
         wildcards = []
         if self.extensions:
             for ext in self.extensions:
-                name = self.extension_name(ext)
-                wildcards.append("%s (*%s)|*%s" % (name, ext, ext))
+                if ext is None or ext == requested_ext:
+                    name = self.extension_name(ext)
+                    wildcards.append("%s (*%s)|*%s" % (name, ext, ext))
         return "|".join(wildcards)
 
     def load_layers_from_uri(self, uri, manager, **kwargs):
@@ -151,7 +152,7 @@ class BaseLayerLoader(BaseLoader):
                 for path in glob.glob(os.path.join(temp_dir, "*")):
                     filename = os.path.basename(path)
                     dest_uri = uri_base + "/" + filename
-                    with fsopen(dest_uri, "wb") as fh:
+                    with open(dest_uri, "wb") as fh:
                         data = open(path, "rb").read()
                         fh.write(data)
                 layer.file_path = uri

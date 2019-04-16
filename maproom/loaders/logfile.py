@@ -20,6 +20,9 @@ class CommandLogLoader(BaseLoader):
 
     name = "MapRoom Command Log"
 
+    def can_save_layer(self, layer):
+        return False
+
     def iter_log(self, uri, manager):
         with open(uri, "r") as fh:
             text = fh.read()

@@ -146,8 +146,9 @@ class save_layer_as(SawxListAction):
     """ A menu for changing the active task in a task window.
     """
 
-    def calc_items(self, layer=None):
+    def calc_list_items(self):
         items = []
+        layer = self.editor.current_layer
         if layer is not None:
             from .loaders import valid_save_formats
             valid = valid_save_formats(layer)
@@ -160,9 +161,9 @@ class save_layer_as(SawxListAction):
 
     def perform(self, action_key):
         item = self.get_item(action_key)
-        path = self.editor.frame.prompt_local_file_dialog("Save Layer", save=True, default_filename=self.editor.document.root_name, wildcard=item.loader.get_file_dialog_wildcard())
+        path = self.editor.frame.prompt_local_file_dialog("Save Layer", save=True, default_filename=self.editor.document.root_name, wildcard=item.loader.get_file_dialog_wildcard(item.ext))
         if path:
-            self.editor.save_layer(path)
+            self.editor.save_layer(path, item.loader, item.ext)
 
 
 class save_movie(SawxAction):

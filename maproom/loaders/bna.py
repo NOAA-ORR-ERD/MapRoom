@@ -9,7 +9,6 @@ from maproom.library.shapely_utils import add_maproom_attributes_to_shapely_geom
 from maproom.layers import PolygonLayer, RNCLoaderLayer, PolygonShapefileLayer
 
 from .common import BaseLayerLoader
-from .shapefile import BNAShapefileLoader, write_layer_as_shapefile
 
 import logging
 log = logging.getLogger(__name__)
@@ -17,11 +16,10 @@ progress_log = logging.getLogger("progress")
 
 
 def identify_loader(file_guess):
-    if not file_guess.is_binary and file_guess.uri.lower().endswith(".bna"):
-        lines = file_guess.sample_data.splitlines()
+    if file_guess.is_text and file_guess.uri.lower().endswith(".bna"):
+        lines = file_guess.sample_lines
         if b".KAP" in lines[0]:
             return dict(mime="application/x-maproom-rncloader", loader=RNCLoader())
-        return dict(mime="application/x-maproom-bna", loader=BNAShapefileLoader())
 
 
 class RNCLoader(BaseLayerLoader):
@@ -34,6 +32,9 @@ class RNCLoader(BaseLayerLoader):
     name = "RNCLoader"
 
     layer_class = RNCLoaderLayer
+
+    def can_save_layer(self, layer):
+        return False
 
     def load_layers(self, uri, manager, **kwargs):
         layer = self.layer_class(manager=manager)
