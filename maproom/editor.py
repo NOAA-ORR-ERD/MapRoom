@@ -486,7 +486,7 @@ class ProjectEditor(SawxEditor):
             self.frame.error(error)
         else:
             self.save_success(path)
-        self.layer_metadata_changed(layer)
+        self.document.layer_metadata_changed_event(layer)
         self.update_layer_selection_ui()
 
     def get_numpy_image(self):
