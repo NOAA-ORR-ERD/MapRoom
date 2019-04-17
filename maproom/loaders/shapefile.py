@@ -307,26 +307,38 @@ def write_rings_as_bna(filename, layer, points, rings, adjacency, projection):
         file_point_index = 0
         ring_index = 0
         feature_index = 0
-        while ring_index < len(rings):
-            point_index = int(rings.start[ring_index])
-            count = 0
-            geom = layer.geometry_list[ring_index]
-            fh.write('"%s","%s", %d\n' % (geom.name, geom.feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
-            # print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
-            while count < rings.count[ring_index]:
-                # print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
+        try:
+            while ring_index < len(rings):
+                point_index = int(rings.start[ring_index])
+                count = 0
+                try:
+                    geom = layer.geometry_list[ring_index]
+                    name, feature_name = geom.name, geom.feature_name
+                except IndexError:
+                    geom = None
+                    name = "feature-missing"
+                    feature_name = "feature-missing"
+                # print(f"processing ring {ring_index} of {len(rings)}: {geom}")
+                fh.write('"%s","%s", %d\n' % (name, feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
+                # print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
+                while count < rings.count[ring_index]:
+                    # print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
+                    fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
+                    count += 1
+                    point_index = adjacency.next[point_index]
+
+                    file_point_index += 1
+                    if file_point_index % BaseLayerLoader.points_per_tick == 0:
+                        progress_log.info("Saved %d points" % file_point_index)
+
+                # duplicate first point to create a closed polygon
+                point_index = int(rings.start[ring_index])
                 fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
-                count += 1
-                point_index = adjacency.next[point_index]
-
-                file_point_index += 1
-                if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                    progress_log.info("Saved %d points" % file_point_index)
-
-            # duplicate first point to create a closed polygon
-            point_index = int(rings.start[ring_index])
-            fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
-            ring_index += 1
+                ring_index += 1
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            raise
 
 
 class BNAShapefileLoader(ShapefileLoader):

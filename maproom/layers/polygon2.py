@@ -430,7 +430,7 @@ class PolygonParentLayer(PointLayer):
         group_index = 0
         for ring_index, (start, count) in enumerate(zip(polygon_starts, polygon_counts)):
             end = start + count
-            log.debug(f"poly: {start, end}")
+            log.debug(f"poly[{ring_index}]: {start, end} geom={self.geometry_list[ring_index]}")
             paa[start:end]['next'] = np.arange(start+1, end+1, dtype=np.uint32)
             paa[end-1]['next'] = start
             paa[start:end]['ring_index'] = ring_index
@@ -449,6 +449,7 @@ class PolygonParentLayer(PointLayer):
         # print(polys)
         self.rings = polys
         self.point_adjacency_array = paa
+        log.debug(f"created {ring_index} rings; geometry_list={len(self.geometry_list)}")
 
     def set_geometry(self, point_list, geom_list):
         self.set_data(point_list)
