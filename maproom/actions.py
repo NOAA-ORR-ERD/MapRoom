@@ -8,7 +8,6 @@ from sawx.actions import save_file, save_as
 from sawx.ui.dialogs import ListReorderDialog, CheckItemDialog
 from sawx.filesystem import find_latest_template_path
 
-from . import pane_layout
 from . import menu_commands as mec
 from . import mouse_commands as moc
 from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile, SimplifyDialog
