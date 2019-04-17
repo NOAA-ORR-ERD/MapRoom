@@ -69,9 +69,9 @@ class TileServerInitRequest(UnskippableRequest):
                 # update last modified time so we can implement cache pruning
                 # at some later time.
                 os.utime(path, None)
-                log.debug("try_cache: found %s" % path)
+                log.debug(f"try_cache: found {path}")
             except Exception as e:
-                log.error("Failed reading %s; exception %s" % (path, e))
+                log.debug(f"try_cache: tile not loaded {path}; exception {e}")
         return data
 
     def save_cache(self, data, zoom, x, y):
