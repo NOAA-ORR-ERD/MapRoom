@@ -44,7 +44,9 @@ autosave_log = logging.getLogger("autosave")
 class ProjectEditor(SawxEditor):
     """Editor for MapRoom layers
     """
-    task_id = "maproom.project"
+    editor_id = "maproom.project"
+
+    ui_name = "MapRoom Project"
 
     preferences_module = "maproom.preferences"
 
@@ -627,7 +629,7 @@ class ProjectEditor(SawxEditor):
 
     def get_default_layout(self, include_user_defined=True):
         try:
-            data = get_template("%s.default_layout" % self.task_id, include_user_defined)
+            data = get_template("%s.default_layout" % self.editor_id, include_user_defined)
         except OSError:
             log.error("no default layout")
             e = {}
@@ -646,7 +648,7 @@ class ProjectEditor(SawxEditor):
     def save_user_defined_default_layout(self):
         layout = self.control.calc_layout()
         text = json.dumps(layout)
-        save_template("%s.default_layout" % self.task_id, text, False)
+        save_template("%s.default_layout" % self.editor_id, text, False)
 
     def create_layout(self):
         json = self.document.extra_metadata
