@@ -49,12 +49,22 @@ class CanvasImageDialog(wx.Dialog):
         self.SetSizer(sizer)
 
         size = canvas_source.GetSize()
-        self.project = self.copy_project(canvas_source.project)
-        canvas = canvas_source.__class__(self, project=self.project, size=size)
+        if False:
+            # FIXME: attempt to reparent, fails miserably but maybe the germ of an idea is here
+            self.old_parent = canvas_source.GetParent()
+            canvas_source.Reparent(self)
+            canvas = canvas_source
+            self.project = canvas.project
+            self.is_synced = True
+        else:
+            self.project = self.copy_project(canvas_source.project)
+            canvas = canvas_source.__class__(self, project=self.project, size=size)
+            canvas.use_pending_render = False
+            self.project.layer_canvas = canvas
+            self.is_synced = False
         sizer.Add(canvas, 1, wx.ALL|wx.EXPAND, self.border)
         self.canvas = canvas
         self.canvas_source = canvas_source
-        self.is_synced = False
 
         btnsizer = wx.StdDialogButtonSizer()
         self.ok_btn = wx.Button(self, wx.ID_SAVE)
@@ -72,7 +82,6 @@ class CanvasImageDialog(wx.Dialog):
         sizer.Fit(self)
 
         # add project references
-        self.project.layer_canvas = self.canvas
         import maproom.mouse_handler as mouse_handler
         self.canvas.set_mouse_handler(mouse_handler.PanMode)
 
@@ -124,7 +133,10 @@ class CanvasImageDialog(wx.Dialog):
         print("DESTROYING DIALOG")
         self.canvas.is_gl_driver_ok = False
         self.canvas.on_draw = self.canvas.on_erase
-        self.Destroy()
+        if self.canvas == self.canvas_source:
+            self.canvas.Reparent(self.old_parent)
+
+        wx.CallAfter(self.Destroy)
         return image
 
 

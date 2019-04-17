@@ -489,13 +489,18 @@ class ProjectEditor(SawxEditor):
         self.document.layer_metadata_changed_event(layer)
         self.update_layer_selection_ui()
 
-    def get_numpy_image(self):
-        # Deselect all layers because it's designed to be used as post-
-        # processing image
-        self.layer_tree_control.set_edit_layer(None)
+    def get_numpy_image_dialog(self):
+        # Attempt at using a dialog to size and choose the image, but it's
+        # running into hard crashes on MacOS
         return self.layer_canvas.get_image_from_dialog()
 
+    def get_numpy_image_immediate(self):
+        return self.layer_canvas.get_canvas_as_image()
+
+    get_numpy_image = get_numpy_image_immediate
+
     def get_numpy_image_before_prompt(self):
+        self.layer_tree_control.set_edit_layer(None)
         raw_data = self.get_numpy_image()
         if raw_data is None:
             raise RuntimeError("save cancelled")
