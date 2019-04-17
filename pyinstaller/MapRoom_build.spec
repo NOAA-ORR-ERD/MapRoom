@@ -24,6 +24,11 @@ sys.modules['FixTk'] = None
 import os
 import pkg_resources
 
+# On Windows 10, it can't find the ucrt DLLs without adding it to the search
+# path. Doesn't affect other systems because this path won't exist.
+import sys
+sys.path.append("C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64")
+
 pathex = [os.path.abspath("..")]
 
 # Found sample code to include entry points inside the bundle at:
