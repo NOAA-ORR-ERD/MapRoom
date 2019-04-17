@@ -430,7 +430,10 @@ class PolygonParentLayer(PointLayer):
         group_index = 0
         for ring_index, (start, count) in enumerate(zip(polygon_starts, polygon_counts)):
             end = start + count
-            log.debug(f"poly[{ring_index}]: {start, end} geom={self.geometry_list[ring_index]}")
+            try:
+                log.debug(f"ring[{ring_index}]: {start, end} geom={self.geometry_list[ring_index]}")
+            except IndexError:
+                log.warning(f"ring[{ring_index}]: {start, end} geometry is missing!")
             paa[start:end]['next'] = np.arange(start+1, end+1, dtype=np.uint32)
             paa[end-1]['next'] = start
             paa[start:end]['ring_index'] = ring_index
