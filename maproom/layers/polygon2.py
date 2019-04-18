@@ -280,6 +280,7 @@ class PolygonParentLayer(PointLayer):
         self.update_bounds()
         self.ring_adjacency = info[1]
         self.create_rings()
+        self.rebuild_needed = True
 
     def get_ring_start_end(self, ring_index):
         r = self.rings[ring_index]
