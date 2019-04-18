@@ -1,16 +1,61 @@
 import os
+import glob
 
 from osgeo import ogr, osr
 import numpy as np
 
+from sawx.filesystem import filesystem_path
+from sawx.utils.fileutil import ExpandZip, save_to_flat_zip
+
 from maproom.library.shapefile_utils import load_shapefile, load_bna_items
 from maproom.layers import PolygonParentLayer
-from ...renderer import data_types
+from ..renderer import data_types
 from .common import BaseLayerLoader
+from .bna import save_bna_file
 
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
+
+
+def identify_loader(file_guess):
+    if file_guess.is_text and file_guess.uri.lower().endswith(".bna"):
+        lines = file_guess.sample_lines
+        if b".KAP" not in lines[0]:
+            return dict(mime="application/x-maproom-bna", loader=BNAShapefileLoader())
+    if file_guess.is_zipfile:
+        if file_guess.zipfile_contains_extension(".shp"):
+            return dict(mime="application/x-maproom-shapefile-zip", loader=ZipShapefileLoader())
+        else:
+            # should we bail if it's an unknown zipfile? Can OGR open zipped data?
+            pass
+    try:
+        file_path = file_guess.filesystem_path
+    except OSError:
+        log.debug(f"{file_guess.uri} not on local filesystem, GDAL won't load it.")
+        return None
+    if file_path.startswith("\\\\?\\"):  # GDAL doesn't support extended filenames
+        file_path = file_path[4:]
+    try:
+        dataset = ogr.Open(file_path)
+    except RuntimeError:
+        log.debug("OGR can't open %s; not an image")
+        return None
+    if dataset is not None and dataset.GetLayerCount() > 0:
+        # check to see if there are any valid layers because some CSV files
+        # seem to be recognized as having layers but have no geometry.
+        count = 0
+        for layer_index in range(dataset.GetLayerCount()):
+            layer = dataset.GetLayer(layer_index)
+            for feature in layer:
+                ogr_geom = feature.GetGeometryRef()
+                print(f"ogr_geom for {layer} = {ogr_geom}")
+                if ogr_geom is None:
+                    continue
+                count += 1
+        if count > 0:
+            return dict(mime="image/x-maproom-shapefile", loader=ShapefileLoader())
+    return None
 
 
 def write_boundaries_as_shapefile(filename, layer, boundaries):
@@ -102,40 +147,79 @@ class ShapefileLoader(BaseLayerLoader):
     def load_uri_as_items(self, uri):
         return load_shapefile(uri)
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         """May return one or two layers; points are placed in a separate layer
         so they can be rendered and operated on like a regular points layer
         """
-        file_path = metadata.uri
+        file_path = uri
 
         layers = []
         parent = PolygonParentLayer(manager=manager)
         # parent.grouped = True
         parent.grouped = False
-        parent.file_path = metadata.uri
+        parent.file_path = uri
         parent.name = os.path.split(file_path)[1]
         parent.mime = self.mime
         layers.append(parent)
 
-        parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(metadata.uri)
-        geom_type = geometry_list[0]
-        items = geometry_list[1:]
-        if log.isEnabledFor(logging.DEBUG):
-            print(geom_type)
-            for item in geometry_list[1:]:
-                print(item)
-            print()
+        parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(uri)
         if (parent.load_error_string == ""):
+            geom_type = geometry_list[0]
+            items = geometry_list[1:]
+            if log.isEnabledFor(logging.DEBUG):
+                print(geom_type)
+                for item in geometry_list[1:]:
+                    print(item)
+                print()
             parent.set_geometry(point_list, geometry_list)
+        else:
+            log.error(parent.load_error_string)
         return layers
 
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
-        desc = self.extension_desc[ext]
-        if ext == ".bna":
-            write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
-        else:
-            write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection)
+        write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection)
+
+
+class ZipShapefileLoader(ShapefileLoader):
+    mime = "application/x-maproom-shapefile-zip"
+
+    extensions = [".zip"]
+
+    extension_desc = {
+        ".zip": "Zipped ESRI Shapefile",
+    }
+
+    name = "Zipped Shapefile"
+
+    def load_uri_as_items(self, uri):
+        expanded_zip = ExpandZip(uri)
+        filename = expanded_zip.find_extension(".shp")
+        return load_shapefile(filename)
+
+    def save_to_local_file(self, filename, layer):
+        filename, ext = os.path.splitext(filename)
+        filename += ".shp"  # force OGR to use ESRI Shapefile
+        super().save_to_local_file(filename, layer)
+        return filename
+
+    def gather_save_files(self, temp_dir, uri):
+        # instead of moving files, zip them up and store at uri
+        files = glob.glob(os.path.join(temp_dir, "*"))
+        if len(files) == 1 and os.path.is_dir(files[0]):
+            files = glob.glob(os.path.join(files[0], "*"))
+        save_to_flat_zip(uri, files)
+        log.debug(f"gather_save_files: saved to zip {uri}")
+
+
+ext_to_driver_name = {
+    ".shp": "ESRI Shapefile",
+    ".json": "GeoJSON",
+    ".geojson": "GeoJSON",
+    ".kml": "KML",
+}
+
+need_projection = set(["ESRI Shapefile"])
 
 
 def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
@@ -143,9 +227,17 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
     srs = osr.SpatialReference()
     srs.ImportFromProj4(projection.srs)
 
-    driver = ogr.GetDriverByName('ESRI Shapefile')
+    _, ext = os.path.splitext(filename)
+    try:
+        driver_name = ext_to_driver_name[ext]
+    except KeyError:
+        raise RuntimeError(f"Unknown shapefile extension '{ext}'")
+
+    using_projection = driver_name in need_projection
+
+    driver = ogr.GetDriverByName(driver_name)
     shapefile = driver.CreateDataSource(filename)
-    print(f"writing {filename}, srs={srs}")
+    log.debug(f"writing {filename}, driver={driver}, srs={srs}")
     shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
 
     file_point_index = 0
@@ -180,7 +272,10 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
         if feature_code >= 0:
             add_poly()
         
-        x, y = projection(points.x[first_index:first_index+count], points.y[first_index:first_index+count])
+        if using_projection:
+            x, y = projection(points.x[first_index:first_index+count], points.y[first_index:first_index+count])
+        else:
+            x, y = points.x[first_index:first_index+count], points.y[first_index:first_index+count]
         for index in range(0, count):
             dest_ring.AddPoint(x[index], y[index])
 
@@ -212,26 +307,38 @@ def write_rings_as_bna(filename, layer, points, rings, adjacency, projection):
         file_point_index = 0
         ring_index = 0
         feature_index = 0
-        while ring_index < len(rings):
-            point_index = int(rings.start[ring_index])
-            count = 0
-            geom = layer.geometry_list[ring_index]
-            fh.write('"%s","%s", %d\n' % (geom.name, geom.feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
-            # print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
-            while count < rings.count[ring_index]:
-                # print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
+        try:
+            while ring_index < len(rings):
+                point_index = int(rings.start[ring_index])
+                count = 0
+                try:
+                    geom = layer.geometry_list[ring_index]
+                    name, feature_name = geom.name, geom.feature_name
+                except IndexError:
+                    geom = None
+                    name = "feature-missing"
+                    feature_name = "feature-missing"
+                # print(f"processing ring {ring_index} of {len(rings)}: {geom}")
+                fh.write('"%s","%s", %d\n' % (name, feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
+                # print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
+                while count < rings.count[ring_index]:
+                    # print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
+                    fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
+                    count += 1
+                    point_index = adjacency.next[point_index]
+
+                    file_point_index += 1
+                    if file_point_index % BaseLayerLoader.points_per_tick == 0:
+                        progress_log.info("Saved %d points" % file_point_index)
+
+                # duplicate first point to create a closed polygon
+                point_index = int(rings.start[ring_index])
                 fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
-                count += 1
-                point_index = adjacency.next[point_index]
-
-                file_point_index += 1
-                if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                    progress_log.info("Saved %d points" % file_point_index)
-
-            # duplicate first point to create a closed polygon
-            point_index = int(rings.start[ring_index])
-            fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
-            ring_index += 1
+                ring_index += 1
+        except Exception as e:
+            import traceback
+            print(traceback.format_exc())
+            raise
 
 
 class BNAShapefileLoader(ShapefileLoader):
@@ -245,6 +352,9 @@ class BNAShapefileLoader(ShapefileLoader):
 
     def load_uri_as_items(self, uri):
         return load_bna_items(uri)
+
+    def save_to_local_file(self, filename, layer):
+        write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
 
 
 if __name__ == "__main__":

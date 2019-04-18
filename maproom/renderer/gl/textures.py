@@ -266,12 +266,12 @@ class TileImageData(ImageData):
             self.set_zoom_level(zoom)
         top_left = host.world_to_tile_num(self.zoom_level, w_r[0][0], w_r[1][1])
         bot_right = host.world_to_tile_num(self.zoom_level, w_r[1][0], w_r[0][1])
-        print("UPDATE_TILES:", top_left, bot_right)
+        log.debug(f"update_tiles: {top_left} -> {bot_right}")
         tile_list = self.calc_center_tiles(top_left, bot_right)
-        print("CENTER TILES:", tile_list)
+        log.debug(f"update_tiles: center_tiles={tile_list}")
         self.request_tiles(tile_list, manager, event_data)
         tile_list = self.calc_border_tiles(top_left, bot_right)
-        print("BORDER TILES", tile_list)
+        log.debug(f"update_tiles: border_tiles={tile_list}")
         self.request_tiles(tile_list, manager, event_data)
 
     def set_zoom_level(self, zoom):
@@ -289,7 +289,7 @@ class TileImageData(ImageData):
             self.requested = dict()
 
     def release_tiles(self):
-        print("RELEASING TILES FOR ZOOM=%d: %s" % (self.last_zoom_level, self.last_requested))
+        log.debug(f"release_tiles: for zoom level {self.last_zoom_level}: { self.last_requested}")
 
     def calc_center_tiles(self, tl, br):
         needed = []
@@ -331,7 +331,7 @@ class TileImageData(ImageData):
             return
         for tile in tiles:
             if tile not in self.requested:
-                print("REQUESTING TILE:", tile)
+                log.debug(f"request_tiles: x,y = {tile}")
                 req = downloader.request_tile(self.zoom_level, tile[0], tile[1], manager, event_data)
                 self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, req.world_lb_rt)
 
@@ -343,7 +343,7 @@ class TileImageData(ImageData):
         try:
             while True:
                 tile_request = tile_queue.get_nowait()
-                print("GOT TILE:", tile_request)
+                log.debug(f"add_tiles: {tile_request}")
                 tile = (tile_request.x, tile_request.y)
                 if tile not in self.requested:
                     # Hmmm, got tile info for something that's not currently in
@@ -351,10 +351,10 @@ class TileImageData(ImageData):
                     # Or the user zoomed in and out really quickly? If it's
                     # for the same zoom level, let's use it.
                     if tile_request.zoom == self.zoom_level:
-                        print("  Using tile received but not requested:", tile)
+                        log.warning(f"add_tiles: Using tile received but not requested: {tile}")
                         self.requested[tile] = TileImage(tile, self.zoom_level, self.texture_size, tile_request.world_lb_rt)
                     else:
-                        print("  Ignoring tile received but not requested:", tile)
+                        log.warning(f"add_tiles: Ignoring tile received but not requested: {tile}")
                 if tile in self.requested:
                     tile_image = self.requested[tile]
                     tile_image.data = tile_request.get_image_array()

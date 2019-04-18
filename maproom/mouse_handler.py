@@ -26,7 +26,7 @@ class MouseHandler(object):
 
     This is an object-based control system of mouse modes
     """
-    icon = "help.png"
+    icon = "help"
     menu_item_name = "Generic Mouse Handler"
     menu_item_tooltip = "Tooltip for generic mouse handler"
     editor_trait_for_enabled = ""
@@ -52,6 +52,9 @@ class MouseHandler(object):
         # Optional (only OS X at this point) mouse wheel event filter
         self.wheel_scroll_count = 0
         self.use_every_nth_wheel_scroll = 5
+
+    def __str__(self):
+        return self.__class__.__name__
 
     def get_cursor(self):
         return wx.Cursor(wx.CURSOR_ARROW)
@@ -108,7 +111,7 @@ class MouseHandler(object):
     def update_status_text(self, proj_p=None, obj=None, zoom=False, instructions=""):
         c = self.layer_canvas
         e = c.project
-        prefs = e.task.preferences
+        prefs = e.preferences
         items = []
         if proj_p is not None:
             items.append(format_coords_for_display(proj_p[0], proj_p[1], prefs.coordinate_display_format))
@@ -116,7 +119,7 @@ class MouseHandler(object):
             items.append("Zoom level=%.2f" % c.zoom_level)
         if instructions:
             items.append(instructions)
-        e.status_message = " ".join(items)
+        e.frame.status_message(" ".join(items))
 
         obj_text = ""
         long_text = ""
@@ -126,7 +129,7 @@ class MouseHandler(object):
             if not long_text:
                 long_text = self.get_long_help_text()
 
-        e.debug_message = obj_text
+        e.frame.status_message(obj_text, True)
         e.long_status.show_status_text(long_text, multiline=True)
 
     def process_mouse_motion_up(self, event):
@@ -142,7 +145,7 @@ class MouseHandler(object):
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
             c.project.clickable_object_in_layer = layer
-            sel = c.project.layer_tree_control.get_edit_layer()
+            sel = c.project.current_layer
             if (layer == sel):
                 obj = c.project.clickable_object_mouse_is_over = self.current_object_under_mouse
             elif sel is not None and sel.show_unselected_layer_info_for(layer):
@@ -230,7 +233,7 @@ class MouseHandler(object):
     def process_rect_select_motion_feedback(self, event, x1, y1, x2, y2):
         c = self.layer_canvas
         e = c.project
-        layer = e.layer_tree_control.get_edit_layer()
+        layer = e.current_layer
         if (layer is not None):
             log.debug(f"selection box: {x1},{y1} -> {x2},{y2}")
             p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
@@ -305,12 +308,12 @@ class MouseHandler(object):
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
             world_point = c.get_world_point_from_screen_point(event.GetPosition())
-            layer = e.layer_tree_control.get_edit_layer()
+            layer = e.current_layer
             self.right_clicked_on_different_layer(event, layer, e.clickable_object_in_layer, world_point)
         else:  # the mouse is not on a clickable object
             # fixme: there should be a reference to the layer manager in the RenderWindow
             # and we could get the selected layer from there -- or is selected purely a UI concept?
-            layer = e.layer_tree_control.get_edit_layer()
+            layer = e.current_layer
             world_point = c.get_world_point_from_screen_point(event.GetPosition())
             self.right_clicked_on_empty_space(event, layer, world_point)
 
@@ -322,11 +325,11 @@ class MouseHandler(object):
 
     def right_clicked_on_interior(self, event, layer, object_type, object_index, world_point):
         print(f"Right clicked on {layer}")
-        menu = layer.calc_context_menu_actions(object_type, object_index, world_point)
-        if menu:
+        menu_desc = layer.calc_context_menu_desc(object_type, object_index, world_point)
+        if menu_desc:
             c = self.layer_canvas
             e = c.project
-            e.popup_context_menu_from_actions(self.layer_canvas, menu, popup_data={'layer':layer, 'object_type':object_type, 'object_index':object_index})
+            e.show_popup(menu_desc, popup_data={'layer':layer, 'object_type':object_type, 'object_index':object_index})
 
     def right_clicked_on_empty_space(self, event, layer, world_point):
         self.right_clicked_on_interior(event, layer, None, None, world_point)
@@ -402,7 +405,7 @@ class MouseHandler(object):
 
         world_point = c.get_world_point_from_screen_point(screen_point)
 
-        prefs = e.task.preferences
+        prefs = e.preferences
 
         zoom = 1.25
         zoom_speed = prefs.zoom_speed
@@ -581,7 +584,7 @@ class MouseHandler(object):
 class PanMode(MouseHandler):
     """Mouse mode to pan the viewport
     """
-    icon = "pan.png"
+    icon = "pan"
     menu_item_name = "Pan Mode"
     menu_item_tooltip = "Scroll the viewport by holding down the mouse"
     editor_trait_for_enabled = ""
@@ -608,7 +611,7 @@ class PanMode(MouseHandler):
 class RNCSelectionMode(PanMode):
     """Mouse mode to pan the viewport
     """
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "RNC Chart Selection Mode"
     menu_item_tooltip = "Select an RNC chart to download"
     editor_trait_for_enabled = ""
@@ -672,14 +675,10 @@ class RNCSelectionMode(PanMode):
                 name, num, filename, url = self.parse_rnc_object(rnc)
                 if url:
                     p = self.get_world_point(event)
-                    if p[0] > 0:
-                        regime = 360
-                    else:
-                        regime = 0
                     # submit download to downloader!
-                    log.info("LOADING RNC MAP #%s from %s in %d - %d" % (num, url, regime - 360, regime))
                     e = c.project
-                    e.download_rnc(url, filename, num, regime, confirm=True, name=name)
+                    log.info("LOADING RNC MAP #%s from %s" % (num, url))
+                    e.download_rnc(url, filename, num, confirm=True, name=name)
 
     def render_overlay(self, renderer):
         # draw outline of polygon object that's currently being moused-over
@@ -696,7 +695,7 @@ class RNCSelectionMode(PanMode):
 class PolygonSelectionMode(RNCSelectionMode):
     """Mouse mode to select rings
     """
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "Polygon Selection Mode"
     menu_item_tooltip = "Select a polygon"
     editor_trait_for_enabled = ""
@@ -728,7 +727,7 @@ class SelectionMode(MouseHandler):
 
     This is a precursor to an object-based control system of mouse modes
     """
-    icon = "select.png"
+    icon = "select"
     toolbar_group = "select"
 
     def get_cursor(self):
@@ -761,7 +760,7 @@ class SelectionMode(MouseHandler):
     def process_click_on_nothing(self, event):
         c = self.layer_canvas
         e = c.project
-        layer = e.layer_tree_control.get_edit_layer()
+        layer = e.current_layer
         if (layer is not None):
             if (event.ControlDown() or event.ShiftDown()):
                 c.selection_box_is_being_defined = True
@@ -944,7 +943,7 @@ class PointSelectionMode(ObjectSelectionMode):
     """Combo of PanMode and PointEdit mode, but only allowing points/lines
     to be selected and moved, not added to or deleted.
     """
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "Point Selection Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1059,7 +1058,7 @@ class PointSelectionMode(ObjectSelectionMode):
 
 
 class PointEditMode(PointSelectionMode):
-    icon = "add_points.png"
+    icon = "add_points"
     menu_item_name = "Point Edit Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1096,7 +1095,7 @@ class PointEditMode(PointSelectionMode):
         c = self.layer_canvas
         e = c.project
         if layer.is_folder():
-            e.task.error("You cannot add points to folder layers.", "Cannot Edit")
+            e.frame.error("You cannot add points to folder layers.", "Cannot Edit")
             return
 
         if (not event.ControlDown() and not event.ShiftDown()):
@@ -1111,7 +1110,7 @@ class PointEditMode(PointSelectionMode):
 
     def clicked_on_different_layer(self, event, other_layer, world_point):
         log.debug("clicked on different layer: %s, point %s" % (other_layer, str(world_point)))
-        layer = self.layer_canvas.project.layer_tree_control.get_edit_layer()
+        layer = self.layer_canvas.project.current_layer
         self.clicked_on_empty_space(event, layer, world_point)
 
     def select_objects_in_rect(self, event, rect, layer):
@@ -1119,7 +1118,7 @@ class PointEditMode(PointSelectionMode):
 
 
 class LineEditMode(PointEditMode):
-    icon = "add_lines.png"
+    icon = "add_lines"
     menu_item_name = "Line Edit Mode"
     menu_item_tooltip = "Edit and add lines in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1195,7 +1194,7 @@ class LineEditMode(PointEditMode):
         c = self.layer_canvas
         e = c.project
         if layer.is_folder():
-            e.task.error("You cannot add lines to folder layers.", "Cannot Edit")
+            e.frame.error("You cannot add lines to folder layers.", "Cannot Edit")
             return
 
         if (not event.ControlDown() and not event.ShiftDown()):
@@ -1289,7 +1288,7 @@ class RectSelectMode(MouseHandler):
 
 
 class RulerMode(RectSelectMode):
-    icon = "ruler.png"
+    icon = "ruler"
     menu_item_name = "Measure Distance"
     menu_item_tooltip = "Measure the great-circle distance between two points"
     toolbar_group = "view"
@@ -1309,7 +1308,7 @@ class RulerMode(RectSelectMode):
 
 
 class ZoomRectMode(RectSelectMode):
-    icon = "zoom_box.png"
+    icon = "zoom_box"
     menu_item_name = "Zoom Mode"
     menu_item_tooltip = "Zoom in to increase magnification of the current layer"
     toolbar_group = "view"
@@ -1327,7 +1326,7 @@ class ZoomRectMode(RectSelectMode):
 
 
 class CropRectMode(RectSelectMode):
-    icon = "crop.png"
+    icon = "crop"
     menu_item_name = "Crop Mode"
     menu_item_tooltip = "Crop the current layer"
     toolbar_group = "view"
@@ -1338,14 +1337,14 @@ class CropRectMode(RectSelectMode):
         p_r = c.get_projected_rect_from_screen_rect(((x1, y1), (x2, y2)))
         w_r = c.get_world_rect_from_projected_rect(p_r)
         # print "CROPPING!!!!  ", w_r
-        layer = c.project.layer_tree_control.get_edit_layer()
+        layer = c.project.current_layer
         if (layer is not None and layer.can_crop()):
             cmd = moc.CropRectCommand(layer, w_r)
             e.process_command(cmd)
 
 
 class ControlPointEditMode(ObjectSelectionMode):
-    icon = "select.png"
+    icon = "select"
     menu_item_name = "Control Point Edit Mode"
     menu_item_tooltip = "Select objects and move control points in the current layer"
 
@@ -1398,6 +1397,7 @@ class ControlPointEditMode(ObjectSelectionMode):
     def select_objects_in_rect(self, event, rect, layer):
         layer.select_points_in_rect(event.ControlDown(), event.ShiftDown(), rect)
 
+#from profilehooks import profile
 
 class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     dim_background_outside_selection = False
@@ -1405,10 +1405,11 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     vector_object_command = None
     toolbar_group = "annotation"
 
+#    @profile
     def process_rect_select(self, x1, y1, x2, y2):
         c = self.layer_canvas
         e = c.project
-        layer = c.project.layer_tree_control.get_edit_layer()
+        layer = c.project.current_layer
         if (layer is None):
             return
         try:
@@ -1429,7 +1430,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
 
 
 class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_text.png"
+    icon = "shape_text"
     menu_item_name = "Add Text"
     menu_item_tooltip = "Add a new text overlay"
     vector_object_command = voc.AddTextCommand
@@ -1446,21 +1447,21 @@ class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_square.png"
+    icon = "shape_square"
     menu_item_name = "Add Rectangle"
     menu_item_tooltip = "Add a new rectangle or square"
     vector_object_command = voc.DrawRectangleCommand
 
 
 class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_ellipse.png"
+    icon = "shape_ellipse"
     menu_item_name = "Add Ellipse"
     menu_item_tooltip = "Add a new ellipse or circle"
     vector_object_command = voc.DrawEllipseCommand
 
 
 class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_arrow_text.png"
+    icon = "shape_arrow_text"
     menu_item_name = "Add Arrow/Text Box"
     menu_item_tooltip = "Add a new arrow and text box combo object"
     vector_object_command = voc.DrawArrowTextBoxCommand
@@ -1478,14 +1479,14 @@ class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddArrowTextIconMode(AddArrowTextMode):
-    icon = "shape_arrow_text_icon.png"
+    icon = "shape_arrow_text_icon"
     menu_item_name = "Add Arrow/Text/Icon Box"
     menu_item_tooltip = "Add a new arrow/text box/icon combo object"
     vector_object_command = voc.DrawArrowTextIconCommand
 
 
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_circle.png"
+    icon = "shape_circle"
     menu_item_name = "Add Circle"
     menu_item_tooltip = "Add a new circle from center point"
     vector_object_command = voc.DrawCircleCommand
@@ -1514,7 +1515,7 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddLineMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_line.png"
+    icon = "shape_line"
     menu_item_name = "Add Line"
     menu_item_tooltip = "Add a new line"
     vector_object_command = voc.DrawLineCommand
@@ -1536,7 +1537,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddPolylineMode(MouseHandler):
-    icon = "shape_polyline.png"
+    icon = "shape_polyline"
     menu_item_name = "Add Polyline"
     menu_item_tooltip = "Add a new polyline"
     vector_object_command = voc.DrawPolylineCommand
@@ -1599,7 +1600,7 @@ class AddPolylineMode(MouseHandler):
         c = self.layer_canvas
         e = c.project
         if len(self.points) > 1:
-            layer = e.layer_tree_control.get_edit_layer()
+            layer = e.current_layer
             if (layer is not None):
                 cmd = self.vector_object_command(layer, self.points)
                 e.process_command(cmd, ControlPointEditMode)
@@ -1616,7 +1617,7 @@ class AddPolylineMode(MouseHandler):
 
 
 class AddPolygonMode(AddPolylineMode):
-    icon = "shape_polygon.png"
+    icon = "shape_polygon"
     menu_item_name = "Add Polygon"
     menu_item_tooltip = "Add a new polygon"
     vector_object_command = voc.DrawPolygonCommand
@@ -1645,7 +1646,7 @@ class AddOverlayMode(MouseHandler):
         # After the first point, mouse up events add points
         c = self.layer_canvas
         e = c.project
-        layer = e.layer_tree_control.get_edit_layer()
+        layer = e.current_layer
         if (layer is not None):
             cp = self.get_world_point(event)
             cmd = self.get_vector_object_command(layer, cp)
@@ -1656,7 +1657,7 @@ class AddOverlayMode(MouseHandler):
 
 
 class AddOverlayIconMode(AddOverlayMode):
-    icon = "shape_icon.png"
+    icon = "shape_icon"
     menu_item_name = "Add Icon"
     menu_item_tooltip = "Add a new Marplot icon"
     vector_object_command = voc.AddIconCommand

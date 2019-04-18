@@ -26,13 +26,118 @@ from .renderer import ImmediateModeRenderer
 from .picker import Picker
 import maproom.library.rect as rect
 
-from ..gl.font import load_font_texture_with_alpha
+from ..gl.font import load_font_texture
 from ..gl import data_types
 from .. import BaseCanvas
 from .. import int_to_color_floats
 
 import logging
 log = logging.getLogger(__name__)
+
+
+class MockFrame(object):
+    def status_message(self, message, debug=False):
+        pass
+
+
+class CanvasImageDialog(wx.Dialog):
+    border = 5
+
+    def __init__(self, parent, canvas_source):
+        wx.Dialog.__init__(self, parent, -1, "Image To Save", size=(700, 500), pos=wx.DefaultPosition, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(sizer)
+
+        size = canvas_source.GetSize()
+        if False:
+            # FIXME: attempt to reparent, fails miserably but maybe the germ of an idea is here
+            self.old_parent = canvas_source.GetParent()
+            canvas_source.Reparent(self)
+            canvas = canvas_source
+            self.project = canvas.project
+            self.is_synced = True
+        else:
+            self.project = self.copy_project(canvas_source.project)
+            canvas = canvas_source.__class__(self, project=self.project, size=size)
+            canvas.use_pending_render = False
+            self.project.layer_canvas = canvas
+            self.is_synced = False
+        sizer.Add(canvas, 1, wx.ALL|wx.EXPAND, self.border)
+        self.canvas = canvas
+        self.canvas_source = canvas_source
+
+        btnsizer = wx.StdDialogButtonSizer()
+        self.ok_btn = wx.Button(self, wx.ID_SAVE)
+        self.ok_btn.SetDefault()
+        btnsizer.AddButton(self.ok_btn)
+        btn = wx.Button(self, wx.ID_CANCEL)
+        btnsizer.AddButton(btn)
+        btnsizer.Realize()
+        sizer.Add(btnsizer, 0, wx.ALL|wx.EXPAND, self.border)
+
+        self.Bind(wx.EVT_BUTTON, self.on_button)
+        self.Bind(wx.EVT_PAINT, self.on_draw)
+
+        # Don't call self.Fit() otherwise the dialog buttons are zero height
+        sizer.Fit(self)
+
+        # add project references
+        import maproom.mouse_handler as mouse_handler
+        self.canvas.set_mouse_handler(mouse_handler.PanMode)
+
+    def copy_project(self, source_project):
+        p = source_project.__class__(source_project.document)
+        p.layer_visibility = source_project.layer_visibility
+        p.long_status = source_project.long_status
+        p.layer_tree_control = source_project.layer_tree_control
+        # p. = source_project.layer_info
+        # p. = source_project.selection_info
+        # p. = source_project.triangle_panel
+        # p. = source_project.merge_points_panel
+        p.undo_history = source_project.undo_history
+        # p. = source_project.flagged_control
+        # p. = source_project.download_control
+        p.timeline = source_project.timeline
+        p.frame = MockFrame()
+        p.control = source_project.control
+        return p
+
+    def sync_from_source(self):
+        if not self.is_synced:
+            print(f"syncing from {self.canvas_source}")
+            c = self.canvas
+            c.copy_viewport_from(self.canvas_source)
+            c.Refresh()
+            c.rebuild_renderers()
+            c.render_callback(immediately=True)
+            self.is_synced = True
+
+    def on_draw(self, evt):
+        self.canvas.on_draw(evt)  # initialize GL 
+        self.sync_from_source()
+        evt.Skip()
+
+    def on_button(self, evt):
+        if evt.GetId() == wx.ID_SAVE:
+            self.EndModal(wx.ID_SAVE)
+        else:
+            self.EndModal(wx.ID_CANCEL)
+        evt.Skip()
+
+    def show_and_get_image(self):
+        result = self.ShowModal()
+        if result == wx.ID_SAVE:
+            image = self.canvas.get_canvas_as_image()
+        else:
+            image = None
+        print("DESTROYING DIALOG")
+        self.canvas.is_gl_driver_ok = False
+        self.canvas.on_draw = self.canvas.on_erase
+        if self.canvas == self.canvas_source:
+            self.canvas.Reparent(self.old_parent)
+
+        wx.CallAfter(self.Destroy)
+        return image
 
 
 class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
@@ -43,12 +148,23 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     shared_context = None
 
+    font_texture = None
+
     @classmethod
     def init_context(cls, canvas):
         # Only one GLContext is needed for the entire application -- this way,
         # textures can be shared among views.
         if cls.shared_context is None:
             cls.shared_context = glcanvas.GLContext(canvas)
+
+    @classmethod
+    def init_font_texture(cls):
+        # Texture creation must be deferred until after the call to SetCurrent
+        # so that the GLContext is attached to the actual window. The texture
+        # itself is shared among views, but each instance uses its own VBO so
+        # they don't stomp over each other
+        if cls.font_texture is None:
+            cls.font_texture, cls.font_texture_size, cls.font_extents = load_font_texture()
 
     def __init__(self, *args, **kwargs):
         project = kwargs.pop('project')
@@ -66,10 +182,6 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         self.pending_render_count = 0
 
         BaseCanvas.__init__(self, project)
-
-        # Texture creation must be deferred until after the call to SetCurrent
-        # so that the GLContext is attached to the actual window
-        self.font_texture = None
 
         # Only bind paint event; others depend on window being realized
         self.Bind(wx.EVT_PAINT, self.on_draw)
@@ -90,6 +202,10 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def get_native_control(self):
         return self
+
+    def get_image_from_dialog(self):
+        d = CanvasImageDialog(self.get_native_control(), self)
+        return d.show_and_get_image()
 
     def set_callbacks(self):
         # Callbacks are not set immediately because they depend on the OpenGL
@@ -137,8 +253,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
                 # this has to be here because the window has to exist before creating
                 # textures and making the renderer
                 try:
-                    if self.font_texture is None:
-                        self.init_font()
+                    self.init_font()
                 except gl.GLError:
                     log.error("Caught GLError on initialization; likely OpenGL driver is not current")
                     self.is_gl_driver_ok = False
@@ -162,7 +277,9 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
                 err += "\n\nThis is especially common on Windows 10 machines, because Windows 10 does not require OpenGL 2.1 support. However, support is typically available with a driver update from the graphics hardware manufacturer."
 
             self.gl_driver_error_message = err
-            wx.CallAfter(self.project.task.error, err, "OpenGL Error")
+            wx.CallAfter(self.project.frame.error, err, "OpenGL Error")
+        else:
+            log.error(f"GL driver status: {self.is_gl_driver_ok}")
 
     def on_resize(self, event):
         if not self.is_canvas_initialized:
@@ -287,35 +404,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         r = ImmediateModeRenderer(self, layer)
         return r
 
-    def load_font_texture(self):
-        buffer_with_alpha, extents = load_font_texture_with_alpha()
-        width = buffer_with_alpha.shape[0]
-        height = buffer_with_alpha.shape[1]
-
-        texture = gl.glGenTextures(1)
-        gl.glBindTexture(gl.GL_TEXTURE_2D, texture)
-        gl.glTexImage2D(
-            gl.GL_TEXTURE_2D,
-            0,
-            gl.GL_RGBA8,
-            width,
-            height,
-            0,
-            gl.GL_RGBA,
-            gl.GL_UNSIGNED_BYTE,
-            buffer_with_alpha.tostring(),
-        )
-        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
-        gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
-
-        # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
-
-        return (texture, (width, height), extents)
-
     def init_font(self, max_label_characters=1000):
-        (self.font_texture, self.font_texture_size, self.font_extents) = self.load_font_texture()
+        self.init_font_texture()
         self.max_label_characters = max_label_characters
 
         self.screen_vertex_data = np.zeros(
@@ -537,8 +627,9 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def render_callback(self, immediately=False):
         log.debug("immediately: %s pending renders: %d" % (immediately, self.pending_render_count))
-        if immediately or self.pending_render_count > 0:
+        if self.is_canvas_initialized and (immediately or self.pending_render_count > 0):
             log.debug("rendering")
+            self.SetCurrent(self.shared_context)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             BaseCanvas.render(self)
             self.set_cursor()

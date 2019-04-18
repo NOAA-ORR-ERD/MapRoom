@@ -2,19 +2,16 @@
 import math
 import bisect
 
-# Enthought library imports.
-from traits.api import Unicode, Str, Float
-
 from ..library import rect
 from ..library.coordinates import haversine_at_const_lat, km_to_string, ft_to_string
 
-from .base import ScreenLayer
+from .base import StickyLayer
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class Scale(ScreenLayer):
+class Scale(StickyLayer):
     """Scale layer
 
     Shows a scale in miles/meters
@@ -22,12 +19,6 @@ class Scale(ScreenLayer):
     name = "Scale"
 
     type = "scale"
-
-    x_percentage = Float(0.0)
-
-    y_percentage = Float(0.0)
-
-    # class attributes
 
     layer_info_panel = ["X location", "Y location"]
 
@@ -57,20 +48,8 @@ class Scale(ScreenLayer):
     x_offset = 10
     y_offset = 20
 
-    def x_percentage_to_json(self):
-        return self.x_percentage
-
-    def x_percentage_from_json(self, json_data):
-        self.x_percentage = json_data['x_percentage']
-
-    def y_percentage_to_json(self):
-        return self.y_percentage
-
-    def y_percentage_from_json(self, json_data):
-        self.y_percentage = json_data['y_percentage']
-
-    def get_visibility_dict(self):
-        prefs = self.manager.project.task.preferences
+    def get_visibility_dict(self, project):
+        prefs = project.preferences
         d = dict()
         d["layer"] = prefs.show_scale
         return d

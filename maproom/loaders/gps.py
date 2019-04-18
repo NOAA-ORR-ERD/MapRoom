@@ -8,16 +8,21 @@ import os
 import numpy as np
 #import re
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
 
 from .common import BaseLayerLoader
-from ...library.gps_utils import GarminGPSDataset
+from ..library.gps_utils import GarminGPSDataset
 from maproom.layers.vector_object import AnnotationLayer, PolylineObject, OverlayIconObject
 
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
+
+def identify_loader(file_guess):
+    if file_guess.is_text:
+        if b'xmlns="http://www.topografix.com/GPX/1/1"' in file_guess.sample_data:
+                return dict(mime="text/garmin-gpx", loader=GarminGPSLoader())
 
 
 class GarminGPSLoader(BaseLayerLoader):
@@ -32,22 +37,25 @@ class GarminGPSLoader(BaseLayerLoader):
     extensions = [".gpx"]
     name = "gpx"
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def can_save_layer(self, layer):
+        return False
+
+    def load_layers(self, uri, manager, **kwargs):
         """
         load the nc_particles file
 
-        :param metadata: the metadata object from the file opener guess object.
+        :param uri: the uri object from the file opener guess object.
 
         :param manager: The layer manager
 
         """
         layers = []
         parent = AnnotationLayer(manager=manager)
-        parent.file_path = metadata.uri
+        parent.file_path = uri
         parent.mime = self.mime  # fixme: tricky here, as one file has multiple layers
         parent.name = os.path.split(parent.file_path)[1]
 
-        xml = fsopen(metadata.uri).read()
+        xml = open(uri).read()
         gps = GarminGPSDataset(xml)
         for waypoint in gps.waypoints:
             layer = OverlayIconObject(manager=manager)
@@ -65,7 +73,7 @@ class GarminGPSLoader(BaseLayerLoader):
         layer.name = gps.name
         layers.append(layer)
 
-        progress_log.info("Finished loading %s" % metadata.uri)
+        progress_log.info("Finished loading %s" % uri)
         layers.reverse()
         layers[0:0] = [parent]
         log.debug("Adding layers: %s" % ("\n".join([str(lr) for lr in layers])))

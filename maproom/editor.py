@@ -7,29 +7,20 @@ import json
 # Major package imports.
 import wx
 
-# Enthought library imports.
-from pyface.api import FileDialog, OK
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Dict
-from traits.api import Float
-from traits.api import Str
-from traits.api import List
-from traits.api import on_trait_change
-
-from omnivore_framework.framework.editor import FrameworkEditor
-from omnivore_framework.framework.errors import ProgressCancelError
-import omnivore_framework.framework.clipboard as clipboard
-from omnivore_framework.utils.wx.popuputil import PopupStatusBar
-from omnivore_framework.utils.wx.tilemanager import TileManager
-from omnivore_framework.templates import get_template
+from sawx.editor import SawxEditor
+from sawx.errors import ProgressCancelError
+import sawx.clipboard as clipboard
+from sawx.ui.popuputil import PopupStatusBar
+from sawx.ui.tilemanager import TileManager
+from sawx.persistence import get_template, save_template
+from sawx.events import EventHandler
+from sawx import persistence
 
 # Local imports.
 from .errors import MapRoomError
 from .layer_canvas import LayerCanvas
 from .layer_manager import LayerManager
 from . import renderer
-from .layers import loaders
 from .command import UndoStack, BatchStatus
 from . import mouse_handler
 from . import menu_commands as mec
@@ -50,174 +41,253 @@ progress_log = logging.getLogger("progress")
 autosave_log = logging.getLogger("autosave")
 
 
-class ProjectEditor(FrameworkEditor):
-    """The wx implementation of a ProjectEditor.
-
-    See the IProjectEditor interface for the API documentation.
+class ProjectEditor(SawxEditor):
+    """Editor for MapRoom layers
     """
+    editor_id = "maproom.project"
+
+    ui_name = "MapRoom Project"
+
+    preferences_module = "maproom.preferences"
 
     printable = True
 
     imageable = True
 
-    layer_manager = Any
-
-    layer_zoomable = Bool
-
-    layer_can_save = Bool
-
-    layer_can_save_as = Bool
-
-    layer_selected = Bool
-
-    layer_above = Bool
-
-    layer_below = Bool
-
-    multiple_layers = Bool
-
-    layer_has_points = Bool
-
-    layer_has_selection = Bool
-
-    layer_has_flagged = Bool
-
-    layer_has_boundaries = Bool
-
-    layer_is_groupable = Bool
-
-    clickable_object_mouse_is_over = Any
-
-    clickable_object_in_layer = Any
-
-    last_refresh = Float(0.0)
-
-    in_batch_processing = Bool
-
-    layer_visibility = Dict()
-
-    # temporary variable set in load process and used in setting the initial
-    # view
-    loaded_project_extra_json = Any
-
-    # can_paste_style is set by copy_style if there's a style that can be
-    # applied
-    can_paste_style = Bool(False)
-
-    latest_movie = Any(False)
-
-    # NOTE: Class attribute!
     clipboard_style = None
 
-    # Force mouse mode toolbar to be blank so that the initial trait change
-    # that occurs during initialization of this class doesn't match a real
-    # mouse mode.  If it does match, the toolbar won't be properly adjusted
-    # during the first trait change in response to update_layer_selection_ui
-    # and there will be an empty between named toolbars
-    mouse_mode_toolbar = Str("")
+    menubar_desc = [
+        ["File",
+            "new_project",
+            "new_empty_project",
+            ["New Project From Template",
+                "new_project_from_template",
+            ],
+            None,
+            "open_file",
+            ["Open Recent",
+                "open_recent",
+            ],
+            None,
+            "save_project",
+            "save_project_as",
+            "save_project_template",
+            "save_command_log",
+            "save_layer",
+            ["Save Layer As",
+                "save_layer_as",
+            ],
+            None,
+            "save_as_image",
+            "save_movie",
+            None,
+            "revert_project",
+            None,
+            "page_setup",
+            "print_preview",
+            "print",
+            None,
+            "save_as_pdf",
+            None,
+            "quit",
+        ],
+        ["Edit",
+            "undo",
+            "redo",
+            None,
+            "cut",
+            "copy",
+            "duplicate_layer",
+            "paste",
+            None,
+            "copy_style",
+            "paste_style",
+            None,
+            "clear_selection",
+            "delete_selection",
+            None,
+            "boundary_to_selection",
+            None,
+            "clear_flagged",
+            "flagged_to_selection",
+            None,
+            "find_points",
+            None,
+            "default_style",
+            "prefs",
+        ],
+        ["View",
+            "zoom_in",
+            "zoom_out",
+            "zoom_to_fit",
+            "zoom_to_layer",
+            None,
+            "jump_to_coords",
+            None,
+            "raise_to_top",
+            "raise_layer",
+            "lower_layer",
+            "lower_to_bottom",
+            None,
+            "group",
+            "ungroup",
+            None,
+            "bounding_box",
+            "picker_framebuffer",
+            None,
+            ["UI Layout",
+                "save_layout",
+                "restore_default_layout",
+            ],
+        ],
+        ["Layer",
+            "new_vector_layer",
+            "new_annotation_layer",
+            "new_shapefile_layer",
+            "new_wms_layer",
+            "new_tile_layer",
+            "new_noaa_logo_layer",
+            "new_compass_rose_layer",
+            "new_timestamp_layer",
+            "new_lon_lat_layer",
+            "new_rnc_layer",
+            None,
+            "triangulate_layer",
+            "convex_hull",
+            "to_polygon_layer",
+            "to_verdat_layer",
+            "merge_layers",
+            "merge_points",
+            None,
+            "delete_layer",
+            None,
+            "check_selected_layer",
+            "check_all_layers",
+        ],
+        ["Tools",
+            "normalize_longitude",
+            "swap_lat_lon",
+            None,
+            "manage_wms_servers",
+            None,
+            "manage_tile_servers",
+            "clear_tile_cache",
+        ],
+        ["Help",
+            "about",
+            None,
+            "user_guide",
+            None,
+            "show_debug_log",
+            "open_log_directory",
+            "open_log",
+            None,
+            ["Developer Debugging",
+                "debug_layer_manager",
+                "widget_inspector",
+                "garbage_objects",
+            ],
+        ],
+    ]
 
-    mouse_mode_factory = Any(mouse_handler.SelectionMode)
+    toolbar_desc = [
+        "new_project"
+        "open_file",
+        "save_project",
+        "save_project_as",
+        None,
+        "undo",
+        "redo",
+        "clear_selection",
+        "delete_selection",
+        None,
+        "raise_to_top",
+        "raise_layer",
+        "lower_layer",
+        "lower_to_bottom",
+        "group",
+        "ungroup",
+        "triangulate_layer",
+        "delete_layer",
+        "zoom_in",
+        "zoom_out",
+        "zoom_to_fit",
+        "zoom_to_layer",
+        None,
+    ]
 
-    ###########################################################################
-    # 'FrameworkEditor' interface.
-    ###########################################################################
+    module_search_order = ["maproom.actions", "maproom.toolbar", "sawx.actions"]
 
-    def create(self, parent):
-        self.control = self._create_control(parent)
+    #### document matching
 
-    def init_blank_document(self, doc, **kwargs):
-        # This gets called only when a new editor is created without a document
-        # and is the only place to select an initial layer in this case.
-        wx.CallAfter(self.layer_tree_control.select_initial_layer)
+    @classmethod
+    def can_edit_document_exact(cls, document):
+        return hasattr(document, "layers")
 
-    def load_in_new_tab(self, metadata):
-        # a default (blank) document is always created when opening a new
-        # toplevel window. If this happens during app init, allow the initial
-        # notebook tab to be replaced with the command line project or the
-        # default project.
-        if metadata.mime.startswith("application/x-maproom-project-"):
-            return self.window.application.application_initialization_finished
-        return False
+    #### init
 
-    def load_omnivore_document(self, document, layer=False, **kwargs):
-        """ Loads the data from the Omnivore document
-        """
-        metadata = document.metadata
-        loader = loaders.get_loader(metadata)
-        regime = kwargs.get("regime", 0)
-        log.debug("load_omnivore_document: doc=%s loader=%s kwargs=%s" % (document, loader, str(kwargs)))
-        if hasattr(loader, "load_project"):
-            document = LayerManager.create(self)
-            document.metadata = metadata.clone_traits()
-            batch_flags = BatchStatus()
-            # FIXME: Add load project command that clears all layers
-            extra = loader.load_project(metadata, document, batch_flags)
-            self.document = self.layer_manager = document
-            self.create_layout(extra)
-            self.parse_extra_json(extra, batch_flags)
-            self.loaded_project_extra_json = extra
-            log.debug("Clearing timeline")
-            self.timeline.clear_marks()
-            self.layer_tree_control.clear_all_items()
-            self.layer_tree_control.rebuild()
-            self.layer_tree_control.select_initial_layer()
-            self.perform_batch_flags(None, batch_flags)
+    def __init__(self, document, **kwargs):
+        SawxEditor.__init__(self, document, **kwargs)
+        self.layer_manager = document
+        self.layer_manager.project = self
+        self.layer_zoomable = False
+        self.layer_can_save = False
+        self.layer_can_save_as = False
+        self.layer_selected = False
+        self.layer_above = False
+        self.layer_below = False
+        self.multiple_layers = False
+        self.layer_has_points = False
+        self.layer_has_selection = False
+        self.layer_has_flagged = False
+        self.layer_has_boundaries = False
+        self.layer_is_groupable = False
+        self.clickable_object_mouse_is_over = None
+        self.clickable_object_in_layer = None
+        self.last_refresh = 0.0
+        self.in_batch_processing = False
+        self.layer_visibility = self.calc_default_visibility()
 
-            # Clear modified flag
-            self.layer_manager.undo_stack.set_save_point()
-            self.dirty = self.layer_manager.undo_stack.is_dirty()
-            self.mouse_mode_factory = mouse_handler.PanMode
-            self.view_document(self.document)
-        elif hasattr(loader, "iter_log"):
-            line = 0
-            document = LayerManager.create(self)
-            document.metadata = metadata.clone_traits()
-            self.document = self.layer_manager = document
-            self.create_layout("")
-            batch_flags = BatchStatus()
-            self.in_batch_processing = True
-            errors = None
-            for cmd in loader.iter_log(metadata, self.layer_manager):
-                line += 1
-                autosave_log.debug(f"processing line #{line}: {cmd}")
-                try:
-                    undo = self.process_batch_command(cmd, batch_flags)
-                    if not undo.flags.success:
-                        errors = undo.errors
-                        break
-                except Exception as e:
-                    errors = [str(e)]
-                    import traceback
-                    print(traceback.format_exc())
-                    break
-            if errors is not None:
-                header = [
-                    "While restoring from the command log file:\n\n%s\n" % metadata.uri,
-                    "an error occurred on line %d while processing" % line,
-                    "the command '%s':" % cmd.short_name,
-                    ""
-                ]
-                header.extend(errors)
-                text = "\n".join(header)
-                self.task.error(text, "Error restoring from command log")
-            self.in_batch_processing = False
-            self.view_document(self.document)
-            self.perform_batch_flags(None, batch_flags)
-        else:
-            if not hasattr(self, 'layer_tree_control'):
-                self.create_layout({})
-            log.debug("loading %s" % metadata)
-            cmd = mec.LoadLayersCommand(metadata, regime)
-            self.process_command(cmd)
-            if 'regime' not in kwargs:
-                layers = cmd.undo_info.affected_layers()
-                if len(layers) == 1:
-                    cmd = moc.ViewportCommand(layers[0])
-                else:
-                    center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
-                    cmd = moc.ViewportCommand(None, center, units_per_pixel)
-                self.process_command(cmd)
-        document.read_only = document.metadata.check_read_only()
+        # can_paste_style is set by copy_style if there's a style that can be
+        # applied
+        self.can_paste_style = False
+
+        self.latest_movie = None
+
+        # Force mouse mode toolbar to be blank so that the initial trait change
+        # that occurs during initialization of this class doesn't match a real
+        # mouse mode.  If it does match, the toolbar won't be properly adjusted
+        # during the first trait change in response to
+        # update_layer_selection_ui and there will be an empty between named
+        # toolbars
+        self.mouse_mode_toolbar = ""
+        self.mouse_mode_factory = mouse_handler.SelectionMode
+
+    def prepare_destroy(self):
+        self.layer_canvas = None
+
+    def create_event_bindings(self):
+        doc = self.layer_manager
+        doc.layer_loaded_event += self.layer_loaded
+        doc.layers_changed_event += self.layers_changed
+        doc.layer_contents_changed_event += self.layer_contents_changed
+        doc.layer_contents_changed_in_place_event += self.layer_contents_changed_in_place
+        
+        # # when points are deleted from a layer the indexes of the points in the
+        # # merge dialog box become invalid; so this event will trigger the
+        # # user to re-find duplicates in order to create a valid list again
+        doc.layer_contents_deleted_event += self.layer_contents_deleted
+        
+        doc.layer_metadata_changed_event += self.layer_metadata_changed
+        # doc.projection_changed_event += EventHandler(self)
+        doc.refresh_needed_event += self.refresh
+        doc.background_refresh_needed_event += self.background_refresh
+        doc.threaded_image_loaded_event += self.threaded_image_loaded
+
+
+    @property
+    def current_layer(self):
+        return self.layer_tree_control.get_edit_layer()
 
     def parse_extra_json(self, json, batch_flags):
         if json is None:
@@ -239,7 +309,7 @@ class ProjectEditor(FrameworkEditor):
             # all layers
             self.update_default_visibility(warn=True)
         else:
-            self.layer_visibility = self.get_default_visibility()
+            self.layer_visibility = self.calc_default_visibility()
         if "commands" in json:
             for cmd in self.layer_manager.undo_stack.unserialize_text(json["commands"], self.layer_manager):
                 self.process_batch_command(cmd, batch_flags)
@@ -253,7 +323,6 @@ class ProjectEditor(FrameworkEditor):
             "projected_point_center": self.layer_canvas.projected_point_center,
             "projected_units_per_pixel": self.layer_canvas.projected_units_per_pixel,
             "timeline": self.timeline.serialize_json(),
-            "tile_manager": self.control.calc_layout()["tile_manager"]
             }
 
     def layer_visibility_to_json(self):
@@ -273,10 +342,10 @@ class ProjectEditor(FrameworkEditor):
                 v[layer] = vis
         self.layer_visibility = v
 
-    def get_default_visibility(self):
+    def calc_default_visibility(self):
         layer_visibility = dict()
         for layer in self.layer_manager.flatten():
-            layer_visibility[layer] = layer.get_visibility_dict()
+            layer_visibility[layer] = layer.get_visibility_dict(self)
         return layer_visibility
 
     def update_default_visibility(self, warn=False):
@@ -284,7 +353,7 @@ class ProjectEditor(FrameworkEditor):
             if layer not in self.layer_visibility:
                 if warn:
                     log.warning("adding default visibility for layer %s" % layer)
-                self.layer_visibility[layer] = layer.get_visibility_dict()
+                self.layer_visibility[layer] = layer.get_visibility_dict(self)
 
     def set_layer_visibility(self, visible_layers, layers=None):
         if layers is None:
@@ -312,66 +381,33 @@ class ProjectEditor(FrameworkEditor):
         self.timeline.recalc_view()
 
     def init_view_properties(self):
-        # Set default view
-        self.layer_canvas.zoom_to_fit()
-
         # Override default view if provided in project file
-        json = self.loaded_project_extra_json
+        json = self.document.extra_metadata
         if json is not None:
             if "projected_units_per_pixel" in json:
                 self.layer_canvas.set_units_per_pixel(json["projected_units_per_pixel"])
             if "projected_point_center" in json:
                 self.layer_canvas.set_center(json["projected_point_center"])
-        self.loaded_project_extra_json = None
+        else:
+            # Set default view
+            self.layer_canvas.zoom_to_fit()
+
         log.debug("using center: %s, upp=%f" % (str(self.layer_canvas.projected_point_center), self.layer_canvas.projected_units_per_pixel))
 
-    def save(self, path=None, prompt=False):
-        """ Saves the contents of the editor in a maproom project file
-        """
-        if path is None:
-            path = self.document.uri
-        if prompt or not path:
-            default_dir = self.best_file_save_dir
-            default_file = ""
-            dialog = FileDialog(parent=self.window.control, action='save as', wildcard="MapRoom Project Files (*.maproom)|*.maproom", default_directory=default_dir, default_filename=default_file)
-            if dialog.open() == OK:
-                path = dialog.path
-            else:
-                return
-        if not path:
-            path = "%s.maproom" % self.name
+        self.layer_tree_control.clear_all_items()
+        self.layer_tree_control.rebuild()
+        self.layer_tree_control.select_initial_layer()
+        self.mouse_mode_factory = mouse_handler.PanMode
 
-        prefs = self.task.preferences
-        if prefs.check_errors_on_save:
-            if not self.check_all_layers_for_errors(True):
-                return
+        self.rebuild_document_properties()
 
-        error = self.save_project(path)
-        if error:
-            self.task.error(error)
-        else:
-            self.layer_manager.undo_stack.set_save_point()
+        # force toolbar update to pick up the correct default mouse mode
+        self.update_layer_selection_ui()
 
-            # Update tab name.  Note that dirty must be changed in order for
-            # the trait to be updated, so force a change if needed.  Also,
-            # update the URI first because trait callbacks happen immediately
-            # and because properties are used for the editor name, no trait
-            # event gets called on updating the metadata URI.
-            self.layer_manager.metadata.uri = path
-            if not self.dirty:
-                self.dirty = True
-            self.dirty = self.layer_manager.undo_stack.is_dirty()
-
-            # Push URL to top of recent files list
-            self.window.application.successfully_saved_event = self.layer_manager.metadata.uri
-
-            # refresh window name in case filename has changed
-            self.task._active_editor_tab_change(None)
-
-    def save_project(self, path):
+    def save_project(self, path, **args):
         try:
             progress_log.info("START=Saving %s" % path)
-            error = self.layer_manager.save_all(path, self.current_extra_json)
+            error = self.layer_manager.save_all_zip(path, self.current_extra_json, **args)
         except ProgressCancelError as e:
             error = str(e)
         finally:
@@ -380,16 +416,19 @@ class ProjectEditor(FrameworkEditor):
         return error
 
     def save_as_template(self, name):
-        path = self.window.application.get_user_dir_filename("project_templates", name)
-        if not os.path.exists(path) or self.task.confirm("Replace existing template %s?" % name, "Replace Template"):
-            error = self.save_project(path)
+        path = persistence.get_user_dir_filename("project_templates", name)
+        log.debug(f"saving template to {path}")
+        if not os.path.exists(path) or self.frame.confirm("Replace existing template %s?" % name, "Replace Template"):
+            # skip default styles when saving templates, otherwise those styles will
+            # always override the user's saved default styles
+            error = self.save_project(path, skip_post_json_data_keys=["default_styles"])
             if error:
-                self.task.error(error)
+                self.frame.error(error)
             else:
-                self.task.templates_changed = True  # update template submenu
+                self.frame.templates_changed = True  # update template submenu
 
     def get_savepoint(self):
-        layer = self.layer_tree_control.get_edit_layer()
+        layer = self.current_layer
         cmd = mec.SavepointCommand(layer, self.layer_canvas.get_zoom_rect())
         return cmd
 
@@ -407,17 +446,33 @@ class ProjectEditor(FrameworkEditor):
             fh.write(str(serializer))
             fh.close()
         except IOError as e:
-            self.task.error(str(e))
+            self.frame.error(str(e))
         self.layer_manager.undo_stack.pop_command()
 
-    def save_layer(self, path, loader=None):
+    #### layer load/save
+
+    def can_load_file(self, file_metadata):
+        """Override in subclass if possible to load files into existing editor
+        """
+        loader = file_metadata["loader"]
+        return not hasattr(loader, "load_project")
+
+    def load_file(self, file_metadata):
+        """Override in subclass to actually load file into existing editor
+        """
+        uri = file_metadata["uri"]
+        loader = file_metadata["loader"]
+        cmd = mec.LoadLayersCommand(uri, loader)
+        self.process_command_from_load(cmd)
+
+    def save_layer(self, path, loader=None, ext=None):
         """ Saves the contents of the current layer in an appropriate file
         """
-        layer = self.layer_tree_control.get_edit_layer()
+        layer = self.current_layer
         if layer is None:
             return
 
-        prefs = self.task.preferences
+        prefs = self.preferences
         if prefs.check_errors_on_save:
             if not self.check_all_layers_for_errors(True):
                 return
@@ -430,22 +485,32 @@ class ProjectEditor(FrameworkEditor):
         finally:
             progress_log.info("END")
         if error:
-            self.task.error(error)
+            self.frame.error(error)
         else:
-            self.window.application.successfully_loaded_event = path
-        self.layer_metadata_changed(layer)
+            self.save_success(path)
+        self.document.layer_metadata_changed_event(layer)
         self.update_layer_selection_ui()
 
-    def get_numpy_image(self):
-        # Deselect all layers because it's designed to be used as post-
-        # processing image
-        self.layer_tree_control.set_edit_layer(None)
-        self.layer_canvas.render_callback(immediately=True)  # force update including deselected layer
+    def get_numpy_image_dialog(self):
+        # Attempt at using a dialog to size and choose the image, but it's
+        # running into hard crashes on MacOS
+        return self.layer_canvas.get_image_from_dialog()
+
+    def get_numpy_image_immediate(self):
         return self.layer_canvas.get_canvas_as_image()
+
+    get_numpy_image = get_numpy_image_immediate
+
+    def get_numpy_image_before_prompt(self):
+        self.layer_tree_control.set_edit_layer(None)
+        raw_data = self.get_numpy_image()
+        if raw_data is None:
+            raise RuntimeError("save cancelled")
+        return raw_data
 
     def print_preview(self):
         import os
-        temp = os.path.join(self.window.application.cache_dir, "preview.pdf")
+        temp = os.path.join(persistence.cache_dir, "preview.pdf")
         self.save_as_pdf(temp)
         try:
             os.startfile(temp)
@@ -470,6 +535,7 @@ class ProjectEditor(FrameworkEditor):
     def start_movie_recording(self):
         log.debug("Starting movie recording")
         self.latest_movie = apng.APNG()
+        self.latest_movie_size = None
 
     def stop_movie_recording(self):
         log.debug("Recorded %d frames" % len(self.latest_movie.frames))
@@ -482,9 +548,15 @@ class ProjectEditor(FrameworkEditor):
         if not self.timeline.timeline.is_beyond_playback_stop_value:
             log.debug("Recording image at %s" % time.strftime("%b %d %Y %H:%M", time.gmtime(self.timeline.current_time)))
             frame = self.get_numpy_image()
+            h, w, depth = frame.shape
+            if self.latest_movie_size is None:
+                self.latest_movie_size = (w, h)
+            else:
+                if self.latest_movie_size != (w, h):
+                    self.timeline.pause_playback()
+                    self.frame.error("Don't resize window during playback.", "Playback Stopped")
             if debug:
                 frame_number = len(self.latest_movie.frames)
-                h, w, depth = frame.shape
                 image = wx.Image(w, h, frame)
                 image.SaveFile("movie_frame_%03d.png" % frame_number, wx.BITMAP_TYPE_PNG)
             self.latest_movie.append(frame, delay=int(self.timeline.timeline.step_rate * 1000))
@@ -502,34 +574,34 @@ class ProjectEditor(FrameworkEditor):
         if not req.is_cancelled:
             if error is None:
                 log.debug("loaded RNC map %s for map %s" % (req.path, req.extra_data))
-                prefs = self.task.preferences
-                kap = extract_from_zip(req.path, req.extra_data[0], prefs.bsb_directory)
+                prefs = self.preferences
+                kap = extract_from_zip(req.path, req.extra_data, prefs.bsb_directory)
                 if kap:
-                    self.window.application.load_file(kap, self.task, regime=req.extra_data[1])
+                    self.frame.load_file(kap, self)
                 else:
-                    self.task.error("The metadata in %s\nhas a problem: map %s doesn't exist" % (req.path, req.extra_data))
+                    self.frame.error("The metadata in %s\nhas a problem: map %s doesn't exist" % (req.path, req.extra_data))
             else:
-                self.task.error("Error downloading %s:\n%s" % (req.url, error))
+                self.frame.error("Error downloading %s:\n%s" % (req.url, error))
 
     def check_rnc_map(self, url, filename, map_id):
         # Check for existence of already downloaded RNC map. This assumes the
         # layout BSB_ROOT/<map number>/<filename>
-        prefs = self.task.preferences
+        prefs = self.preferences
         if prefs.bsb_directory:
             path = os.path.join(prefs.bsb_directory, "BSB_ROOT", map_id, filename)
             log.debug("checking for RNC file %s" % path)
             if os.path.exists(path):
                 return path
 
-    def download_rnc(self, url, filename, map_id, regime, confirm=False, name=None):
+    def download_rnc(self, url, filename, map_id, confirm=False, name=None):
         if confirm:
-            if not self.task.confirm(f"Download and display RNC #{map_id}?\n\n{name}", "Confirm RNC Download"):
+            if not self.frame.confirm(f"Download and display RNC #{map_id}?\n\n{name}", "Confirm RNC Download"):
                 return
         kap = self.check_rnc_map(url, filename, map_id)
         if not kap:
-            self.download_file(url, None, self.process_rnc_download, (filename, regime))
+            self.download_file(url, None, self.process_rnc_download, filename)
         else:
-            self.window.application.load_file(kap, self.task, regime=regime)
+            self.frame.load_file(kap, self)
 
     def download_file(self, url, filename, callback, extra_data):
         if filename is None:
@@ -541,16 +613,13 @@ class ProjectEditor(FrameworkEditor):
     # Private interface.
     ###########################################################################
 
-    def _create_control(self, parent):
+    def create_control(self, parent):
         """ Creates the toolkit-specific control for the widget. """
 
         panel = TileManager(parent)
         panel.Bind(TileManager.EVT_LAYOUT_CHANGED, self.on_layout_changed)
 
-        self.document = self.layer_manager = LayerManager.create(self)
-        self.layer_visibility = self.get_default_visibility()
-
-        log.debug("LayerEditor: task=%s" % self.task)
+        log.debug("LayerEditor: document=%s" % self.document)
 
         return panel
 
@@ -558,9 +627,9 @@ class ProjectEditor(FrameworkEditor):
         layout = self.control.calc_layout()
         log.debug("on_layout_changed: new tilemanager layout {json.dumps(layout)}")
 
-    def get_default_layout(self):
+    def get_default_layout(self, include_user_defined=True):
         try:
-            data = get_template("%s.default_layout" % self.task.id)
+            data = get_template("%s.default_layout" % self.editor_id, include_user_defined)
         except OSError:
             log.error("no default layout")
             e = {}
@@ -572,13 +641,20 @@ class ProjectEditor(FrameworkEditor):
                 e = {}
         return e
 
-    def create_layout(self, json):
+    def restore_default_layout(self, include_user_defined=True):
+        layout = self.get_default_layout(include_user_defined)
+        self.control.restore_layout(layout)
+
+    def save_user_defined_default_layout(self):
+        layout = self.control.calc_layout()
+        text = json.dumps(layout)
+        save_template("%s.default_layout" % self.editor_id, text, False)
+
+    def create_layout(self):
+        json = self.document.extra_metadata
+
         panel = self.control
-        if "tile_manager" in json:
-            layout = json
-        else:
-            layout = self.get_default_layout()
-        panel.restore_layout(layout)
+        self.restore_default_layout()
 
         # Mac can occasionally fail to get an OpenGL context, so creation of
         # the layer canvas can fail. Attempting to work around by giving it
@@ -606,33 +682,67 @@ class ProjectEditor(FrameworkEditor):
         self.selection_info = SelectionInfoPanel(panel, self, size=(200, 200))
         panel.add(self.selection_info, "selection_info", use_close_button=False)
 
-        self.triangle_panel = TrianglePanel(panel, self.task)
+        self.triangle_panel = TrianglePanel(panel, self)
         panel.add(self.triangle_panel, "triangle_panel", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.merge_points_panel = MergePointsPanel(panel, self.task)
+        self.merge_points_panel = MergePointsPanel(panel, self)
         panel.add(self.merge_points_panel, "merge_points_panel", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.undo_history = UndoHistoryPanel(panel, self.task)
+        self.undo_history = UndoHistoryPanel(panel, self)
         panel.add(self.undo_history, "undo_history", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.flagged_control = panes.FlaggedPointPanel(panel, self.task)
+        self.flagged_control = panes.FlaggedPointPanel(panel, self)
         panel.add(self.flagged_control, "flagged_control", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.download_control = panes.DownloadPanel(panel, self.task)
+        self.download_control = panes.DownloadPanel(panel, self)
         panel.add(self.download_control, "download_control", wx.RIGHT, sidebar=True, use_close_button=False)
 
-        self.timeline = panes.TimelinePlaybackPanel(panel, self.task)
+        self.timeline = panes.TimelinePlaybackPanel(panel, self)
         panel.add_footer(self.timeline)
+        log.debug("Clearing timeline")
+        self.timeline.clear_marks()
+
+        batch_flags = json.get('batch_flags_from_load', BatchStatus())
+        self.parse_extra_json(json, batch_flags)
+        self.perform_batch_flags(None, batch_flags)
+
+        try:
+            cmd = json['command_from_load']
+        except KeyError:
+            pass
+        else:
+            # ViewportCommand will fail because the screen doesn't yet have a
+            # size, so wait until after controls are realized on screen
+            wx.CallAfter(self.process_command_from_load, cmd, True)
+
+        wx.CallAfter(self.init_view_properties)
+
+    def process_command_from_load(self, cmd, set_save_point=False):
+        self.process_command(cmd)
+        layers = cmd.undo_info.affected_layers()
+        if len(layers) == 1:
+            layer = layers[0]
+            if layer.is_zoomable():
+                cmd = moc.ViewportCommand(layer)
+            else:
+                cmd = None
+        else:
+            center, units_per_pixel = self.layer_canvas.calc_zoom_to_layers(layers)
+            cmd = moc.ViewportCommand(None, center, units_per_pixel)
+        if cmd is not None:
+            self.process_command(cmd)
+        if set_save_point:
+            self.layer_manager.undo_stack.set_save_point()
 
     # Traits event handlers
 
-    @on_trait_change('layer_manager:layer_loaded')
-    def layer_loaded(self, layer):
+    def layer_loaded(self, evt):
+        layer = evt[0]
         log.debug("layer_loaded called for %s" % layer)
-        self.layer_visibility[layer] = layer.get_visibility_dict()
+        self.layer_visibility[layer] = layer.get_visibility_dict(self)
 
-    @on_trait_change('layer_manager:layers_changed')
-    def layers_changed(self, batch_status):
+    def layers_changed(self, evt):
+        batch_status = evt[0]
         log.debug("layers_changed called!!!")
         try:
             collapse = batch_status.collapse
@@ -644,66 +754,78 @@ class ProjectEditor(FrameworkEditor):
         self.timeline.recalc_view()
 
     def update_layer_menu_ui(self, edit_layer):
-        if edit_layer is not None:
-            self.can_copy = edit_layer.can_copy()
-            self.can_paste = True
-            self.can_paste_style = self.clipboard_style is not None
-            self.layer_can_save = edit_layer.can_save()
-            self.layer_can_save_as = edit_layer.can_save_as()
-            self.layer_selected = not edit_layer.is_root()
-            self.layer_zoomable = edit_layer.is_zoomable()
-            self.layer_above = self.layer_manager.is_raisable(edit_layer)
-            self.layer_below = self.layer_manager.is_lowerable(edit_layer)
-        else:
-            self.can_copy = False
-            self.can_paste = False
-            self.can_paste_style = False
-            self.layer_can_save = False
-            self.layer_can_save_as = False
-            self.layer_selected = False
-            self.layer_zoomable = False
-            self.layer_above = False
-            self.layer_below = False
+        # if edit_layer is not None:
+        #     self.can_copy = edit_layer.can_copy()
+        #     self.can_paste = True
+        #     self.can_paste_style = self.clipboard_style is not None
+        #     self.layer_can_save = edit_layer.can_save()
+        #     self.layer_can_save_as = edit_layer.can_save_as()
+        #     self.layer_selected = not edit_layer.is_root()
+        #     self.layer_zoomable = edit_layer.is_zoomable()
+        #     self.layer_above = self.layer_manager.is_raisable(edit_layer)
+        #     self.layer_below = self.layer_manager.is_lowerable(edit_layer)
+        # else:
+        #     self.can_copy = False
+        #     self.can_paste = False
+        #     self.can_paste_style = False
+        #     self.layer_can_save = False
+        #     self.layer_can_save_as = False
+        #     self.layer_selected = False
+        #     self.layer_zoomable = False
+        #     self.layer_above = False
+        #     self.layer_below = False
+        pass
 
     def update_layer_selection_ui(self, edit_layer=None):
         if edit_layer is None:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
         if edit_layer is not None:
             # leave mouse_mode set to current setting
             self.mouse_mode_toolbar = edit_layer.mouse_mode_toolbar
             self.mouse_mode_factory = toolbar.get_valid_mouse_mode(self.mouse_mode_factory, self.mouse_mode_toolbar)
         else:
             self.mouse_mode_factory = mouse_handler.SelectionMode
+
+        self.update_toolbar_for_mouse_mode()
+
         self.update_layer_menu_ui(edit_layer)
         self.layer_canvas.set_mouse_handler(self.mouse_mode_factory)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_info_panels(edit_layer)
         self.update_layer_contents_ui(edit_layer)
-        self.task.layer_selection_changed = edit_layer
+        # self.task.layer_selection_changed = edit_layer
+
+    def update_toolbar_for_mouse_mode(self):
+        # Creating an object attribute that will shadow the class attribute
+        self.toolbar_desc = list(self.__class__.toolbar_desc)
+        name = self.mouse_mode_toolbar
+        tools = toolbar.valid_mouse_modes.get(self.mouse_mode_toolbar, [])
+        self.toolbar_desc.extend(tools)
+        self.frame.rebuild_toolbar()
 
     def update_layer_contents_ui(self, edit_layer=None):
         if edit_layer is None:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
         if edit_layer is not None:
-            self.layer_has_points = edit_layer.has_points()
-            self.layer_has_selection = edit_layer.has_selection()
-            self.layer_has_flagged = edit_layer.has_flagged()
-            self.layer_has_boundaries = edit_layer.has_boundaries()
-            self.layer_is_groupable = edit_layer.has_groupable_objects()
+        #     self.layer_has_points = edit_layer.has_points()
+        #     self.layer_has_selection = edit_layer.has_selection()
+        #     self.layer_has_flagged = edit_layer.has_flagged()
+        #     self.layer_has_boundaries = edit_layer.has_boundaries()
+        #     self.layer_is_groupable = edit_layer.has_groupable_objects()
             layer_name = edit_layer.name
         else:
-            self.layer_has_points = False
-            self.layer_has_selection = False
-            self.layer_has_flagged = False
-            self.layer_has_boundaries = False
-            self.layer_is_groupable = False
+        #     self.layer_has_points = False
+        #     self.layer_has_selection = False
+        #     self.layer_has_flagged = False
+        #     self.layer_has_boundaries = False
+        #     self.layer_is_groupable = False
             layer_name = "Current Layer"
         log.debug("has_points=%s, has_selection = %s, has_flagged=%s, has_boundaries = %s" % (self.layer_has_points, self.layer_has_selection, self.layer_has_flagged, self.layer_has_boundaries))
         self.layer_info.SetName(layer_name)
-        self.update_undo_redo()
+        pass
 
     def update_info_panels(self, layer, force=False):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer == layer:
             self.layer_info.display_panel_for_layer(self, layer, force)
             self.selection_info.display_panel_for_layer(self, layer, force)
@@ -716,36 +838,42 @@ class ProjectEditor(FrameworkEditor):
         if self.selection_info.process_initial_key(event, text):
             return
 
-    @on_trait_change('layer_manager:undo_stack_changed')
-    def undo_stack_changed(self):
+    # @on_trait_change('layer_manager:undo_stack_changed')
+    def undo_stack_changed(self, evt):
         log.debug("undo_stack_changed called!!!")
         self.refresh()
 
-    @on_trait_change('layer_manager:layer_contents_changed')
-    def layer_contents_changed(self, layer):
+    # @on_trait_change('layer_manager:layer_contents_changed')
+    def layer_contents_changed(self, evt):
+        layer = evt[0]
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
-    @on_trait_change('layer_manager:layer_contents_changed_in_place')
-    def layer_contents_changed_in_place(self, layer):
+    # @on_trait_change('layer_manager:layer_contents_changed_in_place')
+    def layer_contents_changed_in_place(self, evt):
+        layer = evt[0]
         log.debug("layer_contents_changed_in_place called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer, in_place=True)
 
-    @on_trait_change('layer_manager:layer_contents_deleted')
-    def layer_contents_deleted(self, layer):
+    # @on_trait_change('layer_manager:layer_contents_deleted')
+    def layer_contents_deleted(self, evt):
+        layer = evt[0]
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
-    @on_trait_change('layer_manager:layer_metadata_changed')
-    def layer_metadata_changed(self, layer):
+    # @on_trait_change('layer_manager:layer_metadata_changed')
+    def layer_metadata_changed(self, evt):
+        layer = evt[0]
         log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
 
-    @on_trait_change('layer_manager:refresh_needed')
-    def refresh(self, batch_flags=None):
+    # @on_trait_change('layer_manager:refresh_needed')
+    def refresh(self, evt=None):
+        if evt is None:
+            batch_flags = None
+        else:
+            batch_flags = evt[0]
         log.debug("refresh called; batch_flags=%s" % batch_flags)
-        if self.control is None:
-            return
         if batch_flags is None or batch_flags is True:
             batch_flags = BatchStatus()
 
@@ -760,13 +888,13 @@ class ProjectEditor(FrameworkEditor):
             # of the cursor position.
             current = None
         else:
-            current = self.window.control.FindFocus()
+            current = self.control.FindFocus()
 
         # On Mac this is neither necessary nor desired.
         if not sys.platform.startswith('darwin'):
             self.control.Update()
 
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         self.update_layer_contents_ui(edit_layer)
         self.update_layer_menu_ui(edit_layer)
         self.layer_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
@@ -775,8 +903,8 @@ class ProjectEditor(FrameworkEditor):
         self.last_refresh = time.clock()
         self.control.Refresh()
 
-    @on_trait_change('layer_manager:background_refresh_needed')
-    def background_refresh(self):
+    # @on_trait_change('layer_manager:background_refresh_needed')
+    def background_refresh(self, evt):
         log.debug("background refresh called")
         t = time.clock()
         if t < self.last_refresh + 0.5:
@@ -784,10 +912,10 @@ class ProjectEditor(FrameworkEditor):
             return
         self.refresh()
 
-    @on_trait_change('layer_manager:threaded_image_loaded')
-    def threaded_image_loaded(self, data):
-        log.debug("threaded image loaded called")
-        (layer, map_server_id), wms_request = data
+    # @on_trait_change('layer_manager:threaded_image_loaded')
+    def threaded_image_loaded(self, evt):
+        log.debug(f"threaded image loaded called: {evt}")
+        (layer, map_server_id), wms_request = evt
         log.debug("event happed on %s for map server id %d" % (layer, map_server_id))
         log.debug(f"wms_request: {wms_request}")
         if layer.is_valid_threaded_result(map_server_id, wms_request):
@@ -807,35 +935,39 @@ class ProjectEditor(FrameworkEditor):
             # handlers and causing UI sizing and redrawing. Preventing the
             # immediate updates with the Freeze/Thaw pair seems to fix it.
             if sys.platform == "darwin":
-                self.window.control.Freeze()
+                self.control.Freeze()
 
             b = BatchStatus()
             try:
                 undo = self.process_batch_command(command, b)
             except MapRoomError as e:
-                self.task.error(str(e), "Error Processing Command")
+                self.frame.error(str(e), "Error Processing Command")
                 if hasattr(e, 'error_points'):
                     layer = command.get_layer_in_layer_manager(self.layer_manager)
                     layer.highlight_exception(e)
                 undo = None
             else:
+                log.debug(f"processed command {command}: flags={undo.flags}")
                 if override_editable_properties_changed is not None:
                     b.editable_properties_changed = override_editable_properties_changed
                 self.perform_batch_flags(command, b)
-                history = self.layer_manager.undo_stack.serialize()
-                self.window.application.save_log(str(history), "command_log", ".mrc")
-                name = self.window.application.get_log_file_name("command_log", ".mrc")
-                latest = os.path.join(os.path.dirname(name), "latest.mrc")
-                import shutil
-                shutil.copy(name, latest)
+                wx.CallAfter(self.save_history)
 
                 if new_mouse_mode is not None:
                     self.mouse_mode_factory = new_mouse_mode
-                    self.update_layer_selection_ui()
+                    wx.CallAfter(self.update_layer_selection_ui)
         finally:
             if sys.platform == "darwin":
-                self.window.control.Thaw()
+                self.control.Thaw()
         return undo
+
+    def save_history(self):
+        history = self.layer_manager.undo_stack.serialize()
+        persistence.save_log(str(history), "command_log", ".mrc")
+        name = persistence.get_log_file_name("command_log", ".mrc")
+        latest = os.path.join(os.path.dirname(name), "latest.mrc")
+        import shutil
+        shutil.copy(name, latest)
 
     def process_flags(self, flags):
         b = BatchStatus()
@@ -880,6 +1012,7 @@ class ProjectEditor(FrameworkEditor):
                 b.messages.append("- %s" % f.message)
             b.messages.append("")
         for lf in f.layer_flags:
+            log.debug(f"processing layer flags: {lf}")
             layer = lf.layer
             if layer in b.layers:
                 log.debug("layer %s already in batch flags" % layer)
@@ -914,7 +1047,7 @@ class ProjectEditor(FrameworkEditor):
                 # only the last layer in the list will be selected
                 b.select_layer = layer
             if lf.layer_loaded:
-                self.layer_manager.layer_loaded = layer
+                self.layer_manager.layer_loaded_event(layer)
                 b.layers_changed = True
             if lf.layer_metadata_changed:
                 b.metadata_changed = True
@@ -932,7 +1065,7 @@ class ProjectEditor(FrameworkEditor):
         """Perform the UI updates given the BatchStatus flags
 
         """
-        log.debug("perform_batch_flags layers affected: %s" % str(b.layers))
+        log.debug(f"perform_batch_flags {b} layers affected: {b.layers}")
         for layer in b.layers:
             layer.increment_change_count()
             if layer.transient_edit_layer:
@@ -945,14 +1078,14 @@ class ProjectEditor(FrameworkEditor):
         # displaying this project
         for layer, in_place in b.need_rebuild.items():
             if in_place:
-                self.layer_manager.layer_contents_changed_in_place = layer
+                self.layer_manager.layer_contents_changed_in_place_event(layer)
             else:
-                self.layer_manager.layer_contents_changed = layer
+                self.layer_manager.layer_contents_changed_event(layer)
 
         if b.layers_changed:
-            self.layer_manager.layers_changed = b
+            self.layer_manager.layers_changed_event(b)
         if b.metadata_changed:
-            self.layer_manager.layer_metadata_changed = True
+            self.layer_manager.layer_metadata_changed_event(True)
 
         overlay_affected = self.layer_manager.recalc_overlay_bounds()
         if overlay_affected:
@@ -962,14 +1095,14 @@ class ProjectEditor(FrameworkEditor):
         if b.immediate_refresh_needed:
             self.layer_canvas.render(immediately=True)
         if b.refresh_needed:
-            self.layer_manager.refresh_needed = b
+            self.layer_manager.refresh_needed_event(b)
         if b.select_layer:
             self.layer_tree_control.set_edit_layer(b.select_layer)
 
         if b.errors:
-            self.task.error("\n".join(b.errors))
+            self.frame.error("\n".join(b.errors))
         if b.messages:
-            self.task.information("\n".join(b.messages), "Messages")
+            self.frame.information("\n".join(b.messages), "Messages")
 
         self.undo_history.update_history()
 
@@ -997,7 +1130,7 @@ class ProjectEditor(FrameworkEditor):
             data_obj.SetText(text)
             retval = "%d characters" % len(text)
         else:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
             if edit_layer is not None:
                 json_data = edit_layer.serialize_json(-999, children=True)
                 text = json.dumps(json_data, indent=4)
@@ -1019,25 +1152,25 @@ class ProjectEditor(FrameworkEditor):
             data_obj = clipboard.get_paste_data_object(self)
             self.process_paste_data_object(data_obj)
         except clipboard.ClipboardError as e:
-            self.task.error(str(e), "Paste Error")
+            self.frame.error(str(e), "Paste Error")
 
     def process_paste_data_object(self, data_obj, cmd_cls=None):
         # print("Found data object %s" % data_obj)
         text = clipboard.get_data_object_value(data_obj, "maproom")
         # print("value:", text)
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             cmd = mec.PasteLayerCommand(edit_layer, text, self.layer_canvas.world_center)
             self.process_command(cmd)
 
     def copy_style(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             self.__class__.clipboard_style = edit_layer.style.get_copy()
             self.can_paste_style = True
 
     def paste_style(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             style = self.clipboard_style
             if style is not None:
@@ -1045,34 +1178,34 @@ class ProjectEditor(FrameworkEditor):
                 self.process_command(cmd)
 
     def clear_selection(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             edit_layer.clear_all_selections()
             self.update_layer_contents_ui()
             self.refresh()
 
     def delete_selection(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             cmd = edit_layer.delete_all_selected_objects()
             self.process_command(cmd)
 
     def clear_all_flagged(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             edit_layer.clear_flagged(refresh=False)
             self.update_layer_contents_ui()
             self.refresh()
 
     def select_all_flagged(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is not None:
             edit_layer.select_flagged(refresh=False)
             self.update_layer_contents_ui()
             self.refresh()
 
     def select_boundary(self):
-        edit_layer = self.layer_tree_control.get_edit_layer()
+        edit_layer = self.current_layer
         if edit_layer is None:
             return
 
@@ -1090,9 +1223,9 @@ class ProjectEditor(FrameworkEditor):
         if error == "cancel":
             return
         elif error is not None:
-            self.task.error(error, edit_layer.name)
+            self.frame.error(error, edit_layer.name)
         elif status is None:
-            self.task.error("No complete boundary", edit_layer.name)
+            self.frame.error("No complete boundary", edit_layer.name)
         else:
             self.update_layer_contents_ui()
             self.refresh()
@@ -1138,7 +1271,7 @@ class ProjectEditor(FrameworkEditor):
 
     def delete_selected_layer(self, layer=None):
         if layer is None:
-            layer = self.layer_tree_control.get_edit_layer()
+            layer = self.current_layer
         if layer is None:
             self.window.status_bar.message = "Selected layer to delete!."
             return
@@ -1148,7 +1281,7 @@ class ProjectEditor(FrameworkEditor):
         else:
             m = None
 
-        if m is not None and not self.task.confirm(m):
+        if m is not None and not self.frame.confirm(m):
             return
 
         cmd = mec.DeleteLayerCommand(layer)
@@ -1157,13 +1290,13 @@ class ProjectEditor(FrameworkEditor):
     def check_for_errors(self, edit_layer=None, save_message=False):
         error = None
         if edit_layer is None:
-            edit_layer = self.layer_tree_control.get_edit_layer()
+            edit_layer = self.current_layer
         if edit_layer is None:
             return
 
         try:
             progress_log.info("START=Checking layer %s" % edit_layer.name)
-            error = self.layer_manager.check_layer(edit_layer, self.window)
+            error = self.layer_manager.check_layer(edit_layer)
         except ProgressCancelError:
             error = "cancel"
         finally:
@@ -1176,12 +1309,12 @@ class ProjectEditor(FrameworkEditor):
         elif error is not None:
             edit_layer.highlight_exception(error)
             if save_message:
-                all_ok = self.task.confirm(str(error), "Layer Contains Problems; Save Anyway?")
+                all_ok = self.frame.confirm(str(error), "Layer Contains Problems; Save Anyway?")
             else:
-                self.task.error(str(error), "Layer Contains Problems")
+                self.frame.error(str(error), "Layer Contains Problems")
         else:
             edit_layer.clear_flagged(refresh=True)
-            self.task.information("Layer %s OK" % edit_layer.name, "No Problems Found")
+            self.frame.information("Layer %s OK" % edit_layer.name, "No Problems Found")
         log.debug(f"check_for_errors in {edit_layer}: {error}")
         self.flagged_control.recalc_view()
         return all_ok
@@ -1193,7 +1326,7 @@ class ProjectEditor(FrameworkEditor):
             progress_log.info("START=Checking all layers for errors")
             for layer in self.layer_manager.flatten():
                 progress_log.info("TITLE=Checking layer %s" % layer.name)
-                error = self.layer_manager.check_layer(layer, self.window)
+                error = self.layer_manager.check_layer(layer)
                 if error is not None:
                     messages.append("%s: %s" % (layer.name, str(error)))
                     layer.highlight_exception(error)
@@ -1211,16 +1344,16 @@ class ProjectEditor(FrameworkEditor):
         elif messages:
             if save_message:
                 msg = "Layers Contains Problems; Save Anyway?"
-                all_ok = self.task.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
+                all_ok = self.frame.confirm("\n\n".join(messages), msg, no_label="Don't Save", yes_label="Save")
             else:
                 msg = "Layers With Problems"
-                self.task.information("\n\n".join(messages), msg)
+                self.frame.information("\n\n".join(messages), msg)
         else:
             for layer in self.layer_manager.flatten():
                 layer.clear_flagged()
-            self.layer_manager.refresh_needed = None
+            self.layer_manager.refresh_needed_event(None)
             if not save_message:
-                self.task.information("Layers OK", "No Problems Found")
+                self.frame.information("Layers OK", "No Problems Found")
         return all_ok
 
     def editor_summary(self):

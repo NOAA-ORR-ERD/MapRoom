@@ -2,10 +2,6 @@ import numpy as np
 
 from pytriangle import triangulate_simple
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
 
@@ -23,15 +19,17 @@ class TriangleLayer(PointLayer):
     """
     type = "triangle"
 
-    mouse_mode_toolbar = Str("BaseLayerToolBar")
-
-    triangles = Any
+    mouse_mode_toolbar = "BaseLayerToolBar"
 
     visibility_items = ["points", "triangles", "labels"]
 
     use_color_cycling = True
 
     layer_info_panel = ["Triangle count", "Show depth shading"]
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.triangles = None
 
     def __str__(self):
         try:
@@ -86,7 +84,7 @@ class TriangleLayer(PointLayer):
 
         self.update_bounds()
 
-    def can_save_as(self):
+    def can_save(self):
         return True
 
     def triangles_to_json(self):
@@ -201,7 +199,7 @@ class TriangleLayer(PointLayer):
 
         # when points are deleted from a layer the indexes of the points in the existing merge dialog box
         # become invalid; so force the user to re-find duplicates in order to create a valid list again
-        self.manager.dispatch_event('layer_contents_deleted', self)
+        self.manager.layer_contents_deleted_event(self)
 
     def make_triangles(self, count):
         return np.repeat(
@@ -265,8 +263,8 @@ class TriangleLayer(PointLayer):
     def triangulate_from_data(self, points, depths, triangles):
         self.set_data(points, depths, triangles)
         self.unproject_triangle_points(self.points)
-        self.manager.dispatch_event('layer_contents_changed', self)
-        self.manager.dispatch_event('layer_metadata_changed', self)
+        self.manager.layer_contents_changed_event(self)
+        self.manager.layer_metadata_changed_event(self)
 
     def triangulate_from_layer(self, parent_layer, q, a):
         points, depths, triangles = self.get_triangulated_points(parent_layer, q, a)
@@ -318,7 +316,7 @@ class TriangleLayer(PointLayer):
         """Update display canvas data with the data in this layer
 
         """
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         triangles = self.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
         tri_points_color = self.get_triangle_point_colors()

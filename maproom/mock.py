@@ -1,19 +1,24 @@
 import os
 
-from omnivore_framework.utils.file_guess import FileGuess
-
+from . import loaders
+from .styles import LayerStyle
 from .layer_manager import LayerManager
-from .layers import Layer, loaders, LayerStyle
+from .layers import Layer
 from .library.Boundary import Boundaries
 from .library.projection import Projection
 from .library.host_utils import HostCache
-from .library.known_hosts import default_tile_hosts
+from .servers import default_tile_hosts
 from .command import UndoStack, BatchStatus
 from .menu_commands import LoadLayersCommand
 
 
 class MockApplication(object):
     command_line_args = []
+
+
+class MockFrame(object):
+    def status_message(self, message, debug=False):
+        pass
 
 
 class MockCanvas(object):
@@ -52,8 +57,8 @@ class MockTask(object):
 
 
 class MockTree(object):
-    def __init__(self):
-        self.layer = Layer()
+    def __init__(self, manager):
+        self.layer = Layer(manager)
 
     def get_edit_layer(self):
         return self.layer
@@ -62,12 +67,17 @@ class MockTree(object):
 class MockProject(object):
     def __init__(self, add_tree_control=False, default_styles=None):
         self.window = MockWindow()
-        self.task = MockTask(self.window, default_styles)
+#        self.task = MockTask(self.window, default_styles)
         self.layer_canvas = MockCanvas()
-        self.layer_manager = LayerManager.create(self)
+        self.layer_manager = LayerManager(None)
         if add_tree_control:
-            self.layer_tree_control = MockTree()
+            self.layer_tree_control = MockTree(self.layer_manager)
             self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
+        self.frame = MockFrame()
+
+    @property
+    def current_layer(self):
+        return self.layer_tree_control.get_edit_layer()
 
     def raw_load_all_layers(self, uri, mime):
         guess = FileGuess(uri)

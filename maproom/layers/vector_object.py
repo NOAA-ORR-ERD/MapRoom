@@ -2,19 +2,11 @@ import math
 
 import numpy as np
 
-
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Float
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
 from ..library import rect
 from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, mi_to_rounded_string
 from ..library.Boundary import Boundary
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_color_uint8, int_to_html_color_string, alpha_from_int, ImageData, data_types
+from .. import styles
 
 from .line import LineLayer
 from .folder import BoundedFolder
@@ -44,13 +36,7 @@ class VectorObjectLayer(LineLayer):
 
     type = "vector_object"
 
-    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
-
-    rotation = Float(0.0)
-
-    border_width = Int(10)
-
-    # class attributes
+    mouse_mode_toolbar = "AnnotationLayerToolBar"
 
     has_control_points = True
 
@@ -63,6 +49,12 @@ class VectorObjectLayer(LineLayer):
     control_point_color = color_floats_to_int(0, 0, 0, 1.0)
 
     control_point_names = [""]
+
+    def __init__(self, manager):
+        super().__init__(manager)
+
+        self.rotation = 0.0
+        self.border_width = 10
 
     def __str__(self):
         return LineLayer.__str__(self) + ", bb: %s" % str(self.bounds)
@@ -77,7 +69,7 @@ class VectorObjectLayer(LineLayer):
     def can_reparent_to(self, potential_parent_layer):
         return potential_parent_layer.can_contain_annotations
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         pass
 
     def rotation_to_json(self):
@@ -181,7 +173,7 @@ class VectorObjectLayer(LineLayer):
         """Update renderer
 
         """
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         r, g, b, a = int_to_color_floats(self.style.line_color)
         point_color, line_color = self.get_renderer_colors()
 #        self.rasterize(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
@@ -717,7 +709,9 @@ class ScaledImageObject(RectangleVectorObject):
 
     layer_info_panel = ["Transparency"]
 
-    image_data = Any
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.image_data = None
 
     def get_image_array(self):
         from maproom.library.numpy_images import get_square
@@ -736,7 +730,7 @@ class ScaledImageObject(RectangleVectorObject):
         """Update renderer
 
         """
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         if self.image_data is None:
             raw = self.get_image_array()
             self.image_data = ImageData(raw.shape[1], raw.shape[0])
@@ -770,7 +764,7 @@ class OverlayMixin(object):
 
     def update_world_control_points(self, renderer):
         self.calc_control_points_from_screen(renderer.canvas)
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         renderer.set_points(projected_point_data, None, None)
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], None)
         self.update_bounds(True)
@@ -827,9 +821,11 @@ class OverlayLineObject(OverlayMixin, LineVectorObject):
 
     type = "overlay_line_obj"
 
-    screen_dx = Float(-1)
+    def __init__(self, manager):
+        LineVectorObject.__init__(self, manager)
 
-    screen_dy = Float(-1)
+        self.screen_dx = -1
+        self.screen_dy = -1
 
     def get_undo_info(self):
         return (self.copy_points(), self.copy_bounds(), self.screen_dx, self.screen_dy)
@@ -931,17 +927,22 @@ class OverlayImageObject(OverlayMixin, RectangleVectorObject):
 
     layer_info_panel = ["Transparency"]
 
-    image_data = Any
-
-    anchor_point_index = Int(8)  # Defaults to center point as the anchor
-
-    show_flagged_anchor_point = Bool(True)
-
     # Screen y coords are backwards from world y coords (screen y increases
     # downward)
     screen_offset_from_center = np.asarray(
         ((-0.5, 0.5), (0.5, 0.5), (0.5, -0.5), (-0.5, -0.5), (0, 0.5), (0.5, 0), (0, -0.5), (-0.5, 0), (0, 0)),
         dtype=np.float32)
+
+    def __init__(self, manager, show_flagged_anchor_point=True):
+        RectangleVectorObject.__init__(self, manager)
+
+        self.image_data = None
+        self.anchor_point_index = 8  # Defaults to center point as the anchor
+        self.show_flagged_anchor_point = show_flagged_anchor_point
+        self.init_overlay_attributes()
+
+    def init_overlay_attributes(self):
+        return
 
     def anchor_point_index_to_json(self):
         return self.anchor_point_index
@@ -1044,11 +1045,10 @@ class OverlayScalableImageObject(OverlayImageObject):
 
     type = "overlay_scalable_image_obj"
 
-    text_width = Float(-1)
-
-    text_height = Float(-1)
-
-    border_width = Int(0)
+    def init_overlay_attributes(self):
+        self.text_width = -1
+        self.text_height = -1
+        self.border_width = 0
 
     def get_undo_info(self):
         return (self.copy_points(), self.copy_bounds(), self.text_width, self.text_height, self.border_width)
@@ -1125,13 +1125,13 @@ class OverlayTextObject(OverlayScalableImageObject):
 
     type = "overlay_text_obj"
 
-    user_text = Unicode("<b>New Label</b>")
-
-    border_width = Int(4)
-
     layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color"]
 
     selection_info_panel = ["Text", "Text format", "Anchor point"]
+
+    def init_overlay_attributes(self):
+        self.user_text = "<b>New Label</b>"
+        self.border_width = 4
 
     def user_text_to_json(self):
         return self.user_text
@@ -1172,15 +1172,12 @@ class OverlayIconObject(OverlayScalableImageObject):
 
     layer_info_panel = ["Marplot icon", "Icon size", "Color"]
 
-    anchor_point_index = Int(8)  # Defaults to center point as the anchor
-
-    text_width = Float(32)
-
-    text_height = Float(32)
-
-    border_width = Int(5)
-
-    min_size = Int(10)
+    def init_overlay_attributes(self):
+        self.anchor_point_index = 8  # Defaults to center point as the anchor
+        self.text_width = 32
+        self.text_height = 32
+        self.border_width = 5
+        self.min_size = 10
 
     def set_style(self, style):
         OverlayScalableImageObject.set_style(self, style)
@@ -1404,7 +1401,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     type = "annotation"
 
-    mouse_mode_toolbar = Str("AnnotationLayerToolBar")
+    mouse_mode_toolbar = "AnnotationLayerToolBar"
 
     layer_info_panel = ["Text color", "Font", "Font size", "Border width", "Line style", "Line width", "Line color", "Fill style", "Fill color"]
 
@@ -1437,7 +1434,7 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     def get_renderer_colors(self):
         """Hook to allow subclasses to override style colors
         """
-        style = self.manager.project.task.default_styles_read_only("ui")
+        style = styles.default_styles_read_only("ui")
         line_color = style.line_color
         r, g, b, a = int_to_color_floats(line_color)
         point_color = color_floats_to_int(r, g, b, 1.0)
@@ -1503,13 +1500,13 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
         # set new bounding rect every time
         if self.rebuild_needed:
             self.rebuild_renderer(renderer)
-        if self.manager.project.layer_tree_control.get_edit_layer() == self:
-            style = self.manager.project.task.default_styles_read_only("ui")
+        if renderer.canvas.project.current_layer == self:
+            style = styles.default_styles_read_only("ui")
             renderer.outline_object(self, picker, style)
 
     def render_control_points_only(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering vector object control points %s!!!" % (self.name))
-        if self.manager.project.layer_tree_control.get_edit_layer() == self:
+        if renderer.canvas.project.current_layer == self:
             renderer.draw_points(self, picker, self.point_size)
 
 

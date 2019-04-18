@@ -79,6 +79,7 @@ class Projection(object):
 
         """
         # return self.projection(lon, lat, inverse=inverse)
+        # print(lon, lat, inverse, self.srs)
         return self.proj(lon, lat, inverse=inverse)
 
     # def projection(self, x, y, inverse=False):

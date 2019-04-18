@@ -1,9 +1,3 @@
-
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-from traits.api import Unicode
-
 from ..library import rect
 
 from ..renderer import NullPicker
@@ -28,17 +22,17 @@ class RasterLayer(ProjectedLayer):
 
     opaque = True
 
-    # Traits
-
     name = "Raster"
 
     type = "image"
 
-    image_data = Any
-
     layer_info_panel = ["Transparency", "Raster size", "Memory used"]
 
     selection_info_panel = []
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.image_data = None
 
     def test_contents_equal(self, other):
         """Test routine to compare layers"""
@@ -74,7 +68,7 @@ class RasterLayer(ProjectedLayer):
         if label == "images":
             return self.image_data is not None
 
-    def check_projection(self, task):
+    def check_projection(self):
         # change the app projection to latlong if this image is latlong projection
         # and we don't currently have a mercator image loaded;
         # alternatively, if we are in latlong and we don't currently have
@@ -85,10 +79,11 @@ class RasterLayer(ProjectedLayer):
         vector_layers = self.manager.count_vector_layers()
 
         if raster_layers == 0:
-            self.manager.dispatch_event('projection_changed', self)
+            self.manager.projection_changed_event(self)
             return
-        currently_merc = self.manager.project.layer_canvas.projection.srs.find("+proj=merc") != -1
-        currently_longlat = self.manager.project.layer_canvas.projection.srs.find("+proj=longlat") != -1
+        e = self.manager.project
+        currently_merc = e.layer_canvas.projection.srs.find("+proj=merc") != -1
+        currently_longlat = e.layer_canvas.projection.srs.find("+proj=longlat") != -1
         incoming_merc = self.image_data.projection.srs.find("+proj=merc") != -1
         incoming_longlat = self.image_data.projection.srs.find("+proj=longlat") != -1
 
@@ -107,11 +102,11 @@ class RasterLayer(ProjectedLayer):
                 message = "The file you are loading is in " + type + " projection. Would you like to convert the loaded vector data to this projection?"
 
             if message is not None:
-                if not task.confirm(message):
+                if not e.frame.confirm(message):
                     self.load_error_string = "Projection conflict"
                     return
 
-                self.manager.dispatch_event('projection_changed', self)
+                self.manager.projection_changed_event(self)
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT
@@ -128,7 +123,7 @@ class RasterLayer(ProjectedLayer):
         if not self.image_data:
             return
 
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         renderer.set_image_projection(self.image_data, projection)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):

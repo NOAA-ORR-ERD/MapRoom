@@ -3,29 +3,22 @@ import math
 import bisect
 import time
 
-# Enthought library imports.
-from traits.api import Unicode, Str, Float
-
 from ..library import rect
 from ..library.coordinates import haversine_at_const_lat, km_to_string, ft_to_string
 
-from .base import ScreenLayer
+from .base import StickyLayer
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class Timestamp(ScreenLayer):
+class Timestamp(StickyLayer):
     """Displays the current date & time in the image, useful for timeline
     playback
     """
     name = "Timestamp"
 
     type = "timestamp"
-
-    x_percentage = Float(1.0)
-
-    y_percentage = Float(0.0)
 
     # class attributes
 
@@ -40,17 +33,8 @@ class Timestamp(ScreenLayer):
     x_offset = 10
     y_offset = 20
 
-    def x_percentage_to_json(self):
-        return self.x_percentage
-
-    def x_percentage_from_json(self, json_data):
-        self.x_percentage = json_data['x_percentage']
-
-    def y_percentage_to_json(self):
-        return self.y_percentage
-
-    def y_percentage_from_json(self, json_data):
-        self.y_percentage = json_data['y_percentage']
+    def __init__(self, manager):
+        super().__init__(manager, x_percentage=1.0, y_percentage=0.0)
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         if picker.is_active:

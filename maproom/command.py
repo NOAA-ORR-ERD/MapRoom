@@ -1,5 +1,5 @@
 
-from omnivore_framework.utils.runtime import get_all_subclasses
+from sawx.utils.runtime import get_all_subclasses
 
 import logging
 log = logging.getLogger(__name__)
@@ -34,11 +34,12 @@ class UndoStack(list):
         cmd.last_flags = undo_info.flags
         return undo_info
 
+    @property
     def can_undo(self):
         return self.insert_index > 0
 
     def get_undo_command(self):
-        if self.can_undo():
+        if self.can_undo:
             return self[self.insert_index - 1]
 
     def undo(self, editor):
@@ -51,11 +52,12 @@ class UndoStack(list):
         cmd.last_flags = undo_info.flags
         return undo_info
 
+    @property
     def can_redo(self):
         return self.insert_index < len(self)
 
     def get_redo_command(self):
-        if self.can_redo():
+        if self.can_redo:
             return self[self.insert_index]
 
     def redo(self, editor):
@@ -154,6 +156,20 @@ class LayerStatus(object):
         # True if the item should be shown collapsed in the tree list
         self.collapse = False
 
+    def __str__(self):
+        flags = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            val = getattr(self, name)
+
+            # note: using 'is False' here instead of not in case the argument
+            # is a numpy array (which fails)
+            if val is None or val is False or hasattr(val, "__call__"):
+                continue
+            flags.append("%s=%s" % (name, val))
+        return ", ".join(flags)
+
 
 class BatchStatus(object):
     def __init__(self):
@@ -188,6 +204,22 @@ class BatchStatus(object):
         # Any error messages will be added to this list
         self.errors = []
 
+    def __str__(self):
+        flags = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            val = getattr(self, name)
+
+            # note: using 'is False' here instead of not in case the argument
+            # is a numpy array (which fails)
+            if val is None or val is False or hasattr(val, "__call__"):
+                continue
+            flags.append("%s=%s" % (name, val))
+        return ", ".join(flags)
+
+    __repr__ = __str__
+
 
 class CommandStatus(object):
     def __init__(self):
@@ -219,6 +251,17 @@ class CommandStatus(object):
         lf = LayerStatus(layer)
         self.layer_flags.append(lf)
         return lf
+
+    def __str__(self):
+        flags = []
+        for name in dir(self):
+            if name.startswith("_"):
+                continue
+            val = getattr(self, name)
+            if val is None or not val or hasattr(val, "__call__"):
+                continue
+            flags.append("%s=%s" % (name, val))
+        return ", ".join(flags)
 
 
 class UndoInfo(object):

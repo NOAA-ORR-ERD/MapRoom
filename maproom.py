@@ -1,4 +1,4 @@
-# Maproom application using the Peppy2 framework
+# Maproom application using the sawx framework
 
 # Uncomment to enable OpenGL command tracing (very slow).  This must occur
 # before any import of OpenGL which is why it's here.  :)
@@ -18,9 +18,6 @@ import os
 import docutils
 from docutils.core import publish_parts
 
-# Debugging turned on for readable exceptions on Enthought ui module import
-os.environ["ETS_DEBUG"] = "True"
-
 # Set GDAL_DATA environment variable, needed on windows to find support files
 # to use whhen converting coordinate systems upon load of shapefiles
 import osgeo.ogr
@@ -36,12 +33,9 @@ if found is not None:
     os.environ["GDAL_DATA"] = found
 
 # Framework imports.
-from omnivore_framework import get_image_path
-from omnivore_framework.app_init import run, setup_frozen_logging
-
-# Local imports.
-from maproom.pane_layout import task_id_with_pane_layout
-from maproom.plugin import MaproomPlugin
+from sawx.application import SawxApp
+from sawx.filesystem import get_image_path
+from sawx.startup import run, setup_frozen_logging
 
 # Imports for py2exe/py2app
 import wx
@@ -60,8 +54,8 @@ def trace_calls(frame, event, arg):
     func_line_no = frame.f_lineno
     func_filename = co.co_filename
     caller = frame.f_back
-    caller_line_no = caller.f_lineno
-    caller_filename = caller.f_code.co_filename
+    caller_line_no = caller.f_lineno if caller is not None else "<none>"
+    caller_filename = caller.f_code.co_filename if caller is not None else "<none>"
     f = caller_filename + func_filename
     if "trait_notifiers.py" in f or "trait_handlers" in f or "has_traits" in f or "logging" in f or "envisage" in f or "sre_" in f:
         return
@@ -70,26 +64,35 @@ def trace_calls(frame, event, arg):
          caller_line_no, caller_filename))
     return
 
+
+from maproom._version import __version__
+
+class MapRoomApp(SawxApp):
+    app_name = "MapRoom"
+    app_version = __version__
+    app_description = "High-performance 2d mapping"
+    app_icon = "icon://maproom.ico"
+    app_website = "http://www.noaa.gov"
+    default_uri = "template://default_project.maproom"
+    about_image = "icon://maproom_large.png"
+    about_html = f"""<h2>{SawxApp.app_name} {SawxApp.app_version}</h2>
+
+<h3>{SawxApp.app_description}</h3>
+
+<p><img src="{SawxApp.about_image}">"""
+
+    def shutdown_subprocesses(self):
+        from maproom.servers import stop_threaded_processing
+        stop_threaded_processing()
+        SawxApp.shutdown_subprocesses(self)
+
+
 def main(argv):
     """ Run the application.
     """
     logging.basicConfig(level=logging.WARNING)
-    for toolkit in ['pyface', 'envisage', 'traits', 'traitsui', 'apptools']:
-        _ = logging.getLogger(toolkit)
-        _.setLevel(logging.WARNING)
     logger = logging.getLogger()
-    logger.setLevel(logging.INFO)
-
-    # Override location of help pages so we don't get the framework user guide
-    from traits.trait_base import get_resource_path
-    import omnivore_framework.help
-    omnivore_framework.help.help_dirs = ["maproom/help"]
-    omnivore_framework.help.root_resource_path = get_resource_path(1)
-
-    plugins = [ MaproomPlugin() ]
-    
-    import maproom.file_type
-    plugins.extend(maproom.file_type.plugins)
+    # logger.setLevel(logging.INFO)
 
     if "--trace" in argv:
         import sys
@@ -98,9 +101,10 @@ def main(argv):
         sys.settrace(trace_calls)
 
     import maproom
-    image_path = [get_image_path("icons", maproom)]
-    template_path = [get_image_path("templates", maproom)]
-    run(plugins=plugins, image_path=image_path, template_path=template_path, use_eggs=False, startup_task=task_id_with_pane_layout, application_name="MapRoom")
+    image_paths = [get_image_path("icons", maproom)]
+    template_paths = [get_image_path("templates", maproom)]
+    help_paths = ["maproom/help"]
+    run(MapRoomApp, image_paths, template_paths, help_paths)
 
     logging.shutdown()
 

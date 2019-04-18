@@ -21,10 +21,18 @@ else:  # linux
     onefile = False
 
 if "-d" in sys.argv:
+    debug = True
     onefile = False
+else:
+    debug = False
+
+# On MacOS, to test the debug build, go to ./dist/MapRoom_build.app/Contents/MacOS
+# and run ./MapRoom_build
+#
+# This will result in seeing the standard out messages on the console.
 
 
-exec(compile(open("../maproom/Version.py").read(), "../maproom/Version.py", 'exec'))
+exec(compile(open("../maproom/_version.py").read(), "../maproom/_version.py", 'exec'))
 
 from subprocess import Popen, PIPE
 
@@ -37,26 +45,27 @@ def run(args):
 
 # can't use MapRoom because MapRoom is a directory name and the filesystem is
 # case-insensitive
-if onefile:
-    build_target="MapRoom_build"
-else:
-    build_target="MapRoom_folder"
+# if onefile:
+#     build_target="MapRoom_build"
+# else:
+#     build_target="MapRoom_folder"
+build_target = "MapRoom_build"
 build_app = "dist/" + build_target + exe
 
 # target app will be renamed
 final_target="MapRoom"
-dest_dir = "../dist-%s" % VERSION
+dest_dir = "../dist-%s" % __version__
 final_app = final_target + exe
 dest_app = "%s/%s" % (dest_dir, final_app)
-final_exe = "%s-%s-win.exe" % (final_target, VERSION)
-final_zip = "%s-%s-darwin.tbz" % (final_target, VERSION)
+final_exe = "%s-%s-win.exe" % (final_target, __version__)
+final_zip = "%s-%s-darwin.tbz" % (final_target, __version__)
 dest_exe = "%s/%s" % (dest_dir, final_exe)
 dest_zip = "%s/%s" % (dest_dir, final_zip)
 
 print("Building %s" % build_app)
-args = ['pyinstaller', '-y', '--debug', '--windowed']
-if onefile:
-    args.append('--onefile')
+# args = ['pyinstaller', '-y', '--debug',] # '--windowed']
+# if onefile:
+#     args.append('--onefile')
 args = ['pyinstaller', '-y']
 args.append('%s.spec' % build_target)
 run(args)
@@ -87,11 +96,11 @@ elif mac:
     print("Copying new Info.plist")
     shutil.copyfile("Info.plist", "%s/Info.plist" % contents)
 
-    dup = "%s/MacOS/libwx_osx_cocoau-3.0.dylib" % contents    
-    if os.path.exists(dup):
-        print("Fixing duplicate wxPython libs")
-        os.unlink(dup)
-        os.symlink("libwx_osx_cocoau-3.0.0.2.0.dylib", dup)
+    # dup = "%s/MacOS/libwx_osx_cocoau-3.0.dylib" % contents    
+    # if os.path.exists(dup):
+    #     print("Fixing duplicate wxPython libs")
+    #     os.unlink(dup)
+    #     os.symlink("libwx_osx_cocoau-3.0.0.2.0.dylib", dup)
 
     print("Fixing missing symlink to geos library")
     os.symlink("libgeos_c.1.dylib", "%s/MacOS/libgeos_c.dylib" % contents)
@@ -103,21 +112,22 @@ elif mac:
     # print("Signing (with self-signed cert)")
     # run(["codesign", "-s", "test1", "--deep", dest_app])
 
-    print("Signing NOAA Cert")
-    run(["codesign",
-         "-s",
-         "Developer ID Application: National Oceanic and Atmospheric Administration",
-         "--deep",
-         "--force",
-         "--timestamp=none",
-         "--verbose",
-         dest_app])
+    if not debug:
+        print("Signing NOAA Cert")
+        run(["codesign",
+             "-s",
+             "Developer ID Application: National Oceanic and Atmospheric Administration",
+             "--deep",
+             "--force",
+             "--timestamp=none",
+             "--verbose",
+             dest_app])
 
-    print("Zipping %s" % dest_zip)
-    run(['tar', 'cfj', dest_zip, '-C', dest_dir, final_app])
+        print("Zipping %s" % dest_zip)
+        run(['tar', 'cfj', dest_zip, '-C', dest_dir, final_app])
 
-    print("Signing zip file")
-    run(["codesign", "-s", "Developer ID Application: National Oceanic and Atmospheric Administration", "--deep", dest_zip])
+        print("Signing zip file")
+        run(["codesign", "-s", "Developer ID Application: National Oceanic and Atmospheric Administration", "--deep", dest_zip])
 
 # useful signing commands:
 # spctl -a -t exec -vv MapRoom.app

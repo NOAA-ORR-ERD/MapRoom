@@ -5,10 +5,6 @@ from shapely.geometry import LineString
 from shapely.geometry import Polygon
 from shapely.geometry import box
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-
 from ..library.Boundary import Boundary
 from ..errors import PointsError
 from ..library.shapely_utils import shapely_to_polygon
@@ -29,19 +25,19 @@ class PolygonLayer(PointLayer):
     """
     type = "polygon"
 
-    mouse_mode_toolbar = Str("PolygonLayerToolBar")
-
-    rings = Any
-
-    point_adjacency_array = Any  # parallels the points array
-
-    ring_identifiers = Any
+    mouse_mode_toolbar = "PolygonLayerToolBar"
 
     visibility_items = ["points", "polygons"]
 
     layer_info_panel = ["Polygon count"]
 
     selection_info_panel = []
+
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.rings = None
+        self.point_adjacency_array = None  # parallels the points array
+        self.ring_identifiers = None
 
     def __str__(self):
         try:
@@ -190,7 +186,7 @@ class PolygonLayer(PointLayer):
             all_lines = np.vstack([all_lines, lines])
         return points, all_lines
 
-    def can_save_as(self):
+    def can_save(self):
         return True
 
     def polygons_to_json(self):
@@ -211,7 +207,7 @@ class PolygonLayer(PointLayer):
     def identifiers_from_json(self, json_data):
         self.ring_identifiers = json_data['identifiers']
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         problems = []
         # record log messages from the shapely package
         templog = logging.getLogger("shapely.geos")
@@ -373,7 +369,7 @@ class PolygonLayer(PointLayer):
         return undo
 
     def rebuild_renderer(self, renderer, in_place=False):
-        projected_point_data = self.compute_projected_point_data()
+        projected_point_data = self.compute_projected_point_data(renderer.canvas.projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         renderer.set_polygons(self.rings, self.point_adjacency_array)
 
@@ -398,9 +394,12 @@ class RNCLoaderLayer(PolygonLayer):
     """
     type = "rncloader"
 
-    mouse_mode_toolbar = Str("RNCToolBar")
+    mouse_mode_toolbar = "RNCToolBar"
 
     layer_info_panel = ["Polygon count"]
+
+    def is_zoomable(self):
+        return False
 
     def color_array(self):
         # set up feature code to color map

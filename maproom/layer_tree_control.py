@@ -1,10 +1,9 @@
 import sys
 import wx
-import omnivore_framework.utils.wx.customtreectrl as treectrl
+import sawx.ui.customtreectrl as treectrl
 
 from .layers import Layer
 from .menu_commands import MoveLayerCommand, RenameLayerCommand
-from . import actions
 
 
 import logging
@@ -81,7 +80,7 @@ class LayerTreeControl(wx.Panel):
         if (item is None):
             return None
         (layer, ) = self.tree.GetItemData(item)
-        log.debug("current edit layer: %s", layer)
+        # log.debug("current edit layer: %s", layer)
 
         return layer
 
@@ -211,7 +210,7 @@ class LayerTreeControl(wx.Panel):
         # self.Thaw()
         if selected:
             self.set_edit_layer(selected)
-            self.project.update_layer_selection_ui(selected)
+#            self.project.update_layer_selection_ui(selected)
 
     def add_layers_recursive(self, layer_tree, parent, expanded_state):
         if (len(layer_tree) == 0):
@@ -330,7 +329,7 @@ class LayerTreeControl(wx.Panel):
         mi_target = lm.get_multi_index_of_layer(target_layer)
 
         if (len(mi_target) > len(mi_source) and mi_target[0: len(mi_source)] == mi_source):
-            self.project.task.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
+            self.project.frame.error("You cannot move folder into one of its sub-folders.", "Invalid Layer Move")
             self.tree.Refresh()
             return
 
@@ -349,30 +348,32 @@ class LayerTreeControl(wx.Panel):
             cmd = MoveLayerCommand(source_layer, target_layer, before)
             self.project.process_command(cmd)
         else:
-            self.project.task.error(f"You cannot move a {source_layer.name} layer into a {parent_layer.name} layer", "Invalid Layer Move")
+            self.project.frame.error(f"You cannot move a {source_layer.name} layer into a {parent_layer.name} layer", "Invalid Layer Move")
             self.tree.Refresh()
 
     def handle_selection_changing(self, event):
         layer = self.get_edit_layer()
-        log.debug("About to change from selected layer: %s" % layer)
+        log.debug(f"handle_selection_changing: About to change from selected layer: {layer}")
         if layer is not None:
             layer.layer_deselected_hook()
 
     def handle_selection_changed(self, event):
         self.project.clear_all_selections(False)
         layer = self.get_edit_layer()
-        log.debug("Currently selected layer: %s" % layer)
+        log.debug(f"handle_selection_changed: Currently selected layer: {layer}")
         self.project.update_layer_selection_ui(layer)
+        #wx.CallAfter(self.project.update_layer_selection_ui, layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
-        prefs = self.project.task.preferences
-        if prefs.identify_layers and self.user_selected_layer:
-            layer.layer_selected_hook()
-        self.user_selected_layer = False
-        self.project.refresh()
+        prefs = self.project.preferences
         self.project.status_message = str(layer)
         lm = self.project.layer_manager
         sel = lm.get_multi_index_of_layer(layer)
         log.debug("Multi-index of selected layer: %s" % sel)
+
+        if prefs.identify_layers and self.user_selected_layer:
+            layer.layer_selected_hook()
+            lm.refresh_needed_event(None)
+        self.user_selected_layer = False
 
     def handle_start_rename(self, event):
         (clicked_item, flags) = self.tree.HitTest(event.GetPosition())

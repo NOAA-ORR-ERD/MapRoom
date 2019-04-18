@@ -1,14 +1,7 @@
-
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
 from ..library import rect
 from ..renderer import ImageData
 from ..renderer import alpha_from_int
+from .. import servers
 
 from .base import ProjectedLayer
 
@@ -30,27 +23,7 @@ class WMSLayer(ProjectedLayer):
 
     selection_info_panel = ["Map server", "Map layer"]
 
-    map_server_id = Int
-
-    map_layers = Any(None)  # holds a set of names representing shown overlay layers
-
-    image_data = Any
-
-    current_size = Any(None)  # holds tuple of screen size
-
-    current_proj = Any(None)  # holds rect of projected coords
-
-    current_world = Any(None)  # holds rect of world coords
-
-    rebuild_needed = Bool(True)
-
-    threaded_request_ready = Any(None)
-
-    download_status_text = Any(None)
-
     checkerboard_when_loading = False
-
-    # class attributes
 
     bounded = False
 
@@ -58,22 +31,30 @@ class WMSLayer(ProjectedLayer):
 
     opaque = True
 
-    ##### Traits
+    def __init__(self, manager):
+        super().__init__(manager)
 
-    def _map_server_id_default(self):
-        return self.manager.project.task.get_default_wms_id()
+        self.map_server_id = servers.get_default_wms_id()
+        self.map_layers = None
+        self.image_data = None
+        self.current_size = None  # holds tuple of screen size
+        self.current_proj = None  # holds rect of projected coords
+        self.current_world = None  # holds rect of world coords
+        self.rebuild_needed = True
+        self.threaded_request_ready = None
+        self.download_status_text = None
 
     ##### Serialization
 
     def map_server_id_to_json(self):
         # get a representative URL to use as the reference in the project file
         # so we can restore the correct tile server
-        wms_host = self.manager.project.task.get_wms_server_by_id(self.map_server_id)
+        wms_host = servers.get_wms_server_by_id(self.map_server_id)
         return wms_host.url
 
     def map_server_id_from_json(self, json_data):
         url = json_data['map_server_id']
-        index = self.manager.project.task.get_wms_server_id_from_url(url)
+        index = servers.get_wms_server_id_from_url(url)
         if index is not None:
             self.map_server_id = index
 
@@ -106,7 +87,7 @@ class WMSLayer(ProjectedLayer):
             return wms_result.world_rect, wms_result.get_image_array(), wms_result.error
 
     def rebuild_renderer(self, renderer, in_place=False):
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         if self.rebuild_needed:
             renderer.release_textures()
             self.image_data = None
@@ -132,7 +113,7 @@ class WMSLayer(ProjectedLayer):
             self.download_status_text = ("error", error)
 
             self.change_count += 1  # Force info panel update
-            self.manager.project.layer_canvas.project.update_info_panels(self, True)
+            renderer.canvas.project.update_info_panels(self, True)
         if self.image_data is not None:
             renderer.set_image_projection(self.image_data, projection)
             self.rebuild_needed = False
@@ -152,7 +133,7 @@ class WMSLayer(ProjectedLayer):
             self.rebuild_needed = True
 
     def wms_rebuild(self, canvas):
-        downloader = self.manager.project.task.get_threaded_wms_by_id(self.map_server_id)
+        downloader = servers.get_threaded_wms_by_id(self.map_server_id)
         if downloader.is_valid():
             if self.map_layers is None:
                 self.map_layers = set(downloader.server.get_default_layers())
@@ -163,7 +144,7 @@ class WMSLayer(ProjectedLayer):
                 self.rebuild_needed = True
                 canvas.render()
             self.name = downloader.host.name
-            canvas.project.layer_metadata_changed(self)
+            self.manager.layer_metadata_changed_event(self)
         else:
             self.download_status_text = None
             # Try again, waiting till we get a successful contact
@@ -201,7 +182,7 @@ class WMSLayer(ProjectedLayer):
     # Utility routines used by info_panels to abstract the server info
 
     def get_downloader(self, server_id):
-        return self.manager.project.task.get_threaded_wms_by_id(server_id)
+        return servers.get_threaded_wms_by_id(server_id)
 
     def get_server_names(self):
-        return self.manager.project.task.get_known_wms_names()
+        return servers.get_known_wms_names()

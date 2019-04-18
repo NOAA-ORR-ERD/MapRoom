@@ -6,7 +6,7 @@ from requests.exceptions import HTTPError
 from owslib.wms import WebMapService
 from owslib.util import ServiceException
 
-from omnivore_framework.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
+from sawx.utils.background_http import BackgroundHttpDownloader, BaseRequest, UnskippableURLRequest
 
 from .numpy_images import get_numpy_from_data
 
@@ -208,7 +208,7 @@ class WMSRequest(BaseRequest):
         except Exception as e:
             self.error = e
         if self.manager is not None:
-            self.manager.threaded_image_loaded = (self.event_data, self)
+            self.manager.threaded_image_loaded_event(self.event_data, self)
 
     def get_image_array(self):
         try:

@@ -518,7 +518,7 @@ class ImmediateModeRenderer():
             dashed_indexes = np.full(self.polygon_count, -1, dtype=np.int32)
             if editing_polygon_indexes is not None and len(editing_polygon_indexes) > 0:
                 dashed_indexes[editing_polygon_indexes] = 1
-            print("DASHED", dashed_indexes, editing_polygon_indexes)
+            # print("DASHED", dashed_indexes, editing_polygon_indexes)
 
             render_buffers_with_one_color(
                 self.line_vertex_buffers[: self.polygon_count],

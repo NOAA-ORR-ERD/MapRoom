@@ -82,8 +82,8 @@ class MergePointsPanel(wx.Panel):
     list_contains_real_data = False
     dirty = False
 
-    def __init__(self, parent, task):
-        self.task = task
+    def __init__(self, parent, editor):
+        self.editor = editor
         wx.Panel.__init__(self, parent, wx.ID_ANY, name="Merge Points")
 
         # Mac/Win needs this, otherwise background color is black
@@ -173,9 +173,6 @@ class MergePointsPanel(wx.Panel):
         self.find_button.Bind(wx.EVT_BUTTON, self.find_duplicates)
         self.Bind(wx.EVT_CHECKBOX, self.on_depth_check)
 
-    def set_task(self, task):
-        self.task = task
-
     def on_points_deleted(self, layer):
         if layer == self.layer:
             self.clear_results()
@@ -191,10 +188,9 @@ class MergePointsPanel(wx.Panel):
             return
 
         # at the time the button is pressed, we commit to a layer
-        project = self.task.active_editor
-        self.layer = project.layer_tree_control.get_edit_layer()
+        self.layer = self.editor.current_layer
         if (self.layer is None or not self.layer.has_points() or len(self.layer.points) < 2 or not hasattr(self.layer, "find_duplicates")):
-            project.task.error("You must first select a layer with points in the layer tree.")
+            self.editor.frame.error("You must first select a layer with points in the layer tree.")
             self.layer = None
 
             return
@@ -212,15 +208,13 @@ class MergePointsPanel(wx.Panel):
         self.list_view.ClearAll()
         self.list_view.InsertStringItem(0, "Click Find Duplicates to search.")
 
-        project = self.task.active_editor
-        for layer in project.layer_manager.flatten():
+        for layer in self.editor.layer_manager.flatten():
             layer.clear_all_selections(state.FLAGGED)
 
         self.list_contains_real_data = False
         self.update_selection()
 
     def display_results(self):
-        project = self.task.active_editor
         self.list_view.ClearAll()
         self.layer.clear_all_selections(state.FLAGGED)
 
@@ -234,7 +228,7 @@ class MergePointsPanel(wx.Panel):
 
             self.list_contains_real_data = False
             self.update_selection()
-            project.refresh()
+            self.editor.refresh()
 
             return
 
@@ -250,7 +244,7 @@ class MergePointsPanel(wx.Panel):
 
             self.list_contains_real_data = False
             self.update_selection()
-            project.refresh()
+            self.editor.refresh()
 
             return
         self.merge_button.Enable(True)
@@ -286,7 +280,6 @@ class MergePointsPanel(wx.Panel):
         if (not self.list_contains_real_data):
             return
 
-        project = self.task.active_editor
         self.dirty = False
 
         points = []
@@ -316,8 +309,8 @@ class MergePointsPanel(wx.Panel):
 
         self.layer.select_points(points, state.FLAGGED)
         bounds = self.layer.compute_bounding_rect(state.FLAGGED)
-        project.layer_canvas.zoom_to_include_world_rect(bounds)
-        project.refresh()
+        self.editor.layer_canvas.zoom_to_include_world_rect(bounds)
+        self.editor.refresh()
 
     def key_pressed(self, event):
         key_code = event.GetKeyCode()
@@ -363,8 +356,7 @@ class MergePointsPanel(wx.Panel):
 
         points_in_lines = self.layer.get_all_line_point_indexes()
         cmd = self.layer.merge_duplicates(self.duplicates, points_in_lines)
-        project = self.task.active_editor
-        project.process_command(cmd)
+        self.editor.process_command(cmd)
 
         event.Skip()
         self.clear_results()

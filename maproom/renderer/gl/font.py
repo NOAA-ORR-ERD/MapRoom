@@ -1,8 +1,9 @@
 import wx
 
 import numpy as np
+import OpenGL.GL as gl
 
-from omnivore_framework import get_image_path
+from sawx.filesystem import get_image_path
 
 from .font_extents import FONT_EXTENTS
 
@@ -26,3 +27,31 @@ def load_font_texture_with_alpha():
     ).clip(180, 255)
 
     return buffer_with_alpha, FONT_EXTENTS
+
+
+def load_font_texture():
+    buffer_with_alpha, extents = load_font_texture_with_alpha()
+    width = buffer_with_alpha.shape[0]
+    height = buffer_with_alpha.shape[1]
+
+    texture = gl.glGenTextures(1)
+    gl.glBindTexture(gl.GL_TEXTURE_2D, texture)
+    gl.glTexImage2D(
+        gl.GL_TEXTURE_2D,
+        0,
+        gl.GL_RGBA8,
+        width,
+        height,
+        0,
+        gl.GL_RGBA,
+        gl.GL_UNSIGNED_BYTE,
+        buffer_with_alpha.tostring(),
+    )
+    gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MAG_FILTER, gl.GL_NEAREST)
+    gl.glTexParameter(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_MIN_FILTER, gl.GL_NEAREST)
+    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
+    gl.glTexParameteri(gl.GL_TEXTURE_2D, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
+
+    # gl.glBindTexture( gl.GL_TEXTURE_2D, 0 )
+
+    return (texture, (width, height), extents)

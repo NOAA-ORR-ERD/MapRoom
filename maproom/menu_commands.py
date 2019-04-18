@@ -1,11 +1,11 @@
 import json
 
 
-from omnivore_framework.framework.errors import ProgressCancelError
+from sawx.errors import ProgressCancelError
 
 from .command import Command, UndoInfo
 from . import layers as ly
-from .layers import loaders
+from . import loaders
 from .library import point_utils
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers
@@ -18,71 +18,21 @@ progress_log = logging.getLogger("progress")
 class LoadLayersCommand(Command):
     short_name = "load"
     serialize_order = [
-        ('metadata', 'file_metadata'),
-        ('regime', 'int', 0),
+        ('uri', 'text'),
+        ('loader', 'loader'),
     ]
 
-    def __init__(self, metadata, regime=0):
+    def __init__(self, uri, loader):
         Command.__init__(self)
-        self.metadata = metadata
-        self.regime = regime
+        self.uri = uri
+        self.loader = loader
 
     def __str__(self):
-        return "Load Layers From %s" % self.metadata.uri
+        return "Load Layers From %s" % self.uri
 
     def perform(self, editor):
-        self.undo_info = undo = UndoInfo()
-        lm = editor.layer_manager
-        saved_invariant = lm.next_invariant
-        loader = loaders.get_loader(self.metadata)
-        if hasattr(loader, "load_query"):
-            loader.load_query(self.metadata, lm)
-        try:
-            progress_log.info("START=Loading %s" % self.metadata.uri)
-            layers = loader.load_layers(self.metadata, manager=lm, regime=self.regime)
-        except ProgressCancelError as e:
-            undo.flags.success = False
-            undo.flags.errors = [str(e)]
-        except IOError as e:
-            undo.flags.success = False
-            undo.flags.errors = [str(e)]
-        finally:
-            progress_log.info("END")
-
-        if not undo.flags.success:
-            return undo
-
-        if layers is None:
-            undo.flags.success = False
-            undo.flags.errors = ["Unknown file type %s for %s" % (self.metadata.mime, self.metadata.uri)]
-        else:
-            errors = []
-            warnings = []
-            for layer in layers:
-                if layer.load_error_string != "":
-                    errors.append(layer.load_error_string)
-                if layer.load_warning_string != "":
-                    warnings.append(layer.load_warning_string)
-            if errors:
-                undo.flags.success = False
-                undo.flags.errors = errors
-            if warnings:
-                undo.flags.message = warnings
-
-        if undo.flags.success:
-            lm.add_layers(layers, False, editor)
-            first = True
-            for layer in layers:
-                lf = undo.flags.add_layer_flags(layer)
-                if first:
-                    lf.select_layer = True
-                    first = False
-                lf.layer_loaded = True
-
-            undo.flags.layers_changed = True
-            undo.flags.refresh_needed = True
-            undo.data = (layers, saved_invariant)
-
+        self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager)
+        editor.load_success(self.uri)
         return self.undo_info
 
     def undo(self, editor):
@@ -118,7 +68,7 @@ class AddLayerCommand(Command):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
-        layer = self.layer_class(manager=lm)
+        layer = self.layer_class(lm)
 
         layer.new()
         lm.insert_loaded_layer(layer, editor, self.before, self.after)
@@ -483,7 +433,7 @@ class MoveLayerCommand(Command):
 
         # here we "re-get" the source layer so that it's replaced by a
         # placeholder and temporarily removed from the tree
-        temp_layer = ly.EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_lm)
         source_layer, children = lm.replace_layer(mi_source, temp_layer)
 
         # if we are inserting onto a folder, insert as the second item in the folder
@@ -505,7 +455,7 @@ class MoveLayerCommand(Command):
     def undo(self, editor):
         lm = editor.layer_manager
         mi_temp, = self.undo_info.data
-        temp_layer = ly.EmptyLayer(layer_manager=lm)
+        temp_layer = ly.EmptyLayer(layer_lm)
         lm.insert_layer(mi_temp, temp_layer)
 
         source_layer = lm.get_layer_by_invariant(self.moved_layer)
@@ -540,7 +490,7 @@ class TriangulateLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        t_layer = ly.TriangleLayer(manager=lm)
+        t_layer = ly.TriangleLayer(lm)
         try:
             progress_log.info("START=Triangulating layer %s" % layer.name)
             t_layer.triangulate_from_layer(layer, self.q, self.a)
@@ -613,7 +563,7 @@ class ToPolygonLayerCommand(Command):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = ly.PolygonParentLayer(manager=lm)
+        p = ly.PolygonParentLayer(lm)
         try:
             progress_log.info("START=Boundary to polygon layer %s" % layer.name)
             boundaries = layer.get_all_boundaries()
@@ -625,7 +575,7 @@ class ToPolygonLayerCommand(Command):
             progress_log.info("END")
             self.undo_info.flags.success = False
             layer.highlight_exception(e)
-            editor.task.error(str(e), "Boundary Error")
+            editor.frame.error(str(e), "Boundary Error")
         finally:
             progress_log.info("END")
 
@@ -679,7 +629,7 @@ class ToVerdatLayerCommand(ToPolygonLayerCommand):
         layer = lm.get_layer_by_invariant(self.layer)
         saved_invariant = lm.next_invariant
         self.undo_info = undo = UndoInfo()
-        p = ly.LineLayer(manager=lm)
+        p = ly.LineLayer(lm)
         points, segments = layer.get_points_lines()
         p.set_data(points, 0, segments)
         p.name = "Verdat from %s" % layer.name
@@ -724,7 +674,7 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = ly.RingEditLayer(manager=lm, parent_layer=layer, object_type=self.obj_type, feature_code=self.feature_code)
+        p = ly.RingEditLayer(lm, layer, self.obj_type, self.feature_code)
 
         if self.feature_code < 0:
             poly_type = "Hole"

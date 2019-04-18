@@ -1,13 +1,5 @@
 import numpy as np
 
-# Enthought library imports.
-from traits.api import Enum
-from traits.api import Float
-from traits.api import Int
-from traits.api import Property
-from traits.api import Str
-from traits.api import Unicode
-
 from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import MovePointsCommand
@@ -31,15 +23,7 @@ class PointLayer(PointBaseLayer):
 
     type = "point"
 
-    mouse_mode_toolbar = Str("VectorLayerToolBar")
-
-    merged_points_index = Int(0)
-
-    default_depth = Float(1.0)
-
-    depth_unit = Property(Str)
-
-    _depth_unit = Enum("unknown", "meters", "feet", "fathoms")
+    mouse_mode_toolbar = "VectorLayerToolBar"
 
     pickable = True  # is this a layer that support picking?
 
@@ -49,11 +33,18 @@ class PointLayer(PointBaseLayer):
 
     selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]
 
-    # Trait setters/getters
-    def _get_depth_unit(self):
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.merged_points_index = 0
+        self.default_depth = 1.0
+        self._depth_unit = "unknown"
+
+    @property
+    def depth_unit(self):
         return self._depth_unit
 
-    def _set_depth_unit(self, unit):
+    @depth_unit.setter
+    def depth_unit(self, unit):
         unit = unit.lower()
         if unit in ['meter', 'meters', 'm']:
             unit = 'meters'
@@ -76,7 +67,7 @@ class PointLayer(PointBaseLayer):
             self.clear_all_selections(state.FLAGGED)
             for p in e.error_points:
                 self.select_point(p, state.FLAGGED)
-            self.manager.dispatch_event('refresh_needed')
+            self.manager.refresh_needed_event(True)
 
     def set_data(self, f_points, f_depths=0.0, style=None):
         n = np.alen(f_points)
@@ -93,9 +84,6 @@ class PointLayer(PointBaseLayer):
 
     def set_data_from_boundary_points(self, points, style=None):
         self.set_data(points)
-
-    def can_save(self):
-        return self.can_save_as() and bool(self.file_path)
 
     # JSON Serialization
 

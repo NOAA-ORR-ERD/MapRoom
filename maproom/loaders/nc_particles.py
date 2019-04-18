@@ -8,7 +8,7 @@ import os
 import numpy as np
 #import re
 
-from fs.opener import opener
+from sawx.filesystem import filesystem_path
 
 from .common import BaseLayerLoader
 from maproom.layers.particles import ParticleLayer, ParticleFolder, ParticleLegend
@@ -20,6 +20,14 @@ progress_log = logging.getLogger("progress")
 from post_gnome import nc_particles
 
 
+def identify_loader(file_guess):
+    byte_stream = file_guess.all_data
+    # check if is is HDF or CDF
+    if byte_stream[:3] == b"CDF" or byte_stream[0:8] == b"\211HDF\r\n\032\n":
+        if (b'feature_type' in byte_stream) and (b'particle_trajector' in byte_stream):
+            return dict(mime="application/x-nc_particles", loader=ParticleLoader())
+
+
 class nc_particles_file_loader():
     """
     iterator for loading all the timesteps in an nc_particles file
@@ -29,10 +37,7 @@ class nc_particles_file_loader():
     """
 
     def __init__(self, uri):
-        fs, relpath = opener.parse(uri)
-        if not fs.hassyspath(relpath):
-            raise RuntimeError("Only file URIs are supported for NetCDF: %s" % uri)
-        path = fs.getsyspath(relpath)
+        path = filesystem_path(uri)
         self.reader = nc_particles.Reader(path)
         self.current_timestep = 0  # fixme## hard coded limit!!!!!
         self.status_id = "status_codes"
@@ -120,7 +125,10 @@ class ParticleLoader(BaseLayerLoader):
     extensions = [".nc"]
     name = "nc_particles"
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def can_save_layer(self, layer):
+        return False
+
+    def load_layers(self, uri, manager, **kwargs):
         """
         load the nc_particles file
 
@@ -129,8 +137,8 @@ class ParticleLoader(BaseLayerLoader):
         :param manager: The layer manager
 
         """
-        parent = ParticleFolder(manager=manager)
-        parent.file_path = metadata.uri
+        parent = ParticleFolder(manager)
+        parent.file_path = uri
         parent.mime = self.mime  # fixme: tricky here, as one file has multiple layers
         parent.name = os.path.split(parent.file_path)[1]
 
@@ -139,9 +147,9 @@ class ParticleLoader(BaseLayerLoader):
         folder_min_max = {}
         folder_status_code_names = {}
         # loop through all the time steps in the file.
-        for (points, status_codes, code_map, timecode, warning, scalar_vars, scalar_min_max) in nc_particles_file_loader(metadata.uri):
-            layer = ParticleLayer(manager=manager, source_particle_folder=parent)
-            layer.file_path = metadata.uri
+        for (points, status_codes, code_map, timecode, warning, scalar_vars, scalar_min_max) in nc_particles_file_loader(uri):
+            layer = ParticleLayer(manager, parent)
+            layer.file_path = uri
             layer.mime = self.mime  # fixme: tricky here, as one file has multiple layers
             layer.name = timecode.isoformat().rsplit(':', 1)[0]
             # print timecode, type(timecode), layer.name, timecode.tzinfo
@@ -164,7 +172,7 @@ class ParticleLoader(BaseLayerLoader):
                     folder_min_max[k] = (float(lo), float(hi))
             folder_status_code_names.update(code_map)
 
-        progress_log.info("Finished loading %s" % metadata.uri)
+        progress_log.info("Finished loading %s" % uri)
         layers.reverse()
 
         # now we can tell the folder what the overall min/max are because
@@ -181,7 +189,7 @@ class ParticleLoader(BaseLayerLoader):
                 layer.end_time = end_time
                 end_time = layer.start_time
 
-        legend = ParticleLegend(manager=manager, source_particle_folder=parent)
+        legend = ParticleLegend(manager, parent)
         layers[0:0] = [parent, legend]
         if warnings:
             warnings[0:0] = ["The following layers have spurious values. Those values have been removed.\n"]

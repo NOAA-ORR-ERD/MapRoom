@@ -5,7 +5,7 @@ import wx
 import wx.lib.sized_controls as sc
 import wx.lib.buttons as buttons
 
-from omnivore_framework.utils.wx.dialogs import ObjectEditDialog
+from sawx.ui.dialogs import ObjectEditDialog
 
 from ..library import coordinates
 from ..library.textparse import parse_int_string
@@ -37,7 +37,7 @@ class FindPointDialog(sc.SizedDialog):
         btn_sizer = self.CreateStdDialogButtonSizer(wx.OK | wx.CANCEL)
         self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())
 
-        self.layer = project.layer_tree_control.get_edit_layer()
+        self.layer = project.current_layer
 
         # Note: indexes are stored in zero-based array but need to be displayed
         # to the user as one-based
@@ -191,13 +191,13 @@ class IconDialog(wx.Dialog):
 class StyleDialog(wx.Dialog):
     displayed_style_types = ["Line style", "Line width", "Line color", "Start marker", "End marker", "Line transparency", "Fill style", "Fill color", "Fill transparency", "Text color", "Font", "Font size", "Text transparency", "Outline color", "Outline transparency", "Marplot icon", "Icon size"]
 
-    def __init__(self, project, layers):
+    def __init__(self, project, layer_classes):
         wx.Dialog.__init__(self, project.control, -1, "Set Default Style", size=(300, -1))
         self.lm = project.layer_manager
 
         self.mock_project = MockProject(add_tree_control=True, default_styles=self.lm.default_styles)
         self.mock_project.control = None
-        self.other = self.mock_project.layer_tree_control.get_edit_layer()
+        self.other = self.mock_project.current_layer
         self.other.type = "other"
         self.other.name = "other"
         self.other.layer_info_panel = self.displayed_style_types
@@ -207,11 +207,10 @@ class StyleDialog(wx.Dialog):
         def set_style_override(self, style):
             self.style.copy_from(style)
 
-        self.styleable_layers = list(layers)
+        self.styleable_layers = [ly(self.lm) for ly in layer_classes]
         self.styleable_layers.append(self.other)
         for v in self.styleable_layers:
             self.mock_project.layer_manager.insert_layer([2], v)
-            v.manager = self.lm
             v.style = self.lm.get_default_style_for(v)
             v.set_style = types.MethodType(set_style_override, v)
 

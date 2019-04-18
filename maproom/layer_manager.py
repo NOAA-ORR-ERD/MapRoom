@@ -3,32 +3,30 @@ import json
 import zipfile
 import functools
 
-from fs.opener import opener, fsopen
+import wx
+
+from sawx.filesystem import fsopen as open
+from sawx.filesystem import filesystem_path
+from sawx.events import EventHandler
 
 from .library import rect
 
 from . import layers as ly
-from .layers import loaders
-from .command import UndoStack
+from . import loaders
+from . import styles
+from .command import UndoStack, BatchStatus
+from .menu_commands import LoadLayersCommand
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Dict
-from traits.api import Event
-from traits.api import Int
-from traits.api import List
-from pyface.api import GUI
-
-from omnivore_framework.framework.document import BaseDocument
-from omnivore_framework.utils.jsonutil import collapse_json
-from omnivore_framework.utils.fileutil import ExpandZip
+from sawx.document import SawxDocument
+from sawx.utils.jsonutil import collapse_json
+from sawx.utils.fileutil import ExpandZip
 from .library import colormap
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class LayerManager(BaseDocument):
+class LayerManager(SawxDocument):
 
     """
     Manages the layers (a tree of ly.Layer).
@@ -41,75 +39,40 @@ class LayerManager(BaseDocument):
     The first layer in the overall list and in each sublist is assumed to be a "folder" layer, whose only
     purpose at present is to hold the folder name.
     """
-    project = Any
-
-    # if the project is loaded from a zip file, the ExpandZip object is stored
-    # here so the unpacked directory can be referenced when re-saving the
-    # project
-    zip_file_source = Any
-
-    layers = List(Any)
-
-    next_invariant = Int(0)
-
-    root_invariant = Int(0)
-
-    default_styles = Any
-
-    layer_loaded = Event
-
-    layers_changed = Event
-
-    layer_contents_changed = Event
-
-    layer_contents_changed_in_place = Event
-
-    # when points are deleted from a layer the indexes of the points in the
-    # merge dialog box become invalid; so this event will trigger the user to
-    # re-find duplicates in order to create a valid list again
-    layer_contents_deleted = Event
-
-    layer_metadata_changed = Event
-
-    projection_changed = Event
-
-    refresh_needed = Event
-
-    background_refresh_needed = Event
-
-    threaded_image_loaded = Event
-
-    # Linked control points are slaves of a truth layer: a dict that maps the
-    # dependent layer/control point to the truth layer/control point
-    control_point_links = Dict(Any)
 
     # Transient layer always uses invariant
     transient_invariant = -99
 
-    def _undo_stack_default(self):
-        return UndoStack()
+    def __init__(self, file_metadata):
+        self.default_styles = styles.copy_default_styles()
+        self.layers = []
 
-    ##### Python special methods
+        self.layer_loaded_event = EventHandler(self)
+        self.layers_changed_event = EventHandler(self)
+        self.layer_contents_changed_event = EventHandler(self)
+        self.layer_contents_changed_in_place_event = EventHandler(self)
+        
+        # when points are deleted from a layer the indexes of the points in the
+        # merge dialog box become invalid; so this event will trigger the
+        # user to re-find duplicates in order to create a valid list again
+        self.layer_contents_deleted_event = EventHandler(self)
 
-    def __str__(self):
-        root = self.get_layer_by_multi_index([0])
-        layers = self.get_children(root)
-        return str(layers)
+        self.layer_metadata_changed_event = EventHandler(self)
+        self.projection_changed_event = EventHandler(self)
+        self.refresh_needed_event = EventHandler(self)
+        self.background_refresh_needed_event = EventHandler(self)
+        self.threaded_image_loaded_event = EventHandler(self)
 
-    ##### Creation/destruction
+        self.loader_class = None
 
-    @classmethod
-    def create(cls, project):
-        """Convenience function to create a new, empty LayerManager
+        # if the project is loaded from a zip file, the ExpandZip object is
+        # stored here so the unpacked directory can be referenced when re-
+        # saving the project
+        self.zip_file_source = None
 
-        Since classes that use Traits can't seem to use an __init__ method,
-        we are forced to use a convenience function to initialize non-traits
-        members.  Trying to define layers using _layers_default results
-        in recursion from the print statement in insert_layers trying to
-        references self.layers which isn't yet defined.
-        """
-        self = cls()
-        self.project = project
+        # Linked control points are slaves of a truth layer: a dict that maps
+        # the dependent layer/control point to the truth layer/control point
+        self.control_point_links = {}
 
         # In order for the serializer to correcly map the layer invariant to
         # the actual layer, the next_invariant must be preset so first user
@@ -119,28 +82,44 @@ class LayerManager(BaseDocument):
         index = 0
         self.root_invariant = -3
         self.next_invariant = self.root_invariant
-        self.default_styles = self.project.task.default_styles
-        layer = ly.RootLayer(manager=self)
+        layer = ly.RootLayer(self)
         self.insert_layer([index], layer)
 
         index += 1
-        grid = ly.Timestamp(manager=self)
+        grid = ly.Timestamp(self)
         self.insert_layer([index], grid)
 
         index += 1
-        grid = ly.Graticule(manager=self)
+        grid = ly.Graticule(self)
         self.insert_layer([index], grid)
         
         index += 1
-        scale = ly.Scale(manager=self)
+        scale = ly.Scale(self)
         self.insert_layer([index], scale)
 
-        # Add hook to create layer instances for debugging purposes
-        if "--debug-objects" in self.project.window.application.command_line_args:
-            from . import debug
-            debug.debug_objects(self)
+        SawxDocument.__init__(self, file_metadata)
+        self.undo_stack = UndoStack()  # replace sawx undo stack with our own
 
-        return self
+        # LayerManagers are *almost* independent of the project. Right now it
+        # isn't possible to have multiple views of a project because there are
+        # references to the project in a few vector object classes that are
+        # positioned relative to the screen. The project will be set once it is
+        # added into a ProjectEditor
+        self.project = None
+
+        # # Add hook to create layer instances for debugging purposes
+        # if "--debug-objects" in self.project.window.application.command_line_args:
+        #     from . import debug
+        #     debug.debug_objects(self)
+
+    ##### Python special methods
+
+    def __str__(self):
+        root = self.get_layer_by_multi_index([0])
+        layers = self.get_children(root)
+        return str(layers)
+
+    ##### destruction
 
     def destroy(self):
         # fixme: why do layers need a destroy() method???
@@ -177,6 +156,42 @@ class LayerManager(BaseDocument):
 
         return result
 
+    #### Load
+
+    @property
+    def can_revert(self):
+        return hasattr(self.loader_class, "load_project")
+
+    def load_raw_data(self):
+        loader = self.file_metadata["loader"]
+        self.loader_class = loader.__class__
+        batch_flags = BatchStatus()
+        # FIXME: Add load project command that clears all layers
+        try:
+            loader.load_project  # test
+        except AttributeError:
+            cmd = LoadLayersCommand(self.uri, loader)
+            extra = {'command_from_load': cmd}
+            # undo = loader.load_layers_from_uri(self.uri, self)
+            # batch_flags = undo.flags
+            # extra = {'batch_flags_from_load': batch_flags}
+        else:
+            extra = loader.load_project(self.uri, self, batch_flags)
+            extra['batch_flags_from_load'] = batch_flags
+        self.extra_metadata = extra
+
+        # Clear modified flag
+        self.undo_stack.set_save_point()
+        # self.dirty = self.layer_manager.undo_stack.is_dirty()
+        # self.mouse_mode_factory = mouse_handler.PanMode
+        # self.view_document(self.document)
+    
+    def calc_raw_data(self, raw):
+        pass
+
+    def create_empty(self):
+        self.file_metadata = {'uri': ''}
+
     ##### Serialization
 
     def get_to_json_attrs(self):
@@ -212,11 +227,11 @@ class LayerManager(BaseDocument):
         self.control_point_links = cpdict
 
     def default_styles_to_json(self):
-        return ly.styles_to_json(self.default_styles)
+        return styles.styles_to_json(self.default_styles)
 
     def default_styles_from_json(self, json_data):
         sdict = json_data['default_styles']
-        d = ly.parse_styles_from_json(sdict)
+        d = styles.parse_styles_from_json(sdict)
         self.update_default_styles(d)
 
     ##### Multi-index calculations
@@ -355,17 +370,17 @@ class LayerManager(BaseDocument):
 
     ##### Style
 
-    def update_default_styles(self, styles):
-        self.default_styles = styles
+    def update_default_styles(self, new_styles):
+        self.default_styles = new_styles
 
         # Make sure "other" is a valid style
         try:
-            s = ly.LayerStyle()
+            s = styles.LayerStyle()
             s.parse(str(self.default_styles["other"]))
         except Exception:
             log.warning("Invalid style for other, using default")
-            self.default_styles["other"] = ly.LayerStyle() # minimal default styles
-        for type_name in sorted(styles.keys()):
+            self.default_styles["other"] = styles.LayerStyle() # minimal default styles
+        for type_name in sorted(new_styles.keys()):
             style = self.default_styles[type_name]
             log.debug("style %s: %s" % (type_name, str(style)))
 
@@ -732,10 +747,10 @@ class LayerManager(BaseDocument):
                 return True
         return False
 
-    def check_layer(self, layer, window):
+    def check_layer(self, layer):
         if layer is not None:
             try:
-                layer.check_for_problems(window)
+                layer.check_for_problems()
             except Exception as e:
                 if hasattr(e, 'error_points'):
                     return e
@@ -791,18 +806,6 @@ class LayerManager(BaseDocument):
         #
         return n
 
-    def dispatch_event(self, event, value=True):  # refactor out
-        log.debug("dispatching event %s = %s" % (event, value))
-        setattr(self, event, value)
-
-    def post_event(self, event_name, *args):  # refactor out
-        log.debug("event: %s.  args=%s" % (event_name, str(args)))
-
-    def get_event_callback(self, event):  # refactor out
-        import functools
-        callback = functools.partial(self.post_event, event)
-        return callback
-
     ##### ly.Layer modification
 
     def update_map_server_ids(self, layer_type, before, after):
@@ -827,41 +830,16 @@ class LayerManager(BaseDocument):
 
     ##### Add layers
 
-    def add_layer(self, type=None, editor=None, before=None, after=None):
-        if type == "grid":
-            layer = ly.Graticule(manager=self)
-        elif type == "triangle":
-            layer = ly.TriangleLayer(manager=self)
-        else:
-            layer = ly.LineLayer(manager=self)
-        layer.new()
-        self.insert_loaded_layer(layer, editor, before, after)
-        self.dispatch_event('layers_changed')
-        if editor is not None:
-            GUI.invoke_later(editor.layer_tree_control.set_edit_layer, layer)
-        return layer
-
-    def add_layers(self, layers, is_project, editor):
+    def add_layers(self, layers, editor=None):
         layers = layers[:]  # work on copy so we don't mess up the caller's list
         parent = None
-        if is_project:
-            # remove all other layers so the project can be inserted in the
-            # correct order
-            existing = self.flatten()
-            for layer in existing:
-                if not layer.is_root():
-                    self.remove_layer(layer)
-
-            # layers are inserted from the beginning, so reverse loaded layers
-            # so they won't show up backwards
-            layers.reverse()
-        else:
-            if layers[0].is_folder():
-                parent = layers.pop(0)
-                self.insert_loaded_layer(parent, editor)
+        if layers[0].is_folder():
+            parent = layers.pop(0)
+            self.insert_loaded_layer(parent, editor)
 
         for layer in layers:
-            layer.check_projection(editor.task)
+            if editor is not None:
+                layer.check_projection()
             if not layer.load_error_string:
                 self.insert_loaded_layer(layer, editor, last_child_of=parent)
         return layers
@@ -877,7 +855,7 @@ class LayerManager(BaseDocument):
             for layer in layer_list:
                 log.debug("adding %s at %s" % (str(layer), str(mi)))
                 if editor is not None:
-                    layer.check_projection(editor.task)
+                    layer.check_projection()
                 if len(mi) > 1:
                     # check to see if it's a folder layer, and if so it would
                     # have been serialized with a 0 as the last multi index.
@@ -901,7 +879,7 @@ class LayerManager(BaseDocument):
         return layers
 
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
-        self.dispatch_event('layer_loaded', layer)
+        self.layer_loaded_event(layer)
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of, layer.background, layer.opaque, layer.bounded)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
@@ -912,7 +890,7 @@ class LayerManager(BaseDocument):
         layer = ly.Layer.load_from_json(json_data, self)[0]
         if old_invariant_map is not None:
             old_invariant_map[json_data['invariant']] = layer
-        self.dispatch_event('layer_loaded', layer)
+        self.layer_loaded_event(layer)
         self.insert_layer(mi, layer)
         if json_data['children']:
             mi.append(1)
@@ -1167,6 +1145,10 @@ class LayerManager(BaseDocument):
             try:
                 from_json(extra_json)
             except KeyError:
+                if attr == "default_styles":
+                    # it's ok if default_styles don't exist; the user's saved defaults will
+                    # be loaded instead.
+                    continue
                 message = "%s not present in layer %s; attempting to continue" % (attr, self.name)
                 log.warning(message)
                 batch_flags.messages.append("WARNING: %s" % message)
@@ -1221,8 +1203,19 @@ class LayerManager(BaseDocument):
 
     ##### Layer save
 
-    def save_all(self, file_path, extra_json_data=None):
-        return self.save_all_zip(file_path, extra_json_data)
+    def verify_ok_to_save(self):
+        prefs = self.project.preferences
+        if prefs.check_errors_on_save:
+            return self.project.check_all_layers_for_errors(True)
+        else:
+            return True
+
+    def save_raw_data(self, uri, raw_data):
+        extra_json = self.project.current_extra_json
+        return self.save_all_zip(uri, extra_json)
+
+    def calc_raw_data_to_save(self):
+        return None
 
     def process_pre_json_data(self, json):
         # pre json data is stuff that layers need to exist at the time they are
@@ -1235,15 +1228,21 @@ class LayerManager(BaseDocument):
         log.debug("pre json data:\n%s" % repr(pre_json_data))
         return pre_json_data
 
-    def calc_post_json_data(self, extra_json_data=None):
+    def calc_post_json_data(self, extra_json_data=None, skip_post_json_data_keys=None):
         if extra_json_data is None:
             extra_json_data = {}
+        if skip_post_json_data_keys is None:
+            skip_post_json_data_keys = []
+        skip = set(skip_post_json_data_keys)
         for attr, to_json in self.get_to_json_attrs():
-            extra_json_data[attr] = to_json()
+            if attr in skip:
+                log.debug(f"skipping post_json_data attribute {attr}")
+            else:
+                extra_json_data[attr] = to_json()
         log.debug("post json data:\n%s" % repr(extra_json_data))
         return extra_json_data
 
-    def save_all_zip(self, file_path, extra_json_data=None):
+    def save_all_zip(self, file_path, extra_json_data=None, skip_post_json_data_keys=None):
         """Save all layers into a zip file that includes any referenced images,
         shapefiles, etc. so the file becomes portable and usable on other
         systems.
@@ -1256,9 +1255,9 @@ class LayerManager(BaseDocument):
         log.debug("layer subclasses:\n" + "\n".join(["%s -> %s" % (t, str(s)) for t, s in ly.Layer.get_subclasses().items()]))
 
         pre_json_data = self.calc_pre_json_data()
-        post_json_data = self.calc_post_json_data(extra_json_data)
+        post_json_data = self.calc_post_json_data(extra_json_data, skip_post_json_data_keys)
         try:
-            with fsopen(file_path, "wb") as fh:
+            with open(file_path, "wb") as fh:
                 zf = zipfile.ZipFile(fh, mode='w', compression=zipfile.ZIP_DEFLATED)
                 try:
                     zf.writestr("pre json data", json.dumps(pre_json_data))
@@ -1285,14 +1284,11 @@ class LayerManager(BaseDocument):
 
                             # save all files into zip file
                             for p in paths:
+                                try:
+                                    p = filesystem_path(p)
+                                except:
+                                    raise RuntimeError("Can't yet handle URIs not on local filesystem")
                                 basename = os.path.basename(p)
-                                if "://" in p:
-                                    # handle URI format
-                                    fs, relpath = opener.parse(p)
-                                    if fs.hassyspath(relpath):
-                                        p = fs.getsyspath(relpath)
-                                    else:
-                                        raise RuntimeError("Can't yet handle URIs not on local filesystem")
                                 archive_name = zip_root + basename
                                 zf.write(p, archive_name, zipfile.ZIP_STORED)
 
@@ -1334,6 +1330,15 @@ class LayerManager(BaseDocument):
             return error
         return "No selected layer."
 
+    #### file recognition
+
+    @classmethod
+    def can_load_file_exact(cls, file_metadata):
+        return "loader" in file_metadata
+ 
+    @classmethod
+    def can_load_file_generic(cls, file_metadata):
+        False
 
 # def test():
 #     a = ly.Layer()

@@ -2,9 +2,6 @@ import numpy as np
 
 import shapely.geometry as sg
 
-# Enthought library imports.
-from traits.api import Any, Int, Str, Bool, List
-
 from ..errors import PointsError
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types
@@ -34,32 +31,30 @@ class RingEditLayer(LineLayer):
 
     type = "ring_edit"
 
-    ring_fill_color = Int
-
-    ring_indexes = Any
-
-    feature_code = Int  # Feature code will apply to all polygons being edited
-
-    feature_name = Str
-
-    layer_info_panel = ["Point count", "Line segment count", "Flagged points", "Color"]
+    layer_info_panel = ["Point count", "Line segment count", "Color", "Save polygon", "Cancel polygon"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude", "Area"]
 
     draw_on_top_when_selected = True
 
-    parent_layer = Any
-
     transient_edit_layer = True
 
-    def _style_default(self):
+    def __init__(self, manager, parent_layer, object_type, feature_code):
+        """NOTE: feature_code applies to all polygons being edited
+        """
+        super().__init__(manager)
+        self.parent_layer = parent_layer
+        self.object_type = object_type
+        self.feature_code = feature_code
+        self.ring_fill_color = 0
+        self.ring_indexes = []
+        self.feature_name = ""
+
+    def calc_initial_style(self):
         style = self.manager.get_default_style_for(self)
         style.line_color = style.default_highlight_color
-        log.debug("_style_default for %s: %s" % (self.type, str(style)))
+        log.debug("calc_initial_style for %s: %s" % (self.type, str(style)))
         return style
-
-    def _ring_indexes_default(self):
-        return list()
 
     @property
     def area(self):
@@ -148,22 +143,20 @@ class RingEditLayer(LineLayer):
 
     ##### User interface
 
-    def calc_context_menu_actions(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, object_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
         from .. import actions as a
 
-        actions = [a.SaveRingEditAction, a.CancelRingEditAction]
+        desc = ["save_ring_edit", "cancel_ring_edit"]
         if object_index is not None:
             log.debug(f"object type {object_type} index {object_index}")
             if not self.parent_layer.is_hole(object_index) and object_index not in self.ring_indexes:
                 _, _, count, _, feature_code, _ = self.parent_layer.get_ring_state(object_index)
-                actions.append(None)
-                edit_action = a.AddPolygonToEditLayerAction(task=self.manager.project.task, object_index=object_index)
-                edit_action.name = f"Add Polygon to Edit Layer ({count} points, id={object_index})"
-                actions.append(edit_action)
-        return actions
+                desc.extend([None, "add_polygon_to_edit_layer"])
+                a.add_polygon_to_edit_layer.name = f"Add Polygon to Edit Layer ({count} points, id={object_index})"
+        return desc
 
 
 class PolygonParentLayer(PointLayer):
@@ -176,43 +169,28 @@ class PolygonParentLayer(PointLayer):
 
     type = "shapefile"
 
-    mouse_mode_toolbar = Str("PolygonLayerToolBar")
-
-    rebuild_needed = Bool(False)
-
-    geometry_list = Any
-
-    ring_adjacency = Any
-
-    rings = Any
+    mouse_mode_toolbar = "PolygonLayerToolBar"
 
     visibility_items = ["points", "lines", "labels"]
 
-    layer_info_panel = ["Point count", "Polygon count", "Flagged points", "Color"]
+    layer_info_panel = ["Point count", "Polygon count"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]
 
-    def _geometry_list_default(self):
-        return []
-
-    def _ring_adjacency_default(self):
+    def __init__(self, manager):
+        super().__init__(manager)
+        self.rebuild_needed = False
+        self.geometry_list = []
         _, ring_adjacency = data_types.compute_rings([], [], feature_code_to_color)
-        return ring_adjacency
-
-    def _rings_default(self):
-        return []
-
-    def _points_default(self):
+        self.ring_adjacency = ring_adjacency
+        self.rings = []
         self.point_adjacency_array = data_types.make_point_adjacency_array(0)
-        return data_types.make_points(0)
+        self.points = data_types.make_points(0)
 
-    def _point_adjacency_array_default(self):
-        return data_types.make_point_adjacency_array(0)
-
-    def _style_default(self):
+    def calc_initial_style(self):
         style = self.manager.get_default_style_for(self)
         style.use_next_default_color()
-        log.debug("_style_default for %s: %s" % (self.type, str(style)))
+        log.debug("calc_initial_style for %s: %s" % (self.type, str(style)))
         return style
 
     def get_info_panel_text(self, prop):
@@ -269,7 +247,6 @@ class PolygonParentLayer(PointLayer):
 
     def create_first_ring(self, points, feature_code, color):
         num_new_points = len(points)
-        print("PONITS", points)
         self.points = data_types.make_points(num_new_points)
         self.ring_adjacency = data_types.make_ring_adjacency_array(num_new_points)
         feature_code = 1
@@ -453,7 +430,10 @@ class PolygonParentLayer(PointLayer):
         group_index = 0
         for ring_index, (start, count) in enumerate(zip(polygon_starts, polygon_counts)):
             end = start + count
-            log.debug(f"poly: {start, end}")
+            try:
+                log.debug(f"ring[{ring_index}]: {start, end} geom={self.geometry_list[ring_index]}")
+            except IndexError:
+                log.warning(f"ring[{ring_index}]: {start, end} geometry is missing!")
             paa[start:end]['next'] = np.arange(start+1, end+1, dtype=np.uint32)
             paa[end-1]['next'] = start
             paa[start:end]['ring_index'] = ring_index
@@ -472,6 +452,7 @@ class PolygonParentLayer(PointLayer):
         # print(polys)
         self.rings = polys
         self.point_adjacency_array = paa
+        log.debug(f"created {ring_index} rings; geometry_list={len(self.geometry_list)}")
 
     def set_geometry(self, point_list, geom_list):
         self.set_data(point_list)
@@ -514,18 +495,19 @@ class PolygonParentLayer(PointLayer):
             insert_index, old_after_index = self.get_ring_start_end(ring_index)
         except IndexError:
             self.create_first_ring(points.view(data_types.POINT_XY_VIEW_DTYPE).xy, 1, feature_code_to_color[1])
-            print("SOEUHCROEHUOE", points)
-            print("SOEUHCROEHUOE", points.view(data_types.POINT_XY_VIEW_DTYPE).xy[:])
+            log.debug(points)
+            log.debug(points.view(data_types.POINT_XY_VIEW_DTYPE).xy[:])
             return
-        print("ZMVWQJMKMQJKMQJZMK", points)
+        log.debug(f"insert_index={insert_index}, old_after_index={old_after_index}, points={points}")
         if new_boundary:
-            # arbitrarily insert at beginning
-            old_after_index = insert_index
-            self.dup_geometry_list_entry(0)
-        elif feature_code < 0:
-            # insert after indicated polygon so it becomes a hole of that one
-            insert_index = old_after_index
-            self.dup_geometry_list_entry(ring_index)
+            if feature_code < 0:
+                # insert after indicated polygon so it becomes a hole of that one
+                insert_index = old_after_index
+                self.dup_geometry_list_entry(ring_index)
+            else:
+                # arbitrarily insert at beginning
+                old_after_index = insert_index
+                self.dup_geometry_list_entry(0)
         old_num_points = len(self.points)
 
         insert_points = points
@@ -588,14 +570,14 @@ class PolygonParentLayer(PointLayer):
         self.create_rings()
         self.rebuild_needed = True
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         pass
 
     def rebuild_renderer(self, renderer, in_place=False):
         log.debug(f"rebuilding polygon2 {self.name}")
         if self.rings is None or len(self.rings) == 0:
             self.create_rings()
-        projection = self.manager.project.layer_canvas.projection
+        projection = renderer.canvas.projection
         projected_point_data = data_types.compute_projected_point_data(self.points, projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
         # renderer.set_rings(self.ring_adjacency)
@@ -624,26 +606,22 @@ class PolygonParentLayer(PointLayer):
 
     ##### User interface
 
-    def calc_context_menu_actions(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, object_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
         from .. import actions as a
 
-        actions = []
+        desc = []
         if object_index is not None:
-            edit_action = a.EditLayerAction(task=self.manager.project.task)
-            actions = [edit_action]
+            desc = ["edit_layer"]
             log.debug(f"object type {object_type} index {object_index}")
             _, _, count, _, feature_code, _ = self.get_ring_state(object_index)
             if self.is_hole(object_index):
-                edit_action.name = f"Edit Hole ({count} points, id={object_index})"
+                a.edit_layer.name = f"Edit Hole ({count} points, id={object_index})"
             else:
-                edit_action.name = f"Edit Polygon ({count} points, id={object_index})"
-                actions.append(a.AddPolygonHoleAction)
-            actions.append(None)
-            actions.append(a.SimplifyPolygonAction)
-            actions.append(None)
-            actions.append(a.DeletePolygonAction)
-        actions.append(a.AddPolygonBoundaryAction)
-        return actions
+                a.edit_layer.name = f"Edit Polygon ({count} points, id={object_index})"
+                desc.append("add_polygon_hole")
+            desc.extend([None, "simplify_polygon", None, "delete_polygon"])
+        desc.append("add_polygon_boundary")
+        return desc

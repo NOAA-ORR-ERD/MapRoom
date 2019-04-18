@@ -2,7 +2,7 @@ import re
 import json
 import zipfile
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
 
 from .common import BaseLoader
 
@@ -11,6 +11,15 @@ log = logging.getLogger(__name__)
 
 
 WHITESPACE_PATTERN = re.compile("\s+")
+
+
+def identify_loader(file_guess):
+    if file_guess.is_binary:
+        if file_guess.is_zipfile and file_guess.zipfile_contains("pre json data"):
+            return dict(mime="application/x-maproom-project-zip", loader=ZipProjectLoader())
+    else:
+        if file_guess.sample_data.startswith(b"# -*- MapRoom project file -*-"):
+            return dict(mime="application/x-maproom-project-json", loader=ProjectLoader())
 
 
 class ProjectLoader(BaseLoader):
@@ -24,9 +33,12 @@ class ProjectLoader(BaseLoader):
 
     load_type = "project"
 
-    def load_project(self, metadata, manager, batch_flags):
+    def can_save_layer(self, layer):
+        return False
+
+    def load_project(self, uri, manager, batch_flags):
         project = []
-        with fsopen(metadata.uri, "r") as fh:
+        with open(uri, "r") as fh:
             line = fh.readline()
             if line != "# -*- MapRoom project file -*-\n":
                 return "Not a MapRoom project file!"
@@ -49,13 +61,12 @@ class ZipProjectLoader(BaseLoader):
 
     load_type = "project"
 
-    def load_project(self, metadata, manager, batch_flags):
-        log.debug("project file: %s" % metadata.uri)
-        fh = None
-        try:
-            fh = metadata.syspath
-        except TypeError:
-            fh = metadata.get_stream()
+    def can_save_layer(self, layer):
+        return False
+
+    def load_project(self, uri, manager, batch_flags):
+        log.debug("project file: %s" % uri)
+        fh = open(uri, "rb")
         if zipfile.is_zipfile(fh):
             log.debug("found zipfile")
             with zipfile.ZipFile(fh, 'r') as zf:

@@ -1,16 +1,7 @@
 import os
 
-# Enthought library imports.
-from envisage.ui.tasks.api import PreferencesPane
-from traits.api import Bool
-from traits.api import Directory
-from traits.api import Enum
-from traits.api import Range
-from traits.api import Str
-from traitsui.api import HGroup, VGroup, Item, Label, \
-    View, RangeEditor
-
-from omnivore_framework.framework.preferences import FrameworkPreferences
+from sawx import persistence
+from sawx.preferences import SawxPreferences
 
 # fixme:
 # Some hard_coded stuff just to put it in a central place -- should be handled smarter
@@ -19,101 +10,84 @@ from omnivore_framework.framework.preferences import FrameworkPreferences
 DEFAULT_PROJECTION_STRING = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +over +no_defs"
 
 
-class MaproomPreferences(FrameworkPreferences):
-    """ The preferences helper for the Framework application.
-    """
-
-    # 'PreferencesHelper' interface ########################################
-
-    # The path to the preference node that contains the preferences.
-    preferences_path = 'maproom'
-
-    # Preferences ##########################################################
-
+class MaproomPreferences(SawxPreferences):
     # Lat/lon degree display format
-    coordinate_display_format = Enum(
+    coordinate_display_format = [
         "degrees decimal minutes",
         "degrees minutes seconds",
         "decimal degrees",
-    )
+    ]
 
     # mouse wheel zoom speed
-    zoom_speed = Enum(
+    zoom_speed = [
         "Slow",
         "Medium",
         "Fast",
-    )
+    ]
 
-    # display scale legend by default
-    show_scale = Bool(True)
+    def __init__(self):
+        self.coordinate_display_format = "degrees decimal minutes"
 
-    # check for layer errors on file save
-    check_errors_on_save = Bool(True)
+        self.zoom_speed = "Slow"
 
-    # blink newly selected layer when switching
-    identify_layers = Bool(True)
+        # display scale legend by default
+        self.show_scale = True
 
-    # minimum number of pixels between grid lines
-    grid_spacing_low = 25
-    grid_spacing_high = 200
-    grid_spacing = Range(low=grid_spacing_low, high=grid_spacing_high, value=100)
+        # check for layer errors on file save
+        self.check_errors_on_save = True
 
-    download_directory = Directory("")
+        # blink newly selected layer when switching
+        self.identify_layers = True
 
-    bsb_directory = Directory("")
+        # minimum number of pixels between grid lines
+        self.grid_spacing_low = 25
+        self.grid_spacing_high = 200
+        self.grid_spacing = 100
 
-    colormap_name = Str("gist_heat")
+        self.download_directory = persistence.get_user_dir("Downloads")
 
-    def _download_directory_default(self):
-      path = os.path.join(self.application.user_data_dir, "Downloads")
-      if not os.path.exists(path):
-          os.makedirs(path)
-      return path
+        self.bsb_directory = persistence.get_user_dir("BSB")
 
-    def _bsb_directory_default(self):
-      path = os.path.join(self.application.user_data_dir, "BSB")
-      if not os.path.exists(path):
-          os.makedirs(path)
-      return path
+        self.colormap_name = "gist_heat"
 
 
-class MaproomPreferencesPane(PreferencesPane):
-    """ The preferences pane for the Framework application.
-    """
+# class MaproomPreferencesPane(PreferencesPane):
+#     """ The preferences pane for the Framework application.
+#     """
 
-    # 'PreferencesPane' interface ##########################################
+#     # 'PreferencesPane' interface ##########################################
 
-    # The factory to use for creating the preferences model object.
-    model_factory = MaproomPreferences
+#     # The factory to use for creating the preferences model object.
+#     model_factory = MaproomPreferences
 
-    category = Str('MapRoom')
+#     category = Str('MapRoom')
 
-    # 'FrameworkPreferencesPane' interface ################################
+#     # 'FrameworkPreferencesPane' interface ################################
 
-    view = View(
-        VGroup(HGroup(Item('coordinate_display_format'),
-                      Label('Coordinate Display Format'),
-                      show_labels=False),
-               HGroup(Item('zoom_speed'),
-                      Label('Scroll Zoom Speed'),
-                      show_labels=False),
-               HGroup(Item('grid_spacing', editor=RangeEditor(mode="spinner", is_float=False, low_name='grid_spacing_low', high_name='grid_spacing_high')),
-                      Label('Minimum Number of Pixels Between Grid Lines'),
-                      show_labels=False),
-               HGroup(Item('show_scale'),
-                      Label('Show Scale Layer'),
-                      show_labels=False),
-               HGroup(Item('check_errors_on_save'),
-                      Label('Check for layer errors on save'),
-                      show_labels=False),
-               HGroup(Item('identify_layers'),
-                      Label('Briefly highlight the selected layer when chosen'),
-                      show_labels=False),
-               HGroup(Item('download_directory'),
-                      Label('Download directory'),
-                      show_labels=False),
-               HGroup(Item('bsb_directory'),
-                      Label('BSB storage directory'),
-                      show_labels=False),
-               label='MapRoom'),
-        resizable=True)
+#     view = View(
+#         VGroup(HGroup(Item('coordinate_display_format'),
+#                       Label('Coordinate Display Format'),
+#                       show_labels=False),
+#                HGroup(Item('zoom_speed'),
+#                       Label('Scroll Zoom Speed'),
+#                       show_labels=False),
+#                HGroup(Item('grid_spacing', editor=RangeEditor(mode="spinner", is_float=False, low_name='grid_spacing_low', high_name='grid_spacing_high')),
+#                       Label('Minimum Number of Pixels Between Grid Lines'),
+#                       show_labels=False),
+#                HGroup(Item('show_scale'),
+#                       Label('Show Scale Layer'),
+#                       show_labels=False),
+#                HGroup(Item('check_errors_on_save'),
+#                       Label('Check for layer errors on save'),
+#                       show_labels=False),
+#                HGroup(Item('identify_layers'),
+#                       Label('Briefly highlight the selected layer when chosen'),
+#                       show_labels=False),
+#                HGroup(Item('download_directory'),
+#                       Label('Download directory'),
+#                       show_labels=False),
+#                HGroup(Item('bsb_directory'),
+#                       Label('BSB storage directory'),
+#                       show_labels=False),
+#                label='MapRoom'),
+#         resizable=True)

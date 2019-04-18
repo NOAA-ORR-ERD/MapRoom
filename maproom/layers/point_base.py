@@ -4,12 +4,6 @@ Layer type to be used as a base class for layers with points
 """
 import numpy as np
 
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Str
-from traits.api import Unicode
-from traits.api import Float
-
 from ..library import rect
 from ..library.depth_utils import convert_units
 from ..renderer import data_types
@@ -31,21 +25,20 @@ class PointBaseLayer(ProjectedLayer):
 
     type = "base_point"
 
-    points = Any
-
-    hidden_points = Any  # numpy array listing indexes of points to hide
-
-    point_size = Float(4.0)
-
-    selected_point_size = Float(15.0)
-
-    selected_line_width = Float(10.0)
-
     visibility_items = ["points"]
 
     layer_info_panel = ["Point count"]
 
     selection_info_panel = []
+
+    def __init__(self, manager):
+        super().__init__(manager)
+
+        self.points = None
+        self.hidden_points = None  # numpy array listing indexes of points to hide
+        self.point_size = 4.0
+        self.selected_point_size = 15.0
+        self.selected_line_width = 10.0
 
     def __str__(self):
         return ProjectedLayer.__str__(self) + ", %d points" % (self.num_points)
@@ -87,9 +80,9 @@ class PointBaseLayer(ProjectedLayer):
 
     # fixme: can we remove all the visibility stuff???
     # and if not -- this shouldn't have any references to labels
-    def get_visibility_dict(self):
+    def get_visibility_dict(self, project):
         # fixme: why not call self.get_visibility_dict ?
-        d = ProjectedLayer.get_visibility_dict(self)
+        d = ProjectedLayer.get_visibility_dict(self, project)
         # fixme: and why do I need to mess with label visibility here?
         d["labels"] = False
         return d
@@ -198,7 +191,7 @@ class PointBaseLayer(ProjectedLayer):
     def clear_flagged(self, refresh=False):
         self.clear_all_selections(state.FLAGGED)
         if refresh:
-            self.manager.refresh_needed = None
+            self.manager.refresh_needed_event(None)
 
     def has_selection(self):
         return self.get_num_points_selected() > 0
@@ -245,7 +238,7 @@ class PointBaseLayer(ProjectedLayer):
         self.deselect_points(indexes, state.FLAGGED)
         self.select_points(indexes, state.SELECTED)
         if refresh:
-            self.manager.dispatch_event('refresh_needed')
+            self.manager.refresh_needed_event(True)
 
     def get_flagged_point_indexes(self):
         return self.get_selected_point_indexes(state.FLAGGED)
@@ -317,8 +310,7 @@ class PointBaseLayer(ProjectedLayer):
     def swap_lat_lon(self):
         self.points.x, self.points.y = self.points.y, self.points.x.copy()
 
-    def compute_projected_point_data(self):
-        projection = self.manager.project.layer_canvas.projection
+    def compute_projected_point_data(self, projection):
         return data_types.compute_projected_point_data(self.points, projection, self.hidden_points)
 
     def update_affected_points(self,
@@ -333,7 +325,8 @@ class PointBaseLayer(ProjectedLayer):
         """Update renderer
 
         """
-        projected_point_data = self.compute_projected_point_data()
+        projection = renderer.canvas.projection
+        projected_point_data = self.compute_projected_point_data(projection)
         renderer.set_points(projected_point_data, self.points.z, self.points.color.copy().view(dtype=np.uint8))
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):

@@ -1,7 +1,7 @@
 
 import wx
 
-from omnivore_framework import get_image_path
+from sawx.filesystem import get_image_path
 
 from . import renderer
 from .mouse_handler import MouseHandler, PanMode
@@ -49,7 +49,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         self.update_renderers()
 
     def get_edit_layer(self):
-        return self.project.layer_tree_control.get_edit_layer()
+        return self.project.current_layer
 
     def set_mouse_handler(self, mode):
         self.release_mouse()
@@ -86,7 +86,7 @@ class LayerCanvas(renderer.ScreenCanvas):
         return mode
 
     def do_jump_coords(self):
-        prefs = self.project.task.preferences
+        prefs = self.project.preferences
         from .ui.dialogs import JumpCoordsDialog
         dialog = JumpCoordsDialog(self, prefs.coordinate_display_format)
         if dialog.ShowModalWithFocus() == wx.ID_OK:

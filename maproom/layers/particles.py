@@ -14,18 +14,13 @@ import calendar
 import numpy as np
 import wx
 
-from traits.api import Any
-from traits.api import Int, Float
-from traits.api import Str
-from traits.api import Unicode
-
-from omnivore_framework.utils.parseutil import NumpyFloatExpression, ParseException
+from sawx.utils.parseutil import NumpyFloatExpression, ParseException
 
 from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils
 
 from .folder import Folder
-from .base import ProjectedLayer, ScreenLayer
+from .base import ProjectedLayer, StickyLayer
 from .point_base import PointBaseLayer
 from . import state
 
@@ -47,24 +42,6 @@ class ParticleFolder(Folder):
 
     style_as = "particle"
 
-    start_index = Int(0)
-
-    end_index = Int(sys.maxsize)
-
-    scalar_subset_expression = Str("")
-
-    current_min_max = Any(None)
-
-    current_scalar_var = Any(None)
-
-    scalar_min_max = Any({})
-
-    status_code_names = Any
-
-    status_code_colors = Any
-
-    colormap = Any
-
     # FIXME: Arbitrary colors for now till we decide on values
     status_code_color_map = {
         7: color_floats_to_int(1.0, 0, 1.0, 1.0),  # off maps
@@ -79,10 +56,18 @@ class ParticleFolder(Folder):
 
     selection_info_panel = ["Scalar value ranges"]
 
-    # Trait initializers
+    def __init__(self, manager):
+        super().__init__(manager)
 
-    def _colormap_default(self):
-        return colormap.get_colormap("gnome")
+        self.start_index = 0
+        self.end_index = sys.maxsize
+        self.scalar_subset_expression = ""
+        self.current_min_max = None
+        self.current_scalar_var = None
+        self.scalar_min_max = {}
+        self.status_code_names = None
+        self.status_code_colors = None
+        self.colormap = colormap.get_colormap("gnome")
 
     # class attributes
 
@@ -106,7 +91,6 @@ class ParticleFolder(Folder):
     def init_status_codes(self, status_code_names):
         self.status_code_names = status_code_names
         self.status_code_colors = self.create_status_code_color_map(status_code_names)
-        print(f"status code names: {self.status_code_names}")
 
     def scalar_value_ranges(self):
         children = self.get_particle_layers()
@@ -279,7 +263,7 @@ class ParticleFolder(Folder):
             if hasattr(layer, "legend_type"):
                 found_legend = True
         if not found_legend:
-            layer = ParticleLegend(manager=self.manager, source_particle_folder=self)
+            layer = ParticleLegend(self.manager, self)
             self.manager.insert_loaded_layer(layer, first_child_of=self)
         self.set_scalar_var(self.current_scalar_var)
         self.subset_using_logical_operation(self.scalar_subset_expression)
@@ -346,16 +330,17 @@ class ParticleFolder(Folder):
     def set_colors_from_colormap(self, var, colormap):
         children = self.get_particle_layers()
         for c in children:
-            c.recalc_colors_from_colormap(var, colormap)
-            self.manager.layer_contents_changed = c
-            self.manager.refresh_needed = None
+            if var in c.scalar_vars:
+                c.recalc_colors_from_colormap(var, colormap)
+                self.manager.layer_contents_changed_event(c)
+        self.manager.refresh_needed_event(None)
 
     def set_colors_from_status_codes(self):
         children = self.get_particle_layers()
         for c in children:
             c.recalc_colors_from_status_codes()
-            self.manager.layer_contents_changed = c
-            self.manager.refresh_needed = None
+            self.manager.layer_contents_changed_event(c)
+        self.manager.refresh_needed_event(None)
 
     def set_colormap(self, new_colormap):
         self.colormap = new_colormap
@@ -371,7 +356,7 @@ class ParticleFolder(Folder):
         return self.is_using_colormap() and self.colormap.is_discrete
 
     def subset_using_logical_operation(self, operation):
-        print(("folder: op=%s" % operation))
+        log.debug(f"subset_using_logical_operation: op={operation}")
 
         self.scalar_subset_expression = operation
         children = self.get_particle_layers()
@@ -389,7 +374,7 @@ class ParticleFolder(Folder):
         return total_lo, total_hi
 
 
-class ParticleLegend(ScreenLayer):
+class ParticleLegend(StickyLayer):
     """Layer for vector annotation image
 
     """
@@ -397,35 +382,23 @@ class ParticleLegend(ScreenLayer):
 
     type = "legend"
 
-    x_percentage = Float(1.0)
-
-    y_percentage = Float(0.0)
-
-    legend_pixel_width = Int(20)
-
-    legend_pixel_height = Int(300)
-
-    tick_pixel_width = Int(4)
-
-    tick_label_pixel_spacing = Int(4)
-
     layer_info_panel = ["X location", "Y location", "Legend type", "Legend labels"]
 
-    source_particle_folder = Any(-1)
-
-    legend_type = Str("Text")
-
-    legend_labels = Str("Light\nMedium\nHeavy")
-
-    legend_bucket_width = Int(20)
-
-    legend_bucket_height = Int(14)
-
     x_offset = 20
-
     y_offset = 40
 
-    ##### traits defaults
+    def __init__(self, manager, source_particle_folder=None):
+        super().__init__(manager, x_percentage=1.0, y_percentage=0.0)
+
+        self.legend_pixel_width = 20
+        self.legend_pixel_height = 300
+        self.tick_pixel_width = 4
+        self.tick_label_pixel_spacing = 4
+        self.source_particle_folder = source_particle_folder
+        self.legend_type = "Text"
+        self.legend_labels = "Light\nMedium\nHeavy"
+        self.legend_bucket_width = 20
+        self.legend_bucket_height = 14
 
     # these are mutually exclusive, used at different times.
     # source_particle_folder_default is only used after a project load and
@@ -437,18 +410,6 @@ class ParticleLegend(ScreenLayer):
         return self.source_particle_folder.invariant
 
     ##### serialization
-
-    def x_percentage_to_json(self):
-        return self.x_percentage
-
-    def x_percentage_from_json(self, json_data):
-        self.x_percentage = json_data['x_percentage']
-
-    def y_percentage_to_json(self):
-        return self.y_percentage
-
-    def y_percentage_from_json(self, json_data):
-        self.y_percentage = json_data['y_percentage']
 
     def legend_pixel_width_to_json(self):
         return self.legend_pixel_width
@@ -604,13 +565,13 @@ class ParticleLayer(PointBaseLayer):
 
     pickable = True  # this is a layer that supports picking
 
-    status_codes = Any  # numpy list matching array size of points
+    def __init__(self, manager, source_particle_folder=None):
+        super().__init__(manager)
 
-    status_code_count = Any({})
-
-    scalar_vars = Any({})
-
-    source_particle_folder = Any(-1)
+        self.source_particle_folder = source_particle_folder
+        self.status_codes = None  # numpy list matching array size of points
+        self.status_code_count = {}
+        self.scalar_vars = {}
 
     def init_from_parent(self):
         self.recalc_colors_from_status_codes(True)
@@ -647,7 +608,6 @@ class ParticleLayer(PointBaseLayer):
         return "\n".join(lines)
 
     def is_using_colormap(self, var=None):
-        print(self)
         return self.source_particle_folder.is_using_colormap(var)
 
     # JSON Serialization
@@ -737,7 +697,6 @@ class ParticleLayer(PointBaseLayer):
             b['colormap'] = colormap.get_colormap(jd) if jd is not None else None
         except KeyError:
             b['colormap'] = colormap.get_colormap('tab20')
-        print(f"SANITY!!!!!!! {b}")
         self.backward_compatibility_json = b
     #
 

@@ -14,8 +14,8 @@ class TrianglePanel(wx.Panel):
     SPACING = 15
     NAME = "Triangulate Layer"
 
-    def __init__(self, parent, task):
-        self.task = task
+    def __init__(self, parent, editor):
+        self.editor = editor
         wx.Panel.__init__(self, parent, wx.ID_ANY, name="Triangulate")
 
         # Mac/Win needs this, otherwise background color is black
@@ -81,9 +81,6 @@ class TrianglePanel(wx.Panel):
         self.sizer.Layout()
         self.Fit()
 
-    def set_task(self, task):
-        self.task = task
-
     def triangulate(self, event):
         if not self.IsShown():
             # Hack for OS X: default buttons can still get Return key presses
@@ -100,14 +97,12 @@ class TrianglePanel(wx.Panel):
         self.sizer.Layout()
 
     def triangulate_internal(self):
-        project = self.task.active_editor
-
         q = None
         if (self.angle_text_box.GetValue().strip() != ""):
             try:
                 q = float(self.angle_text_box.GetValue().strip())
             except:
-                project.task.error("The minimum angle you entered is not a valid number.", "Value Error")
+                self.editor.error("The minimum angle you entered is not a valid number.", "Value Error")
 
                 return
 
@@ -116,11 +111,12 @@ class TrianglePanel(wx.Panel):
             try:
                 a = float(self.area_text_box.GetValue().strip())
             except:
-                project.task.error("The maximum area you entered is not a valid number.", "Value Error")
+                self.editor.error("The maximum area you entered is not a valid number.", "Value Error")
 
                 return
 
-        layer = project.layer_tree_control.get_edit_layer()
+        project = self.editor
+        layer = project.current_layer
         if layer.type == "triangle":
             # If attempting to triangulate a triangle layer, check if it is an
             # already-triangulated layer, and if so, use its parent
@@ -128,7 +124,7 @@ class TrianglePanel(wx.Panel):
             if parent is not None:
                 layer = parent
         if (layer is None or not layer.has_points()):
-                project.task.error("To triangulate, use the Layers tree to select a layer that contains points.", "Triangulate")
+                self.editor.error("To triangulate, use the Layers tree to select a layer that contains points.", "Triangulate")
                 return
 
         cmd = TriangulateLayerCommand(layer, q, a)

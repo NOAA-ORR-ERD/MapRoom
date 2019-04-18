@@ -10,11 +10,11 @@ from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 
 # Enthought library imports.
 
-from omnivore_framework.framework.panes import FrameworkPane, FrameworkFixedPane
-from omnivore_framework.utils.wx.popuputil import SpringTabs
-from omnivore_framework.utils.wx.download_manager import DownloadControl
-from omnivore_framework.utils.wx.zoomruler import ZoomRuler
-from omnivore_framework.utils.textutil import pretty_seconds, parse_pretty_seconds
+from sawx import preferences
+from sawx.ui.popuputil import SpringTabs
+from sawx.ui.download_manager import DownloadControl
+from sawx.ui.zoomruler import ZoomRuler
+from sawx.utils.textutil import pretty_seconds, parse_pretty_seconds
 
 from .layer_tree_control import LayerTreeControl
 from .ui.info_panels import LayerInfoPanel, SelectionInfoPanel
@@ -27,10 +27,9 @@ log = logging.getLogger(__name__)
 
 
 class TimelinePanel(ZoomRuler):
-    def __init__(self, parent, task, **kwargs):
+    def __init__(self, parent, editor, **kwargs):
         ZoomRuler.__init__(self, parent, **kwargs)
-        self.task = task
-        self.editor = None
+        self.editor = editor
         self.current_time = None
  
     def init_playback(self):
@@ -162,7 +161,7 @@ class TimeStepEvent(wx.CommandEvent):
 
 step_values = ['10m', '20m', '30m', '40m', '45m', '60m', '90m', '120m', '3hr', '4hr', '5hr', '6hr', '8hr', '10hr', '12hr', '16h', '24hr', '36hr', '48hr', '3d', '4d', '5d', '6d', '7d', '2wk', '3wk', '4wk']
 step_values_as_seconds = [parse_pretty_seconds(a) for a in step_values]
-rate_values = ['100ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
+rate_values = ['100ms', '200ms', '500ms', '1s', '2s', '3s', '4s', '5s', '10s', '15s', '20s']
 rate_values_as_seconds = [parse_pretty_seconds(a) for a in rate_values]
 
 class TimeStepPanelMixin(object):
@@ -303,7 +302,7 @@ class TimeStepDialog(wx.Dialog, TimeStepPanelMixin):
 
 
 class TimelinePlaybackPanel(wx.Panel):
-    def __init__(self, parent, task, *args, **kwargs):
+    def __init__(self, parent, editor, *args, **kwargs):
         wx.Panel.__init__(self, parent, *args, **kwargs)
         self.SetName("Timeline")
 
@@ -313,11 +312,11 @@ class TimelinePlaybackPanel(wx.Panel):
         self.play.Bind(wx.EVT_BUTTON, self.on_play)
         sizer.Add(self.play, 0, wx.EXPAND)
 
-        self.steps = wx.Button(self, -1, "MM", style=wx.BU_EXACTFIT)
+        self.steps = wx.Button(self, -1, "1m / 200ms", style=wx.BU_EXACTFIT)
         self.steps.Bind(wx.EVT_BUTTON, self.on_steps)
         sizer.Add(self.steps, 0, wx.EXPAND)
 
-        self.timeline = TimelinePanel(self, task)
+        self.timeline = TimelinePanel(self, editor)
         sizer.Add(self.timeline, 1, wx.EXPAND|wx.LEFT, 5)
 
         self.SetSizer(sizer)
@@ -362,13 +361,12 @@ class TimelinePlaybackPanel(wx.Panel):
 
     def recalc_view(self):
         log.debug("timeline recalc_view")
-        self.timeline.editor = self.timeline.task.active_editor
         self.timeline.rebuild(self.timeline)
         log.debug("step rate %d num %d" % (self.timeline.step_rate, self.timeline.num_marks))
         if self.timeline.step_rate == 0 and self.timeline.num_marks > 1:
             if self.timeline.num_marks > 1:
                 interval = (self.timeline.highest_marker_value - self.timeline.lowest_marker_value) / (self.timeline.num_marks - 1)
-                self.timeline.step_rate = 1
+                self.timeline.step_rate = .2
                 log.debug(str((step_values_as_seconds, interval, interval/2, self.timeline._length)))
                 self.timeline.step_value = step_values_as_seconds[bisect.bisect_left(step_values_as_seconds, interval)]
             if self.timeline.step_rate == 0:
@@ -393,6 +391,12 @@ class TimelinePlaybackPanel(wx.Panel):
             self.timeline.pause_playback()
         else:
             self.timeline.start_playback()
+
+    def start_playback(self):
+        self.timeline.start_playback()
+
+    def pause_playback(self):
+        self.timeline.pause_playback()
 
     def on_steps(self, evt):
         btn = evt.GetEventObject()
@@ -437,9 +441,8 @@ class TimelinePlaybackPanel(wx.Panel):
 #        self.Fit()
 
 class FlaggedPointPanel(wx.ListBox):
-    def __init__(self, parent, task, **kwargs):
-        self.task = task
-        self.editor = None
+    def __init__(self, parent, editor, **kwargs):
+        self.editor = editor
         self.point_indexes = []
         self.notification_count = 0
         wx.ListBox.__init__(self, parent, wx.ID_ANY, name="Flagged Points", **kwargs)
@@ -479,8 +482,8 @@ class FlaggedPointPanel(wx.ListBox):
 
     def process_index(self, index):
         point_index = self.point_indexes[index]
-        editor = self.task.active_editor
-        layer = editor.layer_tree_control.get_edit_layer()
+        editor = self.editor
+        layer = editor.current_layer
         editor.layer_canvas.do_center_on_point_index(layer, point_index)
 
     def set_flagged(self, point_indexes):
@@ -489,9 +492,8 @@ class FlaggedPointPanel(wx.ListBox):
         self.notification_count = len(point_indexes)
 
     def recalc_view(self):
-        editor = self.task.active_editor
-        self.editor = editor
-        layer = editor.layer_tree_control.get_edit_layer()
+        editor = self.editor
+        layer = editor.current_layer
         try:
             points = layer.get_flagged_point_indexes()
         except AttributeError:
@@ -504,29 +506,23 @@ class FlaggedPointPanel(wx.ListBox):
 
 
 class DownloadPanel(DownloadControl):
-    def __init__(self, parent, task, **kwargs):
-        self.task = task
-        self.editor = None
-        downloader = self.task.window.application.get_downloader()
+    def __init__(self, parent, editor, **kwargs):
+        self.editor = editor
+        downloader = wx.GetApp().get_downloader()
         DownloadControl.__init__(self, parent, downloader, size=(400, -1), name="Downloads", **kwargs)
 
     # turn the superclass attribute path into a property so we can override it
     # and pull out the paths from the preferences
     @property
     def path(self):
-        prefs = self.task.preferences
-        if prefs.download_directory:
-            path = prefs.download_directory
-        else:
-            path = self.task.window.application.user_data_dir
+        path = self.editor.preferences.download_directory
         log.debug("download path: %s" % path)
         return path
 
     @path.setter
     def path(self, value):
         if value:
-            prefs = self.task.preferences
-            prefs.download_directory = value
+            self.editor.preferences.download_directory = value
 
     def refresh_view(self):
         self.Refresh()
@@ -539,7 +535,7 @@ class DownloadPanel(DownloadControl):
         return self.num_active
 
 
-class HtmlHelpPane(FrameworkPane):
+class HtmlHelpPane(PyClickableHtmlWindow):
     # TaskPane interface ###################################################
 
     id = 'maproom.html_help_pane'
@@ -557,10 +553,9 @@ class HtmlHelpPane(FrameworkPane):
     </ul>|end list
     """
 
-    def create_contents(self, parent):
-        control = PyClickableHtmlWindow(parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE, size=(400, 300))
-        control.SetPage(self.get_help_text())
-        return control
+    def __init__(self, parent):
+        PyClickableHtmlWindow.__init__(self, parent, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE, size=(400, 300))
+        self.SetPage(self.get_help_text())
 
     def get_help_text(self):
         lines = ["<table><tr><th>%s</th><th>%s</th>" % (self.code_header, self.desc_header)]

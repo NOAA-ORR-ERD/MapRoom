@@ -3,31 +3,21 @@ import time
 import datetime
 import calendar
 
-from fs.errors import ResourceNotFoundError
-
-# Enthought library imports.
-from traits.api import Any
-from traits.api import Bool
-from traits.api import Float
-from traits.api import HasTraits
-from traits.api import Int
-from traits.api import Str
-from traits.api import Unicode
-
-from omnivore_framework.utils.runtime import get_all_subclasses
+from sawx.utils.runtime import get_all_subclasses
+from sawx.loader import identify_file
 
 # MapRoom imports
 from ..library import rect
+from ..styles import LayerStyle
 
 # local package imports
 from . import state
-from .style import LayerStyle
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class Layer(HasTraits):
+class Layer:
     """Base Layer class with some abstract methods.
     """
     # Class attributes
@@ -60,52 +50,9 @@ class Layer(HasTraits):
     # serializable.
     type = ""
 
-    # Traits
+    mouse_mode_toolbar = "BaseLayerToolBar"
 
-    # invariant is sort of a serial number of the layer in a LayerManager: an
-    # id that doesn't change when the layer is renamed or reordered.  It is
-    # unique within a particular instance of a LayerManager, and gets created
-    # when the layer is added to a LayerManager.  Initial value of -999 is a
-    # flag to indicate that the invariant hasn't been initialized.
-    invariant = Int(-999)
-
-    # the invariant of the parent layer (used in triangulation so that a
-    # retriangulation will replace the older triangulation.
-    dependent_of = Int(-1)
-
-    mime = Str("")
-
-    skip_on_insert = Bool(False)
-
-    file_path = Unicode
-
-    style = Any
-
-    bounds = Any(rect.NONE_RECT)
-
-    grouped = Bool
-
-    mouse_mode_toolbar = Str("BaseLayerToolBar")
-
-    # this is any change that might affect the properties panel (e.g., number
-    # of points selected)
-    change_count = Int(0)
-
-    load_error_string = Str
-
-    load_warning_string = Str
-
-    load_warning_details = Str
-
-    manager = Any
-
-    start_time = Float(0.0)
-
-    end_time = Float(0.0)
-
-    rebuild_needed = Bool(False)
-
-    ##### class attributes
+    skip_on_insert = False
 
     has_control_points = False
 
@@ -121,7 +68,42 @@ class Layer(HasTraits):
 
     selection_info_panel = []
 
-    def _style_default(self):
+    def __init__(self, manager):
+        self.manager = manager
+
+        # invariant is sort of a serial number of the layer in a LayerManager:
+        # an id that doesn't change when the layer is renamed or reordered.  It
+        # is unique within a particular instance of a LayerManager, and gets
+        # created when the layer is added to a LayerManager.  Initial value of
+        # -999 is a flag to indicate that the invariant hasn't been
+        # initialized.
+        self.invariant = -999
+
+        # the invariant of the parent layer (used in triangulation so that a
+        # retriangulation will replace the older triangulation.
+        self.dependent_of = -1
+
+        self.mime = ""
+        self.file_path = ""
+
+        self.style = self.calc_initial_style()
+        self.bounds = rect.NONE_RECT
+        self.grouped = False
+
+        # this is any change that might affect the properties panel (e.g.,
+        # number of points selected)
+        self.change_count = 0
+
+        self.load_error_string = ""
+        self.load_warning_string = ""
+        self.load_warning_details = ""
+
+        self.start_time = 0.0
+        self.end_time = 0.0
+
+        self.rebuild_needed = False
+
+    def calc_initial_style(self):
         style = self.manager.get_default_style_for(self)
         if self.use_color_cycling:
             style.use_next_default_color()
@@ -259,11 +241,7 @@ class Layer(HasTraits):
         return False
 
     def can_save(self):
-        """Can the layer be saved using the current filename?"""
-        return False
-
-    def can_save_as(self):
-        """Can the layer be saved if given a new filename?"""
+        """Can the layer be saved, assuming it is given a valid filename?"""
         return False
 
     def save_to_file(self, file_path):
@@ -436,9 +414,8 @@ class Layer(HasTraits):
         if not cls.type_to_class_defs:
             subclasses = get_all_subclasses(Layer)
             for kls in subclasses:
-                layer = kls()
-                if layer.type:
-                    cls.type_to_class_defs[layer.type] = kls
+                if kls.type:
+                    cls.type_to_class_defs[kls.type] = kls
         return cls.type_to_class_defs
 
     @classmethod
@@ -452,15 +429,19 @@ class Layer(HasTraits):
         kls = cls.type_to_class(t)
         log.debug("load_from_json: found type %s, class=%s" % (t, kls))
         if 'url' in json_data and kls.restore_from_url:
-            from maproom.layers import loaders
+            url = json_data['url']
+            file_metadata = identify_file(url)
+            # print(f"file metadata: {file_metadata}")
+            loader = file_metadata["loader"]
 
-            log.debug("Loading layers from url %s" % json_data['url'])
+            log.debug(f"Loading layers from {url} using {loader}")
             try:
-                loader, layers = loaders.load_layers_from_url(json_data['url'], json_data['mime'], manager)
-            except ResourceNotFoundError:
-                raise RuntimeError("Failed loading from %s" % json_data['url'])
+                undo_info = loader.load_layers_from_uri(url, manager)
+            except OSError:
+                raise RuntimeError(f"Failed loading from {url}")
 
             # need to restore other metadata that isn't part of the URL load
+            layers = undo_info.data[0]
             layers[0].unserialize_json(json_data, batch_flags)
         else:
             log.debug("Loading layers from json encoded data")
@@ -554,13 +535,13 @@ class Layer(HasTraits):
     def set_dependent_of(self, layer):
         self.dependent_of = layer.invariant
 
-    def check_for_problems(self, window):
+    def check_for_problems(self):
         pass
 
-    def check_projection(self, task):
+    def check_projection(self):
         pass
 
-    def get_visibility_dict(self):
+    def get_visibility_dict(self, project):
         # fixme: you'be GOT to be kidding me!
         # shouldn't visibility be governed by the layer manager?
         # or each layer has its own sub-layer visibility
@@ -783,11 +764,11 @@ class Layer(HasTraits):
 
     ##### User interface
 
-    def calc_context_menu_actions(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, object_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
-        print(f"no popup actions for {self}")
+        log.warning(f"no popup actions for {self}")
         return []
 
 
@@ -807,3 +788,41 @@ class ProjectedLayer(Layer):
 class ScreenLayer(Layer):
     def render_screen(self, renderer, world_rect, projected_rect, screen_rect, layer_visibility, picker):
         log.debug("Layer %s doesn't have screen objects to render" % self.name)
+
+
+class StickyLayer(ScreenLayer):
+    layer_info_panel = ["X location", "Y location"]
+
+    x_offset = 10
+    y_offset = 10
+
+    def __init__(self, manager, x_percentage=None, y_percentage=None):
+        super().__init__(manager)
+        self.x_percentage = 0.0 if x_percentage is None else x_percentage
+        self.y_percentage = 0.0 if y_percentage is None else y_percentage
+
+    def x_percentage_to_json(self):
+        return self.x_percentage
+
+    def x_percentage_from_json(self, json_data):
+        self.x_percentage = json_data['x_percentage']
+
+    def y_percentage_to_json(self):
+        return self.y_percentage
+
+    def y_percentage_from_json(self, json_data):
+        self.y_percentage = json_data['y_percentage']
+
+
+class StickyResizableLayer(StickyLayer):
+    layer_info_panel = ["X location", "Y location", "Magnification"]
+
+    def __init__(self, manager, x_percentage=None, y_percentage=None, magnification=None):
+        super().__init__(manager, x_percentage, y_percentage)
+        self.magnification = 0.2 if magnification is None else magnification
+
+    def magnification_to_json(self):
+        return self.magnification
+
+    def magnification_from_json(self, json_data):
+        self.magnification = json_data['magnification']

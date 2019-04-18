@@ -4,7 +4,7 @@ import os
 import sys
 import zipfile
 
-from fs.opener import fsopen
+from sawx.filesystem import fsopen as open
 
 
 class KAPImage(object):
@@ -78,7 +78,7 @@ class BSBParser(object):
         items = {}
         tag = None
         current = ""
-        with fsopen(self.filename) as fh:
+        with open(self.filename) as fh:
             for text in fh:
                 text = text.rstrip()
                 if text.startswith(" "):

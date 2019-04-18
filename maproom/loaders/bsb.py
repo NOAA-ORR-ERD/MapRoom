@@ -25,8 +25,8 @@ class BSBLoader(BaseLoader):
 
     name = "NOAA BSB"
 
-    def load_query(self, metadata, manager):
-        bsb = BSBParser(metadata.uri)
+    def load_query(self, uri, manager):
+        bsb = BSBParser(uri)
         items = []
         for image in bsb.info.images:
             error, dataset = get_dataset(image.filename)
@@ -34,20 +34,20 @@ class BSBLoader(BaseLoader):
             dataset = None  # close the GDAL dataset
 
         self.selected = []
-        dlg = wx.MultiChoiceDialog(manager.project.window.control, "Select images from BSB file", "Choose Images", items)
+        dlg = wx.MultiChoiceDialog(manager.project.control, "Select images from BSB file", "Choose Images", items)
         if (dlg.ShowModal() == wx.ID_OK):
             selections = dlg.GetSelections()
             for index in selections:
                 self.selected.append(bsb.info.images[index].filename)
 
-    def load_layers(self, metadata, manager, **kwargs):
+    def load_layers(self, uri, manager, **kwargs):
         if not self.selected:
             raise ProgressCancelError("No files selected from BSB")
         layers = []
         for filename in self.selected:
             layer = RasterLayer(manager=manager)
 
-            progress_log.info("Loading from %s" % metadata.uri)
+            progress_log.info("Loading from %s" % uri)
             (layer.load_error_string, layer.image_data) = load_image_file(filename)
             if (layer.load_error_string == ""):
                 progress_log.info("Finished loading %s" % filename)

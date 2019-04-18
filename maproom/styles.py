@@ -3,9 +3,11 @@ from collections import OrderedDict
 
 import numpy as np
 
-from ..renderer import color_floats_to_int, color_ints_to_int, int_to_color_uint8
+from sawx import persistence
 
-from maproom.library.marplot_icons import get_numpy_bitmap
+from .renderer import color_floats_to_int, color_ints_to_int, int_to_color_uint8
+
+from .library.marplot_icons import get_numpy_bitmap
 
 import logging
 log = logging.getLogger(__name__)
@@ -320,3 +322,56 @@ def styles_to_json(style_dict):
         j[name] = str(style)
     return j
 
+_fallback_styles = {
+    "other": LayerStyle(),
+    "ui": LayerStyle(line_stipple=0xaaaa, line_width=1, line_color=LayerStyle.default_line_color, fill_style=0),
+    "triangle": LayerStyle(line_width=1),
+}
+
+_default_styles = {}
+
+def copy_default_styles():
+    d = {}
+    for type_name, style in _default_styles.items():
+        d[type_name] = style.get_copy()
+    return d
+
+def replace_default_styles(styles):
+    global _default_styles
+
+    if styles:
+        _default_styles = styles
+    else:
+        _default_styles = {}
+    for type_name, style in _fallback_styles.items():
+        if type_name not in _default_styles:
+            _default_styles[type_name] = style.get_copy()
+
+def override_default_styles(styles):
+    global _default_styles
+
+    if styles:
+        for type_name, style in styles.items():
+            _default_styles[type_name] = style.get_copy()
+
+def default_styles_read_only(type_name):
+    return _default_styles.get(type_name, _default_styles["other"])
+
+def remember_styles(override_styles=None):
+    override_default_styles(override_styles)
+    data = styles_to_json(_default_styles)
+    persistence.save_json_data("styles", data)
+
+
+def restore_from_last_time():
+    data = persistence.get_json_data("styles")
+    if data is not None:
+        styles = parse_styles_from_json(data)
+    else:
+        styles = None
+    replace_default_styles(styles)
+
+def remember_for_next_time():
+    # Styles aren't automatically saved for next time; have to do that
+    # explicitly with a call to remember_styles
+    pass

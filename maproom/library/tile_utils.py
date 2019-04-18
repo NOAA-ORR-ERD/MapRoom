@@ -9,8 +9,8 @@ from requests.exceptions import HTTPError
 from owslib.util import ServiceException
 from owslib.wms import WebMapService
 
-from omnivore_framework.utils.background_http import BackgroundHttpMultiDownloader
-from omnivore_framework.utils.background_http import UnskippableRequest
+from sawx.utils.background_http import BackgroundHttpMultiDownloader
+from sawx.utils.background_http import UnskippableRequest
 
 from .numpy_images import get_numpy_from_data
 
@@ -69,9 +69,9 @@ class TileServerInitRequest(UnskippableRequest):
                 # update last modified time so we can implement cache pruning
                 # at some later time.
                 os.utime(path, None)
-                log.debug("try_cache: found %s" % path)
+                log.debug(f"try_cache: found {path}")
             except Exception as e:
-                log.error("Failed reading %s; exception %s" % (path, e))
+                log.debug(f"try_cache: tile not loaded {path}; exception {e}")
         return data
 
     def save_cache(self, data, zoom, x, y):
@@ -277,7 +277,7 @@ class TileRequest(UnskippableRequest):
             log.error("Error %s loading %s" % (e, self.url))
             self.error = e
         if self.manager is not None:
-            self.manager.threaded_image_loaded = (self.event_data, self)
+            self.manager.threaded_image_loaded_event(self.event_data, self)
 
     def get_image_array(self):
         try:

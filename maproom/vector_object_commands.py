@@ -289,7 +289,7 @@ class DrawVectorObjectCommand(StyledCommand):
         pass
 
     def get_vector_object_layer(self, lm):
-        layer = self.vector_object_class(manager=lm)
+        layer = self.vector_object_class(lm)
         layer.set_opposite_corners(self.cp1, self.cp2)
         layer.set_style(self.style)
         return layer
@@ -337,7 +337,7 @@ class DrawCircleCommand(DrawVectorObjectCommand):
     vector_object_class = CircleVectorObject
 
     def get_vector_object_layer(self, lm):
-        layer = self.vector_object_class(manager=lm)
+        layer = self.vector_object_class(lm)
         layer.set_center_and_radius(self.cp1, self.cp2)
         layer.set_style(self.style)
         return layer
@@ -349,7 +349,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
     vector_object_class = ArrowTextBoxLayer
 
     def get_vector_object_layer(self, lm):
-        layer = self.vector_object_class(manager=lm)
+        layer = self.vector_object_class(lm)
         layer.set_style(self.style)
         return layer
 
@@ -359,7 +359,7 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         style = layer.style  # use annotation layer parent style
 
         halfway = ((self.cp1[0] + self.cp2[0]) / 2.0, (self.cp1[1] + self.cp2[1]) / 2.0)
-        line = OverlayLineObject(manager=lm)
+        line = OverlayLineObject(lm)
         line.set_opposite_corners(self.cp1, halfway)
         line.set_style(style)
         line.style.line_start_marker = 2  # Turn on arrow
@@ -368,8 +368,8 @@ class DrawArrowTextBoxCommand(DrawVectorObjectCommand):
         lf = undo.flags.add_layer_flags(line)
         lf.layer_loaded = True
 
-        #text = RectangleVectorObject(manager=lm)
-        text = OverlayTextObject(manager=lm, show_flagged_anchor_point=False)
+        #text = RectangleVectorObject(lm)
+        text = OverlayTextObject(lm, show_flagged_anchor_point=False)
         text.set_style(style)
         text.set_opposite_corners(halfway, self.cp2)
         c = editor.layer_canvas
@@ -407,7 +407,7 @@ class DrawArrowTextIconCommand(DrawArrowTextBoxCommand):
 
     def perform_post(self, editor, lm, layer, undo):
         DrawArrowTextBoxCommand.perform_post(self, editor, lm, layer, undo)
-        icon = OverlayIconObject(manager=lm)
+        icon = OverlayIconObject(lm)
         icon.set_location(self.cp1)
         icon.set_style(layer.style)
         kwargs = {'first_child_of': layer}
@@ -447,7 +447,7 @@ class DrawLineCommand(DrawVectorObjectCommand):
         self.snapped_cp = snapped_cp
 
     def get_vector_object_layer(self, lm):
-        layer = self.vector_object_class(manager=lm)
+        layer = self.vector_object_class(lm)
         layer.set_opposite_corners(self.cp1, self.cp2)
         layer.set_style(self.style)
         return layer
@@ -485,7 +485,7 @@ class DrawPolylineCommand(DrawVectorObjectCommand):
         layer.style.fill_style = 0  # force unfilled because it's a polyLINE
 
     def get_vector_object_layer(self, lm):
-        layer = self.vector_object_class(manager=lm)
+        layer = self.vector_object_class(lm)
         layer.set_points(self.points)
         layer.set_style(self.style)
         self.check_style(layer)
@@ -520,7 +520,7 @@ class AddTextCommand(DrawVectorObjectCommand):
         self.screen_height = screen_height
 
     def get_vector_object_layer(self, lm):
-        layer = self.vector_object_class(manager=lm)
+        layer = self.vector_object_class(lm)
         layer.set_location_and_size(self.point, self.screen_width, self.screen_height)
         layer.set_style(self.style)
         return layer
@@ -541,7 +541,7 @@ class AddIconCommand(DrawVectorObjectCommand):
         self.point = point
 
     def get_vector_object_layer(self, lm):
-        layer = self.vector_object_class(manager=lm)
+        layer = self.vector_object_class(lm)
         layer.set_location(self.point)
         layer.set_style(self.style)
         return layer
