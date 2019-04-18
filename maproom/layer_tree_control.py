@@ -365,7 +365,7 @@ class LayerTreeControl(wx.Panel):
         #wx.CallAfter(self.project.update_layer_selection_ui, layer)
         layer.set_visibility_when_selected(self.project.layer_visibility[layer])
         prefs = self.project.preferences
-        self.project.status_message = str(layer)
+        self.project.frame.status_message(str(layer))
         lm = self.project.layer_manager
         sel = lm.get_multi_index_of_layer(layer)
         log.debug("Multi-index of selected layer: %s" % sel)
