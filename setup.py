@@ -150,14 +150,14 @@ install_requires = [
     'docutils',
     'markdown',
     'reportlab',
-    'docutils',
     'pyparsing',
     'requests',
     'python-dateutil',
     'pytz',
     'cftime',  # required by netcdf4 but not always installed?
     'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
-    'wxpython>=4.0.3',
+    'wxpython',
+    'sawx>=1.0',
     'pillow',
     'urllib3',
     'certifi',
