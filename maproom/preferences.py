@@ -25,6 +25,18 @@ class MaproomPreferences(SawxPreferences):
         "Fast",
     ]
 
+    display_order = [
+        ("coordinate_display_format", coordinate_display_format),
+        ("zoom_speed", zoom_speed),
+        ("show_scale", "bool"),
+        ("check_errors_on_save", "bool"),
+        ("identify_layers", "bool", "Blink newly selected layer when switching"),
+        ("grid_spacing", "intrange:25-200"),
+        ("download_directory", "directory"),
+        ("bsb_directory", "directory"),
+        ("colormap_name", "colormap"),
+    ]
+
     def __init__(self):
         self.coordinate_display_format = "degrees decimal minutes"
 
