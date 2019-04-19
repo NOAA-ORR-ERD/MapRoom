@@ -666,6 +666,10 @@ class PolygonEditLayerCommand(Command):
             self.obj_index = None
         else:
             self.obj_index = obj_index
+        if self.feature_code < 0:
+            self.hole_parent_index = obj_index
+        else:
+            self.hole_parent_index = None
 
     def __str__(self):
         return "Editing Polygon from %s" % self.name
@@ -674,7 +678,7 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = ly.RingEditLayer(lm, layer, self.obj_type, self.feature_code)
+        p = ly.RingEditLayer(lm, layer, self.obj_type, self.feature_code, self.hole_parent_index)
 
         if self.feature_code < 0:
             poly_type = "Hole"
