@@ -429,6 +429,7 @@ class PolygonParentLayer(PointLayer):
         polys = data_types.make_polygons(len(polygon_counts))
         paa = data_types.make_point_adjacency_array(len(self.points))
         group_index = 0
+        ring_index = 0
         for ring_index, (start, count) in enumerate(zip(polygon_starts, polygon_counts)):
             end = start + count
             try:

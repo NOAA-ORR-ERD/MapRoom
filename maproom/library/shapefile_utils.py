@@ -79,8 +79,10 @@ def parse_fiona(source, point_list):
 def parse_ogr(dataset, point_list):
     geometry_list = []
     count = dataset.GetLayerCount()
+    log.debug(f"parse_ogr: {count} layers")
     for layer_index in range(count):
         layer = dataset.GetLayer(layer_index)
+        log.debug(f"parse_ogr: {len(layer)} features")
         for feature in layer:
             ogr_geom = feature.GetGeometryRef()
             if ogr_geom is None:
@@ -90,6 +92,7 @@ def parse_ogr(dataset, point_list):
             item = parse_geom(geom, point_list)
             if item is not None:
                 geometry_list.append(item)
+    log.debug(f"parse_ogr: found {len(point_list)} points, {len(geometry_list)} geom entries")
     return geometry_list
 
 def parse_from_old_json(json_data):
@@ -145,6 +148,7 @@ def load_shapefile(uri):
     if error:
         return (error, None, None)
     points = np.asarray(point_list)
+    log.debug(f"load_shapefile: {len(points)} points, {len(point_list)} points_list")
     if source is not None:
         tx, ty = pyproj.transform(source, target, points[:,0], points[:,1])
         # Re-create (n,2) coordinates

@@ -181,6 +181,7 @@ def iter_geom(geom_list):
 
 
 def compute_rings(point_list, geom_list, feature_code_to_color):
+    log.debug(f"compute_rings: {len(point_list)} points, {len(geom_list)} geom_list entries")
     ring_adjacency = make_ring_adjacency_array(len(point_list))
     flattened_geom_list = []
     default_color = feature_code_to_color.get("default", 0x12345678)
@@ -190,8 +191,8 @@ def compute_rings(point_list, geom_list, feature_code_to_color):
         ring_adjacency[item.start_index]['point_flag'] = -item.count
         ring_adjacency[item.start_index + item.count - 1]['point_flag'] = 2
         ring_adjacency[item.start_index]['state'] = 0
-        if item.count > 0:
-            ring_adjacency[item.start_index + 1]['state'] = item.feature_code
         if item.count > 1:
+            ring_adjacency[item.start_index + 1]['state'] = item.feature_code
+        if item.count > 2:
             ring_adjacency[item.start_index + 2]['state'] = feature_code_to_color.get(item.feature_code, default_color)
     return flattened_geom_list, ring_adjacency
