@@ -19,9 +19,18 @@ progress_log = logging.getLogger("progress")
 
 GeomInfo = collections.namedtuple('GeomInfo', 'start_index count name feature_code feature_name')
 
+# A feature_list is a list of items, where each item is itself a list
+# containing a string identifier and one or more GeomInfo objects.
+#
+# For example, this feature_list contains 2 entries: a polygon and a polygon
+# with a hole.
+#
+# [
+#    ['Polygon', GeomInfo(start_index=0, count=5, name='', feature_code=1, feature_name='1')],
+#    ['Polygon', GeomInfo(start_index=5, count=4, name='', feature_code=1, feature_name='1'), GeomInfo(start_index=9, count=4, name='', feature_code=-1, feature_name='1')],
+# ]
 
-
-def parse_geom(geom, point_list):
+def calc_feature_from_geom(geom, point_list):
     item = None
     name = ""
     feature_code = 1
@@ -68,16 +77,16 @@ def parse_fiona(source, point_list):
     # Note: all coordinate points are converted from
     # shapely.coords.CoordinateSequence to normal numpy array
 
-    geometry_list = []
+    feature_list = []
     for f in source:
         geom = shape(f['geometry'])
-        item = parse_geom(geom, point_list)
+        item = calc_feature_from_geom(geom, point_list)
         if geom is not None:
-            geometry_list.append(item)
-    return geometry_list
+            feature_list.append(item)
+    return feature_list
 
 def parse_ogr(dataset, point_list):
-    geometry_list = []
+    feature_list = []
     count = dataset.GetLayerCount()
     log.debug(f"parse_ogr: {count} layers")
     for layer_index in range(count):
@@ -89,14 +98,14 @@ def parse_ogr(dataset, point_list):
                 continue
             wkt = ogr_geom.ExportToWkt()
             geom = loads(wkt)
-            item = parse_geom(geom, point_list)
+            item = calc_feature_from_geom(geom, point_list)
             if item is not None:
-                geometry_list.append(item)
-    log.debug(f"parse_ogr: found {len(point_list)} points, {len(geometry_list)} geom entries")
-    return geometry_list
+                feature_list.append(item)
+    log.debug(f"parse_ogr: found {len(point_list)} points, {len(feature_list)} geom entries")
+    return feature_list
 
 def parse_from_old_json(json_data):
-    geometry_list = []
+    feature_list = []
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
     for entry in json_data:
         if entry[0] == "v2":
@@ -109,21 +118,21 @@ def parse_from_old_json(json_data):
             wkt = entry
         geom = loads(wkt)
         add_maproom_attributes_to_shapely_geom(geom, name, feature_code)
-        item = parse_geom(geom, point_list)
+        item = calc_feature_from_geom(geom, point_list)
         if item is not None:
-            geometry_list.append(item)
+            feature_list.append(item)
     points = np.asarray(point_list)
-    return ("", geometry_list, points)
+    return ("", feature_list, points)
 
 
 def load_shapefile(uri):
-    geometry_list = []
+    feature_list = []
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
     source = None
     try:
         # Try fiona first
         error, source = get_fiona(uri)
-        geometry_list = parse_fiona(source, point_list)
+        feature_list = parse_fiona(source, point_list)
     except (DriverLoadFailure, ImportError):
         # use GDAL instead
         error, dataset = get_dataset(uri)
@@ -139,7 +148,7 @@ def load_shapefile(uri):
                 target = pyproj.Proj(init='epsg:4326')
                 log.debug(f"load_shapefile: target projection: {target.srs}")
             try:
-                geometry_list = parse_ogr(dataset, point_list)
+                feature_list = parse_ogr(dataset, point_list)
             except ValueError as e:
                 error = str(e)
                 import traceback
@@ -154,15 +163,15 @@ def load_shapefile(uri):
         # Re-create (n,2) coordinates
         points = np.dstack([tx, ty])[0]
 
-    return ("", geometry_list, points)
+    return ("", feature_list, points)
 
 
-def parse_bna_file2(uri, points_accumulator):
+def parse_bna_to_feature_list(uri, points_accumulator):
     f = open(uri, "r")
     s = f.read()
     f.close()
     lines = s.splitlines()
-    items = []
+    feature_list = []
 
     update_every = 1000
     total_points = 0
@@ -222,15 +231,15 @@ def parse_bna_file2(uri, points_accumulator):
             item = ['LineString', GeomInfo(start_index, num_points, name, feature_code, feature_name)]
         else:
             item = ['Polygon', GeomInfo(start_index, num_points, name, feature_code, feature_name)]
-        items.append(item)
+        feature_list.append(item)
 
     progress_log.info("TICK=%d" % num_lines)
-    return items
+    return feature_list
 
 
 def load_bna_items(uri):
     point_list = accumulator(block_shape=(2,), dtype=np.float64)
-    item_list = parse_bna_file2(uri, point_list)
+    feature_list = parse_bna_to_feature_list(uri, point_list)
 
-    return ("", item_list, np.asarray(point_list))
+    return ("", feature_list, np.asarray(point_list))
 

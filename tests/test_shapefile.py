@@ -146,9 +146,6 @@ class TestESRIShapefile(object):
         out = layer.calc_output_feature_list()
         print(out)
 
-        uri = os.path.join(os.getcwd(), "tmp.save_as_rings.shp")
-        shapefile.write_rings_as_shapefile(uri, layer, layer.points, layer.rings, layer.ring_adjacency, proj)
-
         uri = os.path.join(os.getcwd(), "tmp.save_feature_list.shp")
         shapefile.write_feature_list_as_shapefile(uri, layer.points, out, proj)
 

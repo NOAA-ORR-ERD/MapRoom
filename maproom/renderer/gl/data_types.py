@@ -165,9 +165,9 @@ def compute_projected_point_data(points, projection, hidden_points=None):
     return projected_point_data
 
 
-def iter_geom(geom_list):
-    for item in geom_list:
-        log.debug(f"processing geometry list item {item}")
+def iter_geom(feature_list):
+    for item in feature_list:
+        log.debug(f"processing feature list item {item}")
         geom_type = item[0]
         if geom_type == "MultiPolygon":
             # MultiPolygon is list of lists
@@ -180,14 +180,14 @@ def iter_geom(geom_list):
                 yield geom_type, subitem
 
 
-def compute_rings(point_list, geom_list, feature_code_to_color):
-    log.debug(f"compute_rings: {len(point_list)} points, {len(geom_list)} geom_list entries")
+def compute_rings(point_list, feature_list, feature_code_to_color):
+    log.debug(f"compute_rings: {len(point_list)} points, {len(feature_list)} feature_list entries")
     ring_adjacency = make_ring_adjacency_array(len(point_list))
-    flattened_geom_list = []
+    geometry_list = []
     default_color = feature_code_to_color.get("default", 0x12345678)
-    for geom_type, item in iter_geom(geom_list):
+    for geom_type, item in iter_geom(feature_list):
         log.debug(f"Adding geometry {item}")
-        flattened_geom_list.append(item)
+        geometry_list.append(item)
         ring_adjacency[item.start_index]['point_flag'] = -item.count
         ring_adjacency[item.start_index + item.count - 1]['point_flag'] = 2
         ring_adjacency[item.start_index]['state'] = 0
@@ -195,4 +195,4 @@ def compute_rings(point_list, geom_list, feature_code_to_color):
             ring_adjacency[item.start_index + 1]['state'] = item.feature_code
         if item.count > 2:
             ring_adjacency[item.start_index + 2]['state'] = feature_code_to_color.get(item.feature_code, default_color)
-    return flattened_geom_list, ring_adjacency
+    return geometry_list, ring_adjacency

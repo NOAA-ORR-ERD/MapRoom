@@ -58,76 +58,6 @@ def identify_loader(file_guess):
     return None
 
 
-def write_boundaries_as_shapefile(filename, layer, boundaries):
-    # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
-    srs = osr.SpatialReference()
-    srs.ImportFromProj4(layer.manager.project.layer_canvas.projection.srs)
-
-    driver = ogr.GetDriverByName('ESRI Shapefile')
-    shapefile = driver.CreateDataSource(filename)
-    shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
-
-    poly = ogr.Geometry(ogr.wkbPolygon)
-    file_point_index = 0
-    points = layer.points
-    for (boundary_index, boundary) in enumerate(boundaries):
-        ring = ogr.Geometry(ogr.wkbLinearRing)
-
-        for point_index in boundary:
-            ring.AddPoint(points.x[point_index], points.y[point_index])
-            file_point_index += 1
-
-            if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                progress_log.info("Saved %d points" % file_point_index)
-
-        poly.AddGeometry(ring)
-
-    feature_index = 0
-    layer_defn = shapefile_layer.GetLayerDefn()
-    feature = ogr.Feature(layer_defn)
-    feature.SetGeometry(poly)
-    feature.SetFID(feature_index)
-    shapefile_layer.CreateFeature(feature)
-    feature.Destroy()
-    feature = None
-
-    # ## lets add now a second point with different coordinates:
-    # point.AddPoint(474598, 5429281)
-    # feature_index = 1
-    # feature = osgeo.ogr.Feature(layer_defn)
-    # feature.SetGeometry(point)
-    # feature.SetFID(feature_index)
-    # layer.CreateFeature(feature)
-    shapefile.Destroy()
-    shapefile = None  # garbage collection = save
-
-
-def write_layer_as_shapefile(filename, layer, driver_name):
-    srs = osr.SpatialReference()
-    srs.ImportFromProj4(layer.manager.project.layer_canvas.projection.srs)
-    write_geometry_as_shapefile(filename, layer.name.encode("UTF-8"), driver_name, layer.geometry, srs)
-
-
-def write_geometry_as_shapefile(filename, layer_name, driver_name, geometry_list, srs=None):
-    driver = ogr.GetDriverByName(driver_name)
-    shapefile = driver.CreateDataSource(filename)
-    shapefile_layer = shapefile.CreateLayer(layer_name, srs, ogr.wkbUnknown)
-    layer_defn = shapefile_layer.GetLayerDefn()
-    feature_index = 0
-
-    # shapefiles can't contain geometry collections, so to put different
-    # geometries in the same file you have to use different features for each.
-    # From http://invisibleroads.com/tutorials/gdal-shapefile-geometries-fields-save-load.html
-    for geom in geometry_list:
-        feature = ogr.Feature(layer_defn)
-        g = ogr.CreateGeometryFromWkt(geom.wkt)
-        feature.SetGeometry(g)
-        feature.SetFID(feature_index)
-        shapefile_layer.CreateFeature(feature)
-        feature.Destroy()
-        feature_index += 1
-
-
 class ShapefileLoader(BaseLayerLoader):
     mime = "application/x-maproom-shapefile"
 
@@ -178,7 +108,8 @@ class ShapefileLoader(BaseLayerLoader):
 
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
-        write_rings_as_shapefile(filename, layer, layer.points, layer.rings, layer.ring_adjacency, layer.manager.project.layer_canvas.projection)
+        feature_list = layer.calc_output_feature_list()
+        write_feature_list_as_shapefile(filename, layer.points, feature_list, layer.manager.project.layer_canvas.projection)
 
 
 class ZipShapefileLoader(ShapefileLoader):
@@ -220,82 +151,6 @@ ext_to_driver_name = {
 }
 
 need_projection = set(["ESRI Shapefile"])
-
-
-def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projection):
-    # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
-    srs = osr.SpatialReference()
-    srs.ImportFromProj4(projection.srs)
-
-    _, ext = os.path.splitext(filename)
-    try:
-        driver_name = ext_to_driver_name[ext]
-    except KeyError:
-        raise RuntimeError(f"Unknown shapefile extension '{ext}'")
-
-    using_projection = driver_name in need_projection
-
-    driver = ogr.GetDriverByName(driver_name)
-    shapefile = driver.CreateDataSource(filename)
-    log.debug(f"writing {filename}, driver={driver}, srs={srs}")
-    shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
-
-    file_point_index = 0
-    ring_index = 0
-    feature_index = 0
-
-    def add_poly():
-        nonlocal poly
-        if poly is not None:
-            layer_defn = shapefile_layer.GetLayerDefn()
-            feature = ogr.Feature(layer_defn)
-            feature.SetGeometry(poly)
-            feature.SetFID(feature_index)
-            shapefile_layer.CreateFeature(feature)
-            feature = None
-        poly = ogr.Geometry(ogr.wkbPolygon)
-
-    poly = None
-    while ring_index < len(rings):
-        point_index = first_index = int(rings.start[ring_index])
-        count = -adjacency[first_index]['point_flag']
-        feature_code = 0
-        dup_first_point = False
-        if count < 2:
-            dest_ring = ogr.Geometry(ogr.wkbPoint)
-        elif count == 2:
-            dest_ring = ogr.Geometry(ogr.wkbLineString)
-        else:
-            feature_code = adjacency[first_index+1]['state']
-            dest_ring = ogr.Geometry(ogr.wkbLinearRing)
-            dup_first_point = True
-        if feature_code >= 0:
-            add_poly()
-        
-        if using_projection:
-            x, y = projection(points.x[first_index:first_index+count], points.y[first_index:first_index+count])
-        else:
-            x, y = points.x[first_index:first_index+count], points.y[first_index:first_index+count]
-        for index in range(0, count):
-            dest_ring.AddPoint(x[index], y[index])
-
-            file_point_index += 1
-            if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                progress_log.info("Saved %d points" % file_point_index)
-        if dup_first_point:
-            dest_ring.AddPoint(x[0], y[0])
-        poly.AddGeometry(dest_ring)
-        ring_index += 1
-    add_poly()
-
-    # ## lets add now a second point with different coordinates:
-    # point.AddPoint(474598, 5429281)
-    # feature_index = 1
-    # feature = osgeo.ogr.Feature(layer_defn)
-    # feature.SetGeometry(point)
-    # feature.SetFID(feature_index)
-    # layer.CreateFeature(feature)
-    shapefile = None  # garbage collection = save
 
 
 def write_feature_list_as_shapefile(filename, points, feature_list, projection):

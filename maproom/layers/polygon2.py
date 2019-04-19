@@ -469,10 +469,10 @@ class PolygonParentLayer(PointLayer):
         self.point_adjacency_array = paa
         log.debug(f"created {ring_index} rings ({group_index} outer boundaries, {num_holes} holes); geometry_list={len(self.geometry_list)}")
 
-    def set_geometry(self, point_list, geom_list):
+    def set_geometry(self, point_list, feature_list):
         self.set_data(point_list)
         log.debug(f"points {self.points}")
-        self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, geom_list, feature_code_to_color)
+        self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, feature_list, feature_code_to_color)
         log.debug(f"adjacency {self.ring_adjacency}")
         self.create_rings()
 
