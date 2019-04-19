@@ -71,14 +71,24 @@ def km_to_string(km):
     return s
 
 
-def km_to_rounded_string(val, sigfigs=5, area=False):
+def km_to_rounded_string(val, sigfigs=5):
     if val < 1.0:
         val *= 1000
         unit = "m"
     else:
         unit = "km"
-    if area:
-        unit += "\u00b2"
+    format = "%%.%dg" % (sigfigs)
+    val = float(format % val)
+    return "%s %s" % (val, unit)
+
+
+def km2_to_rounded_string(val, sigfigs=5):
+    if val < 1.0:
+        val *= 1000 * 1000
+        unit = "m"
+    else:
+        unit = "km"
+    unit += "\u00b2"
     format = "%%.%dg" % (sigfigs)
     val = float(format % val)
     return "%s %s" % (val, unit)
@@ -92,14 +102,24 @@ def ft_to_string(ft):
     return s
 
 
-def mi_to_rounded_string(val, sigfigs=5, area=False):
+def mi_to_rounded_string(val, sigfigs=5):
     if val < 1.0:
         val *= 5280
         unit = "ft"
     else:
         unit = "mi"
-    if area:
-        unit += "\u00b2"
+    format = "%%.%dg" % (sigfigs)
+    val = float(format % val)
+    return "%s %s" % (val, unit)
+
+
+def mi2_to_rounded_string(val, sigfigs=5):
+    if val < 1.0:
+        val *= 5280 * 5280
+        unit = "ft"
+    else:
+        unit = "mi"
+    unit += "\u00b2"
     format = "%%.%dg" % (sigfigs)
     val = float(format % val)
     return "%s %s" % (val, unit)

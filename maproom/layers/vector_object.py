@@ -3,7 +3,7 @@ import math
 import numpy as np
 
 from ..library import rect
-from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, mi_to_rounded_string
+from ..library.coordinates import haversine, distance_bearing, haversine_at_const_lat, haversine_list, km_to_rounded_string, km2_to_rounded_string, mi_to_rounded_string, mi2_to_rounded_string
 from ..library.Boundary import Boundary
 from ..renderer import color_floats_to_int, int_to_color_floats, int_to_color_uint8, int_to_html_color_string, alpha_from_int, ImageData, data_types
 from .. import styles
@@ -541,8 +541,8 @@ class RectangleVectorObject(RectangleMixin, FillableVectorObject):
             return "%s, %s" % (km_to_rounded_string(hkm), mi_to_rounded_string(hkm * .621371))
         elif prop == "Area":
             wkm, hkm = self.get_width_height()
-            km = wkm * hkm
-            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
+            km2 = wkm * hkm
+            return "%s, %s" % (km2_to_rounded_string(km2), mi2_to_rounded_string(km2 * .621371 * .621371))
         return FillableVectorObject.get_info_panel_text(self, prop)
 
     def get_marker_points(self):
