@@ -5,6 +5,7 @@ import numpy as np
 from mock import *
 
 from maproom import loaders
+from maproom.loaders import shapefile
 from maproom.layers import PolygonParentLayer
 from maproom.library.Boundary import Boundaries, PointsError
 
@@ -50,6 +51,7 @@ class TestBNAShapefile(object):
         print(self.bna)
         print(self.bna.points)
         print(len(self.bna.points))
+        assert len(self.bna.rings) == 3
         assert 33 == np.alen(self.bna.points)
         
         uri = os.path.join(os.getcwd(), "tmp.3polys.shp")
@@ -62,7 +64,6 @@ class TestBNAShapefile(object):
         uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
         boundary = layer.select_outer_boundary()
-        self.bna.create_rings()
         self.bna.replace_ring(0, boundary.get_points(), 0, True)
         assert len(self.bna.rings) == 4
 
@@ -126,6 +127,37 @@ class TestESRIShapefile(object):
         print(self.layer.points)
         assert layer.points[0]['x'] == self.layer.points[0]['x']
 
+    def test_output_feature_list(self):
+        print(self.layer.geometry_list)
+        out = self.layer.calc_output_feature_list()
+        print(out)
+        uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
+        layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
+        boundary = layer.select_outer_boundary()
+        print(boundary)
+        self.layer.replace_ring(0, boundary.get_points(), 0, True)
+        print(self.layer.geometry_list)
+        out = self.layer.calc_output_feature_list()
+        print(out)
+
+    def test_save_feature_list(self):
+        layer = self.layer
+        proj = layer.manager.project.layer_canvas.projection
+        out = layer.calc_output_feature_list()
+        print(out)
+
+        uri = os.path.join(os.getcwd(), "tmp.save_as_rings.shp")
+        shapefile.write_rings_as_shapefile(uri, layer, layer.points, layer.rings, layer.ring_adjacency, proj)
+
+        uri = os.path.join(os.getcwd(), "tmp.save_feature_list.shp")
+        shapefile.write_feature_list_as_shapefile(uri, layer.points, out, proj)
+
+        loader = shapefile.ShapefileLoader()
+        layers = loader.load_layers(uri, self.project.layer_manager)
+        test_layer = layers[0]
+        test_out = test_layer.calc_output_feature_list()
+        print(test_out)
+        assert out == test_out
 
 
 if __name__ == "__main__":
@@ -150,15 +182,17 @@ if __name__ == "__main__":
         reloaded_layer = project.raw_load_first_layer(out_uri, "application/x-maproom-shapefile")
         assert np.alen(reloaded_layer.points) == np.alen(layer.points)
     else:
-        t = TestBNAShapefile()
-        t.setup()
-        t.test_simple()
-        t.setup()
-        t.test_add_polygon()
-        t.setup()
-        t.test_delete_polygon()
+        # t = TestBNAShapefile()
+        # t.setup()
+        # t.test_simple()
+        # t.setup()
+        # t.test_add_polygon()
+        # t.setup()
+        # t.test_delete_polygon()
         t = TestESRIShapefile()
         t.setup()
-        t.test_delete_polygon()
-        t.setup()
-        t.test_delete_hole()
+        # t.test_delete_polygon()
+        # t.setup()
+        # t.test_delete_hole()
+        t.test_output_feature_list()
+        t.test_save_feature_list()

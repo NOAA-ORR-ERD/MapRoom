@@ -3,6 +3,7 @@ import numpy as np
 from ..library.scipy_ckdtree import cKDTree
 from ..library.Boundary import Boundaries
 from ..library.shapely_utils import shapely_to_polygon
+from ..library.shapefile_utils import GeomInfo
 from ..renderer import data_types
 from ..command import UndoInfo
 from ..mouse_commands import DeleteLinesCommand, MergePointsCommand
@@ -626,6 +627,27 @@ class LineLayer(PointLayer):
 
         if (len(points_to_delete) > 0):
             return MergePointsCommand(self, list(points_to_delete))
+
+    #### output
+
+    def can_output_feature_list(self):
+        return True
+
+    def calc_output_feature_list(self):
+        """Create list of geometry primitives"""
+        output = []
+        boundaries = self.get_all_boundaries()
+        ring_index = 0
+        name = ""
+        feature_name = ""
+        feature_code = 1
+        for boundary in boundaries:
+            geom_type = "Polygon"
+            item = [geom_type, GeomInfo(boundary, "boundary", name, feature_code, feature_name)]
+            output.append(item)
+        return output
+
+    #### rendering
 
     def rebuild_renderer(self, renderer, in_place=False):
         """Update display canvas data with the data in this layer

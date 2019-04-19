@@ -298,6 +298,98 @@ def write_rings_as_shapefile(filename, layer, points, rings, adjacency, projecti
     shapefile = None  # garbage collection = save
 
 
+def write_feature_list_as_shapefile(filename, points, feature_list, projection):
+    # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(projection.srs)
+
+    _, ext = os.path.splitext(filename)
+    try:
+        driver_name = ext_to_driver_name[ext]
+    except KeyError:
+        raise RuntimeError(f"Unknown shapefile extension '{ext}'")
+
+    using_projection = driver_name in need_projection
+    if using_projection:
+        x, y = projection(points.x, points.y)
+    else:
+        x, y = points.x, points.y
+
+    driver = ogr.GetDriverByName(driver_name)
+    shapefile = driver.CreateDataSource(filename)
+    log.debug(f"writing {filename}, driver={driver}, srs={srs}")
+    shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
+
+    file_point_index = 0
+
+    def fill_ring(dest_ring, geom_info, dup_first_point=True):
+        nonlocal file_point_index
+        if geom_info.count == "boundary":
+            # using a Boundary object
+            boundary = geom_info.start_index
+            index_iter = range(0, len(boundary))
+            first_index = index_iter[0]
+            # temporarily shadow x & y with boundary points
+            if using_projection:
+                rx, ry = projection(boundary.points.x, boundary.points.y)
+            else:
+                rx, ry = boundary.points.x, boundary.points.y
+        else:
+            rx, ry = x, y
+            if geom_info.count == "indexed":
+                # using a list of point indexes
+                index_iter = geom_info.start_index
+                first_index = index_iter[0]
+            else:
+                first_index = geom_info.start_index
+                index_iter = range(first_index, first_index + geom_info.count)
+        print(first_index, geom_info.count)
+        for index in index_iter:
+            print(index)
+            dest_ring.AddPoint(rx[index], ry[index])
+
+            file_point_index += 1
+            if file_point_index % BaseLayerLoader.points_per_tick == 0:
+                progress_log.info("Saved %d points" % file_point_index)
+        if dup_first_point:
+            dest_ring.AddPoint(rx[first_index], ry[first_index])
+
+    for feature_index, feature in enumerate(feature_list):
+        geom_type = feature[0]
+        print(geom_type, feature[1:])
+        poly = ogr.Geometry(ogr.wkbPolygon)
+        if geom_type == "Polygon":
+            for geom_info in feature[1:]:
+                dest_ring = ogr.Geometry(ogr.wkbLinearRing)
+                fill_ring(dest_ring, geom_info)
+                poly.AddGeometry(dest_ring)
+        else:
+            geom_info = feature[1]
+            if geom_type == "LineString":
+                dest_ring = ogr.Geometry(ogr.wkbLineString)
+            elif geom_type == "Point":
+                dest_ring = ogr.Geometry(ogr.wkbPoint)
+            fill_ring(dest_ring, geom_info, False)
+            poly.AddGeometry(dest_ring)
+
+        layer_defn = shapefile_layer.GetLayerDefn()
+        f = ogr.Feature(layer_defn)
+        f.SetGeometry(poly)
+        f.SetFID(feature_index)
+        shapefile_layer.CreateFeature(f)
+        f = None
+        poly = None
+
+    # ## lets add now a second point with different coordinates:
+    # point.AddPoint(474598, 5429281)
+    # feature_index = 1
+    # feature = osgeo.ogr.Feature(layer_defn)
+    # feature.SetGeometry(point)
+    # feature.SetFID(feature_index)
+    # layer.CreateFeature(feature)
+    shapefile = None  # garbage collection = save
+
+
 def write_rings_as_bna(filename, layer, points, rings, adjacency, projection):
     update_every = 1000
     ticks = 0

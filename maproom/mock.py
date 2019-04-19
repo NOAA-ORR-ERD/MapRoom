@@ -72,6 +72,7 @@ class MockProject(object):
 #        self.task = MockTask(self.window, default_styles)
         self.layer_canvas = MockCanvas()
         self.layer_manager = LayerManager(None)
+        self.layer_manager.project = self
         if add_tree_control:
             self.layer_tree_control = MockTree(self.layer_manager)
             self.layer_manager.insert_layer([2], self.layer_tree_control.layer)
@@ -80,6 +81,10 @@ class MockProject(object):
     @property
     def current_layer(self):
         return self.layer_tree_control.get_edit_layer()
+
+    @property
+    def projection(self):
+        return self.layer_canvas.projection
 
     def raw_load_all_layers(self, uri, mime):
         file_metadata = identify_file(os.path.realpath(uri))
@@ -91,7 +96,7 @@ class MockProject(object):
     def raw_load_first_layer(self, uri, mime):
         return self.raw_load_all_layers(uri, mime)[0]
 
-    def load_file(self, path, mime):
+    def load_file(self, path, mime=None):
         file_metadata = identify_file(os.path.realpath(path))
         print(file_metadata)
         loader = file_metadata["loader"]

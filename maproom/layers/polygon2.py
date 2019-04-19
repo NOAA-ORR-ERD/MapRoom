@@ -436,6 +436,7 @@ class PolygonParentLayer(PointLayer):
         group_index = 0
         ring_index = 0
         num_holes = 0
+        geom_list = self.geometry_list
         for ring_index, (start, count) in enumerate(zip(polygon_starts, polygon_counts)):
             end = start + count
             try:
@@ -458,6 +459,10 @@ class PolygonParentLayer(PointLayer):
             else:
                 color = 0x12345678
             polys[ring_index]['color'] = color
+            g = geom_list[ring_index]
+            if g.start_index != start or g.count != count:
+                g = GeomInfo(start, count, g[2], g[3], g[4])
+                geom_list[ring_index] = g
         # print(paa)
         # print(polys)
         self.rings = polys
@@ -473,7 +478,8 @@ class PolygonParentLayer(PointLayer):
 
     def dup_geometry_list_entry(self, ring_index_to_copy):
         g = self.geometry_list[ring_index_to_copy]
-        self.geometry_list[ring_index_to_copy:ring_index_to_copy] = [g]
+        dup_g = g._make(g)
+        self.geometry_list[ring_index_to_copy:ring_index_to_copy] = [dup_g]
 
     def delete_geometry_list_entries(self, start_ring_index, count):
         self.geometry_list[start_ring_index:start_ring_index + count] = []
@@ -589,8 +595,36 @@ class PolygonParentLayer(PointLayer):
         self.create_rings()
         self.rebuild_needed = True
 
+    #### Output
+
     def check_for_problems(self):
         pass
+
+    def can_output_feature_list(self):
+        return True
+
+    def calc_output_feature_list(self):
+        """Create list of geometry primitives"""
+        output = []
+        rings = self.rings
+        item = None
+        for g in self.geometry_list:
+            if g.count < 2:
+                geom_type = "Point"
+            elif g.count == 2:
+                geom_type = "LineString"
+            else:
+                if g.feature_code < 0:
+                    item.append(g)
+                    continue
+                else:
+                    geom_type = "Polygon"
+            item = [geom_type, g]
+            output.append(item)
+        return output
+
+
+    #### rendering
 
     def rebuild_renderer(self, renderer, in_place=False):
         log.debug(f"rebuilding polygon2 {self.name}")

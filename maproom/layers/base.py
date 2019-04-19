@@ -721,6 +721,16 @@ class Layer:
     def subset_using_logical_operation(self, operation):
         pass
 
+    #### output
+
+    def can_output_feature_list(self):
+        return False
+
+    def calc_output_feature_list(self):
+        pass
+
+    #### rendering
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
 
