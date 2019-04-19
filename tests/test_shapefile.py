@@ -4,7 +4,8 @@ import numpy as np
 
 from mock import *
 
-from maproom.layers import loaders, PolygonParentLayer
+from maproom import loaders
+from maproom.layers import PolygonParentLayer
 from maproom.library.Boundary import Boundaries, PointsError
 
 from maproom.renderer.gl.data_types import make_points_from_xy
@@ -70,6 +71,7 @@ class TestBNAShapefile(object):
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-verdat")
         layer.feature_code = 0
         layer.ring_indexes = []
+        layer.is_hole = False
         self.bna.commit_editing_layer(layer)
         assert len(self.bna.rings) == 5
         uri = os.path.join(os.getcwd(), "tmp.add_commit.shp")
@@ -82,7 +84,7 @@ class TestBNAShapefile(object):
         layer.ring_indexes = [1, 2]
         layer.new_boundary = False
         layer.num_boundaries = 2
-        layer.new_hole = False
+        layer.is_hole = False
         self.bna.commit_editing_layer(layer)
         assert len(self.bna.rings) == 3
 
@@ -93,7 +95,7 @@ class TestBNAShapefile(object):
         layer.ring_indexes = [1]
         layer.new_boundary = False
         layer.num_boundaries = 2
-        layer.new_hole = False
+        layer.is_hole = False
         self.bna.commit_editing_layer(layer)
         assert len(self.bna.rings) == 4
 

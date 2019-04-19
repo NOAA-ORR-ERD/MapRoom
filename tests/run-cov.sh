@@ -2,10 +2,10 @@
 
 case $PATH in
 	*conda*)
-        ./py.testw
+        ./py.testw --cov=maproom --cov-report html --cov-report term
         ;;
     *)
-	    py.test
+	    py.test --cov=maproom --cov-report html --cov-report term
 	    ;;
 esac
 RESULT=$?

@@ -1,5 +1,7 @@
 import os
 
+from sawx.loader import identify_file
+
 from . import loaders
 from .styles import LayerStyle
 from .layer_manager import LayerManager
@@ -80,27 +82,23 @@ class MockProject(object):
         return self.layer_tree_control.get_edit_layer()
 
     def raw_load_all_layers(self, uri, mime):
-        guess = FileGuess(uri)
-        guess.metadata.mime = mime
-        print(guess)
-        print(guess.metadata)
-        loader, layers = loaders.load_layers(guess.metadata, manager=self.layer_manager)
+        file_metadata = identify_file(os.path.realpath(uri))
+        print(file_metadata)
+        loader = file_metadata["loader"]
+        layers = loader.load_layers(uri, manager=self.layer_manager)
         return layers
 
     def raw_load_first_layer(self, uri, mime):
         return self.raw_load_all_layers(uri, mime)[0]
 
     def load_file(self, path, mime):
-        guess = FileGuess(os.path.realpath(path))
-        guess.metadata.mime = mime
-        metadata = guess.get_metadata()
-        print(metadata)
-        loader = loaders.get_loader(metadata)
-        print(loader)
+        file_metadata = identify_file(os.path.realpath(path))
+        print(file_metadata)
+        loader = file_metadata["loader"]
         batch_flags = BatchStatus()
         if hasattr(loader, "load_project"):
             print("FIXME: Add load project command that clears all layers")
-            loader.load_project(metadata, self.layer_manager, batch_flags)
+            loader.load_project(file_metadata["uri"], self.layer_manager, batch_flags)
         elif hasattr(loader, "iter_log"):
             line = 0
             for cmd in loader.iter_log(metadata, self.layer_manager):
@@ -123,10 +121,13 @@ class MockProject(object):
                 text = "\n".join(errors)
                 raise RuntimeError(text)
         else:
-            cmd = LoadLayersCommand(metadata)
+            cmd = LoadLayersCommand(file_metadata["uri"], loader)
             self.process_command(cmd)
             return cmd
         return None
+
+    def load_success(self, uri):
+        pass
 
     def undo(self, count=1):
         while count > 0:
