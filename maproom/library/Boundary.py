@@ -102,11 +102,20 @@ class Boundary(Polyline):
 
     def calc_area(self):
         # See http://alienryderflex.com/polygon_area/
-        connected_indexes = np.roll(self.point_indexes, 1)
+        connected_indexes = np.roll(self.point_indexes, -1)
         p = self.points
-        print(f"point_indexes: {self.point_indexes}; connected {connected_indexes}")
-        print(p.x[self.point_indexes])
-        print(p.y[self.point_indexes])
+        # print(f"point_indexes: {self.point_indexes}; connected {connected_indexes}")
+        # x = p.x[self.point_indexes]
+        # yroll = p.y[connected_indexes]
+        # print(x)
+        # print(yroll)
+        # print(x * yroll)
+
+        # y = p.y[self.point_indexes]
+        # xroll = p.x[connected_indexes]
+        # print(xroll)
+        # print(y)
+        # print(y * xroll)
         return 0.5 * np.dot(p.x[self.point_indexes], p.y[connected_indexes]) - np.dot(p.y[self.point_indexes], p.x[connected_indexes])
 
     def __str__(self):
