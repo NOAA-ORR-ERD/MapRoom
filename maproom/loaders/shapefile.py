@@ -198,9 +198,9 @@ def write_feature_list_as_shapefile(filename, points, feature_list, projection):
             else:
                 first_index = geom_info.start_index
                 index_iter = range(first_index, first_index + geom_info.count)
-        print(first_index, geom_info.count)
+        # print(first_index, geom_info.count)
         for index in index_iter:
-            print(index)
+            # print(index)
             dest_ring.AddPoint(rx[index], ry[index])
 
             file_point_index += 1
@@ -211,7 +211,7 @@ def write_feature_list_as_shapefile(filename, points, feature_list, projection):
 
     for feature_index, feature in enumerate(feature_list):
         geom_type = feature[0]
-        print(geom_type, feature[1:])
+        log.debug(f"writing: {geom_type}, {feature[1:]}")
         poly = ogr.Geometry(ogr.wkbPolygon)
         if geom_type == "Polygon":
             for geom_info in feature[1:]:
@@ -245,47 +245,61 @@ def write_feature_list_as_shapefile(filename, points, feature_list, projection):
     shapefile = None  # garbage collection = save
 
 
-def write_rings_as_bna(filename, layer, points, rings, adjacency, projection):
+def write_feature_list_as_bna(filename, points, feature_list, projection):
     update_every = 1000
     ticks = 0
     progress_log.info("TICKS=%d" % np.alen(points))
     progress_log.info("Saving BNA...")
     with open(filename, "w") as fh:
         file_point_index = 0
-        ring_index = 0
-        feature_index = 0
-        try:
-            while ring_index < len(rings):
-                point_index = int(rings.start[ring_index])
-                count = 0
-                try:
-                    geom = layer.geometry_list[ring_index]
-                    name, feature_name = geom.name, geom.feature_name
-                except IndexError:
-                    geom = None
-                    name = "feature-missing"
-                    feature_name = "feature-missing"
-                # print(f"processing ring {ring_index} of {len(rings)}: {geom}")
-                fh.write('"%s","%s", %d\n' % (name, feature_name, rings.count[ring_index] + 1))  # extra point for closed polygon
-                # print(f"starting ring={ring_index}, start={point_index} {type(point_index)} count={rings.count[ring_index]}")
-                while count < rings.count[ring_index]:
-                    # print(f"ring:{ring_index}, point_index={point_index} x={points.x[point_index]} y={points.y[point_index]}")
-                    fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
-                    count += 1
-                    point_index = adjacency.next[point_index]
 
-                    file_point_index += 1
-                    if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                        progress_log.info("Saved %d points" % file_point_index)
+        def write_poly(geom_info, dup_first_point=True):
+            nonlocal file_point_index
 
-                # duplicate first point to create a closed polygon
-                point_index = int(rings.start[ring_index])
-                fh.write("%s,%s\n" % (points.x[point_index], points.y[point_index]))
-                ring_index += 1
-        except Exception as e:
-            import traceback
-            print(traceback.format_exc())
-            raise
+            if geom_info.count == "boundary":
+                # using a Boundary object
+                boundary = geom_info.start_index
+                count = len(boundary)
+                index_iter = range(0, count)
+                first_index = index_iter[0]
+                # temporarily shadow x & y with boundary points
+                rx, ry = boundary.points.x, boundary.points.y
+            else:
+                rx, ry = points.x, points.y
+                if geom_info.count == "indexed":
+                    # using a list of point indexes
+                    index_iter = geom_info.start_index
+                    count = len(index_iter)
+                    first_index = index_iter[0]
+                else:
+                    first_index = geom_info.start_index
+                    count = geom_info.count
+                    index_iter = range(first_index, first_index + count)
+            if dup_first_point:
+                count += 1
+            fh.write('"%s","%s", %d\n' % (geom_info.name, geom_info.feature_name, count))  # extra point for closed polygon
+
+            # print(first_index, geom_info.count)
+            for index in index_iter:
+                fh.write("%s,%s\n" % (rx[index], ry[index]))
+                file_point_index += 1
+                if file_point_index % BaseLayerLoader.points_per_tick == 0:
+                    progress_log.info("Saved %d points" % file_point_index)
+
+            # duplicate first point to create a closed polygon
+            if dup_first_point:
+                fh.write("%s,%s\n" % (rx[first_index], ry[first_index]))
+
+        for feature_index, feature in enumerate(feature_list):
+            geom_type = feature[0]
+            log.debug(f"writing: {geom_type}, {feature[1:]}")
+            if geom_type == "Polygon":
+                for geom_info in feature[1:]:
+                    write_poly(geom_info)
+            else:
+                print(geom_type)
+                geom_info = feature[1]
+                write_poly(geom_info, False)
 
 
 class BNAShapefileLoader(ShapefileLoader):
@@ -301,7 +315,9 @@ class BNAShapefileLoader(ShapefileLoader):
         return load_bna_items(uri)
 
     def save_to_local_file(self, filename, layer):
-        write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
+        # write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
+        feature_list = layer.calc_output_feature_list()
+        write_feature_list_as_bna(filename, layer.points, feature_list, layer.manager.project.layer_canvas.projection)
 
 
 if __name__ == "__main__":

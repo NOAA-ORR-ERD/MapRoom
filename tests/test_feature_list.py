@@ -48,9 +48,6 @@ class TestFeatureList(object):
         out = layer.calc_output_feature_list()
         print(out)
 
-        uri = os.path.join(os.getcwd(), "tmp.test_shapefile_feature_list.rings.shp")
-        shapefile.write_rings_as_shapefile(uri, layer, layer.points, layer.rings, layer.ring_adjacency, self.proj)
-
         uri = os.path.join(os.getcwd(), "tmp.test_shapefile_feature_list.feature_list.shp")
         shapefile.write_feature_list_as_shapefile(uri, layer.points, out, self.proj)
 
@@ -62,6 +59,30 @@ class TestFeatureList(object):
         assert out == test_out
 
 
+    def test_shapefile_formats(self):
+        self.project.load_file("../TestData/BNA/00011polys_001486pts.bna")
+        layer = self.project.layer_manager.get_nth_oldest_layer_of_type("shapefile", 1)
+        layer.create_rings()
+        out = layer.calc_output_feature_list()
+        print(out)
+
+        uri = os.path.join(os.getcwd(), "tmp.test_shapefile_formats.shp")
+        shapefile.write_feature_list_as_shapefile(uri, layer.points, out, self.proj)
+        uri2 = os.path.join(os.getcwd(), "tmp.test_shapefile_formats.bna")
+        shapefile.write_feature_list_as_bna(uri2, layer.points, out, self.proj)
+
+        loader = shapefile.ShapefileLoader()
+        layers = loader.load_layers(uri, self.project.layer_manager)
+        test_layer = layers[0]
+        test_out = test_layer.calc_output_feature_list()
+        layers = loader.load_layers(uri2, self.project.layer_manager)
+        test2_layer = layers[0]
+        test2_out = test_layer.calc_output_feature_list()
+        print(test_out)
+        print(test2_out)
+        assert test2_out == test_out
+
+
 
 if __name__ == "__main__":
     import sys
@@ -71,4 +92,4 @@ if __name__ == "__main__":
     # t.test_delete_polygon()
     # t.setup()
     # t.test_delete_hole()
-    t.test_line_feature_list()
+    t.test_shapefile_formats()
