@@ -52,8 +52,6 @@ class MaproomPreferences(SawxPreferences):
         self.identify_layers = True
 
         # minimum number of pixels between grid lines
-        self.grid_spacing_low = 25
-        self.grid_spacing_high = 200
         self.grid_spacing = 100
 
         self.download_directory = persistence.get_user_dir("Downloads")
