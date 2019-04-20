@@ -191,7 +191,7 @@ class ProjectEditor(SawxEditor):
     ]
 
     toolbar_desc = [
-        "new_project"
+        "new_project",
         "open_file",
         "save_project",
         "save_project_as",

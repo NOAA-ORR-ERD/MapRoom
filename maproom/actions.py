@@ -53,6 +53,9 @@ class new_project(SawxAction):
 
     template = None
 
+    def calc_icon_name(self, action_key):
+        return 'new_file'
+
     def perform(self, action_key):
         template = self.template if self.template is not None else wx.GetApp().default_uri
         self.editor.frame.load_file(template, self.editor)
