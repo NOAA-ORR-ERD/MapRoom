@@ -13,9 +13,9 @@ DEFAULT_PROJECTION_STRING = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0
 class MaproomPreferences(SawxPreferences):
     # Lat/lon degree display format
     coordinate_display_format = [
+        "decimal degrees",
         "degrees decimal minutes",
         "degrees minutes seconds",
-        "decimal degrees",
     ]
 
     # mouse wheel zoom speed
