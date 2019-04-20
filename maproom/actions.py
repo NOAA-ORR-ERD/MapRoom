@@ -73,6 +73,7 @@ class new_empty_project(new_project):
 class save_project(save_file):
     name = 'Save Project'
     tooltip = 'Save the current project'
+    ext_list = [("MapRoom Project Files", ".maproom")]
 
     def calc_icon_name(self, action_key):
         return "save_file"
@@ -81,6 +82,7 @@ class save_project(save_file):
 class save_project_as(save_as):
     name = 'Save Project As...'
     tooltip = 'Save the current project with a new name'
+    ext_list = [("MapRoom Project Files", ".maproom")]
 
     def calc_icon_name(self, action_key):
         return "save_as"
