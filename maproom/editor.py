@@ -186,6 +186,8 @@ class ProjectEditor(SawxEditor):
                 "debug_layer_manager",
                 "widget_inspector",
                 "garbage_objects",
+                "raise_exception",
+                "test_progress",
             ],
         ],
     ]
