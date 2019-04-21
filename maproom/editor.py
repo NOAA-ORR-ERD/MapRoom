@@ -286,6 +286,9 @@ class ProjectEditor(SawxEditor):
         doc.background_refresh_needed_event += self.background_refresh
         doc.threaded_image_loaded_event += self.threaded_image_loaded
 
+        # preferences changed
+        self.preferences.preferences_changed_event += self.preferences_changed
+
 
     @property
     def current_layer(self):
@@ -924,6 +927,10 @@ class ProjectEditor(SawxEditor):
             wx.CallAfter(self.layer_canvas.render)
         else:
             log.debug("Throwing away result from old map server id")
+
+    def preferences_changed(self, evt):
+        log.debug("preferences_changed called")
+        self.refresh()
 
     # New Command processor
 
