@@ -4,6 +4,7 @@ import bisect
 
 from ..library import rect
 from ..library.coordinates import haversine_at_const_lat, km_to_string, ft_to_string
+from ..renderer import int_to_color_floats
 
 from .base import StickyLayer
 
@@ -20,6 +21,8 @@ class Scale(StickyLayer):
 
     type = "scale"
 
+    mouse_mode_toolbar = "StickyLayerToolBar"
+
     layer_info_panel = ["X location", "Y location"]
 
     skip_on_insert = True
@@ -27,6 +30,8 @@ class Scale(StickyLayer):
     bounded = False
 
     background = True
+
+    pickable = True
 
     km_steps = [item for sublist in [[i * math.pow(10, scale) for i in [1, 2, 5]] for scale in range(-3, 5)] for item in sublist]
     km_step_count = len(km_steps)
@@ -67,8 +72,6 @@ class Scale(StickyLayer):
         return steps[min(bisect.bisect(steps, abs(reference_size)), count - 1)]
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
-        if picker.is_active:
-            return
         log.log(5, "Rendering scale!!! pick=%s" % (picker))
         self.resize(renderer, w_r, s_r)
 
@@ -80,15 +83,23 @@ class Scale(StickyLayer):
         ft_length = self.ft_length / self.ft_per_pixel
         # print "ft_length", self.ft_length, "length", length
 
-        w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - max(km_length, ft_length)
+        scale_width = max(km_length, ft_length)
+        w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - scale_width
         h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset
 
         x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
         y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
 
-        size = renderer.get_drawn_string_dimensions(km_label)
-        renderer.draw_screen_lines([(x, y - self.tick_length), (x, y), (x + self.tick_spacing + km_length, y), (x + self.tick_spacing + km_length, y - self.tick_length)], width=self.line_width)
-        renderer.draw_screen_string((x + self.tick_spacing, y - size[1] - 1), km_label)
-        size = renderer.get_drawn_string_dimensions(ft_label)
-        renderer.draw_screen_lines([(x, y + self.tick_length), (x, y), (x + self.tick_spacing + ft_length, y), (x + self.tick_spacing + ft_length, y + self.tick_length)], width=self.line_width)
-        renderer.draw_screen_string((x + self.tick_spacing, y + 1), ft_label)
+        if picker.is_active:
+            c = picker.get_polygon_picker_colors(self, 1)[0]
+            r, g, b, a = int_to_color_floats(c)
+            rect = ((x, y - self.tick_length), (x + scale_width, y + self.tick_length))
+            self.usable_screen_size = (w, h)
+            renderer.draw_screen_rect(rect, r, g, b, a)
+        else:
+            size = renderer.get_drawn_string_dimensions(km_label)
+            renderer.draw_screen_lines([(x, y - self.tick_length), (x, y), (x + self.tick_spacing + km_length, y), (x + self.tick_spacing + km_length, y - self.tick_length)], width=self.line_width)
+            renderer.draw_screen_string((x + self.tick_spacing, y - size[1] - 1), km_label)
+            size = renderer.get_drawn_string_dimensions(ft_label)
+            renderer.draw_screen_lines([(x, y + self.tick_length), (x, y), (x + self.tick_spacing + ft_length, y), (x + self.tick_spacing + ft_length, y + self.tick_length)], width=self.line_width)
+            renderer.draw_screen_string((x + self.tick_spacing, y + 1), ft_label)

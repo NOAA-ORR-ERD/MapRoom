@@ -43,6 +43,12 @@ valid_mouse_modes = {
         "zoom_rect_mode",
         "ruler_mode",
     ],
+    'StickyLayerToolBar': [
+        "sticky_selection_mode",
+        "pan_mode",
+        "zoom_rect_mode",
+        "ruler_mode",
+    ],
     'RNCToolBar': [
         "rnc_selection_mode",
         "pan_mode",
@@ -162,6 +168,11 @@ class add_arrow_text_icon_mode(MouseModeTool):
 
 class rnc_selection_mode(MouseModeTool):
     mouse_mode_cls = modes.RNCSelectionMode
+
+# Sticky screen layer tools
+
+class sticky_selection_mode(MouseModeTool):
+    mouse_mode_cls = modes.StickySelectionMode
 
 
 # build lookup dicts between the action_Key and mouse mode class needed for the

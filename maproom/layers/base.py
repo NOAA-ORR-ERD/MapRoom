@@ -810,6 +810,7 @@ class StickyLayer(ScreenLayer):
         super().__init__(manager)
         self.x_percentage = 0.0 if x_percentage is None else x_percentage
         self.y_percentage = 0.0 if y_percentage is None else y_percentage
+        self.usable_screen_size = (100, 100)
 
     def x_percentage_to_json(self):
         return self.x_percentage
@@ -822,6 +823,31 @@ class StickyLayer(ScreenLayer):
 
     def y_percentage_from_json(self, json_data):
         self.y_percentage = json_data['y_percentage']
+
+    def get_undo_info(self):
+        return (self.x_percentage, self.y_percentage)
+
+    def restore_undo_info(self, info):
+        self.x_percentage, self.y_percentage = info
+
+    def move_layer(self, orig_x_percentage, orig_y_percentage, dx, dy):
+        log.debug(f"move_layer: {orig_x_percentage}, {orig_y_percentage}, {dx}, {dy}")
+        sw, sh = self.usable_screen_size
+        px = (orig_x_percentage * sw + dx) / sw
+        py = (orig_y_percentage * sh + dy) / sh
+        # leave unchanged if off screen
+        if 0 < px < 1.0:
+            self.x_percentage = px
+        if 0 < py < 1.0:
+            self.y_percentage = py
+
+    def dragging_layer(self, dx, dy):
+        from ..screen_object_commands import MoveStickyLayerCommand
+        cmd = MoveStickyLayerCommand(self, dx, dy)
+        return cmd
+
+    def rotating_layer(self, dx, dy):
+        return None
 
 
 class StickyResizableLayer(StickyLayer):

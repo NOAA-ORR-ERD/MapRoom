@@ -172,7 +172,7 @@ class MouseHandler(object):
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
         effective_mode = c.get_effective_tool_mode(event)
-        log.debug("process_mouse_motion_down: panning=%s box=%s mode=%s" % (self.is_panning, c.selection_box_is_being_defined, effective_mode))
+        log.debug(f"process_mouse_motion_down: panning={self.is_panning} box={c.selection_box_is_being_defined} mode={effective_mode} pending={self.pending_selection}")
         c.mouse_move_position = event.GetPosition()
         if self.is_panning:
             self.process_pan(event)
@@ -1669,3 +1669,110 @@ class AddOverlayIconMode(AddOverlayMode):
     menu_item_name = "Add Icon"
     menu_item_tooltip = "Add a new Marplot icon"
     vector_object_command = voc.AddIconCommand
+
+
+class StickySelectionMode(SelectionMode):
+    """Handler for objects that are stuck to the screen; that is, operate
+    in screen coordinates, not world coordinates.
+    """
+    icon = "select"
+    toolbar_group = "select"
+
+    def process_mouse_motion_with_selection(self, event):
+        c = self.layer_canvas
+        e = c.project
+        print("HINOESU", e.clickable_object_mouse_is_over)
+        if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
+            layer, object_type, object_index = e.clickable_object_mouse_is_over
+            p = self.get_position(event)
+            dx = p[0] - c.mouse_down_position[0]
+            dy = c.mouse_down_position[1] - p[1]
+            # print "d_x = " + str( d_x ) + ", d_y = " + str( d_x )
+            if (dx != 0 or dy != 0):
+                modifiers = event.GetModifiers()
+                rotate = modifiers & wx.MOD_CMD
+                last = self.last_modifier_state
+                if last is None:
+                    self.last_modifier_state = modifiers
+                elif last != modifiers:
+                    if last & wx.MOD_CMD and not modifiers & wx.MOD_CMD:
+                        # stopped rotation, pick up with dragging next time
+                        c.mouse_down_position = p
+                        self.last_modifier_state = modifiers
+                        return
+                    elif layer.can_rotate:
+                        layer.set_initial_rotation()  # reset rotation when control is pressed again
+                        c.mouse_down_position = p
+                        self.last_modifier_state = modifiers
+                        return
+
+                self.last_modifier_state = modifiers
+                if not c.HasCapture():
+                    c.CaptureMouse()
+                if rotate and layer.can_rotate:
+                    cmd = self.rotated(p, dx, dy)
+                else:
+                    cmd = self.dragged(p, dx, dy)
+                    c.mouse_down_position = p
+                if cmd is not None:
+                    c.project.process_command(cmd)
+                    c.render(event)
+
+            self.update_status_text(None, None, True, self.get_help_text())
+
+    def finish_over_object(self, event):
+        c = self.layer_canvas
+        e = c.project
+        modifiers = event.GetModifiers()
+        last = self.last_modifier_state
+        if last is not None and last != modifiers:
+            modifiers = last
+        rotate = modifiers & wx.MOD_CMD
+        p = self.get_position(event)
+        dx = p[0] - c.mouse_down_position[0]
+        dy = c.mouse_down_position[1] - p[1]
+        if rotate:
+            cmd = self.finish_rotate(dx, dy)
+        else:
+            cmd = self.finish_drag(c.mouse_down_position, p, dx, dy)
+        if cmd is not None:
+            e.process_command(cmd)
+
+    def delete_key_pressed(self):
+        pass
+
+    def clicked_on_point(self, event, layer, point_index):
+        pass
+
+    def clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
+        pass
+
+    # def clicked_on_interior(self, event, layer, polygon_index, world_point):
+    #     pass
+
+    # def clicked_on_empty_space(self, event, layer, world_point):
+    #     pass
+
+    def render_overlay(self, renderer):
+        pass
+
+    def dragged(self, p, dx, dy):
+        c = self.layer_canvas
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.dragging_layer(dx, dy)
+        return cmd
+
+    def finish_drag(self, mouse_down_position, mouse_move_position, dx, dy):
+        if dx == 0 and dy == 0:
+            return
+        return self.dragged(mouse_move_position, dx, dy)
+
+    def rotated(self, p, dx, dy):
+        (layer, object_type, object_index) = self.get_current_object_info()
+        cmd = layer.rotating_layer(dx, dy)
+        return cmd
+
+    def finish_rotate(self, dx, dy):
+        if dx == 0 and dy == 0:
+            return
+        return self.rotate(dx, dy)
