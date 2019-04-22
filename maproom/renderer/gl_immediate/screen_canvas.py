@@ -4,7 +4,9 @@ if sys.platform.startswith("win"):
     # CallAfter, so calls will still stack up without a delay
     time_delay_refresh = 200  # milliseconds
 else:
-    time_delay_refresh = 0
+    # implement tiny delay which will allow a bunch of renders to be optimized
+    # out during load time, especially when using a Tile layer
+    time_delay_refresh = 20
 
 import wx
 import wx.glcanvas as glcanvas
@@ -21,6 +23,8 @@ FormatHandler('recarray',
               'OpenGL.arrays.numpymodule.NumpyHandler',
               ['numpy.recarray', ],
               )
+
+from sawx.ui import progress_dialog
 
 from .renderer import ImmediateModeRenderer
 from .picker import Picker
@@ -617,6 +621,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
         # renders may stack up
         immediately = immediately and time_delay_refresh == 0
         if self.use_pending_render and not immediately:
+            log.debug(f"render (screen_canvas): PENDING dely={time_delay_refresh}")
             self.pending_render_count += 1
             if time_delay_refresh > 0:
                 wx.CallLater(time_delay_refresh, self.render_callback)
@@ -626,16 +631,16 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             self.render_callback(immediately=True)
 
     def render_callback(self, immediately=False):
-        log.debug("immediately: %s pending renders: %d" % (immediately, self.pending_render_count))
+        log.debug(f"render_callback: immediately={immediately} pending renders: {self.pending_render_count}")
         if self.is_canvas_initialized and (immediately or self.pending_render_count > 0):
-            log.debug("rendering")
+            log.debug("render_callback: RENDERING")
             self.SetCurrent(self.shared_context)
             gl.glClear(gl.GL_COLOR_BUFFER_BIT)
             BaseCanvas.render(self)
             self.set_cursor()
             self.pending_render_count = 0
         else:
-            log.debug("optimized out a render!!!!")
+            log.debug("render_callback: OPTIMIZED OUT a render!!!!")
 
     def render_overlay(self):
         self.overlay.prepare_to_render_screen_objects()

@@ -9,8 +9,11 @@ import maproom.library.rect as rect
 from maproom.library.projection import Projection
 import maproom.preferences
 
+from sawx.ui import progress_dialog
+
 import logging
 log = logging.getLogger(__name__)
+progress_log = logging.getLogger("progress")
 
 
 class BaseCanvas(object):
@@ -169,7 +172,7 @@ class BaseCanvas(object):
             return
 
         if self.project.in_batch_processing:
-            log.debug("Skipping render in batch processing mode")
+            log.debug("render: Skipping render in batch processing mode")
             return
 
         # Get interactive console here:
@@ -177,13 +180,13 @@ class BaseCanvas(object):
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
         t0 = time.clock()
-        log.debug("RENDERING at %f" % t0)
+        log.debug("render: RENDERING at %f" % t0)
         self.update_renderers()
 
         s_r = self.get_screen_rect()
         p_r = self.get_projected_rect_from_screen_rect(s_r)
         w_r = self.get_world_rect_from_projected_rect(p_r)
-        log.debug(f"screen: {s_r}\nprojected: {p_r}\nworld: {w_r}")
+        log.debug(f"render: screen: {s_r}\nprojected: {p_r}\nworld: {w_r}")
 
         if not self.begin_rendering_screen(p_r, s_r):
             return
@@ -210,14 +213,21 @@ class BaseCanvas(object):
                 layer_draw_order.append((i, layer))
         affected_layers = self.project.layer_manager.update_linked_control_points()
         for layer in affected_layers:
-            log.debug(f"rebuilding layer {layer} to update control points")
+            log.debug(f"render: rebuilding layer {layer} to update control points")
             renderer = self.layer_renderers[layer]
             layer.rebuild_renderer(renderer, True)
+
+        elapsed = time.clock() - t0
+        if progress_dialog.is_active():
+            log.debug(f"render: ABORTING RENDERING because progress dialog is active; total time = {elapsed}")
+            return
+
+        log.debug(f"render: FINISHED REBUILDING LAYERS; total time = {elapsed}")
 
         null_picker = NullPicker()
 
         def render_layers(layer_order, picker=null_picker):
-            log.debug("rendering at time %s, range %s" % (self.project.timeline.current_time, self.project.timeline.selected_time_range))
+            log.debug("render: rendering at time %s, range %s" % (self.project.timeline.current_time, self.project.timeline.selected_time_range))
             delayed_pick_layer = None
             control_points_layer = None
             for i, layer in layer_order:
@@ -226,14 +236,14 @@ class BaseCanvas(object):
                 if not vis["layer"]:
                     # short circuit displaying anything if entire layer is hidden
                     continue
-                log.debug("valid times: %s - %s; layer=%s" % (layer.start_time, layer.end_time, layer))
+                log.debug("render: valid times: %s - %s; layer=%s" % (layer.start_time, layer.end_time, layer))
                 if not self.project.is_layer_visible_at_current_time(layer):
-                    log.debug("skipping layer %s; not in currently displayed time")
+                    log.debug("render: skipping layer %s; not in currently displayed time")
                     continue
                 if picker.is_active:
                     if layer.pickable:
                         if layer == self.hide_picker_layer:
-                            log.debug("Hiding picker layer %s from picking itself" % layer)
+                            log.debug("render: Hiding picker layer %s from picking itself" % layer)
                             continue
                         elif layer == selected:
                             delayed_pick_layer = (layer, vis)
@@ -261,6 +271,7 @@ class BaseCanvas(object):
         self.render_overlay()
 
         if self.is_canvas_pickable():
+            log.debug("render: rendering picker")
             self.begin_rendering_picker(s_r)
             render_layers(layer_draw_order, picker=self.picker)
             self.done_rendering_picker()
@@ -271,6 +282,7 @@ class BaseCanvas(object):
         self.post_render_update_ui_hook(elapsed, event)
 
         self.finalize_rendering_screen()
+        log.debug(f"render: FINISHED RENDERING; total time = {elapsed}")
 
     def render_overlay(self):
         pass

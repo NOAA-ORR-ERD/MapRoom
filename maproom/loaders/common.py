@@ -61,7 +61,6 @@ class BaseLoader(object):
         undo = UndoInfo()
         saved_invariant = manager.next_invariant
         try:
-            progress_log.info("START=Loading %s" % uri)
             layers = self.load_layers(uri, manager, **kwargs)
         except ProgressCancelError as e:
             undo.flags.success = False
@@ -69,8 +68,6 @@ class BaseLoader(object):
         except IOError as e:
             undo.flags.success = False
             undo.flags.errors = [str(e)]
-        finally:
-            progress_log.info("END")
 
         if undo.flags.success:
             if layers is None:
