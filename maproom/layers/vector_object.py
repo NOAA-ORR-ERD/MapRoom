@@ -574,7 +574,7 @@ class EllipseVectorObject(RectangleVectorObject):
         if prop == "Area":
             wkm, hkm = self.get_width_height()
             km = wkm * hkm * math.pi / 4.0
-            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
+            return "%s, %s" % (km2_to_rounded_string(km), mi2_to_rounded_string(km * .621371 * .621371))
         return RectangleVectorObject.get_info_panel_text(self, prop)
 
     def get_semimajor_axes(self, p):
@@ -667,7 +667,7 @@ class CircleVectorObject(EllipseVectorObject):
         elif prop == "Area":
             r = self.get_radius()
             km = r * r * math.pi
-            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
+            return "%s, %s" % (km2_to_rounded_string(km), mi2_to_rounded_string(km * .621371 * .621371))
         return EllipseVectorObject.get_info_panel_text(self, prop)
 
     def set_center_and_radius(self, p1, p2):
@@ -1331,7 +1331,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     def get_info_panel_text(self, prop):
         if prop == "Area":
             km = self.get_area()
-            return "%s, %s" % (km_to_rounded_string(km, area=True), mi_to_rounded_string(km * .621371, area=True))
+            return "%s, %s" % (km2_to_rounded_string(km), mi_to_rounded_string(km * .621371, area=True))
         return FillableVectorObject.get_info_panel_text(self, prop)
 
     def get_polylines(self, num_points):
