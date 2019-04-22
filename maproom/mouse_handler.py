@@ -77,6 +77,8 @@ class MouseHandler(object):
             self.pending_selection = None
             self.is_panning = True
         else:
+            self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
+            self.check_clickable_object()
             self.pending_selection = self.current_object_under_mouse
             self.is_panning = False
             self.process_left_down(event)
@@ -132,15 +134,8 @@ class MouseHandler(object):
         e.frame.status_message(obj_text, True)
         e.long_status.show_status_text(long_text, multiline=True)
 
-    def process_mouse_motion_up(self, event):
+    def check_clickable_object(self):
         c = self.layer_canvas
-        p = event.GetPosition()
-        proj_p = c.get_world_point_from_screen_point(p)
-
-        c.release_mouse()
-        # print "mouse is not down"
-        self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
-        log.debug(f"{self.__class__.__name__} process_mouse_motion_up: object under mouse: {str(self.current_object_under_mouse)}")
         obj = None
         if (self.current_object_under_mouse is not None):
             (layer, object_type, object_index) = self.current_object_under_mouse
@@ -157,9 +152,22 @@ class MouseHandler(object):
             c.project.clickable_object_mouse_is_over = None
             c.project.clickable_object_in_layer = None
             self.is_over_object = False
+        return obj
+
+    def process_mouse_motion_up(self, event):
+        c = self.layer_canvas
+        p = event.GetPosition()
+        proj_p = c.get_world_point_from_screen_point(p)
+
+        c.release_mouse()
+        # print "mouse is not down"
+        self.current_object_under_mouse = c.get_object_at_mouse_position(event.GetPosition())
+        log.debug(f"{self.__class__.__name__} process_mouse_motion_up: object under mouse: {str(self.current_object_under_mouse)}")
+        obj = self.check_clickable_object()
         mouselog.debug("object under mouse: %s, on current layer: %s" % (self.current_object_under_mouse, c.project.clickable_object_mouse_is_over is not None))
 
         self.update_status_text(proj_p, obj, True, self.get_help_text())
+
 
     def process_mouse_motion_down(self, event):
         c = self.layer_canvas
