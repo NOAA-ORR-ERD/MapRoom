@@ -433,7 +433,7 @@ class MoveLayerCommand(Command):
 
         # here we "re-get" the source layer so that it's replaced by a
         # placeholder and temporarily removed from the tree
-        temp_layer = ly.EmptyLayer(layer_lm)
+        temp_layer = ly.EmptyLayer(lm)
         source_layer, children = lm.replace_layer(mi_source, temp_layer)
 
         # if we are inserting onto a folder, insert as the second item in the folder
