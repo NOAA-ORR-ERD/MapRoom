@@ -495,25 +495,25 @@ class LayerTreeControl(wx.Panel):
 
         event.Skip()
 
-    def get_popup_actions(self):
+    def calc_context_menu_desc(self):
         return [
-            actions.RenameLayerAction,
-            actions.StartTimeAction,
-            actions.EndTimeAction,
+            "rename_layer",
+            "start_time",
+            "end_time",
             None,
-            actions.GroupLayerAction,
-            actions.UngroupLayerAction,
+            "group_layer",
+            "ungroup_layer",
             None,
-            actions.RaiseToTopAction,
-            actions.RaiseLayerAction,
-            actions.LowerLayerAction,
-            actions.LowerToBottomAction,
+            "raise_to_top",
+            "raise_layer",
+            "lower_layer",
+            "lower_to_bottom",
             None,
-            actions.DuplicateLayerAction,
-            actions.CheckSelectedLayerAction,
-            actions.ZoomToLayer,
+            "duplicate_layer",
+            "check_selected_layer",
+            "zoom_to_layer",
             None,
-            actions.DeleteLayerAction,
+            "delete_layer",
             ]
 
     def on_context_menu(self, event):
@@ -526,7 +526,6 @@ class LayerTreeControl(wx.Panel):
 
         (layer, ) = self.tree.GetItemData(clicked_item)
         log.debug("context menu: layer=%s" % layer)
-        actions = self.get_popup_actions()
-        popup_data = {'layer': layer}
-        if actions:
-            self.project.popup_context_menu_from_actions(self.tree, actions, popup_data)
+        menu_desc = self.calc_context_menu_desc()
+        if menu_desc:
+            self.project.show_popup(menu_desc, popup_data={'layer': layer})
