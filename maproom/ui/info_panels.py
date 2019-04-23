@@ -1686,7 +1686,7 @@ class ScalarExpressionField(TextEditField):
         expression = self.parse_from_string()
         affected = layer.subset_using_logical_operation(expression)
         for layer in affected:
-            self.panel.project.layer_contents_changed(layer)
+            self.panel.project.document.layer_contents_changed_event(layer)
         self.panel.project.refresh()
 
 
