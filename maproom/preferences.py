@@ -2,6 +2,7 @@ import os
 
 from sawx import persistence
 from sawx.preferences import SawxEditorPreferences
+from sawx.ui import fonts
 
 # fixme:
 # Some hard_coded stuff just to put it in a central place -- should be handled smarter
@@ -9,7 +10,7 @@ from sawx.preferences import SawxEditorPreferences
 # EPSG:3857 now the default projection due to the use of WMS and Tile servers
 DEFAULT_PROJECTION_STRING = "+proj=merc +a=6378137 +b=6378137 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +nadgrids=@null +wktext +over +no_defs"
 
-
+default_title_font = "24 pt Helvetica"
 # Add unique MapRoom preferences types
 
 import wx
@@ -62,6 +63,7 @@ class MaproomPreferences(SawxEditorPreferences):
         ("download_directory", "directory"),
         ("bsb_directory", "directory"),
         ("colormap_name", "colormap", "Default colormap"),
+        ("title_font", "wx.Font"),
     ]
 
     def set_defaults(self):
@@ -86,3 +88,6 @@ class MaproomPreferences(SawxEditorPreferences):
         self.bsb_directory = persistence.get_user_dir("BSB")
 
         self.colormap_name = "gist_heat"
+
+        self.title_font = fonts.str_to_font(default_title_font)
+

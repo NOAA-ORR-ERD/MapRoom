@@ -48,6 +48,13 @@ class Title(StickyLayer):
 
         self.rebuild_needed = True
 
+    def calc_initial_style(self):
+        style = super().calc_initial_style()
+        prefs = self.manager.project.get_preferences()
+        style.font = prefs.title_font.GetFaceName()
+        style.font_size = prefs.title_font.GetPointSize()
+        return style
+
     @property
     def user_text(self):
         return self._user_text
