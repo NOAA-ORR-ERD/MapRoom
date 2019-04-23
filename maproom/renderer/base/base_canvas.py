@@ -118,6 +118,7 @@ class BaseCanvas(object):
         p_h = rect.height(projected_rect)
 
         if (self.s_w <= 0 or self.s_h <= 0 or p_w <= 0 or p_h <= 0):
+            log.error(f"begin_rendering_screen: nonsensical projection! {self.projected_rect}")
             return False
 
         self.prepare_screen_viewport()

@@ -147,6 +147,8 @@ def load_shapefile(uri):
                     log.error(f"error in source projection: {e}")
                 target = pyproj.Proj(init='epsg:4326')
                 log.debug(f"load_shapefile: target projection: {target.srs}")
+            else:
+                log.warning(f"load_shapefile: no projection found in {uri}")
             try:
                 feature_list = parse_ogr(dataset, point_list)
             except ValueError as e:
@@ -157,7 +159,7 @@ def load_shapefile(uri):
     if error:
         return (error, None, None)
     points = np.asarray(point_list)
-    log.debug(f"load_shapefile: {len(points)} points, {len(point_list)} points_list")
+    log.debug(f"load_shapefile: {len(points)} points, {len(feature_list)} features")
     if source is not None:
         tx, ty = pyproj.transform(source, target, points[:,0], points[:,1])
         # Re-create (n,2) coordinates

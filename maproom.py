@@ -11,6 +11,7 @@ import logging
 # Must set these environmental vars early, before any of the Enthought
 # libraries are loaded, because some are only used at module load time.
 import os
+import sys
 
 # Workaround for unknown locale bug on OS X; importing docutils here prevents
 # the failure when loading docutils.core in the markup support for the text
@@ -31,6 +32,8 @@ if not os.path.exists(found):
         found = os.path.join(os.path.dirname(fiona.__file__), "gdal_data")
 if found is not None:
     os.environ["GDAL_DATA"] = found
+elif sys.platform.startswith("win"):
+    print("ERROR: GDAL_DATA environment not set; will have errors loading some shapfiles")
 
 # Framework imports.
 from sawx.application import SawxApp
