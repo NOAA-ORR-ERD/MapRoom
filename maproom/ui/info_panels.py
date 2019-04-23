@@ -562,7 +562,7 @@ class FloatSliderField(InfoField):
 
     def create_control(self):
         minval, maxval, steps = self.get_params()
-        c = sliders.TextSlider(self.parent, -1, minval, minval, maxval, steps)
+        c = sliders.TextSlider(self.parent, -1, minval, minval, maxval, steps, num_digits=1)
         c.Bind(wx.EVT_SLIDER, self.slider_changed)
         c.Bind(wx.EVT_SPINCTRLDOUBLE, self.slider_changed)
         return c
