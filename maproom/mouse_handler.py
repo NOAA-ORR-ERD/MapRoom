@@ -277,7 +277,7 @@ class MouseHandler(object):
 
     def process_mouse_up(self, event):
         c = self.layer_canvas
-        print(f"process_mouse_up: moved enough: {self.mouse_moved_enough} down={c.mouse_is_down}")
+        log.debug(f"process_mouse_up: moved enough: {self.mouse_moved_enough} down={c.mouse_is_down}")
 
         if c.mouse_is_down:
             if (c.selection_box_is_being_defined):
@@ -304,7 +304,7 @@ class MouseHandler(object):
 
         if (e.clickable_object_mouse_is_over is not None): 
             (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-            print(f"right mouse down: {self} {layer} {object_type} {object_index}")
+            log.debug(f"right mouse down: {self} {layer} {object_type} {object_index}")
             if (e.clickable_object_is_ugrid_point()):
                 self.right_clicked_on_point(event, layer, object_index)
             elif (e.clickable_object_is_ugrid_line()):
@@ -332,7 +332,7 @@ class MouseHandler(object):
         pass
 
     def right_clicked_on_interior(self, event, layer, object_type, object_index, world_point):
-        print(f"Right clicked on {layer}")
+        log.debug(f"Right clicked on {layer}")
         menu_desc = layer.calc_context_menu_desc(object_type, object_index, world_point)
         if menu_desc:
             c = self.layer_canvas
@@ -343,12 +343,12 @@ class MouseHandler(object):
         self.right_clicked_on_interior(event, layer, None, None, world_point)
 
     def right_clicked_on_different_layer(self, event, layer, different_layer, world_point):
-        print(f"right clicked on different layer {different_layer}")
+        log.debug(f"right clicked on different layer {different_layer}")
         if self.current_object_under_mouse is not None:
             (other_layer, object_type, object_index) = self.current_object_under_mouse
             self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
         else:
-            print(f"not under object of other layer")
+            log.debug(f"not under object of other layer")
 
     def process_right_mouse_up(self, event):
         event.Skip()
@@ -1681,7 +1681,6 @@ class StickySelectionMode(SelectionMode):
     def process_mouse_motion_with_selection(self, event):
         c = self.layer_canvas
         e = c.project
-        print("HINOESU", e.clickable_object_mouse_is_over)
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
             layer, object_type, object_index = e.clickable_object_mouse_is_over
             p = self.get_position(event)
