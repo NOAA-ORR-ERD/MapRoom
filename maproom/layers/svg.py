@@ -2,6 +2,7 @@
 
 from ..library import rect
 from ..library.svg_utils import SVGOverlay
+from ..renderer import int_to_color_floats
 
 from .base import StickyResizableLayer
 
@@ -20,10 +21,6 @@ class SVGLayer(StickyResizableLayer):
 
     # SVG source text goes here
     default_svg_source = ""
-
-    skip_on_insert = True
-
-    bounded = False
 
     def __init__(self, manager, svg_source=None, x_percentage=1.0, y_percentage=0.0, magnification=0.2):
         super().__init__(manager, x_percentage, y_percentage, magnification)
@@ -47,8 +44,6 @@ class SVGLayer(StickyResizableLayer):
         self._svg = None  # force recreation of svg overlay
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
-        if picker.is_active:
-            return
         log.log(5, f"Rendering svg {self.name} rose!!! pick={picker}")
 
         if self.svg.height > 0:
@@ -75,9 +70,17 @@ class SVGLayer(StickyResizableLayer):
         w = max_w * self.magnification
         h = max_h * self.magnification
 
+        # SVG coordinate origin is lower left
         x = s_r[0][0] + ((usable_w - w) * self.x_percentage) + self.x_offset
-        y = s_r[1][1] - ((usable_h - h) * self.y_percentage) - self.y_offset
+        y = s_r[0][1] + ((usable_h - h) * self.y_percentage) + self.y_offset
 
-        r = rect.get_rect_of_points([(x, y), (x + w, y - h)])
-
-        renderer.draw_screen_svg(r, self.svg)
+        bounding_box = rect.get_rect_of_points([(x, y), (x + w, y + h)])
+        if picker.is_active:
+            c = picker.get_polygon_picker_colors(self, 1)[0]
+            r, g, b, a = int_to_color_floats(c)
+            w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - w
+            h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset - h
+            self.usable_screen_size = (w, h)
+            renderer.draw_screen_rect(bounding_box, r, g, b, a, flip=False)
+        else:
+            renderer.draw_screen_svg(bounding_box, self.svg)

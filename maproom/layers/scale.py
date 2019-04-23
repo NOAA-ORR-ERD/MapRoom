@@ -21,18 +21,6 @@ class Scale(StickyLayer):
 
     type = "scale"
 
-    mouse_mode_toolbar = "StickyLayerToolBar"
-
-    layer_info_panel = ["X location", "Y location"]
-
-    skip_on_insert = True
-
-    bounded = False
-
-    background = True
-
-    pickable = True
-
     km_steps = [item for sublist in [[i * math.pow(10, scale) for i in [1, 2, 5]] for scale in range(-3, 5)] for item in sublist]
     km_step_count = len(km_steps)
 
@@ -87,6 +75,8 @@ class Scale(StickyLayer):
         w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - scale_width
         h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset
 
+        # screen drawing by default expects to flip the y coord, so this origin
+        # is the upper left
         x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
         y = s_r[1][1] - (h * self.y_percentage) - self.y_offset
 

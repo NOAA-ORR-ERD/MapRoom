@@ -803,6 +803,16 @@ class ScreenLayer(Layer):
 class StickyLayer(ScreenLayer):
     layer_info_panel = ["X location", "Y location"]
 
+    mouse_mode_toolbar = "StickyLayerToolBar"
+
+    skip_on_insert = True
+
+    bounded = False
+
+    background = True
+
+    pickable = True
+
     x_offset = 10
     y_offset = 10
 
