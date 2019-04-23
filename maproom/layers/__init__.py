@@ -8,6 +8,7 @@ from .grid import Graticule
 from .scale import Scale
 from .compass_rose import CompassRose
 from .noaa_logo import NOAALogo
+from .title import Title
 from .timestamp import Timestamp
 from .triangle import TriangleLayer
 from .polygon import PolygonLayer, RNCLoaderLayer

@@ -349,6 +349,12 @@ class new_annotation_layer(NewLayerBaseAction):
     layer_class = layers.AnnotationLayer
 
 
+class new_title_layer(NewLayerBaseAction):
+    name = 'New Title Layer'
+    tooltip = 'Create a text overlay layer'
+    layer_class = layers.Title
+
+
 class new_wms_layer(NewLayerBaseAction):
     name = 'New WMS Layer'
     tooltip = 'Create new Web Map Service layer'

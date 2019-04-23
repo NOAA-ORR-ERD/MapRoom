@@ -144,6 +144,7 @@ class ProjectEditor(SawxEditor):
             "new_vector_layer",
             "new_annotation_layer",
             "new_shapefile_layer",
+            "new_title_layer",
             "new_wms_layer",
             "new_tile_layer",
             "new_noaa_logo_layer",

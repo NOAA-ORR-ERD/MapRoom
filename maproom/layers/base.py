@@ -859,6 +859,21 @@ class StickyLayer(ScreenLayer):
     def rotating_layer(self, dx, dy):
         return None
 
+    def calc_bounding_box(self, s_r, pixel_width, pixel_height):
+        """Calculate the OpenGL-referenced bounding box: origin at the lower
+        left. The Y-coords must be subtracted from the screen height if drawing
+        in wx pixel coords.
+        """
+        w = s_r[1][0] - s_r[0][0] - 2 * self.x_offset - pixel_width
+        h = s_r[1][1] - s_r[0][1] - 2 * self.y_offset - pixel_height
+
+        x = s_r[0][0] + (w * self.x_percentage) + self.x_offset
+        y = s_r[0][1] + (h * self.y_percentage) + self.y_offset
+
+        self.usable_screen_size = (w, h)
+        bounding_box = ((x, y), (x + pixel_width, y + pixel_height))
+        return bounding_box
+
 
 class StickyResizableLayer(StickyLayer):
     layer_info_panel = ["X location", "Y location", "Magnification"]
