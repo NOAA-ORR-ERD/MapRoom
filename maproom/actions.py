@@ -350,7 +350,7 @@ class new_annotation_layer(NewLayerBaseAction):
 
 
 class new_title_layer(NewLayerBaseAction):
-    name = 'New Title Layer'
+    name = 'New Text Overlay Layer'
     tooltip = 'Create a text overlay layer'
     layer_class = layers.Title
 
