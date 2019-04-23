@@ -49,6 +49,7 @@ class Picker(object):
         self.vbo_colors = None
 
     def prepare_to_render(self, screen_rect):
+        log.debug("prepare_to_render")
         if (screen_rect != self.screen_rect and self.frame_buffer is not None):
             gl_fbo.glDeleteFramebuffersEXT(
                 1, np.array([self.frame_buffer], dtype=np.uint32),
@@ -175,7 +176,8 @@ class Picker(object):
             returns ( layer, object_index ) or None
 
         """
-
+        if self.frame_buffer is None:
+            return None
         self.bind_frame_buffer()
         if screen_point[1] == 0:
             # work around an odd bug in which the color is not read correctly from the first row of
