@@ -75,15 +75,17 @@ try:
     print("Creating %s" % dest_dir)
 except OSError:
     # Directory exists; remove old stuff
-    if os.path.exists(dest_app):
-        print("Removing old %s" % dest_app)
-        shutil.rmtree(dest_app)
-    if os.path.exists(dest_zip):
-        print("Removing old %s" % dest_zip)
-        os.unlink(dest_zip)
-    if os.path.exists(dest_app):
-        print("Removing old %s" % dest_exe)
-        shutil.rmtree(dest_exe)
+    if mac:
+        if os.path.exists(dest_app):
+            print("Removing old %s" % dest_app)
+            shutil.rmtree(dest_app)
+        if os.path.exists(dest_zip):
+            print("Removing old %s" % dest_zip)
+            os.unlink(dest_zip)
+    elif win:
+        if os.path.exists(dest_exe):
+            print("Removing old %s" % dest_exe)
+            shutil.rmtree(dest_exe)
 
 if win:
     if onefile:
