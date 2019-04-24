@@ -50,9 +50,18 @@ class Title(StickyLayer):
 
     def calc_initial_style(self):
         style = super().calc_initial_style()
-        prefs = self.manager.project.get_preferences()
-        style.font = prefs.title_font.GetFaceName()
-        style.font_size = prefs.title_font.GetPointSize()
+        try:
+            prefs = self.manager.project.get_preferences()
+        except AttributeError:
+            # The 'project' attribute won't exist when loading a file because
+            # it's not set in the manager until it is *assigned* to a project.
+            # (Documents are loaded before being attached to an editor.) But,
+            # this is OK because the style will have been serialized and will
+            # be loaded into this layer
+            pass
+        else:
+            style.font = prefs.title_font.GetFaceName()
+            style.font_size = prefs.title_font.GetPointSize()
         return style
 
     @property
