@@ -85,7 +85,7 @@ except OSError:
     elif win:
         if os.path.exists(dest_exe):
             print("Removing old %s" % dest_exe)
-            shutil.rmtree(dest_exe)
+            os.remove(dest_exe)
 
 if win:
     if onefile:
