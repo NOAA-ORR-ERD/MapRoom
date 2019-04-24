@@ -1,12 +1,19 @@
 import sys
+
+USE_TINY_DELAY = False
+
 if sys.platform.startswith("win"):
     # Windows seems to have no delay between the call to refresh and the
     # CallAfter, so calls will still stack up without a delay
     time_delay_refresh = 200  # milliseconds
-else:
+elif USE_TINY_DELAY:
     # implement tiny delay which will allow a bunch of renders to be optimized
-    # out during load time, especially when using a Tile layer
-    time_delay_refresh = 20
+    # out during load time, especially when using a Tile layer. However, it sometimes
+    # seems to miss a refresh, especially on linux when loading a new documen in a
+    # new tab. Not sure of the underlying cause yet.
+    time_delay_refresh = 10
+else:
+    time_delay_refresh = 0
 
 import wx
 import wx.glcanvas as glcanvas
