@@ -7,8 +7,8 @@ if sys.platform.startswith("win"):
     # CallAfter, so calls will still stack up without a delay
     time_delay_refresh = 200  # milliseconds
 
-    # FIXME: trying zero delay to make it more responsive
-    time_delay_refresh = 0
+    # FIXME: trying smaller delay to make it more responsive
+    time_delay_refresh = 20
 elif USE_TINY_DELAY:
     # implement tiny delay which will allow a bunch of renders to be optimized
     # out during load time, especially when using a Tile layer. However, it sometimes
