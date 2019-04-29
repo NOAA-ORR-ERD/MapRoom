@@ -642,7 +642,10 @@ class LineLayer(PointLayer):
         feature_name = ""
         feature_code = 1
         for boundary in boundaries:
-            geom_type = "Polygon"
+            if boundary.is_closed:
+                geom_type = "Polygon"
+            else:
+                geom_type = "LineString"
             item = [geom_type, GeomInfo(boundary, "boundary", name, feature_code, feature_name)]
             output.append(item)
         return output

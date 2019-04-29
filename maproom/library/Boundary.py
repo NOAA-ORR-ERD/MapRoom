@@ -36,6 +36,10 @@ class Polyline:
     def __getitem__(self, index):
         return self.point_indexes[index]
 
+    @property
+    def is_closed(self):
+        return self.point_indexes[0] == self.point_indexes[-1]
+
     def get_xy_point_tuples(self):
         points = self.points
         return [(points.x[i], points.y[i]) for i in self.point_indexes]

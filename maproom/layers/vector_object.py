@@ -1296,6 +1296,11 @@ class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
                 (indexes.point1[0], indexes.point2[0], self.style.line_start_marker),
                 (indexes.point2[-1], indexes.point1[-1], self.style.line_end_marker))
 
+    def get_all_boundaries(self):
+        indexes = list(range(self.center_point_index + 1, np.alen(self.points)))
+        b = Boundary(self.points, indexes, 0.0)
+        return [b]
+
 
 class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     name = "Polygon"

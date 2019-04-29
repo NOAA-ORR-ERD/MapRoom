@@ -93,6 +93,7 @@ class ShapefileLoader(BaseLayerLoader):
         layers.append(parent)
 
         parent.load_error_string, geometry_list, point_list = self.load_uri_as_items(uri)
+        log.debug(f"load_layers: num points={len(point_list)}, geometry list={geometry_list}")
         if (parent.load_error_string == ""):
             geom_type = geometry_list[0]
             items = geometry_list[1:]
@@ -173,7 +174,6 @@ def write_feature_list_as_shapefile(filename, points, feature_list, projection):
     driver = ogr.GetDriverByName(driver_name)
     shapefile = driver.CreateDataSource(filename)
     log.debug(f"writing {filename}, driver={driver}, srs={srs}")
-    shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
 
     file_point_index = 0
 
@@ -182,8 +182,10 @@ def write_feature_list_as_shapefile(filename, points, feature_list, projection):
         if geom_info.count == "boundary":
             # using a Boundary object
             boundary = geom_info.start_index
-            index_iter = range(0, len(boundary))
+            index_iter = boundary.point_indexes
             first_index = index_iter[0]
+            if dup_first_point and boundary.is_closed:
+                dup_first_point = False
             # temporarily shadow x & y with boundary points
             if using_projection:
                 rx, ry = projection(boundary.points.x, boundary.points.y)
@@ -209,31 +211,46 @@ def write_feature_list_as_shapefile(filename, points, feature_list, projection):
         if dup_first_point:
             dest_ring.AddPoint(rx[first_index], ry[first_index])
 
+    last_geom_type = None
+    shapefile_layer = None
     for feature_index, feature in enumerate(feature_list):
         geom_type = feature[0]
+        if last_geom_type is None:
+            last_geom_type = geom_type
+        elif last_geom_type != geom_type:
+            raise RuntimeError(f"Only one geometry type may be saved to a shapefile. Starting writing {last_geom_type}, found {geom_type}")
         log.debug(f"writing: {geom_type}, {feature[1:]}")
-        poly = ogr.Geometry(ogr.wkbPolygon)
         if geom_type == "Polygon":
+            if shapefile_layer is None:
+                shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
+            poly = ogr.Geometry(ogr.wkbPolygon)
             for geom_info in feature[1:]:
                 dest_ring = ogr.Geometry(ogr.wkbLinearRing)
                 fill_ring(dest_ring, geom_info)
                 poly.AddGeometry(dest_ring)
-        else:
-            geom_info = feature[1]
-            if geom_type == "LineString":
-                dest_ring = ogr.Geometry(ogr.wkbLineString)
-            elif geom_type == "Point":
-                dest_ring = ogr.Geometry(ogr.wkbPoint)
-            fill_ring(dest_ring, geom_info, False)
-            poly.AddGeometry(dest_ring)
 
-        layer_defn = shapefile_layer.GetLayerDefn()
-        f = ogr.Feature(layer_defn)
-        f.SetGeometry(poly)
-        f.SetFID(feature_index)
-        shapefile_layer.CreateFeature(f)
-        f = None
-        poly = None
+            layer_defn = shapefile_layer.GetLayerDefn()
+            f = ogr.Feature(layer_defn)
+            f.SetGeometry(poly)
+            f.SetFID(feature_index)
+            shapefile_layer.CreateFeature(f)
+            f = None
+            poly = None
+        elif geom_type == "LineString":
+            if shapefile_layer is None:
+                shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbLineString)
+            poly = ogr.Geometry(ogr.wkbLineString)
+            geom_info = feature[1]
+            fill_ring(poly, geom_info, False)
+            layer_defn = shapefile_layer.GetLayerDefn()
+            f = ogr.Feature(layer_defn)
+            f.SetGeometry(poly)
+            f.SetFID(feature_index)
+            shapefile_layer.CreateFeature(f)
+            f = None
+            poly = None
+        elif geom_type == "Point":
+            raise RuntimeError("Points should be saved as particle layers")
 
     # ## lets add now a second point with different coordinates:
     # point.AddPoint(474598, 5429281)
@@ -260,8 +277,10 @@ def write_feature_list_as_bna(filename, points, feature_list, projection):
                 # using a Boundary object
                 boundary = geom_info.start_index
                 count = len(boundary)
-                index_iter = range(0, count)
+                index_iter = boundary.point_indexes
                 first_index = index_iter[0]
+                if dup_first_point and boundary.is_closed:
+                    dup_first_point = False
                 # temporarily shadow x & y with boundary points
                 rx, ry = boundary.points.x, boundary.points.y
             else:
