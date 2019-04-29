@@ -562,7 +562,7 @@ class ImmediateModeRenderer():
         gl.glEnable(gl.GL_LINE_SMOOTH)
         gl.glHint(gl.GL_LINE_SMOOTH_HINT, gl.GL_DONT_CARE)
 
-    def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False):
+    def draw_screen_lines(self, points, width=1.0, red=0.0, green=0.0, blue=0.0, alpha=1.0, stipple_factor=1, stipple_pattern=0xFFFF, xor=False, fill=False):
         c = self.canvas
         h = rect.height(c.screen_rect)
         gl.glDisable(gl.GL_TEXTURE_2D)
@@ -575,7 +575,10 @@ class ImmediateModeRenderer():
         if xor:
             gl.glEnable(gl.GL_COLOR_LOGIC_OP)
             gl.glLogicOp(gl.GL_XOR)
-        gl.glBegin(gl.GL_LINE_STRIP)
+        if fill:
+            gl.glBegin(gl.GL_TRIANGLE_FAN)
+        else:
+            gl.glBegin(gl.GL_LINE_STRIP)
         for p in points:
             # flip y to treat point as normal screen coordinates
             gl.glVertex(p[0], h - p[1], 0)

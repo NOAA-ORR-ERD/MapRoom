@@ -697,7 +697,7 @@ class RNCSelectionMode(PanMode):
             wp_list = layer.get_highlight_lines(object_type, object_index)
             for wp in wp_list:
                 sp = [c.get_screen_point_from_world_point(w) for w in wp]
-                renderer.draw_screen_lines(sp, 1.0, 0, 1.0, 1.0, xor=True)
+                renderer.draw_screen_lines(sp, 1.0, 1.0, 1.0, 1.0, xor=True, fill=True)
 
 
 class PolygonSelectionMode(RNCSelectionMode):
