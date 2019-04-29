@@ -4,7 +4,7 @@ import numpy as np
 
 from mock import *
 
-from maproom.layers import loaders, TriangleLayer
+from maproom import loaders
 from maproom.library.Boundary import Boundaries, PointsError
 
 class TestVerdat(object):
@@ -17,7 +17,7 @@ class TestVerdat(object):
         layer = self.verdat
         assert 23 == np.alen(layer.points)
         print(layer.points)
-        layer.check_for_problems(None)
+        layer.check_for_problems()
     
     def test_save(self):
         uri = os.path.join(os.getcwd(), "test.verdat")
@@ -32,3 +32,4 @@ if __name__ == "__main__":
     t = TestVerdat()
     t.setup()
     t.test_simple()
+    t.test_save()

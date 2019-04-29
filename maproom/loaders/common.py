@@ -163,14 +163,12 @@ class BaseLayerLoader(BaseLoader):
 
     def save_to_local_file(self, filename, layer):
         fh = open(filename, "w")
-        error = ""
         try:
             self.save_to_fh(fh, layer)
         except Exception:
             raise
         finally:
             fh.close()
-        return error
 
     def save_to_fh(self, fh, layer):
         raise NotImplementedError
