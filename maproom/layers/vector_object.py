@@ -1336,7 +1336,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
     def get_info_panel_text(self, prop):
         if prop == "Area":
             km = self.get_area()
-            return "%s, %s" % (km2_to_rounded_string(km), mi_to_rounded_string(km * .621371, area=True))
+            return "%s, %s" % (km2_to_rounded_string(km), mi2_to_rounded_string(km * .621371 * .621371))
         return FillableVectorObject.get_info_panel_text(self, prop)
 
     def get_polylines(self, num_points):
