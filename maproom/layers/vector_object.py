@@ -1474,25 +1474,27 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
     def fit_to_bounding_box(self, current_bounds, new_bounds):
         layers = self.manager.get_layer_children(self)
-        # print "FITTING SUB-OBJECTS TO NEW BOUNDING BOX!!!", self, layers
-        # print "  old bounds: %s" % str(current_bounds)
-        # print "  new bounds: %s" % str(new_bounds)
+        # print(f"FITTING SUB-OBJECTS of {self} = {layers} TO NEW BOUNDING BOX!!!")
+        # print(f"  old bounds: {str(current_bounds)}")
+        # print(f"  new bounds: {str(new_bounds)}")
         scale, old_origin, new_origin = rect.get_transform(current_bounds, new_bounds)
         # print(" scale: %s" % str(scale))
         # print(" old origin: %s" % str(old_origin))
         # print(" new origin: %s" % str(new_origin))
         for layer in layers:
-            # print("fitting layer: %s, bounds=%s" % (layer, layer.bounds))
+            # print(f"    fitting layer: {layer}, bounds={layer.bounds}")
             # fit the child layer in the new bounding box by a linear transform
             # of the child bounding box in the proportion of the parent
             # bounding box change
             offset = layer.center_point_index + 1
             current_sublayer_bounds = layer.copy_bounds()
             p = layer.points.view(data_types.POINT_XY_VIEW_DTYPE)
-            # print(" before: %s" % str(p.xy))
-            points = (p.xy[:offset] - old_origin).dot(scale) + new_origin
+            # print(f"    before: {str(p.xy)}")
+            relative = (p.xy[:offset] - old_origin).dot(scale)
+            # print(f"    relative: {str(relative)}")
+            points = relative + new_origin
             p.xy[:offset] = points
-            # print(" after: %s" % str(p.xy))
+            # print(f"    after: {str(p.xy)}")
 
             # set new bounding rect
             layer.bounds = self.compute_bounding_rect_from_points(layer.points[0:offset])
