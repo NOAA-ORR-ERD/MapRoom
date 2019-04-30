@@ -45,7 +45,8 @@ def save_and_check_layer(layer, layer_point_offset, label, project):
     print(test_out)
     print(test2_out)
     assert test2_out == test_out
-    check_layer_points(test2_layer, layer, layer_point_offset)
+    if layer_point_offset is not None:
+        check_layer_points(test2_layer, layer, layer_point_offset)
 
 
 class TestFeatureList(object):
@@ -313,6 +314,23 @@ class TestFeatureList(object):
         uri2 = os.path.join(os.getcwd(), f"tmp.test_{label}.bna")
         shapefile.write_feature_list_as_bna(uri2, out, self.project.projection)
 
+    def test_annotation_ellipse(self):
+        lm = self.project.layer_manager
+        parent = ly.AnnotationLayer(manager=lm)
+        lm.insert_layer([3], parent)
+        
+        layer = ly.EllipseVectorObject(manager=lm)
+        layer.set_opposite_corners(
+            (-16.6637485204,-1.40163099748),
+            (9.65688930428,-19.545688433))
+        lm.insert_layer([3, 2], layer)
+        
+        # Calculate bounds of the annotation layers to set up their
+        # points/lines arrays
+        parent.update_bounds()
+        
+        save_and_check_layer(layer, None, "annotation_ellipse", self.project)
+
 
 if __name__ == "__main__":
     import sys
@@ -327,5 +345,6 @@ if __name__ == "__main__":
     # t.test_annotation_polyline()
     # t.test_annotation_polygon()
     # t.test_annotation_multi_rect()
-    t.test_annotation_multi_many()
+    # t.test_annotation_multi_many()
     # t.test_annotation_multi_polyline()
+    t.test_annotation_ellipse()

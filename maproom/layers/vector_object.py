@@ -604,6 +604,19 @@ class EllipseVectorObject(RectangleVectorObject):
         dy = bbox_halfheight - sy
         self.move_bounding_box_point(2, 0, dx, dy, about_center=True)
 
+    def calc_ellipse(self, cx, cy, sx, sy, num_segments=128):
+        xy = np.zeros((num_segments, 2), dtype=np.float32)
+
+        dtheta = 2 * 3.1415926 / num_segments
+        theta = 0.0
+        i = 0
+        while i < num_segments:
+            xy[i] = (cx + sx * math.cos(theta), cy + sy * math.sin(theta))
+            theta += dtheta
+            i += 1
+
+        return xy
+
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
         p = projected_point_data
@@ -614,15 +627,7 @@ class EllipseVectorObject(RectangleVectorObject):
         cy = p[self.center_point_index][1]
 
         num_segments = 128
-        xy = np.zeros((num_segments, 2), dtype=np.float32)
-
-        dtheta = 2 * 3.1415926 / num_segments
-        theta = 0.0
-        i = 0
-        while i < num_segments:
-            xy[i] = (cx + sx * math.cos(theta), cy + sy * math.sin(theta))
-            theta += dtheta
-            i += 1
+        xy = self.calc_ellipse(cx, cy, sx, sy, num_segments)
 
         # create line segment list from one point to the next
         i1 = np.arange(num_segments, dtype=np.uint32)
@@ -636,6 +641,19 @@ class EllipseVectorObject(RectangleVectorObject):
 
         points = self.rotate_points(xy, p[self.center_point_index])
         renderer.set_lines(points, lsi, colors)
+
+    def get_all_boundaries(self):
+        cx = self.points[self.center_point_index].x
+        cy = self.points[self.center_point_index].y
+        sx, sy = self.get_semimajor_axes(self.points)
+        xy = self.calc_ellipse(cx, cy, sx, sy)
+        indexes = np.arange(len(xy) + 1, dtype=np.int32)
+        indexes[-1] = 0
+        print(xy)
+        print(indexes)
+        points = data_types.make_points_from_xy(xy)
+        b = Boundary(points, indexes, 0.0)
+        return [b]
 
 
 class CircleVectorObject(EllipseVectorObject):
