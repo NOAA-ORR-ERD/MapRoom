@@ -1528,6 +1528,20 @@ class DownloadStatusField(ExpandableErrorField):
         return c
 
 
+class SVGStatusField(ExpandableErrorField):
+    same_line = False
+
+    def get_error_text(self, layer):
+        svg = layer.svg
+        text = layer.svg_parse_error
+        if svg is None or text is not None:
+            color = "#FF8080"
+        else:
+            text = f"Size: {svg.width} x {svg.height}"
+            color = None
+        return text, color
+
+
 class ScalarChoiceField(InfoField):
     same_line = True
 
@@ -1856,6 +1870,7 @@ class InfoPanel(PANELTYPE):
         "Server status": ServerStatusField,
         "Server reload": ServerReloadField,
         "Map status": DownloadStatusField,
+        "SVG status": SVGStatusField,
         "Path length": WholeLinePropertyField,
         "Width": WholeLinePropertyField,
         "Height": WholeLinePropertyField,
