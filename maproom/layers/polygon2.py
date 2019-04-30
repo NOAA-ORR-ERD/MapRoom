@@ -619,7 +619,7 @@ class PolygonParentLayer(PointLayer):
                     continue
                 else:
                     geom_type = "Polygon"
-            item = [geom_type, g]
+            item = [geom_type, self.points, g]
             output.append(item)
         return output
 

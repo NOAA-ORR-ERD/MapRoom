@@ -1430,6 +1430,17 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
     def can_contain_vector_object(self, potential_vector_object_layer):
         return True
 
+    def can_output_feature_list(self):
+        return True
+
+    def calc_output_feature_list(self):
+        """Create list of geometry primitives"""
+        output = []
+        children = self.manager.get_layer_children(self)
+        for layer in children:
+            output.extend(layer.calc_output_feature_list())
+        return output
+
     def set_border_width(self, width):
         self.border_width = width
         children = self.manager.get_layer_children(self)

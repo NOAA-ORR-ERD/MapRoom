@@ -26,15 +26,14 @@ def check_layer_points(layer, other, other_point_offset):
 def save_and_check_layer(layer, layer_point_offset, label, project):
     out = layer.calc_output_feature_list()
     print(out)
-    print(layer.points)
-    boundary = out[0][1].start_index
+    boundary = out[0][2].start_index
     print(boundary)
     print(boundary.points)
     print(boundary.point_indexes)
     uri = os.path.join(os.getcwd(), f"tmp.test_{label}.shp")
-    shapefile.write_feature_list_as_shapefile(uri, layer.points, out, project.projection)
+    shapefile.write_feature_list_as_shapefile(uri, out, project.projection)
     uri2 = os.path.join(os.getcwd(), f"tmp.test_{label}.bna")
-    shapefile.write_feature_list_as_bna(uri2, layer.points, out, project.projection)
+    shapefile.write_feature_list_as_bna(uri2, out, project.projection)
 
     loader = shapefile.ShapefileLoader()
     layers = loader.load_layers(uri, project.layer_manager)
@@ -60,7 +59,7 @@ class TestFeatureList(object):
         out = layer.calc_output_feature_list()
 
         uri = os.path.join(os.getcwd(), "tmp.test_line_feature_list.shp")
-        shapefile.write_feature_list_as_shapefile(uri, layer.points, out, self.proj)
+        shapefile.write_feature_list_as_shapefile(uri, out, self.proj)
 
         loader = shapefile.ShapefileLoader()
         layers = loader.load_layers(uri, self.project.layer_manager)
@@ -68,7 +67,7 @@ class TestFeatureList(object):
         test_out = test_layer.calc_output_feature_list()
 
         uri2 = os.path.join(os.getcwd(), "tmp.test_line_feature_list2.shp")
-        shapefile.write_feature_list_as_shapefile(uri2, test_layer.points, test_out, self.proj)
+        shapefile.write_feature_list_as_shapefile(uri2, test_out, self.proj)
 
         layers = loader.load_layers(uri2, self.project.layer_manager)
         test2_layer = layers[0]
@@ -85,7 +84,7 @@ class TestFeatureList(object):
         print(out)
 
         uri = os.path.join(os.getcwd(), "tmp.test_shapefile_feature_list.feature_list.shp")
-        shapefile.write_feature_list_as_shapefile(uri, layer.points, out, self.proj)
+        shapefile.write_feature_list_as_shapefile(uri, out, self.proj)
 
         loader = shapefile.ShapefileLoader()
         layers = loader.load_layers(uri, self.project.layer_manager)
@@ -103,9 +102,9 @@ class TestFeatureList(object):
         print(out)
 
         uri = os.path.join(os.getcwd(), "tmp.test_shapefile_formats.shp")
-        shapefile.write_feature_list_as_shapefile(uri, layer.points, out, self.proj)
+        shapefile.write_feature_list_as_shapefile(uri, out, self.proj)
         uri2 = os.path.join(os.getcwd(), "tmp.test_shapefile_formats.bna")
-        shapefile.write_feature_list_as_bna(uri2, layer.points, out, self.proj)
+        shapefile.write_feature_list_as_bna(uri2, out, self.proj)
 
         loader = shapefile.ShapefileLoader()
         layers = loader.load_layers(uri, self.project.layer_manager)
@@ -117,7 +116,6 @@ class TestFeatureList(object):
         print(test_out)
         print(test2_out)
         assert test2_out == test_out
-
 
     def test_annotation_rect(self):
         lm = self.project.layer_manager
@@ -135,6 +133,39 @@ class TestFeatureList(object):
         parent.update_bounds()
         
         save_and_check_layer(layer, 0, "annotation_rect", self.project)
+
+    def test_annotation_multi_rect(self):
+        lm = self.project.layer_manager
+        parent = ly.AnnotationLayer(manager=lm)
+        lm.insert_layer([3], parent)
+        
+        layer1 = ly.RectangleVectorObject(manager=lm)
+        layer1.set_opposite_corners(
+            (-20, 20),
+            (-10, 30))
+        lm.insert_layer([3, 2], layer1)
+        
+        layer2 = ly.RectangleVectorObject(manager=lm)
+        layer2.set_opposite_corners(
+            (0, 10),
+            (10, 0))
+        lm.insert_layer([3, 2], layer2)
+        
+        # Calculate bounds of the annotation layers to set up their
+        # points/lines arrays
+        parent.update_bounds()
+        
+        out = parent.calc_output_feature_list()
+        print(out)
+        boundary = out[0][2].start_index
+        print(boundary)
+        print(boundary.points)
+        print(boundary.point_indexes)
+        label = "multi_rect"
+        uri = os.path.join(os.getcwd(), f"tmp.test_{label}.shp")
+        shapefile.write_feature_list_as_shapefile(uri, out, self.project.projection)
+        uri2 = os.path.join(os.getcwd(), f"tmp.test_{label}.bna")
+        shapefile.write_feature_list_as_bna(uri2, out, self.project.projection)
 
     def test_annotation_polyline(self):
         lm = self.project.layer_manager
@@ -178,6 +209,110 @@ class TestFeatureList(object):
         
         save_and_check_layer(layer, layer.center_point_index + 1, "annotation_polygon", self.project)
 
+    def test_annotation_multi_polyline(self):
+        lm = self.project.layer_manager
+        parent = ly.AnnotationLayer(manager=lm)
+        lm.insert_layer([3], parent)
+        
+        layer = ly.PolylineObject(manager=lm)
+        layer.set_points([
+            (-20, 0),
+            (-10, 0),
+            (-10, 5),
+            (-5, 10),
+            (-10, 15),
+            (-20, 10),
+            ])
+        lm.insert_layer([3, 2], layer)
+        
+        layer = ly.PolylineObject(manager=lm)
+        layer.set_points([
+            (0, 15),
+            (10, 17),
+            (10, 20),
+            (8, 22),
+            (10, 30),
+            (5, 27),
+            (-5, 20),
+            ])
+        lm.insert_layer([3, 2], layer)
+        
+        # Calculate bounds of the annotation layers to set up their
+        # points/lines arrays
+        parent.update_bounds()
+        
+        out = parent.calc_output_feature_list()
+        print(out)
+        boundary = out[0][2].start_index
+        print(boundary)
+        print(boundary.points)
+        print(boundary.point_indexes)
+        label = "multi_polyline"
+        uri = os.path.join(os.getcwd(), f"tmp.test_{label}.shp")
+        shapefile.write_feature_list_as_shapefile(uri, out, self.project.projection)
+        uri2 = os.path.join(os.getcwd(), f"tmp.test_{label}.bna")
+        shapefile.write_feature_list_as_bna(uri2, out, self.project.projection)
+
+    def test_annotation_multi_many(self):
+        lm = self.project.layer_manager
+        parent = ly.AnnotationLayer(manager=lm)
+        lm.insert_layer([3], parent)
+        
+        layer1 = ly.RectangleVectorObject(manager=lm)
+        layer1.set_opposite_corners(
+            (-20, 20),
+            (-10, 30))
+        lm.insert_layer([3, 2], layer1)
+        
+        layer2 = ly.RectangleVectorObject(manager=lm)
+        layer2.set_opposite_corners(
+            (0, 10),
+            (10, 0))
+        lm.insert_layer([3, 2], layer2)
+        
+        layer = ly.PolylineObject(manager=lm)
+        layer.set_points([
+            (-20, 0),
+            (-10, 0),
+            (-10, 5),
+            (-5, 10),
+            (-10, 15),
+            (-20, 10),
+            ])
+        lm.insert_layer([3, 2], layer)
+        
+        layer = ly.PolygonObject(manager=lm)
+        layer.set_points([
+            (0, 15),
+            (10, 17),
+            (10, 20),
+            (8, 22),
+            (10, 30),
+            (5, 27),
+            (-5, 20),
+            ])
+        lm.insert_layer([3, 2], layer)
+        
+        # Calculate bounds of the annotation layers to set up their
+        # points/lines arrays
+        parent.update_bounds()
+        
+        out = parent.calc_output_feature_list()
+        print(out)
+        boundary = out[0][2].start_index
+        print(boundary)
+        print(boundary.points)
+        print(boundary.point_indexes)
+        label = "multi_many"
+        uri = os.path.join(os.getcwd(), f"tmp.test_{label}.shp")
+        with pytest.raises(RuntimeError):
+            # Shapefiles can't contain both polygons and polylines
+            shapefile.write_feature_list_as_shapefile(uri, out, self.project.projection)
+        uri = os.path.join(os.getcwd(), f"tmp.test_{label}.json")
+        shapefile.write_feature_list_as_shapefile(uri, out, self.project.projection)
+        uri2 = os.path.join(os.getcwd(), f"tmp.test_{label}.bna")
+        shapefile.write_feature_list_as_bna(uri2, out, self.project.projection)
+
 
 if __name__ == "__main__":
     import sys
@@ -188,6 +323,9 @@ if __name__ == "__main__":
     # t.setup()
     # t.test_delete_hole()
     # t.test_shapefile_formats()
-    #t.test_annotation_rect()
-    t.test_annotation_polyline()
+    # t.test_annotation_rect()
+    # t.test_annotation_polyline()
     # t.test_annotation_polygon()
+    # t.test_annotation_multi_rect()
+    t.test_annotation_multi_many()
+    # t.test_annotation_multi_polyline()

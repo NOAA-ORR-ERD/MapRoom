@@ -646,7 +646,7 @@ class LineLayer(PointLayer):
                 geom_type = "Polygon"
             else:
                 geom_type = "LineString"
-            item = [geom_type, GeomInfo(boundary, "boundary", name, feature_code, feature_name)]
+            item = [geom_type, self.points, GeomInfo(boundary, "boundary", name, feature_code, feature_name)]
             output.append(item)
         return output
 
