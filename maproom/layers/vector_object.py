@@ -649,8 +649,6 @@ class EllipseVectorObject(RectangleVectorObject):
         xy = self.calc_ellipse(cx, cy, sx, sy)
         indexes = np.arange(len(xy) + 1, dtype=np.int32)
         indexes[-1] = 0
-        print(xy)
-        print(indexes)
         points = data_types.make_points_from_xy(xy)
         b = Boundary(points, indexes, 0.0)
         return [b]

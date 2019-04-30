@@ -115,7 +115,6 @@ def make_points(count):
 
 def make_points_from_xy(xy_values):
     xy_values = np.asarray(xy_values, dtype=np.float32)
-    print(xy_values)
     points = make_points(len(xy_values))
     points.z = 0.
     points.x = xy_values[:,0]
