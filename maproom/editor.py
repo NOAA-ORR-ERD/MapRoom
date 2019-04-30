@@ -631,7 +631,7 @@ class ProjectEditor(SawxEditor):
 
     def on_layout_changed(self, evt):
         layout = self.control.calc_layout()
-        log.debug("on_layout_changed: new tilemanager layout {json.dumps(layout)}")
+        log.debug(f"on_layout_changed: new tilemanager layout {json.dumps(layout)}")
 
     def get_default_layout(self, include_user_defined=True):
         try:

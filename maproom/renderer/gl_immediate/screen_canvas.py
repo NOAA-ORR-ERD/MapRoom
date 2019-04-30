@@ -280,6 +280,8 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
                 self.render()
             else:
                 self.render_error()
+        else:
+            log.warning("on_draw: not yet shown on screen!")
         event.Skip()
 
     def render_error(self):
