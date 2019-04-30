@@ -127,9 +127,7 @@ class PasteLayerCommand(Command):
         layer.name = "Copy of %s" % layer.name
 
         drag = layer.center_point_index
-        x = layer.points.x[drag]
-        y = layer.points.y[drag]
-        layer.move_control_point(drag, drag, self.center[0] - x, self.center[1] - y)
+        layer.move_control_point(drag, drag, self.center[0], self.center[1])
         print("AFTER NEW LAYER POSITION")
         layer.update_bounds()
 

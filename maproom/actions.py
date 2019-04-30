@@ -739,18 +739,45 @@ class paste_style(SawxAction):
 
 
 class duplicate_layer(LayerAction):
-    name = 'Duplicate Layer'
+    name = 'At Same Location'
     tooltip = 'Duplicate the current layer'
 
     def is_enabled_for_layer(self, action_key, layer):
         return hasattr(layer, "center_point_index")  # only vector layers
 
+    def get_delta(self, layer):
+        return (0.0, 0.0)
+
     def perform_on_layer(self, action_key, layer):
         json_data = layer.serialize_json(-999, True)
         if json_data:
             text = json.dumps(json_data)
-            cmd = mec.PasteLayerCommand(layer, text, self.editor.layer_canvas.world_center)
+            delta = self.get_delta(layer)
+            cmd = mec.PasteLayerCommand(layer, text, delta)
             self.editor.process_command(cmd)
+
+
+class duplicate_layer_at_center(duplicate_layer):
+    name = 'At Center'
+    tooltip = 'Duplicate the current layer at the center of the viewport'
+
+    def get_delta(self, layer):
+        viewport_center = self.editor.layer_canvas.world_center
+        layer_center = layer.points[layer.center_point_index]
+        return viewport_center[0] - layer_center[0], viewport_center[1] - layer_center[1]
+
+
+class duplicate_layer_at_offset(duplicate_layer):
+    name = 'At Offset'
+    tooltip = 'Duplicate the current layer with a small offset'
+
+    pixel_offset = 10
+
+    def get_delta(self, layer):
+        lc = self.editor.layer_canvas
+        p1 = lc.get_world_point_from_screen_point((0, 0))
+        p2 = lc.get_world_point_from_screen_point((self.pixel_offset, self.pixel_offset))
+        return p1[0] - p2[0], p1[1] - p2[1]
 
 
 class manage_wms_servers(SawxAction):
