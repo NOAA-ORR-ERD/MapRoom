@@ -54,7 +54,7 @@ class SVGLayer(StickyResizableLayer):
 
     type = "svg"
 
-    layer_info_panel = ["X location", "Y location", "Magnification", "SVG status"]
+    layer_info_panel = ["X location", "Y location", "Magnification", "SVG status", "Load SVG"]
 
     default_svg_source = svg_error_box
 
@@ -83,7 +83,7 @@ class SVGLayer(StickyResizableLayer):
 
     @svg_source.setter
     def svg_source(self, value):
-        if value.startswith("template://"):
+        if value.startswith("template://") or value.endswith(".svg"):
             try:
                 value = open(value).read()
             except IOError as e:
@@ -96,6 +96,13 @@ class SVGLayer(StickyResizableLayer):
 
     def svg_source_from_json(self, json_data):
         self.svg_source = json_data['svg_source']
+
+    def get_undo_info(self):
+        return (self.svg_source,)
+
+    def restore_undo_info(self, undo_info):
+        s = undo_info[0]
+        self.svg_source = s
 
     def render_screen(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, f"Rendering svg {self.name} rose!!! pick={picker}")

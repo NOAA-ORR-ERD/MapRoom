@@ -1029,3 +1029,35 @@ class EndTimeCommand(StartTimeCommand):
         last_time = layer.start_time
         layer.start_time = self.time
         return last_time
+
+
+class LoadSVGCommand(Command):
+    short_name = "load_svg"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('pathname', 'string'),
+    ]
+
+    def __init__(self, layer, pathname):
+        Command.__init__(self, layer)
+        self.pathname = pathname
+
+    def __str__(self):
+        return "Load SVG from %s" % self.pathname
+
+    def perform(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = layer.get_undo_info()
+        layer.svg_source = self.pathname
+        lf = undo.flags.add_layer_flags(layer)
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf.layer_contents_changed = True
+        return self.undo_info
+
+    def undo(self, editor):
+        layer = editor.layer_manager.get_layer_by_invariant(self.layer)
+        undo_info = self.undo_info.data
+        layer.restore_undo_info(undo_info)
+        return self.undo_info

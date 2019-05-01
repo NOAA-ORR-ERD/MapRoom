@@ -1739,6 +1739,17 @@ class CancelEditInPolygon(ButtonActionField):
         self.panel.project.process_command(cmd)
 
 
+class LoadSVG(ButtonActionField):
+    button_label = "Load SVG"
+
+    def button_pressed(self, event):
+        layer = self.panel.project.current_layer
+        svgfile = self.panel.project.frame.prompt_local_file_dialog("Load SVG", wildcard="*.svg")
+        if svgfile is not None:
+            cmd = mec.LoadSVGCommand(layer, svgfile)
+            self.panel.project.process_command(cmd)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
@@ -1890,6 +1901,7 @@ class InfoPanel(PANELTYPE):
         "Legend labels": LegendLabelsField,
         "Save polygon": SaveChangesInPolygon,
         "Cancel polygon": CancelEditInPolygon,
+        "Load SVG": LoadSVG,
     }
 
     def create_fields(self, layer, fields):
