@@ -20,6 +20,7 @@ import subprocess
 import sys
 
 is_64bit = sys.maxsize > 2**32
+is_conda = len(list(filter(lambda a: a, ["CONDA" in k for k in os.environ.keys()]))) > 0
 
 exec(compile(open('maproom/_version.py').read(), 'maproom/_version.py', 'exec'))
 
@@ -140,10 +141,8 @@ package_data = {
 install_requires = [
     'numpy',
     'pyopengl',
-    'pyproj==1.9.6',  # pyproj version 2 fails outside the -180/+180 range
     'cython',
-    'shapely<1.7',
-    'owslib>=0.16',
+    'owslib',
     'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
     'coverage',
     'pytest-cov',
@@ -155,7 +154,6 @@ install_requires = [
     'python-dateutil',
     'pytz',
     'cftime',  # required by netcdf4 but not always installed?
-    'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
     'wxpython',
     'sawx>=1.1.1',
     'pillow',
@@ -164,9 +162,23 @@ install_requires = [
     'chardet',
     'idna',
     'packaging',
-    'glsvg',
-    'lat-lon-parser',
+    'omnivore_framework>=4',  # dependencies not yet in pypi or conda: glsvg, lat_lon_parser, post_gnome, pyugrid
 ]
+
+if is_conda:
+    install_requires.extend([
+        'shapely',
+        'pyproj',
+        'netCDF4',
+    ])
+else:
+    install_requires.extend([
+        'shapely<1.7',
+        'pyproj==1.9.6',  # pyproj version 2 fails outside the -180/+180 range
+        'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
+    ])
+
+
 #if sys.platform != "win32":
 if False:  # disabling for everybody temporarily
     # pyopengl_accelerate can fail on windows, sometimes. It's not necessary,
