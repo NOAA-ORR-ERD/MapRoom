@@ -644,15 +644,18 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
 
     def render_callback(self, immediately=False):
         log.debug(f"render_callback: immediately={immediately} pending renders: {self.pending_render_count}")
-        if self.is_canvas_initialized and (immediately or self.pending_render_count > 0):
-            log.debug("render_callback: RENDERING")
-            self.SetCurrent(self.shared_context)
-            gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-            BaseCanvas.render(self)
-            self.set_cursor()
-            self.pending_render_count = 0
-        else:
-            log.debug("render_callback: OPTIMIZED OUT a render!!!!")
+        try:
+            if self.is_canvas_initialized and (immediately or self.pending_render_count > 0):
+                log.debug("render_callback: RENDERING")
+                self.SetCurrent(self.shared_context)
+                gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+                BaseCanvas.render(self)
+                self.set_cursor()
+                self.pending_render_count = 0
+            else:
+                log.debug("render_callback: OPTIMIZED OUT a render!!!!")
+        except RuntimeError as e:
+            log.error(f"render_callback: {e}; probably shutting down")
 
     def render_overlay(self):
         self.overlay.prepare_to_render_screen_objects()
