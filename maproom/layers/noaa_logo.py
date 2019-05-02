@@ -13,7 +13,7 @@ class NOAALogo(SVGLayer):
 
     type = "noaa_logo"
 
-    default_svg_source = "nhaehuotemplate://noaa_logo.svg"
+    default_svg_source = "template://noaa_logo.svg"
 
     def __init__(self, manager):
        super().__init__(manager, None, x_percentage=1.0, y_percentage=1.0, magnification=0.1)
