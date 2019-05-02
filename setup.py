@@ -157,7 +157,7 @@ install_requires = [
     'cftime',  # required by netcdf4 but not always installed?
     'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
     'wxpython',
-    'sawx>=1.1',
+    'sawx>=1.1.1',
     'pillow',
     'urllib3',
     'certifi',
