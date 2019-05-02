@@ -164,7 +164,6 @@ install_requires = [
     'chardet',
     'idna',
     'packaging',
-    'pyinstaller',
     'glsvg',
     'lat-lon-parser',
 ]
