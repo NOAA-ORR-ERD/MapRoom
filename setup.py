@@ -142,10 +142,6 @@ install_requires = [
     'numpy',
     'pyopengl',
     'cython',
-    'owslib',
-    'pytest>=3.2', # somehow, just plain pytest causes pip install to find pytest-cov
-    'coverage',
-    'pytest-cov',
     'docutils',
     'markdown',
     'reportlab',
@@ -155,7 +151,7 @@ install_requires = [
     'pytz',
     'cftime',  # required by netcdf4 but not always installed?
     'wxpython',
-    'sawx>=1.1.1',
+    'sawx>=1.1.2',
     'pillow',
     'urllib3',
     'certifi',
@@ -167,12 +163,14 @@ install_requires = [
 
 if is_conda:
     install_requires.extend([
+        # 'owslib',  # commented out because it overwrites the conda install of OWSLib
         'shapely',
         'pyproj',
         'netCDF4',
     ])
 else:
     install_requires.extend([
+        'owslib',
         'shapely<1.7',
         'pyproj==1.9.6',  # pyproj version 2 fails outside the -180/+180 range
         'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
