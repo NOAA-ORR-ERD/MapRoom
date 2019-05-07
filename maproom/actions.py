@@ -905,7 +905,7 @@ class add_polygon_to_edit_layer(SawxAction):
 
     def perform(self, action_key):
         d = self.popup_data
-        cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['object_type'], d['object_index'], None, False)
+        cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['object_type'], d['object_index'], 1, False)
         self.editor.process_command(cmd)
 
 
