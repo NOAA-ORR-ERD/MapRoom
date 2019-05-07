@@ -5,9 +5,12 @@ from shapely.geometry import LineString
 from shapely.geometry import Polygon
 from shapely.geometry import box
 
+from sawx.filesystem import find_latest_template_path
+
 from ..library.Boundary import Boundary
 from ..errors import PointsError
 from ..library.shapely_utils import shapely_to_polygon
+from ..library.bna_utils import load_bna_file
 from ..renderer import color_floats_to_int, data_types
 from ..command import UndoInfo
 
@@ -188,24 +191,6 @@ class PolygonLayer(PointLayer):
 
     def can_save(self):
         return True
-
-    def polygons_to_json(self):
-        return self.rings.tolist()
-
-    def polygons_from_json(self, json_data):
-        self.rings = np.array([tuple(i) for i in json_data["polygons"]], data_types.POLYGON_DTYPE).view(np.recarray)
-
-    def adjacency_to_json(self):
-        return self.point_adjacency_array.tolist()
-
-    def adjacency_from_json(self, json_data):
-        self.point_adjacency_array = np.array([tuple(i) for i in json_data['adjacency']], data_types.POLYGON_ADJACENCY_DTYPE).view(np.recarray)
-
-    def identifiers_to_json(self):
-        return self.ring_identifiers
-
-    def identifiers_from_json(self, json_data):
-        self.ring_identifiers = json_data['identifiers']
 
     def check_for_problems(self):
         problems = []
@@ -400,6 +385,23 @@ class RNCLoaderLayer(PolygonLayer):
 
     def is_zoomable(self):
         return False
+
+    # It is unnecessary to save the layer data because the template will be
+    # reloaded every time, so stub out routines that would ordinarily be used
+    # to reconstruct the RNC catalog.
+
+    def points_to_json(self):
+        return []
+
+    def points_from_json(self, json_data):
+        pass
+
+    def from_json_sanity_check_after_load(self, json_data):
+        path = find_latest_template_path("RNCProdCat_*.bna")
+        load_error_string, f_ring_points, f_ring_starts, f_ring_counts, f_ring_identifiers = load_bna_file(path, regimes=[0, 360])
+        if not load_error_string:
+            self.set_data(f_ring_points, f_ring_starts, f_ring_counts,
+                           f_ring_identifiers)
 
     def color_array(self):
         # set up feature code to color map
