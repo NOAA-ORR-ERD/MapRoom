@@ -11,14 +11,13 @@ from .noaa_logo import NOAALogo
 from .title import Title
 from .timestamp import Timestamp
 from .triangle import TriangleLayer
-from .polygon import PolygonLayer, RNCLoaderLayer
+from .polygon import RNCLoaderLayer
 from .polygon2 import PolygonParentLayer, RingEditLayer
 from .raster import RasterLayer
 from .wms import WMSLayer
 from .tiles import TileLayer
 from .particles import ParticleLayer, valid_legend_types
 from .vector_object import LineVectorObject, RectangleVectorObject, EllipseVectorObject, CircleVectorObject, OverlayScalableImageObject, OverlayTextObject, OverlayIconObject, PolylineObject, PolygonObject, AnnotationLayer, ArrowTextBoxLayer, ArrowTextIconLayer
-from .shapefile import PolygonShapefileLayer
 from . import state
 
 
