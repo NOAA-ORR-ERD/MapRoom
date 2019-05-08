@@ -21,19 +21,27 @@ from docutils.core import publish_parts
 
 # Set GDAL_DATA environment variable, needed on windows to find support files
 # to use whhen converting coordinate systems upon load of shapefiles
-import osgeo.ogr
-found = os.path.join(os.path.dirname(osgeo.ogr.__file__), "data")
-if not os.path.exists(found):
-    try:
-        import fiona
-    except ImportError:
-        found = None
-    else:
-        found = os.path.join(os.path.dirname(fiona.__file__), "gdal_data")
-if found is not None:
-    os.environ["GDAL_DATA"] = found
+gdal_path = None
+proj_path = None
+if "CONDA_PREFIX" in os.environ:
+    gdal_path = os.path.join(os.environ["CONDA_PREFIX"], "Library/share/gdal")
+    proj_path = os.path.join(os.environ["CONDA_PREFIX"], "Library/share")
+else:
+    import osgeo.ogr
+    gdal_path = os.path.join(os.path.dirname(osgeo.ogr.__file__), "data")
+    if not os.path.exists(gdal_path):
+        try:
+            import fiona
+        except ImportError:
+            gdal_path = None
+        else:
+            gdal_path = os.path.join(os.path.dirname(fiona.__file__), "gdal_data")
+if gdal_path is not None:
+    os.environ["GDAL_DATA"] = gdal_path
 elif sys.platform.startswith("win"):
     print("ERROR: GDAL_DATA environment not set; will have errors loading some shapfiles")
+if proj_path is not None:
+    os.environ["PROJ_LIB"] = proj_path
 
 # Framework imports.
 from sawx.application import SawxApp
