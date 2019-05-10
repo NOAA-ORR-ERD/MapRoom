@@ -1121,9 +1121,9 @@ class ProjectEditor(SawxEditor):
             self.layer_tree_control.set_edit_layer(b.select_layer)
 
         if b.errors:
-            self.frame.error("\n".join(b.errors))
+            wx.CallAfter(self.frame.error, "\n".join(b.errors))
         if b.messages:
-            self.frame.information("\n".join(b.messages), "Messages")
+            wx.CallAfter(self.frame.information, "\n".join(b.messages), "Messages")
 
         self.undo_history.update_history()
 
