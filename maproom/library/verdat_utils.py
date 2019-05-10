@@ -83,13 +83,12 @@ def load_verdat_file(uri, points_per_tick=1000):
 
     # read the boundary polygon indexes
 
+    boundary_indexes = []
     try:
         boundary_count = int(get_line())
     except ValueError:
-        warning = "Missing polygon specifiers. Assuming all points belong to one polygon."
-        boundary_indexes = [len(points)]
+        pass # No polygons; a point-only verdat
     else:
-        boundary_indexes = []
         for i in range(boundary_count):
             try:
                 end_point_number = int(get_line())
