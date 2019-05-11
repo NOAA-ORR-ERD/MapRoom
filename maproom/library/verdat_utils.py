@@ -174,7 +174,7 @@ def write_layer_as_verdat(f, layer, points_per_tick=1000):
             ))
             file_point_index += 1
 
-            if file_point_index % VerdatLoader.points_per_tick == 0:
+            if file_point_index % points_per_tick == 0:
                 progress_log.info("Saved %d points" % file_point_index)
 
         boundary_endpoints.append(file_point_index - 1)
@@ -194,7 +194,7 @@ def write_layer_as_verdat(f, layer, points_per_tick=1000):
         ))
         file_point_index += 1
 
-        if file_point_index % VerdatLoader.points_per_tick == 0:
+        if file_point_index % points_per_tick == 0:
             progress_log.info("Saved %d points" % file_point_index)
 
     # zero record signals the end of the points section
