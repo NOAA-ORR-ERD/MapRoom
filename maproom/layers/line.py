@@ -129,6 +129,10 @@ class LineLayer(PointLayer):
             points.color = self.style.line_color
             points.state = 0
 
+        lines = self.calc_lines(f_line_segment_indexes)
+        return points, lines
+
+    def calc_lines(self, f_line_segment_indexes):
         n = np.alen(f_line_segment_indexes)
         lines = data_types.make_line_segment_indexes(n)
         if (n > 0):
@@ -137,7 +141,7 @@ class LineLayer(PointLayer):
             ] = f_line_segment_indexes
             lines.color = self.style.line_color
             lines.state = 0
-        return points, lines
+        return lines
 
     def calc_simple_data(self, points):
         count = len(points)

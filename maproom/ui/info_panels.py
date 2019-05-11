@@ -1750,6 +1750,15 @@ class LoadSVG(ButtonActionField):
             self.panel.project.process_command(cmd)
 
 
+class MergeTrianglePoints(ButtonActionField):
+    button_label = "Merge Points Into Source Layer"
+
+    def button_pressed(self, event):
+        layer = self.panel.project.current_layer
+        cmd = mec.MergeGeneratedTrianglePointsCommand(layer)
+        self.panel.project.process_command(cmd)
+
+
 PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
@@ -1902,6 +1911,7 @@ class InfoPanel(PANELTYPE):
         "Save polygon": SaveChangesInPolygon,
         "Cancel polygon": CancelEditInPolygon,
         "Load SVG": LoadSVG,
+        "Merge created points": MergeTrianglePoints,
     }
 
     def create_fields(self, layer, fields):

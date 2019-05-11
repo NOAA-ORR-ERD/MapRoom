@@ -25,7 +25,7 @@ class TriangleLayer(PointLayer):
 
     use_color_cycling = True
 
-    layer_info_panel = ["Triangle count", "Show depth shading"]
+    layer_info_panel = ["Triangle count", "Show depth shading", "Merge created points"]
 
     def __init__(self, manager):
         super().__init__(manager)
@@ -253,6 +253,10 @@ class TriangleLayer(PointLayer):
             layer.points.z[: len(layer.points)].copy(),
             layer.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE).points[: len(layer.line_segment_indexes)].view(np.uint32).copy(),
             hole_points_xy)
+
+        # store generated line segments for later merging into source layer,
+        # because extra points may have been created on the boundary.
+        self.generated_line_segment_indexes = triangle_line_segment_indexes
         return (triangle_points_xy,
                 triangle_points_z,
                 triangles)

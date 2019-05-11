@@ -1,5 +1,6 @@
 import json
 
+import numpy as np
 
 from sawx.errors import ProgressCancelError
 
@@ -9,6 +10,7 @@ from . import loaders
 from .library import point_utils
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers
+from .renderer import data_types
 
 import logging
 log = logging.getLogger(__name__)
@@ -541,6 +543,40 @@ class TriangulateLayerCommand(Command):
         undo.flags.layers_changed = True
         undo.flags.refresh_needed = True
         return undo
+
+
+class MergeGeneratedTrianglePointsCommand(Command):
+    short_name = "trimerge"
+    serialize_order = [
+        ('layer', 'layer'),
+    ]
+
+    def __str__(self):
+        return "Merge Triangle Points"
+
+    def perform(self, editor):
+        lm = editor.layer_manager
+        tlayer = lm.get_layer_by_invariant(self.layer)
+        layer = lm.find_parent_of_dependent_layer(tlayer)
+        self.undo_info = undo = UndoInfo()
+        undo.data = (layer.invariant, layer.get_undo_info())
+
+        layer.points = tlayer.copy_points()
+        lsi = tlayer.generated_line_segment_indexes
+        layer.line_segment_indexes = layer.calc_lines(lsi)
+
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.layer_items_moved = True
+        lf.layer_contents_added = True
+        return undo
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        invariant, layer_undo_info = self.undo_info.data
+        layer = lm.get_layer_by_invariant(invariant)
+        layer.restore_undo_info(layer_undo_info)
+        return self.undo_info
 
 
 class ToPolygonLayerCommand(Command):

@@ -548,13 +548,13 @@ class LayerManager(SawxDocument):
                 return layer
         return None
 
-    def find_dependent_layer(self, layer, dependent_type):
+    def find_dependent_layer(self, layer, dependent_type=None):
         for child in self.flatten():
             if child.dependent_of == layer.invariant:
                 return child
         return None
 
-    def find_parent_of_dependent_layer(self, child, dependent_type):
+    def find_parent_of_dependent_layer(self, child, dependent_type=None):
         for layer in self.flatten():
             if child.dependent_of == layer.invariant:
                 return layer
