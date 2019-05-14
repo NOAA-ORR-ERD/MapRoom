@@ -4,6 +4,9 @@ import time
 import datetime
 import calendar
 import bisect
+import math
+
+import numpy as np
 
 import wx
 from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
@@ -14,6 +17,7 @@ from sawx import preferences
 from sawx.ui.popuputil import SpringTabs
 from sawx.ui.download_manager import DownloadControl
 from sawx.ui.zoomruler import ZoomRuler
+from sawx.ui import compactgrid as cg
 from sawx.utils.textutil import pretty_seconds, parse_pretty_seconds
 
 from .layer_tree_control import LayerTreeControl
@@ -597,3 +601,99 @@ class MarkdownHelpPane(HtmlHelpPane):
     **bold**|<b>bold</b>
     * list item[RET]* list item|<ul><li>list item</li><li>list item</li></ul>
     """
+
+
+class PointsTable(cg.VirtualTable):
+    column_labels = ["Longitude", "Latitude"]
+    column_sizes = [16, 16]
+
+    def __init__(self, layer):
+        self.layer = layer
+        self.current_num_rows = 0
+        cg.VirtualTable.__init__(self, len(self.column_labels), 0)
+
+    def calc_num_rows(self):
+        try:
+            num = len(self.layer.points)
+        except AttributeError:
+            num = 0
+        return num
+
+    def calc_last_valid_index(self):
+        size = self.current_num_rows * self.items_per_row
+        self.style = np.zeros(size, dtype=np.uint8)
+        return size
+
+    def get_label_at_index(self, index):
+        return (index // self.items_per_row)
+
+    def get_row_label_text(self, start_line, last_line, step=1):
+        for line in range(start_line, last_line, step):
+            yield str(int(line))
+
+    def calc_row_label_width(self, view_params):
+        return view_params.calc_text_width("8" * len(str(int(self.num_rows))))
+
+    def get_value_style(self, row, col):
+        index, _ = self.get_index_range(row, col)
+        try:
+            if col == 0:
+                text = self.layer.points.x[row]
+            else:
+                text = self.layer.points.y[row]
+            text = str(text)
+        except IndexError:
+            text = f"{row}"
+        try:
+            s = self.style[index]
+        except IndexError:
+            s = 0
+        return text, s
+
+    def rebuild(self, layer):
+        self.layer = layer
+        self.init_boundaries()
+
+class PointsList(cg.CompactGrid):
+    def __init__(self, parent, editor, **kwargs):
+        self.editor = editor
+        table = PointsTable(None)
+        cg.CompactGrid.__init__(self, table, editor.preferences, None, None, parent, size=(-1,800), name="Points")
+        editor.layer_tree_control.current_layer_changed_event += self.on_current_layer_changed
+
+    def calc_line_renderer(self):
+        return cg.VirtualTableLineRenderer(self, 1, widths=self.table.column_sizes, col_labels=self.table.column_labels)
+
+    def on_current_layer_changed(self, evt):
+        layer = evt[0]
+        log.debug(f"on_current_layer_changed: {layer}")
+        self.recalc_view()
+
+    def send_caret_event(self, flags):
+        index = self.caret_handler.current.rc[0]
+        self.process_index(index)
+
+    def process_index(self, index):
+        self.editor.layer_canvas.do_center_on_point_index(self.table.layer, index)
+
+    def recalc_view(self):
+        log.debug(f"recalc_view: {self}")
+        self.table.rebuild(self.editor.current_layer)
+        cg.CompactGrid.recalc_view(self)
+
+    def refresh_view(self):
+        if self.IsShown():
+            log.debug("refreshing %s" % self)
+            if self.table.layer != self.editor.current_layer:
+                self.recalc_view()
+            else:
+                cg.CompactGrid.refresh_view(self)
+        else:
+            log.debug("skipping refresh of hidden %s" % self)
+
+    def activateSpringTab(self):
+        self.refresh_view()
+
+    def get_notification_count(self):
+        self.refresh_view()
+        return self.num_active

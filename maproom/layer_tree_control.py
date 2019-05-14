@@ -1,5 +1,7 @@
 import sys
 import wx
+
+from sawx.events import EventHandler
 import sawx.ui.customtreectrl as treectrl
 
 from .layers import Layer
@@ -64,6 +66,7 @@ class LayerTreeControl(wx.Panel):
             self.tree.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
 
         self.user_selected_layer = False
+        self.current_layer_changed_event = EventHandler(self)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.sizer.Add(self.tree, 1, wx.EXPAND)
@@ -370,6 +373,7 @@ class LayerTreeControl(wx.Panel):
         sel = lm.get_multi_index_of_layer(layer)
         log.debug("Multi-index of selected layer: %s" % sel)
 
+        self.current_layer_changed_event(layer)
         if prefs.identify_layers and self.user_selected_layer:
             layer.layer_selected_hook()
             lm.refresh_needed_event(None)

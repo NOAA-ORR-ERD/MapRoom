@@ -67,6 +67,8 @@ class MaproomPreferences(SawxEditorPreferences):
     ]
 
     def set_defaults(self):
+        SawxEditorPreferences.set_defaults(self)
+
         self.coordinate_display_format = "degrees decimal minutes"
 
         self.zoom_speed = "Slow"

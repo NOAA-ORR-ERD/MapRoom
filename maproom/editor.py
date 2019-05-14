@@ -635,6 +635,7 @@ class ProjectEditor(SawxEditor):
 
         panel = TileManager(parent)
         panel.Bind(TileManager.EVT_LAYOUT_CHANGED, self.on_layout_changed)
+        panel.Bind(TileManager.EVT_CLIENT_ACTIVATED, self.on_viewer_active)
 
         log.debug("LayerEditor: document=%s" % self.document)
 
@@ -643,6 +644,10 @@ class ProjectEditor(SawxEditor):
     def on_layout_changed(self, evt):
         layout = self.control.calc_layout()
         log.debug(f"on_layout_changed: new tilemanager layout {json.dumps(layout)}")
+
+    def on_viewer_active(self, evt):
+        child = evt.GetChild()
+        log.debug(f"on_viewer_active: child {child} now active!")
 
     def get_default_layout(self, include_user_defined=True):
         try:
@@ -713,6 +718,9 @@ class ProjectEditor(SawxEditor):
 
         self.download_control = panes.DownloadPanel(panel, self)
         panel.add(self.download_control, "download_control", wx.RIGHT, sidebar=True, use_close_button=False)
+
+        self.points_list = panes.PointsList(panel, self, size=(200, 800))
+        panel.add(self.points_list, "points_list", wx.RIGHT, sidebar=True, use_close_button=False)
 
         self.timeline = panes.TimelinePlaybackPanel(panel, self)
         panel.add_footer(self.timeline)
