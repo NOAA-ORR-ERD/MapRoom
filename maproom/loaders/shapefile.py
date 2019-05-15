@@ -351,7 +351,7 @@ class BNAShapefileLoader(ShapefileLoader):
     def save_to_local_file(self, filename, layer):
         # write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
         feature_list = layer.calc_output_feature_list()
-        write_feature_list_as_bna(filename, layer.points, feature_list, layer.manager.project.layer_canvas.projection)
+        write_feature_list_as_bna(filename, feature_list, layer.manager.project.layer_canvas.projection)
 
 
 if __name__ == "__main__":
