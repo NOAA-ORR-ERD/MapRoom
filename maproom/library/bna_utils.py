@@ -233,7 +233,7 @@ def save_bna_file(f, layer):
     progress_log.info("Saved BNA")
 
 
-def write_feature_list_as_bna(filename, feature_list, projection, points_per_tick=1000):
+def write_feature_list_as_bna(filename, feature_list, points_per_tick=1000):
     update_every = 1000
     ticks = 0
 

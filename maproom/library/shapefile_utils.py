@@ -176,15 +176,13 @@ ext_to_driver_name = {
     ".kml": "KML",
 }
 
-need_projection = set(["ESRI Shapefile"])
-
 shape_restriction = set(["ESRI Shapefile"])
 
 
-def write_feature_list_as_shapefile(filename, feature_list, projection, points_per_tick=1000):
+def write_feature_list_as_shapefile(filename, feature_list, points_per_tick=1000):
     # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
     srs = osr.SpatialReference()
-    srs.ImportFromProj4(projection.srs)
+    srs.SetWellKnownGeogCS("WGS84")
 
     _, ext = os.path.splitext(filename)
     try:
@@ -192,7 +190,6 @@ def write_feature_list_as_shapefile(filename, feature_list, projection, points_p
     except KeyError:
         raise RuntimeError(f"Unknown shapefile extension '{ext}'")
 
-    using_projection = driver_name in need_projection
     single_shape = driver_name in shape_restriction
 
     driver = ogr.GetDriverByName(driver_name)
@@ -211,15 +208,9 @@ def write_feature_list_as_shapefile(filename, feature_list, projection, points_p
             if dup_first_point and boundary.is_closed:
                 dup_first_point = False
             # temporarily shadow x & y with boundary points
-            if using_projection:
-                rx, ry = projection(boundary.points.x, boundary.points.y)
-            else:
-                rx, ry = boundary.points.x, boundary.points.y
+            rx, ry = boundary.points.x, boundary.points.y
         else:
-            if using_projection:
-                rx, ry = projection(points.x, points.y)
-            else:
-                rx, ry = points.x, points.y
+            rx, ry = points.x, points.y
             if geom_info.count == "indexed":
                 # using a list of point indexes
                 index_iter = geom_info.start_index
@@ -288,14 +279,3 @@ def write_feature_list_as_shapefile(filename, feature_list, projection, points_p
     # feature.SetFID(feature_index)
     # layer.CreateFeature(feature)
     shapefile = None  # garbage collection = save
-
-
-
-
-
-
-
-
-
-
-
