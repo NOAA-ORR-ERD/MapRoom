@@ -1,3 +1,4 @@
+import os
 import collections
 
 import numpy as np
@@ -168,80 +169,133 @@ def load_shapefile(uri):
     return ("", feature_list, points)
 
 
-def parse_bna_to_feature_list(uri, points_accumulator):
-    f = open(uri, "r")
-    s = f.read()
-    f.close()
-    lines = s.splitlines()
-    feature_list = []
+ext_to_driver_name = {
+    ".shp": "ESRI Shapefile",
+    ".json": "GeoJSON",
+    ".geojson": "GeoJSON",
+    ".kml": "KML",
+}
 
-    update_every = 1000
-    total_points = 0
-    i = 0
-    num_lines = len(lines)
-    progress_log.info("TICKS=%d" % num_lines)
-    progress_log.info("Loading BNA...")
-    while True:
-        if (i >= num_lines):
-            break
-        if (i % update_every) == 0:
-            progress_log.info("TICK=%d" % i)
-        line = lines[i].strip()
-        i += 1
-        if (len(line) == 0):
-            continue
+need_projection = set(["ESRI Shapefile"])
 
-        # fixme -- this will break if there are commas in any of the fields!
-        pieces = line.split(",")
-        if len(pieces) != 3:
-            raise RuntimeError("Error at line {0}. Expecting line with 3 items: primary name, secondary name & point count.".format(i))
-        try:
-            feature_code = int(pieces[1].strip('" ,'))
-        except ValueError:
-            feature_code = 0
-        name = pieces[0].strip('" ,')
-        if name.lower() in ['map bounds', 'mapbounds']:
-            feature_code = 4
-        elif name.lower() in ['spillable area', 'spillablearea']:
-            feature_code = 5
-        feature_name = pieces[1].strip('" ,')
-        num_points = int(pieces[2])
+shape_restriction = set(["ESRI Shapefile"])
 
-        start_index = len(points_accumulator)
-        polygon_points = np.zeros((num_points, 2), dtype=np.float64)
-        first_point = ()
-        for j in range(num_points):
-            line = lines[i].strip()
-            i += 1
-            pieces = line.split(",")
-            if len(pieces) != 2:
-                raise RuntimeError("Error at line {0}. Expecting line with 2 items: longitude, latitude.".format(i))
-            p = (float(pieces[0]), float(pieces[1]))
-            if (j == 0):
-                first_point = tuple(p)
-            # if the last point is a duplicate of the first point, remove it
-            if (j == (num_points - 1) and p[0] == first_point[0] and p[1] == first_point[1]):
-                num_points -= 1
-                continue
-            polygon_points[j, :] = p
-        points_accumulator.extend(polygon_points[:num_points])
 
-        # A negative num_points value indicates that this is a line
-        # rather than a polygon. And if a "polygon" only has 1 or 2
-        # points, it's not a polygon.
-        if num_points < 3:
-            item = ['LineString', GeomInfo(start_index, num_points, name, feature_code, feature_name)]
+def write_feature_list_as_shapefile(filename, feature_list, projection, points_per_tick=1000):
+    # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
+    srs = osr.SpatialReference()
+    srs.ImportFromProj4(projection.srs)
+
+    _, ext = os.path.splitext(filename)
+    try:
+        driver_name = ext_to_driver_name[ext]
+    except KeyError:
+        raise RuntimeError(f"Unknown shapefile extension '{ext}'")
+
+    using_projection = driver_name in need_projection
+    single_shape = driver_name in shape_restriction
+
+    driver = ogr.GetDriverByName(driver_name)
+    shapefile = driver.CreateDataSource(filename)
+    log.debug(f"writing {filename}, driver={driver}, srs={srs}")
+
+    file_point_index = 0
+
+    def fill_ring(dest_ring, points, geom_info, dup_first_point=True):
+        nonlocal file_point_index
+        if geom_info.count == "boundary":
+            # using a Boundary object
+            boundary = geom_info.start_index
+            index_iter = boundary.point_indexes
+            first_index = index_iter[0]
+            if dup_first_point and boundary.is_closed:
+                dup_first_point = False
+            # temporarily shadow x & y with boundary points
+            if using_projection:
+                rx, ry = projection(boundary.points.x, boundary.points.y)
+            else:
+                rx, ry = boundary.points.x, boundary.points.y
         else:
-            item = ['Polygon', GeomInfo(start_index, num_points, name, feature_code, feature_name)]
-        feature_list.append(item)
+            if using_projection:
+                rx, ry = projection(points.x, points.y)
+            else:
+                rx, ry = points.x, points.y
+            if geom_info.count == "indexed":
+                # using a list of point indexes
+                index_iter = geom_info.start_index
+                first_index = index_iter[0]
+            else:
+                first_index = geom_info.start_index
+                index_iter = range(first_index, first_index + geom_info.count)
+        # print(first_index, geom_info.count)
+        for index in index_iter:
+            # print(index)
+            dest_ring.AddPoint(rx[index], ry[index])
 
-    progress_log.info("TICK=%d" % num_lines)
-    return feature_list
+            file_point_index += 1
+            if file_point_index % points_per_tick == 0:
+                progress_log.info("Saved %d points" % file_point_index)
+        if dup_first_point:
+            dest_ring.AddPoint(rx[first_index], ry[first_index])
+
+    last_geom_type = None
+    shapefile_layer = None
+    for feature_index, feature in enumerate(feature_list):
+        geom_type = feature[0]
+        points = feature[1]
+        if last_geom_type is None:
+            last_geom_type = geom_type
+        elif single_shape and last_geom_type != geom_type:
+            raise RuntimeError(f"Only one geometry type may be saved to a {driver_name}. Starting writing {last_geom_type}, found {geom_type}")
+        log.debug(f"writing: {geom_type}, {feature[1:]}")
+        if geom_type == "Polygon":
+            if shapefile_layer is None:
+                shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
+            poly = ogr.Geometry(ogr.wkbPolygon)
+            for geom_info in feature[2:]:
+                dest_ring = ogr.Geometry(ogr.wkbLinearRing)
+                fill_ring(dest_ring, points, geom_info)
+                poly.AddGeometry(dest_ring)
+
+            layer_defn = shapefile_layer.GetLayerDefn()
+            f = ogr.Feature(layer_defn)
+            f.SetGeometry(poly)
+            f.SetFID(feature_index)
+            shapefile_layer.CreateFeature(f)
+            f = None
+            poly = None
+        elif geom_type == "LineString":
+            if shapefile_layer is None:
+                shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbLineString)
+            poly = ogr.Geometry(ogr.wkbLineString)
+            geom_info = feature[2]
+            fill_ring(poly, points, geom_info, False)
+            layer_defn = shapefile_layer.GetLayerDefn()
+            f = ogr.Feature(layer_defn)
+            f.SetGeometry(poly)
+            f.SetFID(feature_index)
+            shapefile_layer.CreateFeature(f)
+            f = None
+            poly = None
+        elif geom_type == "Point":
+            raise RuntimeError("Points should be saved as particle layers")
+
+    # ## lets add now a second point with different coordinates:
+    # point.AddPoint(474598, 5429281)
+    # feature_index = 1
+    # feature = osgeo.ogr.Feature(layer_defn)
+    # feature.SetGeometry(point)
+    # feature.SetFID(feature_index)
+    # layer.CreateFeature(feature)
+    shapefile = None  # garbage collection = save
 
 
-def load_bna_items(uri):
-    point_list = accumulator(block_shape=(2,), dtype=np.float64)
-    feature_list = parse_bna_to_feature_list(uri, point_list)
 
-    return ("", feature_list, np.asarray(point_list))
+
+
+
+
+
+
+
 

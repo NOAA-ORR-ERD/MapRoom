@@ -7,7 +7,8 @@ import numpy as np
 from sawx.filesystem import filesystem_path
 from sawx.utils.fileutil import ExpandZip, save_to_flat_zip
 
-from maproom.library.shapefile_utils import load_shapefile, load_bna_items
+from maproom.library.shapefile_utils import load_shapefile, write_feature_list_as_shapefile
+from maproom.library.bna_utils import load_bna_items, write_feature_list_as_bna
 from maproom.layers import PolygonParentLayer
 from ..renderer import data_types
 from .common import BaseLayerLoader
@@ -110,7 +111,7 @@ class ShapefileLoader(BaseLayerLoader):
     def save_to_local_file(self, filename, layer):
         _, ext = os.path.splitext(filename)
         feature_list = layer.calc_output_feature_list()
-        write_feature_list_as_shapefile(filename, feature_list, layer.manager.project.layer_canvas.projection)
+        write_feature_list_as_shapefile(filename, feature_list, layer.manager.project.layer_canvas.projection, self.points_per_tick)
 
 
 class ZipShapefileLoader(ShapefileLoader):
@@ -144,198 +145,6 @@ class ZipShapefileLoader(ShapefileLoader):
         log.debug(f"gather_save_files: saved to zip {uri}")
 
 
-ext_to_driver_name = {
-    ".shp": "ESRI Shapefile",
-    ".json": "GeoJSON",
-    ".geojson": "GeoJSON",
-    ".kml": "KML",
-}
-
-need_projection = set(["ESRI Shapefile"])
-
-shape_restriction = set(["ESRI Shapefile"])
-
-
-def write_feature_list_as_shapefile(filename, feature_list, projection):
-    # with help from http://www.digital-geography.com/create-and-edit-shapefiles-with-python-only/
-    srs = osr.SpatialReference()
-    srs.ImportFromProj4(projection.srs)
-
-    _, ext = os.path.splitext(filename)
-    try:
-        driver_name = ext_to_driver_name[ext]
-    except KeyError:
-        raise RuntimeError(f"Unknown shapefile extension '{ext}'")
-
-    using_projection = driver_name in need_projection
-    single_shape = driver_name in shape_restriction
-
-    driver = ogr.GetDriverByName(driver_name)
-    shapefile = driver.CreateDataSource(filename)
-    log.debug(f"writing {filename}, driver={driver}, srs={srs}")
-
-    file_point_index = 0
-
-    def fill_ring(dest_ring, points, geom_info, dup_first_point=True):
-        nonlocal file_point_index
-        if geom_info.count == "boundary":
-            # using a Boundary object
-            boundary = geom_info.start_index
-            index_iter = boundary.point_indexes
-            first_index = index_iter[0]
-            if dup_first_point and boundary.is_closed:
-                dup_first_point = False
-            # temporarily shadow x & y with boundary points
-            if using_projection:
-                rx, ry = projection(boundary.points.x, boundary.points.y)
-            else:
-                rx, ry = boundary.points.x, boundary.points.y
-        else:
-            if using_projection:
-                rx, ry = projection(points.x, points.y)
-            else:
-                rx, ry = points.x, points.y
-            if geom_info.count == "indexed":
-                # using a list of point indexes
-                index_iter = geom_info.start_index
-                first_index = index_iter[0]
-            else:
-                first_index = geom_info.start_index
-                index_iter = range(first_index, first_index + geom_info.count)
-        # print(first_index, geom_info.count)
-        for index in index_iter:
-            # print(index)
-            dest_ring.AddPoint(rx[index], ry[index])
-
-            file_point_index += 1
-            if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                progress_log.info("Saved %d points" % file_point_index)
-        if dup_first_point:
-            dest_ring.AddPoint(rx[first_index], ry[first_index])
-
-    last_geom_type = None
-    shapefile_layer = None
-    for feature_index, feature in enumerate(feature_list):
-        geom_type = feature[0]
-        points = feature[1]
-        if last_geom_type is None:
-            last_geom_type = geom_type
-        elif single_shape and last_geom_type != geom_type:
-            raise RuntimeError(f"Only one geometry type may be saved to a {driver_name}. Starting writing {last_geom_type}, found {geom_type}")
-        log.debug(f"writing: {geom_type}, {feature[1:]}")
-        if geom_type == "Polygon":
-            if shapefile_layer is None:
-                shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbPolygon)
-            poly = ogr.Geometry(ogr.wkbPolygon)
-            for geom_info in feature[2:]:
-                dest_ring = ogr.Geometry(ogr.wkbLinearRing)
-                fill_ring(dest_ring, points, geom_info)
-                poly.AddGeometry(dest_ring)
-
-            layer_defn = shapefile_layer.GetLayerDefn()
-            f = ogr.Feature(layer_defn)
-            f.SetGeometry(poly)
-            f.SetFID(feature_index)
-            shapefile_layer.CreateFeature(f)
-            f = None
-            poly = None
-        elif geom_type == "LineString":
-            if shapefile_layer is None:
-                shapefile_layer = shapefile.CreateLayer("test", srs, ogr.wkbLineString)
-            poly = ogr.Geometry(ogr.wkbLineString)
-            geom_info = feature[2]
-            fill_ring(poly, points, geom_info, False)
-            layer_defn = shapefile_layer.GetLayerDefn()
-            f = ogr.Feature(layer_defn)
-            f.SetGeometry(poly)
-            f.SetFID(feature_index)
-            shapefile_layer.CreateFeature(f)
-            f = None
-            poly = None
-        elif geom_type == "Point":
-            raise RuntimeError("Points should be saved as particle layers")
-
-    # ## lets add now a second point with different coordinates:
-    # point.AddPoint(474598, 5429281)
-    # feature_index = 1
-    # feature = osgeo.ogr.Feature(layer_defn)
-    # feature.SetGeometry(point)
-    # feature.SetFID(feature_index)
-    # layer.CreateFeature(feature)
-    shapefile = None  # garbage collection = save
-
-
-def write_feature_list_as_bna(filename, feature_list, projection):
-    update_every = 1000
-    ticks = 0
-
-    def write(feature_list, fh=None):
-        file_point_index = 0
-
-        def write_poly(points, geom_info, dup_first_point=True):
-            nonlocal file_point_index
-
-            if geom_info.count == "boundary":
-                # using a Boundary object
-                boundary = geom_info.start_index
-                count = len(boundary)
-                index_iter = boundary.point_indexes
-                first_index = index_iter[0]
-                if dup_first_point and boundary.is_closed:
-                    dup_first_point = False
-                # temporarily shadow x & y with boundary points
-                rx, ry = boundary.points.x, boundary.points.y
-            else:
-                rx, ry = points.x, points.y
-                if geom_info.count == "indexed":
-                    # using a list of point indexes
-                    index_iter = geom_info.start_index
-                    count = len(index_iter)
-                    first_index = index_iter[0]
-                else:
-                    first_index = geom_info.start_index
-                    count = geom_info.count
-                    index_iter = range(first_index, first_index + count)
-            if dup_first_point:
-                count += 1  # extra point for closed polygon
-
-            if fh is None:
-                file_point_index += count
-            else:
-                fh.write(f'"{geom_info.name}","{geom_info.feature_name}", {count}\n')
-
-                # print(first_index, geom_info.count)
-                for index in index_iter:
-                    fh.write(f"{rx[index]},{ry[index]}\n")
-                    file_point_index += 1
-                    if file_point_index % BaseLayerLoader.points_per_tick == 0:
-                        progress_log.info("Saved %d points" % file_point_index)
-
-                # duplicate first point to create a closed polygon
-                if dup_first_point:
-                    fh.write(f"{rx[first_index]},{ry[first_index]}\n")
-
-        for feature_index, feature in enumerate(feature_list):
-            geom_type = feature[0]
-            points = feature[1]
-            if fh is not None:
-                log.debug(f"writing: {geom_type}, {feature[2:]}")
-            if geom_type == "Polygon":
-                for geom_info in feature[2:]:
-                    write_poly(points, geom_info)
-            else:
-                geom_info = feature[2]
-                write_poly(points, geom_info, False)
-
-        return file_point_index
-
-    total = write(feature_list)
-    progress_log.info(f"TICKS={total}")
-    progress_log.info("Saving BNA...")
-    with open(filename, "w") as fh:
-        write(feature_list, fh)
-
-
 class BNAShapefileLoader(ShapefileLoader):
     mime = "application/x-maproom-bna"
 
@@ -351,7 +160,7 @@ class BNAShapefileLoader(ShapefileLoader):
     def save_to_local_file(self, filename, layer):
         # write_rings_as_bna(filename, layer, layer.points, layer.rings, layer.point_adjacency_array, layer.manager.project.layer_canvas.projection)
         feature_list = layer.calc_output_feature_list()
-        write_feature_list_as_bna(filename, feature_list, layer.manager.project.layer_canvas.projection)
+        write_feature_list_as_bna(filename, feature_list, layer.manager.project.layer_canvas.projection, self.points_per_tick)
 
 
 if __name__ == "__main__":
