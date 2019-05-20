@@ -4,6 +4,9 @@ from sawx.filesystem import fsopen as open
 
 import numpy as np
 
+from .accumulator import accumulator
+from .shapefile_utils import GeomInfo
+
 import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
