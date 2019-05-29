@@ -200,6 +200,7 @@ class ProjectEditor(SawxEditor):
                 "garbage_objects",
                 "raise_exception",
                 "test_progress",
+                "show_focus",
             ],
         ],
     ]
