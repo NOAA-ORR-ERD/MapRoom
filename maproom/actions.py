@@ -940,8 +940,32 @@ class delete_polygon(SawxAction):
 
     def perform(self, action_key):
         d = self.popup_data
-        cmd = mec.DeletePolygonCommand(d['layer'], d['object_type'], d['object_index'])
-        self.editor.process_command(cmd)
+        layer = d['layer']
+        editor = self.editor
+        lm = editor.layer_manager
+        feature_code = layer.get_feature_code(d['object_index'])
+
+        # set up transient edit layer to give visual feedback of which polygon
+        # is going to be deleted. The ring edit layer won't actually be
+        # rendered, but it will trigger the rendering to display the polygon
+        # with a dashed-line border.
+        p = layers.RingEditLayer(lm, layer, d['object_type'], feature_code)
+        geom, feature_code = layer.get_geometry_from_object_index(d['object_index'], 0, 0)
+        p.set_data_from_geometry(geom, d['object_index'])
+        lm.replace_transient_layer(p, editor, after=layer)
+        editor.refresh()
+        wx.CallAfter(self.confirm_delete)
+
+    def confirm_delete(self):
+        d = self.popup_data
+        editor = self.editor
+        confirm = editor.frame.confirm(message=f'Delete polygon {d["object_index"]}?', title='Delete Polygon?')
+        editor.layer_manager.remove_transient_layer()
+        if confirm:
+            cmd = mec.DeletePolygonCommand(d['layer'], d['object_type'], d['object_index'])
+            editor.process_command(cmd)
+        else:
+            editor.refresh()
 
 
 class simplify_polygon(SawxAction):
