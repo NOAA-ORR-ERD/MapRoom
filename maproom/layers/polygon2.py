@@ -278,12 +278,13 @@ class PolygonParentLayer(PointLayer):
         self.create_rings()
 
     def get_undo_info(self):
-        return (self.copy_points(), self.ring_adjacency.copy())
+        return (self.copy_points(), self.ring_adjacency.copy(), self.geometry_list.copy())
 
     def restore_undo_info(self, info):
         self.points = info[0]
         self.update_bounds()
         self.ring_adjacency = info[1]
+        self.geometry_list = info[2]
         self.create_rings()
         self.rebuild_needed = True
 
