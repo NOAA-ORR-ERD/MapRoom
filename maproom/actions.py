@@ -49,12 +49,10 @@ class new_project(SawxAction):
     """ An action for creating a new empty file that can be edited by a particular task
     """
     name = 'New Default Project'
+    icon = 'add-file'
     tooltip = 'Open a new copy of the default project'
 
     template = None
-
-    def calc_icon_name(self, action_key):
-        return 'new_file'
 
     def perform(self, action_key):
         template = self.template if self.template is not None else wx.GetApp().default_uri
@@ -75,25 +73,17 @@ class save_project(save_file):
     tooltip = 'Save the current project'
     ext_list = [("MapRoom Project Files", ".maproom")]
 
-    def calc_icon_name(self, action_key):
-        return "save_file"
-
 
 class save_project_as(save_as):
     name = 'Save Project As...'
+    icon = 'save_as'
     tooltip = 'Save the current project with a new name'
     ext_list = [("MapRoom Project Files", ".maproom")]
-
-    def calc_icon_name(self, action_key):
-        return "save_as"
 
 
 class save_project_template(SawxAction):
     name = 'Save Project as Template...'
     tooltip = 'Save the current project as a template that can be reused'
-
-    def calc_icon_name(self, action_key):
-        return 'file_save_as'
 
     def perform(self, action_key):
         name = self.editor.frame.prompt("Enter name for this template", "Save Project as Template", self.editor.layer_manager.root_name)
@@ -284,6 +274,7 @@ class zoom_out(SawxAction):
 
 class zoom_to_fit(SawxAction):
     name = 'Zoom to Fit'
+    icon = 'expand'
     tooltip = 'Set magnification to show all layers'
 
     def perform(self, action_key):
@@ -295,6 +286,7 @@ class zoom_to_fit(SawxAction):
 
 class zoom_to_layer(LayerAction):
     name = 'Zoom to Layer'
+    icon = 'collapse'
     tooltip = 'Set magnification to show current layer'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -384,6 +376,7 @@ class new_rnc_layer(SawxAction):
 
 class delete_layer(LayerAction):
     name = 'Delete Layer'
+    icon = 'remove-image'
     tooltip = 'Remove the layer from the project'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -395,6 +388,7 @@ class delete_layer(LayerAction):
 
 class raise_layer(LayerAction):
     name = 'Raise Layer'
+    icon = 'chevron-up'
     tooltip = 'Move layer up in the stacking order'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -406,6 +400,7 @@ class raise_layer(LayerAction):
 
 class raise_to_top(LayerAction):
     name = 'Raise Layer To Top'
+    icon = 'double-up'
     tooltip = 'Move layer to the top'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -417,6 +412,7 @@ class raise_to_top(LayerAction):
 
 class lower_to_bottom(LayerAction):
     name = 'Lower Layer To Bottom'
+    icon = 'double-down'
     tooltip = 'Move layer to the bottom'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -428,6 +424,7 @@ class lower_to_bottom(LayerAction):
 
 class lower_layer(LayerAction):
     name = 'Lower Layer'
+    icon = 'chevron-down'
     tooltip = 'Move layer down in the stacking order'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -439,6 +436,7 @@ class lower_layer(LayerAction):
 
 class triangulate_layer(LayerAction):
     name = 'Triangulate Layer'
+    icon = 'triangle'
     tooltip = 'Create triangular mesh'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -590,7 +588,7 @@ class merge_points(LayerAction):
 
 class jump_to_coords(SawxAction):
     name = 'Jump to Coordinates'
-    
+    icon = 'kangaroo'
     tooltip = 'Center the screen on the specified coordinates'
 
     def perform(self, action_key):
@@ -599,6 +597,7 @@ class jump_to_coords(SawxAction):
 
 class clear_selection(LayerAction):
     name = 'Clear Selection'
+    icon = 'select-none'
     tooltip = 'Deselects all selected items in the current layer'
 
     def is_enabled_for_layer(self, action_key, layer):
@@ -610,6 +609,7 @@ class clear_selection(LayerAction):
 
 class delete_selection(LayerAction):
     name = 'Delete Selection'
+    icon = 'trash-can'
     tooltip = 'Deletes the selected items in the current layer'
 
     def is_enabled_for_layer(self, action_key, layer):

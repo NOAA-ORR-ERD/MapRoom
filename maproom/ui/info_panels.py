@@ -162,9 +162,9 @@ class BooleanLabelField(SimplePropertyField):
     def create_extra_controls(self):
         b = buttons.GenBitmapToggleButton(self.parent, -1, None, style=wx.BORDER_NONE | wx.BU_EXACTFIT)  # BU_EXACTFIT removes padding
         b.Bind(wx.EVT_BUTTON, self.on_toggled)
-        bitmap = art.find_bitmap('eye-closed')
+        bitmap = art.find_bitmap('closed-eye')
         b.SetBitmapLabel(bitmap)
-        bitmap = art.find_bitmap('eye-open')
+        bitmap = art.find_bitmap('eye')
         b.SetBitmapSelected(bitmap)
         b.SetInitialSize()
         self.toggle = b

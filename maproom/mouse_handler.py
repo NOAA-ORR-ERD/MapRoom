@@ -592,7 +592,7 @@ class MouseHandler(object):
 class PanMode(MouseHandler):
     """Mouse mode to pan the viewport
     """
-    icon = "pan"
+    icon = "hand"
     menu_item_name = "Pan Mode"
     menu_item_tooltip = "Scroll the viewport by holding down the mouse"
     editor_trait_for_enabled = ""
@@ -619,7 +619,7 @@ class PanMode(MouseHandler):
 class RNCSelectionMode(PanMode):
     """Mouse mode to pan the viewport
     """
-    icon = "select"
+    icon = "cursor"
     menu_item_name = "RNC Chart Selection Mode"
     menu_item_tooltip = "Select an RNC chart to download"
     editor_trait_for_enabled = ""
@@ -703,7 +703,7 @@ class RNCSelectionMode(PanMode):
 class PolygonSelectionMode(RNCSelectionMode):
     """Mouse mode to select rings
     """
-    icon = "select"
+    icon = "cursor"
     menu_item_name = "Polygon Selection Mode"
     menu_item_tooltip = "Select a polygon"
     editor_trait_for_enabled = ""
@@ -735,7 +735,7 @@ class SelectionMode(MouseHandler):
 
     This is a precursor to an object-based control system of mouse modes
     """
-    icon = "select"
+    icon = "cursor"
     toolbar_group = "select"
 
     def get_cursor(self):
@@ -951,7 +951,7 @@ class PointSelectionMode(ObjectSelectionMode):
     """Combo of PanMode and PointEdit mode, but only allowing points/lines
     to be selected and moved, not added to or deleted.
     """
-    icon = "select"
+    icon = "cursor"
     menu_item_name = "Point Selection Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1066,7 +1066,7 @@ class PointSelectionMode(ObjectSelectionMode):
 
 
 class PointEditMode(PointSelectionMode):
-    icon = "add_points"
+    icon = "points"
     menu_item_name = "Point Edit Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1126,7 +1126,7 @@ class PointEditMode(PointSelectionMode):
 
 
 class LineEditMode(PointEditMode):
-    icon = "add_lines"
+    icon = "polyline"
     menu_item_name = "Line Edit Mode"
     menu_item_tooltip = "Edit and add lines in the current layer"
     editor_trait_for_enabled = "layer_has_points"
@@ -1316,7 +1316,7 @@ class RulerMode(RectSelectMode):
 
 
 class ZoomRectMode(RectSelectMode):
-    icon = "zoom_box"
+    icon = "zoom-to-extents"
     menu_item_name = "Zoom Mode"
     menu_item_tooltip = "Zoom in to increase magnification of the current layer"
     toolbar_group = "view"
@@ -1352,7 +1352,7 @@ class CropRectMode(RectSelectMode):
 
 
 class ControlPointEditMode(ObjectSelectionMode):
-    icon = "select"
+    icon = "cursor"
     menu_item_name = "Control Point Edit Mode"
     menu_item_tooltip = "Select objects and move control points in the current layer"
 
@@ -1438,7 +1438,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
 
 
 class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_text"
+    icon = "text"
     menu_item_name = "Add Text"
     menu_item_tooltip = "Add a new text overlay"
     vector_object_command = voc.AddTextCommand
@@ -1455,21 +1455,21 @@ class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_square"
+    icon = "rectangular"
     menu_item_name = "Add Rectangle"
     menu_item_tooltip = "Add a new rectangle or square"
     vector_object_command = voc.DrawRectangleCommand
 
 
 class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_ellipse"
+    icon = "oval"
     menu_item_name = "Add Ellipse"
     menu_item_tooltip = "Add a new ellipse or circle"
     vector_object_command = voc.DrawEllipseCommand
 
 
 class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_arrow_text"
+    icon = "arrow-text"
     menu_item_name = "Add Arrow/Text Box"
     menu_item_tooltip = "Add a new arrow and text box combo object"
     vector_object_command = voc.DrawArrowTextBoxCommand
@@ -1487,14 +1487,14 @@ class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddArrowTextIconMode(AddArrowTextMode):
-    icon = "shape_arrow_text_icon"
+    icon = "arrow-text-icon"
     menu_item_name = "Add Arrow/Text/Icon Box"
     menu_item_tooltip = "Add a new arrow/text box/icon combo object"
     vector_object_command = voc.DrawArrowTextIconCommand
 
 
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_circle"
+    icon = "filled-circle"
     menu_item_name = "Add Circle"
     menu_item_tooltip = "Add a new circle from center point"
     vector_object_command = voc.DrawCircleCommand
@@ -1523,7 +1523,7 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddLineMode(AddVectorObjectByBoundingBoxMode):
-    icon = "shape_line"
+    icon = "line"
     menu_item_name = "Add Line"
     menu_item_tooltip = "Add a new line"
     vector_object_command = voc.DrawLineCommand
@@ -1545,7 +1545,7 @@ class AddLineMode(AddVectorObjectByBoundingBoxMode):
 
 
 class AddPolylineMode(MouseHandler):
-    icon = "shape_polyline"
+    icon = "polyline"
     menu_item_name = "Add Polyline"
     menu_item_tooltip = "Add a new polyline"
     vector_object_command = voc.DrawPolylineCommand
@@ -1625,7 +1625,7 @@ class AddPolylineMode(MouseHandler):
 
 
 class AddPolygonMode(AddPolylineMode):
-    icon = "shape_polygon"
+    icon = "polygon"
     menu_item_name = "Add Polygon"
     menu_item_tooltip = "Add a new polygon"
     vector_object_command = voc.DrawPolygonCommand
@@ -1665,7 +1665,7 @@ class AddOverlayMode(MouseHandler):
 
 
 class AddOverlayIconMode(AddOverlayMode):
-    icon = "shape_icon"
+    icon = "map-pin"
     menu_item_name = "Add Icon"
     menu_item_tooltip = "Add a new Marplot icon"
     vector_object_command = voc.AddIconCommand
@@ -1675,7 +1675,7 @@ class StickySelectionMode(SelectionMode):
     """Handler for objects that are stuck to the screen; that is, operate
     in screen coordinates, not world coordinates.
     """
-    icon = "select"
+    icon = "cursor"
     toolbar_group = "select"
 
     def process_mouse_motion_with_selection(self, event):
