@@ -82,15 +82,12 @@ class MapRoomApp(SawxApp):
     app_name = "MapRoom"
     app_version = __version__
     app_description = "High-performance 2d mapping"
+    app_author = "NOAA OR&R Emergency Response Division<br>"
     app_icon = "icon://maproom.ico"
-    app_website = "http://www.noaa.gov"
+    app_website = "https://response.restoration.noaa.gov/"
     default_uri = "template://default_project.maproom"
-    about_image = "icon://maproom_large.png"
-    about_html = f"""<h2>{SawxApp.app_name} {SawxApp.app_version}</h2>
-
-<h3>{SawxApp.app_description}</h3>
-
-<p><img src="{SawxApp.about_image}">"""
+    about_dialog_image = "maproom_large"
+    about_dialog_image_credits = ""
 
     def shutdown_subprocesses(self):
         from maproom.servers import stop_threaded_processing
