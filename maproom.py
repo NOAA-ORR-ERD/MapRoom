@@ -88,6 +88,7 @@ class MapRoomApp(SawxApp):
     default_uri = "template://default_project.maproom"
     about_dialog_image = "maproom_large"
     about_dialog_image_credits = ""
+    show_progress_bar_on_load = True
 
     def shutdown_subprocesses(self):
         from maproom.servers import stop_threaded_processing
