@@ -121,6 +121,10 @@ class LayerManager(SawxDocument):
 
     ##### destruction
 
+    def prepare_destroy(self):
+        if self.zip_file_source:
+            self.zip_file_source.cleanup()
+
     def destroy(self):
         # fixme: why do layers need a destroy() method???
         for layer in self.flatten():
@@ -1192,7 +1196,6 @@ class LayerManager(SawxDocument):
 
         self.load_extra_json_attrs(extra_json, batch_flags)
         self.zip_file_source = expanded_zip
-        self.add_cleanup_function(functools.partial(expanded_zip.cleanup))
         return order, extra_json
 
     def restore_layer_relationships_after_load(self):
