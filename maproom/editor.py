@@ -721,6 +721,9 @@ class ProjectEditor(SawxEditor):
         self.points_list = panes.PointsList(panel, self, size=(200, 800))
         panel.add(self.points_list, "points_list", wx.RIGHT, sidebar=True, use_close_button=False)
 
+        self.polygon_list = panes.PolygonList(panel, self, size=(200, 800))
+        panel.add(self.polygon_list, "polygon_list", wx.RIGHT, sidebar=True, use_close_button=False)
+
         self.timeline = panes.TimelinePlaybackPanel(panel, self)
         panel.add_footer(self.timeline)
         log.debug("Clearing timeline")

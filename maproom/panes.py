@@ -603,21 +603,16 @@ class MarkdownHelpPane(HtmlHelpPane):
     """
 
 
-class PointsTable(cg.VirtualTable):
-    column_labels = ["Longitude", "Latitude"]
-    column_sizes = [16, 16]
+# Layer debugging info panels
+
+class LayerInfoTable(cg.VirtualTable):
+    column_labels = []
+    column_sizes = []
 
     def __init__(self, layer):
         self.layer = layer
         self.current_num_rows = 0
         cg.VirtualTable.__init__(self, len(self.column_labels), 0)
-
-    def calc_num_rows(self):
-        try:
-            num = len(self.layer.points)
-        except AttributeError:
-            num = 0
-        return num
 
     def calc_last_valid_index(self):
         size = self.current_num_rows * self.items_per_row
@@ -635,14 +630,13 @@ class PointsTable(cg.VirtualTable):
     def calc_row_label_width(self, view_params):
         return view_params.calc_text_width("8" * len(str(int(self.num_rows))))
 
+    def calc_cell_value(self, row, col, index):
+        raise NotImplementedError
+
     def get_value_style(self, row, col):
         index, _ = self.get_index_range(row, col)
         try:
-            if col == 0:
-                text = self.layer.points.x[row]
-            else:
-                text = self.layer.points.y[row]
-            text = str(text)
+            text = str(self.calc_cell_value(row, col, index))
         except IndexError:
             text = f"{row}"
         try:
@@ -655,12 +649,18 @@ class PointsTable(cg.VirtualTable):
         self.layer = layer
         self.init_boundaries()
 
-class PointsList(cg.CompactGrid):
+
+class LayerInfoList(cg.CompactGrid):
+    ui_name = "Layer Info"
+
     def __init__(self, parent, editor, **kwargs):
         self.editor = editor
-        table = PointsTable(None)
-        cg.CompactGrid.__init__(self, table, editor.preferences, None, None, parent, size=(-1,800), name="Points")
+        table = self.calc_table(None)
+        cg.CompactGrid.__init__(self, table, editor.preferences, None, None, parent, size=(-1,800), name=self.ui_name)
         editor.layer_tree_control.current_layer_changed_event += self.on_current_layer_changed
+
+    def calc_table(self, layer):
+        raise NotImplementedError
 
     def calc_line_renderer(self):
         return cg.VirtualTableLineRenderer(self, 1, widths=self.table.column_sizes, col_labels=self.table.column_labels)
@@ -675,7 +675,7 @@ class PointsList(cg.CompactGrid):
         self.process_index(index)
 
     def process_index(self, index):
-        self.editor.layer_canvas.do_center_on_point_index(self.table.layer, index)
+        pass
 
     def recalc_view(self):
         log.debug(f"recalc_view: {self}")
@@ -691,3 +691,65 @@ class PointsList(cg.CompactGrid):
                 cg.CompactGrid.refresh_view(self)
         else:
             log.debug("skipping refresh of hidden %s" % self)
+
+
+class PointsTable(LayerInfoTable):
+    column_labels = ["Longitude", "Latitude"]
+    column_sizes = [16, 16]
+
+    def calc_num_rows(self):
+        try:
+            num = len(self.layer.points)
+        except AttributeError:
+            num = 0
+        return num
+
+    def calc_cell_value(self, row, col, index):
+        if col == 0:
+            text = self.layer.points.x[row]
+        else:
+            text = self.layer.points.y[row]
+        return text
+
+
+class PointsList(LayerInfoList):
+    ui_name = "Points"
+
+    def calc_table(self, layer):
+        return PointsTable(layer)
+
+    def process_index(self, index):
+        self.editor.layer_canvas.do_center_on_point_index(self.table.layer, index)
+
+
+class PolygonTable(LayerInfoTable):
+    column_labels = ["^Name", "^Start", "^Count", "^Code", "^Name"]
+    column_sizes = [12, 5, 5, 4, 12]
+
+    def calc_num_rows(self):
+        try:
+            num = len(self.layer.geometry_list)
+        except AttributeError:
+            num = 0
+        return num
+
+    def calc_cell_value(self, row, col, index):
+        geom_info = self.layer.geometry_list[row]
+        if col == 0:
+            val = geom_info.name
+        elif col == 1:
+            val = geom_info.start_index
+        elif col == 2:
+            val = geom_info.count
+        elif col == 3:
+            val = geom_info.feature_code
+        else:
+            val = geom_info.feature_name
+        return val
+
+
+class PolygonList(LayerInfoList):
+    ui_name = "Polygons"
+
+    def calc_table(self, layer):
+        return PolygonTable(None)
