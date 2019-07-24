@@ -1,3 +1,4 @@
+import numpy as np
 
 import wx
 
@@ -98,6 +99,14 @@ class LayerCanvas(renderer.ScreenCanvas):
         if layer.has_points():
             lat_lon = layer.points[index].x, layer.points[index].y
             self.projected_point_center = self.get_projected_point_from_world_point(lat_lon)
+            self.project.refresh()
+
+    def do_center_on_points(self, layer, start_index, count):
+        if layer.has_points():
+            last_index = start_index + count
+            lat = np.sum(layer.points[start_index:last_index].x) / count
+            lon = np.sum(layer.points[start_index:last_index].y) / count
+            self.projected_point_center = self.get_projected_point_from_world_point((lat, lon))
             self.project.refresh()
 
     def do_select_points(self, layer, indexes):

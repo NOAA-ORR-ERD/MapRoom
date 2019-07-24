@@ -671,10 +671,9 @@ class LayerInfoList(cg.CompactGrid):
         self.recalc_view()
 
     def send_caret_event(self, flags):
-        index = self.caret_handler.current.rc[0]
-        self.process_index(index)
+        self.process_item(*self.caret_handler.current.rc)
 
-    def process_index(self, index):
+    def process_item(self, row, col):
         pass
 
     def recalc_view(self):
@@ -718,12 +717,12 @@ class PointsList(LayerInfoList):
     def calc_table(self, layer):
         return PointsTable(layer)
 
-    def process_index(self, index):
-        self.editor.layer_canvas.do_center_on_point_index(self.table.layer, index)
+    def process_item(self, row, col):
+        self.editor.layer_canvas.do_center_on_point_index(self.table.layer, row)
 
 
 class PolygonTable(LayerInfoTable):
-    column_labels = ["^Name", "^Start", "^Count", "^Code", "^Name"]
+    column_labels = ["^Name", "^Start", "^Count", "^Code", "^Feature Name"]
     column_sizes = [12, 5, 5, 4, 12]
 
     def calc_num_rows(self):
@@ -753,3 +752,13 @@ class PolygonList(LayerInfoList):
 
     def calc_table(self, layer):
         return PolygonTable(None)
+
+    def process_item(self, row, col):
+        try:
+            geom_info = self.table.layer.geometry_list[row]
+        except AttributeError:
+            pass
+        except IndexError:
+            pass
+        else:
+            self.editor.layer_canvas.do_center_on_points(self.table.layer, geom_info.start_index, geom_info.count)
