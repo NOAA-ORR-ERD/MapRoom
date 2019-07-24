@@ -627,7 +627,8 @@ class PointsTable(cg.VirtualTable):
     def get_label_at_index(self, index):
         return (index // self.items_per_row)
 
-    def get_row_label_text(self, start_line, last_line, step=1):
+    def get_row_label_text(self, start_line, num_lines, step=1):
+        last_line = min(start_line + num_lines, self.num_rows)
         for line in range(start_line, last_line, step):
             yield str(int(line))
 
@@ -690,10 +691,3 @@ class PointsList(cg.CompactGrid):
                 cg.CompactGrid.refresh_view(self)
         else:
             log.debug("skipping refresh of hidden %s" % self)
-
-    def activateSpringTab(self):
-        self.refresh_view()
-
-    def get_notification_count(self):
-        self.refresh_view()
-        return self.num_active
