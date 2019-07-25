@@ -97,6 +97,7 @@ def parse_bna_to_feature_list(uri, points_accumulator):
     num_lines = len(lines)
     progress_log.info("TICKS=%d" % num_lines)
     progress_log.info("Loading BNA...")
+    found_map_bounds = False
     while True:
         if (i >= num_lines):
             break
@@ -117,7 +118,12 @@ def parse_bna_to_feature_list(uri, points_accumulator):
             feature_code = 0
         name = pieces[0].strip('" ,')
         if name.lower() in ['map bounds', 'mapbounds']:
-            feature_code = 4
+            if found_map_bounds:
+                name = 'unknown'
+            else:
+                name = 'Map Bounds'
+                feature_code = 4
+                found_map_bounds = True
         elif name.lower() in ['spillable area', 'spillablearea']:
             feature_code = 5
         feature_name = pieces[1].strip('" ,')
