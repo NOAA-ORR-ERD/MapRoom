@@ -462,13 +462,13 @@ def prompt_for_tile(parent, title, default=None):
 
 class SimplifyDialog(sc.SizedDialog):
 
-    def __init__(self, project, layer, obj_type, obj_index, initial_ratio=1.0):
+    def __init__(self, project, layer, picker_type, obj_index, initial_ratio=1.0):
         sc.SizedDialog.__init__(self, project.control, wx.ID_ANY, "Simplify Polygon")
 
         self.project = project
         self.layer = layer
         self.obj_index = obj_index
-        self.obj_type = obj_type
+        self.picker_type = picker_type
 
         panel = self.GetContentsPane()
         wx.StaticText(panel, -1, "Simplification Ratio\n\nFewest segments                                                                          Most segments")
@@ -491,7 +491,7 @@ class SimplifyDialog(sc.SizedDialog):
         self.have_processed = False
 
     def on_slider(self, evt):
-        cmd = mec.SimplifyPolygonCommand(self.layer, self.obj_type, self.obj_index, self.simplifier, self.slider.Value)
+        cmd = mec.SimplifyPolygonCommand(self.layer, self.picker_type, self.obj_index, self.simplifier, self.slider.Value)
         self.project.process_command(cmd)
         self.have_processed = True
 

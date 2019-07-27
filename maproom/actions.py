@@ -895,7 +895,7 @@ class edit_layer(SawxAction):
         d = self.popup_data
         layer = d['layer']
         feature_code = layer.get_feature_code(d['object_index'])
-        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=feature_code, new_boundary=False)
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['picker_type'], d['object_index'], feature_code=feature_code, new_boundary=False)
         self.editor.process_command(cmd)
 
 
@@ -905,7 +905,7 @@ class add_polygon_to_edit_layer(SawxAction):
 
     def perform(self, action_key):
         d = self.popup_data
-        cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['object_type'], d['object_index'], 1, False)
+        cmd = mec.AddPolygonToEditLayerCommand(d['layer'], d['picker_type'], d['object_index'], 1, False)
         self.editor.process_command(cmd)
 
 
@@ -920,7 +920,7 @@ class add_polygon_boundary(SawxAction):
             feature_code = layer.get_feature_code(d['object_index'])
         except IndexError:
             feature_code = 1
-        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=feature_code, new_boundary=True)
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['picker_type'], d['object_index'], feature_code=feature_code, new_boundary=True)
         self.editor.process_command(cmd)
 
 
@@ -930,8 +930,43 @@ class add_polygon_hole(SawxAction):
 
     def perform(self, action_key):
         d = self.popup_data
-        cmd = mec.PolygonEditLayerCommand(d['layer'], d['object_type'], d['object_index'], feature_code=-1, new_boundary=True)
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['picker_type'], d['object_index'], feature_code=-1, new_boundary=True)
         self.editor.process_command(cmd)
+
+
+class add_map_bounds(SawxAction):
+    name = 'Add Map Bounds'
+    tooltip = 'Add the "Map Bounds" bounding polygon'
+
+    def perform(self, action_key):
+        d = self.popup_data
+        layer = d['layer']
+        try:
+            object_index = layer.find_map_bounds_index()
+            new_boundary = False
+        except KeyError:
+            object_index = None
+            new_boundary = True
+        feature_code = 4
+        cmd = mec.PolygonEditLayerCommand(d['layer'], d['picker_type'], object_index, feature_code=feature_code, new_boundary=new_boundary)
+        self.editor.process_command(cmd)
+
+
+class edit_map_bounds(SawxAction):
+    name = 'Edit Map Bounds'
+    tooltip = 'Edit the "Map Bounds" bounding polygon'
+
+    def perform(self, action_key):
+        d = self.popup_data
+        layer = d['layer']
+        try:
+            object_index = layer.find_map_bounds_index()
+        except KeyError:
+            log.error("No map boundary defined")
+        else:
+            feature_code = 4
+            cmd = mec.PolygonEditLayerCommand(d['layer'], d['picker_type'], object_index, feature_code=feature_code, new_boundary=False)
+            self.editor.process_command(cmd)
 
 
 class delete_polygon(SawxAction):
@@ -949,7 +984,7 @@ class delete_polygon(SawxAction):
         # is going to be deleted. The ring edit layer won't actually be
         # rendered, but it will trigger the rendering to display the polygon
         # with a dashed-line border.
-        p = layers.RingEditLayer(lm, layer, d['object_type'], feature_code)
+        p = layers.RingEditLayer(lm, layer, d['picker_type'], feature_code)
         geom, feature_code = layer.get_geometry_from_object_index(d['object_index'], 0, 0)
         p.set_data_from_geometry(geom, d['object_index'])
         lm.replace_transient_layer(p, editor, after=layer)
@@ -962,7 +997,7 @@ class delete_polygon(SawxAction):
         confirm = editor.frame.confirm(message=f'Delete polygon {d["object_index"]}?', title='Delete Polygon?')
         editor.layer_manager.remove_transient_layer()
         if confirm:
-            cmd = mec.DeletePolygonCommand(d['layer'], d['object_type'], d['object_index'])
+            cmd = mec.DeletePolygonCommand(d['layer'], d['picker_type'], d['object_index'])
             editor.process_command(cmd)
         else:
             editor.refresh()
@@ -974,7 +1009,7 @@ class simplify_polygon(SawxAction):
 
     def perform(self, action_key):
         d = self.popup_data
-        dlg = SimplifyDialog(self.editor, d['layer'], d['object_type'], d['object_index'])
+        dlg = SimplifyDialog(self.editor, d['layer'], d['picker_type'], d['object_index'])
         if dlg.ShowModal() != wx.ID_OK:
             dlg.roll_back()
 

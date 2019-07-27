@@ -184,6 +184,7 @@ def compute_rings(point_list, feature_list, feature_code_to_color):
     ring_adjacency = make_ring_adjacency_array(len(point_list))
     geometry_list = []
     default_color = feature_code_to_color.get("default", 0x12345678)
+    has_map_bounds = False
     for geom_type, item in iter_geom(feature_list):
         log.debug(f"Adding geometry {item}")
         geometry_list.append(item)
@@ -194,4 +195,6 @@ def compute_rings(point_list, feature_list, feature_code_to_color):
             ring_adjacency[item.start_index + 1]['state'] = item.feature_code
         if item.count > 2:
             ring_adjacency[item.start_index + 2]['state'] = feature_code_to_color.get(item.feature_code, default_color)
-    return geometry_list, ring_adjacency
+        if item.name == "Map Bounds":
+            has_map_bounds = True
+    return geometry_list, ring_adjacency, has_map_bounds

@@ -133,18 +133,18 @@ class Layer:
         """Test routine to compare layers"""
         return self.type == other.type
 
-    def clickable_object_info(self, picker, object_type, object_index):
+    def clickable_object_info(self, picker, picker_type, object_index):
         """Return info about the object of given type and index.
 
         Typically used to show information about the object under the cursor
         """
-        if picker.is_ugrid_point_type(object_type):
+        if picker.is_ugrid_point_type(picker_type):
             info = self.point_object_info(object_index)
             long_info = self.point_object_long_info(object_index)
-        elif picker.is_ugrid_line_type(object_type):
+        elif picker.is_ugrid_line_type(picker_type):
             info = self.line_object_info(object_index)
             long_info = self.line_object_long_info(object_index)
-        elif picker.is_interior_type(object_type):
+        elif picker.is_interior_type(picker_type):
             info = self.interior_object_info(object_index)
             long_info = self.interior_object_long_info(object_index)
         else:
@@ -712,10 +712,10 @@ class Layer:
     def crop_rectangle(self, world_rect):
         raise NotImplementedError
 
-    def can_highlight_clickable_object(self, canvas, object_type, object_index):
+    def can_highlight_clickable_object(self, canvas, picker_type, object_index):
         return False
 
-    def get_highlight_lines(self, object_type, object_index):
+    def get_highlight_lines(self, picker_type, object_index):
         return []
 
     def subset_using_logical_operation(self, operation):
@@ -774,7 +774,7 @@ class Layer:
 
     ##### User interface
 
-    def calc_context_menu_desc(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, picker_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """

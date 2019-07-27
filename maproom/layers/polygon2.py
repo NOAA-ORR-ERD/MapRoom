@@ -39,12 +39,13 @@ class RingEditLayer(LineLayer):
 
     transient_edit_layer = True
 
-    def __init__(self, manager, parent_layer, object_type, feature_code, ring_index_of_hole_parent=None):
+    def __init__(self, manager, parent_layer, picker_type, new_layer_name, feature_code, ring_index_of_hole_parent=None):
         """NOTE: feature_code applies to all polygons being edited
         """
         super().__init__(manager)
         self.parent_layer = parent_layer
-        self.object_type = object_type
+        self.picker_type = picker_type
+        self.new_layer_name = new_layer_name
         self.feature_code = feature_code
         self.ring_fill_color = 0
         self.ring_indexes = []
@@ -56,6 +57,11 @@ class RingEditLayer(LineLayer):
         style.line_color = style.default_highlight_color
         log.debug("calc_initial_style for %s: %s" % (self.type, str(style)))
         return style
+
+    @property
+    def pretty_name(self):
+        prefix = "Editing "
+        return prefix + self.new_layer_name
 
     @property
     def area(self):
@@ -148,7 +154,7 @@ class RingEditLayer(LineLayer):
 
     ##### User interface
 
-    def calc_context_menu_desc(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, picker_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
@@ -156,7 +162,7 @@ class RingEditLayer(LineLayer):
 
         desc = ["save_ring_edit", "cancel_ring_edit"]
         if object_index is not None:
-            log.debug(f"object type {object_type} index {object_index}")
+            log.debug(f"object type {picker_type} index {object_index}")
             if not self.parent_layer.is_hole(object_index) and object_index not in self.ring_indexes:
                 _, _, count, _, feature_code, _ = self.parent_layer.get_ring_state(object_index)
                 desc.extend([None, "add_polygon_to_edit_layer"])
@@ -185,8 +191,9 @@ class PolygonParentLayer(PointLayer):
     def __init__(self, manager):
         super().__init__(manager)
         self.rebuild_needed = False
+        self.has_map_bounds = False
         self.geometry_list = []
-        _, ring_adjacency = data_types.compute_rings([], [], feature_code_to_color)
+        _, ring_adjacency, _ = data_types.compute_rings([], [], feature_code_to_color)
         self.ring_adjacency = ring_adjacency
         self.rings = []
         self.point_adjacency_array = data_types.make_point_adjacency_array(0)
@@ -287,6 +294,13 @@ class PolygonParentLayer(PointLayer):
         self.geometry_list = info[2]
         self.create_rings()
         self.rebuild_needed = True
+
+    def find_map_bounds_index(self):
+        for i, g in enumerate(self.geometry_list):
+            if g.name == "Map Bounds":
+                return i
+        else:
+            raise KeyError("No map bounds")
 
     def get_ring_start_end(self, ring_index):
         r = self.rings[ring_index]
@@ -473,7 +487,7 @@ class PolygonParentLayer(PointLayer):
     def set_geometry(self, point_list, feature_list):
         self.set_data(point_list)
         log.debug(f"points {self.points}")
-        self.geometry_list, self.ring_adjacency = data_types.compute_rings(point_list, feature_list, feature_code_to_color)
+        self.geometry_list, self.ring_adjacency, self.has_map_bounds = data_types.compute_rings(point_list, feature_list, feature_code_to_color)
         log.debug(f"adjacency {self.ring_adjacency}")
         self.create_rings()
 
@@ -660,7 +674,7 @@ class PolygonParentLayer(PointLayer):
 
     ##### User interface
 
-    def calc_context_menu_desc(self, object_type, object_index, world_point):
+    def calc_context_menu_desc(self, picker_type, object_index, world_point):
         """Return actions that are appropriate when the right mouse button
         context menu is displayed over a particular object within the layer.
         """
@@ -669,7 +683,7 @@ class PolygonParentLayer(PointLayer):
         desc = []
         if object_index is not None:
             desc = ["edit_layer"]
-            log.debug(f"object type {object_type} index {object_index}")
+            log.debug(f"object type {picker_type} index {object_index}")
             _, _, count, _, feature_code, _ = self.get_ring_state(object_index)
             if self.is_hole(object_index):
                 a.edit_layer.name = f"Edit Hole ({count} points, id={object_index})"
@@ -678,4 +692,8 @@ class PolygonParentLayer(PointLayer):
                 desc.append("add_polygon_hole")
             desc.extend([None, "simplify_polygon", None, "delete_polygon"])
         desc.append("add_polygon_boundary")
+        if not self.has_map_bounds:
+            desc.extend([None, "add_map_bounds"])
+        elif self.has_map_bounds:
+            desc.extend([None, "edit_map_bounds"])
         return desc

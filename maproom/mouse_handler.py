@@ -101,13 +101,13 @@ class MouseHandler(object):
             o = c.get_object_at_mouse_position(position)
             self.snapped_point = None, 0
             if (o is not None):
-                (layer, object_type, object_index) = o
+                (layer, picker_type, object_index) = o
                 before = tuple(position)
-                if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(object_type):
+                if self.is_snappable_to_layer(layer) and c.picker.is_ugrid_point_type(picker_type):
                     wp = (layer.points.x[object_index], layer.points.y[object_index])
                     position = c.get_screen_point_from_world_point(wp)
                     self.snapped_point = layer, object_index
-                    log.debug("snapping to layer %s type %s oi %s %s %s" % (layer, object_type, object_index, before, position))
+                    log.debug("snapping to layer %s type %s oi %s %s %s" % (layer, picker_type, object_index, before, position))
         return position
 
     def update_status_text(self, proj_p=None, obj=None, zoom=False, instructions=""):
@@ -126,8 +126,8 @@ class MouseHandler(object):
         obj_text = ""
         long_text = ""
         if obj is not None:
-            (layer, object_type, object_index) = obj
-            obj_text, long_text = layer.clickable_object_info(c.picker, object_type, object_index)
+            (layer, picker_type, object_index) = obj
+            obj_text, long_text = layer.clickable_object_info(c.picker, picker_type, object_index)
             if not long_text:
                 long_text = self.get_long_help_text()
 
@@ -138,7 +138,7 @@ class MouseHandler(object):
         c = self.layer_canvas
         obj = None
         if (self.current_object_under_mouse is not None):
-            (layer, object_type, object_index) = self.current_object_under_mouse
+            (layer, picker_type, object_index) = self.current_object_under_mouse
             c.project.clickable_object_in_layer = layer
             sel = c.project.current_layer
             if (layer == sel):
@@ -197,7 +197,7 @@ class MouseHandler(object):
         if e.clickable_object_mouse_is_over is None:
             self.prepare_drag_on_empty_space(event)
         else:
-            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+            (layer, picker_type, object_index) = e.clickable_object_mouse_is_over
             if (e.clickable_object_is_ugrid_point()):
                 self.prepare_drag_on_point(event, layer, object_index)
             elif (e.clickable_object_is_ugrid_line()):
@@ -303,8 +303,8 @@ class MouseHandler(object):
         e = c.project
 
         if (e.clickable_object_mouse_is_over is not None): 
-            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-            log.debug(f"right mouse down: {self} {layer} {object_type} {object_index}")
+            (layer, picker_type, object_index) = e.clickable_object_mouse_is_over
+            log.debug(f"right mouse down: {self} {layer} {picker_type} {object_index}")
             if (e.clickable_object_is_ugrid_point()):
                 self.right_clicked_on_point(event, layer, object_index)
             elif (e.clickable_object_is_ugrid_line()):
@@ -312,7 +312,7 @@ class MouseHandler(object):
                 self.right_clicked_on_line_segment(event, layer, object_index, world_point)
             else:  # anything else is the interior of the layer
                 world_point = c.get_world_point_from_screen_point(event.GetPosition())
-                self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
+                self.right_clicked_on_interior(event, layer, picker_type, object_index, world_point)
         elif (e.clickable_object_in_layer is not None):
             # clicked on something in different layer.
             world_point = c.get_world_point_from_screen_point(event.GetPosition())
@@ -331,13 +331,13 @@ class MouseHandler(object):
     def right_clicked_on_line_segment(self, event, layer, line_segment_index, world_point):
         pass
 
-    def right_clicked_on_interior(self, event, layer, object_type, object_index, world_point):
+    def right_clicked_on_interior(self, event, layer, picker_type, object_index, world_point):
         log.debug(f"Right clicked on {layer}")
-        menu_desc = layer.calc_context_menu_desc(object_type, object_index, world_point)
+        menu_desc = layer.calc_context_menu_desc(picker_type, object_index, world_point)
         if menu_desc:
             c = self.layer_canvas
             e = c.project
-            e.show_popup(menu_desc, popup_data={'layer':layer, 'object_type':object_type, 'object_index':object_index})
+            e.show_popup(menu_desc, popup_data={'layer':layer, 'picker_type':picker_type, 'object_index':object_index})
 
     def right_clicked_on_empty_space(self, event, layer, world_point):
         self.right_clicked_on_interior(event, layer, None, None, world_point)
@@ -345,8 +345,8 @@ class MouseHandler(object):
     def right_clicked_on_different_layer(self, event, layer, different_layer, world_point):
         log.debug(f"right clicked on different layer {different_layer}")
         if self.current_object_under_mouse is not None:
-            (other_layer, object_type, object_index) = self.current_object_under_mouse
-            self.right_clicked_on_interior(event, layer, object_type, object_index, world_point)
+            (other_layer, picker_type, object_index) = self.current_object_under_mouse
+            self.right_clicked_on_interior(event, layer, picker_type, object_index, world_point)
         else:
             log.debug(f"not under object of other layer")
 
@@ -522,8 +522,8 @@ class MouseHandler(object):
         if (e.clickable_object_mouse_is_over is None):
             raise NoObjectError
 
-        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-        return layer, object_type, object_index
+        (layer, picker_type, object_index) = e.clickable_object_mouse_is_over
+        return layer, picker_type, object_index
 
     def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
         pass
@@ -612,7 +612,7 @@ class PanMode(MouseHandler):
     def process_mouse_up_after_drag(self, event):
         c = self.layer_canvas
         if self.pending_selection is not None:
-            layer, object_type, object_index = self.pending_selection
+            layer, picker_type, object_index = self.pending_selection
             c.project.layer_tree_control.set_edit_layer(layer)
 
 
@@ -629,13 +629,13 @@ class RNCSelectionMode(PanMode):
         c = self.layer_canvas
         e = c.project
         if e.clickable_object_mouse_is_over is not None:
-            (layer, object_type, object_index) = e.clickable_object_mouse_is_over
-            if layer.can_highlight_clickable_object(c, object_type, object_index):
-                return layer, object_type, object_index
+            (layer, picker_type, object_index) = e.clickable_object_mouse_is_over
+            if layer.can_highlight_clickable_object(c, picker_type, object_index):
+                return layer, picker_type, object_index
         return None
 
     def parse_rnc_object(self, rnc):
-        layer, object_type, object_index = rnc
+        layer, picker_type, object_index = rnc
         name = layer.ring_identifiers[object_index]['name']
         if ";" in name:
             name, filename, url = name.split(";")
@@ -650,7 +650,7 @@ class RNCSelectionMode(PanMode):
     def get_long_help_text(self):
         rnc = self.get_rnc_object()
         if rnc is not None:
-            layer, object_type, object_index = rnc
+            layer, picker_type, object_index = rnc
             name, num, filename, url = self.parse_rnc_object(rnc)
             return "RNC #%s: %s" % (num, name)
         return ""
@@ -679,7 +679,7 @@ class RNCSelectionMode(PanMode):
         if not self.is_panning:
             rnc = self.get_rnc_object()
             if rnc is not None:
-                layer, object_type, object_index = rnc
+                layer, picker_type, object_index = rnc
                 name, num, filename, url = self.parse_rnc_object(rnc)
                 if url:
                     p = self.get_world_point(event)
@@ -693,8 +693,8 @@ class RNCSelectionMode(PanMode):
         rnc = self.get_rnc_object()
         if rnc is not None:
             c = self.layer_canvas
-            layer, object_type, object_index = rnc
-            wp_list = layer.get_highlight_lines(object_type, object_index)
+            layer, picker_type, object_index = rnc
+            wp_list = layer.get_highlight_lines(picker_type, object_index)
             for wp in wp_list:
                 sp = [c.get_screen_point_from_world_point(w) for w in wp]
                 renderer.draw_screen_lines(sp, 1.0, 1.0, 1.0, 1.0, xor=True, fill=True)
@@ -712,7 +712,7 @@ class PolygonSelectionMode(RNCSelectionMode):
     def get_help_text(self):
         rnc = self.get_rnc_object()
         if rnc is not None:
-            layer, object_type, object_index = rnc
+            layer, picker_type, object_index = rnc
             ident = layer.ring_identifiers[object_index]
             geom = layer.geometry[ident['geom_index']]
             return "   Geom %s: %s" % (str(geom), layer.name)
@@ -724,8 +724,8 @@ class PolygonSelectionMode(RNCSelectionMode):
     def process_mouse_up_after_click(self, event):
         rnc = self.get_rnc_object()
         if rnc is not None:
-            layer, object_type, object_index = rnc
-            cmd = mec.PolygonEditLayerCommand(layer, object_type, object_index)
+            layer, picker_type, object_index = rnc
+            cmd = mec.PolygonEditLayerCommand(layer, picker_type, object_index)
             c.project.process_command(cmd)
             c.render(event)
 
@@ -747,7 +747,7 @@ class SelectionMode(MouseHandler):
         p = self.get_position(event)
         proj_p = c.get_world_point_from_screen_point(p)
 
-        (layer, object_type, object_index) = e.clickable_object_mouse_is_over
+        (layer, picker_type, object_index) = e.clickable_object_mouse_is_over
         if (e.clickable_object_is_ugrid_point()):
             self.clicked_on_point(event, layer, object_index)
         elif (e.clickable_object_is_ugrid_line()):
@@ -782,7 +782,7 @@ class SelectionMode(MouseHandler):
         c = self.layer_canvas
         e = c.project
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            layer, object_type, object_index = e.clickable_object_mouse_is_over
+            layer, picker_type, object_index = e.clickable_object_mouse_is_over
             p = self.get_position(event)
             proj_p = c.get_world_point_from_screen_point(p)
             d_x = p[0] - c.mouse_down_position[0]
@@ -923,26 +923,26 @@ class ObjectSelectionMode(SelectionMode):
         return text
 
     def dragged(self, world_d_x, world_d_y, snapped_layer, snapped_cp, about_center=False):
-        (layer, object_type, object_index) = self.get_current_object_info()
+        (layer, picker_type, object_index) = self.get_current_object_info()
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp, about_center)
         return cmd
 
     def finish_drag(self, mouse_down_position, mouse_move_position, world_d_x, world_d_y, snapped_layer, snapped_cp):
         if world_d_x == 0 and world_d_y == 0:
             return
-        (layer, object_type, object_index) = self.get_current_object_info()
+        (layer, picker_type, object_index) = self.get_current_object_info()
         cmd = layer.dragging_selected_objects(world_d_x, world_d_y, snapped_layer, snapped_cp)
         return cmd
 
     def rotated(self, world_d_x, world_d_y):
-        (layer, object_type, object_index) = self.get_current_object_info()
+        (layer, picker_type, object_index) = self.get_current_object_info()
         cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
         return cmd
 
     def finish_rotate(self, world_d_x, world_d_y):
         if world_d_x == 0 and world_d_y == 0:
             return
-        (layer, object_type, object_index) = self.get_current_object_info()
+        (layer, picker_type, object_index) = self.get_current_object_info()
         cmd = layer.rotating_selected_objects(world_d_x, world_d_y)
         return cmd
 
@@ -1682,7 +1682,7 @@ class StickySelectionMode(SelectionMode):
         c = self.layer_canvas
         e = c.project
         if (e.clickable_object_mouse_is_over is not None):  # the mouse is on a clickable object
-            layer, object_type, object_index = e.clickable_object_mouse_is_over
+            layer, picker_type, object_index = e.clickable_object_mouse_is_over
             p = self.get_position(event)
             dx = p[0] - c.mouse_down_position[0]
             dy = c.mouse_down_position[1] - p[1]
@@ -1757,7 +1757,7 @@ class StickySelectionMode(SelectionMode):
 
     def dragged(self, p, dx, dy):
         c = self.layer_canvas
-        (layer, object_type, object_index) = self.get_current_object_info()
+        (layer, picker_type, object_index) = self.get_current_object_info()
         cmd = layer.dragging_layer(dx, dy)
         return cmd
 
@@ -1767,7 +1767,7 @@ class StickySelectionMode(SelectionMode):
         return self.dragged(mouse_move_position, dx, dy)
 
     def rotated(self, p, dx, dy):
-        (layer, object_type, object_index) = self.get_current_object_info()
+        (layer, picker_type, object_index) = self.get_current_object_info()
         cmd = layer.rotating_layer(dx, dy)
         return cmd
 

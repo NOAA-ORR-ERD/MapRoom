@@ -708,10 +708,10 @@ class LineEditLayer(LineLayer):
 
     transient_edit_layer = True
 
-    def __init__(self, manager, parent_layer, object_type, object_index=-1):
+    def __init__(self, manager, parent_layer, picker_type, object_index=-1):
         super().__init__(manager)
         self.parent_layer = parent_layer
-        self.object_type = object_type
+        self.picker_type = picker_type
         self.object_index = object_index
 
     def get_new_points_after_move(self, indexes):

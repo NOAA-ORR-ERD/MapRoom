@@ -684,15 +684,15 @@ class PolygonEditLayerCommand(Command):
     short_name = "polygon_edit"
     serialize_order = [
         ('layer', 'layer'),
-        ('obj_type', 'int'),
+        ('picker_type', 'int'),
         ('obj_index', 'int'),
         ('feature_code', 'int'),
         ('new_boundary', 'bool'),
     ]
 
-    def __init__(self, layer, obj_type, obj_index, feature_code, new_boundary):
+    def __init__(self, layer, picker_type, obj_index, feature_code, new_boundary):
         Command.__init__(self, layer)
-        self.obj_type = obj_type
+        self.picker_type = picker_type
         self.name = layer.name
         self.feature_code = feature_code
         self.new_boundary = new_boundary
@@ -712,12 +712,13 @@ class PolygonEditLayerCommand(Command):
         lm = editor.layer_manager
         layer = lm.get_layer_by_invariant(self.layer)
         self.undo_info = undo = UndoInfo()
-        p = ly.RingEditLayer(lm, layer, self.obj_type, self.feature_code, self.hole_parent_index)
-
         if self.feature_code < 0:
             poly_type = "Hole"
+        elif self.feature_code == 4:
+            poly_type = "Map Bounds"
         else:
             poly_type = "Boundary"
+        p = ly.RingEditLayer(lm, layer, self.picker_type, poly_type, self.feature_code, self.hole_parent_index)
         if self.new_boundary:
             p.name = f"New {poly_type}"
             geom = []
@@ -789,13 +790,13 @@ class DeletePolygonCommand(Command):
     short_name = "polygon_del"
     serialize_order = [
         ('layer', 'layer'),
-        ('obj_type', 'int'),
+        ('picker_type', 'int'),
         ('obj_index', 'int'),
     ]
 
-    def __init__(self, layer, obj_type, obj_index):
+    def __init__(self, layer, picker_type, obj_index):
         Command.__init__(self, layer)
-        self.obj_type = obj_type
+        self.picker_type = picker_type
         self.obj_index = obj_index
         self.name = layer.name
 
@@ -833,13 +834,13 @@ class SimplifyPolygonCommand(Command):
     short_name = "polygon_simplify"
     serialize_order = [
         ('layer', 'layer'),
-        ('obj_type', 'int'),
+        ('picker_type', 'int'),
         ('obj_index', 'int'),
     ]
 
-    def __init__(self, layer, obj_type, obj_index, simplifier, ratio):
+    def __init__(self, layer, picker_type, obj_index, simplifier, ratio):
         Command.__init__(self, layer)
-        self.obj_type = obj_type
+        self.picker_type = picker_type
         self.obj_index = obj_index
         self.name = layer.name
         self.ratio = ratio

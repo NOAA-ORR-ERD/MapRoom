@@ -413,10 +413,10 @@ class RNCLoaderLayer(PolygonLayer):
         color_array = np.array((0, green, blue, gray, mapbounds, spillable), dtype=np.uint32)
         return color_array
 
-    def can_highlight_clickable_object(self, canvas, object_type, object_index):
-        return canvas.picker.is_interior_type(object_type)
+    def can_highlight_clickable_object(self, canvas, picker_type, object_index):
+        return canvas.picker.is_interior_type(picker_type)
 
-    def get_highlight_lines(self, object_type, object_index):
+    def get_highlight_lines(self, picker_type, object_index):
         points, polygon_id = self.get_ring(object_index)
         # add starting point again so the outline will be closed
         boundary = np.vstack((points, points[0]))

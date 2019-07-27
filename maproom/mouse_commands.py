@@ -107,7 +107,7 @@ class MovePointsCommand(Command):
 
     def transient_geometry_update(self, tlayer):
         new_points = tlayer.get_new_points_after_move(self.indexes)
-        tlayer.parent_layer.rebuild_geometry_from_points(tlayer.object_type, tlayer.object_index, new_points)
+        tlayer.parent_layer.rebuild_geometry_from_points(tlayer.picker_type, tlayer.object_index, new_points)
 
     def coalesce(self, next_command):
         if next_command.__class__ == self.__class__:
@@ -354,7 +354,7 @@ class SplitLineCommand(Command):
 
     def transient_geometry_update(self, tlayer):
         new_points = tlayer.get_new_points_after_insert(self.point_index_1, self.point_index_2, self.undo_point.index)
-        tlayer.parent_layer.rebuild_geometry_from_points(tlayer.object_type, tlayer.object_index, new_points)
+        tlayer.parent_layer.rebuild_geometry_from_points(tlayer.picker_type, tlayer.object_index, new_points)
         tlayer.rebuild_from_parent_layer()
         tlayer.select_nearest_point(self.world_point)
 

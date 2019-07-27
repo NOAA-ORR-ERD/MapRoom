@@ -116,7 +116,7 @@ class Picker(object):
     def bind_picker_colors_for_points(self, layer, object_count, layer_manager=None):
         self.bind_picker_colors(layer, POINTS_PICKER_OFFSET, object_count, False, layer_manager)
 
-    def bind_picker_colors(self, layer, object_type, object_count, doubled=False, layer_manager=None):
+    def bind_picker_colors(self, layer, picker_type, object_count, doubled=False, layer_manager=None):
         """
         bind the colors in the OpenGL context (right word?)
 
@@ -124,14 +124,14 @@ class Picker(object):
 
         :param layer: the first index to use -- this will be pick-layer index plus the sublayer index
 
-        :param object_type: flag indicating the type of object
+        :param picker_type: flag indicating the type of object
 
         :param object_count: how many objects need colors
 
         :param doubled = False: whether to double the array (used for drawing line segments)
         """
         # Get range of picker colors for this layer and object type
-        color_data = self.get_next_color_block(layer, object_type, object_count, layer_manager)
+        color_data = self.get_next_color_block(layer, picker_type, object_count, layer_manager)
 
         # NOTE: the color data array is doubled for lines because there are two
         # copies of each endpoint in the line data. See set_lines in
@@ -149,7 +149,7 @@ class Picker(object):
         self.vbo_colors.unbind()
         gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
 
-    def get_next_color_block(self, layer, object_type, object_count, layer_manager):
+    def get_next_color_block(self, layer, picker_type, object_count, layer_manager):
         if self.select_group_object and layer_manager is not None:
            # if a layer is in a group, point to the group itself, rather than
            # the component. Only when it's ungrouped will the components be
@@ -161,9 +161,9 @@ class Picker(object):
         end_range = self.picker_block_start + object_count
         self.picker_block_start = end_range
         color_data = np.arange(start_range, end_range, dtype=np.uint32)
-        self.picker_map.append((layer, object_type, start_range))
+        self.picker_map.append((layer, picker_type, start_range))
         self.picker_blocks.append(start_range)
-        log.debug("Generating color block for [%s] type=%d, #%d: %d-%d" % (layer, object_type, object_count, start_range, end_range))
+        log.debug("Generating color block for [%s] type=%d, #%d: %d-%d" % (layer, picker_type, object_count, start_range, end_range))
         return color_data
 
     def get_polygon_picker_colors(self, layer, object_count, layer_manager=None):
@@ -221,34 +221,34 @@ class Picker(object):
         index = bisect.bisect(self.picker_blocks, picked_color) - 1
         if index < 0:
             return None
-        layer, object_type, start_color = self.picker_map[index]
+        layer, picker_type, start_color = self.picker_map[index]
         object_index = int(picked_color - start_color)
 
-        return (layer, object_type, object_index)
+        return (layer, picker_type, object_index)
 
     @staticmethod
     def is_ugrid_point(obj):
-        (layer, object_type, object_index) = obj
-        return object_type == POINTS_PICKER_OFFSET
+        (layer, picker_type, object_index) = obj
+        return picker_type == POINTS_PICKER_OFFSET
 
     @staticmethod
-    def is_ugrid_point_type(object_type):
-        return object_type == POINTS_PICKER_OFFSET
+    def is_ugrid_point_type(picker_type):
+        return picker_type == POINTS_PICKER_OFFSET
 
     @staticmethod
     def is_ugrid_line(obj):
-        (layer, object_type, object_index) = obj
-        return object_type == LINES_PICKER_OFFSET
+        (layer, picker_type, object_index) = obj
+        return picker_type == LINES_PICKER_OFFSET
 
     @staticmethod
-    def is_ugrid_line_type(object_type):
-        return object_type == LINES_PICKER_OFFSET
+    def is_ugrid_line_type(picker_type):
+        return picker_type == LINES_PICKER_OFFSET
 
     @staticmethod
     def is_interior(obj):
-        (layer, object_type, object_index) = obj
+        (layer, picker_type, object_index) = obj
         return type == FILL_PICKER_OFFSET
 
     @staticmethod
-    def is_interior_type(object_type):
-        return object_type == FILL_PICKER_OFFSET
+    def is_interior_type(picker_type):
+        return picker_type == FILL_PICKER_OFFSET
