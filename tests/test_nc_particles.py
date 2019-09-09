@@ -8,7 +8,7 @@ import numpy as np
 
 from mock import maproom_dir
 
-from maproom.layers.loaders.nc_particles import nc_particles_file_loader
+from maproom.loaders.nc_particles import nc_particles_file_loader
 
 def test_iterator():
     sample_nc_file = os.path.join(maproom_dir, "TestData/NC_particles/Mobile_test.nc")
