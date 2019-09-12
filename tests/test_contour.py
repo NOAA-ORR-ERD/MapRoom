@@ -8,6 +8,8 @@ from mock import maproom_dir, MockProject
 from maproom import loaders
 from maproom.library.Boundary import Boundaries, PointsError
 
+INTERACTIVE = False
+
 
 def surface_conc_kde(sc):
     """
@@ -78,72 +80,54 @@ class TestContour(object):
         assert 100 == len(layer.points)
         print(layer.status_code_names)
         print(layer.scalar_var_names)
-        print(layer.points.x)
-        print(layer.points.y)
-        print(layer.scalar_vars['surface_concentration'])
         bounds = layer.compute_bounding_rect()
         print(bounds)
-        h, xedges, yedges = np.histogram2d(layer.points.x, layer.points.y, bins=21, weights=layer.scalar_vars['surface_concentration'])
-        print(h, xedges, yedges)
 
-        # pos = np.vstack([layer.points.x, layer.points.y])
-        # print(pos)
-        # #values = np.vstack([])
-        # kernel = scipy.stats.gaussian_kde(pos, weights=layer.scalar_vars['latitude'])
-
-
-        # # x, y = np.mgrid[bounds[0][0]:bounds[1][0]:20j, bounds[0][1]:bounds[1][1]:20j]
-        # grid = np.vstack([x, y])
-        # print(grid)
-        # values = kernel(grid)
-        # print(values)
-
-        x = layer.points.x - layer.points.x.min()
-        y = layer.points.y - layer.points.y.min()
+        xmin = layer.points.x.min()
+        ymin = layer.points.y.min()
+        x = layer.points.x - xmin
+        y = layer.points.y - ymin
         xy = np.vstack([x, y])
 
         weights = layer.scalar_vars['surface_concentration']
-        weights -= weights.min()
-        weights /= weights.max() - weights.min()
         total_weight = weights.sum()
+        kernel = scipy.stats.gaussian_kde(xy, weights=weights)
+
+        binsize = 101
+        x_flat = np.linspace(x.min(), x.max(), binsize)
+        y_flat = np.linspace(y.min(), y.max(), binsize)
+        xx,yy = np.meshgrid(x_flat,y_flat)
+        grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
+
+        values = kernel(grid_coords.T) * total_weight
+        values = values.reshape(binsize,binsize)
+
+        max_density = values.max()
+        levels = [0.1, 0.4, 0.8, 1]
+        levels.sort()
+        particle_contours = [lev * max_density for lev in levels]
+
+        if INTERACTIVE:
+            try:
+                import matplotlib.pyplot as plt
+            except ImportError:
+                pass
+            else:
+                plt.contour(xx + xmin, yy + ymin, values, particle_contours)
+                plt.scatter(x + xmin, y + ymin, 10, weights)
+                plt.show()
+
         print(xy)
         print(weights)
-        kernel = scipy.stats.gaussian_kde(xy, weights=weights/total_weight) 
-
-        # Attempt from https://stackoverflow.com/questions/4128699/using-scipy-stats-gaussian-kde-with-2-dimensional-data
-        # x_flat = np.r_[xy[:,0].min():xy[:,0].max():16j]
-        # y_flat = np.r_[xy[:,1].min():xy[:,1].max():16j]
-        x_flat = np.linspace(x.min(), x.max(), 17)
-        y_flat = np.linspace(y.min(), y.max(), 17)
-        x,y = np.meshgrid(x_flat,y_flat)
-        grid_coords = np.append(x.reshape(-1,1),y.reshape(-1,1),axis=1)
         print(grid_coords.T)
-
-        values = kernel(grid_coords.T) / total_weight
-        print(values.reshape(17,17))
-
-
-
-        # xyBnds  = np.linspace(-1.0, 1.0, N+1)  #boundaries of histogram bins
-        # xy  = (xyBnds[1:] + xyBnds[:-1])/2      #centers of histogram bins
-        # xx, yy = np.meshgrid(xy,xy)
-
-        # #DEFINE SAMPLES, TWO OPTIONS
-        # #samples = rv.rvs(size=(nSamp,2))
-        # samples = np.array([[0.5,0.5],[0.2,0.5],[0.2,0.2]])
-
-        # #points to sample the KDE at, in a form gaussian_kde likes:
-        # grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
-
-        # #NON-FFT IMPLEMTATION FROM SCIPY
-        # KDEfn = scipy.gaussian_kde(samples.T)
-        # KDE2 = KDEfn(grid_coords.T).reshape((N,N))
-
-
+        print(values)
+        print(particle_contours)
 
 
 
 if __name__ == "__main__":
+    INTERACTIVE = True
+
     t = TestContour()
     t.setup()
     t.test_simple()
