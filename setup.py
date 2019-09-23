@@ -24,6 +24,7 @@ exec(compile(open('maproom/_version.py').read(), 'maproom/_version.py', 'exec'))
 
 data_files = []
 options = {}
+packages = find_packages()
 package_data = {
     'maproom': [
         'renderer/gl/font.png',
@@ -90,7 +91,7 @@ setup(
         'packaging',
     ],
     data_files=data_files,
-    packages=find_packages(),
+    packages=packages,
     package_data=package_data,
     app=["maproom.py"],
     entry_points = {
