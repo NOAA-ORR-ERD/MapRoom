@@ -8,8 +8,8 @@ import OpenGL.GLU as glu
 import maproom.library.rect as rect
 from .. import int_to_color_floats
 from ..gl.textures import ImageTextures, TileTextures
-from ..gl.Tessellator import init_vertex_buffers, tessellate
-from ..gl.Render import render_buffers_with_colors, render_buffers_with_one_color
+from libmaproom.Tessellator import init_vertex_buffers, tessellate
+from libmaproom.Render import render_buffers_with_colors, render_buffers_with_one_color
 
 from .gldc import GLDC
 

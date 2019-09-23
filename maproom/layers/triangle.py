@@ -1,6 +1,6 @@
 import numpy as np
 
-from pytriangle import triangulate_simple
+from libmaproom.pytriangle import triangulate_simple
 
 from ..library.Boundary import Boundaries
 from ..renderer import color_floats_to_int, data_types

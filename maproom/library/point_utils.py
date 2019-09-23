@@ -6,7 +6,7 @@ from maproom.renderer.gl.data_types import POINT_XY_VIEW_DTYPE
 from .shapefile_utils import GeomInfo
 from ..layers.polygon2 import PolygonParentLayer
 
-from pytriangle import triangulate_simple
+from libmaproom.pytriangle import triangulate_simple
 
 
 import logging

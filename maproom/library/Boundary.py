@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 from ..errors import PointsError
-from maproom.library.Shape import point_in_polygon, points_outside_polygon
+from libmaproom.Shape import point_in_polygon, points_outside_polygon
 
 import logging
 progress_log = logging.getLogger("progress")

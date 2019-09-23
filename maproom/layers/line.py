@@ -1,6 +1,6 @@
 import numpy as np
 
-from ..library.scipy_ckdtree import cKDTree
+from libmaproom.scipy_ckdtree import cKDTree
 from ..library.Boundary import Boundaries
 from ..library.shapely_utils import shapely_to_polygon
 from ..library.shapefile_utils import GeomInfo
