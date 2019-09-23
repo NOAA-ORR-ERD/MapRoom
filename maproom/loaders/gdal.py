@@ -7,7 +7,7 @@ import pyproj
 
 from sawx.filesystem import filesystem_path
 
-import maproom.library.Bitmap as Bitmap
+import libmaproom.Bitmap as Bitmap
 from maproom.renderer import ImageData
 
 from .common import BaseLayerLoader
