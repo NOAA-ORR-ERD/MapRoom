@@ -123,6 +123,31 @@ class TestContour(object):
         print(values)
         print(particle_contours)
 
+        try:
+            import py_contour
+        except ImportError:
+            pass
+        else:
+            segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
+            print(x_flat)
+            print(y_flat)
+            print(segs)
+            print(segs.keys())
+            print(particle_contours)
+            for level in particle_contours:
+                if level in segs:
+                    print(level, segs[level])
+
+            # import matplotlib.pyplot as plt
+            # from matplotlib import collections as mc
+            # fig, ax = plt.subplots()
+            # for level in particle_contours:
+            #     if level in segs:
+            #         lc = mc.LineCollection(segs[level], linewidths=2)
+            #         ax.add_collection(lc)
+            # # plt.scatter(x + xmin, y + ymin, 10, weights)
+            # plt.show()
+
 
 
 if __name__ == "__main__":
