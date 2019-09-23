@@ -11,11 +11,11 @@ python setup.py build_ext --inplace
 import sys
 
 from Cython.Distutils import build_ext
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, Extension
 
 
-
-exec(compile(open('maproom/_version.py').read(), 'maproom/_version.py', 'exec'))
+version_path = "../maproom/_version.py"
+exec(compile(open(version_path).read(), version_path, 'exec'))
 
 # find the various headers, libs, etc.
 import numpy
@@ -141,7 +141,7 @@ setup(
         'packaging',
     ],
     data_files=data_files,
-    packages=find_packages(),
+    packages=['libmaproom'],
     package_data=package_data,
     ext_modules=ext_modules,
     options=options,
