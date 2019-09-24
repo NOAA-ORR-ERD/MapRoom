@@ -46,12 +46,6 @@ shape = Extension("libmaproom.Shape",
                   extra_compile_args = ["-O3" ],
                   )
 
-tree = Extension("libmaproom.scipy_ckdtree",
-                 sources=["libmaproom/scipy_ckdtree.pyx"],
-                 include_dirs=[numpy.get_include()],
-                 extra_compile_args = ["-O3" ],
-                 )
-
 tessellator = Extension("libmaproom.Tessellator",
                         sources=["libmaproom/Tessellator.pyx"],
                         include_dirs=gl_include_dirs,
@@ -118,7 +112,7 @@ pytriangle = Extension(
 
 
 
-ext_modules = [bitmap, shape, tree, tessellator, render, pytriangle]
+ext_modules = [bitmap, shape, tessellator, render, pytriangle]
 #ext_modules = [tessellator]
 
 data_files = []

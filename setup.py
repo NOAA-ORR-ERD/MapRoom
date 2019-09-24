@@ -35,6 +35,7 @@ package_data = {
 
 install_requires = [
     'numpy',
+    'scipy',
     'pyopengl',
     'cython',
     'docutils',
