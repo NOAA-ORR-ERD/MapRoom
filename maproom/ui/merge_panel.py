@@ -3,6 +3,9 @@ import wx
 from ..layers import state
 from . import sliders
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class DistanceCtrl(wx.Panel):
     SPACING = 5
@@ -268,7 +271,21 @@ class MergePointsPanel(wx.Panel):
                 self.list_view.SetItemTextColour(index, wx.RED)
 
         self.update_selection()
-        self.merge_button.SetDefault()
+        try:
+            self.merge_button.SetDefault()
+        except Exception as e:
+            # don't know why this is failing on a Mac. The default button is supposed to move
+            # from the Find button to the Merge button, but it fails instead. Catching this
+            # exception partially works around it, but leaves the Find button still highlighted.
+            # Perhaps because the merge panel is reparented in the sidebar?
+            #
+            # Traceback (most recent call last):
+            #  File "/Users/rob.mcmullen/src/refactor/maproom/maproom/ui/merge_panel.py", line 205, in find_duplicates
+            #    self.display_results()
+            #  File "/Users/rob.mcmullen/src/refactor/maproom/maproom/ui/merge_panel.py", line 271, in display_results
+            #    self.merge_button.SetDefault()
+            # wx._core.wxAssertionError: C++ assertion "tlw" failed at /Users/robind/projects/buildbots/macosx-vm6/dist-osx-py36/Phoenix/ext/wxWidgets/src/common/btncmn.cpp(104) in SetDefault(): button without top level window?
+            log.error(f"Must be on a mac? {e}")
 
     def update_selection_once(self, event):
         if not self.dirty:
