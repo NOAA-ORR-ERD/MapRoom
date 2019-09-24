@@ -1412,6 +1412,7 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
     normalize_mouse_coordinates = False
     vector_object_command = None
     toolbar_group = "annotation"
+    minimum_pixel_size = 0
 
 #    @profile
     def process_rect_select(self, x1, y1, x2, y2):
@@ -1423,6 +1424,10 @@ class AddVectorObjectByBoundingBoxMode(RectSelectMode):
         try:
             cmd = self.get_vector_object_screen_point_command(layer, x1, y1, x2, y2)
         except NotImplementedError:
+            if abs(x1 - x2) < self.minimum_pixel_size:
+                x2 = x1 + self.minimum_pixel_size
+            if abs(y1 - y2) < self.minimum_pixel_size:
+                y2 = y1 + self.minimum_pixel_size
             p1 = c.get_projected_point_from_screen_point((x1, y1))
             p2 = c.get_projected_point_from_screen_point((x2, y2))
             cp1 = c.get_world_point_from_projected_point(p1)
@@ -1442,6 +1447,7 @@ class AddOverlayTextMode(AddVectorObjectByBoundingBoxMode):
     menu_item_name = "Add Text"
     menu_item_tooltip = "Add a new text overlay"
     vector_object_command = voc.AddTextCommand
+    minimum_pixel_size = 30
 
     def get_vector_object_screen_point_command(self, layer, x1, y1, x2, y2, style=None):
         c = self.layer_canvas
@@ -1459,6 +1465,7 @@ class AddRectangleMode(AddVectorObjectByBoundingBoxMode):
     menu_item_name = "Add Rectangle"
     menu_item_tooltip = "Add a new rectangle or square"
     vector_object_command = voc.DrawRectangleCommand
+    minimum_pixel_size = 10
 
 
 class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
@@ -1466,6 +1473,7 @@ class AddEllipseMode(AddVectorObjectByBoundingBoxMode):
     menu_item_name = "Add Ellipse"
     menu_item_tooltip = "Add a new ellipse or circle"
     vector_object_command = voc.DrawEllipseCommand
+    minimum_pixel_size = 10
 
 
 class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
@@ -1473,6 +1481,7 @@ class AddArrowTextMode(AddVectorObjectByBoundingBoxMode):
     menu_item_name = "Add Arrow/Text Box"
     menu_item_tooltip = "Add a new arrow and text box combo object"
     vector_object_command = voc.DrawArrowTextBoxCommand
+    minimum_pixel_size = 40
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
@@ -1491,6 +1500,7 @@ class AddArrowTextIconMode(AddArrowTextMode):
     menu_item_name = "Add Arrow/Text/Icon Box"
     menu_item_tooltip = "Add a new arrow/text box/icon combo object"
     vector_object_command = voc.DrawArrowTextIconCommand
+    minimum_pixel_size = 40
 
 
 class AddCircleMode(AddVectorObjectByBoundingBoxMode):
@@ -1498,6 +1508,7 @@ class AddCircleMode(AddVectorObjectByBoundingBoxMode):
     menu_item_name = "Add Circle"
     menu_item_tooltip = "Add a new circle from center point"
     vector_object_command = voc.DrawCircleCommand
+    minimum_pixel_size = 10
 
     def render_overlay(self, renderer):
         c = self.layer_canvas
