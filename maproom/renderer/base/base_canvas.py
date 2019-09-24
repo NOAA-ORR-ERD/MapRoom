@@ -100,6 +100,7 @@ class BaseCanvas(object):
         self.update_renderers()
 
     def rebuild_renderer_for_layer(self, layer, in_place=False):
+        log.debug(f"rebuild_renderer_for_layer: {layer}")
         if layer in self.layer_renderers:
             r = self.layer_renderers[layer]
             layer.rebuild_renderer(r, in_place)

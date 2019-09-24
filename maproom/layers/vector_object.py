@@ -1527,7 +1527,8 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
         """
         self.update_overlay_bounds()
-        RectangleVectorObject.rebuild_renderer(self, renderer, in_place)
+        if self.bounds[0][0] is not None:
+            RectangleVectorObject.rebuild_renderer(self, renderer, in_place)
 
     def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
         log.log(5, "Rendering annotation layer group %s!!! pick=%s" % (self.name, picker))
