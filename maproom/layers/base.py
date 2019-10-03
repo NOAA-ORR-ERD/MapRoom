@@ -719,7 +719,7 @@ class Layer:
         return []
 
     def subset_using_logical_operation(self, operation):
-        pass
+        return [], None
 
     #### output
 

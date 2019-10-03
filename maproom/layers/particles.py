@@ -360,9 +360,23 @@ class ParticleFolder(Folder):
 
         self.scalar_subset_expression = operation
         children = self.get_particle_layers()
+
+        # Some layers won't have any data, and trying to use a logical
+        # operation on that layer would return an error. But displaying that
+        # error would obscure the other layers with valid data. So, if any
+        # layer is valid (i.e. doesn't return an error), assume that there is
+        # valid data to show
+        any_valid = False
+        error = None
         for c in children:
-            c.subset_using_logical_operation(operation)
-        return children
+            _, cerr = c.subset_using_logical_operation(operation)
+            if not cerr:
+                any_valid = True
+            elif error is None:
+                error = cerr
+        if any_valid:
+            error = None
+        return children, error
 
     def num_below_above(self):
         total_lo = 0
@@ -778,15 +792,31 @@ class ParticleLayer(PointBaseLayer):
         try:
             matches = self.get_matches(operation)
             # print matches
-        except ValueError:
+        except ValueError as e:
             self.hidden_points = None
+            error = str(e)
         else:
             self.hidden_points = np.where(matches == False)[0]
+            error = None
             # print self.hidden_points
-        return [self]
+        return [self], error
+
+    def add_status_codes_to_scalar_vars(self):
+        # status codes are pulled out by name and added to the scalar vars,
+        # meaning that the status codes can now be referenced just like
+        # variables in the scalar expression window
+        v = dict(self.scalar_vars)
+        v.update(self.scalar_vars)
+        if 'status_codes' in v:
+            source = v['status_codes']
+            for value, name in self.status_code_names.items():
+                indexes = (source == value) * 1.0
+                v[name] = indexes
+        return v
 
     def get_matches(self, search_text):
-        expression = NumpyFloatExpression(self.scalar_vars)
+        v = self.add_status_codes_to_scalar_vars()
+        expression = NumpyFloatExpression(v)
         try:
             result = expression.eval(search_text)
             return result
