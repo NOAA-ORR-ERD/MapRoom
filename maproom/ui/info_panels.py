@@ -1698,10 +1698,18 @@ class ScalarExpressionField(TextEditField):
 
     def process_text_change(self, layer):
         expression = self.parse_from_string()
-        affected = layer.subset_using_logical_operation(expression)
+        affected, error = layer.subset_using_logical_operation(expression)
         for layer in affected:
             self.panel.project.document.layer_contents_changed_event(layer)
         self.panel.project.refresh()
+        c = self.ctrl
+        if error:
+            c.SetBackgroundColour("#FF8080")
+            self.panel.project.frame.status_message(error)
+        else:
+            c.SetBackgroundColour("#FFFFFF")
+            self.panel.project.frame.status_message("")
+        c.Refresh()
 
 
 class ButtonActionField(InfoField):
