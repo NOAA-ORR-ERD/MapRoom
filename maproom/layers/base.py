@@ -430,12 +430,12 @@ class Layer:
         log.debug("load_from_json: found type %s, class=%s" % (t, kls))
         if 'url' in json_data and kls.restore_from_url:
             url = json_data['url']
-            file_metadata = identify_file(url)
-            # print(f"file metadata: {file_metadata}")
-            loader = file_metadata["loader"]
-
-            log.debug(f"Loading layers from {url} using {loader}")
             try:
+                file_metadata = identify_file(url)
+                # print(f"file metadata: {file_metadata}")
+                loader = file_metadata["loader"]
+
+                log.debug(f"Loading layers from {url} using {loader}")
                 undo_info = loader.load_layers_from_uri(url, manager)
             except OSError:
                 raise RuntimeError(f"Failed loading from {url}")
