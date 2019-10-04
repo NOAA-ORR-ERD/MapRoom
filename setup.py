@@ -47,7 +47,7 @@ install_requires = [
     'pytz',
     'cftime',  # required by netcdf4 but not always installed?
     'wxpython',
-    'sawx>=1.5.2',
+    'sawx>=1.5.3',
     'pillow',
     'urllib3',
     'certifi',
