@@ -119,6 +119,6 @@ dependencies:
     - fleep==1.0.1
     - omnivore-framework==4.0
     - python-slugify==3.0.4
-    - sawx==1.5.1
+    - sawx==1.5.3
     - text-unidecode==1.3
 

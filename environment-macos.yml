@@ -116,5 +116,5 @@ dependencies:
     - fleep==1.0.1
     - omnivore-framework==4.0
     - text-unidecode==1.3
-    - sawx==1.5.1
+    - sawx==1.5.3
 
