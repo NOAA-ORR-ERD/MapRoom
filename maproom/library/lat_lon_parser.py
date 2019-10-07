@@ -3,7 +3,7 @@ import re
 import numpy as np
 
 # removed local copy and now use parse function from Chris's pypi package
-from lat_lon_parser import parse
+from lat_lon_parser import parse, to_deg_min, to_deg_min_sec
 
 from sawx.utils.textutil import check_for_matching_lines, parse_for_matching_lines
 

@@ -2,7 +2,7 @@
 import re
 import math
 
-from .lat_lon_parser import parse
+from .lat_lon_parser import parse, to_deg_min, to_deg_min_sec
 
 
 def haversine(lon1, lat1, lon2=None, lat2=None, r=6371.0):
@@ -133,11 +133,7 @@ def float_to_degrees_minutes_seconds(value, directions=None):
         elif value < 0:
             direction = directions[1]
 
-    value = abs(value)
-    degrees = int(value)
-    value = (value - degrees) * 60
-    minutes = int(value)
-    seconds = int((value - minutes) * 60)
+    degrees, minutes, seconds = to_deg_min_sec(value)
 
     if degrees == 0 and minutes == 0 and seconds == 0:
         direction = ""
@@ -153,10 +149,7 @@ def float_to_degrees_minutes(value, directions=None):
         elif value < 0:
             direction = directions[1]
 
-    value = abs(value)
-    degrees = int(value)
-    minutes = (value - degrees) * 60
-
+    degrees, minutes = to_deg_min(value)
     return (degrees, minutes, direction)
 
 
