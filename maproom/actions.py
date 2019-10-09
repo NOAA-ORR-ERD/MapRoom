@@ -548,9 +548,11 @@ class merge_layers(SawxAction):
         if result == wx.ID_OK:
             selections = dialog.GetSelections()
         else:
-            selections = []
+            selections = None
         dialog.Destroy()
-        if len(selections) != 2:
+        if selections is None:
+            return
+        elif len(selections) != 2:
             project.frame.error("You must select exactly two layers to merge.")
         else:
             layer_a = layers[selections[0]]
