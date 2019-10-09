@@ -1098,3 +1098,68 @@ class LoadSVGCommand(Command):
         undo_info = self.undo_info.data
         layer.restore_undo_info(undo_info)
         return self.undo_info
+
+
+class AddContourLayerCommand(Command):
+    short_name = "contour_layer"
+    ui_name = "Contour Layer"
+    serialize_order = [
+        ('layer', 'layer'),
+        ('cp1', 'point'),
+        ('cp2', 'point'),
+        ('contour_segments', 'contour_segments'),
+    ]
+
+    def __init__(self, event_layer, cp1, cp2, contour_segments):
+        Command.__init__(self, event_layer)
+        self.cp1 = cp1
+        self.cp2 = cp2
+        self.contour_segments = contour_segments
+
+    def __str__(self):
+        return self.ui_name
+
+    def perform(self, editor):
+        self.undo_info = undo = UndoInfo()
+        lm = editor.layer_manager
+        saved_invariant = lm.next_invariant
+        layer = ly.AnnotationLayer(lm)
+        parent_layer = lm.get_layer_by_invariant(self.layer)
+
+        kwargs = {'before': parent_layer}
+        lm.insert_loaded_layer(layer, editor, **kwargs)
+
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+        lf = undo.flags.add_layer_flags(layer)
+        lf.select_layer = True
+        lf.layer_loaded = True
+        lf.collapse = False
+
+        kwargs = {'first_child_of': layer}
+        text = ly.RectangleVectorObject(lm)
+        text.set_opposite_corners(self.cp1, self.cp2)
+        lm.insert_loaded_layer(text, editor, **kwargs)
+        lf = undo.flags.add_layer_flags(text)
+        lf.layer_loaded = True
+
+        undo.data = (layer.invariant, saved_invariant)
+
+        return self.undo_info
+
+    def undo(self, editor):
+        lm = editor.layer_manager
+        invariant, saved_invariant, parent_layer_data = self.undo_info.data
+        layer = editor.layer_manager.get_layer_by_invariant(invariant)
+        insertion_index = lm.get_multi_index_of_layer(layer)
+
+        # Only remove the reference to the layer in the layer manager, leave
+        # all the layer info around so that it can be undone
+        lm.remove_layer_at_multi_index(insertion_index)
+        lm.next_invariant = saved_invariant
+
+        undo = UndoInfo()
+        undo.flags.layers_changed = True
+        undo.flags.refresh_needed = True
+
+        return undo

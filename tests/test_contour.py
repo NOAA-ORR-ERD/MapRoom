@@ -136,7 +136,9 @@ class TestContour(object):
             print(particle_contours)
             for level in particle_contours:
                 if level in segs:
-                    print(level, segs[level])
+                    print(level)
+                    for i, seg in enumerate(segs[level]):
+                        print("  ", level, i, seg[0][0]+xmin, seg[0][1]+ymin, seg[1][0]+xmin, seg[1][1]+ymin)
 
             # import matplotlib.pyplot as plt
             # from matplotlib import collections as mc

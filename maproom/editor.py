@@ -162,6 +162,7 @@ class ProjectEditor(SawxEditor):
             "to_verdat_layer",
             "merge_layers",
             "merge_points",
+            "contour_layers",
             None,
             "delete_layer",
             None,
