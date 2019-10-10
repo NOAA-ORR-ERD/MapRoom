@@ -7,6 +7,7 @@ from mock import maproom_dir, MockProject
 
 from maproom import loaders
 from maproom.library.Boundary import Boundaries, PointsError
+from maproom.library.contour_utils import contour_layer, contour_layer_to_polylines
 
 INTERACTIVE = False
 
@@ -150,6 +151,36 @@ class TestContour(object):
             # # plt.scatter(x + xmin, y + ymin, 10, weights)
             # plt.show()
 
+    def test_library(self):
+        timesteps = self.folder.get_particle_layers()
+        print(len(timesteps))
+        assert 25 == len(timesteps)
+        layer = timesteps[-2]
+        print(layer)
+        assert 100 == len(layer.points)
+        print(layer.status_code_names)
+        print(layer.scalar_var_names)
+        segs, bbox = contour_layer(layer, 'surface_concentration')
+        for level in segs.keys():
+            print(level)
+            for i, seg in enumerate(segs[level]):
+                print("  ", level, i, seg[0][0]+bbox[0][0], seg[0][1]+bbox[0][1], seg[1][0]+bbox[0][0], seg[1][1]+bbox[0][1])
+
+    def test_library_to_polylines(self):
+        timesteps = self.folder.get_particle_layers()
+        print(len(timesteps))
+        assert 25 == len(timesteps)
+        layer = timesteps[-2]
+        print(layer)
+        assert 100 == len(layer.points)
+        print(layer.status_code_names)
+        print(layer.scalar_var_names)
+        polyline_levels = contour_layer_to_polylines(layer, 'surface_concentration')
+        # for level in polyline_levels.keys():
+        #     print(level)
+        #     for i, p in enumerate(polyline_levels[level]):
+        #         print("  ", level, i, p)
+
 
 
 if __name__ == "__main__":
@@ -157,4 +188,6 @@ if __name__ == "__main__":
 
     t = TestContour()
     t.setup()
-    t.test_simple()
+    # t.test_simple()
+    # t.test_library()
+    t.test_library_to_polylines()
