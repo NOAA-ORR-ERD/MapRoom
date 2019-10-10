@@ -2,7 +2,7 @@
 
 from .base import Layer, EmptyLayer
 from .point import PointLayer
-from .line import LineLayer, LineEditLayer
+from .line import LineLayer, LineEditLayer, SegmentLayer
 from .folder import RootLayer, Folder
 from .grid import Graticule
 from .scale import Scale

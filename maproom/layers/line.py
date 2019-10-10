@@ -758,3 +758,26 @@ class LineEditLayer(LineLayer):
         if command and hasattr(command, 'transient_geometry_update'):
             command.transient_geometry_update(self)
         return self.parent_layer
+
+
+class SegmentLayer(LineLayer):
+    visibility_items = ["lines"]
+
+    layer_info_panel = ["Line segment count", "Color"]
+
+    def render_projected(self, renderer, w_r, p_r, s_r, layer_visibility, picker):
+        """Actually draw the screen using the current display canvas renderer
+
+        """
+        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        if (not layer_visibility["layer"]):
+            return
+
+        if (picker.is_active):
+            return
+
+        # the points and line segments
+        if layer_visibility["lines"]:
+            renderer.draw_lines(self, picker, self.style,
+                                self.get_selected_line_segment_indexes(),
+                                self.get_selected_line_segment_indexes(state.FLAGGED))

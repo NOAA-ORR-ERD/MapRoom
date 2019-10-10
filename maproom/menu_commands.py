@@ -8,6 +8,7 @@ from .command import Command, UndoInfo
 from . import layers as ly
 from . import loaders
 from .library import point_utils
+from .library.contour_utils import contour_layer_to_line_layer_data
 from .vector_object_commands import get_parent_layer_data
 from .vector_object_commands import restore_layers
 from .renderer import data_types
@@ -1105,16 +1106,12 @@ class AddContourLayerCommand(Command):
     ui_name = "Contour Layer"
     serialize_order = [
         ('layer', 'layer'),
-        ('cp1', 'point'),
-        ('cp2', 'point'),
-        ('contour_segments', 'contour_segments'),
+        ('contour_param', 'contour_param'),
     ]
 
-    def __init__(self, event_layer, cp1, cp2, contour_segments):
-        Command.__init__(self, event_layer)
-        self.cp1 = cp1
-        self.cp2 = cp2
-        self.contour_segments = contour_segments
+    def __init__(self, layer, contour_param):
+        Command.__init__(self, layer)
+        self.contour_param = contour_param
 
     def __str__(self):
         return self.ui_name
@@ -1123,39 +1120,55 @@ class AddContourLayerCommand(Command):
         self.undo_info = undo = UndoInfo()
         lm = editor.layer_manager
         saved_invariant = lm.next_invariant
-        layer = ly.AnnotationLayer(lm)
-        parent_layer = lm.get_layer_by_invariant(self.layer)
 
-        kwargs = {'before': parent_layer}
-        lm.insert_loaded_layer(layer, editor, **kwargs)
+        contour_layer = lm.get_layer_by_invariant(self.layer)
+        try:
+            line_layer_data = contour_layer_to_line_layer_data(contour_layer, self.contour_param)
+        except ValueError as e:
+            raise RuntimeError(e)
 
-        undo.flags.layers_changed = True
-        undo.flags.refresh_needed = True
-        lf = undo.flags.add_layer_flags(layer)
+        if not line_layer_data:
+            raise RuntimeError("No contours produced.")
+
+        folder = ly.Folder(lm)
+        folder.name = "Contour of " + contour_layer.name
+        folder.start_time = contour_layer.start_time
+        folder.end_time = contour_layer.end_time
+        lm.insert_loaded_layer(folder, editor, after=contour_layer)
+        kwargs = {'first_child_of': folder}
+        lf = undo.flags.add_layer_flags(folder)
         lf.select_layer = True
         lf.layer_loaded = True
-        lf.collapse = False
+        added_layers = [folder.invariant]
+        for contour_level, layer_data in line_layer_data.items():
+            p = ly.SegmentLayer(lm)
+            points, segments = layer_data
+            p.set_data(points, 0, segments)
+            p.name = f"{self.contour_param} = {contour_level}"
+            p.start_time = contour_layer.start_time
+            p.end_time = contour_layer.end_time
+            lm.insert_loaded_layer(p, editor, **kwargs)
+            kwargs = {'after': p}
+            lf = undo.flags.add_layer_flags(p)
+            lf.select_layer = True
+            lf.layer_loaded = True
+            lf.collapse = False
+            added_layers.append(p.invariant)
 
-        kwargs = {'first_child_of': layer}
-        text = ly.RectangleVectorObject(lm)
-        text.set_opposite_corners(self.cp1, self.cp2)
-        lm.insert_loaded_layer(text, editor, **kwargs)
-        lf = undo.flags.add_layer_flags(text)
-        lf.layer_loaded = True
-
-        undo.data = (layer.invariant, saved_invariant)
+        undo.data = (saved_invariant, added_layers)
 
         return self.undo_info
 
     def undo(self, editor):
         lm = editor.layer_manager
-        invariant, saved_invariant, parent_layer_data = self.undo_info.data
-        layer = editor.layer_manager.get_layer_by_invariant(invariant)
-        insertion_index = lm.get_multi_index_of_layer(layer)
+        saved_invariant, added_layers = self.undo_info.data
+        for invariant in added_layers:
+            layer = editor.layer_manager.get_layer_by_invariant(invariant)
+            insertion_index = lm.get_multi_index_of_layer(layer)
 
-        # Only remove the reference to the layer in the layer manager, leave
-        # all the layer info around so that it can be undone
-        lm.remove_layer_at_multi_index(insertion_index)
+            # Only remove the reference to the layer in the layer manager, leave
+            # all the layer info around so that it can be undone
+            lm.remove_layer_at_multi_index(insertion_index)
         lm.next_invariant = saved_invariant
 
         undo = UndoInfo()

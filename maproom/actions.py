@@ -605,76 +605,42 @@ class contour_layers(SawxAction):
         layer_names = [str(layer.name) for layer in layers]
 
         import wx
-        dialog = wx.MultiChoiceDialog(
+        # dialog = wx.MultiChoiceDialog(
+        #     project.control,
+        #     "Please select layers to contour.",
+        #     "Contour Layers",
+        #     layer_names
+        # )
+        dialog = wx.SingleChoiceDialog(
             project.control,
-            "Please select layers to contour.",
-            "Contour Layers",
+            "Please select layer to contour.",
+            "Contour Layer",
             layer_names
         )
 
         result = dialog.ShowModal()
         if result == wx.ID_OK:
-            selections = dialog.GetSelections()
+            # selections = dialog.GetSelections()
+            selections = [dialog.GetSelection()]
         else:
             selections = None
         dialog.Destroy()
         if selections is None:
             return
         contouring = [layers[i] for i in selections]
-
-        # dialog = wx.SingleChoiceDialog(project.control, "Choose value to be contoured", "Contour Value", [list_of_valid_contour_params])
-        # result = dialog.ShowModal()
-        # if result == wx.ID_OK:
-        #     contour_param = dialog.GetStringSelection()
-        # else:
-        #     contour_param = None
-        # dialog.Destroy()
-        contour_param = "age"
-
-        import numpy as np
         layer = contouring[0]  # one layer for now
-        xmin = layer.points.x.min()
-        ymin = layer.points.y.min()
-        xmax = layer.points.x.max()
-        ymax = layer.points.y.max()
-        x = layer.points.x - xmin
-        y = layer.points.y - ymin
-        xy = np.vstack([x, y])
 
-        import scipy.stats
-        weights = layer.scalar_vars[contour_param]
-        total_weight = weights.sum()
-        kernel = scipy.stats.gaussian_kde(xy, weights=weights)
-
-        binsize = 101
-        x_flat = np.linspace(x.min(), x.max(), binsize)
-        y_flat = np.linspace(y.min(), y.max(), binsize)
-        xx,yy = np.meshgrid(x_flat,y_flat)
-        grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
-
-        values = kernel(grid_coords.T) * total_weight
-        values = values.reshape(binsize,binsize)
-
-        max_density = values.max()
-        levels = [0.1, 0.4, 0.8, 1]
-        levels.sort()
-        particle_contours = [lev * max_density for lev in levels]
-
-        try:
-            import py_contour
-        except ImportError:
-            pass
+        list_of_valid_contour_params = sorted(layer.scalar_var_names)
+        dialog = wx.SingleChoiceDialog(project.control, "Choose value to be contoured", "Contour Value", list_of_valid_contour_params)
+        result = dialog.ShowModal()
+        if result == wx.ID_OK:
+            contour_param = dialog.GetStringSelection()
         else:
-            segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
-            for level in particle_contours:
-                if level in segs:
-                    print(level)
-                    for i, seg in enumerate(segs[level]):
-                        print("  ", level, i, seg[0][0]+xmin, seg[0][1]+ymin, seg[1][0]+xmin, seg[1][1]+ymin)
-            
-            parent = lm.get_layer_parent(layer)
-            cmd = mec.AddContourLayerCommand(parent, (xmin, ymin), (xmax, ymax), segs)
-            project.process_command(cmd)
+            contour_param = None
+        dialog.Destroy()
+
+        cmd = mec.AddContourLayerCommand(layer, contour_param)
+        project.process_command(cmd)
 
 
 class jump_to_coords(SawxAction):

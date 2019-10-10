@@ -46,141 +46,47 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     return segs, ((xmin, ymin), (xmax, ymax))
 
 
-def segments_to_polylines(seg_list):
-    """Calculate polylines from list of point1 -> point2 tuples
+def segments_to_line_layer_data(seg_list):
+    """Calculate numpy array to be used as input to line layer
 
-    Simplistic code, assuming the next tuple matches either the first or second
-    point the current tuple.
+    py_contour returns list of tuples, each tuple represents a line segment. This
+    converts to a numpy array and a list of segment connectivity.
     """
     count = len(seg_list)
-    workspace = np.zeros((count, 2), dtype=np.float32)
-    polylines = []
+    points = np.zeros((count * 2, 2), dtype=np.float64)
+    lines = np.empty((count, 2), dtype=np.uint32)
     i = 0
+    i2 = 0
     while (i < count):
-        sx = seg_list[i][0][0]
-        sy = seg_list[i][0][1]
-        ex = seg_list[i][1][0]
-        ey = seg_list[i][1][1]
-        print("start", sx, sy, ex, ey, "at", i)
+        points[i2][0] = seg_list[i][0][0]
+        points[i2][1] = seg_list[i][0][1]
+        lines[i][0] = i2
+        i2 += 1
+        points[i2][0] = seg_list[i][1][0]
+        points[i2][1] = seg_list[i][1][1]
+        lines[i][1] = i2
+        i2 += 1
         i += 1
-        if i < count:
-            ax = seg_list[i][0][0]
-            ay = seg_list[i][0][1]
-            bx = seg_list[i][1][0]
-            by = seg_list[i][1][1]
-            print("first group", ax, ay, bx, by, "at", i)
-            if ax == sx and ay == sy:
-                # found continuation: e -> s -> b (since s == a)
-                workspace[0][0] = ex
-                workspace[0][1] = ey
-                workspace[1][0] = sx
-                workspace[1][1] = sy
-                workspace[2][0] = bx
-                workspace[2][1] = by
-                ex = bx
-                ey = by
-                w = 2  # index into workspace of current endpoint
-            elif ax == ex and ay == ey:
-                # found continuation: s -> e -> b (since e == a)
-                workspace[0][0] = sx
-                workspace[0][1] = sy
-                workspace[1][0] = ex
-                workspace[1][1] = ey
-                workspace[2][0] = bx
-                workspace[2][1] = by
-                ex = bx
-                ey = by
-                w = 2  # index into workspace of current endpoint
-            elif bx == sx and by == sy:
-                # found continuation: e -> s -> a (since s == b)
-                workspace[0][0] = ex
-                workspace[0][1] = ey
-                workspace[1][0] = sx
-                workspace[1][1] = sy
-                workspace[2][0] = ax
-                workspace[2][1] = ay
-                ex = ax
-                ey = ay
-                w = 2  # index into workspace of current endpoint
-            elif bx == ex and by == ey:
-                # found continuation: s -> e -> b (since e == b)
-                workspace[0][0] = sx
-                workspace[0][1] = sy
-                workspace[1][0] = ex
-                workspace[1][1] = ey
-                workspace[2][0] = ax
-                workspace[2][1] = ay
-                ex = ax
-                ey = ay
-                w = 2  # index into workspace of current endpoint
-            else:
-                w = 1  # flag: a-b segment isn't connected to s-e
-        else:
-            w = 1  # no more segments
-
-        if w == 1:
-            print("SINGLE SEGMENT at", i)
-            # a-b segment isn't connected to the s-e segment, so s-e
-            # is a two-point segment
-            workspace[0][0] = sx
-            workspace[0][1] = sy
-            workspace[1][0] = ex
-            workspace[1][1] = ey
-        else:
-            # continue to look for more segments
-            i += 1
-            while (i < count):
-                ax = seg_list[i][0][0]
-                ay = seg_list[i][0][1]
-                bx = seg_list[i][1][0]
-                by = seg_list[i][1][1]
-                print("looking for", ex, ey, "at", i, ax, ay, bx, by)
-                if ax == ex and ay == ey:
-                    # found continuation: e -> b (since e == a)
-                    workspace[w][0] = bx
-                    workspace[w][1] = by
-                    ex = bx
-                    ey = by
-                    w += 1
-                elif bx == ex and by == ey:
-                    # found continuation: e -> b (since e == b)
-                    workspace[w][0] = ax
-                    workspace[w][1] = ay
-                    ex = ax
-                    ey = ay
-                    w += 1
-                else:
-                    # doesn't match either point, so we must be starting a
-                    # new polyline.
-                    print("DOESNT MATCH at ", i)
-                    break
-                i += 1
-
-        # end of segment, store it and check the next one
-        w += 1
-        polyline = np.zeros((w, 2), dtype=np.float32)
-        polyline[0:w,:] = workspace[0:w,:]
-        polylines.append(polyline)
-    return polylines       
+    return points, lines       
 
 
-def contour_layer_to_polylines(particle_layer, contour_param, percent_levels=None):
-    """Calculate polylines for each contour level
+def contour_layer_to_line_layer_data(particle_layer, contour_param, percent_levels=None):
+    """Calculate segment lists suitable for use in line layers
 
-    Instead of disjointed segments as returned by contour_layer, this returns a list
-    of polylines for each contour level. Each polyline is a list of points connected
-    sequentially. Each contour level may contain one or more polylines, as each
-    polyline does not have any gaps.
+    Because py_contour appears to return disjointed segments, no attempt is made
+    to convert the contour lines into contiguous polylines. Instead, a list of points
+    is returned such that a line segment list can be created connecting point 0 to point 1,
+    point 2 to point 3, point 4 to point 5 (etc) and can be fed into a normal line layer
+    using the set_disjointed_segment_data method.
     """
     segs, bbox = contour_layer(particle_layer, contour_param, percent_levels)
     levels = {}
     for level in segs.keys():
-        print(level)
-        polylines = segments_to_polylines(segs[level])
-        # for i, p in enumerate(polylines):
-        #     p[:,0] += bbox[0][0]
-        #     p[:,1] += bbox[0][1]
-        #     print("  ", level, i, p)
-        levels[level] = polylines
-        break
+        # print(level)
+        points, line_segment_indexes = segments_to_line_layer_data(segs[level])
+        points[:,0] += bbox[0][0]
+        points[:,1] += bbox[0][1]
+        # print(points)
+        # print(line_segment_indexes)
+        levels[level] = points, line_segment_indexes
     return levels

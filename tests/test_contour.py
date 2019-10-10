@@ -7,7 +7,7 @@ from mock import maproom_dir, MockProject
 
 from maproom import loaders
 from maproom.library.Boundary import Boundaries, PointsError
-from maproom.library.contour_utils import contour_layer, contour_layer_to_polylines
+from maproom.library.contour_utils import contour_layer, contour_layer_to_line_layer_data
 
 INTERACTIVE = False
 
@@ -175,7 +175,7 @@ class TestContour(object):
         assert 100 == len(layer.points)
         print(layer.status_code_names)
         print(layer.scalar_var_names)
-        polyline_levels = contour_layer_to_polylines(layer, 'surface_concentration')
+        polyline_levels = contour_layer_to_line_layer_data(layer, 'surface_concentration')
         # for level in polyline_levels.keys():
         #     print(level)
         #     for i, p in enumerate(polyline_levels[level]):
