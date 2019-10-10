@@ -28,8 +28,10 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     kernel = scipy.stats.gaussian_kde(xy, weights=weights)
 
     binsize = 101
-    x_flat = np.linspace(x.min(), x.max(), binsize)
-    y_flat = np.linspace(y.min(), y.max(), binsize)
+    xdelta = (xmax - xmin) / 2.0
+    ydelta = (ymax - ymin) / 2.0
+    x_flat = np.linspace(x.min() - xdelta, x.max() + xdelta, binsize)
+    y_flat = np.linspace(y.min() - ydelta, y.max() + ydelta, binsize)
     xx,yy = np.meshgrid(x_flat,y_flat)
     grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
 
