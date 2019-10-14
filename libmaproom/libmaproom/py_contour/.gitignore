@@ -1,0 +1,13 @@
+.DS_store
+.cache/
+
+build/*
+example_poly.png
+example_segments.png
+
+*.egg-info/
+
+*.pyc
+*.c
+*.so
+__pycache__/

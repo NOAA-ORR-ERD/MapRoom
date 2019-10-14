@@ -109,10 +109,23 @@ pytriangle = Extension(
     define_macros = DEFINES,
 )
 
+# Extension module is named libmaproom.contour rather than libmaproom.py_contour
+# because imports get confused with the py_contour source directory within the libmaproom
+# directory (error message "dynamic module doesn't define module export function"), but
+# moving the py_contour directory outside of the libmaproom directory doesn't seem to help. 
+py_contour = Extension(
+    "libmaproom.contour",
+    sources = [
+        "libmaproom/py_contour/py_contour/contour.pyx",
+        "libmaproom/py_contour/py_contour/conrec.cxx",
+    ],
+    include_dirs = [
+        numpy.get_include(),
+    ],
+)
 
 
-
-ext_modules = [bitmap, shape, tessellator, render, pytriangle]
+ext_modules = [bitmap, shape, tessellator, render, pytriangle, py_contour]
 #ext_modules = [tessellator]
 
 data_files = []

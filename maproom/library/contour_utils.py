@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.stats
-import py_contour
+import libmaproom.contour as py_contour
 
 import logging
 log = logging.getLogger(__name__)
