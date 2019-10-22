@@ -1123,9 +1123,14 @@ class AddContourLayerCommand(Command):
 
         contour_layer = lm.get_layer_by_invariant(self.layer)
         try:
+            progress_log.info("START=Computing contour for layer %s" % contour_layer.name)
             line_layer_data = contour_layer_to_line_layer_data(contour_layer, self.contour_param)
         except ValueError as e:
             raise RuntimeError(e)
+        except ProgressCancelError as e:
+            self.undo_info.flags.success = False
+        finally:
+            progress_log.info("END")
 
         if not line_layer_data:
             raise RuntimeError("No contours produced.")

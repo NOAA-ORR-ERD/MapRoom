@@ -4,6 +4,7 @@ import libmaproom.contour as py_contour
 
 import logging
 log = logging.getLogger(__name__)
+progress_log = logging.getLogger("progress")
 
 
 def contour_layer(particle_layer, contour_param, percent_levels=None):
@@ -33,11 +34,12 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
         total_weight = 1.0
     else:
         total_weight = weights.sum()
+    progress_log.info("Calculating gaussian_kde...")
     kernel = scipy.stats.gaussian_kde(xy, weights=weights)
 
-    binsize = 101
-    xdelta = (xmax - xmin) / 1.5
-    ydelta = (ymax - ymin) / 1.5
+    binsize = 301
+    xdelta = (xmax - xmin)# / 2.0
+    ydelta = (ymax - ymin)# / 2.0
     # xdelta = 0.0
     # ydelta = 0.0
     x_flat = np.linspace(x.min() - xdelta, x.max() + xdelta, binsize)
@@ -45,6 +47,7 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     xx,yy = np.meshgrid(x_flat,y_flat)
     grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
 
+    progress_log.info("Calculating values from kernel...")
     values = kernel(grid_coords.T) * total_weight
     values = values.reshape(binsize,binsize)
 
@@ -52,6 +55,7 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     particle_contours = [lev * max_density for lev in percent_levels]
 
     values = np.ascontiguousarray(values.T)
+    progress_log.info("Calculating contour...")
     segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
 
     return segs, ((xmin, ymin), (xmax, ymax))
