@@ -35,7 +35,7 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
         total_weight = weights.sum()
     kernel = scipy.stats.gaussian_kde(xy, weights=weights)
 
-    binsize = 1001
+    binsize = 101
     xdelta = (xmax - xmin) / 1.5
     ydelta = (ymax - ymin) / 1.5
     # xdelta = 0.0
@@ -51,8 +51,9 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     max_density = values.max()
     particle_contours = [lev * max_density for lev in percent_levels]
 
+    values = np.ascontiguousarray(values.T)
     segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
-    
+
     return segs, ((xmin, ymin), (xmax, ymax))
 
 
@@ -92,6 +93,8 @@ def contour_layer_to_line_layer_data(particle_layer, contour_param, percent_leve
     segs, bbox = contour_layer(particle_layer, contour_param, percent_levels)
     levels = {}
     for level in segs.keys():
+        # polys = py_contour.sort_segments(segs[level])  # SUPER SLOW!!!!!
+        # print(polys)
         # print(level)
         points, line_segment_indexes = segments_to_line_layer_data(segs[level])
         points[:,0]# += bbox[0][0]
