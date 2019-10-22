@@ -835,5 +835,7 @@ class ParticleLayer(PointBaseLayer):
         points returned by `calc_contour_points`) containing the weight at each
         point.
         """
-        return None
+        if contour_weight_name == "unweighted":
+            return None
+        return self.scalar_vars[contour_weight_name]
 
