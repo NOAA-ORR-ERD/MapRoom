@@ -761,6 +761,10 @@ class LineEditLayer(LineLayer):
 
 
 class SegmentLayer(LineLayer):
+    name = "Segment"
+
+    type = "segment"
+
     visibility_items = ["lines"]
 
     layer_info_panel = ["Line segment count", "Color"]
