@@ -704,6 +704,18 @@ class LayerManager(SawxDocument):
                 layers.append(layer)
         return layers
 
+    def get_layers_by_function(self, func):
+        """Find all layers that match a criterion specified by a callable.
+
+        Callable takes one parameter, the layer, and should return boolean
+        to indicate whether or not it should be included in the returned list.
+        """
+        layers = []
+        for layer in self.flatten():
+            if func(layer):
+                layers.append(layer)
+        return layers
+
     def get_timestamped_layers(self, layer_visibility, only_visible_layers=True):
         possible = self.get_visible_layers(layer_visibility, only_visible_layers)
         layers = []

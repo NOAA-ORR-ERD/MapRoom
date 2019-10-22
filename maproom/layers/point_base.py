@@ -321,6 +321,17 @@ class PointBaseLayer(ProjectedLayer):
         """
         pass
 
+    #### contour
+
+    @property
+    def can_contour(self):
+        return True
+
+    def calc_contour_points(self):
+        return self.points.x, self.points.y
+
+    #### rendering
+
     def rebuild_renderer(self, renderer, in_place=False):
         """Update renderer
 

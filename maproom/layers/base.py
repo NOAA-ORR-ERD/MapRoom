@@ -729,6 +729,36 @@ class Layer:
     def calc_output_feature_list(self):
         pass
 
+    #### contour
+
+    @property
+    def can_contour(self):
+        """Can this layer be used to generate a contour?"""
+        return False
+
+    def calc_contour_points(self):
+        """Determine which points in the layer should be used to generate
+        a contour. 
+
+        Returns tuple containing two numpy arrays, one of the x coordinate and
+        one of the y coordinates.
+        """
+        return []
+
+    def get_contour_weight_names(self):
+        """Return a list of strings representing each auxiliary piece of data
+        connected to each point that can be used as weights for the contour
+        generation.
+        """
+        return []
+
+    def calc_contour_weights(self, contour_weight_name):
+        """Return a numpy array (with the same number of entries as number of
+        points returned by `calc_contour_points`) containing the weight at each
+        point.
+        """
+        return None
+
     #### rendering
 
     def rebuild_renderer(self, renderer, in_place=False):

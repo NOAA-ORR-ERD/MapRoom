@@ -66,6 +66,10 @@ class VectorObjectLayer(LineLayer):
     def can_copy(self):
         return True
 
+    @property
+    def can_contour(self):
+        return False
+
     def can_reparent_to(self, potential_parent_layer):
         return potential_parent_layer.can_contain_annotations
 
@@ -729,6 +733,10 @@ class ScaledImageObject(RectangleVectorObject):
         super().__init__(manager)
         self.image_data = None
 
+    @property
+    def can_contour(self):
+        return False
+
     def get_image_array(self):
         from maproom.library.numpy_images import get_square
         return get_square(100)
@@ -777,6 +785,10 @@ class OverlayMixin(object):
 
     def calc_control_points_from_screen(self, canvas):
         pass
+
+    @property
+    def can_contour(self):
+        return False
 
     def update_world_control_points(self, renderer):
         self.calc_control_points_from_screen(renderer.canvas)
@@ -1244,6 +1256,10 @@ class PolylineMixin(object):
      0           1
     """
 
+    @property
+    def can_contour(self):
+        return True
+
     def set_points(self, points):
         points = np.asarray(points)
 
@@ -1292,6 +1308,10 @@ class PolylineMixin(object):
         colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
+
+    def calc_contour_points(self):
+        offset = self.center_point_index + 1
+        return self.points[offset:].x, self.points[offset:].y
 
 
 class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):

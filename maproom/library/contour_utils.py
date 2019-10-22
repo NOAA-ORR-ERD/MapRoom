@@ -15,25 +15,38 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
         percent_levels = [0.1, 0.4, 0.8, 1]
     percent_levels.sort()
 
-    xmin = particle_layer.points.x.min()
-    ymin = particle_layer.points.y.min()
-    xmax = particle_layer.points.x.max()
-    ymax = particle_layer.points.y.max()
-    x = particle_layer.points.x - xmin
-    y = particle_layer.points.y - ymin
+    x, y = particle_layer.calc_contour_points()
+    xmin = x.min()
+    ymin = y.min()
+    xmax = x.max()
+    ymax = y.max()
+    # x = np.asarray(particle_layer.points.x, dtype=np.float64)# - xmin
+    # y = np.asarray(particle_layer.points.y, dtype=np.float64)# - ymin
+    print(x)
+    print(y)
     xy = np.vstack([x, y])
+    print("XY")
+    print(xy)
 
-    weights = particle_layer.scalar_vars[contour_param]
-    total_weight = weights.sum()
+    weights = particle_layer.calc_contour_weights(contour_param)
+    if weights is None:
+        total_weight = 1.0
+    else:
+        total_weight = weights.sum()
     kernel = scipy.stats.gaussian_kde(xy, weights=weights)
 
-    binsize = 101
-    xdelta = (xmax - xmin) / 2.0
-    ydelta = (ymax - ymin) / 2.0
+    binsize = 1001
+    xdelta = (xmax - xmin) / 1.5
+    ydelta = (ymax - ymin) / 1.5
+    # xdelta = 0.0
+    # ydelta = 0.0
     x_flat = np.linspace(x.min() - xdelta, x.max() + xdelta, binsize)
     y_flat = np.linspace(y.min() - ydelta, y.max() + ydelta, binsize)
     xx,yy = np.meshgrid(x_flat,y_flat)
     grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
+    print(grid_coords)
+    print("TRONSSUHSNOEH")
+    print(grid_coords.T)
 
     values = kernel(grid_coords.T) * total_weight
     values = values.reshape(binsize,binsize)
@@ -41,6 +54,8 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     max_density = values.max()
     particle_contours = [lev * max_density for lev in percent_levels]
 
+    print(x_flat)
+    print(y_flat)
     segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
     
     return segs, ((xmin, ymin), (xmax, ymax))
@@ -84,8 +99,8 @@ def contour_layer_to_line_layer_data(particle_layer, contour_param, percent_leve
     for level in segs.keys():
         # print(level)
         points, line_segment_indexes = segments_to_line_layer_data(segs[level])
-        points[:,0] += bbox[0][0]
-        points[:,1] += bbox[0][1]
+        points[:,0]# += bbox[0][0]
+        points[:,1]# += bbox[0][1]
         # print(points)
         # print(line_segment_indexes)
         levels[level] = points, line_segment_indexes

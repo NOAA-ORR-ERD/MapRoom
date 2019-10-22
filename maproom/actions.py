@@ -600,7 +600,7 @@ class contour_layers(SawxAction):
 
     def show_dialog(self, project):
         lm = project.layer_manager
-        layers = lm.get_layers_of_type("particle")
+        layers = lm.get_layers_by_function(lambda ly: ly.can_contour)
 
         layer_names = [str(layer.name) for layer in layers]
 
@@ -630,14 +630,20 @@ class contour_layers(SawxAction):
         contouring = [layers[i] for i in selections]
         layer = contouring[0]  # one layer for now
 
-        list_of_valid_contour_params = sorted(layer.scalar_var_names)
-        dialog = wx.SingleChoiceDialog(project.control, "Choose value to be contoured", "Contour Value", list_of_valid_contour_params)
-        result = dialog.ShowModal()
-        if result == wx.ID_OK:
-            contour_param = dialog.GetStringSelection()
+        list_of_valid_contour_params = layer.get_contour_weight_names()
+        if list_of_valid_contour_params:
+            dialog = wx.SingleChoiceDialog(project.control, "Choose value to be contoured", "Contour Value", list_of_valid_contour_params)
+            result = dialog.ShowModal()
+            if result == wx.ID_OK:
+                contour_param = dialog.GetStringSelection()
+            else:
+                contour_param = None
+            dialog.Destroy()
         else:
-            contour_param = None
-        dialog.Destroy()
+            try:
+                contour_param = list_of_valid_contour_params[0]
+            except IndexError:
+                contour_param = None
 
         cmd = mec.AddContourLayerCommand(layer, contour_param)
         project.process_command(cmd)

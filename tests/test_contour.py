@@ -72,85 +72,6 @@ class TestContour(object):
         self.project.load_file(maproom_dir + "/TestData/NC_particles/gnome_output_spill_start_after_model.nc", "application/x-nc_particles")
         self.folder = self.project.layer_manager.get_nth_oldest_layer_of_type("particles", 1)
 
-    def test_simple(self):
-        timesteps = self.folder.get_particle_layers()
-        print(len(timesteps))
-        assert 25 == len(timesteps)
-        layer = timesteps[-2]
-        print(layer)
-        assert 100 == len(layer.points)
-        print(layer.status_code_names)
-        print(layer.scalar_var_names)
-        bounds = layer.compute_bounding_rect()
-        print(bounds)
-
-        xmin = layer.points.x.min()
-        ymin = layer.points.y.min()
-        x = layer.points.x - xmin
-        y = layer.points.y - ymin
-        xy = np.vstack([x, y])
-
-        weights = layer.scalar_vars['surface_concentration']
-        total_weight = weights.sum()
-        kernel = scipy.stats.gaussian_kde(xy, weights=weights)
-
-        binsize = 101
-        x_flat = np.linspace(x.min(), x.max(), binsize)
-        y_flat = np.linspace(y.min(), y.max(), binsize)
-        xx,yy = np.meshgrid(x_flat,y_flat)
-        grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
-
-        values = kernel(grid_coords.T) * total_weight
-        values = values.reshape(binsize,binsize)
-
-        max_density = values.max()
-        levels = [0.1, 0.4, 0.8, 1]
-        levels.sort()
-        particle_contours = [lev * max_density for lev in levels]
-
-        if INTERACTIVE:
-            try:
-                import matplotlib.pyplot as plt
-            except ImportError:
-                pass
-            else:
-                plt.contour(xx + xmin, yy + ymin, values, particle_contours)
-                plt.scatter(x + xmin, y + ymin, 10, weights)
-                plt.show()
-
-        print(xy)
-        print(weights)
-        print(grid_coords.T)
-        print(values)
-        print(particle_contours)
-
-        try:
-            import py_contour
-        except ImportError:
-            pass
-        else:
-            segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
-            print(x_flat)
-            print(y_flat)
-            print(segs)
-            print(segs.keys())
-            print(particle_contours)
-            for level in particle_contours:
-                if level in segs:
-                    print(level)
-                    for i, seg in enumerate(segs[level]):
-                        print("  ", level, i, seg[0][0]+xmin, seg[0][1]+ymin, seg[1][0]+xmin, seg[1][1]+ymin)
-
-            # import matplotlib.pyplot as plt
-            # from matplotlib import collections as mc
-            # fig, ax = plt.subplots()
-            # for level in particle_contours:
-            #     if level in segs:
-            #         lc = mc.LineCollection(segs[level], linewidths=2)
-            #         ax.add_collection(lc)
-            # # plt.scatter(x + xmin, y + ymin, 10, weights)
-            # plt.show()
-
     def test_library(self):
         timesteps = self.folder.get_particle_layers()
         print(len(timesteps))
@@ -184,10 +105,94 @@ class TestContour(object):
 
 
 if __name__ == "__main__":
+    import sys
     INTERACTIVE = True
 
-    t = TestContour()
-    t.setup()
-    # t.test_simple()
-    # t.test_library()
-    t.test_library_to_polylines()
+    def interactive(filename, contour_param=None):
+        project = MockProject()
+        project.load_file(filename, "application/x-nc_particles")
+        folder = project.layer_manager.get_nth_oldest_layer_of_type("particles", 1)
+
+        timesteps = folder.get_particle_layers()
+        print(len(timesteps))
+        layer = timesteps[1]
+        print(layer)
+        print(layer.status_code_names)
+        print(layer.scalar_var_names)
+        bounds = layer.compute_bounding_rect()
+        print(bounds)
+
+        xmin = layer.points.x.min()
+        ymin = layer.points.y.min()
+        x = layer.points.x - xmin
+        y = layer.points.y - ymin
+        xy = np.vstack([x, y])
+
+        contour_param = None
+        if contour_param is None:
+            weights = None
+            total_weight = 1.0
+        else:
+            weights = particle_layer.scalar_vars[contour_param]
+            total_weight = weights.sum()
+        kernel = scipy.stats.gaussian_kde(xy, weights=weights)
+
+        binsize = 101
+        x_flat = np.linspace(x.min(), x.max(), binsize)
+        y_flat = np.linspace(y.min(), y.max(), binsize)
+        xx,yy = np.meshgrid(x_flat,y_flat)
+        grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
+
+        values = kernel(grid_coords.T) * total_weight
+        values = values.reshape(binsize,binsize)
+
+        max_density = values.max()
+        levels = [0.1, 0.4, 0.8, 1]
+        levels.sort()
+        particle_contours = [lev * max_density for lev in levels]
+
+        import matplotlib.pyplot as plt
+        plt.contour(xx + xmin, yy + ymin, values, particle_contours)
+        plt.scatter(x + xmin, y + ymin, 10, weights)
+        plt.show()
+
+        print(xy)
+        print(weights)
+        print(grid_coords.T)
+        print(values)
+        print(particle_contours)
+
+        import libmaproom.contour as py_contour
+        segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
+        print(x_flat)
+        print(y_flat)
+        print(segs)
+        print(segs.keys())
+        print(particle_contours)
+        for level in particle_contours:
+            if level in segs:
+                print(level)
+                for i, seg in enumerate(segs[level]):
+                    print("  ", level, i, seg[0][0]+xmin, seg[0][1]+ymin, seg[1][0]+xmin, seg[1][1]+ymin)
+
+        # import matplotlib.pyplot as plt
+        # from matplotlib import collections as mc
+        # fig, ax = plt.subplots()
+        # for level in particle_contours:
+        #     if level in segs:
+        #         lc = mc.LineCollection(segs[level], linewidths=2)
+        #         ax.add_collection(lc)
+        # # plt.scatter(x + xmin, y + ymin, 10, weights)
+        # plt.show()
+
+
+    if sys.argv:
+        for arg in sys.argv[1:]:
+            interactive(arg)
+    else:
+        t = TestContour()
+        t.setup()
+        # t.test_simple()
+        # t.test_library()
+        t.test_library_to_polylines()
+

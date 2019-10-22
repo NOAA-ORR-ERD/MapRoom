@@ -822,3 +822,18 @@ class ParticleLayer(PointBaseLayer):
             return result
         except ParseException as e:
             raise ValueError(e)
+
+    #### contour
+
+    def get_contour_weight_names(self):
+        names = sorted(self.scalar_var_names)
+        names[0:0] = ["unweighted"]
+        return names
+
+    def calc_contour_weights(self, contour_weight_name):
+        """Return a numpy array (with the same number of entries as number of
+        points returned by `calc_contour_points`) containing the weight at each
+        point.
+        """
+        return None
+
