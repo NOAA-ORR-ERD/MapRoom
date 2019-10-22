@@ -44,9 +44,6 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     y_flat = np.linspace(y.min() - ydelta, y.max() + ydelta, binsize)
     xx,yy = np.meshgrid(x_flat,y_flat)
     grid_coords = np.append(xx.reshape(-1,1),yy.reshape(-1,1),axis=1)
-    print(grid_coords)
-    print("TRONSSUHSNOEH")
-    print(grid_coords.T)
 
     values = kernel(grid_coords.T) * total_weight
     values = values.reshape(binsize,binsize)
@@ -54,8 +51,6 @@ def contour_layer(particle_layer, contour_param, percent_levels=None):
     max_density = values.max()
     particle_contours = [lev * max_density for lev in percent_levels]
 
-    print(x_flat)
-    print(y_flat)
     segs = py_contour.contour(values, x_flat, y_flat, particle_contours)
     
     return segs, ((xmin, ymin), (xmax, ymax))

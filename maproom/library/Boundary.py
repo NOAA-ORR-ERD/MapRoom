@@ -82,7 +82,7 @@ class Polyline:
             error_points.update({self[point] for segment in intersecting_segments for item in segment for point in item[2:]})
 
         t = time.clock() - t0
-        print("DONE WITH BOUNDARY SELF-CROSSING CHECK! %f" % t)
+        # print("DONE WITH BOUNDARY SELF-CROSSING CHECK! %f" % t)
 
         return tuple(error_points)
 
@@ -258,7 +258,7 @@ class Boundaries(object):
             connection_count += c
             c = np.bincount(point2[point2 >= 0], minlength=(len(connection_count))).astype(np.int32)
             connection_count += c
-            print(f"loop: connection_count={connection_count}")
+            # print(f"loop: connection_count={connection_count}")
 
             if first_time:
                 self.branch_points = np.where(connection_count > 2)[0].astype(np.int32)
@@ -266,9 +266,9 @@ class Boundaries(object):
                 first_time = False
 
             endpoints = np.where(connection_count == 1)[0]
-            print(endpoints)
+            # print(endpoints)
             if len(endpoints) == 0:
-                print(f"No more polyline endpoints")
+                # print(f"No more polyline endpoints")
                 break
 
             # polylines will start at an endpoint and end when the point has 1
@@ -276,10 +276,11 @@ class Boundaries(object):
             # (ends at a branch point)
             for endpoint in endpoints:
                 if connection_count[endpoint] == 0:
-                    print(f"already checked endpoint {endpoint}")
+                    # print(f"already checked endpoint {endpoint}")
                     continue
                 else:
-                    print(f"starting from {endpoint}")
+                    # print(f"starting from {endpoint}")
+                    pass
                 polyline_len = 0
                 scratch[polyline_len] = endpoint
                 polyline_len += 1
@@ -296,7 +297,7 @@ class Boundaries(object):
                         line_index = np.where(point2 == endpoint)[0]
                         other_end = point1[line_index[0]]
                         used = "point2"
-                    print(f"connecting to {other_end}")
+                    # print(f"connecting to {other_end}")
 
                     scratch[polyline_len] = other_end
                     polyline_len += 1
@@ -319,9 +320,9 @@ class Boundaries(object):
                         self.polylines.append(p)
                         break
                     endpoint = other_end
-                print(f"found polyline {self.polylines[-1]})")
+                # print(f"found polyline {self.polylines[-1]})")
 
-        print(F"after polyline extraction: connection_count {connection_count}")
+        # print(F"after polyline extraction: connection_count {connection_count}")
 
     def extract_polygons(self, point1, point2):
         scratch = np.zeros(len(self.lines), dtype=np.int32)
@@ -339,12 +340,12 @@ class Boundaries(object):
             connection_count += c
             c = np.bincount(point2[point2 >= 0], minlength=(len(connection_count))).astype(np.int32)
             connection_count += c
-            print(f"loop: connection_count={connection_count}")
+            # print(f"loop: connection_count={connection_count}")
 
             connected_points = np.where(connection_count > 0)[0]
-            print(connected_points)
+            # print(connected_points)
             if len(connected_points) == 0:
-                print(f"No more polygons")
+                # print(f"No more polygons")
                 break
 
             # polygons by definition are closed, so it doesn't matter where we
@@ -354,7 +355,7 @@ class Boundaries(object):
             scratch[polyline_len] = start_index
             polyline_len += 1
             endpoint = start_index
-            print(f"polygon starting at {start_index}")
+            # print(f"polygon starting at {start_index}")
             while True:
                 line_index = np.where(point1 == endpoint)[0]
                 if len(line_index) > 0:
@@ -366,25 +367,25 @@ class Boundaries(object):
                         other_end = point1[line_index[0]]
                         used = "point2"
                     else:
-                        print(F"no more lines; assume this polygon is closed")
+                        # print(F"no more lines; assume this polygon is closed")
                         break
 
                 # remove line segments as we process them
                 point1[line_index] = point2[line_index] = -1
 
                 if other_end == start_index:
-                    print(F"found polygon end")
+                    # print(F"found polygon end")
                     break
-                print(f"connecting to {other_end}")
+                # print(f"connecting to {other_end}")
 
                 scratch[polyline_len] = other_end
                 polyline_len += 1
                 endpoint = other_end
             p = Boundary(self.points, np.array(scratch[0:polyline_len]))
             self.boundaries.append(p)
-            print(f"found boundary {self.boundaries[-1]})")
+            # print(f"found boundary {self.boundaries[-1]})")
 
-        print(F"after polygon extraction: connection_count {connection_count}")
+        # print(F"after polygon extraction: connection_count {connection_count}")
 
         # Find the outer boundary that contains all the other boundaries.
         # Determine this by simply selecting the boundary with the biggest
@@ -425,7 +426,7 @@ class Boundaries(object):
             points = boundary.get_points_list()
             point_indexes.extend(boundary.point_indexes)
             num_points = len(points)
-            print(f"crossings: {num_points} points={points}\n  indexes={point_indexes}")
+            # print(f"crossings: {num_points} points={points}\n  indexes={point_indexes}")
 
             # points must be set up for each closed-loop boundary so they don't
             # point into another boundary. The special case for i==0 exists
@@ -457,7 +458,7 @@ class Boundaries(object):
             error_points.update({point_indexes[index] for segment in intersecting_segments for item in segment for index in item[2:]})
 
         t = time.clock() - t0
-        print("DONE WITH BOUNDARY CROSSING CHECK! %f" % t)
+        # print("DONE WITH BOUNDARY CROSSING CHECK! %f" % t)
         progress_log.info("TIME_DELTA=Boundary crossing")
 
         return tuple(error_points)
@@ -481,7 +482,7 @@ class Boundaries(object):
         )
 
         t = time.clock() - t0
-        print("DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t)
+        # print("DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t)
         progress_log.info("TIME_DELTA=Points outside boundary")
         return outside_point_indices
 
