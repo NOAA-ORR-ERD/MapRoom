@@ -81,7 +81,7 @@ from maproom._version import __version__
 class MapRoomApp(SawxApp):
     app_name = "MapRoom"
     app_version = __version__
-    app_description = "High-performance 2d mapping"
+    app_tagline = "High-performance 2d mapping"
     app_author = "NOAA OR&R Emergency Response Division<br>"
     app_icon = "icon://maproom.ico"
     app_website = "https://response.restoration.noaa.gov/"
