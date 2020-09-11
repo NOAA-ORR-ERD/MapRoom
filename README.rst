@@ -66,7 +66,42 @@ Building redistributable versions
 
 MapRoom uses pyinstaller to build standalone/redistributable binary versions.
 
-TODO
+I (Rob McMullen) have not yet been successful creating pyinstaller bundles
+using conda. I have been able to build pyinstaller bundles using pip virtual
+environments, but this requires some by-hand building of some major
+dependencies: GEOS and GDAL. There are notes on the wiki for both MacOS and
+Windows:
+
+* https://gitlab.orr.noaa.gov/erd/MapRoom/-/wikis/dev/MacOS:-building-app-bundles-without-conda
+* https://gitlab.orr.noaa.gov/erd/MapRoom/-/wikis/dev/Windows-10:-building-app-bundles-without-conda
+
+There is a script in the ``maproom/pyinstaller`` directory called
+``build_pyinstaller.py`` that includes the configuration data to create a
+bundle. On a non-conda install, this creates a working app bundle.
+
+On a conda install, the operation to create the bundle completes successfully
+and creates the application ``maproom/pyinstaller/dist/MapRoom_build.app``.
+However, running this fails with a crash dialog box.
+
+Trying to run executable the unpacked version in the
+``maproom/pyinstaller/dist/MapRoom_build`` directory results in::
+
+    $ ./MapRoom_build
+    This program needs access to the screen. Please run with a
+    Framework build of python, and only when you are logged in
+    on the main display of your Mac.
+
+Even using the ``--windowed`` flag to pyinstaller results in this same error.
+
+Some references:
+
+* https://github.com/chriskiehl/Gooey/issues/259
+
+Debugging pyinstaller problems is very tedious, as it is difficult to get
+error messages. On a non-conda install, running the application out of the
+build folder would send error messages to the screen, but on a conda install
+it doesn't get far enough because it can't seem to do the equivalent of the
+the pythonw command.
 
 
 Code Architecture
