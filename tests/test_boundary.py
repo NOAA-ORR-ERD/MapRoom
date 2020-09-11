@@ -138,32 +138,32 @@ if __name__ == "__main__":
         
 #    iterations = 1
 #    
-#    t0 = time.clock()
+#    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
 #        t.test_verdat_is_self_intersecting()
 #        #t.test_large_verdat_is_self_intersecting()
-#    elapsed = time.clock() - t0
+#    elapsed = time.perf_counter() - t0
 #    print "%d custom loops: %f" % (iterations, elapsed)
 #    
-#    t0 = time.clock()
+#    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
 #        t.test_large_verdat_is_self_intersecting()
-#    elapsed = time.clock() - t0
+#    elapsed = time.perf_counter() - t0
 #    print "%d custom loops: %f" % (iterations, elapsed)
     
-#    t0 = time.clock()
+#    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
 #        t.test_large_verdat_is_simple_slow()
-#    elapsed = time.clock() - t0
+#    elapsed = time.perf_counter() - t0
 #    print "%d slow loops: %f" % (iterations, elapsed)
 #    
-#    t0 = time.clock()
+#    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
 #        t.test_large_verdat_is_simple_fast()
-#    elapsed = time.clock() - t0
+#    elapsed = time.perf_counter() - t0
 #    print "%d fast loops: %f" % (iterations, elapsed)
     

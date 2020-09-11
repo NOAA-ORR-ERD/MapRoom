@@ -927,13 +927,13 @@ class ProjectEditor(SawxEditor):
         self.layer_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
         self.selection_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
         self.timeline.refresh_view()
-        self.last_refresh = time.clock()
+        self.last_refresh = time.perf_counter()
         self.control.Refresh()
 
     # @on_trait_change('layer_manager:background_refresh_needed')
     def background_refresh(self, evt):
         log.debug("background refresh called")
-        t = time.clock()
+        t = time.perf_counter()
         if t < self.last_refresh + 0.5:
             log.debug("refreshed too recently; skipping.")
             return

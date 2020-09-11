@@ -181,7 +181,7 @@ class BaseCanvas(object):
 #        import traceback
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
-        t0 = time.clock()
+        t0 = time.perf_counter()
         log.debug("render: RENDERING at %f" % t0)
         self.update_renderers()
 
@@ -219,7 +219,7 @@ class BaseCanvas(object):
             renderer = self.layer_renderers[layer]
             layer.rebuild_renderer(renderer, True)
 
-        elapsed = time.clock() - t0
+        elapsed = time.perf_counter() - t0
         if progress_dialog.is_active():
             log.debug(f"render: ABORTING RENDERING because progress dialog is active; total time = {elapsed}")
             return
@@ -280,7 +280,7 @@ class BaseCanvas(object):
             if self.debug_show_picker_framebuffer:
                 self.picker.render_picker_to_screen()
 
-        elapsed = time.clock() - t0
+        elapsed = time.perf_counter() - t0
         self.post_render_update_ui_hook(elapsed, event)
 
         self.finalize_rendering_screen()

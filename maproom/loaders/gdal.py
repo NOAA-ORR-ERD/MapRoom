@@ -181,10 +181,10 @@ def load_image_file(uri):
     # if (dataset.GetDriver().ShortName in SCANLINE_DRIVER_NAMES):
     #     has_scaline_data = True
 
-    t0 = time.clock()
+    t0 = time.perf_counter()
     image_data = ImageDataBlocks(dataset)
     image_data.load_dataset(dataset)
-    log.debug("GDAL load time: %f" % (time.clock() - t0))
+    log.debug("GDAL load time: %f" % (time.perf_counter() - t0))
 
     return ("", image_data)
 
