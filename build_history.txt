@@ -1,5 +1,0 @@
-r2018 - 11/12/2012
-----------------------------
-- Introduction of Maproom application preferences system and UI 
-- Fix for #156 (Preference setting to change format of lat/long display)
-- Fix for #452 (Need be able to identify duplicate points regardless of how different the depths are.)
