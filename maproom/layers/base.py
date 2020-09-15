@@ -492,10 +492,11 @@ class Layer:
     def parse_time_to_float(self, t):
         if t is None:
             t = 0.0
-        elif isinstance(t, datetime.datetime):
-            t = calendar.timegm(t.timetuple())
         else:
-            t = float(t)
+            try:
+                t = calendar.timegm(t.timetuple())
+            except AttributeError:
+                t = float(t)
         return t
 
     def set_datetime(self, start, end=None):
