@@ -55,7 +55,8 @@ install_requires = [
     'idna',
     'packaging',
     'libmaproom>=5.1',
-    'omnivore_framework>=4',  # dependencies not yet in pypi or conda: glsvg, lat_lon_parser, post_gnome, pyugrid
+    'pyugrid',
+    'lat_lon_parser',
 ]
 
 if is_conda:

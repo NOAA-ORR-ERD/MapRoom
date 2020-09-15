@@ -32,7 +32,7 @@ Create and populate the MapRoom virtual environment with::
 
 Install the dependencies that conda can install::
 
-    conda install numpy pillow pytest-cov cython docutils markdown requests configobj netcdf4 reportlab python-dateutil gdal pyproj shapely pyopengl wxpython owslib scipy
+    conda install numpy pillow pytest-cov cython docutils markdown requests configobj netcdf4 reportlab python-dateutil gdal pyproj shapely pyopengl wxpython owslib scipy pyugrid
 
 and the dependencies that aren't in conda::
 
