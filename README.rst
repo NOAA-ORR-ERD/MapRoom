@@ -104,6 +104,53 @@ it doesn't get far enough because it can't seem to do the equivalent of the
 the pythonw command.
 
 
+Top-Level Directory Layout
+=================================
+
+TestData
+------------------------
+
+This directory contains many subdirectories of example data; see the
+00-README.txt in that directory for more details.
+
+libmaproom
+-------------------
+
+All the C and Cython code is contained in this directory, and it can be
+compiled with a single call to ``python setup.py develop`` inside this
+directory.
+
+
+maproom
+---------------
+
+The pure-python code for MapRoom is contained in this directory.
+
+
+tests
+----------
+
+The test framework, using ``pytest``, is contained in this directory. Changing
+to this directory and running ``py.test`` will execute the test suite.
+
+scripts
+----------
+
+* ``maproom.py`` -- The main script used to start MapRoom
+
+* ``setup.py`` -- python install script
+
+* ``release-and-tag-new-version.sh`` -- helper script to create a new version
+  of the code (updating the version number in the code, tagging a new version
+  in git, creating a ChangeLog, and building a new version using pyinstaller).
+  This would be run on MacOS to create the new version number & tag it in git,
+  and then the resulting repository would be checked out on a Windows machine
+  to use pyinstaller there to create the executable for Windows.
+
+* ``make-changelog.py`` -- helper script used by the above script to generate
+  and update the ChangeLog
+
+
 Code Architecture
 =====================
 
