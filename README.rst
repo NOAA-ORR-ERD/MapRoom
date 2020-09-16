@@ -151,8 +151,43 @@ scripts
   and update the ChangeLog
 
 
-Code Architecture
-=====================
+Code Architecture - libmaproom
+===================================
 
-TODO
+The libmaproom directory contains a separate python package that includes all
+the Cython and C code used by MapRoom. There are 6 modules, 4 of which are
+used directly by MapRoom to help accelerate rendering. The other 2 are
+standalone modules for accelerating specific tasks: pytriangle for creating
+triangular meshes, and py_contour for creating contours of particle layers.
+
+libmaproom/libmaproom/*.pyx files
+--------------------------------------
+
+The 4 Cython files (.pyx) are helpers for OpenGL rendering.
+
+libmaproom/libmaproom/py_contour/
+--------------------------------------
+
+This is a copy of the py_contour code found `here
+<https://github.com/NOAA-ORR-ERD/py_contour>`_. There are no changes to the
+code, it is just included here to streamline the install and development
+process.
+
+libmaproom/libmaproom/pytriangle-1.6.1/
+-------------------------------------------
+
+This is an implementation of `Richard Shewchuk's Triangle library
+<http://www.cs.cmu.edu/~quake/triangle.html>`_ that is used for mesh
+generation. It is Cython code, consisting of a Cython file
+``libmaproom/libmaproom/pytriangle-1.6.1/src/triangle.pyx`` and Shewchuk's
+original C source in the ``libmaproom/libmaproom/pytriangle-1.6.1/triangle/``
+directory.
+
+The ``triangle.pyx`` file is divided into two python functions, where
+``triangulate_simple`` is the function designed to be called from user code,
+where it uses the Multiprocess package to call ``triangulate_simple_child``
+(which wraps the Shewchuk C code). If the C code were not run in another
+process, it could kill the entire program as the C code uses the ``exit()``
+system call.
+
 
