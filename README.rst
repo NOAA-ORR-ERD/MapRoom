@@ -191,3 +191,17 @@ process, it could kill the entire program as the C code uses the ``exit()``
 system call.
 
 
+
+
+Code Architecture - maproom
+===================================
+
+The MapRoom program is started using the ``maproom.py`` script in the top
+level directory. It contains the ``MapRoomApp`` class and the ``main``
+function that is the driver for the whole program. The ``get_image_path`` call
+to determine paths for icons and other things is used here because bundled
+apps (using pyinstaller) can have different locations for code and resource
+data.
+
+
+
