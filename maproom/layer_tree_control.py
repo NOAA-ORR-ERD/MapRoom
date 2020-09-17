@@ -1,8 +1,8 @@
 import sys
 import wx
 
-from sawx.events import EventHandler
-import sawx.ui.customtreectrl as treectrl
+from maproom.app_framework.events import EventHandler
+import maproom.app_framework.ui.customtreectrl as treectrl
 
 from .layers import Layer
 from .menu_commands import MoveLayerCommand, RenameLayerCommand

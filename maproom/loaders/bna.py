@@ -1,6 +1,6 @@
 import os
 
-from sawx.filesystem import fsopen as open
+from maproom.app_framework.filesystem import fsopen as open
 
 import numpy as np
 from shapely.geometry import Polygon, LineString

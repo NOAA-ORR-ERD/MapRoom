@@ -5,7 +5,7 @@ from shapely.geometry import LineString
 from shapely.geometry import Polygon
 from shapely.geometry import box
 
-from sawx.filesystem import find_latest_template_path
+from maproom.app_framework.filesystem import find_latest_template_path
 
 from ..library.Boundary import Boundary
 from ..errors import PointsError

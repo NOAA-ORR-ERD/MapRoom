@@ -1,6 +1,6 @@
 # coding=utf8
 
-from sawx.filesystem import fsopen as open
+from maproom.app_framework.filesystem import fsopen as open
 
 from ..library import rect
 from ..library.svg_utils import SVGOverlay

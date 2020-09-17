@@ -4,7 +4,7 @@ import os
 import sys
 import zipfile
 
-from sawx.filesystem import fsopen as open
+from maproom.app_framework.filesystem import fsopen as open
 
 
 class KAPImage(object):

@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 import numpy as np
 
-from sawx import persistence
+from maproom.app_framework import persistence
 
 from .renderer import color_floats_to_int, color_ints_to_int, int_to_color_uint8
 

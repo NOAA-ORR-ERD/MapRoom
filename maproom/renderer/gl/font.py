@@ -3,7 +3,7 @@ import wx
 import numpy as np
 import OpenGL.GL as gl
 
-from sawx.filesystem import get_image_path
+from maproom.app_framework.filesystem import get_image_path
 
 from .font_extents import FONT_EXTENTS
 

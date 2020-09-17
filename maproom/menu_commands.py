@@ -2,7 +2,7 @@ import json
 
 import numpy as np
 
-from sawx.errors import ProgressCancelError
+from maproom.app_framework.errors import ProgressCancelError
 
 from .command import Command, UndoInfo
 from . import layers as ly

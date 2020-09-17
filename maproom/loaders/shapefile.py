@@ -4,8 +4,8 @@ import glob
 from osgeo import ogr, osr
 import numpy as np
 
-from sawx.filesystem import filesystem_path
-from sawx.utils.fileutil import ExpandZip, save_to_flat_zip
+from maproom.app_framework.filesystem import filesystem_path
+from maproom.app_framework.utils.fileutil import ExpandZip, save_to_flat_zip
 
 from maproom.library.shapefile_utils import load_shapefile, write_feature_list_as_shapefile
 from maproom.library.bna_utils import load_bna_items, write_feature_list_as_bna

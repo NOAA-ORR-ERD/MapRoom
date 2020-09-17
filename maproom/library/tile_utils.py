@@ -9,8 +9,8 @@ from requests.exceptions import HTTPError
 from owslib.util import ServiceException
 from owslib.wms import WebMapService
 
-from sawx.utils.background_http import BackgroundHttpMultiDownloader
-from sawx.utils.background_http import UnskippableRequest
+from maproom.app_framework.utils.background_http import BackgroundHttpMultiDownloader
+from maproom.app_framework.utils.background_http import UnskippableRequest
 
 from .numpy_images import get_numpy_from_data
 

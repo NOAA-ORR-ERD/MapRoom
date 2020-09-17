@@ -2,7 +2,7 @@ import os
 import collections
 
 import numpy as np
-from sawx.filesystem import fsopen as open
+from maproom.app_framework.filesystem import fsopen as open
 
 from shapely.geometry import Polygon
 from shapely.geometry import shape

@@ -28,8 +28,6 @@ else:
 
 
 subpkgs = [
-    "traits",
-    "sawx",
     "maproom",
 ]
 
@@ -41,7 +39,6 @@ if DEBUG:
     print("\n".join(sorted(hiddenimports)))
 
 subpkgs = [
-    "sawx",
     "maproom",
     "osgeo",
 ]

@@ -5,9 +5,9 @@ import functools
 
 import wx
 
-from sawx.filesystem import fsopen as open
-from sawx.filesystem import filesystem_path
-from sawx.events import EventHandler
+from maproom.app_framework.filesystem import fsopen as open
+from maproom.app_framework.filesystem import filesystem_path
+from maproom.app_framework.events import EventHandler
 
 from .library import rect
 
@@ -17,16 +17,16 @@ from . import styles
 from .command import UndoStack, BatchStatus
 from .menu_commands import LoadLayersCommand
 
-from sawx.document import SawxDocument
-from sawx.utils.jsonutil import collapse_json
-from sawx.utils.fileutil import ExpandZip
+from maproom.app_framework.document import MafDocument
+from maproom.app_framework.utils.jsonutil import collapse_json
+from maproom.app_framework.utils.fileutil import ExpandZip
 from .library import colormap
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class LayerManager(SawxDocument):
+class LayerManager(MafDocument):
 
     """
     Manages the layers (a tree of ly.Layer).
@@ -97,8 +97,8 @@ class LayerManager(SawxDocument):
         scale = ly.Scale(self)
         self.insert_layer([index], scale)
 
-        SawxDocument.__init__(self, file_metadata)
-        self.undo_stack = UndoStack()  # replace sawx undo stack with our own
+        MafDocument.__init__(self, file_metadata)
+        self.undo_stack = UndoStack()  # replace default undo stack with our own
 
         # LayerManagers are *almost* independent of the project. Right now it
         # isn't possible to have multiple views of a project because there are

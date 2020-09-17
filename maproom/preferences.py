@@ -1,8 +1,8 @@
 import os
 
-from sawx import persistence
-from sawx.preferences import SawxEditorPreferences
-from sawx.ui import fonts
+from maproom.app_framework import persistence
+from maproom.app_framework.preferences import MafEditorPreferences
+from maproom.app_framework.ui import fonts
 
 # fixme:
 # Some hard_coded stuff just to put it in a central place -- should be handled smarter
@@ -14,7 +14,7 @@ default_title_font = "24 pt Helvetica"
 # Add unique MapRoom preferences types
 
 import wx
-from sawx.ui.prefs_dialog import InfoField, register_preference_field
+from maproom.app_framework.ui.prefs_dialog import InfoField, register_preference_field
 from .library.colormap.ui_combobox import ColormapComboBox
 
 
@@ -38,7 +38,7 @@ class ColormapField(InfoField):
 register_preference_field("colormap", ColormapField)
 
 
-class MaproomPreferences(SawxEditorPreferences):
+class MaproomPreferences(MafEditorPreferences):
     # Lat/lon degree display format
     coordinate_display_format = [
         "decimal degrees",
@@ -67,7 +67,7 @@ class MaproomPreferences(SawxEditorPreferences):
     ]
 
     def set_defaults(self):
-        SawxEditorPreferences.set_defaults(self)
+        MafEditorPreferences.set_defaults(self)
 
         self.coordinate_display_format = "degrees decimal minutes"
 

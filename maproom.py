@@ -1,4 +1,4 @@
-# Maproom application using the sawx framework
+# MapRoom application main script
 
 # Uncomment to enable OpenGL command tracing (very slow).  This must occur
 # before any import of OpenGL which is why it's here.  :)
@@ -44,9 +44,9 @@ if proj_path is not None:
     os.environ["PROJ_LIB"] = proj_path
 
 # Framework imports.
-from sawx.application import SawxApp
-from sawx.filesystem import get_image_path
-from sawx.startup import run, setup_frozen_logging
+from maproom.app_framework.application import MafApp
+from maproom.app_framework.filesystem import get_image_path
+from maproom.app_framework.startup import run, setup_frozen_logging
 
 # Imports for py2exe/py2app
 import wx
@@ -78,22 +78,13 @@ def trace_calls(frame, event, arg):
 
 from maproom._version import __version__
 
-class MapRoomApp(SawxApp):
-    app_name = "MapRoom"
+class MapRoomApp(MafApp):
     app_version = __version__
-    app_tagline = "High-performance 2d mapping"
-    app_author = "NOAA OR&R Emergency Response Division<br>"
-    app_icon = "icon://maproom.ico"
-    app_website = "https://response.restoration.noaa.gov/"
-    default_uri = "template://default_project.maproom"
-    about_dialog_image = "maproom_large"
-    about_dialog_image_credits = ""
-    show_progress_bar_on_load = True
 
     def shutdown_subprocesses(self):
         from maproom.servers import stop_threaded_processing
         stop_threaded_processing()
-        SawxApp.shutdown_subprocesses(self)
+        MafApp.shutdown_subprocesses(self)
 
 
 def main(argv):

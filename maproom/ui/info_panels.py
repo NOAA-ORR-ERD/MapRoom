@@ -3,7 +3,7 @@ import wx
 import wx.adv
 from wx.lib.expando import ExpandoTextCtrl
 
-from sawx import art
+from maproom.app_framework import art
 
 from . import sliders
 from . import dialogs

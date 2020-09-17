@@ -47,7 +47,6 @@ install_requires = [
     'pytz',
     'cftime',  # required by netcdf4 but not always installed?
     'wxpython',
-    'sawx>=1.5.3',
     'pillow',
     'urllib3',
     'certifi',
@@ -57,6 +56,10 @@ install_requires = [
     'libmaproom>=5.1',
     'pyugrid',
     'lat_lon_parser',
+    'jsonpickle>=0.9.4',
+    'bson<1.0.0',
+    'appdirs',
+    'configobj',
 ]
 
 if is_conda:
@@ -99,7 +102,7 @@ setup(
     entry_points = {
         # NOTE: entry points are processed lexicographically, not in the order
         # specified, so force e.g. verdat loader to come before text loader
-        "sawx.loaders": [
+        "maproom.app_framework.loaders": [
             '01verdat = maproom.loaders.verdat',
             '00project = maproom.loaders.project',
             '08nc_particles = maproom.loaders.nc_particles',
@@ -110,17 +113,22 @@ setup(
             '20gdal = maproom.loaders.gdal',
             '20shapefile = maproom.loaders.shapefile',
             '90text = maproom.loaders.text',
+            '99generic_text = maproom.app_framework.loaders.text',
         ],
 
-        "sawx.documents": [
+        "maproom.app_framework.documents": [
             '00layer_manager = maproom.layer_manager',
+            '99text = maproom.app_framework.documents.text',
         ],
 
-        "sawx.editors": [
+        "maproom.app_framework.editors": [
             'editor = maproom.editor',
+            'html = maproom.app_framework.editors.html_viewer',
+            'text = maproom.app_framework.editors.text_editor',
         ],
 
-        "sawx.remember": [
+        "maproom.app_framework.remember": [
+            'app = maproom.app_framework.application',
             'styles = maproom.styles',
             'servers = maproom.servers',
         ],

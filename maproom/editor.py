@@ -7,14 +7,14 @@ import json
 # Major package imports.
 import wx
 
-from sawx.editor import SawxEditor
-from sawx.errors import ProgressCancelError
-import sawx.clipboard as clipboard
-from sawx.ui.popuputil import PopupStatusBar
-from sawx.ui.tilemanager import TileManager
-from sawx.persistence import get_template, save_template
-from sawx.events import EventHandler
-from sawx import persistence
+from maproom.app_framework.editor import MafEditor
+from maproom.app_framework.errors import ProgressCancelError
+import maproom.app_framework.clipboard as clipboard
+from maproom.app_framework.ui.popuputil import PopupStatusBar
+from maproom.app_framework.ui.tilemanager import TileManager
+from maproom.app_framework.persistence import get_template, save_template
+from maproom.app_framework.events import EventHandler
+from maproom.app_framework import persistence
 
 # Local imports.
 from .errors import MapRoomError
@@ -41,7 +41,7 @@ progress_log = logging.getLogger("progress")
 autosave_log = logging.getLogger("autosave")
 
 
-class ProjectEditor(SawxEditor):
+class ProjectEditor(MafEditor):
     """Editor for MapRoom layers
     """
     editor_id = "maproom.project"
@@ -230,7 +230,7 @@ class ProjectEditor(SawxEditor):
         None,
     ]
 
-    module_search_order = ["maproom.actions", "maproom.toolbar", "sawx.actions"]
+    module_search_order = ["maproom.actions", "maproom.toolbar", "maproom.app_framework.actions"]
 
     #### document matching
 

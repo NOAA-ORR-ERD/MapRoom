@@ -2,7 +2,7 @@ import os
 import numpy as np
 import re
 
-from sawx.filesystem import fsopen as open
+from maproom.app_framework.filesystem import fsopen as open
 
 from maproom.library.accumulator import accumulator
 from maproom.library.Boundary import Boundaries, PointsError

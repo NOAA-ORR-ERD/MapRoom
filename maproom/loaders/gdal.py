@@ -5,7 +5,7 @@ import numpy as np
 from osgeo import gdal, gdal_array, osr
 import pyproj
 
-from sawx.filesystem import filesystem_path
+from maproom.app_framework.filesystem import filesystem_path
 
 import libmaproom.Bitmap as Bitmap
 from maproom.renderer import ImageData

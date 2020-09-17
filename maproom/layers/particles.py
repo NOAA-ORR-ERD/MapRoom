@@ -14,7 +14,7 @@ import calendar
 import numpy as np
 import wx
 
-from sawx.utils.parseutil import NumpyFloatExpression, ParseException
+from maproom.app_framework.utils.parseutil import NumpyFloatExpression, ParseException
 
 from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils

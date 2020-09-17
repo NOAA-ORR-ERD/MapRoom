@@ -8,7 +8,7 @@ import os
 import numpy as np
 #import re
 
-from sawx.filesystem import filesystem_path
+from maproom.app_framework.filesystem import filesystem_path
 
 from .common import BaseLayerLoader
 from maproom.layers.particles import ParticleLayer, ParticleFolder, ParticleLegend

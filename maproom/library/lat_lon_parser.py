@@ -5,7 +5,7 @@ import numpy as np
 # removed local copy and now use parse function from Chris's pypi package
 from lat_lon_parser import parse, to_deg_min, to_deg_min_sec
 
-from sawx.utils.textutil import check_for_matching_lines, parse_for_matching_lines
+from maproom.app_framework.utils.textutil import check_for_matching_lines, parse_for_matching_lines
 
 
 re_latlon = rb'^\s*([-+]?(?:[1-8]?\d(?:\.\d+)?|90(?:\.0+)?))\s*[/,|\s]+\s*([-+]?(?:180(?:\.0+)?|(?:(?:1[0-7]\d)|(?:[1-9]?\d))(?:\.\d+)?))'

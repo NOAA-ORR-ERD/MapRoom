@@ -9,7 +9,7 @@ import maproom.library.rect as rect
 from maproom.library.projection import Projection
 import maproom.preferences
 
-from sawx.ui import progress_dialog
+from maproom.app_framework.ui import progress_dialog
 
 import logging
 log = logging.getLogger(__name__)

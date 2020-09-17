@@ -34,7 +34,7 @@ FormatHandler('recarray',
               ['numpy.recarray', ],
               )
 
-from sawx.ui import progress_dialog
+from maproom.app_framework.ui import progress_dialog
 
 from .renderer import ImmediateModeRenderer
 from .picker import Picker

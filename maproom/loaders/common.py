@@ -3,8 +3,8 @@ import glob
 import tempfile
 import shutil
 
-from sawx.filesystem import fsopen as open
-from sawx.errors import ProgressCancelError
+from maproom.app_framework.filesystem import fsopen as open
+from maproom.app_framework.errors import ProgressCancelError
 
 from ..library.Boundary import Boundaries, PointsError
 from ..command import UndoInfo

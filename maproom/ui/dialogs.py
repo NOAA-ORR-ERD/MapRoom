@@ -5,7 +5,7 @@ import wx
 import wx.lib.sized_controls as sc
 import wx.lib.buttons as buttons
 
-from sawx.ui.dialogs import ObjectEditDialog
+from maproom.app_framework.ui.dialogs import ObjectEditDialog
 
 from ..library import coordinates
 from ..library.textparse import parse_int_string

@@ -2,7 +2,7 @@ import numpy as np
 
 import wx
 
-from sawx.filesystem import get_image_path
+from maproom.app_framework.filesystem import get_image_path
 
 from . import renderer
 from .mouse_handler import MouseHandler, PanMode
