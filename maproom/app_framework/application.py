@@ -7,7 +7,7 @@ import collections
 import wx
 import wx.adv
 
-from .frame import MafFrame, MafTablessFrame
+from .frame import MafFrame
 from .editor import get_editors, find_editor_class_by_id
 from .filesystem import init_filesystems
 from .filesystem import fsopen as open
@@ -123,12 +123,9 @@ class MafApp(wx.App):
 
     def process_command_line_args(self, args):
         parser = argparse.ArgumentParser(description="Application parser")
-        parser.add_argument("-t", "--task_id", "--task-id", "--edit_with","--edit-with", action="store", default="", help="Use the editing mode specified by this task id for all files listed on the command line")
         parser.add_argument("-d", "--debug_loggers", action="append", nargs=1, help="Comma separated list of debug loggers to enable")
         parser.add_argument("--show_editors", "--show-editors", action="store_true", default=False, help="List all task ids")
-        parser.add_argument("--show_focused", "--show-focused", action="store_true", default=False, help="Show the focused window at every idle processing ")
         parser.add_argument("--show_prefs", "--show-prefs", action="store_true", default=False, help="Show the preferences dialog at start time")
-        parser.add_argument("--build_docs", "--build-docs", action="store_true", default=False, help="Build documentation from the menubar")
         options, extra_args = parser.parse_known_args(args)
         if options.show_editors:
             for e in get_editors:
@@ -136,30 +133,14 @@ class MafApp(wx.App):
         if options.debug_loggers:
             for logger_name in options.debug_loggers:
                 error_logger.enable_loggers(logger_name[0])
-        task_arguments = collections.OrderedDict()
-        if ":" in options.task_id:
-            options.task_id, task_str = options.task_id.split(":", 1)
-            items = task_str.split(",")
-            for item in items:
-                if '=' in item:
-                    item, v = item.split('=', 1)
-                else:
-                    v = True
-                task_arguments[item] = v
-        log.debug("task arguments: %s" % task_arguments)
-        try:
-            default_editor_cls = find_editor_class_by_id(options.task_id)
-        except errors.EditorNotFound:
-            default_editor_cls = None
-        log.debug(f"default editor: {default_editor_cls}")
         log.debug(f"args: {args}")
 
         if extra_args:
             log.debug(f"files to load: {extra_args}")
-            frame = self.new_frame(uri=self.app_blank_uri, editor_cls=default_editor_cls)
+            frame = self.new_frame(uri=self.app_blank_uri)
             while len(extra_args) > 0:
                 path = extra_args.pop(0)
-                frame.load_file(path, None, task_arguments, show_progress_bar=False, default_editor_cls=default_editor_cls)
+                frame.load_file(path, show_progress_bar=False)
         else:
             frame = self.new_frame()
         frame.Show()
@@ -371,11 +352,7 @@ class MafApp(wx.App):
             uri = self.default_uri
         if uri is None:
             uri = self.app_blank_uri
-        if editor_cls is not None and editor_cls.needs_tabless_frame:
-            frame_cls = MafTablessFrame
-        else:
-            frame_cls = MafFrame
-        frame = frame_cls(None, uri)
+        frame = MafFrame(None, uri)
         return frame
 
     def show_focused(self):
