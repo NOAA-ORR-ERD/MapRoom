@@ -210,6 +210,10 @@ class LayerManager(MafDocument):
 
     ##### Serialization
 
+    # Any routine that ends in "_to_json" will be called during the save
+    # process, and the corresponding "_from_json" routine during the load
+    # process, to serialize and unserialize the layer manager data.
+
     def get_to_json_attrs(self):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-8]) and m.endswith("_to_json")]
 
@@ -1029,7 +1033,7 @@ class LayerManager(MafDocument):
     ##### Control points: links between layers
 
     def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None, locked=False):
-        """Links a control point to a truth (master) layer
+        """Links a control point to a truth (source) layer
 
         Parameters can be passed two ways: if only two parameters
         are passed in, they will each be tuples of (layer.invariant,
@@ -1136,6 +1140,12 @@ class LayerManager(MafDocument):
     ##### Layer load
 
     def load_all_from_json(self, json, batch_flags=None):
+        """DEPRECATED. Load layers from old json format
+
+        This is the old file format where all layers were stored in the same
+        json file. The current storage method is the zip file format,
+        described in load_all_from_zip.
+        """
         order = []
         if json[0] == "extra json data":
             extra_json = json[1]
@@ -1157,6 +1167,8 @@ class LayerManager(MafDocument):
         return order, extra_json
 
     def load_extra_json_attrs(self, extra_json, batch_flags):
+        """Call the "_from_json" routines to restore layer manager data from json
+        """
         for attr, from_json in self.get_from_json_attrs():
             try:
                 from_json(extra_json)
@@ -1170,6 +1182,36 @@ class LayerManager(MafDocument):
                 batch_flags.messages.append("WARNING: %s" % message)
 
     def load_all_from_zip(self, zf, batch_flags=None):
+        """Load layers from zip file.
+
+        The zip file format puts each layer in its own directory, and includes
+        a few special files at the root directory to store additional
+        information, such as the metadata needed to specify the connections
+        between layers.
+
+        Examining the contents of the default project zip file shows these entries:
+
+            Archive:  blank_project.maproom
+             Length   Method    Size  Cmpr  Name
+            --------  ------  ------- ----  ----
+                   2  Defl:N        4 100%  pre json data
+                1978  Defl:N      432  78%  post json data
+                 376  Defl:N      206  45%  1-Graticule/json layer description
+                 422  Defl:N      215  49%  2-Scale/json layer description
+                2180  Defl:N      441  80%  3/0-New Annotation/json layer description
+                2180  Defl:N      448  79%  3/1-Rectangle/json layer description
+            --------          -------  ---  -------
+                7138             1746  76%  6 files
+
+        The "pre json data" file is processed before any layers are loaded,
+        and the "post json data" file is processed after all layers are
+        loaded. ("extra json data" is an old, deprecated name for "post json
+        data".) Layers themselves are directories. Directories that have only
+        a number for a name are folders, named a number plus a dash and a text
+        value are normal layers.
+
+        Most layers are described in the file "json layer description". Image layers will have additional file(s) with the image data.
+        """
         expanded_zip = ExpandZip(zf, ["pre json data", "post json data", "extra json data", "json layer description"])
         order = []
         try:
@@ -1259,6 +1301,12 @@ class LayerManager(MafDocument):
         shapefiles, etc. so the file becomes portable and usable on other
         systems.
 
+        The layers are looped over in order listed in the folder order. Each
+        layer gets its :meth:`serialize_json` method called to generate the
+        json text data that will be stored in the zipfile entry for that
+        layer. If the layer requires image data or additional files, the layer
+        will return data from its :meth:`extra_files_to_serialize` method and
+        those files will be added to the zipfile directly."
         """
         log.debug("saving layers in project file: " + file_path)
         layer_info = self.flatten_with_indexes()
