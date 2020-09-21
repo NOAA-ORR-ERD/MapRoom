@@ -40,13 +40,14 @@ class LayerManager(MafDocument):
     purpose at present is to hold the folder name.
     """
 
-    # Transient layer always uses invariant
+    # Transient layer always uses invariant -99 and is never saved
     transient_invariant = -99
 
     def __init__(self, file_metadata):
         self.default_styles = styles.copy_default_styles()
         self.layers = []
 
+        # Events are used to trigger UI changes
         self.layer_loaded_event = EventHandler(self)
         self.layers_changed_event = EventHandler(self)
         self.layer_contents_changed_event = EventHandler(self)
@@ -63,6 +64,8 @@ class LayerManager(MafDocument):
         self.background_refresh_needed_event = EventHandler(self)
         self.threaded_image_loaded_event = EventHandler(self)
 
+        # the loader used for the MapRoom project file will be stored here so
+        # the project can be reverted to the last saved state.
         self.loader_class = None
 
         # if the project is loaded from a zip file, the ExpandZip object is
@@ -73,6 +76,18 @@ class LayerManager(MafDocument):
         # Linked control points are slaves of a truth layer: a dict that maps
         # the dependent layer/control point to the truth layer/control point
         self.control_point_links = {}
+
+        # The "layer invariant" is used for undo/redo operations to make sure
+        # that layers can be restored during an undo/redo operation. This
+        # invariant is basically a counter that uniquely identifies the layer
+        # in the order it was loaded. The undo/redo system can't reference by
+        # name because layers can be renamed and therefore not unique.
+        # Storing the layer itself results in problems when a layer gets
+        # removed and then re-added (by an undo then redo) because a new layer
+        # is created for that command.  The layers saved in redos beyond that
+        # command are pointing to the old layer, not the newly created layer,
+        # so stepping into the future operates on the old layer that isn't
+        # displayed.
 
         # In order for the serializer to correcly map the layer invariant to
         # the actual layer, the next_invariant must be preset so first user
@@ -189,9 +204,6 @@ class LayerManager(MafDocument):
         # self.dirty = self.layer_manager.undo_stack.is_dirty()
         # self.mouse_mode_factory = mouse_handler.PanMode
         # self.view_document(self.document)
-    
-    def calc_raw_data(self, raw):
-        pass
 
     def create_empty(self):
         self.file_metadata = {'uri': ''}
@@ -1213,12 +1225,9 @@ class LayerManager(MafDocument):
         else:
             return True
 
-    def save_raw_data(self, uri, raw_data):
+    def save_raw_data(self, uri):
         extra_json = self.project.current_extra_json
         return self.save_all_zip(uri, extra_json)
-
-    def calc_raw_data_to_save(self):
-        return None
 
     def process_pre_json_data(self, json):
         # pre json data is stuff that layers need to exist at the time they are

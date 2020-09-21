@@ -53,8 +53,6 @@ class MafDocument:
 
     json_expand_keywords = {}
 
-    session_save_file_extension = ""
-
     def __init__(self, file_metadata):
         self.undo_stack = UndoStack()
         self.extra_metadata = {}
@@ -77,19 +75,12 @@ class MafDocument:
             self.create_empty()
         else:
             self.file_metadata = file_metadata
-            raw = self.load_raw_data()
-            self.raw_data = self.calc_raw_data(raw)
-            self.load_session()
+            self.load_raw_data()
 
     def load_raw_data(self):
-        fh = open(self.uri, 'rb')
-        return fh.read()
-
-    def calc_raw_data(self, raw):
-        return to_numpy(raw)
+        raise RuntimeError("Implement in subclass!")
 
     def create_empty(self):
-        self.raw_data = np.zeros(0, dtype=np.uint8)
         self.file_metadata = {'uri': '', 'mime': "application/octet-stream"}
 
     @property
@@ -132,25 +123,12 @@ class MafDocument:
             return False
         return True
 
-    @classmethod
-    def get_blank(cls):
-        return cls(raw_data=b"")
-
     def __str__(self):
         return f"Document: uuid={self.uuid}, mime={self.mime}, {self.uri}"
-
-    def __len__(self):
-        return np.alen(self.raw_data)
-
-    def __getitem__(self, val):
-        return self.raw_data[val]
 
     @property
     def is_dirty(self):
         return self.undo_stack.is_dirty()
-
-    def to_bytes(self):
-        return self.raw_data.tostring()
 
     def load_permute(self, editor):
         if self.permute:
@@ -159,103 +137,13 @@ class MafDocument:
     def filesystem_path(self):
         return filesystem.filesystem_path(self.uri)
 
-    @property
-    def bytestream(self):
-        return BytesIO.BytesIO(self.raw_data)
-
-    # serialization
-
-    def load_session(self):
-        d = self.calc_default_session()
-        last = self.load_last_session()
-        d.update(last)
-        self.last_session = d
-        self.restore_session(d)
-
-    def calc_default_session(self):
-        mime = self.mime
-        log.debug(f"calc_default_session: looking for {mime}")
-        try:
-            text = get_template(mime)
-            log.debug(f"calc_default_template: found template for {mime}")
-        except OSError:
-            log.debug(f"calc_default_template: no template for {mime}")
-            e = {}
-        else:
-            e = jsonutil.unserialize(mime, text)
-        return e
-
-    def load_last_session(self):
-        session_info = {}
-        ext = self.session_save_file_extension
-        if ext:
-            uri = self.uri + ext
-            try:
-                fh = open(uri, 'r')
-                text = fh.read()
-            except IOError:
-                log.debug(f"load_last_session: no metadata found at {uri}")
-                pass
-            else:
-                try:
-                    session_info = jsonutil.unserialize(uri, text)
-                except ValueError as e:
-                    log.error(f"invalid data in {uri}: {e}")
-        return session_info
-
-    def serialize_session(self, mdict):
-        """Save session information to a dict so that it can be serialized
-        """
-        mdict["document uuid"] = self.uuid
-        if self.baseline_document is not None:
-            mdict["baseline document"] = self.baseline_document.metadata.uri
-
-    def restore_session(self, e):
-        log.debug("restoring sesssion data: %s" % str(e))
-        if 'document uuid' in e:
-            self.uuid = e['document uuid']
-        # if 'baseline document' in e:
-        #     try:
-        #         self.load_baseline(e['baseline document'])
-        #     except DocumentError:
-        #         pass
-        if 'last_task_id' in e:
-            self.last_task_id = e['last_task_id']
-
-    def load_baseline(self, uri, confirm_callback=None):
-        log.debug(f"loading baseline data from {uri}")
-        if confirm_callback is None:
-            confirm_callback = lambda a,b: True
-        try:
-            guess = FileGuess(uri)
-        except Exception as e:
-            log.error("Problem loading baseline file %s: %s" % (uri, str(e)))
-            raise DocumentError(str(e))
-        raw_data = guess.numpy
-        difference = len(raw_data) - len(self)
-        if difference > 0:
-            if confirm_callback("Truncate baseline data by %d bytes?" % difference, "Baseline Size Difference"):
-                raw_data = raw_data[0:len(self)]
-            else:
-                raw_data = []
-        elif difference < 0:
-            if confirm_callback("Pad baseline data with %d zeros?" % (-difference), "Baseline Size Difference"):
-                raw_data = np.pad(raw_data, (0, -difference), "constant", constant_values=0)
-            else:
-                raw_data = []
-        if len(raw_data) > 0:
-            self.init_baseline(guess.metadata, raw_data)
-        else:
-            self.del_baseline()
-
     def save(self, uri=None):
         if uri is None:
             uri = self.uri
         if not self.verify_writeable_uri(uri):
             raise errors.ReadOnlyFilesystemError(uri)
         if self.verify_ok_to_save():
-            raw_data = self.calc_raw_data_to_save()
-            self.save_raw_data(uri, raw_data)
+            self.save_raw_data(uri)
             self.file_metadata['uri'] = uri
             self.undo_stack.set_save_point()
 
@@ -265,29 +153,8 @@ class MafDocument:
     def verify_ok_to_save(self):
         return True
 
-    def calc_raw_data_to_save(self):
-        return self.raw_data.tostring()
-
-    def save_raw_data(self, uri, raw_data):
-        fh = open(uri, 'wb')
-        log.debug("saving to %s" % uri)
-        fh.write(raw_data)
-        fh.close()
-
-    def save_session(self, editor_id, editor_session):
-        if not self.session_save_file_extension:
-            log.debug("no filename extension for session data; not saving")
-        else:
-            s = {}
-            self.serialize_session(s)
-            if s and editor_session:
-                s[editor_id] = editor_session
-                jsonpickle.set_encoder_options("json", sort_keys=True, indent=4)
-                text = jsonpickle.dumps(s)
-                text = jsonutil.collapse_json(text, 8, self.json_expand_keywords)
-                path = self.save_adjacent(self.session_save_file_extension, text)
-                log.debug("saved session to {path}")
-                return path
+    def save_raw_data(self, uri):
+        raise RuntimeError("Implement in subclass!")
 
     def save_adjacent(self, ext, data, mode="w"):
         if ext:

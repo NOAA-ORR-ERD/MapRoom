@@ -10,18 +10,12 @@ log = logging.getLogger(__name__)
 class TextDocument(MafDocument):
     def load_raw_data(self):
         fh = open(self.uri, 'r')
-        return fh.read()
+        self.raw_data = str(fh.read())
 
-    def calc_raw_data(self, raw):
-        return str(raw)
-
-    def calc_raw_data_to_save(self):
-        return self.raw_data
-
-    def save_raw_data(self, uri, raw_data):
+    def save_raw_data(self, uri):
         fh = open(uri, 'w')
         log.debug("saving to %s" % uri)
-        fh.write(raw_data)
+        fh.write(self.raw_data)
         fh.close()
 
     # won't automatically match anything; must force this editor with the -t

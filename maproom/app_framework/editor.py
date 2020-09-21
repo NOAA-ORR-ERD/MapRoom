@@ -46,13 +46,6 @@ def find_editor_class_for_document(document):
                 matching_editors.append(editor)
     log.debug(f"find_editor_class_for_file: exact matches: {matching_editors}")
 
-    # # restore last session files from all possible editors before choosing best
-    # # editor
-    # for editor in matching_editors:
-    #     editor.load_last_session(document)
-    # for editor in matching_editors:
-    #     if editor.can_restore_last_session(document):
-    #         return editor
     if matching_editors:
         return matching_editors[0]
 
@@ -165,10 +158,6 @@ class MafEditor:
     ]
 
     module_search_order = ["maproom.app_framework.actions"]
-
-    session_save_file_header = ""
-
-    session_save_file_extension = ""
 
     tool_bitmap_size = 0  # default size for platform
 
@@ -366,16 +355,9 @@ class MafEditor:
         self.update_recent_path(path)
         self.frame.status_message(f"loaded {path}", True)
 
-    def save_to_uri(self, uri=None, save_session=True):
+    def save_to_uri(self, uri=None):
         self.document.save(uri)
-        if save_session:
-            self.save_session()
         self.save_success()
-
-    def save_session(self):
-        s = {}
-        self.serialize_session(s)
-        self.document.save_session(self.editor_id, s)
 
     def save_success(self, path=None):
         if path is None:
@@ -602,33 +584,6 @@ class MafEditor:
         if flags.refresh_needed:
             log.debug(f"process_flags: refresh_needed")
             d.recalc_event(flags=flags)
-
-
-    #### session
-
-    def get_editor_specific_metadata(self, keyword):
-        """Get the metadata for the keyword that is specific to this editor
-        class.
-
-        E.g. if there is a layout stored in the metadata, it will be in
-        metadata[self.editor_id]['layout']:
-
-        {
-            "omnivore.byte_edit": {
-                "layout": {
-                    "sidebars": [ ... ],
-                    "tile_manager": { .... },
-                }
-        }
-        """
-        try:
-            layout_dict = metadata[self.editor_id][keyword]
-        except KeyError:
-            layout_dict = {}
-        return layout_dict
-
-    def serialize_session(self, s):
-        pass
 
     #### file identification routines
 
