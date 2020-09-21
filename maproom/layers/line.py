@@ -668,7 +668,7 @@ class LineLayer(PointLayer):
         """Actually draw the screen using the current display canvas renderer
 
         """
-        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        log.debug("Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
 
@@ -761,6 +761,12 @@ class LineEditLayer(LineLayer):
 
 
 class SegmentLayer(LineLayer):
+    """Layer for non-selectable lines, for example contour lines.
+    """
+    name = "Segment"
+
+    type = "segment"
+
     visibility_items = ["lines"]
 
     layer_info_panel = ["Line segment count", "Color"]
@@ -769,7 +775,7 @@ class SegmentLayer(LineLayer):
         """Actually draw the screen using the current display canvas renderer
 
         """
-        log.log(5, "Rendering line layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
+        log.debug("Rendering segment layer!!! visible=%s, pick=%s" % (layer_visibility["layer"], picker))
         if (not layer_visibility["layer"]):
             return
 

@@ -415,6 +415,8 @@ class Layer:
             subclasses = get_all_subclasses(Layer)
             for kls in subclasses:
                 if kls.type:
+                    if kls.type in cls.type_to_class_defs:
+                        raise SystemExit(f"\n\n***** CODING ERROR!\n\nMultiple layers must not have the same text type!\nChange the class attribute 'type' in one of the following classes in the source code: \n{cls.type_to_class_defs[kls.type]}\n{kls}")
                     cls.type_to_class_defs[kls.type] = kls
         return cls.type_to_class_defs
 
