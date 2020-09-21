@@ -117,7 +117,7 @@ class Layer:
         return "%s layer '%s' (%s) %s" % (self.type, self.name, "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
 
     @property
-    def pretty_name(self):
+    def ui_label(self):
         if self.grouped:
             prefix = self.grouped_indicator_prefix
         else:

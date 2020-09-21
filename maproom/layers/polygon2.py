@@ -59,7 +59,7 @@ class RingEditLayer(LineLayer):
         return style
 
     @property
-    def pretty_name(self):
+    def ui_label(self):
         prefix = "Editing "
         return prefix + self.new_layer_name
 
@@ -84,7 +84,7 @@ class RingEditLayer(LineLayer):
         return self.feature_code < 0
 
     @property
-    def pretty_name(self):
+    def ui_label(self):
         if self.grouped:
             prefix = self.grouped_indicator_prefix
         else:
