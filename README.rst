@@ -204,4 +204,59 @@ apps (using pyinstaller) can have different locations for code and resource
 data.
 
 
+Application Init
+----------------------
 
+The UI is built using the ``maproom.app_framework`` utilities. Its classes use
+the ``Maf`` prefix.
+
+The application, ``MafApplication``, wraps the wx.App class. Its ``OnInit``
+method sets up some initial data and event handling, but the main application
+start occurs in the ``process_command_line_args`` method. This routine is
+responsible for creating the first ``MafFrame`` window.
+
+If no file is not specified on the command line, a default project will be
+used. The command line supports loading a project file or a layer file; if a
+layer only is specified, a default project will be created and the layer
+loaded into that project. The ``MafFrame.load_file`` method is used to load
+whichever type of file is specified, and once loaded the frame will be created
+and displayed.
+
+
+File Load
+--------------------
+
+Projects or files are loaded using the ``MafFrame.load_file`` method. The file
+is identified through the ``maproom.app_framework.loader.identify_file``
+routine to determine the loader that can parse the data, and the loader
+creates the layers that are used for display.
+
+At the start of the ``identify_file`` routine, the file data is loaded into
+``maproom.app_framework.loader.FileGuess`` class instance that supplies
+convenience functions for accessing the data in the file. It then loops over
+every loader to find the best match. Each loader can test the data using
+convenience methods of the FileGuess class without having to read the file
+over again.
+
+Loaders are registered as setuptools plugins with the entry point
+"maproom.app_framework.loaders". Loaders are modules that implement a
+module-level function called ``identify_loader`` that returns a dictionary
+containing the MIME type and loader class that can handle the file, or None if
+the loader can't handle that file.
+
+The ``identify_file`` routine returns the "best" loader if an exact match is
+found, or tries to supply a generic loader as a fallback.
+
+At this point, the code is back in the ``MafFrame.load_file`` method with a
+dictionary called ``file_metadata`` containing the loader class and the
+FileGuess object. Here is where the difference between a project load and a
+layer load is handled: if the attempted load is a project, the call to
+``MafEditor.can_load_file`` will return false and a new document will be
+created. (A document corresponds to a tab in the user interface.)  If the file
+to be loaded can be represented as single layer (or group of layers under a
+single layer like a NetCDF particles file), the layer will be added to the
+current project.
+
+
+Document Load
+------------------
