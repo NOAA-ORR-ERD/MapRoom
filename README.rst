@@ -208,7 +208,8 @@ Application Init
 ----------------------
 
 The UI is built using the ``maproom.app_framework`` utilities. Its classes use
-the ``Maf`` prefix.
+the ``Maf`` prefix. It supplies a multi-window interface, where each window
+may have multiple tabs. Each tab represents a single project.
 
 The application, ``MafApplication``, wraps the wx.App class. Its ``OnInit``
 method sets up some initial data and event handling, but the main application
@@ -260,3 +261,28 @@ current project.
 
 Document Load
 ------------------
+
+A ``MafDocument`` is the data container that is shown in an individual tab on
+the user interface. The view of the data is supplied by the ``MafEditor``
+class, which will be described in the next section. The framework is capable
+of handling multiple document types, registered as setuptools plugins with the
+entry point "maproom.app_framework.documents". Modules must supply at least
+one ``MafDocument`` subclass. Each subclass must implement one or both of the
+``can_load_file_exact`` and ``can_load_file_generic``, and return a boolean to
+indicate if the document can load the file as specified by the
+``file_metadata`` argument passed into the method. The
+``maproom.app_framework.documents.text.TextDocument`` is a sample document
+type that holds text data and can be viewed as HTML or plain text depending on
+the format of the file. The title screen of MapRoom is an HTML document,
+although the title screen is now not typically viewed since the change was
+made to load an empty document at startup.
+
+``maproom.layer_manager.LayerManager`` is the document class used to represent
+a MapRoom project. The ``LayerManager`` object holds the layers in an
+arbitrarily deep array of arrays that results in a tree-like structure.
+Internally, layers are referred to by a "multi-index", which represents the
+location in the structure of the layer. For example, in the source code is the
+example uses the array [ [ a, b ], [c, [ d, e ] ], f, [ g, h ] ]. The
+multi_index [ 0 ] refers to subtree [ a, b ], the multi_index [ 1, 1, 1 ]
+refers to the leaf e, and the multi_index [ 3, 0 ] refers to the leaf g.
+
