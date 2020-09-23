@@ -151,6 +151,21 @@ scripts
   and update the ChangeLog
 
 
+
+Project Architecture
+==========================
+
+A MapRoom project file represents graphic items on a lat/lon grid that can
+create a product suitable for printing or display, representing spill data and
+text & graphics showing predictions of future impacts of the spill.
+
+The MapRoom program is a user interface to create this graphic file. Graphic
+elements are divided into layers of the same types of elements. Only one layer
+can be edited at a time, and the user interface changes depending on the
+selected layer. The toolbar only shows tools available for the currently
+selected layer.
+
+
 Code Architecture - libmaproom
 ===================================
 
@@ -193,8 +208,8 @@ system call.
 
 
 
-Code Architecture - maproom
-===================================
+Code Architecture - MapRoom Application Framework & File Loading
+=====================================================================
 
 The MapRoom program is started using the ``maproom.py`` script in the top
 level directory. It contains the ``MapRoomApp`` class and the ``main``
@@ -224,8 +239,8 @@ whichever type of file is specified, and once loaded the frame will be created
 and displayed.
 
 
-File Load
---------------------
+File Identification and Load
+--------------------------------
 
 Projects or files are loaded using the ``MafFrame.load_file`` method. The file
 is identified through the ``maproom.app_framework.loader.identify_file``
@@ -252,15 +267,32 @@ At this point, the code is back in the ``MafFrame.load_file`` method with a
 dictionary called ``file_metadata`` containing the loader class and the
 FileGuess object. Here is where the difference between a project load and a
 layer load is handled: if the attempted load is a project, the call to
-``MafEditor.can_load_file`` will return false and a new document will be
-created. (A document corresponds to a tab in the user interface.)  If the file
-to be loaded can be represented as single layer (or group of layers under a
-single layer like a NetCDF particles file), the layer will be added to the
-current project.
+``MafEditor.can_load_file`` will return false and a new project will be
+created. If the file to be loaded can be represented as single layer (or group
+of layers under a single layer like a NetCDF particles file), the layer will
+be added to the current project.
+
+``MafFrame.load_file`` contains a call to the function ``identify_document``
+with the file metadata as an argument. It returns a document class that is
+then used to create an editing window in a new tab of the frame. The framework
+supports different types of documents with different editing UI elements for
+each type. For example, the MapRoom graphic editor for MapRoom documents, a
+text editor for text documents, etc. This is a layer of abstraction that
+allows different viewers in each tab of the frame. It is largely unused in the
+current version, but the idea whas that different editors could operate on
+different types of documents, in different tabs in the same frame.
 
 
-Document Load
-------------------
+Document Identification
+-------------------------------------
+
+There is a distinction between documents and files because it is possible to
+have different ways to view and edit the same type of file. For example, a
+text file could be edited as a list of x, y points but that same file could
+also be displayed as a set of particles in a MapRoom project. The document
+provides the interface to access the data in a file. It is still possible that
+different viewers use the same type of document; for instance, an HTML viewer
+and a text editor use the same text document.
 
 A ``MafDocument`` is the data container that is shown in an individual tab on
 the user interface. The view of the data is supplied by the ``MafEditor``
@@ -278,11 +310,87 @@ although the title screen is now not typically viewed since the change was
 made to load an empty document at startup.
 
 ``maproom.layer_manager.LayerManager`` is the document class used to represent
-a MapRoom project. The ``LayerManager`` object holds the layers in an
-arbitrarily deep array of arrays that results in a tree-like structure.
-Internally, layers are referred to by a "multi-index", which represents the
-location in the structure of the layer. For example, in the source code is the
-example uses the array [ [ a, b ], [c, [ d, e ] ], f, [ g, h ] ]. The
-multi_index [ 0 ] refers to subtree [ a, b ], the multi_index [ 1, 1, 1 ]
-refers to the leaf e, and the multi_index [ 3, 0 ] refers to the leaf g.
+a MapRoom project. More details on the inner workings of the ``LayerManager``
+class below; but in summary, this class keeps references to all layers, the
+stacking order, and any relationships between layers.
 
+Once the document type is identified, the ``MafFrame.add_document`` method is
+called in order to create a new editor tab for the specified document.
+
+
+Editor Identification
+----------------------------
+
+The class ``maproom.app_framework.editor.MafEditor`` is the base class for the
+user interface that is presented by a tab in the top level frames. It may be a
+read-only viewer of a document, or it may provide both viewing and editing of
+the document.
+
+The ``maproom.app_framework.editor.MafEditor.find_editor_class_for_document``
+module-level function searches through the list of available editors to find
+the best match for the specified document. Editors are also setuptools
+plugins, registered under the entry point "maproom.app_framework.editors".
+Each plugin must provide at least one subclass of ``MafEditor``, and each
+subclass must implement one or both of the class methods
+``can_edit_document_exact`` or ``can_edit_document_generic``. The exact
+matches are attempted first, so if an editor is a specific match for the
+document (by MIME type provided in the document metadata, or by examining more
+specific data in the document itself), those matches will happen before any
+generic matches are considered.
+
+Once an editor class is determined, the new tab is created in the frame and
+the UI for the editor is instantiated. This happens in the
+``maproom.app_framework.frame.MafFrame.add_editor`` method.
+
+
+Code Architecture - Layers and Layer Manager
+==================================================
+
+The ``maproom.layer_manager.LayerManager`` class is the ``MafDocument``
+subclass that represents the MapRoom project. An object of this class holds
+all the layers that make up the final image. Each layer is a subclass of the
+``maproom.layers.base.Layer`` class.
+
+Layer Manager
+--------------------
+
+The ``LayerManager`` object holds the layers in an arbitrarily deep array of
+arrays that results in a tree-like structure. Internally, layers are referred
+to by a "multi-index", which represents the location in the structure of the
+layer. For example, in the source code is the following example: the array ``[
+[ a, b ], [c, [ d, e ] ], f, [ g, h ] ]``. The multi_index ``[ 0 ]`` refers to
+subtree ``[ a, b ]``, the multi_index ``[ 1, 1, 1 ]`` refers to the leaf
+``e``, and the multi_index ``[ 3, 0 ]`` refers to the leaf ``g``.
+
+Layers are also referenced by a unique number called an ``invariant``. This is
+an integer used as id that doesn't change when the layer is renamed or
+reordered. It gets created when the layer is added to a LayerManager. There
+are special values that represent transient layers, the root layer, and other
+layers created at project creation time.
+
+There are various methods to find layers by id, multi-index, by layer type,
+and by relationship to other layers. Layers must be added through the methods
+provided in this class as there are many internal bookkeeping data that must
+be updated as layers change.
+
+Layers
+------------
+
+The ``maproom.layers.base.Layer`` abstract class must be subclassed before it
+can be added to a LayerManager as a visible layer in the project. An example
+of a simple layer is the ``maproom.layers.point.PointLayer`` layer, which
+displays only points. A direct subclass is the
+``maproom.layers.line.LineLayer`` which displays both points and lines in
+files like ``.verdat`` and other "ugrid" file types. It is much more
+complicated than the ``PointLayer`` because it includes editing functions:
+moving, adding, and deleting points and lines.
+
+All layers use numpy arrays to hold coordinates to be mapped onto the lat/lon
+project space. Some layers, like the LineLayer, have large arrays (one row per
+point) that must be resized periodically if many points are added. Other
+layers, like image layers, only store points for the 4 corners and store the
+image data in OpenGL textures.
+
+
+Code Architecture - Commands and the Undo Stack
+===========================================================
