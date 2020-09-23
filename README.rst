@@ -391,6 +391,84 @@ point) that must be resized periodically if many points are added. Other
 layers, like image layers, only store points for the 4 corners and store the
 image data in OpenGL textures.
 
+Annotation layers use the parent class
+``maproom.layers.vector_object.VectorObjectLayer`` which is a further
+subclasses of the LineLayer. They use the numpy array of points as the
+bounding box of the layer, and some layers use additional points to represent
+more points within the layer. Discussion of annotation layers is below.
+
 
 Code Architecture - Commands and the Undo Stack
 ===========================================================
+
+MapRoom provides unlimited undo/redo capability through the
+``maproom.command.UndoStack`` object created in the initialization of the
+LayerManager. Each change to the document is recorded in a
+``maproom.command.Command`` object, and recorded in the UndoStack. Each
+command must include a way to restore the LayerManager to the previous state,
+providing the undo capability.
+
+The ``maproom.command.Command`` class is subclassed to provide individual
+commands. There are 4 modules in the code that contain the available commands:
+
+ * menu_commands.py
+ * mouse_commands.py
+ * screen_object_commands.py
+ * vector_object_commands.py
+
+A command is required to implement 3 methods: ``__init__``, ``perform``, and
+``undo``. The ``perform`` method is used to make the change and the ``undo``
+is used to revert the action.
+
+Other features of commands are available, like coalescing commands. If two of
+the same command are applied in a row, it is possible to combine them into a
+single command such that only one command appears in the undo list. Commands
+like viewport movement are coalesced so that each mouse movement isn't
+recorded in a separate command.
+
+There is another partially-implemented feature where commands could be
+serialized into a text file and (theoretically) replayed to recreate the list
+of commands. This capability is incomplete, but was planned and partially
+implemented. It has, however, not been tested in quite a while. The
+serialization of commands is mostly automated by a class attribute called
+``serialize_order`` containing a list of the object instance attribute to save
+and the type of data. The serialization of each of the data types is held in
+the ``maproom.serializer`` module, so if new types are needed the
+serialization code should be added in that module.
+
+Command Initialization - __init__ method
+---------------------------------------------
+
+Each Command subclass can take its own argument list; the superclass __init__
+method stores the layer as a layer invariant so that a reference to the Layer
+object is not held with the Command object. This becomes important when
+deleting a layer so that an old layer (with potentially a lot of memory) isn't
+kept around. Deleting layers then restoring them will result in a new Layer
+object reconstructed from the data in the Command object, not by restoring
+references to the deleted layer.
+
+Any data needed to perform the action should be stored in instance attributes
+in the __init__ method.
+
+Performing an Action - perform method
+-----------------------------------------
+
+Any change to the MapRoom project must happen in the perform method of a
+Command. This complicates the code quite a bit, because instead of just
+changing the LayerManager or Layer in the UI callback, the UI callback must
+create a Command object and then call the
+``maproom.editor.ProjectEditor.process_command`` method.
+
+The perform method of a Command must create an ``maproom.command.UndoInfo``
+object to hold any additional data necessary to construct the reverted state
+should this command being undone.
+
+The UndoInfo object also has a ``flags`` attribute that controls what aspects
+of the UI is refreshed after the change. 
+
+
+Undoing an Action -- undo method
+------------------------------------
+
+
+
