@@ -463,6 +463,12 @@ class MafEditor:
     #### popup menu utilities
 
     def show_popup(self, popup_menu_desc, popup_data=None):
+        """Popup a menu from a description list.
+
+        The menu description is in the same format as the menubar_desc class
+        attribute: a list of action names. The actions will be searched using
+        the search order listed in module_search_order.
+        """
         valid_id_map = {}
         menu = MenuDescription("popup", popup_menu_desc, self, valid_id_map, popup_data=popup_data)
         menu.sync_with_editor(valid_id_map)
@@ -476,6 +482,30 @@ class MafEditor:
                 wx.CallAfter(action.perform, action_key)
             except AttributeError:
                 log.warning(f"no perform method for {action}")
+
+    def popup_context_menu_from_commands(self, window, commands):
+        """Alternate (simple) method for creating a popup window with menu items
+        defined by commands.
+        
+        Each entry is either None to indicate a separator, or a 2-tuple
+        containing the string name and the command instance to process if the
+        menu entry is selected.
+        """
+        popup = wx.Menu()
+        context_menu_data = dict()
+        for entry in commands:
+            if entry is None:
+                popup.AppendSeparator()
+            else:
+                name, cmd = entry
+                i = wx.NewId()
+                popup.Append(i, name)
+                context_menu_data[i] = cmd
+        ret = window.GetPopupMenuSelectionFromUser(popup)
+        if ret == wx.ID_NONE:
+            return
+        cmd = context_menu_data[ret]
+        self.process_command(cmd)
 
     #### clipboard operations
 
