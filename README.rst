@@ -213,11 +213,21 @@ Code Architecture - MapRoom Application Framework & File Loading
 
 The MapRoom program is started using the ``maproom.py`` script in the top
 level directory. It contains the ``MapRoomApp`` class and the ``main``
-function that is the driver for the whole program. The ``get_image_path`` call
-to determine paths for icons and other things is used here because bundled
-apps (using pyinstaller) can have different locations for code and resource
-data.
+function that is the driver for the whole program. 
 
+Image Resources
+--------------------
+
+The ``get_image_path`` call in the main function is used to determine paths
+for icons and other files located within the maproom file hierarchy in the
+source distribution, but may be placed in different locations when bundled
+using application bundlers like pyinstaller. It can be used to find any type
+of file, not just images; for example, there is the concept of templates for
+sample data, and a ``template_path`` argument is created using a call to
+``get_image_path``.
+
+Icons for toolbars and the About dialog are located in the "maproom/icons" and
+"maproom/app_framework/icons" directories.
 
 Application Init
 ----------------------
@@ -577,3 +587,22 @@ seaching would be performed. If it had not been found there, the remaining
 modules would be attempted. Because ``maproom.app_framework.actions`` has
 sub-modules, the additional module searching based on the underscore splitting
 would occur.
+
+Toolbar
+--------------
+
+The toolbar definition works identically to the menubar, except there is no
+hierarchy. A single list is all that is available. Tools must be updated
+depending on the active layer, though, so there is an additional routine in
+ProjectEditor called ``update_toolbar_for_mouse_mode`` that appends some
+additional tools onto the end of the list that are useful for the active
+layer. This routine is called at the end of the ``process_command`` method.
+
+Each layer has a class attribute called ``mouse_mode_toolbar`` that references
+a collection of toolbar items in the ``maproom.toolbar`` module. When a new
+layer is made active, those toolbar actions listed in the named mouse mode are
+appended to the toolbar and the UI is updated.
+
+The toolbar icon is set through a function called ``calc_icon_name`` that
+returns a resource name. Icon resources are described above and most are in
+the "maproom/app_framework/icons" directory.
