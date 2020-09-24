@@ -29,7 +29,6 @@ class MouseHandler(object):
     icon = "help"
     menu_item_name = "Generic Mouse Handler"
     menu_item_tooltip = "Tooltip for generic mouse handler"
-    editor_trait_for_enabled = ""
     toolbar_group = "other"
 
     mouse_too_close_pixel_tolerance = 8
@@ -595,7 +594,6 @@ class PanMode(MouseHandler):
     icon = "hand"
     menu_item_name = "Pan Mode"
     menu_item_tooltip = "Scroll the viewport by holding down the mouse"
-    editor_trait_for_enabled = ""
     toolbar_group = "view"
 
     def __init__(self, layer_canvas):
@@ -622,7 +620,6 @@ class RNCSelectionMode(PanMode):
     icon = "cursor"
     menu_item_name = "RNC Chart Selection Mode"
     menu_item_tooltip = "Select an RNC chart to download"
-    editor_trait_for_enabled = ""
     toolbar_group = "select"
 
     def get_rnc_object(self):
@@ -706,7 +703,6 @@ class PolygonSelectionMode(RNCSelectionMode):
     icon = "cursor"
     menu_item_name = "Polygon Selection Mode"
     menu_item_tooltip = "Select a polygon"
-    editor_trait_for_enabled = ""
     toolbar_group = "select"
 
     def get_help_text(self):
@@ -954,7 +950,6 @@ class PointSelectionMode(ObjectSelectionMode):
     icon = "cursor"
     menu_item_name = "Point Selection Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
-    editor_trait_for_enabled = "layer_has_points"
 
     def __init__(self, layer_canvas):
         ObjectSelectionMode.__init__(self, layer_canvas)
@@ -1069,7 +1064,6 @@ class PointEditMode(PointSelectionMode):
     icon = "points"
     menu_item_name = "Point Edit Mode"
     menu_item_tooltip = "Edit and add points in the current layer"
-    editor_trait_for_enabled = "layer_has_points"
     toolbar_group = "edit"
 
     def get_cursor(self):
@@ -1129,7 +1123,6 @@ class LineEditMode(PointEditMode):
     icon = "polyline"
     menu_item_name = "Line Edit Mode"
     menu_item_tooltip = "Edit and add lines in the current layer"
-    editor_trait_for_enabled = "layer_has_points"
     toolbar_group = "edit"
 
     def get_cursor(self):

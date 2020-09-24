@@ -243,18 +243,6 @@ class ProjectEditor(MafEditor):
     def init_default_values(self):
         self.layer_manager = self.document
         self.layer_manager.project = self
-        self.layer_zoomable = False
-        self.layer_can_save = False
-        self.layer_can_save_as = False
-        self.layer_selected = False
-        self.layer_above = False
-        self.layer_below = False
-        self.multiple_layers = False
-        self.layer_has_points = False
-        self.layer_has_selection = False
-        self.layer_has_flagged = False
-        self.layer_has_boundaries = False
-        self.layer_is_groupable = False
         self.clickable_object_mouse_is_over = None
         self.clickable_object_in_layer = None
         self.last_refresh = 0.0
@@ -267,12 +255,8 @@ class ProjectEditor(MafEditor):
 
         self.latest_movie = None
 
-        # Force mouse mode toolbar to be blank so that the initial trait change
-        # that occurs during initialization of this class doesn't match a real
-        # mouse mode.  If it does match, the toolbar won't be properly adjusted
-        # during the first trait change in response to
-        # update_layer_selection_ui and there will be an empty between named
-        # toolbars
+        # Force mouse mode toolbar to be blank so that it will be set correctly
+        # in the first call to update_layer_selection_ui
         self.mouse_mode_toolbar = ""
         self.mouse_mode_factory = mouse_handler.SelectionMode
 
@@ -761,7 +745,7 @@ class ProjectEditor(MafEditor):
         if set_save_point:
             self.layer_manager.undo_stack.set_save_point()
 
-    # Traits event handlers
+    # Document event handlers
 
     def layer_loaded(self, evt):
         layer = evt[0]
@@ -780,29 +764,6 @@ class ProjectEditor(MafEditor):
         self.timeline.clear_marks()
         self.timeline.recalc_view()
 
-    def update_layer_menu_ui(self, edit_layer):
-        # if edit_layer is not None:
-        #     self.can_copy = edit_layer.can_copy()
-        #     self.can_paste = True
-        #     self.can_paste_style = self.clipboard_style is not None
-        #     self.layer_can_save = edit_layer.can_save()
-        #     self.layer_can_save_as = edit_layer.can_save_as()
-        #     self.layer_selected = not edit_layer.is_root()
-        #     self.layer_zoomable = edit_layer.is_zoomable()
-        #     self.layer_above = self.layer_manager.is_raisable(edit_layer)
-        #     self.layer_below = self.layer_manager.is_lowerable(edit_layer)
-        # else:
-        #     self.can_copy = False
-        #     self.can_paste = False
-        #     self.can_paste_style = False
-        #     self.layer_can_save = False
-        #     self.layer_can_save_as = False
-        #     self.layer_selected = False
-        #     self.layer_zoomable = False
-        #     self.layer_above = False
-        #     self.layer_below = False
-        pass
-
     def update_layer_selection_ui(self, edit_layer=None):
         if edit_layer is None:
             edit_layer = self.current_layer
@@ -815,7 +776,6 @@ class ProjectEditor(MafEditor):
 
         self.update_toolbar_for_mouse_mode()
 
-        self.update_layer_menu_ui(edit_layer)
         self.layer_canvas.set_mouse_handler(self.mouse_mode_factory)
         self.multiple_layers = self.layer_manager.count_layers() > 1
         self.update_info_panels(edit_layer)
@@ -834,20 +794,9 @@ class ProjectEditor(MafEditor):
         if edit_layer is None:
             edit_layer = self.current_layer
         if edit_layer is not None:
-        #     self.layer_has_points = edit_layer.has_points()
-        #     self.layer_has_selection = edit_layer.has_selection()
-        #     self.layer_has_flagged = edit_layer.has_flagged()
-        #     self.layer_has_boundaries = edit_layer.has_boundaries()
-        #     self.layer_is_groupable = edit_layer.has_groupable_objects()
             layer_name = edit_layer.name
         else:
-        #     self.layer_has_points = False
-        #     self.layer_has_selection = False
-        #     self.layer_has_flagged = False
-        #     self.layer_has_boundaries = False
-        #     self.layer_is_groupable = False
             layer_name = "Current Layer"
-        log.debug("has_points=%s, has_selection = %s, has_flagged=%s, has_boundaries = %s" % (self.layer_has_points, self.layer_has_selection, self.layer_has_flagged, self.layer_has_boundaries))
         self.layer_info.SetName(layer_name)
         pass
 
@@ -865,36 +814,30 @@ class ProjectEditor(MafEditor):
         if self.selection_info.process_initial_key(event, text):
             return
 
-    # @on_trait_change('layer_manager:undo_stack_changed')
     def undo_stack_changed(self, evt):
         log.debug("undo_stack_changed called!!!")
         self.refresh()
 
-    # @on_trait_change('layer_manager:layer_contents_changed')
     def layer_contents_changed(self, evt):
         layer = evt[0]
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
-    # @on_trait_change('layer_manager:layer_contents_changed_in_place')
     def layer_contents_changed_in_place(self, evt):
         layer = evt[0]
         log.debug("layer_contents_changed_in_place called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer, in_place=True)
 
-    # @on_trait_change('layer_manager:layer_contents_deleted')
     def layer_contents_deleted(self, evt):
         layer = evt[0]
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
-    # @on_trait_change('layer_manager:layer_metadata_changed')
     def layer_metadata_changed(self, evt):
         layer = evt[0]
         log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
 
-    # @on_trait_change('layer_manager:refresh_needed')
     def refresh(self, evt=None):
         if evt is None:
             batch_flags = None
@@ -923,14 +866,12 @@ class ProjectEditor(MafEditor):
 
         edit_layer = self.current_layer
         self.update_layer_contents_ui(edit_layer)
-        self.update_layer_menu_ui(edit_layer)
         self.layer_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
         self.selection_info.display_panel_for_layer(self, edit_layer, batch_flags.editable_properties_changed, has_focus=current)
         self.timeline.refresh_view()
         self.last_refresh = time.perf_counter()
         self.control.Refresh()
 
-    # @on_trait_change('layer_manager:background_refresh_needed')
     def background_refresh(self, evt):
         log.debug("background refresh called")
         t = time.perf_counter()
@@ -939,7 +880,6 @@ class ProjectEditor(MafEditor):
             return
         self.refresh()
 
-    # @on_trait_change('layer_manager:threaded_image_loaded')
     def threaded_image_loaded(self, evt):
         log.debug(f"threaded image loaded called: {evt}")
         (layer, map_server_id), wms_request = evt

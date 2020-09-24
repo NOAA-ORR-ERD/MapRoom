@@ -18,7 +18,6 @@ class MouseMode(object):
     icon = "help.png"
     menu_item_name = "Generic Mouse Mode"
     menu_item_tooltip = "Tooltip for generic mouse mode"
-    editor_trait_for_enabled = ""
 
     mouse_too_close_pixel_tolerance = 5
 
