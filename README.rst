@@ -151,7 +151,7 @@ scripts
   and update the ChangeLog
 
 
-
+==========================
 Project Architecture
 ==========================
 
@@ -454,21 +454,126 @@ Performing an Action - perform method
 -----------------------------------------
 
 Any change to the MapRoom project must happen in the perform method of a
-Command. This complicates the code quite a bit, because instead of just
-changing the LayerManager or Layer in the UI callback, the UI callback must
-create a Command object and then call the
-``maproom.editor.ProjectEditor.process_command`` method.
+Command. This complicates the code quite a bit, because instead of changing
+the project where it happens in the UI code, the UI code must instead create a
+Command object and then call the
+``maproom.editor.ProjectEditor.process_command`` method. This will attempt the
+operation, and if successful will record the command to the undo/redo
+framework. If the operation fails, an error message will be generated. Raising
+a ``maproom.errors.MapRoomError`` in the perform method is the way to report
+an error.
+
+There is a special subclass of ``MapRoomError`` called ``PointsError`` that
+includes an extra argument called  ``points`` that will cause the editor to
+highlight the points included in that list as the error conditions.
 
 The perform method of a Command must create an ``maproom.command.UndoInfo``
 object to hold any additional data necessary to construct the reverted state
 should this command being undone.
 
-The UndoInfo object also has a ``flags`` attribute that controls what aspects
-of the UI is refreshed after the change. 
+The UndoInfo object also has a ``flags`` attribute, an instance of the
+``maproom.command.CommandStatus`` class, that controls what aspects of the UI
+is refreshed after the change. There are several boolean attributes of
+``flags`` that can be set and are described in the class, and there is an
+additional ``layer_flags`` list that uses a ``LayerStatus`` object that
+contains a summary of all changes for each layer that is affected by this
+command -- use the ``add_layer_flags`` method of the ``CommandStatus`` object
+instead of appending to the ``layer_flags`` list directly.
 
+There is an additional ``data`` attribute of the UndoInfo object that is for
+arbitrary data that the ``undo`` method can use to restore the state of the
+project.
+
+The undo_info object should be returned at the end of the perform method.
 
 Undoing an Action -- undo method
 ------------------------------------
 
+The state of the project must be restored to a functionally identical state as
+before the ``perform`` method was called after the ``undo`` method completes.
+Note that it is not necessary to be totally identical; for instance, some
+arrays may have been resized to be larger during the ``perform`` method. It is
+not necessary to undo that sort of operation -- as long as the working data is
+presented as the same, the condition of a layer doesn't have to be identical
+to the "before" state.
+
+An undo_info object must be returned at the end of the method that contains
+flags showing what has changed so the UI can be updated properly.
 
 
+Code Architecture - Project Editor and Processing Commands
+===========================================================
+
+The ``maproom.editor.ProjectEditor`` is a subclass of the
+``maproom.app_framework.editor.MafEditor`` and represents a tab in a top-level
+``MafFrame``, which is a subclass of a wxPython Frame.
+
+The ``process_command`` method takes the Command object and makes the change
+described in its perform method. Assuming the change is successful, t flags
+resulting from it are added to a ``BatchStatus`` object, the idea being that
+multiple commands could be performed in a batch and the UI only updated after
+all commands completed.
+
+The call to ``perform_batch_flags`` is where the UI actually gets updated.
+
+
+Code Architecture - Actions, Menu Bar, and Toolbar
+===========================================================
+
+The application framework doesn't use the normal wx method of a large if/else
+block to decide what to UI function to perform. Rather, it uses a list of
+actions for both menubar and toolbar specification, the definitions of which
+are stored as class attributes of the ProjectEditor.
+
+Actions are subclasses of the ``maproom.app_framework.action.MafAction`` that
+hold the action description, icon, name, and trigger all in one place. There
+is also the ability to perform differently if called using a keystroke or as a
+UI callback.
+
+Menu Bar
+-----------
+
+Menubars are hierarchical, and are described in the ``menubar_desc`` class
+attribute of a ``MafEditor``. Nested lists form sub-menus. The first item in
+any nested list is the title of the menu, either the top level menu item if
+it's a direct child of the ``menubar_desc`` list, or the sub-menu name if it's
+a subsequent child. The following items in the list are the class names of
+actions that will appear in sequence in the menu.
+
+The class attribute ``module_search_order`` describes the modules in which
+class names will be searched to populate the menubar. For instance, the source
+for the ProjectEditor contains::
+
+    menubar_desc = [
+        ["File",
+            "new_project",
+            "new_empty_project",
+            ["New Project From Template",
+                "new_project_from_template",
+            ],
+            None,
+            "open_file",
+        ...
+    ]
+
+    module_search_order = ["maproom.actions", "maproom.toolbar", "maproom.app_framework.actions"]
+
+
+The "new_project" class will be searched for first in the ``maproom.actions``
+module, then ``maproom.toolbar``, and finally the
+``maproom.app_framework.actions`` module. The class may appear in any one of
+the successively more generic modules formed by the name of the action where
+it is split by the underscore character. For instance, "new_project" will be
+searched for in the following order:
+
+    maproom.actions
+    maproom.toolbar
+    maproom.app_framework.actions.new_project.py
+    maproom.app_framework.actions.new.py
+    maproom.app_framework.actions.__init__.py
+
+In this example, it is found in the ``maproom.actions`` module and no further
+seaching would be performed. If it had not been found there, the remaining
+modules would be attempted. Because ``maproom.app_framework.actions`` has
+sub-modules, the additional module searching based on the underscore splitting
+would occur.
