@@ -464,10 +464,10 @@ providing the undo capability.
 The ``maproom.command.Command`` class is subclassed to provide individual
 commands. There are 4 modules in the code that contain the available commands:
 
- * menu_commands.py
- * mouse_commands.py
- * screen_object_commands.py
- * vector_object_commands.py
+* menu_commands.py
+* mouse_commands.py
+* screen_object_commands.py
+* vector_object_commands.py
 
 A command is required to implement 3 methods: ``__init__``, ``perform``, and
 ``undo``. The ``perform`` method is used to make the change and the ``undo``
@@ -539,7 +539,7 @@ project.
 
 The undo_info object should be returned at the end of the perform method.
 
-Undoing an Action -- undo method
+Undoing an Action - undo method
 ------------------------------------
 
 The state of the project must be restored to a functionally identical state as
@@ -616,13 +616,19 @@ for the ProjectEditor contains::
 
     module_search_order = ["maproom.actions", "maproom.toolbar", "maproom.app_framework.actions"]
 
+The ``maproom.app_framework.menubar.MenubarDescription`` object is created
+from this ``menubar_desc`` list, and stored in the ``menubar`` instance
+attribute of the ``MafFrame`` instance. Note that when a new editor is made
+active by chosing a different tab to be the active tab, this ``menubar``
+instance attribute is updated to use the ``menubar_desc`` of the now-active
+tab.
 
 The "new_project" class will be searched for first in the ``maproom.actions``
 module, then ``maproom.toolbar``, and finally the
 ``maproom.app_framework.actions`` module. The class may appear in any one of
 the successively more generic modules formed by the name of the action where
 it is split by the underscore character. For instance, "new_project" will be
-searched for in the following order:
+searched for in the following order::
 
     maproom.actions
     maproom.toolbar
@@ -640,11 +646,17 @@ Toolbar
 --------------
 
 The toolbar definition works identically to the menubar, except there is no
-hierarchy. A single list is all that is available, for example:
+hierarchy. A single list is all that is available, for example::
 
     toolbar_desc = [
         "open_file", "save_file", None, "undo", "redo", None, "copy", "cut", "paste"
     ]
+
+Analogous to the menubar, the toolbar description object
+``maproom.app_framework.toolbar.ToolbarDescription`` is stored in the
+``MafFrame`` object as the ``toolbar`` instance attribute. This description
+object is replaced every time a new tab is made active using the
+``toolbar_desc`` list of the editor corresponding to the now-active tab.
 
 Some tools should only be shown depending on the active layer, though, so
 there is an additional routine in ProjectEditor called
@@ -668,7 +680,7 @@ Keyboard bindings are listed separately from toolbar and menubar descriptions.
 Key binding actions may correspond to existing menubar or toolbar actions, or
 may not have an equivalent. Either way, the actions are stored in a keybinding
 description object and the actions are located in the same way as menubar and
-toolbar actions. The description class attribute is a dictionary:
+toolbar actions. The description class attribute is a dictionary::
 
     keybinding_desc = {
         "new_file": "Ctrl+N",
@@ -680,6 +692,9 @@ toolbar actions. The description class attribute is a dictionary:
         "paste": "Ctrl+V",
     }
 
+The keybinding description object is stored in the ``keybinding`` instance
+attribute of the ``MafFrame`` and is defined in
+``maproom.app_framework.keybindings.KeyBindingDescription``.
 
 Binding UI Actions
 ------------------------
@@ -689,7 +704,7 @@ at the editor creation tab; that is, when a new tab is created.
 
 The actions are bound to the menubar and toolbar during a call to
 ``MafFrame.sync_active_tab`` which is called whenever a tab is changed. The
-entire mapping of ``wx.ID``s is thrown out and recreated through this
+entire mapping of menu ids is thrown out and recreated through this
 function. The menubar (and toolbar) description objects have methods called
 ``sync_with_editor`` that loop through each action and call the
 ``wx.Menu.Append`` (or ``wx.ToolBar.AddTool``) methods linking an id value
@@ -704,3 +719,37 @@ calls that action as ``MafAction.perform_as_menu_item``.
 Keybinding actions are handled in the ``wx.EVT_CHAR_HOOK`` binding, and if an
 id value is found in the keybinding's ``valid_id_map``, the action's
 ``perform_as_keystroke`` method is called.
+
+
+Menu Enabling & Disabling
+------------------------------
+
+One of the challenges of wxPython menubars and toolbars is efficiently
+managing the code to enable or disable menu items depending on the state of
+the application. For instance, the "Copy" item in the "Edit" menu should only
+be enabled when there is something that can be copied to the clipboard,
+otherwise it should remain grayed-out.
+
+There are also dynamic menu items that change appearance or values depending
+on the state of the application, including submenus that have the ability to
+contain different numbers of menu items (which is discussed in the next
+section).
+
+The menu bar needs to be updated periodically in order to reflect these
+dynamic updates. The ``wx.EVT_MENU_OPEN`` event is supposed to be emitted
+before a menu is opened, which is provided for just this case: to update menu
+state before it is displayed. However, there are platform differences on each
+of the 3 supported wxPython platforms, so a platform test is performed at the
+``MafFrame.__init__`` method and the appropriate method is bound to the
+``wx.EVT_MENU_OPEN`` event.
+
+The ``sync_menubar`` method is called as a result of the wx event handler,
+which it turn calls the ``sync_with_editor`` method of the menubar description
+object. This loops through each action and calls the
+``sync_menu_item_from_editor`` method to determine the enabled/disabled state,
+and also the checked state for radio/checkbox items.
+
+
+Dynamic Submenus
+----------------------
+
