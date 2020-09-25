@@ -30,8 +30,6 @@ class PolygonLayer(PointLayer):
 
     mouse_mode_toolbar = "PolygonLayerToolBar"
 
-    visibility_items = ["points", "polygons"]
-
     layer_info_panel = ["Polygon count"]
 
     selection_info_panel = []
@@ -73,15 +71,6 @@ class PolygonLayer(PointLayer):
         no_rings = (self.rings is None or len(self.rings) == 0)
 
         return no_points and no_rings
-
-    def visibility_item_exists(self, label):
-        """Return keys for visibility dict lookups that currently exist in this layer
-        """
-        if label == "points":
-            return self.points is not None
-        if label == "polygons":
-            return self.rings is not None
-        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def color_array(self):
         # set up feature code to color map

@@ -21,8 +21,6 @@ class TriangleLayer(PointLayer):
 
     mouse_mode_toolbar = "BaseLayerToolBar"
 
-    visibility_items = ["points", "triangles", "labels"]
-
     use_color_cycling = True
 
     layer_info_panel = ["Triangle count", "Show depth shading", "Merge created points"]
@@ -54,15 +52,6 @@ class TriangleLayer(PointLayer):
         no_triangles = (self.triangles is None or len(self.triangles) == 0)
 
         return no_points and no_triangles
-
-    def visibility_item_exists(self, label):
-        """Return keys for visibility dict lookups that currently exist in this layer
-        """
-        if label in ["points", "labels"]:
-            return self.points is not None
-        if label == "triangles":
-            return self.triangles is not None
-        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def set_data(self, f_points, f_depths, f_triangles):
         n = np.alen(f_points)

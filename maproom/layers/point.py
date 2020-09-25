@@ -27,8 +27,6 @@ class PointLayer(PointBaseLayer):
 
     pickable = True  # is this a layer that support picking?
 
-    visibility_items = ["points", "labels"]
-
     layer_info_panel = ["Point count", "Flagged points", "Default depth", "Depth unit", "Color", "Outline color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]

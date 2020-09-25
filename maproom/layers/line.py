@@ -28,8 +28,6 @@ class LineLayer(PointLayer):
 
     use_color_cycling = True
 
-    visibility_items = ["points", "lines", "labels"]
-
     layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
 
     def __init__(self, manager):
@@ -60,17 +58,6 @@ class LineLayer(PointLayer):
                 return str(len(self.line_segment_indexes))
             return "0"
         return PointLayer.get_info_panel_text(self, prop)
-
-    def visibility_item_exists(self, label):
-        """Return keys for visibility dict lookups that currently exist in this layer
-        """
-        # fixme == does this need to be hard-coded?
-        if label in ["points", "labels"]:
-            return self.points is not None
-        elif label == "lines":
-            return self.line_segment_indexes is not None
-        else:
-            raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def copy_lines(self):
         return self.line_segment_indexes.copy().view(np.recarray)
@@ -766,8 +753,6 @@ class SegmentLayer(LineLayer):
     name = "Segment"
 
     type = "segment"
-
-    visibility_items = ["lines"]
 
     layer_info_panel = ["Line segment count", "Color"]
 

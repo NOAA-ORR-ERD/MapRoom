@@ -182,8 +182,6 @@ class PolygonParentLayer(PointLayer):
 
     mouse_mode_toolbar = "PolygonLayerToolBar"
 
-    visibility_items = ["points", "lines", "labels"]
-
     layer_info_panel = ["Point count", "Polygon count"]
 
     selection_info_panel = ["Selected points", "Point index", "Point latitude", "Point longitude"]

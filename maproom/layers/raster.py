@@ -59,15 +59,6 @@ class RasterLayer(ProjectedLayer):
         """
         return [self.file_path]
 
-    def get_allowable_visibility_items(self):
-        """Return allowable keys for visibility dict lookups for this layer
-        """
-        return ["images"]
-
-    def visibility_item_exists(self, label):
-        if label == "images":
-            return self.image_data is not None
-
     def check_projection(self):
         # change the app projection to latlong if this image is latlong projection
         # and we don't currently have a mercator image loaded;

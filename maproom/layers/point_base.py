@@ -25,8 +25,6 @@ class PointBaseLayer(ProjectedLayer):
 
     type = "base_point"
 
-    visibility_items = ["points"]
-
     layer_info_panel = ["Point count"]
 
     selection_info_panel = []

@@ -43,6 +43,7 @@ class Layer:
     # True if an image or other layer where it occludes stuff behind it
     opaque = False
 
+    # ui label used as the default name for this layer when creating a new instance
     name = "Empty"
 
     # type is a string identifier that uniquely refers to a layer class.
@@ -50,19 +51,28 @@ class Layer:
     # serializable.
     type = ""
 
+    # if layers have additional toolbar items, update this attribute to
+    # correspond to an entry in `valid_mouse_modes` in maproom/toolbar.py
     mouse_mode_toolbar = "BaseLayerToolBar"
 
+    # should this layer be skipped over when adding a new layer at the
+    # beginning of the list? This is used primarily for the graticule layer so
+    # it stays on top of any new layers added
     skip_on_insert = False
 
+    # only vector object layers set this flag
     has_control_points = False
 
     pickable = False  # is this a layer that support picking?
 
+    # used only to indicate that this layer is a transient layer. There is
+    # only one transient layer at any one time.
     transient_edit_layer = False
 
+    # flag to indicate this layer should be temporarily moved to the top of
+    # the stack while editing is taking place. Currently used only on the
+    # RingEditLayer
     draw_on_top_when_selected = False
-
-    visibility_items = []
 
     layer_info_panel = []
 
@@ -561,13 +571,6 @@ class Layer:
             d["labels"] = False
             d["points"] = False
         return d
-
-    def visibility_item_exists(self, label):
-        """Return keys for visibility dict lookups that currently exist in this layer
-        """
-        if label in self.visibility_items:
-            return self.points is not None
-        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def update_bounds(self, parents=False):
         if parents:
