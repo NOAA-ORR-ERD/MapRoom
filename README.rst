@@ -255,7 +255,22 @@ sample data, and a ``template_path`` argument is created using a call to
 ``get_image_path``.
 
 Icons for toolbars and the About dialog are located in the "maproom/icons" and
-"maproom/app_framework/icons" directories.
+"maproom/app_framework/icons" directories. They can be referenced using the
+"icon://" URI when passed to the filesystem utility
+``maproom.app_framework.filesystem.fsopen``.
+
+Template Resources
+----------------------
+
+The default project files and some sample data files are stored in the
+"maproom/templates" directory. These can be referenced by the "template://"
+URI prefix when using the ``maproom.app_framework.filesystem.fsopen``
+function. For example, the default project loaded when MapRoom is started is
+the  file "maproom/templates/default_project.maproom" and referenced by
+"template://default_project.maproom" in the code. That reference is in the
+main application class, ``maproom.app_framework.application.MafApplication``,
+in the ``default_uri`` class attribute.
+
 
 Application Init
 ----------------------
@@ -568,6 +583,11 @@ hold the action description, icon, name, and trigger all in one place. There
 is also the ability to perform differently if called using a keystroke or as a
 UI callback.
 
+There is a further subclass of ``MafAction``, ``maproom.actions.LayerAction``
+that includes a convenience method ``perform_on_layer`` that includes the
+active layer as an argument. Not all actions will subclass from
+``LayerAction`` because not all actions apply to a single layer.
+
 Menu Bar
 -----------
 
@@ -620,11 +640,17 @@ Toolbar
 --------------
 
 The toolbar definition works identically to the menubar, except there is no
-hierarchy. A single list is all that is available. Tools must be updated
-depending on the active layer, though, so there is an additional routine in
-ProjectEditor called ``update_toolbar_for_mouse_mode`` that appends some
-additional tools onto the end of the list that are useful for the active
-layer. This routine is called at the end of the ``process_command`` method.
+hierarchy. A single list is all that is available, for example:
+
+    toolbar_desc = [
+        "open_file", "save_file", None, "undo", "redo", None, "copy", "cut", "paste"
+    ]
+
+Some tools should only be shown depending on the active layer, though, so
+there is an additional routine in ProjectEditor called
+``update_toolbar_for_mouse_mode`` that appends some additional tools onto the
+end of the list that are useful for the active layer. This routine is called
+at the end of the ``process_command`` method.
 
 Each layer has a class attribute called ``mouse_mode_toolbar`` that references
 a collection of toolbar items in the ``maproom.toolbar`` module. When a new
@@ -634,3 +660,47 @@ appended to the toolbar and the UI is updated.
 The toolbar icon is set through a function called ``calc_icon_name`` that
 returns a resource name. Icon resources are described above and most are in
 the "maproom/app_framework/icons" directory.
+
+Key Bindings
+------------------
+
+Keyboard bindings are listed separately from toolbar and menubar descriptions.
+Key binding actions may correspond to existing menubar or toolbar actions, or
+may not have an equivalent. Either way, the actions are stored in a keybinding
+description object and the actions are located in the same way as menubar and
+toolbar actions. The description class attribute is a dictionary:
+
+    keybinding_desc = {
+        "new_file": "Ctrl+N",
+        "open_file": "Ctrl+O",
+        "save_file" : "Ctrl+S",
+        "save_as" : "Shift+Ctrl+S",
+        "cut": "Ctrl+X",
+        "copy": "Ctrl+C",
+        "paste": "Ctrl+V",
+    }
+
+
+Binding UI Actions
+------------------------
+
+The menubar, toolbar, and keybinding description objects are only created once
+at the editor creation tab; that is, when a new tab is created.
+
+The actions are bound to the menubar and toolbar during a call to
+``MafFrame.sync_active_tab`` which is called whenever a tab is changed. The
+entire mapping of ``wx.ID``s is thrown out and recreated through this
+function. The menubar (and toolbar) description objects have methods called
+``sync_with_editor`` that loop through each action and call the
+``wx.Menu.Append`` (or ``wx.ToolBar.AddTool``) methods linking an id value
+with this action.
+
+A mapping of id value to action is kept in the menubar (or toolbar)
+description object called ``valid_id_map``, and the ``wx.EVT_MENU`` is bound
+to the ``MafFrame.on_menu`` method. That method looks through first the
+menubar then the toolbar description objects for the id value, and if found
+calls that action as ``MafAction.perform_as_menu_item``.
+
+Keybinding actions are handled in the ``wx.EVT_CHAR_HOOK`` binding, and if an
+id value is found in the keybinding's ``valid_id_map``, the action's
+``perform_as_keystroke`` method is called.
