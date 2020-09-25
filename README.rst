@@ -736,12 +736,11 @@ contain different numbers of menu items (which is discussed in the next
 section).
 
 The menu bar needs to be updated periodically in order to reflect these
-dynamic updates. The ``wx.EVT_MENU_OPEN`` event is supposed to be emitted
-before a menu is opened, which is provided for just this case: to update menu
-state before it is displayed. However, there are platform differences on each
-of the 3 supported wxPython platforms, so a platform test is performed at the
-``MafFrame.__init__`` method and the appropriate method is bound to the
-``wx.EVT_MENU_OPEN`` event.
+dynamic updates. The ``wx.EVT_MENU_OPEN`` event is provided by wxPython to
+handle this exact case: to update menu state just prior to being displayed.
+However, there are platform differences on each of the 3 supported platforms.
+A test is performed at the ``MafFrame.__init__`` method and the appropriate
+method is bound to the ``wx.EVT_MENU_OPEN`` event.
 
 The ``sync_menubar`` method is called as a result of the wx event handler,
 which it turn calls the ``sync_with_editor`` method of the menubar description
@@ -752,4 +751,36 @@ and also the checked state for radio/checkbox items.
 
 Dynamic Submenus
 ----------------------
+
+Submenus that have a variable number of entries depending on some aspect of
+the current project are handled through the same
+``sync_menu_item_from_editor`` method of each action.
+
+The ``maproom.app_framework.action.MafListAction`` class is provided for
+submenus that can have variable numbers of items. The first time the
+``sync_menu_item_from_editor`` method is called, the object will create the
+list of items to be contained in the submenu. The method ``calc_list_items``
+must be overridden by the subclass to provide the items for the list. The list
+does not have to be text items, a method ``calc_name`` is provided to return a
+string that will be used as the menu item text.
+
+The ``action_key`` is a text string that represents the specific menu item of
+interest -- the root string of the ``action_key`` is the name of the menu
+class, and for each menu item in the submenu, an underscore and the text
+representation of an integer is appended. This compound action key is used by
+the ``get_index`` method to return the position in the list items.
+
+Every time the ``wx.EVT_MENU_OPEN`` event is called, the
+``sync_menu_item_from_editor`` method is called to recreate the list of items.
+If the items have changed, an
+``maproom.app_framework.errors.RecreateDynamicMenuBar`` exception is raised
+which causes the entire menu to be rebuilt, thereby creating the new menu that
+includes the changed items.
+
+Note that while this is not super efficient because it loops through the
+entire menu system, recreating items that possibly don't need to be created,
+it has the advantage of requiring a minimal amount of code. Modifying menus in
+place would require careful track of identifying menus that were no longer
+needed and deleting items from submenus. In practice, the speed of
+regenerating menus has not been an issue.
 
