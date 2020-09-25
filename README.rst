@@ -396,61 +396,6 @@ the UI for the editor is instantiated. This happens in the
 ``maproom.app_framework.frame.MafFrame.add_editor`` method.
 
 
-Code Architecture - Layers and Layer Manager
-==================================================
-
-The ``maproom.layer_manager.LayerManager`` class is the ``MafDocument``
-subclass that represents the MapRoom project. An object of this class holds
-all the layers that make up the final image. Each layer is a subclass of the
-``maproom.layers.base.Layer`` class.
-
-Layer Manager
---------------------
-
-The ``LayerManager`` object holds the layers in an arbitrarily deep array of
-arrays that results in a tree-like structure. Internally, layers are referred
-to by a "multi-index", which represents the location in the structure of the
-layer. For example, in the source code is the following example: the array ``[
-[ a, b ], [c, [ d, e ] ], f, [ g, h ] ]``. The multi_index ``[ 0 ]`` refers to
-subtree ``[ a, b ]``, the multi_index ``[ 1, 1, 1 ]`` refers to the leaf
-``e``, and the multi_index ``[ 3, 0 ]`` refers to the leaf ``g``.
-
-Layers are also referenced by a unique number called an ``invariant``. This is
-an integer used as id that doesn't change when the layer is renamed or
-reordered. It gets created when the layer is added to a LayerManager. There
-are special values that represent transient layers, the root layer, and other
-layers created at project creation time.
-
-There are various methods to find layers by id, multi-index, by layer type,
-and by relationship to other layers. Layers must be added through the methods
-provided in this class as there are many internal bookkeeping data that must
-be updated as layers change.
-
-Layers
-------------
-
-The ``maproom.layers.base.Layer`` abstract class must be subclassed before it
-can be added to a LayerManager as a visible layer in the project. An example
-of a simple layer is the ``maproom.layers.point.PointLayer`` layer, which
-displays only points. A direct subclass is the
-``maproom.layers.line.LineLayer`` which displays both points and lines in
-files like ``.verdat`` and other "ugrid" file types. It is much more
-complicated than the ``PointLayer`` because it includes editing functions:
-moving, adding, and deleting points and lines.
-
-All layers use numpy arrays to hold coordinates to be mapped onto the lat/lon
-project space. Some layers, like the LineLayer, have large arrays (one row per
-point) that must be resized periodically if many points are added. Other
-layers, like image layers, only store points for the 4 corners and store the
-image data in OpenGL textures.
-
-Annotation layers use the parent class
-``maproom.layers.vector_object.VectorObjectLayer`` which is a further
-subclasses of the LineLayer. They use the numpy array of points as the
-bounding box of the layer, and some layers use additional points to represent
-more points within the layer. Discussion of annotation layers is below.
-
-
 Code Architecture - Commands and the Undo Stack
 ===========================================================
 
@@ -783,4 +728,83 @@ it has the advantage of requiring a minimal amount of code. Modifying menus in
 place would require careful track of identifying menus that were no longer
 needed and deleting items from submenus. In practice, the speed of
 regenerating menus has not been an issue.
+
+
+Code Architecture - Layers and Layer Manager
+==================================================
+
+The ``maproom.layer_manager.LayerManager`` class is the ``MafDocument``
+subclass that represents the MapRoom project. An object of this class holds
+all the layers that make up the final image. Each layer is a subclass of the
+``maproom.layers.base.Layer`` class.
+
+Layer Manager
+--------------------
+
+The ``LayerManager`` object holds the layers in an arbitrarily deep array of
+arrays that results in a tree-like structure. Internally, layers are referred
+to by a "multi-index", which represents the location in the structure of the
+layer. For example, in the source code is the following example: the array ``[
+[ a, b ], [c, [ d, e ] ], f, [ g, h ] ]``. The multi_index ``[ 0 ]`` refers to
+subtree ``[ a, b ]``, the multi_index ``[ 1, 1, 1 ]`` refers to the leaf
+``e``, and the multi_index ``[ 3, 0 ]`` refers to the leaf ``g``.
+
+Layers are also referenced by a unique number called an ``invariant``. This is
+an integer used as id that doesn't change when the layer is renamed or
+reordered. It gets created when the layer is added to a LayerManager. There
+are special values that represent transient layers, the root layer, and other
+layers created at project creation time.
+
+There are various methods to find layers by id, multi-index, by layer type,
+and by relationship to other layers. Layers must be added through the methods
+provided in this class as there are many internal bookkeeping data that must
+be updated as layers change.
+
+LayerTreeControl
+----------------------
+
+This UI panel contains a tree control that allows the layers to be reordered
+through drag-and-drop, thereby updating the LayerManager data structure (by
+altering the "multi-index" of any affected layers).
+
+
+Base Layer
+------------
+
+The ``maproom.layers.base.Layer`` abstract class must be subclassed before it
+can be added to a LayerManager as a visible layer in the project. An example
+of a simple layer is the ``maproom.layers.point.PointLayer`` layer, which
+displays only points. A direct subclass is the
+``maproom.layers.line.LineLayer`` which displays both points and lines in
+files like ``.verdat`` and other "ugrid" file types. It is much more
+complicated than the ``PointLayer`` because it includes editing functions:
+moving, adding, and deleting points and lines. See the next section for more
+information.
+
+All layers use numpy arrays to hold coordinates to be mapped onto the lat/lon
+project space. Some layers, like the LineLayer, have large arrays (one row per
+point) that must be resized periodically if many points are added. Other
+layers, like image layers, only store points for the 4 corners and store the
+image data in OpenGL textures.
+
+Annotation layers use the parent class
+``maproom.layers.vector_object.VectorObjectLayer`` which is a further
+subclasses of the LineLayer. They use the numpy array of points as the
+bounding box of the layer, and some layers use additional points to represent
+more points within the layer. Discussion of annotation layers is below.
+
+Layers use class attributes to describe many characteristics, as quite a few
+don't depend on the actual instance. They are described in comments in the
+``maproom.layers.base`` module.
+
+UGrid Layer
+---------------
+
+The most simple layer to display lat/lon data is the
+``maproom.layers.line.LineLayer", capable of displaying point and lines.
+Several file formats support line layers, including:
+
+* Verdat (.verdat); see the ``maproom.loaders.verdat`` module
+* NetCDF (.nc), without particle data; see ``maproom.loaders.ugrid``
+* text holding rows of lat/lon data; see ``maproom.loaders.text``
 
