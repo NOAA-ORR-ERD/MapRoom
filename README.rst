@@ -733,6 +733,63 @@ needed and deleting items from submenus. In practice, the speed of
 regenerating menus has not been an issue.
 
 
+Code Architecture - OpenGL Rendering Primer
+==============================================
+
+For speed, OpenGL is used to render all graphics in the main window. The
+advantage of OpenGL is that the graphics card can hold most of the data in its
+localized (fast) memory. Only when data changes (adding/deleting a point,
+changing a coordinate, adding a line, etc.) does new data have to be loaded
+into the graphics card memory.
+
+Numpy record arrays are used as a further optimization, defined in
+``maproom.renderer.gl.data_types`` for different use cases. For example,
+``POINT_VIEW_DTYPE is used `` to access individual x, y, z coordinates
+separately, and ``POINT_XY_VIEW_DTYPE is used to access `` the XY values
+together. This ``POINT_XY_VIEW_DTYPE`` can be used, for instance, to set the
+XY values in the record array from a regular python list of two-tuples.
+
+There are convenience functions to create blank lists of points, lines, and
+other items. Notice that ``numpy.NaN`` is used as a placeholder for undefined
+values, and the drawing code will skip over those points. Arrays may be
+allocated with extra members as buffer at the end so that additions can happen
+by overwriting the ``NaN`` values at the end rather than continually
+reallocating and resizing the array.
+
+Layer Drawing
+----------------------
+
+Layers are drawn in the stacking order shown in the ``LayerTreeControl``, from
+the bottom to the top. Any opaque layers, like a WMS layer, will obscure any
+layer below it.
+
+Rendering happens in the ``render`` method of
+``maproom.renderer.base.BaseCanvas``. The class is subclassed in the
+``maproom.renderer.gl_immediate.screen_canvas.ScreenCanvas`` class that
+provides the wxPython and OpenGL drawing area. The ``ScreenCanvas`` uses some
+optimization and overrides the ``render`` method before calling the
+``BaseCanvas.render`` method.
+
+The ``ScreenCanvas`` is further subclassed in ``maproom.layer_canvas`` as the
+``LayerCanvas`` object. A ``LayerCanvas`` object is created by the
+``ProjectEditor`` main viewer during the instantiation process.
+
+When drawing the screen, the layers are looped over from bottom to top, and
+each layer's renderer object is called to draw that layer's contents.
+
+
+Layer Renderers
+----------------------
+
+Each layer has an object that controls how it is drawn, called the "layer
+renderer", created by a call to ``LayerCanvas.new_renderer`` and held in the
+dictionary attribute ``layer_renderers`` in the ``LayerCanvas``.
+
+Any time a layer changes its representation (moving a point, changing a line,
+adding or deleting an element), the layer renderer for that layer must be
+updated through a call to ``update_renderer``.
+
+
 Code Architecture - Layers and Layer Manager
 ==================================================
 
@@ -811,3 +868,5 @@ Several file formats support line layers, including:
 * NetCDF (.nc), without particle data; see ``maproom.loaders.ugrid``
 * text holding rows of lat/lon data; see ``maproom.loaders.text``
 
+Points and lines are held in numpy record arrays, as explained above as an
+optimization to speed the OpenGL rendering.
