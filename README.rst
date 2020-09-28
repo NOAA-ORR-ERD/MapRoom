@@ -775,8 +775,16 @@ The ``ScreenCanvas`` is further subclassed in ``maproom.layer_canvas`` as the
 ``ProjectEditor`` main viewer during the instantiation process.
 
 When drawing the screen, the layers are looped over from bottom to top, and
-each layer's renderer object is called to draw that layer's contents.
+each layer's renderer object is called to draw that layer's contents. Layer
+renderer objects are explained in the next section. There is an optional
+overlay layer that will always be drawn on the top of the stacking order. The
+overlay is used for certain user-interface modes (See the Mouse Handler
+section below) like rubberbanding for selecting points.
 
+An entire additional rendering pass is made after the drawing is complete, but
+this time it is to create non-visible layer that is used to detect what object
+is under the mouse. This is the picker framebuffer, and is described in a
+subsequent section.
 
 Layer Renderers
 ----------------------
@@ -788,6 +796,56 @@ dictionary attribute ``layer_renderers`` in the ``LayerCanvas``.
 Any time a layer changes its representation (moving a point, changing a line,
 adding or deleting an element), the layer renderer for that layer must be
 updated through a call to ``update_renderer``.
+
+All layer renderers include a picker object that is only active when
+rendering the picker framebuffer.
+
+
+Picker
+----------------
+
+The picker works by creating a separate pass through the rendering process,
+but instead of drawing to the screen, it draws to an off-screen framebuffer.
+In order to determine what object is under a specific mouse location, the
+off-screen framebuffer stores a unique color value for every object that is
+pickable. This color value doesn't relate to its color displayed on the
+screen, instead it encodes the layer that it belongs to, the type of graphic
+element within that layer, and an identifying number of that graphic element.
+
+For instance, for a ``LineLayer`` (described below), the picker has to deal
+with both points and lines. Each point renders to a circle with some radius in
+pixels, so each one of those pixels gets assigned a color that the UI can
+decode. Similarly, each line is rendered to a set of pixels, and the color for
+each of those pixels will uniquely map back to the line on this layer.
+
+The class ``maproom.renderer.gl_immediate.picker.Picker`` contains this code.
+During the second pass through rendering (the picker pass), a new ``Picker``
+object is created and the picker colors are determined before each primitive
+is drawn. The method ``get_next_color_block`` contains the logic for reserving
+colors, and the ``Picker`` object contains the lists that are used to decode
+the color value.
+
+Internally, OpenGL uses a 32 bit integer to represent the color in red, green,
+blue & alpha (RGBA) format. Because the alpha value allows color blending,
+this would mess up the uniqueness of the mapping from color to pickable
+object. So, the alpha value is left at zero which leaves 24 bits to map to
+pickable objects.
+
+An assumption is made here in the code: the machines will operate in
+little-endian mode. Since most current computers are little endian (running on
+Intel or AMD 64 bit processors), no code is added to check for big endian
+machines. Red is stored in the least significant byte, green in the next, blue
+next, and finally alpha in the most significant byte. For the numpy code used
+here, the lowest 24 bits encode the color, and the highest 8 bits are alpha.
+We must avoid the high 8 bits (we leave them at zero), but still we have 2^24
+values, or 16.7 million possible unique color combinations allowing that many
+unique objects to be decoded.
+
+As each block of colors is reserved with a call to ``get_next_color_block``,
+lists are maintained in order to reverse the mapping of color into layer type,
+object type and object number. The method ``get_object_at_mouse_position``
+takes the mouse position and reverses out the object info from the 24 bit
+color value.
 
 
 Code Architecture - Layers and Layer Manager
