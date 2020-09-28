@@ -66,6 +66,9 @@ class LayerTreeControl(wx.Panel):
             self.tree.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
 
         self.user_selected_layer = False
+
+        # This event is used to propagate the newly-selected current layer to
+        # anything that needs to update its UI when the layer changes
         self.current_layer_changed_event = EventHandler(self)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -376,7 +379,7 @@ class LayerTreeControl(wx.Panel):
         self.current_layer_changed_event(layer)
         if prefs.identify_layers and self.user_selected_layer:
             layer.layer_selected_hook()
-            lm.refresh_needed_event(None)
+            self.project.refresh()
         self.user_selected_layer = False
 
     def handle_start_rename(self, event):

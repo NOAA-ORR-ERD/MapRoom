@@ -188,7 +188,7 @@ class TriangleLayer(PointLayer):
 
         # when points are deleted from a layer the indexes of the points in the existing merge dialog box
         # become invalid; so force the user to re-find duplicates in order to create a valid list again
-        self.manager.layer_contents_deleted_event(self)
+        self.manager.project.layer_contents_deleted(self)
 
     def make_triangles(self, count):
         return np.repeat(
@@ -256,8 +256,8 @@ class TriangleLayer(PointLayer):
     def triangulate_from_data(self, points, depths, triangles):
         self.set_data(points, depths, triangles)
         self.unproject_triangle_points(self.points)
-        self.manager.layer_contents_changed_event(self)
-        self.manager.layer_metadata_changed_event(self)
+        self.manager.project.layer_contents_changed(self)
+        self.manager.project.layer_metadata_changed(self)
 
     def triangulate_from_layer(self, parent_layer, q, a):
         points, depths, triangles = self.get_triangulated_points(parent_layer, q, a)

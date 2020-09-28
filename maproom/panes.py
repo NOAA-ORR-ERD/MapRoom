@@ -657,6 +657,8 @@ class LayerInfoList(cg.CompactGrid):
         self.editor = editor
         table = self.calc_table(None)
         cg.CompactGrid.__init__(self, table, editor.preferences, None, None, parent, size=(-1,800), name=self.ui_name)
+        # The layer info list must change whenever a layer is selected, so the event on
+        # the layer tree control is bound so this UI can be updated.
         editor.layer_tree_control.current_layer_changed_event += self.on_current_layer_changed
 
     def calc_table(self, layer):

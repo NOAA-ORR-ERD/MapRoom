@@ -69,10 +69,10 @@ class RasterLayer(ProjectedLayer):
         raster_layers = self.manager.count_raster_layers()
         vector_layers = self.manager.count_vector_layers()
 
-        if raster_layers == 0:
-            self.manager.projection_changed_event(self)
-            return
         e = self.manager.project
+        if raster_layers == 0:
+            e.projection_changed(self)
+            return
         currently_merc = e.layer_canvas.projection.srs.find("+proj=merc") != -1
         currently_longlat = e.layer_canvas.projection.srs.find("+proj=longlat") != -1
         incoming_merc = self.image_data.projection.srs.find("+proj=merc") != -1
@@ -97,7 +97,7 @@ class RasterLayer(ProjectedLayer):
                     self.load_error_string = "Projection conflict"
                     return
 
-                self.manager.projection_changed_event(self)
+                e.projection_changed(self)
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT

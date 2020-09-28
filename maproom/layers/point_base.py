@@ -189,7 +189,7 @@ class PointBaseLayer(ProjectedLayer):
     def clear_flagged(self, refresh=False):
         self.clear_all_selections(state.FLAGGED)
         if refresh:
-            self.manager.refresh_needed_event(None)
+            self.manager.project.refresh(None)
 
     def has_selection(self):
         return self.get_num_points_selected() > 0
@@ -236,7 +236,7 @@ class PointBaseLayer(ProjectedLayer):
         self.deselect_points(indexes, state.FLAGGED)
         self.select_points(indexes, state.SELECTED)
         if refresh:
-            self.manager.refresh_needed_event(True)
+            self.manager.project.refresh(True)
 
     def get_flagged_point_indexes(self):
         return self.get_selected_point_indexes(state.FLAGGED)

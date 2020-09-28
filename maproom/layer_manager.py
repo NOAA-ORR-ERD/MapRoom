@@ -44,25 +44,15 @@ class LayerManager(MafDocument):
     transient_invariant = -99
 
     def __init__(self, file_metadata):
+        # LayerManagers are *almost* independent of the project. Right now it
+        # isn't possible to have multiple views of a project because there are
+        # references to the project in a few vector object classes that are
+        # positioned relative to the screen. The project will be set once it is
+        # added into a ProjectEditor
+        self.project = None
+
         self.default_styles = styles.copy_default_styles()
         self.layers = []
-
-        # Events are used to trigger UI changes
-        self.layer_loaded_event = EventHandler(self)
-        self.layers_changed_event = EventHandler(self)
-        self.layer_contents_changed_event = EventHandler(self)
-        self.layer_contents_changed_in_place_event = EventHandler(self)
-        
-        # when points are deleted from a layer the indexes of the points in the
-        # merge dialog box become invalid; so this event will trigger the
-        # user to re-find duplicates in order to create a valid list again
-        self.layer_contents_deleted_event = EventHandler(self)
-
-        self.layer_metadata_changed_event = EventHandler(self)
-        self.projection_changed_event = EventHandler(self)
-        self.refresh_needed_event = EventHandler(self)
-        self.background_refresh_needed_event = EventHandler(self)
-        self.threaded_image_loaded_event = EventHandler(self)
 
         # the loader used for the MapRoom project file will be stored here so
         # the project can be reverted to the last saved state.
@@ -114,13 +104,6 @@ class LayerManager(MafDocument):
 
         MafDocument.__init__(self, file_metadata)
         self.undo_stack = UndoStack()  # replace default undo stack with our own
-
-        # LayerManagers are *almost* independent of the project. Right now it
-        # isn't possible to have multiple views of a project because there are
-        # references to the project in a few vector object classes that are
-        # positioned relative to the screen. The project will be set once it is
-        # added into a ProjectEditor
-        self.project = None
 
         # # Add hook to create layer instances for debugging purposes
         # if "--debug-objects" in self.project.window.application.command_line_args:
@@ -899,7 +882,8 @@ class LayerManager(MafDocument):
         return layers
 
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
-        self.layer_loaded_event(layer)
+        if self.project is not None:
+            self.project.layer_loaded(layer)
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of, layer.background, layer.opaque, layer.bounded)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
@@ -910,7 +894,8 @@ class LayerManager(MafDocument):
         layer = ly.Layer.load_from_json(json_data, self)[0]
         if old_invariant_map is not None:
             old_invariant_map[json_data['invariant']] = layer
-        self.layer_loaded_event(layer)
+        if self.project is not None:
+            self.project.layer_loaded(layer)
         self.insert_layer(mi, layer)
         if json_data['children']:
             mi.append(1)

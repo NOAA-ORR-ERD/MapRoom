@@ -65,7 +65,7 @@ class PointLayer(PointBaseLayer):
             self.clear_all_selections(state.FLAGGED)
             for p in e.error_points:
                 self.select_point(p, state.FLAGGED)
-            self.manager.refresh_needed_event(True)
+            self.manager.project.refresh(True)
 
     def set_data(self, f_points, f_depths=0.0, style=None):
         n = np.alen(f_points)

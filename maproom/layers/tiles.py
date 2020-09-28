@@ -77,7 +77,7 @@ class TileLayer(ProjectedLayer):
             downloader = self.get_downloader(self.map_server_id)
             self.image_data = TileImageData(projection, downloader, renderer)
             self.name = downloader.host.name
-            renderer.canvas.project.layer_manager.layer_metadata_changed_event(self)
+            renderer.canvas.project.layer_metadata_changed(self)
         if self.image_data is not None:
             renderer.set_tiles(self.image_data)
             self.image_data.add_tiles(self.threaded_request_results, renderer.image_tiles)

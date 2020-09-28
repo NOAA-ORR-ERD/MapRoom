@@ -264,24 +264,9 @@ class ProjectEditor(MafEditor):
         self.layer_canvas = None
 
     def create_event_bindings(self):
-        doc = self.layer_manager
-        doc.layer_loaded_event += self.layer_loaded
-        doc.layers_changed_event += self.layers_changed
-        doc.layer_contents_changed_event += self.layer_contents_changed
-        doc.layer_contents_changed_in_place_event += self.layer_contents_changed_in_place
-        
-        # # when points are deleted from a layer the indexes of the points in the
-        # # merge dialog box become invalid; so this event will trigger the
-        # # user to re-find duplicates in order to create a valid list again
-        doc.layer_contents_deleted_event += self.layer_contents_deleted
-        
-        doc.layer_metadata_changed_event += self.layer_metadata_changed
-        # doc.projection_changed_event += EventHandler(self)
-        doc.refresh_needed_event += self.refresh
-        doc.background_refresh_needed_event += self.background_refresh
-        doc.threaded_image_loaded_event += self.threaded_image_loaded
-
-        # preferences changed
+        # preferences changed event gets triggered by the preferences dialog indexes
+        # the app_framework, so we bind to it here in order to get informed when
+        # it happens.
         self.preferences.preferences_changed_event += self.preferences_changed
 
 
@@ -488,7 +473,7 @@ class ProjectEditor(MafEditor):
             self.frame.error(error)
         else:
             self.save_success(path)
-        self.document.layer_metadata_changed_event(layer)
+        self.layer_metadata_changed(layer)
         self.update_layer_selection_ui()
 
     def get_numpy_image_dialog(self):
@@ -747,13 +732,11 @@ class ProjectEditor(MafEditor):
 
     # Document event handlers
 
-    def layer_loaded(self, evt):
-        layer = evt[0]
+    def layer_loaded(self, layer):
         log.debug("layer_loaded called for %s" % layer)
         self.layer_visibility[layer] = layer.get_visibility_dict(self)
 
-    def layers_changed(self, evt):
-        batch_status = evt[0]
+    def layers_changed(self, batch_status):
         log.debug("layers_changed called!!!")
         try:
             collapse = batch_status.collapse
@@ -818,31 +801,32 @@ class ProjectEditor(MafEditor):
         log.debug("undo_stack_changed called!!!")
         self.refresh()
 
-    def layer_contents_changed(self, evt):
-        layer = evt[0]
+    def layer_contents_changed(self, layer):
         log.debug("layer_contents_changed called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
-    def layer_contents_changed_in_place(self, evt):
-        layer = evt[0]
+    def layer_contents_changed_in_place(self, layer):
         log.debug("layer_contents_changed_in_place called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer, in_place=True)
 
-    def layer_contents_deleted(self, evt):
-        layer = evt[0]
+    def layer_contents_deleted(self, layer):
+        # when points are deleted from a layer the indexes of the points in the
+        # merge dialog box become invalid; so this will trigger the
+        # user to re-find duplicates in order to create a valid list again
         log.debug("layer_contents_deleted called!!! layer=%s" % layer)
         self.layer_canvas.rebuild_renderer_for_layer(layer)
 
-    def layer_metadata_changed(self, evt):
-        layer = evt[0]
+    def layer_metadata_changed(self, layer):
         log.debug("layer_metadata_changed called!!! layer=%s" % layer)
         self.layer_tree_control.rebuild()
 
-    def refresh(self, evt=None):
-        if evt is None:
-            batch_flags = None
-        else:
-            batch_flags = evt[0]
+    def projection_changed(self, layer):
+        log.debug("projection_changed called!!! layer=%s" % layer)
+        # FIXME: this happens on image layers only, but not clear on how images
+        # are changed when the projection changes
+        pass
+
+    def refresh(self, batch_flags=None):
         log.debug("refresh called; batch_flags=%s" % batch_flags)
         if batch_flags is None or batch_flags is True:
             batch_flags = BatchStatus()
@@ -880,9 +864,9 @@ class ProjectEditor(MafEditor):
             return
         self.refresh()
 
-    def threaded_image_loaded(self, evt):
-        log.debug(f"threaded image loaded called: {evt}")
-        (layer, map_server_id), wms_request = evt
+    def threaded_image_loaded(self, event_data, wms_request):
+        log.debug(f"threaded image loaded called: {event_data}, {wms_request}")
+        (layer, map_server_id) = event_data
         log.debug("event happed on %s for map server id %d" % (layer, map_server_id))
         log.debug(f"wms_request: {wms_request}")
         if layer.is_valid_threaded_result(map_server_id, wms_request):
@@ -1018,7 +1002,7 @@ class ProjectEditor(MafEditor):
                 # only the last layer in the list will be selected
                 b.select_layer = layer
             if lf.layer_loaded:
-                self.layer_manager.layer_loaded_event(layer)
+                self.layer_loaded(layer)
                 b.layers_changed = True
             if lf.layer_metadata_changed:
                 b.metadata_changed = True
@@ -1049,14 +1033,14 @@ class ProjectEditor(MafEditor):
         # displaying this project
         for layer, in_place in b.need_rebuild.items():
             if in_place:
-                self.layer_manager.layer_contents_changed_in_place_event(layer)
+                self.layer_contents_changed_in_place(layer)
             else:
-                self.layer_manager.layer_contents_changed_event(layer)
+                self.layer_contents_changed(layer)
 
         if b.layers_changed:
-            self.layer_manager.layers_changed_event(b)
+            self.layers_changed(b)
         if b.metadata_changed:
-            self.layer_manager.layer_metadata_changed_event(True)
+            self.layer_metadata_changed(True)
 
         overlay_affected = self.layer_manager.recalc_overlay_bounds()
         if overlay_affected:
@@ -1066,7 +1050,7 @@ class ProjectEditor(MafEditor):
         if b.immediate_refresh_needed:
             self.layer_canvas.render(immediately=True)
         if b.refresh_needed:
-            self.layer_manager.refresh_needed_event(b)
+            self.refresh(b)
         if b.select_layer:
             self.layer_tree_control.set_edit_layer(b.select_layer)
 
@@ -1322,7 +1306,7 @@ class ProjectEditor(MafEditor):
         else:
             for layer in self.layer_manager.flatten():
                 layer.clear_flagged()
-            self.layer_manager.refresh_needed_event(None)
+            self.refresh()
             if not save_message:
                 self.frame.information("Layers OK", "No Problems Found")
         return all_ok

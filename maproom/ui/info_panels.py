@@ -584,8 +584,8 @@ class XPercentageField(FloatSliderField):
             return
         c = self.ctrl
         self.set_value(layer, c.GetValue())
-        layer.manager.layer_contents_changed_event(layer)
-        layer.manager.refresh_needed_event(None)
+        layer.manager.project.layer_contents_changed(layer)
+        layer.manager.project.refresh(None)
 
 class YPercentageField(XPercentageField):
     def get_value(self, layer):
@@ -1700,7 +1700,7 @@ class ScalarExpressionField(TextEditField):
         expression = self.parse_from_string()
         affected, error = layer.subset_using_logical_operation(expression)
         for layer in affected:
-            self.panel.project.document.layer_contents_changed_event(layer)
+            self.panel.project.layer_contents_changed(layer)
         self.panel.project.refresh()
         c = self.ctrl
         if error:

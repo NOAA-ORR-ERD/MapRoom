@@ -139,7 +139,7 @@ class BaseLayerLoader(BaseLoader):
                 layer.clear_all_selections(state.FLAGGED)
                 for p in e.error_points:
                     layer.select_point(p, state.FLAGGED)
-                layer.manager.refresh_needed_event(True)
+                layer.manager.project.refresh(True)
             error = str(e)
         else:
             error = None
@@ -148,7 +148,7 @@ class BaseLayerLoader(BaseLoader):
             if temp_file and os.path.exists(temp_file):
                 if layer.get_num_points_selected(state.FLAGGED):
                     layer.clear_all_selections(state.FLAGGED)
-                    layer.manager.refresh_needed_event(True)
+                    layer.manager.project.refresh(True)
                 try:
                     self.gather_save_files(temp_dir, uri)
                     layer.file_path = uri
