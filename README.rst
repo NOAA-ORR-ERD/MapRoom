@@ -742,6 +742,9 @@ localized (fast) memory. Only when data changes (adding/deleting a point,
 changing a coordinate, adding a line, etc.) does new data have to be loaded
 into the graphics card memory.
 
+The PyOpenGL package is used to interface with the operating system's native
+OpenGL libraries.
+
 Numpy record arrays are used as a further optimization, defined in
 ``maproom.renderer.gl.data_types`` for different use cases. For example,
 ``POINT_VIEW_DTYPE is used `` to access individual x, y, z coordinates
@@ -791,18 +794,50 @@ Layer Renderers
 
 Each layer has an object that controls how it is drawn, called the "layer
 renderer", created by a call to ``LayerCanvas.new_renderer`` and held in the
-dictionary attribute ``layer_renderers`` in the ``LayerCanvas``.
+dictionary attribute ``layer_renderers`` in the ``LayerCanvas``. It is of the
+class ``maproom.renderer.gl_immediate.renderer.ImmediateModeRenderer``.
 
 Any time a layer changes its representation (moving a point, changing a line,
 adding or deleting an element), the layer renderer for that layer must be
-updated through a call to ``update_renderer``.
+updated through a call to ``update_renderer``. The usage of the word "update"
+is a bit fuzzy, because it is the object held in the ``layer_renderers`` that
+is updated; a new ``ImmediateModeRenderer`` object is created and the
+dictionary is updated with this new object instance. The previous object
+referred to in the dictionary is garbage collected.
 
-All layer renderers include a picker object that is only active when
-rendering the picker framebuffer.
+The ``ImmediateModeRenderer`` object holds the OpenGL Vertex Buffer Objects
+(VBO) for the data in the layer. These VBOs are representations of the data
+held on the graphics card, so they must be loaded through calls line
+``set_points``,``set_lines``, ``set_polygons`` and others. These routines do
+the work of creating the VBOs and, behind the scenes, copy the values to the
+graphics card.
 
+It is because of this data transfer to the graphics card that the data types
+in ``maproom.renderer.gl.data_types`` are used. They provide access to the raw
+layer data in a format that can be easily converted into data that the
+PyOpenGL methods need.
+
+The ``ImmediateModeRenderer`` includes many convenience functions for drawing
+on the OpenGL canvas. Some examples are: ``draw_points`` to draw small circles
+for each non-NaN point in the layer; ``draw_selected_points`` which draws
+larger circles for only those points specified in the argument to the
+function; ``draw_image`` to draw texture mapped images after the images have
+been set up with a call to one of the ``set_image_*`` methods; and many
+others.
+
+Note that all of the code here uses the now-deprecated OpenGL Immediate Mode
+(hence the name ImmediateModeRenderer!), where OpenGL calls are bookended by
+calls to ``glBegin`` and ``glEnd``. Modern OpenGL uses shaders for everything,
+and the long term plan was to convert MapRoom to use shaders.
+
+Examples of the usage of the layer renderers will be included in the layer
+descriptions below.
 
 Picker
 ----------------
+
+All layer renderers include a picker object that is only active when
+rendering the picker framebuffer.
 
 The picker works by creating a separate pass through the rendering process,
 but instead of drawing to the screen, it draws to an off-screen framebuffer.
