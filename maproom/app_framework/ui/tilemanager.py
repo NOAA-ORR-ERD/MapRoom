@@ -425,6 +425,11 @@ class TileManager(wx.Window):
         self.menu_currently_displayed = None
         self.dock_target_mode = "swap"  # or "split" to split target window on drop
 
+    @property
+    def layout_direction(self):
+        print(f"TILEMANAGER DEBUG: HIT layout_direction ON MAIN CLASS")
+        return self.child.layout_direction
+
     def set_defaults(self):
         self.allow_docking_to_empty_sidebar = False
 
