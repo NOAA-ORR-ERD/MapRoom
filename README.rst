@@ -11,6 +11,9 @@ in use.
 
 The newest versions for Mac OS X and Windows are on the `download page <https://gitlab.orr.noaa.gov/erd/MapRoom/wikis/downloads>`_.
 
+.. toctree:
+   :maxdepth: 2
+
 
 Installation
 ============
