@@ -399,6 +399,112 @@ the UI for the editor is instantiated. This happens in the
 ``maproom.app_framework.frame.MafFrame.add_editor`` method.
 
 
+Code Architecture - The Main User Interface
+==================================================
+
+The UI is divided into 4 areas: the left column of 3 panels, the main area
+showing the map view, a small vertically oriented popup menu list on the right
+border of the frame, and a timeline strip on the bottom.
+
+The left column of panels includes a tree view showing the stacking order of
+layers, a list of layer parameters, and a list containing information about
+the currently selected item in the main view.
+
+ProjectEditor
+------------------
+
+The main editing window, taking up most of the space in the frame, is
+``maproom.editor.ProjectEditor``, a subclass of ``MafEditor`` and represents a
+tab in a top-level ``MafFrame``, which is a subclass of a wxPython Frame.
+
+All the map data, annotations, and other graphical data that appear in layers
+are rendered using OpenGL and are controlled by the ``LayerCanvas`` object in
+the main portion of the window, which is described in a section below. The UI
+for the frame is created in the method ``create_layout``. The arrangement of
+the UI within the frame is controlled by a tiling layout manager, the
+``maproom.app_framework.ui.tilemanager.TileManager``, a custom control that
+provides tiling for the main windows, sidebars with popout windows, and a
+footer that holds the timeline control.
+
+LayerCanvas
+----------------
+
+This is the main rendering control, and it is more fully described in the
+OpenGL Rendering section below.
+
+LayerTreeControl
+----------------------
+
+The top-most panel on the left side of the frame is the
+``maproom.layer_tree_control.LayerTreeControl``, a custom tree control
+slightly modified from the ``wx.lib.agw.customtreecontrol.CustomTreeCtrl``
+class. This UI panel allows the layers to be reordered through drag-and-drop.
+
+The ``LayerTreeControl`` also has an event, contained in an attribute named
+``current_layer_changed_event``, that is fired whenever the user selects a new
+layer. The tree control is a single selection tree, so changing the selection
+makes that layer the current editing layer. Other UI elements can add a method
+to the event to get a callback when this happens. This is used for the points
+list panel: ``maproom.panes.PointsList`` so that it can update its list using
+points from the now-current layer.
+
+The event handling class is ``maproom.app_framework.events.EventHandler``,
+which is a small custom class that provides callback mechanisms.
+
+LayerInfoPanel
+-------------------
+
+The middle panel on the left side, below the tree control, is the class
+``maproom.ui.info_panels.LayerInfoPanel``. This displays information about the
+currently selected layer, and provides controls to modify the characteristics
+of the layer. The layer characteristics are described in a list of text
+strings in the layer's class definition (see the Base Layer section below).
+
+Each of the strings is the name of a field, and is used to create a control in
+this info panel. For example, for a UGrid layer, the fields are defined by the
+list::
+
+    layer_info_panel = ["Point count", "Line segment count", "Show depth", "Flagged points", "Default depth", "Depth unit", "Color"]
+
+The module ``maproom.ui.info_panels`` contains a large number of classes that
+represent UI controls designed to display or modify layer parameters. For
+example, the "Point count" field corresponds to a static text display that
+shows the user the number of points in the layer and a toggle control that
+allows the display or hiding of those points. This control is defined in the
+class ``PointVisibilityField``.
+
+"Line segment count" shows a similar control, except the number of line
+segments instead of points. It is defined in the ``LineVisibilityField``.
+
+Other fields will have different controls; for example, the "Depth unit" field
+contains a drop-down list with a choice of units: "unknown", "meters", "feet",
+or "fathoms".
+
+See the docstrings of the ``maproom.ui.info_panels.InfoPanel`` object for more
+details on how the controls for the fields are created and managed.
+
+SelectionInfoPanel
+----------------------
+
+This is the bottom panel on the left side and is similar in operation to the
+LayerInfoPanel except that is displays data on the currently selected items in
+the layer. Using the LineLayer as an example: if no points are selected, the
+panel is blank. However, once one or more points are selected, details of the
+selection are displayed.
+
+TimelinePlaybackPanel
+-------------------------
+
+This control displays the timesteps available in all particle layers, and
+playback controls to step through a visualization of the motion of the
+particles.
+
+The timeline itself is the ``maproom.panes.TimelinePanel`` class, subclassed
+from the custom control ``maproom.app_framework.ui.zoomruler.ZoomRuler``. The
+base class handles the scrolling, zooming, and selecting via the mouse and
+uses callback functions to communicate the UI actions.
+
+
 Code Architecture - Commands and the Undo Stack
 ===========================================================
 
@@ -437,7 +543,7 @@ and the type of data. The serialization of each of the data types is held in
 the ``maproom.serializer`` module, so if new types are needed the
 serialization code should be added in that module.
 
-Command Initialization - __init__ method
+Command Initialization - ``__init__`` method
 ---------------------------------------------
 
 Each Command subclass can take its own argument list; the superclass __init__
@@ -451,7 +557,7 @@ references to the deleted layer.
 Any data needed to perform the action should be stored in instance attributes
 in the __init__ method.
 
-Performing an Action - perform method
+Running a Command - ``perform`` method
 -----------------------------------------
 
 Any change to the MapRoom project must happen in the perform method of a
@@ -487,7 +593,7 @@ project.
 
 The undo_info object should be returned at the end of the perform method.
 
-Undoing an Action - undo method
+Undoing a Command - ``undo`` method
 ------------------------------------
 
 The state of the project must be restored to a functionally identical state as
@@ -502,18 +608,14 @@ An undo_info object must be returned at the end of the method that contains
 flags showing what has changed so the UI can be updated properly.
 
 
-Code Architecture - Project Editor and Processing Commands
-===========================================================
+Processing Commands
+--------------------------
 
-The ``maproom.editor.ProjectEditor`` is a subclass of the
-``maproom.app_framework.editor.MafEditor`` and represents a tab in a top-level
-``MafFrame``, which is a subclass of a wxPython Frame.
-
-The ``process_command`` method takes the Command object and makes the change
-described in its perform method. Assuming the change is successful, t flags
-resulting from it are added to a ``BatchStatus`` object, the idea being that
-multiple commands could be performed in a batch and the UI only updated after
-all commands completed.
+The ``process_command`` method of the ``ProjectEditor`` takes the Command
+object and makes the change described in its perform method. Assuming the
+change is successful, t flags resulting from it are added to a ``BatchStatus``
+object, the idea being that multiple commands could be performed in a batch
+and the UI only updated after all commands completed.
 
 The call to ``perform_batch_flags`` is where the UI actually gets updated.
 
@@ -733,7 +835,7 @@ needed and deleting items from submenus. In practice, the speed of
 regenerating menus has not been an issue.
 
 
-Code Architecture - OpenGL Rendering Primer
+Code Architecture - OpenGL Rendering 
 ==============================================
 
 For speed, OpenGL is used to render all graphics in the main window. The
@@ -762,9 +864,9 @@ reallocating and resizing the array.
 Layer Drawing
 ----------------------
 
-Layers are drawn in the stacking order shown in the ``LayerTreeControl``, from
-the bottom to the top. Any opaque layers, like a WMS layer, will obscure any
-layer below it.
+Layers are drawn in the stacking order shown in the ``LayerTreeControl``
+(described below), from the bottom to the top. Any opaque layers, like a WMS
+layer, will obscure any layer below it.
 
 Rendering happens in the ``render`` method of
 ``maproom.renderer.base.BaseCanvas``. The class is subclassed in the
@@ -800,10 +902,10 @@ class ``maproom.renderer.gl_immediate.renderer.ImmediateModeRenderer``.
 Any time a layer changes its representation (moving a point, changing a line,
 adding or deleting an element), the layer renderer for that layer must be
 updated through a call to ``update_renderer``. The usage of the word "update"
-is a bit fuzzy, because it is the object held in the ``layer_renderers`` that
-is updated; a new ``ImmediateModeRenderer`` object is created and the
-dictionary is updated with this new object instance. The previous object
-referred to in the dictionary is garbage collected.
+is a bit fuzzy, because it is the ``layer_renderers`` dictionary that is
+updated; a new ``ImmediateModeRenderer`` object is created and stored in the
+dictionary. The previous object referred to in the dictionary is garbage
+collected.
 
 The ``ImmediateModeRenderer`` object holds the OpenGL Vertex Buffer Objects
 (VBO) for the data in the layer. These VBOs are representations of the data
@@ -849,9 +951,10 @@ element within that layer, and an identifying number of that graphic element.
 
 For instance, for a ``LineLayer`` (described below), the picker has to deal
 with both points and lines. Each point renders to a circle with some radius in
-pixels, so each one of those pixels gets assigned a color that the UI can
-decode. Similarly, each line is rendered to a set of pixels, and the color for
-each of those pixels will uniquely map back to the line on this layer.
+pixels, so each one of those pixels gets assigned a unique color associated
+with that point. Similarly, each line is rendered to a set of pixels, and the
+color for each of those pixels will uniquely map back to the line on this
+layer.
 
 The class ``maproom.renderer.gl_immediate.picker.Picker`` contains this code.
 During the second pass through rendering (the picker pass), a new ``Picker``
@@ -913,14 +1016,6 @@ and by relationship to other layers. Layers must be added through the methods
 provided in this class as there are many internal bookkeeping data that must
 be updated as layers change.
 
-LayerTreeControl
-----------------------
-
-This UI panel contains a tree control that allows the layers to be reordered
-through drag-and-drop, thereby updating the LayerManager data structure (by
-altering the "multi-index" of any affected layers).
-
-
 Base Layer
 ------------
 
@@ -948,14 +1043,16 @@ more points within the layer. Discussion of annotation layers is below.
 
 Layers use class attributes to describe many characteristics, as quite a few
 don't depend on the actual instance. They are described in comments in the
-``maproom.layers.base`` module.
+``maproom.layers.base`` module. For example, the ``layer_info_panel``
+attribute is a list of text identifiers that are used to display controls that
+can modify layer characteristics.
 
 UGrid Layer
 ---------------
 
-The most simple layer to display lat/lon data is the
-``maproom.layers.line.LineLayer", capable of displaying point and lines.
-Several file formats support line layers, including:
+The layer ``maproom.layers.line.LineLayer" is capable of displaying point and
+lines using lat/lon coordinates. Several file formats support line layers,
+including:
 
 * Verdat (.verdat); see the ``maproom.loaders.verdat`` module
 * NetCDF (.nc), without particle data; see ``maproom.loaders.ugrid``

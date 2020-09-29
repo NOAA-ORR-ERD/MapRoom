@@ -1771,9 +1771,19 @@ PANELTYPE = wx.lib.scrolledpanel.ScrolledPanel
 
 
 class InfoPanel(PANELTYPE):
+    """A panel that uses a list of text fields to display the properties of
+    the layer.
 
-    """
-    A panel for displaying and manipulating the properties of a layer.
+    This panel takes a text list of field names and creates a scrollable list
+    of controls that can display or modify the properties of the layer.
+
+    The method :meth:`get_visible_fields` must be subclassed to provide a list
+    of the currently visible field names. These names are then looked up from
+    the :attr:`known_fields` dictionary in order to create the list of UI
+    controls.
+
+    The UI is laid out in a vertical list, which will scroll if necessary to
+    display all items.
     """
     LABEL_SPACING = 0
     VALUE_SPACING = 3
@@ -1805,7 +1815,21 @@ class InfoPanel(PANELTYPE):
         self.sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(self.sizer)
 
+    def get_visible_fields(self, layer):
+        """Subclasses must implement this method to provide a list of visible fields
+        """
+        raise NotImplementedError("Must subclass this to provide visible fields!")
+
     def display_panel_for_layer(self, project, layer, force_selection_change=False, has_focus=None):
+        """Create the controls that populate the scrolling list.
+
+        The field list is not automatically created at every call to this
+        method. If the layer in different that the last layer displayed, it
+        will force an update. Also if the layer's change_count is different
+        than the last time it was displayed, an update will happen.
+
+        If an update is needed, :meth:`display_fields` is called.
+        """
         self.project = project
 
         if (self.ignore_next_update):
@@ -1848,6 +1872,14 @@ class InfoPanel(PANELTYPE):
         self.display_fields(layer, fields, different_layer, selection_changed, has_focus)
 
     def display_fields(self, layer, fields, different_layer, selection_changed, has_focus):
+        """Update the current display of UI controls.
+
+        If the current list of fields is the same as the desired list of
+        fields, then the field status is simply updated to reflect the current
+        layer parameters by calling :meth:`set_fields`. If a new list of
+        fields is being requested, the UI is cleared an rebuilt through a call
+        to :meth:`create_fields`.
+        """
         if self.current_fields == fields:
             log.debug("reusing current fields, sel_changed=%s layer=%d" % (layer, selection_changed))
             self.set_fields(layer, fields, different_layer, selection_changed, has_focus)
@@ -1855,6 +1887,7 @@ class InfoPanel(PANELTYPE):
             log.debug("creating fields")
             self.create_fields(layer, fields)
 
+    # List mapping the field name to the class used to display the layer information
     known_fields = {
         "Layer name": LayerNameField,
         "Depth unit": DepthUnitField,
@@ -1923,6 +1956,19 @@ class InfoPanel(PANELTYPE):
     }
 
     def create_fields(self, layer, fields):
+        """Create controls representing the field names
+
+        Field names are looked up in the :attr:`known_fields` class attribute.
+        If they are not found, it is assumed to be a SimplePropertyField
+        object if a value can be looked up in the layer's
+        :meth:`get_info_panel_text` method.
+
+        Controls are not deleted and recreated; they are kept in a list and
+        just hidden if they are not needed in the current display.
+
+        This method also sets the current values of each field, so no need to
+        call :meth:`set_fields` after calling this method.
+        """
         self.sizer.AddSpacer(self.LABEL_SPACING)
         self.layer_name_control = None
         self.depth_unit_control = None
@@ -1974,6 +2020,11 @@ class InfoPanel(PANELTYPE):
         self.current_fields = list(fields)
 
     def set_fields(self, layer, fields, different_layer, selection_changed, has_focus):
+        """Sets the current values of each field.
+
+        Sets the current values of all the visible fields by calling
+        :meth:`fill_data` method on each of the InfoField objects.
+        """
         focus = None
         for field_name in fields:
             if field_name in self.field_map:
@@ -1994,6 +2045,8 @@ class InfoPanel(PANELTYPE):
         self.constrain_size(focus)
 
     def constrain_size(self, focus=None):
+        """Resize the scrolling window to fit the current fields
+        """
         self.sizer.Layout()
         self.focus_on_input = focus
         if focus is not None:
