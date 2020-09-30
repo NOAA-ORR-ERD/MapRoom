@@ -10,7 +10,7 @@ from maproom.app_framework.filesystem import find_latest_template_path
 
 from . import menu_commands as mec
 from . import mouse_commands as moc
-from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile, SimplifyDialog, MergePointsDialog
+from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile, SimplifyDialog, MergePointsDialog, TriangulateLayerDialog
 from .library.thread_utils import BackgroundWMSDownloader
 from .library.tile_utils import BackgroundTileDownloader
 from . import layers
@@ -443,8 +443,9 @@ class triangulate_layer(LayerAction):
         return layer.has_points()
 
     def perform_on_layer(self, action_key, layer):
-        e = self.editor
-        e.control.force_focus(e.triangle_panel)
+        dialog = TriangulateLayerDialog(self.editor, layer)
+        dialog.ShowModal()
+        dialog.Destroy()
 
 
 class to_polygon_layer(LayerAction):
