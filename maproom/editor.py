@@ -674,11 +674,18 @@ class ProjectEditor(MafEditor):
         self.selection_info = SelectionInfoPanel(panel, self, size=(200, 200))
         panel.add(self.selection_info, "selection_info", use_close_button=False)
 
-        self.triangle_panel = TrianglePanel(panel, self)
-        panel.add(self.triangle_panel, "triangle_panel", wx.RIGHT, sidebar=True, use_close_button=False)
+        # Use preferences for triangle panel and merge points panel. Note that
+        # the changes to these preferences won't show up until next time a
+        # tab is created.
+        prefs = self.preferences
 
-        self.merge_points_panel = MergePointsPanel(panel, self)
-        panel.add(self.merge_points_panel, "merge_points_panel", wx.RIGHT, sidebar=True, use_close_button=False)
+        if prefs.triangulate_in_sidebar:
+            self.triangle_panel = TrianglePanel(panel, self)
+            panel.add(self.triangle_panel, "triangle_panel", wx.RIGHT, sidebar=True, use_close_button=False)
+
+        if prefs.merge_points_in_sidebar:
+            self.merge_points_panel = MergePointsPanel(panel, self)
+            panel.add(self.merge_points_panel, "merge_points_panel", wx.RIGHT, sidebar=True, use_close_button=False)
 
         self.undo_history = UndoHistoryPanel(panel, self)
         panel.add(self.undo_history, "undo_history", wx.RIGHT, sidebar=True, use_close_button=False)

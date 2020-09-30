@@ -64,6 +64,8 @@ class MaproomPreferences(MafEditorPreferences):
         ("bsb_directory", "directory"),
         ("colormap_name", "colormap", "Default colormap"),
         ("title_font", "wx.Font"),
+        ("triangulate_in_sidebar", "bool"),
+        ("merge_points_in_sidebar", "bool"),
     ]
 
     def set_defaults(self):
@@ -92,4 +94,10 @@ class MaproomPreferences(MafEditorPreferences):
         self.colormap_name = "gist_heat"
 
         self.title_font = fonts.str_to_font(default_title_font)
+
+        # flag to add the triangulate dialog to sidebar
+        self.triangulate_in_sidebar = False
+
+        # flag to add merge dialog to sidebar
+        self.merge_points_in_sidebar = False
 
