@@ -402,38 +402,48 @@ the UI for the editor is instantiated. This happens in the
 Code Architecture - The Main User Interface
 ==================================================
 
-The UI is divided into 4 areas: the left column of 3 panels, the main area
-showing the map view, a small vertically oriented popup menu list on the right
-border of the frame, and a timeline strip on the bottom.
+The UI is divided into 3 main areas:
 
-The left column of panels includes a tree view showing the stacking order of
-layers, a list of layer parameters, and a list containing information about
-the currently selected item in the main view.
+1. the menu bar
+2. the toolbar
+3. the top level frame containing tabbed views of editing windows
 
-ProjectEditor
-------------------
+The menubar and toolbar are described in a subsequent section.
 
-The main editing window, taking up most of the space in the frame, is
-``maproom.editor.ProjectEditor``, a subclass of ``MafEditor`` and represents a
-tab in a top-level ``MafFrame``, which is a subclass of a wxPython Frame.
+Each editing window, displayed in a tab in the main frame, is further divided
+into 4 sections:
+
+1. the main drawing area showing the map view
+2. the left column of 3 panels
+3. the vertically oriented popup menu list on the right border of the frame
+4. timeline strip on the bottom.
+
+The editing window is defined in ``maproom.editor.ProjectEditor``, a subclass
+of ``MafEditor`` and represents a tab in a top-level ``MafFrame``, which is a
+subclass of a wxPython Frame.
+
+Main Drawing Area - LayerCanvas
+------------------------------------
 
 All the map data, annotations, and other graphical data that appear in layers
-are rendered using OpenGL and are controlled by the ``LayerCanvas`` object in
-the main portion of the window, which is described in a section below. The UI
-for the frame is created in the method ``create_layout``. The arrangement of
-the UI within the frame is controlled by a tiling layout manager, the
+are rendered using OpenGL and are controlled by the
+``maproom.layer_canvas.LayerCanvas`` object in the main portion of the window,
+which is described in a section below. The UI for the frame is created in the
+method ``create_layout``. The arrangement of the UI within the frame is
+controlled by a tiling layout manager, the
 ``maproom.app_framework.ui.tilemanager.TileManager``, a custom control that
 provides tiling for the main windows, sidebars with popout windows, and a
 footer that holds the timeline control.
 
-LayerCanvas
-----------------
+The ``LayerCanvas`` is more fully described in the OpenGL Rendering section
+below.
 
-This is the main rendering control, and it is more fully described in the
-OpenGL Rendering section below.
+Top Info Panel - LayerTreeControl
+-------------------------------------
 
-LayerTreeControl
-----------------------
+The left column of panels includes a tree view showing the stacking order of
+layers, a list of layer parameters, and a list containing information about
+the currently selected item in the main view.
 
 The top-most panel on the left side of the frame is the
 ``maproom.layer_tree_control.LayerTreeControl``, a custom tree control
@@ -451,8 +461,8 @@ points from the now-current layer.
 The event handling class is ``maproom.app_framework.events.EventHandler``,
 which is a small custom class that provides callback mechanisms.
 
-LayerInfoPanel
--------------------
+Middle Info Panel - LayerInfoPanel
+--------------------------------------
 
 The middle panel on the left side, below the tree control, is the class
 ``maproom.ui.info_panels.LayerInfoPanel``. This displays information about the
@@ -483,8 +493,8 @@ or "fathoms".
 See the docstrings of the ``maproom.ui.info_panels.InfoPanel`` object for more
 details on how the controls for the fields are created and managed.
 
-SelectionInfoPanel
-----------------------
+Lower Info Panel - SelectionInfoPanel
+-----------------------------------------
 
 This is the bottom panel on the left side and is similar in operation to the
 LayerInfoPanel except that is displays data on the currently selected items in
@@ -492,8 +502,17 @@ the layer. Using the LineLayer as an example: if no points are selected, the
 panel is blank. However, once one or more points are selected, details of the
 selection are displayed.
 
-TimelinePlaybackPanel
--------------------------
+Popup Menu List
+--------------------
+
+The right side of the frame contains popup windows that represent extra
+information about the layer, or debugging info on the app itself. Hovering the
+mouse pointer over one of the names on the list will display a popup dialog
+with a data display.
+
+
+Timeline Panel - TimelinePlaybackPanel
+------------------------------------------
 
 This control displays the timesteps available in all particle layers, and
 playback controls to step through a visualization of the motion of the
