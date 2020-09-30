@@ -1137,10 +1137,56 @@ data, like images, is extremely inefficient to save in JSON format, so
 additional binary data may be used in some cases.
 
 The ``serialize_json`` method in ``maproom.layers.base.Layer`` is the driver
-to convert the layer data to a JSON text string. The ``unserialize_json``
-method is the reverse: taking the JSON text string and repopulating the layer
+to convert the layer data to a JSON dictionary. The ``unserialize_json``
+method is the reverse: taking the JSON dictionary and repopulating the layer
 with the correct data types represented by the JSON text encoding.
 
+There is a simple list of attributes that will be saved for each layer, like
+the type, invariant, and name. See the ``serialize_json`` method for the
+complete list of simple attributes. Other attributes are marked for inclusion
+in the JSON serialization by having a pair of methods in the class for
+converting to and from JSON. These methods must be indicated by having the
+``_to_json`` and ``_from_json`` strings appended to the attribute name.
+
+For instance, the attribute ``start_time`` (indicating the first valid time
+for the layer to appear on the timeline) has the companion methods
+``start_time_to_json`` and ``start_time_from_json`` to handle converting the
+time value to a JSON string and from the JSON string to a floating point
+value, respectively.
+
+Note that JSON is a special text format that is converted upon load to a
+python dictionary where the keys are strings and the values can be python
+primitives, lists or dictionaries. The ``json_data`` argument passed into the
+``*_from_json`` is a python dictionary where the keywords will be the layer
+attribute names.
+
+Analogously, when saving to JSON format, MapRoom produces a dictionary that it
+then converted to a text file and saved. Numpy values can give the Python
+built-in ``json`` module difficulties and returns very vague error messages
+claiming that value that looks like a normal floating point can't be
+serialized. It usually turns out that this is a numpy value that gets printed
+out as a normal looking string due to numpy's str() or repr() method, but is
+actually a numpy data type. The ``*_to_json`` methods should return primitive
+types (or lists of primitive types) that the ``json`` module will be able to
+serialize.
+
+The ``serialize_json`` method automatically scans the class definition for
+attributes that have the matching ``_to_json`` and ``_from_json`` methods.
+Adding a new attribute to the serialization process simply requires these two
+methods. For backward compatibility, it is advised to handle the case where
+the ``_from_json`` method is unable to find the value from the JSON encoded
+data. For instance, the ``maproom.layers.vector_object.VectorObjectLayer``
+base class has the method::
+
+    def rotation_from_json(self, json_data):
+        # Ignore when rotation isn't present
+        try:
+            self.rotation = json_data['rotation']
+        except KeyError:
+            self.rotation = 0.0
+
+which sets the rotation value to zero if the keyword isn't present in the JSON
+data.
 
 UGrid Layer
 ---------------
