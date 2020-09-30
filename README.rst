@@ -1035,8 +1035,46 @@ and by relationship to other layers. Layers must be added through the methods
 provided in this class as there are many internal bookkeeping data that must
 be updated as layers change.
 
-Base Layer
-------------
+File Format
+----------------
+
+The ``LayerManager`` can also be considered the representation of the MapRoom
+project file. Serialization to and from the project file is handled through
+``save_all_zip`` and ``load_all_from_zip``. There is an older JSON-only text
+file format accessed through ``load_all_from_json`` that is deprecated.
+
+The zip file format puts each layer in its own directory, and includes
+a few special files at the root directory to store additional
+information, such as the metadata needed to specify the connections
+between layers.
+
+Examining the contents of the default project zip file shows these entries::
+
+    Archive:  blank_project.maproom
+     Length   Method    Size  Cmpr  Name
+    --------  ------  ------- ----  ----
+           2  Defl:N        4 100%  pre json data
+        1978  Defl:N      432  78%  post json data
+         376  Defl:N      206  45%  1-Graticule/json layer description
+         422  Defl:N      215  49%  2-Scale/json layer description
+        2180  Defl:N      441  80%  3/0-New Annotation/json layer description
+        2180  Defl:N      448  79%  3/1-Rectangle/json layer description
+    --------          -------  ---  -------
+        7138             1746  76%  6 files
+
+The "pre json data" file is processed before any layers are loaded, and the
+"post json data" file is processed after all layers are loaded. Layers
+themselves are directories. Directories that have only a number for a name are
+folders, named a number plus a dash and a text value are normal layers.
+
+Most layers are described in the file "json layer description". Image layers
+will have additional file(s) with the image data.
+
+Layers must be able to convert to and from JSON. They do this through their
+``serialize_json`` and ``load_from_json`` methods.
+
+Layer Overview
+----------------------
 
 The ``maproom.layers.base.Layer`` abstract class must be subclassed before it
 can be added to a LayerManager as a visible layer in the project. An example
@@ -1045,8 +1083,8 @@ displays only points. A direct subclass is the
 ``maproom.layers.line.LineLayer`` which displays both points and lines in
 files like ``.verdat`` and other "ugrid" file types. It is much more
 complicated than the ``PointLayer`` because it includes editing functions:
-moving, adding, and deleting points and lines. See the next section for more
-information.
+moving, adding, and deleting points and lines. See the UGrid section below for
+more information.
 
 All layers use numpy arrays to hold coordinates to be mapped onto the lat/lon
 project space. Some layers, like the LineLayer, have large arrays (one row per
@@ -1065,6 +1103,44 @@ don't depend on the actual instance. They are described in comments in the
 ``maproom.layers.base`` module. For example, the ``layer_info_panel``
 attribute is a list of text identifiers that are used to display controls that
 can modify layer characteristics.
+
+Styles
+----------
+
+Annotation layers use a style object to hold the colors, line widths, font
+sizes, etc. of all the shapes that they draw. There are default styles for
+each layer type, and a style dialog to manage these. 
+
+Other layers use the same style object to hold the point and line colors.
+However, their styles aren't as customizable. UGrid layers rotate through a
+set of colors as a new layer is created; particle layers use colors depending
+on characteristics of the particle.
+
+Styles are described in the ``maproom.styles.LayerStyle`` object, and are
+serialized into text strings that are saved with the layer JSON data when
+saving MapRoom project files.
+
+As new style types were added to the class, backward compatibility was added
+so old versions of MapRoom project files can still be loaded.
+
+The ``LayerManager`` keeps a default style object, and as a new layer is
+created a copy of this style object is used as the layer's style object. The
+layer's style can then be changed without affecting other layers, but all
+layers will start with the same styling. The style dialog changes the default
+style object and can apply changes to current annotation layer objects.
+
+Layer Serialization
+---------------------
+
+JSON was chosen as the file format in which to save layer data. Some layer
+data, like images, is extremely inefficient to save in JSON format, so
+additional binary data may be used in some cases.
+
+The ``serialize_json`` method in ``maproom.layers.base.Layer`` is the driver
+to convert the layer data to a JSON text string. The ``unserialize_json``
+method is the reverse: taking the JSON text string and repopulating the layer
+with the correct data types represented by the JSON text encoding.
+
 
 UGrid Layer
 ---------------
