@@ -18,6 +18,7 @@ from ..library.simplify import VWSimplifier
 from .. import menu_commands as mec
 
 from .sliders import FloatSlider
+from .merge_panel import MergePointsPanel
 
 import logging
 log = logging.getLogger(__name__)
@@ -519,3 +520,28 @@ class SimplifyDialog(sc.SizedDialog):
             self.coords_text.SetBackgroundColour("#FF8080")
             valid = False
         self.ok_btn.Enable(valid)
+
+
+class MergePointsDialog(sc.SizedDialog):
+
+    def __init__(self, project, layer):
+        sc.SizedDialog.__init__(self, project.control, wx.ID_ANY, "Merge Points")
+
+        self.project = project
+        self.layer = layer
+
+        panel = self.GetContentsPane()
+        self.merge = MergePointsPanel(panel, self.project)
+        self.merge.set_layer(layer)
+
+        btn_sizer = self.CreateStdDialogButtonSizer(wx.OK)
+        self.ok_btn = self.FindWindowById(wx.ID_OK)
+        self.ok_btn.SetLabel("Dismiss")
+        self.Sizer.Add(btn_sizer, 0, 0, wx.EXPAND | wx.BOTTOM | wx.RIGHT, self.GetDialogBorder())
+
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+
+        self.Fit()
+
+    def OnClose(self, event):
+        self.EndModal(wx.ID_CANCEL)

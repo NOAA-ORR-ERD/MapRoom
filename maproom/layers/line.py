@@ -594,6 +594,7 @@ class LineLayer(PointLayer):
         return list(duplicates)
 
     def merge_duplicates(self, indexes, points_in_lines):
+        log.debug(f"merge_duplicates: indexes={indexes}, points_in_lines={points_in_lines}")
         points_to_delete = set()
 
         for sublist in indexes:
@@ -616,6 +617,7 @@ class LineLayer(PointLayer):
             else:
                 points_to_delete.add(point_1)
 
+        log.debug(f"merge_duplicates: points_to_delete={points_to_delete}")
         if (len(points_to_delete) > 0):
             return MergePointsCommand(self, list(points_to_delete))
 
