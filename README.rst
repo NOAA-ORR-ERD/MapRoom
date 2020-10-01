@@ -1129,6 +1129,99 @@ layer's style can then be changed without affecting other layers, but all
 layers will start with the same styling. The style dialog changes the default
 style object and can apply changes to current annotation layer objects.
 
+Bounding Rectangles
+----------------------
+
+All layers have a boolean class attribute ``bounded`` which flags whether or
+not the layer has finite lat/lon boundaries, or is unbounded. Bounded layers
+are defined by an axis-aligned bounding rectangle that specifies lat/lon
+coordinates for each corner.
+
+Unbounded layers include the ``maproom.layers.tiles.TileLayer`` that hold the
+WMS maps, sticky layers like the ``maproom.layers.title.TitleLayer`` or the
+``maproom.layers.scale.Scale`` layer, and graticule layer
+``maproom.layers.grid.Graticule``.
+
+Vector object layers that don't scale with the map like the
+``maproom.layers.vector_object.OverlayTextObject`` shouldn't technically be
+bounded because the borders aren't stuck to 4 lat/lon coordinates. These
+layers attach one control point to a lat/lon coordinate and maintain a fixed
+size relative to the computer's display. They do not scale as the lat/lon area
+is zoomed in or out. However, in the code they are bounded -- the bounds are
+recalculated at every zoom to maintain the relative size. The layers were
+written this way to be able to leverage the same rendering code and the same
+code to use the mouse to move control points. It does lead to complications;
+the method ``LayerManager.recalc_overlay_bounds`` is used to recompute the new
+bounding box for each overlay layer every time the viewport is updated.
+
+For normal bounded layers, the ``compute_bounding_rect`` method is called. The
+``maproom.layers.points_base.PointBaseLayer``, which is the superclass for
+most layers that use numpy arrays to store the point values, calculates the
+the min/max values of the lat/lon of the set of points describes the bounding
+rectangle.
+
+For folder layers that are bounded, each child layer's bounding rectangle must
+be calculated first. Once those sets of bounding rectangles, the folder's
+bounding box becomes the bounding box of the union of those rectangles.
+Because bounded folder layers can be resized, the child layers contained
+within may need to be scaled to correspond to the new size. This is
+accomplished using the ``set_data_from_bounds`` method on child layers, called
+with the new bounding box size of the child folder that allows the child to
+scale the location of the points to match the new bounding box location.
+
+Valid Times
+-----------------
+
+Particle layers have a time associated with them, as each layer represents the
+state of a set of points at a certain point in time.
+
+The concept of time was extended to all layers, so all layers have a
+``start_time`` and ``end_time`` value describing the period of time which is
+valid to display this layer. Times are stored in floating point seconds, as
+converted by the Python library function ``calendar.timegm``.
+
+If the start and end times are zero, the layer is valid at all times.
+
+
+Layer Rendering
+------------------
+
+Layers can either be drawn in projected space (zoomed in relative to the
+visible layer on the map), or screen space (fixed relative to the computer
+display). Verdat layers are drawn in projected space since they are a set of
+lat/lon points plotted on a map. The Scale layer is drawn in screen space
+since it always occupies the same position on screen regardless of zoom level.
+
+Layers subclass from either ``maproom.layers.base.ProjectedLayer`` or
+``maproom.layers.base.ScreenLayer`` which provides the ``render_projected`` or
+``render_screen`` methods that are overridden by the subclass.
+
+The call to ``maproom.layers.base.Layer.render`` handles the call to use
+``render_projected`` or ``render_screen``.
+
+Before the first time the layer is drawn or when the internal structure of the
+layer changes (generally when items are added or deleted, but **not**
+necessary when items are moved), the ``rebuild_renderer`` method is called. A
+new, unpopulated ``ImmediateModeRenderer`` instance is passed to the function
+allowing this method to call whatever setup is needed to add points, lines,
+polygons, or other graphic primitive values.
+
+The ``render_projected`` (or ``render_screen``) method must also be defined
+for each layer, which calls methods on the ``ImmediateModeRenderer`` instance
+passed into the method.
+
+Renderers are passed into these methods and not stored in the objects for two
+reasons:
+
+1. the initial design of MapRoom called for the ability to have multiple tabs
+   showing the same MapRoom project at different zoom levels or geographic
+   locations.
+
+2. there is the capability to generate PDF images of the current view. This is
+   accomplished using the exact same interface: ``rebuild_renderer`` followed
+   by ``render``, but this time using an
+   ``maproom.renderer.pdf.renderer.ReportLabRenderer`` instance.
+
 Layer Serialization
 ---------------------
 
@@ -1176,7 +1269,9 @@ Adding a new attribute to the serialization process simply requires these two
 methods. For backward compatibility, it is advised to handle the case where
 the ``_from_json`` method is unable to find the value from the JSON encoded
 data. For instance, the ``maproom.layers.vector_object.VectorObjectLayer``
-base class has the method::
+base class has an attribute named ``rotation`` and both ``rotation_to_json``
+and ``rotation_from_json``. Looking at the the method to read JSON data and
+restore the layer value::
 
     def rotation_from_json(self, json_data):
         # Ignore when rotation isn't present
@@ -1185,8 +1280,8 @@ base class has the method::
         except KeyError:
             self.rotation = 0.0
 
-which sets the rotation value to zero if the keyword isn't present in the JSON
-data.
+it includes the check that sets the rotation value to zero if the keyword
+isn't present in the JSON data.
 
 UGrid Layer
 ---------------
