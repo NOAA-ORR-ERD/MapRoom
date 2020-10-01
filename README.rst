@@ -1283,8 +1283,8 @@ restore the layer value::
 it includes the check that sets the rotation value to zero if the keyword
 isn't present in the JSON data.
 
-UGrid Layer
----------------
+Code Architecture - UGrid Layer
+==================================================
 
 The layer ``maproom.layers.line.LineLayer" is capable of displaying point and
 lines using lat/lon coordinates. Several file formats support line layers,
@@ -1294,5 +1294,40 @@ including:
 * NetCDF (.nc), without particle data; see ``maproom.loaders.ugrid``
 * text holding rows of lat/lon data; see ``maproom.loaders.text``
 
-Points and lines are held in numpy record arrays, as explained above as an
-optimization to speed the OpenGL rendering.
+Points and lines are held in numpy record arrays (as explained above) as an
+optimization to speed the OpenGL rendering. Both record arrays contain a
+``state`` item that reflects a bitfield defined in ``maproom.layers.state``.
+Selecting a point or line, for instance, sets the ``state.SELECTED`` bit and
+the item will show in the UI with a selected border. The ``FLAGGED`` bit shows
+up in the UI as a larger selection border around the time, and in a different
+color than the selected state.
+
+When inserting points or lines, the arrays are shifted and corresponding
+indexes are updated. At the moment, there is only a routine to insert a single
+point, not multiple points at one time. The UI would have to be changed for
+more routines to be needed, since it only allows single points to be added at
+once. In practice for verdat layers, this has not been a problem as of yet.
+
+Deleting points or lines is similar, with the entire array being copied except
+for the items to be removed. However, there is the facility to remove more
+than one point or line at the same time, due to the UI allowing multiple
+points & lines to be selected.
+
+Lines are stored in the ``line_segment_indexes`` attribute, of type
+``maproom.renderer.gl.data_types.LINE_SEGMENT_VIEW``. Lines will be referred
+to by the index number into this list. Each line holds the index of the start
+and end point, implying that this layer really holds a list of possibly
+disjointed line segments. In order to determine if a subset of the line
+segments makes a closed boundary, additional tools are needed. The
+``maproom.library.Boundary`` module provides the ``Boundaries`` class which
+can determine a set of ``Boundary`` objects that correspond to closed
+boundaries in the layer.
+
+
+Code Architecture - Polygon Layer
+==================================================
+
+
+
+Code Architecture - Vector Object Layers
+==================================================
