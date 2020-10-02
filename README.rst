@@ -1488,4 +1488,61 @@ Line objects also have markers that can be added to the beginning or ending of
 the line. These are stored in the style instance attribute of the layer, and
 is drawn by the renderer.
 
+Ends of lines can be snapped to other annotation layer control points. This is
+maintained by a mapping in the LayerManager that keeps track of which control
+points are linked to other layers. The method
+``LayerManager.set_control_point_link`` sets up a "truth" point that is the
+source of the location and a "dependent" point, such that any movement of the
+source location is propagated to the dependent point. In the
+``BaseCanvas.render`` method, there is a call to
+``LayerManager.update_linked_control_points`` that, before drawing any layers,
+checks to see if any dependent control points need to be move in response to
+either: 1) a source control point moving, or 2) the zoom level of the view has
+changed, forcing an update of an overlay object.
+
+RectangleVectorObject
+-------------------------
+
+The rectangle object is used as the base class for other annotation layer
+objects because it defines a rectangular set of control points that can be
+used to constrain other objects, like a circle or ellipse.
+
+The addition of more control points requires new ``anchor_of`` and
+``anchor_dxdy`` arrays, and the ``compute_constrained_control_points``
+function which is needed to fill in the mid-edge control points when new
+control points are calculated. The function
+``get_control_points_from_corners`` is used when the layer must be fit into a
+specified area (specified by opposite corners); this is typically called when
+a layer is inside another annotation folder and that folder is resized.
+
+
+Polylines and Polygons
+-------------------------
+
+These objects include extra points after the control points that define the
+line segments making up the object. The control points will be adjusted to the
+minimum necessary bounding box if the line segment are modified to go outside
+the original boundary.
+
+Polylines may have markers at the start and end of the line, while polygons
+are always closed shapes.
+
+
+Overlay Objects
+-----------------
+
+Overlay objects are those that are drawn relative to the computer screen and
+do not scale with the lat/lon map. They use the OverlayMixin class that
+handles updating the control points to keep the objects fixed on screen.
+
+The way overlay objects work is that a lat/lon position is calculated for each
+control point at creation time. At every viewport change (zoom or pan), the
+lat/lon position of the the control points are recalculated to maintain the
+relative position on the screen.
+
+Overlay objects always have one control point fixed to the lat/lon map; the
+other control points are recalculated based on some fixed sizes in pixels -
+the width and height of the screen object. The control point that is fixed can
+be changed, and this changes the location of the object relative to other
+lat/lon objects when the map is zoomed in or out.
 

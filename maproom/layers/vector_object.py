@@ -1550,8 +1550,10 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
 
 class ArrowTextBoxLayer(AnnotationLayer):
-    """Layer for predefined group of text box and arrow pointing to lat/lon
+    """Folder layer for to hold a group of two annotation objects: a text box and an
+    arrow pointing to lat/lon.
 
+    The layer and associations among child layers is created in DrawArrowTextBoxCommand
     """
     name = "Arrow Text Box"
 
@@ -1605,8 +1607,10 @@ class ArrowTextBoxLayer(AnnotationLayer):
 
 
 class ArrowTextIconLayer(ArrowTextBoxLayer):
-    """Layer for predefined group of text box and arrow pointing to lat/lon
-
+    """Folder layer for to hold a group of three annotation objects: a text box, an
+    arrow pointing to lat/lon, and an icon at that lat/lon location.
+ 
+    The layer and associations among child layers is created in DrawArrowTextIconCommand
     """
     name = "Arrow Text Icon"
 
