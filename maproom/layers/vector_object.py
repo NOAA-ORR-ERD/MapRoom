@@ -223,7 +223,11 @@ class LineVectorObject(VectorObjectLayer):
 
     control_point_names = ["start", "end", "middle"]
 
-    # return the anchor point of the index point. E.g. anchor_of[0] = 1
+    # return the anchor point of the index point, the point that should remain
+    # in place when dragging the index point. So, for instance, dragging
+    # control point zero would use zero as the index value into this array,
+    # e.g. anchor_of[0] = 1. This means control point 1 remains in place as
+    # control point 0 is dragged.
     anchor_of = np.asarray((1, 0, 2), dtype=np.uint8)
 
     # anchor modification array: apply dx,dy values to each control point based

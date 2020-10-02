@@ -1421,3 +1421,71 @@ The feature list is used when exporting to a shapefile.
 
 Code Architecture - Vector Object Layers
 ==================================================
+
+Annotation objects are defined in ``maproom.layers.vector_object_layer``. They
+include graphical elements like lines, rectangles, circles, and polygons that
+scale with the current zoom level, and the objects that act as if they are
+stuck to the display, like the text box and the combo text-arrow boxes.
+
+The ``VectorObjectLayer`` base class defines the abstract class used for all
+vector objects, based on the ``LineLayer``, so using the same numpy points
+array as the line layers. However, the points array is used for control points
+for the annotation objects. The control points will define a rectangle that is
+the bounding box of the layer.
+
+Some subclasses like the polyline classes use additional points to draw the
+polyline contained within the control point boundary box.
+
+Annotation layer objects can also be grouped together; the ``AnnotationLayer``
+class is provided that is both a folder object and an annotation layer object.
+It doesn't draw anything itself, merely provides a container for other
+objects. These folder objects can be nested, and are also used to implement
+the ``ArrowTextBoxLayer`` and ``ArrowTextIconLayer``.
+
+LineVectorObject
+------------------
+
+The simplest vector object is the ``LineVectorObject``, a line segment with 3
+control points: one at each end and one at the midpoint.
+
+The line is defined in the UI by the starting and ending point. The center
+control point is not displayed (because the ``display_center_control_point``
+class attribute is False). Clicking and dragging one of the control points
+moves that point, stretching or shrinking the line in response. The other
+control point remains anchored in place.
+
+The class attribute ``anchor_of`` returns the value of the opposite control
+point, the point that should remain in place when dragging the index point.
+So, for instance, dragging control point zero would use zero as the index
+value into this array, returning the value ``1`` as the control point that
+remains in place.
+
+The ``anchor_dxdy`` is an array that describes how each control point is
+affected when a control point is dragged. This is a two-dimensional array, the
+first index indicates the control point that is being dragged. The second
+index contains values for all control points and supplies the scaling values
+to be applied to each control point as the dragging point is moved.
+
+The dragging operation itself is a command object called from the mouse
+handler. The ``MoveControlPointCommand`` is defined in
+``maproom.vector_object_commands`` and handles additional details like control
+points that are bound to other vector objects ("snap-to-layer"), which is
+discussed later.
+
+After every control point move, the bounding box must be updated. When an
+annotation object is inside a folder, the bounding box may be forced to be
+updated. In this case the object is entirely defined by the points array and
+the containing folder will resize the points. Other cases will require the
+call to ``fit_to_bounding_box``, which in this case is just an empty method.
+
+Rendering annotation layer objects requires an additional step, called
+rasterizing. This sets the renderer with the points needed to describe this
+object. Rasterizing lines does not require an extra step because the line can
+be fully described by the control points. but rasterizing a circle needs extra
+steps since the circle doesn't pass through any of the control points.
+
+Line objects also have markers that can be added to the beginning or ending of
+the line. These are stored in the style instance attribute of the layer, and
+is drawn by the renderer.
+
+
