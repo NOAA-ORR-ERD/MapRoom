@@ -45,23 +45,23 @@ TRIANGLE_POINTS_VIEW_DTYPE = np.dtype([
     ("state", np.uint32)
 ])
 
-# point adjacency flag can be:
+# point adjacency flag is a bit field and can be:
 # bit 0: if 1, connect previous point to this point
 # bit 1: last point
-# bit 2: only checked on last point: connect to starting point
-# any points after this in the ring are unconnected points
+# bit 2: only checked on last point: connect to starting point any points after this
+#        in the ring are unconnected points
 # bit 31: if 1, start of new ring and bits 0 - 30 are number of points
 #
 # the meaning of state depends on its position in the points array
 # entry corresponding to starting point holds state for entire polygon (see maproom/layers/state.py)
-# next entry is feature code, because if there's only one entry, it's a point
+# next entry is feature code, because if there's only one entry, it's a point. The feature_code also indicates a hole
 # next entry holds fill color for entire polygon, because it requires at least 3 points to have a color
 RING_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
     ("point_flag", np.int32),
     ("state", np.int32),
 ])
 
-POLYGON_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
+POINT_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
     ("next", np.uint32),   # Index of next adjacent point in ring
     ("ring_index", np.uint32)  # Index of ring this point is in
 ])
@@ -146,7 +146,7 @@ def make_ring_adjacency_array(count):
 
 def make_point_adjacency_array(count):
     return np.repeat(
-        np.array([(0, 0)], dtype=POLYGON_ADJACENCY_DTYPE),
+        np.array([(0, 0)], dtype=POINT_ADJACENCY_DTYPE),
         count,
     ).view(np.recarray)
 

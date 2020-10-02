@@ -362,7 +362,7 @@ class new_tile_layer(NewLayerBaseAction):
 class new_shapefile_layer(NewLayerBaseAction):
     name = 'New Shapefile/Polygon Layer'
     tooltip = 'Create new layer of polygons'
-    layer_class = layers.PolygonParentLayer
+    layer_class = layers.ShapefileLayer
 
 
 class new_rnc_layer(MafAction):

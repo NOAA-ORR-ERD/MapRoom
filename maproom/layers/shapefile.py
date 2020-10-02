@@ -170,10 +170,9 @@ class RingEditLayer(LineLayer):
         return desc
 
 
-class PolygonParentLayer(PointLayer):
-    """Parent folder for group of polygons. Direct children will be
-    PolygonBoundaryLayer objects (with grandchildren will be HoleLayers) or
-    PointLayer objects.
+class ShapefileLayer(PointLayer):
+    """Shapefile layer that holds a set of polygons (or holes) represented by a list
+    of closed rings.
 
     """
     name = "Polygon"
@@ -640,7 +639,7 @@ class PolygonParentLayer(PointLayer):
     #### rendering
 
     def rebuild_renderer(self, renderer, in_place=False):
-        log.debug(f"rebuilding polygon2 {self.name}")
+        log.debug(f"rebuilding shapefile {self.name}")
         if self.rings is None or len(self.rings) == 0:
             self.create_rings()
         projection = renderer.canvas.projection

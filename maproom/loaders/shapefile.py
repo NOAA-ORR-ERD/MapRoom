@@ -9,7 +9,7 @@ from maproom.app_framework.utils.fileutil import ExpandZip, save_to_flat_zip
 
 from maproom.library.shapefile_utils import load_shapefile, write_feature_list_as_shapefile
 from maproom.library.bna_utils import load_bna_items, write_feature_list_as_bna
-from maproom.layers import PolygonParentLayer
+from maproom.layers import ShapefileLayer
 from ..renderer import data_types
 from .common import BaseLayerLoader
 from .bna import save_bna_file
@@ -85,7 +85,7 @@ class ShapefileLoader(BaseLayerLoader):
         file_path = uri
 
         layers = []
-        parent = PolygonParentLayer(manager=manager)
+        parent = ShapefileLayer(manager=manager)
         # parent.grouped = True
         parent.grouped = False
         parent.file_path = uri

@@ -1324,9 +1324,99 @@ can determine a set of ``Boundary`` objects that correspond to closed
 boundaries in the layer.
 
 
-Code Architecture - Polygon Layer
+Code Architecture - Shapefile Layer
 ==================================================
 
+There are two modules defining polygon layers: the older type in
+``maproom.layers.polygon`` and the newer module supporting editable polygons
+in ``maproom.layers.shapefile``.
+
+The older module originally was used to display all polygon layers, but is now
+only used to display the RNC selection map. Because it is working and debugged
+for this purpose, it was not rearchitected into the ``shapefile`` module. The
+older module is not documented here; this description is for the newer
+``shapefile`` module.
+
+Editable polygons are supported by the ``shapefile`` module in the
+``ShapefileLayer``. It is a subclass of the ``PointLayer``, using the points
+numpy array to store all the lat/lon coordinates of each point. The polygons
+are broken up into rings, each ring having an index in the ``rings`` attribute
+which is of the ``POLYGON_DTYPE`` numpy recarray type. The ring descriptions
+are stored in the ``point_adjacency_array`` and ``ring_adjacency`` attributes,
+of type ``POINT_ADJACENCY_DTYPE`` and ``RING_ADJACENCY_DTYPE``, respectively.
+These two arrays are the same size as the points array and track information
+about the rings. They are two different arrays for historical reasons, as the
+old ``PolygonLayer`` from ``maproom.layers.polygon`` uses the
+``POINT_ADJACENCY_DTYPE`` and the drawing code in the
+``ImmediateModeRenderer`` uses this array for the OpenGL VBO data.
+
+Rings are defined as a contiguous block of points in the ``points`` array. The
+starting point and number of points in the ring are defined in the
+``ring_adjacency`` array, which is the same length as the points array. The
+ring size is encoded into the ``point_flag`` attribute. The numpy recarray is
+defined in ``maproom.renderer.gl.data_types`` as::
+
+    RING_ADJACENCY_DTYPE = np.dtype([  # parallels the points array
+        ("point_flag", np.int32),
+        ("state", np.int32),
+    ])
+
+where the ``state`` is the same selection state bitfield as other data types.
+The ``point_flag`` is a 32 bit integer that uses bits to encode several types
+of data.
+
+* bit 31: if set, results in a negative number. Indicates the start of a new
+  ring, where the negative value is the number of points
+* bit 0: if set, connect previous point to this point
+* bit 1: last point
+* bit 2: only checked on last point: connect to starting point and any points
+  after this but before the next ring are unconnected points
+
+In the code, the polygon start and count arrays are determined by::
+
+    polygon_starts = np.where(self.ring_adjacency['point_flag'] < 0)[0]
+    polygon_counts = -self.ring_adjacency[polygon_starts]['point_flag']
+
+The ``state`` flag in this array is used to indicate several aspects of the
+ring, including the selected state of the entire ring. Because this array is
+the same size as the points array, there are a lot of entries in this array
+that can be unused. (NOTE: This was a design decision early on, and I can't
+remember why now it is done this way instead of a smaller array that is just
+tracked on a per-ring array. But, at any rate, this is how it works now.) The
+meaning of ``state`` depends on its position in the points array. The entry in
+``state`` at the same index as the first point in the ring holds the selection
+state for entire polygon. The next entry (at ``index + 1``) is the feature
+code, which is an integer indicating what type of ring it is: water, land,
+etc. If the integer is negative, then the ring indicates a hole in the parent
+polygon. The next entry, ``index + 2``, holds fill color for entire ring. The
+remaining entries corresponding to this ring are unused.
+
+Rings can be edited individually; in the UI, right-clicking inside a ring will
+bring up a context menu to modify the ring. Ring data is adjusted using the
+``replace_ring`` method, which shifts ring data after an inserted ring and
+adjusts the ring adjacency. The ``rings`` attribute is recreated and the
+renderer is flagged as needing to be rebuilt.
+
+There is also the concept of the ``geometry_list``, which is defined an a
+NamedTuple called ``GeomInfo`` in ``maproom.library.shapefile_utils``, and
+keeps track of the ring state in addition to text strings that aren't stored
+anywhere else. These text strings corresponding to the name of the polygon as
+read out of the source data file (some loaders, like the GDAL loader, can have
+text names for these), as well as text names for the ``feature_code`` and
+``feature_name``.
+
+A ``feature_list`` is a list of items, where each item is itself a list. Each
+sub-list consists of a string identifier and one or more GeomInfo objects. For
+example, this feature_list contains 2 entries: a polygon and a polygon with a
+hole.
+
+    [
+       ['Polygon', GeomInfo(start_index=0, count=5, name='', feature_code=1, feature_name='1')],
+       ['Polygon', GeomInfo(start_index=5, count=4, name='', feature_code=1, feature_name='1'),
+                   GeomInfo(start_index=9, count=4, name='', feature_code=-1, feature_name='1')],
+    ]
+
+The feature list is used when exporting to a shapefile.
 
 
 Code Architecture - Vector Object Layers
