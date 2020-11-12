@@ -13,12 +13,12 @@ from wx.lib.ClickableHtmlWindow import PyClickableHtmlWindow
 
 # Enthought library imports.
 
-from sawx import preferences
-from sawx.ui.popuputil import SpringTabs
-from sawx.ui.download_manager import DownloadControl
-from sawx.ui.zoomruler import ZoomRuler
-from sawx.ui import compactgrid as cg
-from sawx.utils.textutil import pretty_seconds, parse_pretty_seconds
+from maproom.app_framework import preferences
+from maproom.app_framework.ui.popuputil import SpringTabs
+from maproom.app_framework.ui.download_manager import DownloadControl
+from maproom.app_framework.ui.zoomruler import ZoomRuler
+from maproom.app_framework.ui import compactgrid as cg
+from maproom.app_framework.utils.textutil import pretty_seconds, parse_pretty_seconds
 
 from .layer_tree_control import LayerTreeControl
 from .ui.info_panels import LayerInfoPanel, SelectionInfoPanel
@@ -657,6 +657,8 @@ class LayerInfoList(cg.CompactGrid):
         self.editor = editor
         table = self.calc_table(None)
         cg.CompactGrid.__init__(self, table, editor.preferences, None, None, parent, size=(-1,800), name=self.ui_name)
+        # The layer info list must change whenever a layer is selected, so the event on
+        # the layer tree control is bound so this UI can be updated.
         editor.layer_tree_control.current_layer_changed_event += self.on_current_layer_changed
 
     def calc_table(self, layer):

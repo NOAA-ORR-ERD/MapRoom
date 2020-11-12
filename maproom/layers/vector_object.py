@@ -227,7 +227,11 @@ class LineVectorObject(VectorObjectLayer):
 
     control_point_names = ["start", "end", "middle"]
 
-    # return the anchor point of the index point. E.g. anchor_of[0] = 1
+    # return the anchor point of the index point, the point that should remain
+    # in place when dragging the index point. So, for instance, dragging
+    # control point zero would use zero as the index value into this array,
+    # e.g. anchor_of[0] = 1. This means control point 1 remains in place as
+    # control point 0 is dragged.
     anchor_of = np.asarray((1, 0, 2), dtype=np.uint8)
 
     # anchor modification array: apply dx,dy values to each control point based
@@ -1566,8 +1570,10 @@ class AnnotationLayer(BoundedFolder, RectangleVectorObject):
 
 
 class ArrowTextBoxLayer(AnnotationLayer):
-    """Layer for predefined group of text box and arrow pointing to lat/lon
+    """Folder layer for to hold a group of two annotation objects: a text box and an
+    arrow pointing to lat/lon.
 
+    The layer and associations among child layers is created in DrawArrowTextBoxCommand
     """
     name = "Arrow Text Box"
 
@@ -1621,8 +1627,10 @@ class ArrowTextBoxLayer(AnnotationLayer):
 
 
 class ArrowTextIconLayer(ArrowTextBoxLayer):
-    """Layer for predefined group of text box and arrow pointing to lat/lon
-
+    """Folder layer for to hold a group of three annotation objects: a text box, an
+    arrow pointing to lat/lon, and an icon at that lat/lon location.
+ 
+    The layer and associations among child layers is created in DrawArrowTextIconCommand
     """
     name = "Arrow Text Icon"
 

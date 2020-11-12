@@ -1,7 +1,7 @@
 import re
 import shlex
 
-from sawx.utils.runtime import get_all_subclasses
+from maproom.app_framework.utils.runtime import get_all_subclasses
 
 from . import command
 from . import magic

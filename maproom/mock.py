@@ -1,6 +1,6 @@
 import os
 
-from sawx.loader import identify_file
+from maproom.app_framework.loader import identify_file
 
 from . import loaders
 from .styles import LayerStyle

@@ -16,8 +16,6 @@ class TestGDAL(object):
     def test_simple(self):
         layer = self.gdal
         assert not layer.empty()
-        assert layer.get_allowable_visibility_items() == ['images']
-        assert layer.visibility_item_exists('images')
 
 if __name__ == "__main__":
     t = TestGDAL()

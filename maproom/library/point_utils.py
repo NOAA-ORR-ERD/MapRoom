@@ -4,7 +4,7 @@ import numpy as np
 
 from maproom.renderer.gl.data_types import POINT_XY_VIEW_DTYPE
 from .shapefile_utils import GeomInfo
-from ..layers.polygon2 import PolygonParentLayer
+from ..layers.shapefile import ShapefileLayer
 
 from libmaproom.pytriangle import triangulate_simple
 
@@ -56,7 +56,7 @@ def create_convex_hull(layers, manager):
     print(triangle_line_segment_indexes)
     #points = np.asarray(points, dtype=np.float64)
     item = ["Polygon", GeomInfo(0, len(points), "convex hull", 1, "blah")]
-    layer = PolygonParentLayer(manager=manager)
+    layer = ShapefileLayer(manager=manager)
     layer.set_geometry(points, [item])
 
     return layer, ""

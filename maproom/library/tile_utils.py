@@ -9,8 +9,8 @@ from requests.exceptions import HTTPError
 from owslib.util import ServiceException
 from owslib.wms import WebMapService
 
-from sawx.utils.background_http import BackgroundHttpMultiDownloader
-from sawx.utils.background_http import UnskippableRequest
+from maproom.app_framework.utils.background_http import BackgroundHttpMultiDownloader
+from maproom.app_framework.utils.background_http import UnskippableRequest
 
 from .numpy_images import get_numpy_from_data
 
@@ -277,7 +277,7 @@ class TileRequest(UnskippableRequest):
             log.error("Error %s loading %s" % (e, self.url))
             self.error = e
         if self.manager is not None:
-            self.manager.threaded_image_loaded_event(self.event_data, self)
+            self.manager.project.threaded_image_loaded(self.event_data, self)
 
     def get_image_array(self):
         try:

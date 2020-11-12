@@ -12,7 +12,7 @@ from .title import Title
 from .timestamp import Timestamp
 from .triangle import TriangleLayer
 from .polygon import RNCLoaderLayer
-from .polygon2 import PolygonParentLayer, RingEditLayer
+from .shapefile import ShapefileLayer, RingEditLayer
 from .raster import RasterLayer
 from .wms import WMSLayer
 from .tiles import TileLayer

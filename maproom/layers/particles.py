@@ -14,7 +14,7 @@ import calendar
 import numpy as np
 import wx
 
-from sawx.utils.parseutil import NumpyFloatExpression, ParseException
+from maproom.app_framework.utils.parseutil import NumpyFloatExpression, ParseException
 
 from ..renderer import color_floats_to_int, linear_contour
 from ..library import colormap, math_utils
@@ -332,15 +332,15 @@ class ParticleFolder(Folder):
         for c in children:
             if var in c.scalar_vars:
                 c.recalc_colors_from_colormap(var, colormap)
-                self.manager.layer_contents_changed_event(c)
-        self.manager.refresh_needed_event(None)
+                self.manager.project.layer_contents_changed(c)
+        self.manager.project.refresh(None)
 
     def set_colors_from_status_codes(self):
         children = self.get_particle_layers()
         for c in children:
             c.recalc_colors_from_status_codes()
-            self.manager.layer_contents_changed_event(c)
-        self.manager.refresh_needed_event(None)
+            self.manager.project.layer_contents_changed(c)
+        self.manager.project.refresh(None)
 
     def set_colormap(self, new_colormap):
         self.colormap = new_colormap

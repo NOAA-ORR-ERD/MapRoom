@@ -3,8 +3,8 @@ import time
 import datetime
 import calendar
 
-from sawx.utils.runtime import get_all_subclasses
-from sawx.loader import identify_file
+from maproom.app_framework.utils.runtime import get_all_subclasses
+from maproom.app_framework.loader import identify_file
 
 # MapRoom imports
 from ..library import rect
@@ -43,6 +43,7 @@ class Layer:
     # True if an image or other layer where it occludes stuff behind it
     opaque = False
 
+    # ui label used as the default name for this layer when creating a new instance
     name = "Empty"
 
     # type is a string identifier that uniquely refers to a layer class.
@@ -50,19 +51,28 @@ class Layer:
     # serializable.
     type = ""
 
+    # if layers have additional toolbar items, update this attribute to
+    # correspond to an entry in `valid_mouse_modes` in maproom/toolbar.py
     mouse_mode_toolbar = "BaseLayerToolBar"
 
+    # should this layer be skipped over when adding a new layer at the
+    # beginning of the list? This is used primarily for the graticule layer so
+    # it stays on top of any new layers added
     skip_on_insert = False
 
+    # only vector object layers set this flag
     has_control_points = False
 
     pickable = False  # is this a layer that support picking?
 
+    # used only to indicate that this layer is a transient layer. There is
+    # only one transient layer at any one time.
     transient_edit_layer = False
 
+    # flag to indicate this layer should be temporarily moved to the top of
+    # the stack while editing is taking place. Currently used only on the
+    # RingEditLayer
     draw_on_top_when_selected = False
-
-    visibility_items = []
 
     layer_info_panel = []
 
@@ -117,7 +127,7 @@ class Layer:
         return "%s layer '%s' (%s) %s" % (self.type, self.name, "grouped" if self.grouped else "ungrouped", self.pretty_time_range())
 
     @property
-    def pretty_name(self):
+    def ui_label(self):
         if self.grouped:
             prefix = self.grouped_indicator_prefix
         else:
@@ -415,6 +425,8 @@ class Layer:
             subclasses = get_all_subclasses(Layer)
             for kls in subclasses:
                 if kls.type:
+                    if kls.type in cls.type_to_class_defs:
+                        raise SystemExit(f"\n\n***** CODING ERROR!\n\nMultiple layers must not have the same text type!\nChange the class attribute 'type' in one of the following classes in the source code: \n{cls.type_to_class_defs[kls.type]}\n{kls}")
                     cls.type_to_class_defs[kls.type] = kls
         return cls.type_to_class_defs
 
@@ -492,10 +504,11 @@ class Layer:
     def parse_time_to_float(self, t):
         if t is None:
             t = 0.0
-        elif isinstance(t, datetime.datetime):
-            t = calendar.timegm(t.timetuple())
         else:
-            t = float(t)
+            try:
+                t = calendar.timegm(t.timetuple())
+            except AttributeError:
+                t = float(t)
         return t
 
     def set_datetime(self, start, end=None):
@@ -558,13 +571,6 @@ class Layer:
             d["labels"] = False
             d["points"] = False
         return d
-
-    def visibility_item_exists(self, label):
-        """Return keys for visibility dict lookups that currently exist in this layer
-        """
-        if label in self.visibility_items:
-            return self.points is not None
-        raise RuntimeError("Unknown label %s for %s" % (label, self.name))
 
     def update_bounds(self, parents=False):
         if parents:

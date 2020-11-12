@@ -59,7 +59,7 @@ class Polyline:
         return self.points[self.point_indexes]
 
     def check_boundary_self_crossing(self):
-        t0 = time.clock()
+        t0 = time.perf_counter()
         progress_log.info("Checking for boundary self-crossing...")
 
         error_points = set()
@@ -81,8 +81,8 @@ class Polyline:
 
             error_points.update({self[point] for segment in intersecting_segments for item in segment for point in item[2:]})
 
-        t = time.clock() - t0
-        # print("DONE WITH BOUNDARY SELF-CROSSING CHECK! %f" % t)
+        t = time.perf_counter() - t0
+        print("DONE WITH BOUNDARY SELF-CROSSING CHECK! %f" % t)
 
         return tuple(error_points)
 
@@ -413,7 +413,7 @@ class Boundaries(object):
         self.extract_polygons(point1, point2)
 
     def check_boundary_crossings(self):
-        t0 = time.clock()
+        t0 = time.perf_counter()
         progress_log.info("Checking for boundary crossings...")
 
         error_points = set()
@@ -457,14 +457,14 @@ class Boundaries(object):
 
             error_points.update({point_indexes[index] for segment in intersecting_segments for item in segment for index in item[2:]})
 
-        t = time.clock() - t0
-        # print("DONE WITH BOUNDARY CROSSING CHECK! %f" % t)
+        t = time.perf_counter() - t0
+        print("DONE WITH BOUNDARY CROSSING CHECK! %f" % t)
         progress_log.info("TIME_DELTA=Boundary crossing")
 
         return tuple(error_points)
 
     def check_outside_outer_boundary(self):
-        t0 = time.clock()
+        t0 = time.perf_counter()
         progress_log.info("Checking for points outside outer boundary...")
 
         if len(self) == 0:
@@ -481,8 +481,8 @@ class Boundaries(object):
             polygon=np.array(outer_boundary, np.uint32)
         )
 
-        t = time.clock() - t0
-        # print("DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t)
+        t = time.perf_counter() - t0
+        print("DONE WITH OUTSIDE BOUNDARY CHECK! %f" % t)
         progress_log.info("TIME_DELTA=Points outside boundary")
         return outside_point_indices
 

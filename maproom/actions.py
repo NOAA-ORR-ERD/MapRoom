@@ -2,15 +2,15 @@ import sys
 import wx
 import json
 
-from sawx import persistence
-from sawx.action import SawxAction, SawxListAction, SawxRadioAction
-from sawx.actions import save_file, save_as
-from sawx.ui.dialogs import ListReorderDialog, CheckItemDialog
-from sawx.filesystem import find_latest_template_path
+from maproom.app_framework import persistence
+from maproom.app_framework.action import MafAction, MafListAction, MafRadioAction
+from maproom.app_framework.actions import save_file, save_as
+from maproom.app_framework.ui.dialogs import ListReorderDialog, CheckItemDialog
+from maproom.app_framework.filesystem import find_latest_template_path
 
 from . import menu_commands as mec
 from . import mouse_commands as moc
-from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile, SimplifyDialog
+from .ui.dialogs import StyleDialog, prompt_for_wms, prompt_for_tile, SimplifyDialog, MergePointsDialog, TriangulateLayerDialog
 from .library.thread_utils import BackgroundWMSDownloader
 from .library.tile_utils import BackgroundTileDownloader
 from . import layers
@@ -21,7 +21,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class LayerAction(SawxAction):
+class LayerAction(MafAction):
     """Superclass for actions that operate on layers.
 
     Provides a common framework for usage in menubars and popup menus
@@ -45,7 +45,7 @@ class LayerAction(SawxAction):
         log.warning("Missing perform_on_layer method for %s" % self.name)
 
 
-class new_project(SawxAction):
+class new_project(MafAction):
     """ An action for creating a new empty file that can be edited by a particular task
     """
     name = 'New Default Project'
@@ -81,7 +81,7 @@ class save_project_as(save_as):
     ext_list = [("MapRoom Project Files", ".maproom")]
 
 
-class save_project_template(SawxAction):
+class save_project_template(MafAction):
     name = 'Save Project as Template...'
     tooltip = 'Save the current project as a template that can be reused'
 
@@ -91,7 +91,7 @@ class save_project_template(SawxAction):
             self.editor.save_as_template(name)
 
 
-class load_project_template(SawxListAction):
+class load_project_template(MafListAction):
     tooltip = 'Open project template'
 
     def calc_list_items(self):
@@ -104,7 +104,7 @@ class load_project_template(SawxListAction):
         self.editor.frame.load_file(uri, self.editor)
 
 
-class save_command_log(SawxAction):
+class save_command_log(MafAction):
     name = 'Save Command Log...'
     tooltip = 'Save a copy of the command log'
 
@@ -114,7 +114,7 @@ class save_command_log(SawxAction):
             self.editor.save_log(dialog.path)
 
 
-class save_layer(SawxAction):
+class save_layer(MafAction):
     name = 'Save Layer...'
     tooltip = 'Save the currently selected layer'
 
@@ -139,7 +139,7 @@ class LoaderForExt:
         return self.loader.__class__ == other.loader.__class__ and self.loader.ext == other.loader.ext
 
 
-class save_layer_as(SawxListAction):
+class save_layer_as(MafListAction):
     """ A menu for changing the active task in a task window.
     """
 
@@ -163,7 +163,7 @@ class save_layer_as(SawxListAction):
             self.editor.save_layer(path, item.loader, item.ext)
 
 
-class save_movie(SawxAction):
+class save_movie(MafAction):
     name = 'Save Latest Playback...'
 
     def calc_enabled(self, action_key):
@@ -175,7 +175,7 @@ class save_movie(SawxAction):
             self.editor.save_latest_movie(path)
 
 
-class revert_project(SawxAction):
+class revert_project(MafAction):
     name = 'Revert Project'
     tooltip = 'Revert project to last saved version'
 
@@ -190,7 +190,7 @@ class revert_project(SawxAction):
             self.editor.frame.close_editor(self.editor)
 
 
-class default_style(SawxAction):
+class default_style(MafAction):
     name = 'Default Styles...'
     tooltip = 'Choose the line, fill and font styles'
 
@@ -208,7 +208,7 @@ class default_style(SawxAction):
                 project.layer_manager.apply_default_styles()
 
 
-class bounding_box(SawxRadioAction):
+class bounding_box(MafRadioAction):
     name = 'Show Bounding Boxes'
     tooltip = 'Display or hide bounding boxes for each layer'
 
@@ -221,7 +221,7 @@ class bounding_box(SawxRadioAction):
         return self.editor.layer_canvas.debug_show_bounding_boxes
 
 
-class picker_framebuffer(SawxRadioAction):
+class picker_framebuffer(MafRadioAction):
     name = 'Show Picker Framebuffer'
     tooltip = 'Display the picker framebuffer instead of the normal view'
 
@@ -234,7 +234,7 @@ class picker_framebuffer(SawxRadioAction):
         return self.editor.layer_canvas.debug_show_picker_framebuffer
 
 
-class save_layout(SawxAction):
+class save_layout(MafAction):
     name = 'Save Layout'
     tooltip = 'Save UI layout as default for subsequent projects'
 
@@ -242,7 +242,7 @@ class save_layout(SawxAction):
         self.editor.save_user_defined_default_layout()
 
 
-class restore_default_layout(SawxAction):
+class restore_default_layout(MafAction):
     name = 'Restore Default Layout'
     tooltip = 'Restore the UI layout to the application default'
 
@@ -250,7 +250,7 @@ class restore_default_layout(SawxAction):
         self.editor.restore_default_layout(False)
 
 
-class zoom_in(SawxAction):
+class zoom_in(MafAction):
     name = 'Zoom In'
     tooltip = 'Increase magnification'
 
@@ -261,7 +261,7 @@ class zoom_in(SawxAction):
         self.editor.process_command(cmd)
 
 
-class zoom_out(SawxAction):
+class zoom_out(MafAction):
     name = 'Zoom Out'
     tooltip = 'Decrease magnification'
 
@@ -272,7 +272,7 @@ class zoom_out(SawxAction):
         self.editor.process_command(cmd)
 
 
-class zoom_to_fit(SawxAction):
+class zoom_to_fit(MafAction):
     name = 'Zoom to Fit'
     icon = 'expand'
     tooltip = 'Set magnification to show all layers'
@@ -297,7 +297,7 @@ class zoom_to_layer(LayerAction):
         self.editor.process_command(cmd)
 
 
-class NewLayerBaseAction(SawxAction):
+class NewLayerBaseAction(MafAction):
     layer_class = None
 
     def perform(self, action_key):
@@ -362,10 +362,10 @@ class new_tile_layer(NewLayerBaseAction):
 class new_shapefile_layer(NewLayerBaseAction):
     name = 'New Shapefile/Polygon Layer'
     tooltip = 'Create new layer of polygons'
-    layer_class = layers.PolygonParentLayer
+    layer_class = layers.ShapefileLayer
 
 
-class new_rnc_layer(SawxAction):
+class new_rnc_layer(MafAction):
     name = 'New RNC Download Selection Layer'
     tooltip = 'Create new layer for downloading RNC images'
 
@@ -443,8 +443,9 @@ class triangulate_layer(LayerAction):
         return layer.has_points()
 
     def perform_on_layer(self, action_key, layer):
-        e = self.editor
-        e.control.force_focus(e.triangle_panel)
+        dialog = TriangulateLayerDialog(self.editor, layer)
+        dialog.ShowModal()
+        dialog.Destroy()
 
 
 class to_polygon_layer(LayerAction):
@@ -471,7 +472,7 @@ class to_verdat_layer(LayerAction):
         self.editor.process_command(cmd)
 
 
-class convex_hull(SawxAction):
+class convex_hull(MafAction):
     name = 'Convex Hull'
     tooltip = 'Create convex hull of a set of points'
 
@@ -512,7 +513,7 @@ class convex_hull(SawxAction):
             project.process_command(cmd)
 
 
-class merge_layers(SawxAction):
+class merge_layers(MafAction):
     name = 'Merge Layers'
     tooltip = 'Merge two vector layers'
 
@@ -584,11 +585,12 @@ class merge_points(LayerAction):
         return layer.has_points()
 
     def perform_on_layer(self, action_key, layer):
-        e = self.editor
-        e.control.force_focus(e.merge_points_panel)
+        dialog = MergePointsDialog(self.editor, layer)
+        dialog.ShowModal()
+        dialog.Destroy()
 
 
-class contour_layers(SawxAction):
+class contour_layers(MafAction):
     name = 'Contour Particle Layer'
     tooltip = 'Contour a particle layer'
 
@@ -649,7 +651,7 @@ class contour_layers(SawxAction):
         project.process_command(cmd)
 
 
-class jump_to_coords(SawxAction):
+class jump_to_coords(MafAction):
     name = 'Jump to Coordinates'
     icon = 'kangaroo'
     tooltip = 'Center the screen on the specified coordinates'
@@ -748,7 +750,7 @@ class check_selected_layer(LayerAction):
         self.editor.check_for_errors(layer)
 
 
-class check_all_layers(SawxAction):
+class check_all_layers(MafAction):
     name = 'Check All Layers For Errors'
     tooltip = 'Check for valid layer construction'
 
@@ -756,7 +758,7 @@ class check_all_layers(SawxAction):
         self.editor.check_all_layers_for_errors()
 
 
-class open_log(SawxAction):
+class open_log(MafAction):
     name = 'View Command History Log'
     tooltip = 'View the log containing a list of all user commands'
 
@@ -765,7 +767,7 @@ class open_log(SawxAction):
         self.editor.frame.load_file(filename)
 
 
-class debug_annotation_layers(SawxAction):
+class debug_annotation_layers(MafAction):
     name = 'Sample Annotation Layer'
     tooltip = 'Create a sample annotation layer with examples of all vector objects'
 
@@ -779,7 +781,7 @@ class debug_annotation_layers(SawxAction):
         project.layer_canvas.zoom_to_fit()
 
 
-class copy_style(SawxAction):
+class copy_style(MafAction):
     name = 'Copy Style'
     tooltip = 'Copy the style of the current selection'
 
@@ -790,7 +792,7 @@ class copy_style(SawxAction):
         self.editor.copy_style()
 
 
-class paste_style(SawxAction):
+class paste_style(MafAction):
     name = 'Paste Style'
     tooltip = 'Apply the style from the clipboard'
 
@@ -843,7 +845,7 @@ class duplicate_layer_at_offset(duplicate_layer):
         return p1[0] - p2[0], p1[1] - p2[1]
 
 
-class manage_wms_servers(SawxAction):
+class manage_wms_servers(MafAction):
     name = 'Manage WMS Servers...'
 
     def perform(self, action_key):
@@ -858,7 +860,7 @@ class manage_wms_servers(SawxAction):
         dlg.Destroy()
 
 
-class manage_tile_servers(SawxAction):
+class manage_tile_servers(MafAction):
     name = 'Manage Tile Servers...'
 
     def perform(self, action_key):
@@ -873,7 +875,7 @@ class manage_tile_servers(SawxAction):
         dlg.Destroy()
 
 
-class clear_tile_cache(SawxAction):
+class clear_tile_cache(MafAction):
     name = 'Clear Tile Cache...'
 
     def perform(self, action_key):
@@ -889,7 +891,7 @@ class clear_tile_cache(SawxAction):
         dlg.Destroy()
 
 
-class normalize_longitude(SawxAction):
+class normalize_longitude(MafAction):
     name = 'Normalize Longitude'
     tooltip = 'Adjust longitudes so the map lies between 0 and 360W'
 
@@ -909,7 +911,7 @@ class swap_lat_lon(LayerAction):
         self.editor.process_command(cmd)
 
 
-class debug_layer_manager(SawxAction):
+class debug_layer_manager(MafAction):
     name = 'Show Layer Manager Info'
     tooltip = 'Show a debug output describing the currently displayed layers'
 
@@ -950,7 +952,7 @@ class rename_layer(LayerAction):
         self.editor.layer_tree_control.start_rename(layer)
 
 
-class edit_layer(SawxAction):
+class edit_layer(MafAction):
     name = 'Edit Layer'
     tooltip = 'Edit the currently selected layer'
 
@@ -962,7 +964,7 @@ class edit_layer(SawxAction):
         self.editor.process_command(cmd)
 
 
-class add_polygon_to_edit_layer(SawxAction):
+class add_polygon_to_edit_layer(MafAction):
     name = 'Add Polygon to Edit Layer'
     tooltip = 'Add a polygon to the current editing layer'
 
@@ -972,7 +974,7 @@ class add_polygon_to_edit_layer(SawxAction):
         self.editor.process_command(cmd)
 
 
-class add_polygon_boundary(SawxAction):
+class add_polygon_boundary(MafAction):
     name = 'Add Polygon'
     tooltip = 'Add a new boundary polygon'
 
@@ -987,7 +989,7 @@ class add_polygon_boundary(SawxAction):
         self.editor.process_command(cmd)
 
 
-class add_polygon_hole(SawxAction):
+class add_polygon_hole(MafAction):
     name = 'Add Hole'
     tooltip = 'Add a new hole polygon'
 
@@ -997,7 +999,7 @@ class add_polygon_hole(SawxAction):
         self.editor.process_command(cmd)
 
 
-class add_map_bounds(SawxAction):
+class add_map_bounds(MafAction):
     name = 'Add Map Bounds'
     tooltip = 'Add the "Map Bounds" bounding polygon'
 
@@ -1015,7 +1017,7 @@ class add_map_bounds(SawxAction):
         self.editor.process_command(cmd)
 
 
-class edit_map_bounds(SawxAction):
+class edit_map_bounds(MafAction):
     name = 'Edit Map Bounds'
     tooltip = 'Edit the "Map Bounds" bounding polygon'
 
@@ -1032,7 +1034,7 @@ class edit_map_bounds(SawxAction):
             self.editor.process_command(cmd)
 
 
-class delete_polygon(SawxAction):
+class delete_polygon(MafAction):
     name = 'Delete Polygon'
     tooltip = 'Remove a polygon or hole; note that if a polygon is removed, any holes in that polygon are also removed'
 
@@ -1066,7 +1068,7 @@ class delete_polygon(SawxAction):
             editor.refresh()
 
 
-class simplify_polygon(SawxAction):
+class simplify_polygon(MafAction):
     name = 'Simplify Polygon'
     tooltip = 'Remove points using Visvalingam algorithm'
 
@@ -1076,7 +1078,7 @@ class simplify_polygon(SawxAction):
         if dlg.ShowModal() != wx.ID_OK:
             dlg.roll_back()
 
-class save_ring_edit(SawxAction):
+class save_ring_edit(MafAction):
     name = 'Save Changes in Polygon'
     tooltip = 'Save the current edits in the parent polygon'
 
@@ -1086,7 +1088,7 @@ class save_ring_edit(SawxAction):
         self.editor.process_command(cmd)
 
 
-class cancel_ring_edit(SawxAction):
+class cancel_ring_edit(MafAction):
     name = 'Cancel Edit'
     tooltip = 'Abandon the current edits in the parent polygon'
 

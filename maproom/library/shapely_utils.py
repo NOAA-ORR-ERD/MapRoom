@@ -5,7 +5,7 @@ from shapely.geometry import shape
 from shapely.wkt import loads
 from osgeo import ogr
 
-from sawx.filesystem import filesystem_path
+from maproom.app_framework.filesystem import filesystem_path
 
 from .accumulator import accumulator
 

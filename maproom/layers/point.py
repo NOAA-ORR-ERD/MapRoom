@@ -27,8 +27,6 @@ class PointLayer(PointBaseLayer):
 
     pickable = True  # is this a layer that support picking?
 
-    visibility_items = ["points", "labels"]
-
     layer_info_panel = ["Point count", "Flagged points", "Default depth", "Depth unit", "Color", "Outline color"]
 
     selection_info_panel = ["Selected points", "Point index", "Point depth", "Point latitude", "Point longitude"]
@@ -67,7 +65,7 @@ class PointLayer(PointBaseLayer):
             self.clear_all_selections(state.FLAGGED)
             for p in e.error_points:
                 self.select_point(p, state.FLAGGED)
-            self.manager.refresh_needed_event(True)
+            self.manager.project.refresh(True)
 
     def set_data(self, f_points, f_depths=0.0, style=None):
         n = np.alen(f_points)

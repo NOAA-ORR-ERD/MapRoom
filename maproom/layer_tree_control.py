@@ -1,8 +1,8 @@
 import sys
 import wx
 
-from sawx.events import EventHandler
-import sawx.ui.customtreectrl as treectrl
+from maproom.app_framework.events import EventHandler
+import maproom.app_framework.ui.customtreectrl as treectrl
 
 from .layers import Layer
 from .menu_commands import MoveLayerCommand, RenameLayerCommand
@@ -66,6 +66,9 @@ class LayerTreeControl(wx.Panel):
             self.tree.Bind(wx.EVT_MOUSEWHEEL, self.on_mouse_wheel_scroll)
 
         self.user_selected_layer = False
+
+        # This event is used to propagate the newly-selected current layer to
+        # anything that needs to update its UI when the layer changes
         self.current_layer_changed_event = EventHandler(self)
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
@@ -145,7 +148,7 @@ class LayerTreeControl(wx.Panel):
             self.tree.SelectItem(item, True)
             self.tree.EnsureVisible(item)
             # also make sure the layer's name is up-to-date
-            self.tree.SetItemText(item, layer.pretty_name)
+            self.tree.SetItemText(item, layer.ui_label)
             layer.set_visibility_when_selected(self.project.layer_visibility[layer])
 
             return True
@@ -241,7 +244,7 @@ class LayerTreeControl(wx.Panel):
             return self.tree.AddRoot(layer.name, data=data)
 
         vis = self.project.layer_visibility[layer]
-        item = self.tree.AppendItem(parent, layer.pretty_name, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
+        item = self.tree.AppendItem(parent, layer.ui_label, ct_type=treectrl.TREE_ITEMTYPE_CHECK, data=data)
         self.tree.CheckItem2(item, vis["layer"])
         if layer.is_folder() and not layer.grouped:
             # Force the appearance of expand button on folders to be used as
@@ -376,7 +379,7 @@ class LayerTreeControl(wx.Panel):
         self.current_layer_changed_event(layer)
         if prefs.identify_layers and self.user_selected_layer:
             layer.layer_selected_hook()
-            lm.refresh_needed_event(None)
+            self.project.refresh()
         self.user_selected_layer = False
 
     def handle_start_rename(self, event):

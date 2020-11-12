@@ -8,7 +8,7 @@ import wx.adv
 import numpy as np
 import numpy.random as rand
 
-from sawx.ui.dialogs import SimplePromptDialog
+from maproom.app_framework.ui.dialogs import SimplePromptDialog
 
 from . import builtin_discrete_colormaps, builtin_continuous_colormaps, get_colormap, DiscreteColormap, ListedBoundedColormap
 from ...ui.buttons import ColorSelectButton, EVT_COLORSELECT, prompt_for_rgba

@@ -1,7 +1,7 @@
 import sys
 import inspect
 
-from sawx.action import SawxRadioAction
+from maproom.app_framework.action import MafRadioAction
 
 from . import mouse_handler as modes
 
@@ -78,7 +78,7 @@ def get_valid_mouse_mode(mouse_mode, mode_mode_toolbar_name):
     return mouse_mode
 
 
-class MouseModeTool(SawxRadioAction):
+class MouseModeTool(MafRadioAction):
     mouse_mode_cls = None
 
     def calc_name(self, action_key):

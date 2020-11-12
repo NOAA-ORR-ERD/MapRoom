@@ -8,7 +8,7 @@ import os
 import numpy as np
 #import re
 
-from sawx.filesystem import filesystem_path
+from maproom.app_framework.filesystem import filesystem_path
 
 from .common import BaseLayerLoader
 from maproom.layers.particles import ParticleLayer, ParticleFolder, ParticleLegend
@@ -17,7 +17,7 @@ import logging
 log = logging.getLogger(__name__)
 progress_log = logging.getLogger("progress")
 
-from post_gnome import nc_particles
+from maproom.third_party.post_gnome import nc_particles
 
 
 def identify_loader(file_guess):

@@ -1,0 +1,642 @@
+# Base class and utilities for editors. An editor is a UI component that can
+# view and/or edit a particular type of document.
+import os
+import sys
+import json
+
+import wx
+
+from . import action
+from . import errors
+from . import clipboard
+from .preferences import find_editor_preferences
+from .utils import apng
+from .utils import jsonutil
+from .utils.command import DisplayFlags
+from .utils.pyutil import get_plugins
+from .menubar import MenuDescription
+from .filesystem import fsopen as open
+
+import logging
+log = logging.getLogger(__name__)
+clipboard_log = logging.getLogger("maproom.app_framework.clipboard")
+event_log = logging.getLogger("event")
+
+
+def get_editors():
+    return get_plugins('maproom.app_framework.editors', MafEditor)
+
+def find_editor_class_for_document(document):
+    """Find the "best" editor for a given MIME type string.
+
+    First attempts all editors with exact matches for the MIME string,
+    and if no exact matches are found, returns through the list to find
+    one that can edit that class of MIME.
+    """
+    all_editors = get_editors()
+    log.debug(f"find_editor_class_for_file: known editors: {all_editors}")
+    matching_editors = []
+    for editor in all_editors:
+        try:
+            state = editor.can_edit_document_exact(document)
+        except Exception as e:
+            log.debug(f"failure checking editor {editor}: {e}")
+        else:
+            if state:
+                matching_editors.append(editor)
+    log.debug(f"find_editor_class_for_file: exact matches: {matching_editors}")
+
+    if matching_editors:
+        return matching_editors[0]
+
+    # Try generic matches if all else fails
+    for editor in all_editors:
+        if editor.can_edit_document_generic(document):
+            return editor
+    raise errors.UnsupportedFileType(f"No editor available for {document}")
+
+def find_editor_class_by_id(editor_id):
+    """Find the editor class given its class name
+
+    Returns the MafEditor subclass whose `name` class attribute matches
+    the given string.
+    """
+    editors = get_editors()
+    log.debug(f"finding editors using {editors}")
+    for editor in editors:
+        if editor.editor_id == editor_id:
+            return editor
+        if editor_id in editor.compatibility_names:
+            return editor
+    raise errors.EditorNotFound(f"No editor named {editor_id}")
+
+
+class MafEditor:
+    """Base class for a UI component to edit or view a document.
+
+    Documents are of class :class:`MafDocument` and the document type will be
+    determined before the editor is loaded. The document type can be modified
+    during the init process by subclassing :method:`preprocess_document`.
+
+    The menubar and toolbar that should be displayed for this editor are
+    described in class attributes initially, but can be overridden by instance
+    attributes. The descriptions for both menubars and toolbars are arrays of
+    text that the framework uses as class names to look up. `None` represents
+    a separator, and menubars may use nested lists to describe submenus. The
+    :attr:`module_search_order` describes the modules in which to search for
+    both menu actions and toolbar actions. See :mod:`maproom.app_framework.action` for more
+    information on the types of actions and how they are implemented.
+
+    Keybindings are described using a dictionary mapping of the action name
+    to the keybinding string.
+    """
+    editor_id = "sawx_base_editor"
+    ui_name = "Maf Framework Base Editor"
+
+    # list of alternate names for this editor, for compatibility with task_ids
+    # from Maf 1.0
+    compatibility_names = []
+
+    menubar_desc = [
+        ["File",
+            ["New",
+                "new_blank_file",
+                None,
+                "new_file_from_template",
+            ],
+            "new_window",
+            None,
+            "open_file",
+            ["Open Recent",
+                "open_recent",
+            ],
+            None,
+            "save_file",
+            "save_as",
+            None,
+            "quit",
+        ],
+        ["Edit",
+            "undo",
+            "redo",
+            None,
+            "copy",
+            "cut",
+            "paste",
+            None,
+            "prefs",
+        ],
+        ["Help",
+            "about",
+            None,
+            ["Debug",
+                "show_debug_log",
+                "widget_inspector",
+                "raise_exception",
+                "test_progress",
+            ],
+        ],
+    ]
+
+    keybinding_desc = {
+        "new_file": "Ctrl+N",
+        "open_file": "Ctrl+O",
+        "save_file" : "Ctrl+S",
+        "save_as" : "Shift+Ctrl+S",
+        "cut": "Ctrl+X",
+        "copy": "Ctrl+C",
+        "paste": "Ctrl+V",
+    }
+
+    toolbar_desc = [
+        "open_file", "save_file", None, "undo", "redo", None, "copy", "cut", "paste"
+    ]
+
+    statusbar_desc = [
+        ["main", -1],
+        ["debug", -1],
+    ]
+
+    module_search_order = ["maproom.app_framework.actions"]
+
+    tool_bitmap_size = 0  # default size for platform
+
+    preferences_module = "maproom.app_framework.preferences"
+
+    # each editor class uses a single preferences object for all instances, but
+    # can't use normal class inheritance because subclasses will find an
+    # already existing preference object if one in its superclass hierarchy
+    # exists. So, we keep track of preference objects by class
+    _preferences = {}
+
+    # if an editor is marked as transient, it will be replaced if it's the
+    # active frame when a new frame is added.
+    transient = False
+
+    # flag to indicate that the editor needs its own frame, without a tabbed
+    # notebook and thus not shared with any other editor
+    needs_tabness_frame = False
+
+    #### class methods
+
+    @classmethod
+    def get_preferences(cls):
+        if cls not in cls._preferences:
+            prefs = find_editor_preferences(cls.preferences_module)
+            prefs.restore_user_settings()
+            log.debug(f"get_preferences: creating preferences: {prefs}")
+            cls._preferences[cls] = prefs
+        return cls._preferences[cls]
+
+    #### dunder methods
+
+    def __init__(self, document, editor_kwargs=None):
+        self.frame = None
+        self.action_factory_lookup = {}
+        self.document = self.preprocess_document(document, editor_kwargs)
+        self.init_default_values()
+        self.process_keyword_arguments(editor_kwargs)
+        self.create_event_bindings()
+        self.last_loaded_uri = document.uri
+        self.last_saved_uri = None
+        self.show_toolbar = True
+
+    def __str__(self):
+        return f"{self.__class__.__name__}: document={self.document}, prefs={self.get_preferences()}"
+
+    #### properties
+
+    @property
+    def is_dirty(self):
+        return self.document.is_dirty
+
+    @property
+    def can_cut(self):
+        return self.can_copy
+
+    @property
+    def can_copy(self):
+        return False
+
+    @property
+    def can_paste(self):
+        return self.frame.active_editor_can_paste
+
+    @property
+    def best_file_save_dir(self):
+        attempts = []
+        if self.last_saved_uri:
+            # try most recent first
+            attempts.append(self.last_saved_uri)
+        if self.last_loaded_uri:
+            # try directory of last loaded file next
+            attempts.append(self.last_loaded_uri)
+        if self.document is not None and self.document.uri:
+            # path of current file is the final try
+            attempts.append(self.document.uri)
+
+        log.debug(("attempts for best_file_save_dir: %s" % str(attempts)))
+        dirpath = ""
+        for uri in attempts:
+            uri_dir = os.path.dirname(uri)
+            if os.path.exists(uri_dir):
+                dirpath = uri_dir
+                break
+
+        return dirpath
+
+    @property
+    def title(self):
+        if self.document is not None:
+            uri = self.document.uri
+        else:
+            uri = self.last_saved_uri or self.last_loaded_uri
+        if uri:
+            if self.is_dirty:
+                uri = "\u2605" + uri
+            return uri
+        return self.ui_name
+
+    @property
+    def tab_name(self):
+        name = self.ui_name
+        if self.document is not None:
+            name = self.document.name
+        if self.is_dirty:
+            name = "\u2605" + name
+        return name
+
+    @property
+    def is_transient(self):
+        return self.transient or self.__class__ == MafEditor
+
+    @property
+    def editor_summary(self):
+        lines = []
+        lines.append(f"name: {self.ui_name} ({self.editor_id})")
+        lines.append(f"document: {self.document}" % self.document)
+        lines.append(f"flags: is_dirty: {self.is_dirty}\n  can_cut: {self.can_cut}\n  can_copy: {self.can_copy}\n  can_paste: {self.can_paste}" )
+        lines.append(f"last saved: {self.last_saved_uri}")
+        lines.append(f"last loaded: {self.last_loaded_uri}")
+        return "\n".join(lines)
+
+    @property
+    def preferences(self):
+        return self.get_preferences()
+
+    #### document destruction
+
+    def prepare_destroy(self):
+        """Release any resources held by the editor, but don't delete the main
+        control as that will be deleted by the tabbed notebook control.
+        """
+        self.document.halt_background_processing()
+        self.document.prepare_destroy()
+
+    #### document creation
+
+    def preprocess_document(self, source_document, kwargs):
+        """Hook during init time to modify or create a new document from
+        the source document if this editor needs special handling.
+
+        See: `EmulationEditor` for an example
+        """
+        return source_document
+
+    def init_default_values(self):
+        """Hook to initialize default values for each new instance"""
+        pass
+
+    def process_keyword_arguments(self, kwargs):
+        pass
+
+    def create_control(self, parent):
+        return wx.StaticText(parent, -1, "Base class for Maf editors")
+
+    def create_layout(self):
+        """Called after the control has been created to allow for initial setup
+        of the user interface
+        """
+        pass
+
+    def show(self, args=None):
+        """populate the control with the editor's document.
+
+        Can't do this at editor construction time because the control may not
+        exist.
+        """
+        pass
+
+    def create_event_bindings(self):
+        pass
+
+    def idle_when_active(self):
+        """Called during idle events when this editor is the one active editor
+        in the entire application, i.e. the active tab in the active frame.
+        """
+        pass
+
+    #### file load/save
+
+    def can_load_file(self, file_metadata):
+        """Override in subclass if possible to load files into the document.
+        """
+        return False
+
+    def load_file(self, file_metadata):
+        """Override in subclass to actually load file into the document.
+        """
+        pass
+
+    def load_success(self, path=None):
+        if path is None:
+            path = self.document.uri
+        self.last_loaded_uri = path
+        self.update_recent_path(path)
+        self.frame.status_message(f"loaded {path}", True)
+
+    def save_to_uri(self, uri=None):
+        self.document.save(uri)
+        self.save_success()
+
+    def save_success(self, path=None):
+        if path is None:
+            path = self.document.uri
+        self.last_saved_uri = path
+        self.update_recent_path(path)
+        self.frame.status_message(f"saved {path}", True)
+
+    def update_recent_path(self, path):
+        from maproom.app_framework.actions import open_recent
+        open_recent.open_recent.append(path)
+        self.frame.status_message(f"saved {path}", True)
+
+    #### images
+
+    @property
+    def numpy_image_available(self):
+        return True
+
+    def save_as_image(self, uri, raw_data=None):
+        """Saves the image in the specified file.
+
+        Filename extension determines type of image saved.
+        """
+        valid = {
+            '.png': wx.BITMAP_TYPE_PNG,
+            '.tif': wx.BITMAP_TYPE_TIFF,
+            '.tiff': wx.BITMAP_TYPE_TIFF,
+            '.jpg': wx.BITMAP_TYPE_JPEG,
+            '.jpeg': wx.BITMAP_TYPE_JPEG,
+            }
+        _, ext = os.path.splitext(uri)
+        if ext not in valid:
+            uri += ".png"
+            t = wx.BITMAP_TYPE_PNG
+        else:
+            t = valid[ext]
+
+        if raw_data is None:
+            raw_data = self.get_numpy_image()
+        if raw_data is not None:
+            h, w, depth = raw_data.shape
+            image = wx.Image(w, h, raw_data)
+            image.SaveFile(uri, t)
+
+    def get_numpy_image_before_prompt(self):
+        return self.get_numpy_image()
+
+    def get_numpy_image(self):
+        raise NotImplementedError
+
+    #### animation
+
+    @property
+    def numpy_animation_available(self):
+        return False
+
+    def save_as_animation(self, uri, raw_data=None):
+        """Saves the animation in the specified file.
+
+        Filename extension determines type of image saved.
+        """
+        valid = {
+            '.png': wx.BITMAP_TYPE_PNG,
+            '.gif': wx.BITMAP_TYPE_GIF,
+            }
+        _, ext = os.path.splitext(uri)
+        if ext not in valid:
+            uri += ".png"
+            t = wx.BITMAP_TYPE_PNG
+        else:
+            t = valid[ext]
+
+        if raw_data is None:
+            raw_data = self.get_numpy_animation()
+        if raw_data is not None:
+            delay, frames = raw_data
+            print(f"Found {len(frames)} frames, delay={delay}")
+            if len(frames) < 1:
+                raise RuntimeError("No frames to save to animation!")
+            h, w, depth = frames[0].shape
+            movie = apng.APNG()
+            for i, frame in enumerate(frames):
+                print("saving frame", i, frame.shape)
+                movie.append(frame, delay=int(delay * 1000))
+            print("final movie:", movie)
+            movie.save(uri)
+
+    def get_numpy_animation(self):
+        """Return a 2-tuple containing the delay (floating point, in seconds)
+        between frames and the list of numpy images that make up the frames.
+        """
+        raise NotImplementedError
+
+    #### search
+
+    @property
+    def search_start(self):
+        """Return index at which the next search will start.
+        """
+        return 0
+
+    #### popup menu utilities
+
+    def show_popup(self, popup_menu_desc, popup_data=None):
+        """Popup a menu from a description list.
+
+        The menu description is in the same format as the menubar_desc class
+        attribute: a list of action names. The actions will be searched using
+        the search order listed in module_search_order.
+        """
+        valid_id_map = {}
+        menu = MenuDescription("popup", popup_menu_desc, self, valid_id_map, popup_data=popup_data)
+        menu.sync_with_editor(valid_id_map)
+        action_id = self.control.GetPopupMenuSelectionFromUser(menu.menu)
+        if action_id == wx.ID_NONE:
+            log.debug("show_popup: cancelled")
+        else:
+            action_key, action = valid_id_map[action_id]
+            log.debug(f"show_popup: id={action_id}, action_key='{action_key}' action={action}")
+            try:
+                wx.CallAfter(action.perform, action_key)
+            except AttributeError:
+                log.warning(f"no perform method for {action}")
+
+    def popup_context_menu_from_commands(self, window, commands):
+        """Alternate (simple) method for creating a popup window with menu items
+        defined by commands.
+        
+        Each entry is either None to indicate a separator, or a 2-tuple
+        containing the string name and the command instance to process if the
+        menu entry is selected.
+        """
+        popup = wx.Menu()
+        context_menu_data = dict()
+        for entry in commands:
+            if entry is None:
+                popup.AppendSeparator()
+            else:
+                name, cmd = entry
+                i = wx.NewId()
+                popup.Append(i, name)
+                context_menu_data[i] = cmd
+        ret = window.GetPopupMenuSelectionFromUser(popup)
+        if ret == wx.ID_NONE:
+            return
+        cmd = context_menu_data[ret]
+        self.process_command(cmd)
+
+    #### clipboard operations
+
+    supported_clipboard_handlers = []
+
+    @property
+    def supported_clipboard_data(self):
+        return [c[0] for c in self.supported_clipboard_handlers]
+
+    def get_clipboard_handler(self, data_obj):
+        for d, handler_name in self.supported_clipboard_handlers:
+            if d == data_obj:
+                try:
+                    handler = getattr(self.__class__, handler_name)
+                except AttributeError:
+                    handler = getattr(clipboard, handler_name)
+                return handler
+
+    def copy_selection_to_clipboard(self):
+        focused = wx.Window.FindFocus()
+        clipboard_log.debug(f"focused control: {focused}")
+        try:
+            data_objs = self.calc_clipboard_data_from(focused)
+        except ValueError:
+            log.warning("No selection")
+        else:
+            clipboard_log.debug(f"created data objs: {data_objs}")
+            clipboard.set_clipboard_data(data_objs)
+
+    def calc_clipboard_data_from(self, focused):
+        return clipboard.calc_data_objects_from_control(focused)
+
+    def delete_selection(self):
+        focused = wx.Window.FindFocus()
+        log.debug(f"deleting selection from {focused}")
+        self.delete_selection_from(focused)
+
+    def delete_selection_from(self, focused):
+        pass
+
+    def paste_clipboard(self):
+        focused = wx.Window.FindFocus()
+        clipboard_log.debug(f"focused control: {focused}")
+        data_obj = clipboard.get_clipboard_data(self.supported_clipboard_data)
+        if data_obj:
+            handler = self.get_clipboard_handler(data_obj)
+            if handler:
+                handler(self, data_obj, focused)
+            else:
+                clipboard_log.error("No clipboard handler found for data {data_obj}")
+
+    #### command processing
+
+    def calc_status_flags(self):
+        return DisplayFlags()
+
+    def undo(self):
+        undo = self.document.undo_stack.undo(self)
+        self.process_flags(undo.flags)
+        self.frame.sync_active_tab()
+
+    def redo(self):
+        undo = self.document.undo_stack.redo(self)
+        self.process_flags(undo.flags)
+        self.frame.sync_active_tab()
+
+    def end_batch(self):
+        self.document.undo_stack.end_batch()
+
+    def process_command(self, command, batch=None):
+        """Process a single command and immediately update the UI to reflect
+        the results of the command.
+        """
+        event_log.debug(f"\nprocess_command: starting command {command}")
+        f = self.calc_status_flags()
+        undo = self.process_batch_command(command, f, batch)
+        if undo.flags.success:
+            self.process_flags(f)
+        event_log.debug(f"process_command: finished command {command}\n")
+        return undo
+
+    def process_batch_command(self, command, f, batch=None):
+        """Process a single command but don't update the UI immediately.
+        Instead, update the batch flags to reflect the changes needed to
+        the UI.
+        
+        """
+        undo = self.document.undo_stack.perform(command, self, batch)
+        f.add_flags(undo.flags, command)
+        return undo
+
+    def process_flags(self, flags):
+        """Perform the UI updates described by the DisplayFlags instance
+        
+        """
+        log.debug("processing flags: %s" % str(flags))
+        d = self.document
+        visible_range = False
+
+        if flags.message:
+            self.frame.status_message(flags.message)
+
+        if flags.rebuild_ui:
+            log.debug(f"process_flags: rebuild_ui")
+            d.recalc_event(flags=flags)
+        if flags.refresh_needed:
+            log.debug(f"process_flags: refresh_needed")
+            d.recalc_event(flags=flags)
+
+    #### file identification routines
+
+    @classmethod
+    def can_edit_document_exact(cls, document):
+        return False
+
+    @classmethod
+    def can_edit_document_generic(cls, document):
+        return False
+
+    @classmethod
+    def can_edit_document(cls, document):
+        return cls.can_edit_document_exact(document) or cls.can_edit_document_generic(document)
+
+    def calc_usable_action(self, action_key):
+        try:
+            action_factory = self.action_factory_lookup[action_key]
+        except KeyError:
+            if "{" in action_key and action_key.endswith("}"):
+                action_key_lookup, _ = action_key[:-1].split("{", 1)
+            else:
+                action_key_lookup = action_key
+            action_factory = action.find_action_factory(self.module_search_order, action_key_lookup)
+            self.action_factory_lookup[action_key] = action_factory
+        return action_factory(self, action_key)

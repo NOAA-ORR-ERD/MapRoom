@@ -1,6 +1,6 @@
 import os
 
-from sawx import persistence
+from maproom.app_framework import persistence
 
 from .library.thread_utils import BackgroundWMSDownloader
 from .library.tile_utils import BackgroundTileDownloader

@@ -2,7 +2,7 @@ import re
 import json
 import zipfile
 
-from sawx.filesystem import fsopen as open
+from maproom.app_framework.filesystem import fsopen as open
 
 from .common import BaseLoader
 

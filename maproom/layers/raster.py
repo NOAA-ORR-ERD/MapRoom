@@ -59,15 +59,6 @@ class RasterLayer(ProjectedLayer):
         """
         return [self.file_path]
 
-    def get_allowable_visibility_items(self):
-        """Return allowable keys for visibility dict lookups for this layer
-        """
-        return ["images"]
-
-    def visibility_item_exists(self, label):
-        if label == "images":
-            return self.image_data is not None
-
     def check_projection(self):
         # change the app projection to latlong if this image is latlong projection
         # and we don't currently have a mercator image loaded;
@@ -78,10 +69,10 @@ class RasterLayer(ProjectedLayer):
         raster_layers = self.manager.count_raster_layers()
         vector_layers = self.manager.count_vector_layers()
 
-        if raster_layers == 0:
-            self.manager.projection_changed_event(self)
-            return
         e = self.manager.project
+        if raster_layers == 0:
+            e.projection_changed(self)
+            return
         currently_merc = e.layer_canvas.projection.srs.find("+proj=merc") != -1
         currently_longlat = e.layer_canvas.projection.srs.find("+proj=longlat") != -1
         incoming_merc = self.image_data.projection.srs.find("+proj=merc") != -1
@@ -106,7 +97,7 @@ class RasterLayer(ProjectedLayer):
                     self.load_error_string = "Projection conflict"
                     return
 
-                self.manager.projection_changed_event(self)
+                e.projection_changed(self)
 
     def compute_bounding_rect(self, mark_type=state.CLEAR):
         bounds = rect.NONE_RECT

@@ -5,9 +5,9 @@ import functools
 
 import wx
 
-from sawx.filesystem import fsopen as open
-from sawx.filesystem import filesystem_path
-from sawx.events import EventHandler
+from maproom.app_framework.filesystem import fsopen as open
+from maproom.app_framework.filesystem import filesystem_path
+from maproom.app_framework.events import EventHandler
 
 from .library import rect
 
@@ -17,16 +17,16 @@ from . import styles
 from .command import UndoStack, BatchStatus
 from .menu_commands import LoadLayersCommand
 
-from sawx.document import SawxDocument
-from sawx.utils.jsonutil import collapse_json
-from sawx.utils.fileutil import ExpandZip
+from maproom.app_framework.document import MafDocument
+from maproom.app_framework.utils.jsonutil import collapse_json
+from maproom.app_framework.utils.fileutil import ExpandZip
 from .library import colormap
 
 import logging
 log = logging.getLogger(__name__)
 
 
-class LayerManager(SawxDocument):
+class LayerManager(MafDocument):
 
     """
     Manages the layers (a tree of ly.Layer).
@@ -40,29 +40,22 @@ class LayerManager(SawxDocument):
     purpose at present is to hold the folder name.
     """
 
-    # Transient layer always uses invariant
+    # Transient layer always uses invariant -99 and is never saved
     transient_invariant = -99
 
     def __init__(self, file_metadata):
+        # LayerManagers are *almost* independent of the project. Right now it
+        # isn't possible to have multiple views of a project because there are
+        # references to the project in a few vector object classes that are
+        # positioned relative to the screen. The project will be set once it is
+        # added into a ProjectEditor
+        self.project = None
+
         self.default_styles = styles.copy_default_styles()
         self.layers = []
 
-        self.layer_loaded_event = EventHandler(self)
-        self.layers_changed_event = EventHandler(self)
-        self.layer_contents_changed_event = EventHandler(self)
-        self.layer_contents_changed_in_place_event = EventHandler(self)
-        
-        # when points are deleted from a layer the indexes of the points in the
-        # merge dialog box become invalid; so this event will trigger the
-        # user to re-find duplicates in order to create a valid list again
-        self.layer_contents_deleted_event = EventHandler(self)
-
-        self.layer_metadata_changed_event = EventHandler(self)
-        self.projection_changed_event = EventHandler(self)
-        self.refresh_needed_event = EventHandler(self)
-        self.background_refresh_needed_event = EventHandler(self)
-        self.threaded_image_loaded_event = EventHandler(self)
-
+        # the loader used for the MapRoom project file will be stored here so
+        # the project can be reverted to the last saved state.
         self.loader_class = None
 
         # if the project is loaded from a zip file, the ExpandZip object is
@@ -73,6 +66,18 @@ class LayerManager(SawxDocument):
         # Linked control points are slaves of a truth layer: a dict that maps
         # the dependent layer/control point to the truth layer/control point
         self.control_point_links = {}
+
+        # The "layer invariant" is used for undo/redo operations to make sure
+        # that layers can be restored during an undo/redo operation. This
+        # invariant is basically a counter that uniquely identifies the layer
+        # in the order it was loaded. The undo/redo system can't reference by
+        # name because layers can be renamed and therefore not unique.
+        # Storing the layer itself results in problems when a layer gets
+        # removed and then re-added (by an undo then redo) because a new layer
+        # is created for that command.  The layers saved in redos beyond that
+        # command are pointing to the old layer, not the newly created layer,
+        # so stepping into the future operates on the old layer that isn't
+        # displayed.
 
         # In order for the serializer to correcly map the layer invariant to
         # the actual layer, the next_invariant must be preset so first user
@@ -97,15 +102,8 @@ class LayerManager(SawxDocument):
         scale = ly.Scale(self)
         self.insert_layer([index], scale)
 
-        SawxDocument.__init__(self, file_metadata)
-        self.undo_stack = UndoStack()  # replace sawx undo stack with our own
-
-        # LayerManagers are *almost* independent of the project. Right now it
-        # isn't possible to have multiple views of a project because there are
-        # references to the project in a few vector object classes that are
-        # positioned relative to the screen. The project will be set once it is
-        # added into a ProjectEditor
-        self.project = None
+        MafDocument.__init__(self, file_metadata)
+        self.undo_stack = UndoStack()  # replace default undo stack with our own
 
         # # Add hook to create layer instances for debugging purposes
         # if "--debug-objects" in self.project.window.application.command_line_args:
@@ -189,14 +187,15 @@ class LayerManager(SawxDocument):
         # self.dirty = self.layer_manager.undo_stack.is_dirty()
         # self.mouse_mode_factory = mouse_handler.PanMode
         # self.view_document(self.document)
-    
-    def calc_raw_data(self, raw):
-        pass
 
     def create_empty(self):
         self.file_metadata = {'uri': ''}
 
     ##### Serialization
+
+    # Any routine that ends in "_to_json" will be called during the save
+    # process, and the corresponding "_from_json" routine during the load
+    # process, to serialize and unserialize the layer manager data.
 
     def get_to_json_attrs(self):
         return [(m[0:-8], getattr(self, m)) for m in dir(self) if hasattr(self, m[0:-8]) and m.endswith("_to_json")]
@@ -895,7 +894,8 @@ class LayerManager(SawxDocument):
         return layers
 
     def insert_loaded_layer(self, layer, editor=None, before=None, after=None, invariant=None, first_child_of=None, last_child_of=None, mi=None, skip_invariant=None):
-        self.layer_loaded_event(layer)
+        if self.project is not None:
+            self.project.layer_loaded(layer)
         if mi is None:
             mi = self.get_insertion_multi_index(before, after, first_child_of, last_child_of, layer.background, layer.opaque, layer.bounded)
         self.insert_layer(mi, layer, invariant=invariant, skip_invariant=skip_invariant)
@@ -906,7 +906,8 @@ class LayerManager(SawxDocument):
         layer = ly.Layer.load_from_json(json_data, self)[0]
         if old_invariant_map is not None:
             old_invariant_map[json_data['invariant']] = layer
-        self.layer_loaded_event(layer)
+        if self.project is not None:
+            self.project.layer_loaded(layer)
         self.insert_layer(mi, layer)
         if json_data['children']:
             mi.append(1)
@@ -1029,7 +1030,7 @@ class LayerManager(SawxDocument):
     ##### Control points: links between layers
 
     def set_control_point_link(self, dep_or_layer, truth_or_cp, truth_layer=None, truth_cp=None, locked=False):
-        """Links a control point to a truth (master) layer
+        """Links a control point to a truth (source) layer
 
         Parameters can be passed two ways: if only two parameters
         are passed in, they will each be tuples of (layer.invariant,
@@ -1136,6 +1137,12 @@ class LayerManager(SawxDocument):
     ##### Layer load
 
     def load_all_from_json(self, json, batch_flags=None):
+        """DEPRECATED. Load layers from old json format
+
+        This is the old file format where all layers were stored in the same
+        json file. The current storage method is the zip file format,
+        described in load_all_from_zip.
+        """
         order = []
         if json[0] == "extra json data":
             extra_json = json[1]
@@ -1157,6 +1164,8 @@ class LayerManager(SawxDocument):
         return order, extra_json
 
     def load_extra_json_attrs(self, extra_json, batch_flags):
+        """Call the "_from_json" routines to restore layer manager data from json
+        """
         for attr, from_json in self.get_from_json_attrs():
             try:
                 from_json(extra_json)
@@ -1170,6 +1179,36 @@ class LayerManager(SawxDocument):
                 batch_flags.messages.append("WARNING: %s" % message)
 
     def load_all_from_zip(self, zf, batch_flags=None):
+        """Load layers from zip file.
+
+        The zip file format puts each layer in its own directory, and includes
+        a few special files at the root directory to store additional
+        information, such as the metadata needed to specify the connections
+        between layers.
+
+        Examining the contents of the default project zip file shows these entries:
+
+            Archive:  blank_project.maproom
+             Length   Method    Size  Cmpr  Name
+            --------  ------  ------- ----  ----
+                   2  Defl:N        4 100%  pre json data
+                1978  Defl:N      432  78%  post json data
+                 376  Defl:N      206  45%  1-Graticule/json layer description
+                 422  Defl:N      215  49%  2-Scale/json layer description
+                2180  Defl:N      441  80%  3/0-New Annotation/json layer description
+                2180  Defl:N      448  79%  3/1-Rectangle/json layer description
+            --------          -------  ---  -------
+                7138             1746  76%  6 files
+
+        The "pre json data" file is processed before any layers are loaded,
+        and the "post json data" file is processed after all layers are
+        loaded. ("extra json data" is an old, deprecated name for "post json
+        data".) Layers themselves are directories. Directories that have only
+        a number for a name are folders, named a number plus a dash and a text
+        value are normal layers.
+
+        Most layers are described in the file "json layer description". Image layers will have additional file(s) with the image data.
+        """
         expanded_zip = ExpandZip(zf, ["pre json data", "post json data", "extra json data", "json layer description"])
         order = []
         try:
@@ -1225,12 +1264,9 @@ class LayerManager(SawxDocument):
         else:
             return True
 
-    def save_raw_data(self, uri, raw_data):
+    def save_raw_data(self, uri):
         extra_json = self.project.current_extra_json
         return self.save_all_zip(uri, extra_json)
-
-    def calc_raw_data_to_save(self):
-        return None
 
     def process_pre_json_data(self, json):
         # pre json data is stuff that layers need to exist at the time they are
@@ -1262,6 +1298,12 @@ class LayerManager(SawxDocument):
         shapefiles, etc. so the file becomes portable and usable on other
         systems.
 
+        The layers are looped over in order listed in the folder order. Each
+        layer gets its :meth:`serialize_json` method called to generate the
+        json text data that will be stored in the zipfile entry for that
+        layer. If the layer requires image data or additional files, the layer
+        will return data from its :meth:`extra_files_to_serialize` method and
+        those files will be added to the zipfile directly."
         """
         log.debug("saving layers in project file: " + file_path)
         layer_info = self.flatten_with_indexes()

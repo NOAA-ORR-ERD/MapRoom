@@ -2,8 +2,8 @@ import xml.etree.cElementTree as ET
 
 import OpenGL.GL as gl
 
-import glsvg
-from glsvg.glutils import CurrentTransform, DisplayListGenerator
+import maproom.third_party.glsvg as glsvg
+from maproom.third_party.glsvg.glutils import CurrentTransform, DisplayListGenerator
 
 
 class SVGOverlay(glsvg.SVGDoc):

@@ -9,7 +9,7 @@ import maproom.library.rect as rect
 from maproom.library.projection import Projection
 import maproom.preferences
 
-from sawx.ui import progress_dialog
+from maproom.app_framework.ui import progress_dialog
 
 import logging
 log = logging.getLogger(__name__)
@@ -19,6 +19,15 @@ progress_log = logging.getLogger("progress")
 class BaseCanvas(object):
     """Abstract class defining the rendering interface
 
+    The canvas represents the native drawing area, by default in the current
+    implementation is the OpenGL Canvas.
+
+    Each layer gets a renderer object that handles the drawing of that layer
+    on the canvas. This object holds references to each renderer for each
+    layer. The renderer objects hold data for the current state of the
+    graphics in each layer, and the renderer objects need updating when the
+    structure of the layer changes (points or lines get added, colors change,
+    etc.).
     """
 
     def __init__(self, project):
@@ -181,7 +190,7 @@ class BaseCanvas(object):
 #        import traceback
 #        traceback.print_stack();
 #        import code; code.interact( local = locals() )
-        t0 = time.clock()
+        t0 = time.perf_counter()
         log.debug("render: RENDERING at %f" % t0)
         self.update_renderers()
 
@@ -219,7 +228,7 @@ class BaseCanvas(object):
             renderer = self.layer_renderers[layer]
             layer.rebuild_renderer(renderer, True)
 
-        elapsed = time.clock() - t0
+        elapsed = time.perf_counter() - t0
         if progress_dialog.is_active():
             log.debug(f"render: ABORTING RENDERING because progress dialog is active; total time = {elapsed}")
             return
@@ -240,16 +249,18 @@ class BaseCanvas(object):
                     continue
                 log.debug("render: valid times: %s - %s; layer=%s" % (layer.start_time, layer.end_time, layer))
                 if not self.project.is_layer_visible_at_current_time(layer):
-                    log.debug("render: skipping layer %s; not in currently displayed time")
+                    log.debug("render: skipping layer not in current time range: %s")
                     continue
                 if picker.is_active:
                     if layer.pickable:
                         if layer == self.hide_picker_layer:
-                            log.debug("render: Hiding picker layer %s from picking itself" % layer)
+                            log.debug("render: Hiding picker layer from picking itself: %s" % layer)
                             continue
                         elif layer == selected:
+                            log.debug("render: currently selecter layer will render pick buffer after all others: %s" % layer)
                             delayed_pick_layer = (layer, vis)
                         else:
+                            log.debug("render: rendering pick buffer for layer %s" % layer)
                             layer.render(renderer, w_r, p_r, s_r, vis, picker)
                 else:  # not in pick-mode
                     if layer == selected:
@@ -258,6 +269,7 @@ class BaseCanvas(object):
                         layer.render(renderer, w_r, p_r, s_r, vis, picker)
             if delayed_pick_layer is not None:
                 layer, vis = delayed_pick_layer
+                log.debug("render: rendering selected pick layer now: %s" % layer)
                 renderer = self.layer_renderers[layer]
                 layer.render(renderer, w_r, p_r, s_r, vis, picker)
             if control_points_layer is not None:
@@ -280,7 +292,7 @@ class BaseCanvas(object):
             if self.debug_show_picker_framebuffer:
                 self.picker.render_picker_to_screen()
 
-        elapsed = time.clock() - t0
+        elapsed = time.perf_counter() - t0
         self.post_render_update_ui_hook(elapsed, event)
 
         self.finalize_rendering_screen()

@@ -131,6 +131,8 @@ class MergePointsPanel(wx.Panel):
             self.list_view, 1, wx.EXPAND | wx.ALL,
             border=self.SPACING
         )
+        label = wx.StaticText(self, wx.ID_ANY, "Points in red can't be merged automatically.")
+        self.sizer.Add(label, 0, wx.ALIGN_LEFT | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=self.SPACING)
 
         self.remove_button_id = wx.NewId()
         self.remove_button = wx.Button(
@@ -183,6 +185,12 @@ class MergePointsPanel(wx.Panel):
     def on_depth_check(self, event):
         self.depth_slider.Enable(event.IsChecked())
 
+    def set_layer(self, layer):
+        self.layer = layer
+        if (self.layer is None or not self.layer.has_points() or len(self.layer.points) < 2 or not hasattr(self.layer, "find_duplicates")):
+            self.editor.frame.error("You must first select a layer with points in the layer tree.")
+            self.layer = None
+
     def find_duplicates(self, event):
         if not self.IsShownOnScreen():
             # Hack for OS X: default buttons can still get Return key presses
@@ -191,11 +199,8 @@ class MergePointsPanel(wx.Panel):
             return
 
         # at the time the button is pressed, we commit to a layer
-        self.layer = self.editor.current_layer
-        if (self.layer is None or not self.layer.has_points() or len(self.layer.points) < 2 or not hasattr(self.layer, "find_duplicates")):
-            self.editor.frame.error("You must first select a layer with points in the layer tree.")
-            self.layer = None
-
+        self.set_layer(self.editor.current_layer)
+        if (self.layer is None):
             return
 
         depth_value = -1
