@@ -27,6 +27,9 @@ class FileGuess:
         self._zipfile = None
         self._filesystem_path = None
 
+    def __str__(self):
+        return f"FileGuess: {self.uri} is_binary={self.is_binary} is_zipfile={self.is_zipfile}"
+
     @property
     def sample_data(self):
         if self._sample_data is None:
