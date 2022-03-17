@@ -1,4 +1,4 @@
-name: maproom-py37
+name: maproompy37
 channels:
   - NOAA-ORR-ERD
   - conda-forge

@@ -1,0 +1,6 @@
+# appdirs==1.4.3
+fleep==1.0.1
+#jsonpickle==1.1
+#text-unidecode==1.2
+omnivore-framework==4.0
+sawx==1.1.2

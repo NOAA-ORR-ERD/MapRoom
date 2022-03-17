@@ -33,58 +33,63 @@ package_data = {
         ],
 }
 
-install_requires = [
-    'numpy',
-    'scipy',
-    'pyopengl',
-    'cython',
-    'docutils',
-    'markdown',
-    'reportlab',
-    'pyparsing',
-    'requests',
-    'python-dateutil',
-    'pytz',
-    'cftime',  # required by netcdf4 but not always installed?
-    'wxpython',
-    'pillow',
-    'urllib3',
-    'certifi',
-    'chardet',
-    'idna',
-    'packaging',
-    'libmaproom>=5.1',
-    'pyugrid',
-    'lat_lon_parser',
-    'jsonpickle>=0.9.4',
-    'bson<1.0.0',
-    'appdirs',
-    'configobj',
-]
+# setuptools / pip can really make a mess of this
+# install the dependencies manually
+# e.g. conda install --file conda_requirements.txt
 
-if is_conda:
-    install_requires.extend([
-        # 'owslib',  # commented out because it overwrites the conda install of OWSLib
-        'shapely',
-        'pyproj',
-        'netCDF4',
-    ])
-else:
-    install_requires.extend([
-        'owslib',
-        'shapely<1.7',
-        'pyproj==1.9.6',  # pyproj version 2 fails outside the -180/+180 range
-        'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
-    ])
+install_requires = []
+# install_requires = [
+#     'numpy',
+#     'scipy',
+#     'pyopengl',
+#     'cython',
+#     'docutils',
+#     'markdown',
+#     'reportlab',
+#     'pyparsing',
+#     'requests',
+#     'python-dateutil',
+#     'pytz',
+#     'cftime',  # required by netcdf4 but not always installed?
+#     'wxpython',
+#     'pillow',
+#     'urllib3',
+#     'certifi',
+#     'chardet',
+#     'idna',
+#     'packaging',
+#     'libmaproom>=5.1',
+#     'pyugrid',
+#     'lat_lon_parser',
+#     'jsonpickle>=0.9.4',
+#     'bson<1.0.0',
+#     'appdirs',
+#     'configobj',
+# ]
+
+# if is_conda:
+#     install_requires.extend([
+#         # 'owslib',  # commented out because it overwrites the conda install of OWSLib
+#         'shapely',
+#         'pyproj',
+#         'netCDF4',
+#     ])
+# else:
+#     install_requires.extend([
+#         'owslib',
+#         'shapely<1.7',
+#         'pyproj==1.9.6',  # pyproj version 2 fails outside the -180/+180 range
+#         'netCDF4==1.3.1',  # newer versions in pypi fail with missing symbol
+#     ])
 
 
-#if sys.platform != "win32":
-if False:  # disabling for everybody temporarily
-    # pyopengl_accelerate can fail on windows, sometimes. It's not necessary,
-    # so by default I'm not including it.
-    install_requires.extend([
-        'pyopengl_accelerate',
-    ])
+# #if sys.platform != "win32":
+# if False:  # disabling for everybody temporarily
+#     # pyopengl_accelerate can fail on windows, sometimes. It's not necessary,
+#     # so by default I'm not including it.
+#     install_requires.extend([
+#         'pyopengl_accelerate',
+#     ])
 
 setup(
     name="MapRoom",
@@ -98,7 +103,7 @@ setup(
     data_files=data_files,
     packages=packages,
     package_data=package_data,
-    app=["maproom.py"],
+#    app=["maproom.py"],
     entry_points = {
         # NOTE: entry points are processed lexicographically, not in the order
         # specified, so force e.g. verdat loader to come before text loader

@@ -20,7 +20,7 @@ import docutils
 from docutils.core import publish_parts
 
 # Set GDAL_DATA environment variable, needed on windows to find support files
-# to use whhen converting coordinate systems upon load of shapefiles
+# to use when converting coordinate systems upon load of shapefiles
 gdal_path = None
 proj_path = None
 if "CONDA_PREFIX" in os.environ:
@@ -111,6 +111,6 @@ def main(argv):
 
 if __name__ == '__main__':
     import sys
-    
+
     setup_frozen_logging()
     main(sys.argv)

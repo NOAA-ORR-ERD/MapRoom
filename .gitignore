@@ -1,5 +1,12 @@
+# This pacakge stuff
+startup_error_message.txt
+
+
 #OS-X crap
 .DS_Store
+
+# why this is still showing, I don't know.
+.eggs/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
