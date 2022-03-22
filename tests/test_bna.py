@@ -23,7 +23,7 @@ class TestBNA(object):
         assert 33 == len(layer.points)
         assert 3 == len(layer.rings)
         print(layer.points)
-        layer.check_for_problems(None)
+        layer.check_for_problems()
 
     def test_save(self):
         uri = os.path.join(os.getcwd(), "test.bna")

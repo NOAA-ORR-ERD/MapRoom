@@ -223,11 +223,11 @@ def load_bna_file(uri, regimes=None):
 def save_bna_file(f, layer):
     update_every = 1000
     ticks = 0
-    progress_log.info("TICKS=%d" % np.alen(layer.points))
+    progress_log.info("TICKS=%d" % len(layer.points))
     progress_log.info("Saving BNA...")
     for i, p in enumerate(layer.iter_rings()):
         polygon = p[0]
-        count = np.alen(polygon)
+        count = len(polygon)
         ident = p[1]
         f.write('"%s","%s", %d\n' % (ident['name'], ident['feature_code'], count + 1))  # extra point for closed polygon
         for j in range(count):

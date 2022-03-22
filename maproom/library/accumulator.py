@@ -19,7 +19,7 @@ class accumulator(object):
     DEFAULT_BUFFER_SIZE = 128
     BUFFER_EXTEND_SIZE = 1.25  # array.array uses 1+1/16 -- that seems small to me.
 
-    def __init__(self, object=None, dtype=np.float, block_shape=()):
+    def __init__(self, object=None, dtype=np.float64, block_shape=()):
         """
         proper docs here
 

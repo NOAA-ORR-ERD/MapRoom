@@ -1,6 +1,9 @@
-
+"""
+mocking MapRoom for tests
+"""
 
 import os
+import pytest
 
 # Include maproom directory so that maproom modules can be imported normally
 import sys
@@ -8,7 +11,6 @@ maproom_dir = os.path.realpath(os.path.abspath(".."))
 if maproom_dir not in sys.path:
     sys.path.insert(0, maproom_dir)
 
-import pytest
 try:
     slow = pytest.mark.skipif(
         not pytest.config.getoption("--runslow"),

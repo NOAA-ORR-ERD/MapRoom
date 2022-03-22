@@ -11,7 +11,7 @@ from .noaa_logo import NOAALogo
 from .title import Title
 from .timestamp import Timestamp
 from .triangle import TriangleLayer
-from .polygon import RNCLoaderLayer
+from .polygon import RNCLoaderLayer, PolygonLayer
 from .shapefile import ShapefileLayer, RingEditLayer
 from .raster import RasterLayer
 from .wms import WMSLayer

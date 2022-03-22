@@ -24,7 +24,7 @@ progress_log = logging.getLogger("progress")
 
 class PolygonLayer(PointLayer):
     """Layer for polygons.
-    
+
     """
     type = "polygon"
 
@@ -86,10 +86,10 @@ class PolygonLayer(PointLayer):
                  f_ring_identifiers, f_ring_groups=None, style=None):
         if style is not None:
             self.style = style
-        n_points = np.alen(f_ring_points)
+        n_points = len(f_ring_points)
         self.points = data_types.make_points(n_points)
         if (n_points > 0):
-            n_rings = np.alen(f_ring_starts)
+            n_rings = len(f_ring_starts)
             self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[
                 0: n_points
             ] = f_ring_points
@@ -132,7 +132,7 @@ class PolygonLayer(PointLayer):
         total_points = 0
         for i, b in enumerate(boundaries):
             points = b.get_xy_points()
-            num_points = np.alen(points)
+            num_points = len(points)
             if all_points is None:
                 all_points = points
             else:
@@ -157,7 +157,7 @@ class PolygonLayer(PointLayer):
     def get_all_boundaries(self):
         boundaries = []
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
-        for index in range(np.alen(self.rings)):
+        for index in range(len(self.rings)):
             start = self.rings.start[index]
             count = self.rings.count[index]
             indexes = np.arange(start, start + count, dtype=np.uint32)
@@ -168,7 +168,7 @@ class PolygonLayer(PointLayer):
     def get_points_lines(self):
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy
         all_lines = np.empty((0, 2), dtype=np.uint32)
-        for index in range(np.alen(self.rings)):
+        for index in range(len(self.rings)):
             start = self.rings.start[index]
             count = self.rings.count[index]
             lines = np.empty((count, 2), dtype=np.uint32)
@@ -190,7 +190,7 @@ class PolygonLayer(PointLayer):
         formatter = logging.Formatter("%(message)s")
         handler.setFormatter(formatter)
         templog.addHandler(handler)
-        for n in range(np.alen(self.rings)):
+        for n in range(len(self.rings)):
             poly = self.get_shapely_polygon(n)
             if not poly.is_valid:
                 problems.append(poly)
@@ -243,13 +243,13 @@ class PolygonLayer(PointLayer):
         return points, self.ring_identifiers[index]
 
     def iter_rings(self):
-        for n in range(np.alen(self.rings)):
+        for n in range(len(self.rings)):
             poly = self.get_ring(n)
             yield poly
 
     def get_shapely_polygon(self, index, debug=False):
         points, ident = self.get_ring(index)
-        if np.alen(points) > 2:
+        if len(points) > 2:
             poly = Polygon(points)
         else:
             poly = LineString(points)
@@ -292,7 +292,7 @@ class PolygonLayer(PointLayer):
                 self.total_points += num_points
 
         new_polys = AccumulatePolygons()
-        for n in range(np.alen(self.rings)):
+        for n in range(len(self.rings)):
             poly = self.get_shapely_polygon(n)
             try:
                 cropped_poly = crop_rect.intersection(poly)
@@ -364,7 +364,7 @@ class PolygonLayer(PointLayer):
 
 class RNCLoaderLayer(PolygonLayer):
     """Layer for selecting RNC maps
-    
+
     """
     type = "rncloader"
 

@@ -131,6 +131,14 @@ class MockProject(object):
             return cmd
         return None
 
+    def layer_loaded(self, layer):
+        """
+        added because it's used by LayerManager.insert_loaded_layer
+
+        should it do something here? no idea
+        """
+        pass
+
     def load_success(self, uri):
         pass
 

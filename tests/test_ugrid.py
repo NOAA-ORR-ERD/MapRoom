@@ -6,7 +6,7 @@ from pyugrid.ugrid import UGrid
 
 from mock import *
 
-from maproom.layers import loaders
+from maproom import loaders
 from maproom.library.Boundary import Boundaries, PointsError
 
 class TestVerdatConversion(object):
@@ -20,7 +20,7 @@ class TestVerdatConversion(object):
         assert 16 == np.alen(layer.line_segment_indexes)
         layer.insert_line_segment(2, 17)
         assert 17 == np.alen(layer.line_segment_indexes)
-        
+
         b = Boundaries(layer, allow_branches=False)
         with pytest.raises(PointsError):
             b.check_errors(True)
@@ -30,7 +30,7 @@ class TestJetty(object):
         self.project = MockProject()
         self.project.load_file("../TestData/Verdat/jetty.verdat", "application/x-maproom-verdat")
         self.verdat = self.project.layer_manager.get_nth_oldest_layer_of_type("line", 1)
-    
+
     def add_segments(self, point_list):
         start = point_list[0]
         for end in point_list[1:]:
@@ -52,7 +52,7 @@ class TestJetty(object):
         assert 5 == np.alen(layer.line_segment_indexes)
         self.create_jetty()
         assert 16 == np.alen(layer.line_segment_indexes)
-        
+
         b = Boundaries(layer, allow_branches=False)
         with pytest.raises(PointsError):
             b.check_errors(True)
@@ -79,7 +79,7 @@ class TestJetty(object):
         assert 5 == np.alen(layer.line_segment_indexes)
         self.create_channel()
         assert 15 == np.alen(layer.line_segment_indexes)
-        
+
         b = Boundaries(layer, allow_branches=False)
         with pytest.raises(PointsError):
             b.check_errors(True)
@@ -96,20 +96,20 @@ class TestUGrid(object):
     def setup(self):
         self.project = MockProject()
         self.layers = self.project.raw_load_all_layers("../TestData/UGrid/2_triangles.nc", "application/x-nc_ugrid")
-    
+
     def test_load(self):
         assert 2 == len(self.layers)
         layer = self.layers[0]
         assert 'line' == layer.type
         layer = self.layers[1]
         assert 'triangle' == layer.type
-    
+
     def test_problems(self):
         layer = self.layers[0]
         with pytest.raises(PointsError):
-            layer.check_for_problems(None)
+            layer.check_for_problems()
         layer = self.layers[1]
-        layer.check_for_problems(None)
+        layer.check_for_problems()
 
 if __name__ == "__main__":
     t = TestVerdatConversion()
