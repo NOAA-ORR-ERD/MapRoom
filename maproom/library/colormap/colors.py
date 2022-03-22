@@ -44,13 +44,8 @@ Matplotlib recognizes the following formats to specify a color:
 All string specifications of color, other than "CN", are case-insensitive.
 """
 
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
 
-import six
-from six.moves import zip
-
-from collections import Sized
+from collections.abc import Sized
 import itertools
 import re
 import warnings
@@ -96,7 +91,7 @@ def get_named_colors_mapping():
 
 def _is_nth_color(c):
     """Return whether *c* can be interpreted as an item in the color cycle."""
-    return isinstance(c, six.string_types) and re.match(r"\AC[0-9]\Z", c)
+    return isinstance(c, str) and re.match(r"\AC[0-9]\Z", c)
 
 
 def is_color_like(c):
@@ -169,7 +164,7 @@ def _to_rgba_no_colorcycle(c, alpha=None):
     ``"none"`` (case-insensitive), which always maps to ``(0, 0, 0, 0)``.
     """
     orig_c = c
-    if isinstance(c, six.string_types):
+    if isinstance(c, str):
         if c.lower() == "none":
             return (0., 0., 0., 0.)
         # Named color.
@@ -178,7 +173,7 @@ def _to_rgba_no_colorcycle(c, alpha=None):
             c = _colors_full_map[c.lower()]
         except KeyError:
             pass
-    if isinstance(c, six.string_types):
+    if isinstance(c, str):
         # hex color with no alpha.
         match = re.match(r"\A#[a-fA-F0-9]{6}\Z", c)
         if match:
@@ -244,7 +239,7 @@ def to_rgba_array(c, alpha=None):
     # Note that this occurs *after* handling inputs that are already arrays, as
     # `to_rgba(c, alpha)` (below) is expensive for such inputs, due to the need
     # to format the array in the ValueError message(!).
-    if isinstance(c, six.string_types) and c.lower() == "none":
+    if isinstance(c, str) and c.lower() == "none":
         return np.zeros((0, 4), float)
     try:
         return np.array([to_rgba(c, alpha)], float)
@@ -707,7 +702,7 @@ class LinearSegmentedColormap(Colormap):
             raise ValueError('colors must be iterable')
 
         if (isinstance(colors[0], Sized) and len(colors[0]) == 2
-                and not isinstance(colors[0], six.string_types)):
+                and not isinstance(colors[0], str)):
             # List of value, color pairs
             vals, colors = list(zip(*colors))
         else:
@@ -754,7 +749,7 @@ class LinearSegmentedColormap(Colormap):
             return func_r
 
         data_r = dict()
-        for key, data in six.iteritems(self._segmentdata):
+        for key, data in self._segmentdata.items():
             if callable(data):
                 data_r[key] = factory(data)
             else:
@@ -800,7 +795,7 @@ class ListedColormap(Colormap):
             self.colors = colors
             N = len(colors)
         else:
-            if isinstance(colors, six.string_types):
+            if isinstance(colors, str):
                 self.colors = [colors] * N
                 self.monochrome = True
             elif cbook.iterable(colors):
