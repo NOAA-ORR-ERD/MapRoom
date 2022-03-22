@@ -2833,7 +2833,8 @@ class CustomTreeCtrl(wx.ScrolledWindow):
             agwStyle &= ~TR_LINES_AT_ROOT
             agwStyle |= TR_NO_LINES
 
-            platform, major, minor = wx.GetOsVersion()
+            # example: (2, 11, 6, 5) on OS-X 11.6.5
+            platform, major, minor, patch = wx.GetOsVersion()
             if major < 10:
                 agwStyle |= TR_ROW_LINES
 

@@ -12,6 +12,7 @@ import sys
 
 from Cython.Distutils import build_ext
 from setuptools import setup, Extension
+from ctypes.util import find_library
 
 
 version_path = "../maproom/_version.py"
@@ -19,21 +20,28 @@ exec(compile(open(version_path).read(), version_path, 'exec'))
 
 # find the various headers, libs, etc.
 import numpy
+gl_libraries = []
 gl_include_dirs = [numpy.get_include()]
 gl_library_dirs = []
-gl_libraries = ["GL", "GLU"]
+extra_link_args = []
 
 if sys.platform.startswith("win"):
     gl_libraries = ["opengl32", "glu32"]
 elif sys.platform == "darwin":
-    gl_include_dirs.append(
-        "/System/Library/Frameworks/OpenGL.framework/Headers",
-    )
-    gl_library_dirs.append(
-        "/System/Library/Frameworks/OpenGL.framework/Libraries",
-    )
+#    gl_libraries = ["GL", "GLU"]
 
-# Definintion of compiled extension code:
+    extra_link_args.extend(("-framework", "OpenGL"))
+
+    # gl_include_dirs.append(
+    #     "/System/Library/Frameworks/OpenGL.framework/Headers",
+    # )
+    # gl_library_dirs.append(
+    #      # find_library("OpenGL"),
+    #      "/System/Library/Frameworks/OpenGL.framework/"
+    #      # "/System/Library/Frameworks/OpenGL.framework/Libraries",
+    # )
+
+# Definition of compiled extension code:
 bitmap = Extension("libmaproom.Bitmap",
                    sources=["libmaproom/Bitmap.pyx"],
                    include_dirs=[numpy.get_include()],
@@ -51,6 +59,7 @@ tessellator = Extension("libmaproom.Tessellator",
                         include_dirs=gl_include_dirs,
                         library_dirs=gl_library_dirs,
                         libraries=gl_libraries,
+                        extra_link_args=extra_link_args,
                         extra_compile_args = ["-O3" ],
                         )
 
@@ -59,6 +68,7 @@ render = Extension("libmaproom.Render",
                    include_dirs=gl_include_dirs,
                    library_dirs=gl_library_dirs,
                    libraries=gl_libraries,
+                   extra_link_args=extra_link_args,
                    extra_compile_args = ["-O3" ],
                    )
 
@@ -69,7 +79,7 @@ DEFINES = [("TRILIBRARY", None), # this builds Triangle as a lib, rather than as
            ("REDUCED", None),
            ]
 
-# Add the defines for disabling the FPU extended precision           ] 
+# Add the defines for disabling the FPU extended precision           ]
 ## fixme: this needs a lot of work!
 ##        it's really compiler dependent, not machine dependent
 if sys.platform == 'darwin':
@@ -79,8 +89,8 @@ if sys.platform == 'darwin':
     ## nothing special is required on OS-X !
     ##
     ## """
-    ##     the precision is always determined by the largest operhand type in C.
-    ## 
+    ##     the precision is always determined by the largest operand type in C.
+    ##
     ##     Because of this, Mac OS X does not provide any C wrapper macros to
     ##     change the internal precision setting of the x87 FPU. It is simply
     ##     not necessary. Should this really be wanted, inline assembler would
@@ -112,7 +122,7 @@ pytriangle = Extension(
 # Extension module is named libmaproom.contour rather than libmaproom.py_contour
 # because imports get confused with the py_contour source directory within the libmaproom
 # directory (error message "dynamic module doesn't define module export function"), but
-# moving the py_contour directory outside of the libmaproom directory doesn't seem to help. 
+# moving the py_contour directory outside of the libmaproom directory doesn't seem to help.
 py_contour = Extension(
     "libmaproom.contour",
     sources = [

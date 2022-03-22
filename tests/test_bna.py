@@ -6,7 +6,8 @@ import numpy as np
 
 from mock import *
 
-from maproom.layers import loaders, TriangleLayer
+from maproom import loaders
+# from maproom.layers import TriangleLayer
 from maproom.library.Boundary import Boundaries, PointsError
 
 class TestBNA(object):
@@ -23,7 +24,7 @@ class TestBNA(object):
         assert 3 == len(layer.rings)
         print(layer.points)
         layer.check_for_problems(None)
-    
+
     def test_save(self):
         uri = os.path.join(os.getcwd(), "test.bna")
         loaders.save_layer(self.bna, uri)

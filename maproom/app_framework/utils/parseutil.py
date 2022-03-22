@@ -5,7 +5,7 @@
 import numpy as np
 
 from pyparsing import Word, nums, hexnums, alphas, alphanums, Combine, oneOf, Optional, \
-    opAssoc, operatorPrecedence, ParseException, ParserElement, Literal, Regex, pyparsing_common
+    opAssoc, infix_notation, ParseException, ParserElement, Literal, Regex, pyparsing_common
 
 ParserElement.enablePackrat()
 
@@ -198,7 +198,7 @@ class NumpyIntExpression():
 
     # use parse actions to attach EvalXXX constructors to sub-expressions
     operand.setParseAction(EvalConstant)
-    arith_expr = operatorPrecedence(operand,
+    arith_expr = infix_notation(operand,
         [(signop, 1, opAssoc.RIGHT, EvalSignOp),
          (multop, 2, opAssoc.LEFT, EvalMultOp),
          (plusop, 2, opAssoc.LEFT, EvalAddOp),
@@ -252,7 +252,7 @@ class NumpyFloatExpression():
 
     # use parse actions to attach EvalXXX constructors to sub-expressions
     operand.setParseAction(EvalFloatConstant)
-    arith_expr = operatorPrecedence(operand,
+    arith_expr = infix_notation(operand,
         [(signop, 1, opAssoc.RIGHT, EvalSignOp),
          (multop, 2, opAssoc.LEFT, EvalMultOp),
          (plusop, 2, opAssoc.LEFT, EvalAddOp),
