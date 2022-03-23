@@ -5,8 +5,8 @@ import numpy as np
 from pyugrid.ugrid import UGrid
 
 from mock import *
-
-from maproom.layers import loaders, TriangleLayer
+from maproom import loaders
+from maproom.layers import TriangleLayer
 from maproom.library.Boundary import Boundaries, PointsError
 
 
@@ -24,13 +24,13 @@ class TestTriangulate(object):
         print(self.verdat)
         assert 23 == np.alen(self.verdat.points)
         print(self.verdat.points)
-        
+
         tris = TriangleLayer(manager=self.project.layer_manager)
         tris.triangulate_from_layer(self.verdat, None, None)
-        
+
         uri = os.path.join(os.getcwd(), "negative-depth-triangles.nc")
         loaders.save_layer(tris, uri)
-        
+
         t2 = self.project.raw_load_first_layer("negative-depth-triangles.nc", "application/x-nc_ugrid")
         print(t2.points)
         assert 23 == np.alen(t2.points)
@@ -39,13 +39,13 @@ class TestTriangulate(object):
         self.load_verdat("../TestData/Verdat/011795pts.verdat")
         print(self.verdat)
         assert 11795 == np.alen(self.verdat.points)
-        
+
         tris = TriangleLayer(manager=self.project.layer_manager)
         tris.triangulate_from_layer(self.verdat, None, None)
-        
+
         uri = os.path.join(os.getcwd(), "test011795.nc")
         loaders.save_layer(tris, uri)
-        
+
         t2 = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
         print(t2)
         assert 11795 == np.alen(t2.points)

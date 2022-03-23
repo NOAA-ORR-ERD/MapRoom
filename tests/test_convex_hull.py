@@ -6,7 +6,7 @@ from mock import *
 
 from maproom.library.point_utils import create_convex_hull
 
-from maproom.layers import loaders
+from maproom import loaders
 
 
 class TestConvexHull(object):
@@ -23,7 +23,7 @@ class TestConvexHull(object):
         print(self.verdat)
         assert 689 == np.alen(self.verdat.points)
         print(self.verdat.points)
-        
+
         layer, err = create_convex_hull([self.verdat], self.project.layer_manager)
         print(layer)
 

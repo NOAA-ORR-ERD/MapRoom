@@ -6,10 +6,11 @@ from mock import *
 
 from maproom import loaders
 from maproom.loaders import shapefile
-from maproom.layers import PolygonParentLayer
+from maproom.layers import ShapefileLayer
 from maproom.library.Boundary import Boundaries, PointsError
 
 from maproom.renderer.gl.data_types import make_points_from_xy
+
 
 
 class TestEmptyShapefile(object):
@@ -18,7 +19,7 @@ class TestEmptyShapefile(object):
 
     def test_empty_layer(self):
         lm = self.project.layer_manager
-        layer = PolygonParentLayer(manager=lm)
+        layer = ShapefileLayer(manager=lm)
         layer.new()
         lm.insert_loaded_layer(layer)
 
@@ -53,10 +54,10 @@ class TestBNAShapefile(object):
         print(len(self.bna.points))
         assert len(self.bna.rings) == 3
         assert 33 == np.alen(self.bna.points)
-        
+
         uri = os.path.join(os.getcwd(), "tmp.3polys.shp")
         loaders.save_layer(self.bna, uri)
-        
+
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-shapefile")
         assert 33 == np.alen(layer.points)
 
@@ -147,7 +148,8 @@ class TestESRIShapefile(object):
         print(out)
 
         uri = os.path.join(os.getcwd(), "tmp.save_feature_list.shp")
-        shapefile.write_feature_list_as_shapefile(uri, layer.points, out, proj)
+        shapefile.write_feature_list_as_shapefile(uri, layer.points)
+#        shapefile.write_feature_list_as_shapefile(uri, layer.points, out, proj)
 
         loader = shapefile.ShapefileLoader()
         layers = loader.load_layers(uri, self.project.layer_manager)

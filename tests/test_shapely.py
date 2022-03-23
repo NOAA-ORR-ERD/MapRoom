@@ -6,7 +6,8 @@ from shapely.geometry import box, Polygon, MultiPolygon, LineString, MultiLineSt
 
 from mock import *
 
-from maproom.layers import loaders, TriangleLayer
+from maproom import loaders
+from maproom.layers import TriangleLayer
 from maproom.library.Boundary import Boundaries
 from maproom.library.shapely_utils import load_shapely2
 
@@ -17,7 +18,7 @@ class ClipBase(object):
         geom_poly = self.get_clip_object()
         print("geom_poly")
         print(geom_poly)
-        
+
         # Create 4 square polygons
         geom_poly_envelope = geom_poly.bounds
         minX = geom_poly_envelope[0]
@@ -48,10 +49,10 @@ class ClipBase(object):
         clipBottomRight = box(coord7[0], coord7[1], coord5[0], coord5[1])
         print("BottomRight")
         print(clipBottomRight.bounds)
-        
+
         # Note: polygons must be in a list
         clip = MultiPolygon([clipTopLeft, clipBottomRight])
-        
+
         print("clip")
         print(clip.is_valid)
         print(clip.bounds)

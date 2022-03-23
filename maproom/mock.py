@@ -139,6 +139,19 @@ class MockProject(object):
         """
         pass
 
+    def layer_contents_changed(self, layer):
+        """
+        Added because it's called in TriangleLayer.triangulate_from_data()
+        """
+        pass
+
+    def layer_metadata_changed(self, layer):
+        """
+        Added because it's called in TriangleLayer.triangulate_from_data()
+        """
+        pass
+
+
     def load_success(self, uri):
         pass
 

@@ -4,7 +4,8 @@ import numpy as np
 
 from mock import *
 
-from maproom.layers import loaders, TriangleLayer
+from maproom import loaders
+from maproom.layers import TriangleLayer
 from maproom.library.Boundary import Boundaries, PointsError
 
 class TestVerdat(object):

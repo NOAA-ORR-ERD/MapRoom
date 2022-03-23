@@ -20,7 +20,7 @@ def get_known_loaders():
     return _loaders
 
 def load_layers_from_url(url, mime, manager=None):
-    from maproom.app_framework.utils.file_guess import FileGuess
+    from maproom.app_framework.utils.loader import FileGuess
 
     guess = FileGuess(url)
     guess.metadata.mime = mime
