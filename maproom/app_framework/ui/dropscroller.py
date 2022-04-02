@@ -69,7 +69,7 @@ class ListDropScrollerMixin(object):
         """
         if self._auto_scroll_timer == None:
             self._auto_scroll_timer = wx.Timer(self, wx.TIMER_ONE_SHOT)
-            self._auto_scroll_timer.Start(self._auto_scroll_interval)
+            self._auto_scroll_timer.Start(int(self._auto_scroll_interval))
         self._auto_scroll = direction
 
     def _stopAutoScrollTimer(self):
@@ -102,7 +102,7 @@ class ListDropScrollerMixin(object):
     def getDropIndex(self, x, y, index=None, flags=None, insert=True):
         """Find the index to insert the new item, which could be
         before or after the index passed in.
-        
+
         @return: if insert is true, return value is the index of the insert
         point (i.e.  the new data should be inserted at that point, pushing
         the existing data further down the list).  If insert is false, the
@@ -514,15 +514,15 @@ class ReorderableList(wx.ListCtrl, listctrl.ListCtrlAutoWidthMixin, ListDropScro
 
     def change_list(self, new_order, make_selected=[]):
         """Reorder the list given the new list of indexes.
-        
+
         The new list will be constructed by building up items based on the
         indexes specified in new_order as taken from the current list.  The
         ListCtrl contents is then replaced with the new list of items.  Items
         may also be deleted from the list by not including items in the
         new_order.
-        
+
         @param new_order: list of indexes used to compose the new list
-        
+
         @param make_selected: optional list showing indexes of original order
         that should be marked as selected in the new list.
         """

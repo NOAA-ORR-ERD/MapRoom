@@ -127,7 +127,7 @@ class CanvasImageDialog(wx.Dialog):
             self.is_synced = True
 
     def on_draw(self, evt):
-        self.canvas.on_draw(evt)  # initialize GL 
+        self.canvas.on_draw(evt)  # initialize GL
         self.sync_from_source()
         evt.Skip()
 
@@ -414,7 +414,7 @@ class ScreenCanvas(glcanvas.GLCanvas, BaseCanvas):
             self.minimum_delay_timers[timer.GetId()] = (timer, callback)
             log.debug("created timer %d for callback %s" % (timer.GetId(), callback))
 
-        timer.Start(delay, oneShot=True)
+        timer.Start(int(delay), oneShot=True)
 
     def new_renderer(self, layer):
         r = ImmediateModeRenderer(self, layer)

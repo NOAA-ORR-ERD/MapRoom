@@ -281,7 +281,7 @@ class LabeledRuler(RulerCtrl):
             if pos < left - 100 or pos > right + 100:
                 #print "skipping major: %s" % label.text, pos, left, right
                 continue
-            
+
             #print "plotting major: %s" % label.text, pos, left, right
 
             if pos < leftmost_major_pos:
@@ -291,7 +291,7 @@ class LabeledRuler(RulerCtrl):
 
             dc.DrawLine(self._left + pos - x, self._bottom - 5,
                 self._left + pos - x, self._bottom)
-            
+
             if label.text != "":
                 dc.DrawText(label.text, self._left + label.lx - x, label.ly - 4)
 
@@ -303,7 +303,7 @@ class LabeledRuler(RulerCtrl):
                 #print text, left, self._left
                 dc.DrawText(text, self._left + left + 1 - x, self._bottom - strh - 10)
                 leftmost_clear_zone = int(left + (strw * 1.8))
-        
+
         dc.SetFont(self._minorfont)
 
         for label in self._minorlabels:
@@ -315,7 +315,7 @@ class LabeledRuler(RulerCtrl):
 
             dc.DrawLine(self._left + pos - x, self._bottom - 3,
                 self._left + pos - x, self._bottom)
-            
+
             if label.lx == 0:
                 continue
 
@@ -418,16 +418,16 @@ class LabeledRuler(RulerCtrl):
 
         self._maxwidth = self._length
         self._maxheight = 0
-        
+
         step, major_step = self.step_size()
 
         self._middlepos = []
-            
+
         # Left and Right Edges
         if self._labeledges:
             self.Tick(dc, 0, self._min, True)
             self.Tick(dc, self._length, self._max, True)
-        
+
         # starting point
         value, _ = divmod(self._min - step/2, step)
         value = int(value * step)
@@ -443,7 +443,7 @@ class LabeledRuler(RulerCtrl):
                 # print "offscreen", value
                 pass
             value += step
-            
+
         self._valid = True
 
 
@@ -452,7 +452,7 @@ class VirtualLabeledRuler(LabeledRuler):
                  style=wx.STATIC_BORDER, orient=wx.HORIZONTAL):
         self.common_init()
 
-        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)        
+        self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
         width, height = size
 
         self._min = 0.0
@@ -465,7 +465,7 @@ class VirtualLabeledRuler(LabeledRuler):
         self._log = False
         self._labeledges = False
         self._units = ""
-        
+
         self._drawingparent = None
         self._drawingpen = wx.Pen(wx.BLACK, 2)
 
@@ -633,7 +633,7 @@ class ZoomRulerBase(object):
             # reset caret value so the first timer callback will occur on the
             # 1st (earliest) time, not the 2nd time.
             self.caret_value -= self.step_value
-            self.playback_timer.Start(self.step_rate * 1000)
+            self.playback_timer.Start(int(self.step_rate) * 1000)
             self.playback_state = "playing"
             self.playback_start_callback()
 
@@ -1104,7 +1104,7 @@ class VirtualZoomRuler(wx.ScrolledWindow, ZoomRulerBase, VirtualLabeledRuler):
         """
         Handles the ``wx.EVT_PAINT`` event for :class:`RulerCtrl`.
 
-        :param `event`: a :class:`PaintEvent` event to be processed.        
+        :param `event`: a :class:`PaintEvent` event to be processed.
         """
         self.clear_and_paint()
 

@@ -79,7 +79,7 @@ class ProgressDialog(wx.Dialog):
 
     def start_visibility_timer(self):
         if not self._delaytimer.IsRunning():
-            self._delaytimer.Start(self.delay, oneShot=True)
+            self._delaytimer.Start(int(self.delay), oneShot=True)
 
     def stop_visibility_timer(self):
         if self._delaytimer.IsRunning():
@@ -158,7 +158,7 @@ class wxLogHandler(logging.Handler):
     def __init__(self, default_title=""):
         """
         Initialize the handler
-        @param wxDest: the destination object to post the event to 
+        @param wxDest: the destination object to post the event to
         @type wxDest: wx.Window
         """
         logging.Handler.__init__(self)
