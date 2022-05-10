@@ -1,8 +1,8 @@
-python=3.10.*
+# these should all be on conda-forge
+python=3.9.*
 appdirs
 bson
 configobj
-cython=0.29.*
 docutils
 gdal
 jsonpickle
@@ -13,10 +13,13 @@ numpy
 pillow
 owslib
 pyopengl
+# no build for 3.9 yet
+# pyopengl-accelerate
 pyparsing
 pyproj
 python-dateutil
 python-slugify
+# Are we really using this -- it's in the pdf renderer, but is that functional?
 reportlab
 scipy
 shapely

@@ -26,20 +26,14 @@ Configure the conda global environment with::
 
     conda config --add channels conda-forge
     conda config --add channels NOAA-ORR-ERD
-    conda install conda-build
 
 Create and populate the MapRoom virtual environment with::
 
-    conda create --name maproom-test python=3.8
+    conda create --name maproom-test --file conda_requirements.txt
     activate maproom-test
 
-Install the dependencies that conda can install::
 
-    conda install numpy pillow pytest-cov cython docutils markdown requests configobj netcdf4 reportlab python-dateutil gdal pyproj shapely pyopengl wxpython owslib scipy pyugrid
-
-and the dependencies that aren't in conda::
-
-    pip install sawx omnivore-framework
+NOTE: maybe still required ??? ``pip install sawx``
 
 Additionally, on MacOS only, install the ``pythonw`` command that allows programs to use GUI frameworks (like wxPython)::
 
@@ -54,14 +48,25 @@ Install the source code if you have not already::
     git clone git@gitlab.orr.noaa.gov:erd/MapRoom.git
     cd maproom
 
-To develop, MapRoom must be installed as it uses entry points than must be registered with
-the python interpreter::
+Build ``libmaproom`` (or install the wheel, if there's an appropriate one there)::
+
+  cd libmaproom
+  python setup.py install
+
+
+To run or work on the code, MapRoom must be installed as it uses entry points than must be registered with the python interpreter::
 
     python setup.py develop
 
 and then run MapRoom by::
 
-    python maproom TestData/Verdat/000011.verdat
+    python maproom.py
+
+or::
+
+    pythonw maproom.py
+
+on the Mac
 
 
 Building redistributable versions

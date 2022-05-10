@@ -124,11 +124,7 @@ def markdown_text_formatter(text):
 
 class OffScreenHTML(object):
     """
-    test of rendering HTML to an off-screen bitmap
-
-    This version uses a wx.GCDC, so you can have an alpha background.
-
-    Works on OS-X, may need an explicite alpha bitmap on other platforms
+    Rendering HTML to an off-screen bitmap
 
     Specifying a height of -1 will return an image that contains the entire
     height of the text
@@ -166,17 +162,20 @@ class OffScreenHTML(object):
         dc = self.setup(source, bitmap, face, size)
 
         # Calculate the height of the final rendered text
-        y = ylast = 0
-        while True:
-            y = self.hr.Render(0, 0, [], y, True, y + self.height)
-            if y == ylast or y < 0:
-                break
-            ylast = y
-        if ylast < self.height:
-            ylast = self.height
+        # y = ylast = 0
+        # while True:
+        #     y = self.hr.Render(0, 0, [], y, True, y + self.height)
+        #     y = self.hr.Render(0, 0, [], y, True, y + self.height)
+        #     if y == ylast or y < 0:
+        #         break
+        #     ylast = y
+        # if ylast < self.height:
+        #     ylast = self.height
+        self.hr.Render(0, 0)
+        ylast = self.hr.GetTotalHeight()
         bitmap = wx.Bitmap(self.width, ylast)
         dc = self.setup(source, bitmap, face, size)
-        self.hr.Render(0, 0, [])
+        self.hr.Render(0, 0)
 
         if self.height < 0:
             h = self.hr.GetTotalHeight()
