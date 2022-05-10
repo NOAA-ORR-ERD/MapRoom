@@ -1,0 +1,4 @@
+# extra stuff we need for development
+# these should all be on conda-forge
+cython=0.29
+pytest
