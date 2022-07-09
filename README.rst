@@ -2,12 +2,14 @@
 MapRoom 5
 =========
 
-A product of the Emergency Response Division of the `NOAA <http://www.noaa.gov/>`_ `Office of
+MapRoom is a desktop application used to make maps to support trajecotry analysis and other support products. It supports a wide variety of base maps (Nautical Charts, assorted WMS and Tile services), The ability to present the results of the `NOAA GNOME Model <https://gnome.orr.noaa.gov>`_, and easy additon of geo-refrences notations.
+
+
+MapRoom is a a product of the Emergency Response Division of the `NOAA <http://www.noaa.gov/>`_ `Office of
 Response and Restoration <http://response.restoration.noaa.gov/>`_.
-Visit the `Response And Restoration Blog
-<https://usresponserestoration.wordpress.com/>`_ to see some `examples of
-MapRoom <https://usresponserestoration.wordpress.com/2015/12/16/on-the-hunt-for-shipping-containers-lost-off-california-coast/>`_
-in use.
+Visit the Office of Response And Restoration Blog to see some
+`examples of MapRoom in use <https://response.restoration.noaa.gov/about/media/hunt-shipping-containers-lost-california-coast.html>`_
+
 
 The newest versions for Mac OS X and Windows are on the `download page <https://gitlab.orr.noaa.gov/erd/MapRoom/wikis/downloads>`_.
 
