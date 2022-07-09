@@ -2,7 +2,13 @@
 MapRoom 5
 =========
 
-MapRoom is a desktop application used to make maps to support trajecotry analysis and other support products. It supports a wide variety of base maps (Nautical Charts, assorted WMS and Tile services), The ability to present the results of the `NOAA GNOME Model <https://gnome.orr.noaa.gov>`_, and easy additon of geo-refrences notations.
+
+MapRoom is a desktop application used to make maps to support trajectory analysis and other support products. It supports a wide variety of base maps (Nautical Charts, assorted WMS and Tile services), The ability to present the results of the `NOAA GNOME Model <https://gnome.orr.noaa.gov>`_, and easy addition of geo-referenced notations.
+
+.. image:: MapRoomExample.png
+   :alt: Example map made with MapRoom from GNOME results with annotations
+   :width: 800
+   :align: center
 
 
 MapRoom is a a product of the Emergency Response Division of the `NOAA <http://www.noaa.gov/>`_ `Office of
@@ -213,13 +219,13 @@ used directly by MapRoom to help accelerate rendering. The other 2 are
 standalone modules for accelerating specific tasks: pytriangle for creating
 triangular meshes, and py_contour for creating contours of particle layers.
 
-libmaproom/libmaproom/*.pyx files
---------------------------------------
+``libmaproom/libmaproom/*.pyx`` files
+-------------------------------------
 
 The 4 Cython files (.pyx) are helpers for OpenGL rendering.
 
-libmaproom/libmaproom/py_contour/
---------------------------------------
+``libmaproom/libmaproom/py_contour/``
+-------------------------------------
 
 This is a copy of the py_contour code found `here
 <https://github.com/NOAA-ORR-ERD/py_contour>`_. There are no changes to the
@@ -1293,7 +1299,7 @@ isn't present in the JSON data.
 Code Architecture - UGrid Layer
 ==================================================
 
-The layer ``maproom.layers.line.LineLayer" is capable of displaying point and
+The layer ``maproom.layers.line.LineLayer`` is capable of displaying point and
 lines using lat/lon coordinates. Several file formats support line layers,
 including:
 
@@ -1415,7 +1421,7 @@ text names for these), as well as text names for the ``feature_code`` and
 A ``feature_list`` is a list of items, where each item is itself a list. Each
 sub-list consists of a string identifier and one or more GeomInfo objects. For
 example, this feature_list contains 2 entries: a polygon and a polygon with a
-hole.
+hole. ::
 
     [
        ['Polygon', GeomInfo(start_index=0, count=5, name='', feature_code=1, feature_name='1')],
@@ -1427,7 +1433,7 @@ The feature list is used when exporting to a shapefile.
 
 
 Code Architecture - Vector Object Layers
-==================================================
+========================================
 
 Annotation objects are defined in ``maproom.layers.vector_object_layer``. They
 include graphical elements like lines, rectangles, circles, and polygons that
