@@ -59,8 +59,8 @@ class ImmediateModeRenderer():
 
     def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
-            num_points = np.alen(xy)
-        if self.vbo_point_xys is None or np.alen(self.vbo_point_xys.data) != num_points:
+            num_points = len(xy)
+        if self.vbo_point_xys is None or len(self.vbo_point_xys.data) != num_points:
             storage = np.zeros((num_points, 2), dtype=np.float32)
             self.vbo_point_xys = gl_vbo.VBO(storage)
         if color is not None:
@@ -72,10 +72,10 @@ class ImmediateModeRenderer():
         # simultaneously. So vbo_line_segment_point_xys is needed to color each
         # line segment individually.
         self.world_line_segment_points = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
-        if self.vbo_line_segment_point_xys is None or np.alen(self.vbo_line_segment_point_xys.data) != np.alen(self.world_line_segment_points):
+        if self.vbo_line_segment_point_xys is None or len(self.vbo_line_segment_point_xys.data) != len(self.world_line_segment_points):
             storage = np.zeros((len(self.world_line_segment_points), 2), dtype=np.float32)
             self.vbo_line_segment_point_xys = gl_vbo.VBO(storage)
-        self.vbo_line_segment_point_xys[: np.alen(self.world_line_segment_points)] = self.world_line_segment_points
+        self.vbo_line_segment_point_xys[: len(self.world_line_segment_points)] = self.world_line_segment_points
         if (color is not None):
             # double the colors since each segment has two vertexes
             segment_colors = np.c_[color, color].reshape(-1)
@@ -103,7 +103,7 @@ class ImmediateModeRenderer():
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
 
-            gl.glDrawArrays(gl.GL_LINES, 0, np.alen(self.vbo_line_segment_point_xys.data))
+            gl.glDrawArrays(gl.GL_LINES, 0, len(self.vbo_line_segment_point_xys.data))
 
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 
@@ -154,7 +154,7 @@ class ImmediateModeRenderer():
                         gl.glColor(r, g, b, a)
                     else:
                         gl.glColor(1, 1, 1, 0.75)
-                    gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
+                    gl.glDrawArrays(gl.GL_POINTS, 0, len(self.vbo_point_xys.data))
 
                 # Now set actual color
                 gl.glEnableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
@@ -162,7 +162,7 @@ class ImmediateModeRenderer():
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glPointSize(point_size)
 
-            gl.glDrawArrays(gl.GL_POINTS, 0, np.alen(self.vbo_point_xys.data))
+            gl.glDrawArrays(gl.GL_POINTS, 0, len(self.vbo_point_xys.data))
             gl.glDisableClientState(gl.GL_VERTEX_ARRAY)
 
             if (picker.is_active):
@@ -223,7 +223,7 @@ class ImmediateModeRenderer():
         gl.glPushMatrix()
         gl.glLoadIdentity()
 
-        # vertex_count = np.alen( self.character_coordinates_data ) * 4
+        # vertex_count = len( self.character_coordinates_data ) * 4
         vertex_count = n * 4
         gl.glDrawArrays(gl.GL_QUADS, 0, vertex_count)
 
@@ -268,13 +268,13 @@ class ImmediateModeRenderer():
                 self.vbo_triangle_point_colors.bind()
                 gl.glColorPointer(self.NUM_COLOR_CHANNELS, gl.GL_UNSIGNED_BYTE, 0, None)  # FIXME: deprecated
                 gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
-                gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
+                gl.glDrawElements(gl.GL_TRIANGLES, len(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
                 gl.glDisableClientState(gl.GL_COLOR_ARRAY)  # FIXME: deprecated
                 gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
 
             gl.glLineWidth(line_width)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-            gl.glDrawElements(gl.GL_TRIANGLES, np.alen(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
+            gl.glDrawElements(gl.GL_TRIANGLES, len(self.vbo_triangle_point_indexes.data) * 3, gl.GL_UNSIGNED_INT, None)
 
             gl.glColor(1, 1, 1, 1)
             gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
@@ -419,7 +419,7 @@ class ImmediateModeRenderer():
     def set_polygons(self, polygons, point_adjacency_array):
         self.point_adjacency_array = point_adjacency_array.copy()
         self.polygons = polygons.copy()
-        self.polygon_count = np.alen(polygons)
+        self.polygon_count = len(polygons)
         self.line_vertex_counts = polygons.count.copy()
         self.triangle_vertex_buffers = np.ndarray(
             self.polygon_count,
@@ -869,7 +869,7 @@ class ImmediateModeRenderer():
         gl.glColor(r, g, b, a)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
         gl.glEnable(gl.GL_POLYGON_OFFSET_FILL)
-        gl.glDrawArrays(gl.GL_TRIANGLE_FAN, 0, np.alen(self.vbo_line_segment_point_xys.data))
+        gl.glDrawArrays(gl.GL_TRIANGLE_FAN, 0, len(self.vbo_line_segment_point_xys.data))
         gl.glDisable(gl.GL_POLYGON_OFFSET_FILL)
         gl.glDisable(gl.GL_POLYGON_STIPPLE)
 
@@ -897,7 +897,7 @@ class ImmediateModeRenderer():
             gl.glEnable(gl.GL_LINE_STIPPLE)
 
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_LINE)
-        gl.glDrawArrays(gl.GL_LINES, 0, np.alen(self.vbo_line_segment_point_xys.data))
+        gl.glDrawArrays(gl.GL_LINES, 0, len(self.vbo_line_segment_point_xys.data))
         gl.glDisable(gl.GL_LINE_STIPPLE)
         gl.glPolygonMode(gl.GL_FRONT_AND_BACK, gl.GL_FILL)
 

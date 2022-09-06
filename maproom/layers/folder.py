@@ -42,7 +42,7 @@ class Folder(Layer):
 
 class RootLayer(Folder):
     """Root layer
-    
+
     Only one root layer per project.
     """
     name = "Root"
@@ -68,7 +68,7 @@ class BoundedFolder(LineLayer, Folder):
 
     @property
     def is_renderable(self):
-        return np.alen(self.points) > 0
+        return len(self.points) > 0
 
     def set_data_from_bounds(self, bounds):
         ((l, b), (r, t)) = bounds
@@ -77,7 +77,7 @@ class BoundedFolder(LineLayer, Folder):
         else:
             points = [(l, b), (r, b), (r, t), (l, t)]
         f_points = np.asarray(points, dtype=np.float32)
-        n = np.alen(f_points)
+        n = len(f_points)
         self.points = data_types.make_points(n)
         log.debug("SET_DATA_FROM_BOUNDS:start %s" % self)
         if (n > 0):

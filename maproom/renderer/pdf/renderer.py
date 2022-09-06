@@ -101,14 +101,14 @@ class ReportLabRenderer(BaseRenderer):
 
     def set_points(self, xy, depths, color=None, num_points=-1):
         if num_points == -1:
-            num_points = np.alen(xy)
+            num_points = len(xy)
         self.point_xys = np.empty((num_points, 2), dtype=np.float32)
         self.point_xys[:num_points] = xy[:num_points]
         self.point_colors = self.convert_colors(color, num_points)
 
     def set_lines(self, xy, indexes, color):
         self.line_xys = xy[indexes.reshape(-1)].astype(np.float32).reshape(-1, 2)  # .view( self.SIMPLE_POINT_DTYPE ).copy()
-        self.line_colors = self.convert_colors(color, np.alen(self.line_xys) / 2)
+        self.line_colors = self.convert_colors(color, len(self.line_xys) / 2)
 
     def draw_lines(self,
                    layer,

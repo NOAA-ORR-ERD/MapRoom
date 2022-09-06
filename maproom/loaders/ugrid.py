@@ -69,12 +69,12 @@ class UGridLoader(BaseLayerLoader):
         return layers
 
     def save_to_local_file(self, filename, layer):
-        n = np.alen(layer.points)
+        n = len(layer.points)
         points = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[0:n]
         depths = layer.points.view(data_types.POINT_XY_VIEW_DTYPE).z[0:n]
         if layer.type == "triangle":
             lines = None
-            n = np.alen(layer.triangles)
+            n = len(layer.triangles)
             faces = layer.triangles.view(data_types.TRIANGLE_POINTS_VIEW_DTYPE).point_indexes
         elif layer.type == "line":
             faces = None

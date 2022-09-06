@@ -392,7 +392,7 @@ class LineVectorObject(VectorObjectLayer):
         pass
 
     def rasterize_points(self, renderer, projected_point_data, z, cp_color):
-        n = np.alen(self.points)
+        n = len(self.points)
         if not self.display_center_control_point:
             n -= 1
         colors = np.empty(n, dtype=np.uint32)
@@ -417,7 +417,7 @@ class LineVectorObject(VectorObjectLayer):
 
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
-        colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
+        colors = np.empty(len(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         self.rasterize_lines(renderer, projected_point_data, colors)
 
@@ -1272,7 +1272,7 @@ class PolylineMixin(object):
         cp = np.zeros((self.center_point_index + 1, 2), dtype=np.float32)
 
         p = np.concatenate((cp, points), 0)  # flatten to 1D
-        lines = self.get_polylines(np.alen(points))
+        lines = self.get_polylines(len(points))
         self.set_data(p, 0.0, np.asarray(lines, dtype=np.uint32))
         self.recalc_bounding_box()
 
@@ -1309,7 +1309,7 @@ class PolylineMixin(object):
 
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
-        colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
+        colors = np.empty(len(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         renderer.set_lines(projected_point_data, self.line_segment_indexes.view(data_types.LINE_SEGMENT_POINTS_VIEW_DTYPE)["points"], colors)
 
@@ -1337,7 +1337,7 @@ class PolylineObject(PolylineMixin, RectangleMixin, LineVectorObject):
                 (indexes.point2[-1], indexes.point1[-1], self.style.line_end_marker))
 
     def get_all_boundaries(self):
-        indexes = list(range(self.center_point_index + 1, np.alen(self.points)))
+        indexes = list(range(self.center_point_index + 1, len(self.points)))
         b = Boundary(self.points, indexes, 0.0)
         return [b]
 
@@ -1360,7 +1360,7 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         r = 6371.
         lat_dist = math.pi * r / 180.0
         area = 0.0
-        indexes = list(range(self.center_point_index + 1, np.alen(self.points)))
+        indexes = list(range(self.center_point_index + 1, len(self.points)))
         indexes.append(self.center_point_index + 1)
         x = []
         y = []
@@ -1393,14 +1393,14 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
         return True
 
     def get_all_boundaries(self):
-        indexes = list(range(self.center_point_index + 1, np.alen(self.points)))
+        indexes = list(range(self.center_point_index + 1, len(self.points)))
         indexes.append(self.center_point_index + 1)
         b = Boundary(self.points, indexes, 0.0)
         return [b]
 
     def get_points_lines(self):
         start = self.center_point_index + 1
-        count = np.alen(self.points) - start
+        count = len(self.points) - start
         points = self.points.view(data_types.POINT_XY_VIEW_DTYPE).xy[start:start + count]
         lines = np.empty((count, 2), dtype=np.uint32)
         lines[:,0] = np.arange(0, count, dtype=np.uint32)
@@ -1410,17 +1410,17 @@ class PolygonObject(PolylineMixin, RectangleMixin, FillableVectorObject):
 
     def rasterize(self, renderer, projected_point_data, z, cp_color, line_color):
         self.rasterize_points(renderer, projected_point_data, z, cp_color)
-        colors = np.empty(np.alen(self.line_segment_indexes), dtype=np.uint32)
+        colors = np.empty(len(self.line_segment_indexes), dtype=np.uint32)
         colors.fill(line_color)
         start = self.center_point_index + 1
-        last = np.alen(self.points)
+        last = len(self.points)
         count = last - start
         rings = data_types.make_polygons(1)
         rings.start[0] = self.center_point_index + 1
         rings.count[0] = count
         rings.group[0] = 0
         rings.color[0] = self.style.fill_color
-        adjacency = data_types.make_point_adjacency_array(np.alen(self.points))
+        adjacency = data_types.make_point_adjacency_array(len(self.points))
         adjacency.ring_index[0:start] = 99999
         adjacency.ring_index[start:last] = 0
         adjacency.next[start:last] = np.arange(start + 1, last + 1)
@@ -1629,7 +1629,7 @@ class ArrowTextBoxLayer(AnnotationLayer):
 class ArrowTextIconLayer(ArrowTextBoxLayer):
     """Folder layer for to hold a group of three annotation objects: a text box, an
     arrow pointing to lat/lon, and an icon at that lat/lon location.
- 
+
     The layer and associations among child layers is created in DrawArrowTextIconCommand
     """
     name = "Arrow Text Icon"

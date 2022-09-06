@@ -13,16 +13,17 @@ numpy
 pillow
 owslib
 pyopengl
-# no build for 3.9 yet
+# no build for 3.10 yet
 # pyopengl-accelerate
 pyparsing
 pyproj
 python-dateutil
 python-slugify
-# Are we really using this -- it's in the pdf renderer, but is that functional?
+# Are we really using this -- it's in the pdf renderer, but is that functional? maybe not -- but it is imported.
 reportlab
 scipy
 shapely
 text-unidecode
-wxpython=4.*
+# no conda-forge build for 4.2 yet.
+# wxpython=4.*
 

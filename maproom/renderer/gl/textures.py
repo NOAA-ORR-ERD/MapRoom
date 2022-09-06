@@ -506,7 +506,7 @@ class ImageTextures(object):
             vertex_data.xprime_rb = rbprime_projected[0]
             vertex_data.yprime_rb = rbprime_projected[1]
 
-            self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
+            self.vbo_vertexes[i][: len(vertex_data)] = raw
 
     def use_screen_rect(self, image_data, r, scale=1.0):
         for i, image in enumerate(image_data):
@@ -525,7 +525,7 @@ class ImageTextures(object):
             vertex_data.x_rb = x + r[0][0] + w
             vertex_data.y_rb = y + r[0][1]
 
-            self.vbo_vertexes[i][: np.alen(vertex_data)] = raw
+            self.vbo_vertexes[i][: len(vertex_data)] = raw
 
     def center_at_screen_point(self, image_data, point, screen_height, scale=1.0):
         left = int(point[0] - (image_data.x / 2) * scale)
@@ -656,7 +656,7 @@ class TileTextures(object):
         vertex_data.x_rb = rb_projected[0]
         vertex_data.y_rb = rb_projected[1]
 
-        tile.vbo_vertexes[: np.alen(vertex_data)] = raw
+        tile.vbo_vertexes[: len(vertex_data)] = raw
 
     def reorder_tiles(self, image_data):
         z_front = image_data.zoom_level

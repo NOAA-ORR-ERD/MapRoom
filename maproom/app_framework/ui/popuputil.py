@@ -303,26 +303,26 @@ class SpringTabItemVerticalRenderer(SpringTabItemRenderer):
 class SpringTabItem(GenToggleButton):
     def __init__(self, parent, id=-1, label='', window_cb=None, available_cb=None, **kwargs):
         """Creates a springtab button
-        
+
         This button on the springtab is linked to a callback function that
         creates a window on demand when the button is clicked.
-        
+
         @param parent: parent window: a L{SpringTab} instance
-        
+
         @param id: optional id of the new button
-        
+
         @param label: label of the springtab button
-        
+
         @param window_cb: callback to create the contents of the popup.  This
         functor will be passed two arguments: the first is the popup window
         determined from L{SpringTab.get_new_popup} to be used as the parent
         window for the popup contents.  The second argument is the kwargs dict.
-        
+
         @param available_cb: callback to see if the button should be displayed
         in the L{SpringTab}.  This callback takes a single argument; the
         kwargs dict and should return a boolean indicating whether or not the
         button will be visible.
-        
+
         @param kwargs: dict containing any keyword arguments necessary to
         create the popup contents or check for button availability.
         """
@@ -633,19 +633,19 @@ else:
 
 class PopupStatusBar(StatusPopupWindow):
     """Transient status bar that displays status text in a popup
-    
+
     Unlike a wx.StatusBar window that uses a constant amount of screen real-
     estate, the PopupStatusBar displays status info in a temporary popup
     that is displayed on the bottom of the frame.
-    
+
     Status text is always overwritten with updates to the status text.  Status
     text is designed to be used for repetitive updates in response to an event;
     for example, to update coordinates when the mouse is moved.
-    
+
     To display menu help text like the wx.StatusBar does by default, capture
     the wx.EVT_MENU_HIGHLIGHT event and send the help text to the status bar
     using a method like:
-    
+
     def OnMenuHighlight(self, evt):
         menu_id = evt.GetMenuId()
         if menu_id >= 0:
@@ -656,9 +656,9 @@ class PopupStatusBar(StatusPopupWindow):
     """
     def __init__(self, frame):
         """Creates (but doesn't show) the PopupStatusBar
-        
+
         @param frame: the parent frame
-        
+
         @kwarg delay: (optional) delay in milliseconds before each message
         decays
         """
@@ -669,18 +669,18 @@ class PopupStatusBar(StatusPopupWindow):
 
     def show_status_text(self, text, multiline=False):
         """Display a status text string in the status popup.
-        
+
         This method is intended to display text in response to a large number
         of updates to a similar actions, for example: updating x,y coordinates
         in response to mouse movement.  It is undesirable to keep these
         messages in the list as the list would quickly grow to display many
         lines.  Instead, status text updates replace any previous status
         updates at the bottom of the popup.
-        
+
         This forces the popup to be displayed if it isn't currently displayed.
         If the popup is displayed and other messages are present, the existing
         messages are moved up and this status text is inserted at the bottom.
-        
+
         @param text: message to display
         """
         if multiline:
@@ -779,7 +779,7 @@ if __name__ == "__main__":
         def OnUpdateUI(self, evt):
             """Specific OnUpdateUI callback for those modes that use an actual
             STC for their edit window.
-            
+
             Adds things like fold level and style display.
             """
             linenum = self.GetCurrentLine()

@@ -77,7 +77,7 @@ class nc_particles_file_loader():
             data = self.reader.get_timestep(self.current_timestep, variables=[self.status_id])
             status_codes = np.array(data[self.status_id], dtype=np.uint32)
         else:
-            status_codes = np.zeros(np.alen(data['longitude']), dtype=np.uint32)
+            status_codes = np.zeros(len(data['longitude']), dtype=np.uint32)
         abslon = np.absolute(points[:,0])
         abslat = np.absolute(points[:,1])
         bogus = np.where((abslon > 1e3) | (abslat > 1e3))

@@ -216,7 +216,7 @@ class OffScreenHTML(object):
             # so the bounding box can be computed by using the idea from
             # http://stackoverflow.com/questions/4808221
             fg = np.argwhere(np.logical_not(mask))
-            if np.alen(fg) > 0:
+            if len(fg) > 0:
                 (ystart, xstart), (ystop, xstop) = fg.min(0), fg.max(0) + 1
                 bb = arr[ystart:ystop, xstart:xstop]
             else:

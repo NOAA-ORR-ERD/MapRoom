@@ -86,7 +86,7 @@ class PointBaseLayer(ProjectedLayer):
         return d
 
     def set_data(self, f_points, style=None):
-        n = np.alen(f_points)
+        n = len(f_points)
         if style is not None:
             self.style = style
         self.points = data_types.make_points(n)

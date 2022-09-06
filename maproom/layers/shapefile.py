@@ -269,7 +269,7 @@ class ShapefileLayer(PointLayer):
         num_new_points = 0
         for i, b in enumerate(boundaries):
             points = b.get_xy_points()
-            num_new_points += np.alen(points)
+            num_new_points += len(points)
 
         self.points = data_types.make_points(num_new_points)
         self.ring_adjacency = data_types.make_ring_adjacency_array(num_new_points)
@@ -364,7 +364,7 @@ class ShapefileLayer(PointLayer):
         p = self.points
         points = np.c_[p.x[start:end], p.y[start:end]]
         points = np.require(points, np.float64, ["C", "OWNDATA"])
-        if np.alen(points) > 2:
+        if len(points) > 2:
             poly = sg.Polygon(points)
         else:
             poly = sg.LineString(points)

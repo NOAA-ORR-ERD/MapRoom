@@ -747,7 +747,7 @@ class ParticleLayer(PointBaseLayer):
 
     def recalc_colors_from_status_codes(self, update_count=False):
         log.debug("setting status code colors to: %s" % self.status_code_colors)
-        colors = np.zeros(np.alen(self.points), dtype=np.uint32)
+        colors = np.zeros(len(self.points), dtype=np.uint32)
         for code, color in self.status_code_colors.items():
             index = np.where(self.status_codes == code)
             colors[index] = color

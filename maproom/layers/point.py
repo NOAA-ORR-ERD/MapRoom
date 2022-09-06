@@ -68,7 +68,7 @@ class PointLayer(PointBaseLayer):
             self.manager.project.refresh(True)
 
     def set_data(self, f_points, f_depths=0.0, style=None):
-        n = np.alen(f_points)
+        n = len(f_points)
         if style is not None:
             self.style = style
         self.points = data_types.make_points(n)

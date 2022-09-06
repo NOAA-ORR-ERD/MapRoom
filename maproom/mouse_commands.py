@@ -464,8 +464,8 @@ class DeleteLinesCommand(Command):
         layer.points = np.insert(layer.points, indexes, old_points).view(np.recarray)
 
         # adjust existing indexes to allow for inserted points
-        offsets1 = np.zeros(np.alen(layer.line_segment_indexes)).astype(np.uint32)
-        offsets2 = np.zeros(np.alen(layer.line_segment_indexes)).astype(np.uint32)
+        offsets1 = np.zeros(len(layer.line_segment_indexes)).astype(np.uint32)
+        offsets2 = np.zeros(len(layer.line_segment_indexes)).astype(np.uint32)
         for index in indexes:
             offsets1 += np.where(layer.line_segment_indexes.point1 >= index, 1, 0).astype(np.uint32)
             offsets2 += np.where(layer.line_segment_indexes.point2 >= index, 1, 0).astype(np.uint32)
