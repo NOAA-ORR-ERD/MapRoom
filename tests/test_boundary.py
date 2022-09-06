@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 import numpy as np
 
@@ -7,20 +8,24 @@ from mock import *
 from maproom.library import Boundary as b
 from maproom.renderer import data_types
 
+TEST_DATA = Path(__file__).parent / "../TestData"
+
 
 class TestVerdatPolygonCrossing(object):
     def setup(self):
         self.project = MockProject()
 
     def test_verdat_is_self_intersecting(self):
-        layer = self.project.raw_load_first_layer("../TestData/Verdat/simple-boundary-crossing.verdat", "application/x-maproom-verdat")
+        layer = self.project.raw_load_first_layer(str(TEST_DATA / "Verdat" / "simple-boundary-crossing.verdat"),
+                                                  "application/x-maproom-verdat")
         boundary = self.project.get_outer_boundary(layer)
         error_points = boundary.check_boundary_self_crossing()
         print(error_points)
         assert set(error_points) == set((0, 4, 5, 6))
 
     def test_verdat_is_overlapping(self):
-        layer = self.project.raw_load_first_layer("../TestData/Verdat/separate-boundary-crossings.verdat", "application/x-maproom-verdat")
+        layer = self.project.raw_load_first_layer(str(TEST_DATA / "Verdat" / "separate-boundary-crossings.verdat"),
+                                                  "application/x-maproom-verdat")
         boundaries = b.Boundaries(layer)
         error_points = boundaries.check_boundary_crossings()
         print(error_points)
@@ -28,7 +33,8 @@ class TestVerdatPolygonCrossing(object):
 
     @slow
     def test_large_verdat_is_self_intersecting(self):
-        layer = self.project.raw_load_first_layer("../TestData/Verdat/large-self-intersecting.verdat", "application/x-maproom-verdat")
+        layer = self.project.raw_load_first_layer(str(TEST_DATA / "Verdat" / "large-self-intersecting.verdat"),
+                                                  "application/x-maproom-verdat")
         boundary = self.project.get_outer_boundary(layer)
         error_points = boundary.check_boundary_self_crossing()
         print(error_points)
@@ -36,7 +42,7 @@ class TestVerdatPolygonCrossing(object):
 
     @slow
     def test_large_verdat_is_overlapping(self):
-        layer = self.project.raw_load_first_layer("../TestData/Verdat/GreenBay2222016.verdat", "application/x-maproom-verdat")
+        layer = self.project.raw_load_first_layer(TEST_DATA / "Verdat" / "GreenBay2222016.verdat", "application/x-maproom-verdat")
         boundaries = b.Boundaries(layer)
         error_points = boundaries.check_boundary_crossings()
         print(error_points)
@@ -45,6 +51,8 @@ class TestVerdatPolygonCrossing(object):
 
 class TestBoundary(object):
     def setup(self):
+        self.project = MockProject()
+
         self.points = data_types.make_points(24)
         x=np.linspace(0.,3.,4)
         y=np.linspace(0.,5,6)
@@ -62,8 +70,7 @@ class TestBoundary(object):
             lines[i].point1 = start
             lines[i].point2 = end
             i += 1
-        print(lines)
-        layer = Layer()
+        layer = Layer(self.project.layer_manager)
         layer.points = self.points
         layer.line_segment_indexes = lines
 
@@ -109,7 +116,7 @@ class TestBoundary(object):
             lines[i].point2 = end
             i += 1
         print(lines)
-        layer = Layer()
+        layer = Layer(self.project.layer_manager)
         layer.points = self.points
         layer.line_segment_indexes = lines
 
@@ -123,7 +130,7 @@ class TestBoundary(object):
 
 if __name__ == "__main__":
     import time
-    
+
     t = TestBoundary()
     t.setup()
     # t.test_polylines()
@@ -135,9 +142,9 @@ if __name__ == "__main__":
     # t.test_verdat_is_overlapping()
     # t.test_large_verdat_is_self_intersecting()
     # t.test_large_verdat_is_overlapping()
-        
+
 #    iterations = 1
-#    
+#
 #    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
@@ -145,25 +152,25 @@ if __name__ == "__main__":
 #        #t.test_large_verdat_is_self_intersecting()
 #    elapsed = time.perf_counter() - t0
 #    print "%d custom loops: %f" % (iterations, elapsed)
-#    
+#
 #    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
 #        t.test_large_verdat_is_self_intersecting()
 #    elapsed = time.perf_counter() - t0
 #    print "%d custom loops: %f" % (iterations, elapsed)
-    
+
 #    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
 #        t.test_large_verdat_is_simple_slow()
 #    elapsed = time.perf_counter() - t0
 #    print "%d slow loops: %f" % (iterations, elapsed)
-#    
+#
 #    t0 = time.perf_counter()
 #    for i in range(iterations):
 #        print "loop %d" % i
 #        t.test_large_verdat_is_simple_fast()
 #    elapsed = time.perf_counter() - t0
 #    print "%d fast loops: %f" % (iterations, elapsed)
-    
+

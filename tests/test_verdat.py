@@ -15,10 +15,10 @@ class TestVerdat(object):
 
     def test_simple(self):
         layer = self.verdat
-        assert 23 == np.alen(layer.points)
+        assert 23 == len(layer.points)
         print(layer.points)
         layer.check_for_problems()
-    
+
     def test_save(self):
         uri = os.path.join(os.getcwd(), "test.verdat")
         loaders.save_layer(self.verdat, uri)
