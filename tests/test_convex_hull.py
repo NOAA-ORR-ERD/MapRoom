@@ -21,7 +21,7 @@ class TestConvexHull(object):
     def test_simple(self):
         self.load_verdat("../TestData/Verdat/000689pts.verdat")
         print(self.verdat)
-        assert 689 == np.alen(self.verdat.points)
+        assert 689 == len(self.verdat.points)
         print(self.verdat.points)
 
         layer, err = create_convex_hull([self.verdat], self.project.layer_manager)

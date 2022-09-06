@@ -23,7 +23,7 @@ class TestVerdatToBNA(object):
             print(b.point_indexes)
             print(b.area)
             print(b.get_xy_points())
-            
+
         p = PolygonLayer(manager=self.lm)
         p.set_data_from_boundaries(layer_bounds.boundaries)
 
@@ -31,7 +31,7 @@ class TestVerdatToBNA(object):
         layer = self.project.raw_load_first_layer("../TestData/Verdat/000026pts.verdat", "application/x-maproom-verdat")
         boundaries = layer.get_all_boundaries()
         assert 2 == len(boundaries)
-            
+
         p = PolygonLayer(manager=self.lm)
         p.set_data_from_boundaries(boundaries)
 
@@ -39,23 +39,23 @@ class TestVerdatToBNA(object):
         layer = self.project.raw_load_first_layer("../TestData/Verdat/000026pts.verdat", "application/x-maproom-verdat")
         boundaries = layer.get_all_boundaries()
         assert 2 == len(boundaries)
-            
+
         p = PolygonLayer(manager=self.lm)
         p.set_data_from_boundaries(boundaries)
-        
+
         v = LineLayer(manager=self.lm)
         points, lines = p.get_points_lines()
         print(points)
         print(lines)
         v.set_data(points, 0.0, lines)
-        assert np.alen(points) == np.alen(v.points)
-        assert np.alen(lines) == np.alen(v.line_segment_indexes)
+        assert len(points) == len(v.points)
+        assert len(lines) == len(v.line_segment_indexes)
 
 
 
 if __name__ == "__main__":
     import time
-    
+
     t = TestVerdatToBNA()
     t.setup()
     t.test_sample_shoreline()

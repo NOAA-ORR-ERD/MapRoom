@@ -17,9 +17,9 @@ class TestVerdatConversion(object):
 
     def test_jetty(self):
         layer = self.verdat
-        assert 16 == np.alen(layer.line_segment_indexes)
+        assert 16 == len(layer.line_segment_indexes)
         layer.insert_line_segment(2, 17)
-        assert 17 == np.alen(layer.line_segment_indexes)
+        assert 17 == len(layer.line_segment_indexes)
 
         b = Boundaries(layer, allow_branches=False)
         with pytest.raises(PointsError):
@@ -49,9 +49,9 @@ class TestJetty(object):
 
     def test_jetty(self):
         layer = self.verdat
-        assert 5 == np.alen(layer.line_segment_indexes)
+        assert 5 == len(layer.line_segment_indexes)
         self.create_jetty()
-        assert 16 == np.alen(layer.line_segment_indexes)
+        assert 16 == len(layer.line_segment_indexes)
 
         b = Boundaries(layer, allow_branches=False)
         with pytest.raises(PointsError):
@@ -62,7 +62,7 @@ class TestJetty(object):
         uri = os.path.normpath(os.getcwd() + "/tmp.jetty.nc")
         loaders.save_layer(self.verdat, uri)
         layer = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
-        assert 16 == np.alen(layer.line_segment_indexes)
+        assert 16 == len(layer.line_segment_indexes)
 
     def create_channel(self):
         layer = self.verdat
@@ -76,9 +76,9 @@ class TestJetty(object):
 
     def test_channel(self):
         layer = self.verdat
-        assert 5 == np.alen(layer.line_segment_indexes)
+        assert 5 == len(layer.line_segment_indexes)
         self.create_channel()
-        assert 15 == np.alen(layer.line_segment_indexes)
+        assert 15 == len(layer.line_segment_indexes)
 
         b = Boundaries(layer, allow_branches=False)
         with pytest.raises(PointsError):
@@ -89,7 +89,7 @@ class TestJetty(object):
         uri = os.path.normpath(os.getcwd() + "/tmp.channel.nc")
         loaders.save_layer(self.verdat, uri)
         layer = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
-        assert 15 == np.alen(layer.line_segment_indexes)
+        assert 15 == len(layer.line_segment_indexes)
 
 
 class TestUGrid(object):

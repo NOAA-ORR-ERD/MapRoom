@@ -53,13 +53,13 @@ class TestBNAShapefile(object):
         print(self.bna.points)
         print(len(self.bna.points))
         assert len(self.bna.rings) == 3
-        assert 33 == np.alen(self.bna.points)
+        assert 33 == len(self.bna.points)
 
         uri = os.path.join(os.getcwd(), "tmp.3polys.shp")
         loaders.save_layer(self.bna, uri)
 
         layer = self.project.raw_load_first_layer(uri, "application/x-maproom-shapefile")
-        assert 33 == np.alen(layer.points)
+        assert 33 == len(layer.points)
 
     def test_add_polygon(self):
         uri = os.path.normpath(os.getcwd() + "/../TestData/Verdat/000011pts.verdat")
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         out_uri = os.path.join(os.getcwd(), "out.shp")
         loaders.save_layer(layer, out_uri)
         reloaded_layer = project.raw_load_first_layer(out_uri, "application/x-maproom-shapefile")
-        assert np.alen(reloaded_layer.points) == np.alen(layer.points)
+        assert len(reloaded_layer.points) == len(layer.points)
     else:
         # t = TestBNAShapefile()
         # t.setup()

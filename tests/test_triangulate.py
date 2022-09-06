@@ -22,7 +22,7 @@ class TestTriangulate(object):
     def test_simple(self):
         self.load_verdat("../TestData/Verdat/negative-depth-triangles.verdat")
         print(self.verdat)
-        assert 23 == np.alen(self.verdat.points)
+        assert 23 == len(self.verdat.points)
         print(self.verdat.points)
 
         tris = TriangleLayer(manager=self.project.layer_manager)
@@ -33,12 +33,12 @@ class TestTriangulate(object):
 
         t2 = self.project.raw_load_first_layer("negative-depth-triangles.nc", "application/x-nc_ugrid")
         print(t2.points)
-        assert 23 == np.alen(t2.points)
+        assert 23 == len(t2.points)
 
     def test_large(self):
         self.load_verdat("../TestData/Verdat/011795pts.verdat")
         print(self.verdat)
-        assert 11795 == np.alen(self.verdat.points)
+        assert 11795 == len(self.verdat.points)
 
         tris = TriangleLayer(manager=self.project.layer_manager)
         tris.triangulate_from_layer(self.verdat, None, None)
@@ -48,7 +48,7 @@ class TestTriangulate(object):
 
         t2 = self.project.raw_load_first_layer(uri, "application/x-nc_ugrid")
         print(t2)
-        assert 11795 == np.alen(t2.points)
+        assert 11795 == len(t2.points)
 
 if __name__ == "__main__":
     t = TestTriangulate()

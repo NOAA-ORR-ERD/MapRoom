@@ -16,14 +16,14 @@ class TestVerdatUndo(object):
     def test_add_points(self):
         world_point = (-118.0, 33.0)
         orig_points = np.copy(self.layer.points)
-        assert 689 == np.alen(self.layer.points)
-        
+        assert 689 == len(self.layer.points)
+
         cmd = InsertPointCommand(self.layer, world_point)
         self.project.process_command(cmd)
-        assert 690 == np.alen(self.layer.points)
-        
+        assert 690 == len(self.layer.points)
+
         self.project.undo()
-        assert 689 == np.alen(self.layer.points)
+        assert 689 == len(self.layer.points)
         assert np.array_equal(orig_points, self.layer.points)
 
     def test_move_points(self):
@@ -31,14 +31,14 @@ class TestVerdatUndo(object):
         dy = 1.5
         indexes = [400, 410, 499]
         orig_points = np.copy(self.layer.points).view(np.recarray)
-        
+
         cmd = MovePointsCommand(self.layer, indexes, dx, dy)
         self.project.process_command(cmd)
         assert np.allclose(self.layer.points.x[indexes], orig_points.x[indexes] + dx)
         assert np.allclose(self.layer.points.y[indexes], orig_points.y[indexes] + dy)
 
         self.project.undo()
-        assert 689 == np.alen(self.layer.points)
+        assert 689 == len(self.layer.points)
         assert np.array_equal(orig_points, self.layer.points)
 
     def test_move_points_coelesce(self):
@@ -46,13 +46,13 @@ class TestVerdatUndo(object):
         dy = 1.5
         indexes = [400, 410, 499]
         orig_points = np.copy(self.layer.points).view(np.recarray)
-        
+
         # move once
         cmd = MovePointsCommand(self.layer, indexes, dx, dy)
         self.project.process_command(cmd)
         assert np.allclose(self.layer.points.x[indexes], orig_points.x[indexes] + dx)
         assert np.allclose(self.layer.points.y[indexes], orig_points.y[indexes] + dy)
-        
+
         # move same points again
         cmd = MovePointsCommand(self.layer, indexes, dx, dy)
         self.project.process_command(cmd)
@@ -61,7 +61,7 @@ class TestVerdatUndo(object):
 
         # single undo should return to original state
         self.project.undo()
-        assert 689 == np.alen(self.layer.points)
+        assert 689 == len(self.layer.points)
         assert np.array_equal(orig_points, self.layer.points)
 
 class TestVerdatDelete(object):
@@ -77,13 +77,13 @@ class TestVerdatDelete(object):
         cmd = DeleteLinesCommand(self.layer, points, None)
         self.project.process_command(cmd)
         print(self.layer.line_segment_indexes)
-        
+
         self.project.undo()
         assert orig_lsi[-1] == self.layer.line_segment_indexes[-1]
 
 if __name__ == "__main__":
     import time
-    
+
 #    t = TestVerdatUndo()
 #    t.setup()
 #    t.test_add_points()

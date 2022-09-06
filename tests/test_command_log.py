@@ -10,7 +10,7 @@ from maproom.menu_commands import *
 
 class TestLogBase(object):
     logfile = None
-    
+
     def setup(self):
         self.project = MockProject()
         self.manager = self.project.layer_manager
@@ -21,14 +21,14 @@ class TestBasic(TestLogBase):
 
     def test_points(self):
         layer = self.manager.get_nth_oldest_layer_of_type("line", 1)
-        assert 692 == np.alen(layer.points)
+        assert 692 == len(layer.points)
 
 class TestPoints(TestLogBase):
     logfile = "../TestData/CommandLog/pt-line-del-line_to.mrc"
 
     def test_points(self):
         layer = self.manager.get_nth_oldest_layer_of_type("line", 1)
-        assert 698 == np.alen(layer.points)
+        assert 698 == len(layer.points)
 
 class TestTwoLayers(TestLogBase):
     logfile = "../TestData/CommandLog/two_layers.mrc"
@@ -36,9 +36,9 @@ class TestTwoLayers(TestLogBase):
     def test_points(self):
         lm = self.manager
         layer1 = lm.get_nth_oldest_layer_of_type("line", 1)
-        assert 693 == np.alen(layer1.points)
+        assert 693 == len(layer1.points)
         layer2 = lm.get_nth_oldest_layer_of_type("line", 2)
-        assert 26 == np.alen(layer2.points)
+        assert 26 == len(layer2.points)
 
     def test_rename(self):
         lm = self.manager
@@ -61,7 +61,7 @@ class TestTwoLayers(TestLogBase):
         assert saved_invariant - 1 == lm.next_invariant
         self.project.undo()
         assert saved_invariant == lm.next_invariant
-        
+
     def test_merge(self):
         lm = self.manager
         saved_invariant = lm.next_invariant
@@ -76,15 +76,15 @@ class TestTwoLayers(TestLogBase):
         self.project.redo()
         assert saved_invariant + 1 == lm.next_invariant
         layer3 = lm.get_nth_oldest_layer_of_type("line", 3)
-        assert 719 == np.alen(layer3.points)
-    
+        assert 719 == len(layer3.points)
+
     def test_triangulate1(self):
         lm = self.manager
         layer1 = lm.get_nth_oldest_layer_of_type("scale", 1)
         cmd = TriangulateLayerCommand(layer1, None, None)
         undo = self.project.process_command(cmd)
         assert not undo.flags.success
-    
+
     def test_triangulate2(self):
         lm = self.manager
         saved_invariant = lm.next_invariant
@@ -108,33 +108,33 @@ class TestInvariantOffset(object):
         self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
         lm = self.manager
         layer = lm.get_nth_oldest_layer_of_type("line", 1)
-        assert 11 == np.alen(layer.points)
+        assert 11 == len(layer.points)
         layer = lm.get_nth_oldest_layer_of_type("line", 2)
-        assert 693 == np.alen(layer.points)
+        assert 693 == len(layer.points)
         layer = lm.get_nth_oldest_layer_of_type("line", 3)
-        assert 26 == np.alen(layer.points)
+        assert 26 == len(layer.points)
 
     def test_offset2(self):
         self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
         self.project.load_file("../TestData/CommandLog/two_layers.mrc", "application/x-maproom-command-log")
         lm = self.manager
         layer = lm.get_nth_oldest_layer_of_type("line", 1)
-        assert 11 == np.alen(layer.points)
+        assert 11 == len(layer.points)
         layer = lm.get_nth_oldest_layer_of_type("line", 2)
-        assert 693 == np.alen(layer.points)
+        assert 693 == len(layer.points)
         layer = lm.get_nth_oldest_layer_of_type("line", 3)
-        assert 26 == np.alen(layer.points)
+        assert 26 == len(layer.points)
         cmd = DeleteLayerCommand(layer)
         undo = self.project.process_command(cmd)
         assert undo.flags.success
         layer = lm.get_nth_oldest_layer_of_type("line", 3)
-        assert 693 == np.alen(layer.points)
+        assert 693 == len(layer.points)
         layer = lm.get_nth_oldest_layer_of_type("line", 4)
-        assert 26 == np.alen(layer.points)
+        assert 26 == len(layer.points)
 
 if __name__ == "__main__":
     import time
-    
+
     t = TestInvariantOffset()
     t.setup()
     t.test_offset1()
