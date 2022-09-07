@@ -34,6 +34,8 @@ class LoadLayersCommand(Command):
         return "Load Layers From %s" % self.uri
 
     def perform(self, editor):
+        print("*******\nperform called on:", self)
+        print("loader:", self.loader)
         self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager)
         editor.load_success(self.uri)
         return self.undo_info
@@ -131,7 +133,6 @@ class PasteLayerCommand(Command):
 
         drag = layer.center_point_index
         layer.move_control_point(drag, drag, self.center[0], self.center[1])
-        print("AFTER NEW LAYER POSITION")
         layer.update_bounds()
 
         new_links = []
@@ -151,7 +152,6 @@ class PasteLayerCommand(Command):
 
         affected = layer.parents_affected_by_move()
         for parent in affected:
-            print("AFFECTED!", parent)
             lf = undo.flags.add_layer_flags(parent)
             lf.layer_items_moved = True
         undo.data = (layer.invariant, saved_invariant, new_links)
@@ -862,7 +862,7 @@ class SimplifyPolygonCommand(Command):
         self.undo_info = undo = UndoInfo()
         undo_info = layer.get_undo_info()
         new_points = self.simplifier.from_ratio(self.ratio)
-        print(f"RATIO: {self.ratio}, {len(new_points)} points")
+        # print(f"RATIO: {self.ratio}, {len(new_points)} points")
         if len(new_points) > 2:
             layer.replace_ring(self.obj_index, new_points)
         undo.data = undo_info

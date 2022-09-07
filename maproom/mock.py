@@ -97,8 +97,9 @@ class MockProject(object):
         return self.raw_load_all_layers(uri, mime)[0]
 
     def load_file(self, path, mime=None):
+        print("loading file:", path, mime)
         file_metadata = identify_file(os.path.realpath(path))
-        print(file_metadata)
+        print("***********\nfile_metadata:", file_metadata)
         loader = file_metadata["loader"]
         batch_flags = BatchStatus()
         if hasattr(loader, "load_project"):
@@ -106,13 +107,12 @@ class MockProject(object):
             loader.load_project(file_metadata["uri"], self.layer_manager, batch_flags)
         elif hasattr(loader, "iter_log"):
             line = 0
-            for cmd in loader.iter_log(metadata, self.layer_manager):
+            for cmd in loader.iter_log(file_metadata['uri'], self.layer_manager):
                 line += 1
                 errors = None
                 if cmd.short_name == "load":
-                    print(cmd.metadata)
-                    if cmd.metadata.uri.startswith("TestData"):
-                        cmd.metadata.uri = "../" + cmd.metadata.uri
+                    if cmd.uri.startswith("TestData"):
+                        cmd.uri = "../" + cmd.uri
                 try:
                     undo = self.process_command(cmd)
                     if not undo.flags.success:
@@ -168,7 +168,7 @@ class MockProject(object):
             count -= 1
 
     def process_command(self, command, new_mouse_mode=None, override_editable_properties_changed=None):
-        print("processing command %s" % command.short_name)
+        print("********\nprocessing command %s" % command.short_name)
         undo = self.layer_manager.undo_stack.perform(command, self)
         self.process_flags(undo.flags)
         return undo

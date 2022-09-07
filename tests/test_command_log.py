@@ -11,6 +11,37 @@ from maproom.menu_commands import *
 class TestLogBase(object):
     logfile = None
 
+    #### BROKEN TEST ####
+    # these tests fail with
+    # self = <maproom.menu_commands.LoadLayersCommand object at 0x16a684b50>, editor = <maproom.mock.MockProject object at 0x16a58d2e0>
+
+#     def perform(self, editor):
+#         print("*******\nperform called on:", self)
+#         print("loader:", self.loader)
+# >       self.undo_info = undo = self.loader.load_layers_from_uri(self.uri, editor.layer_manager)
+# E       AttributeError: 'str' object has no attribute 'load_layers_from_uri'
+
+    # I *think* this is because the logfile reader:
+    # CommandLogLoader
+    # is getting a uri (filename) and mimetype from the logfile, then passing those off
+    # to:
+    # class LoadLayersCommand(Command):
+    #     short_name = "load"
+    #     serialize_order = [
+    #         ('uri', 'text'),
+    #         ('loader', 'loader'),
+    #     ]
+
+    #     def __init__(self, uri, loader):
+    #         Command.__init__(self)
+    #         self.uri = uri
+    #         self.loader = loader
+
+    # which is expecting a Loader object, rather than a string mimetype.
+
+    # so there should be code int ehre to convert the mime type to a loader, but
+    # I'm not sure where that belongs, or if the logfile for the test is out of date.
+
     def setup(self):
         self.project = MockProject()
         self.manager = self.project.layer_manager
